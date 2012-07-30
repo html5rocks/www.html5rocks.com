@@ -1,0 +1,43 @@
+<!doctype html>
+<head>
+  <title>UA string-based device class detection</title>
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+</head>
+<h1>Detecting device type based on User-Agent</h1>
+
+Basic logic:
+<pre>
+var ua = navigator.userAgent;
+for (var re in RULES) {
+  if (ua.match(re)) {
+    return RULES[re];
+  }
+}
+</pre>
+
+<h2>Device detected: <span id="device"></span></h2>
+
+<script>
+// Map of {regexp: deviceType} that should be applied against the UA.
+// Most specific rules first.
+var UA_RULES = [
+  ['iPhone;', 'phone'],
+  ['iPad;', 'tablet'],
+  ['Android.*Mobile Safari', 'phone'],  // Chrome/Browser on Android phone
+  ['Android.*Safari', 'tablet'],        // Chrome/Browser on Android tablet
+  ['.*', 'desktop'],                    // Fallback to desktop.
+]
+
+function detectDevice() {
+  var ua = navigator.userAgent;
+  for (var i = 0; i < UA_RULES.length; i++) {
+    var device = UA_RULES[i][1];
+    var re = new RegExp(UA_RULES[i][0]);
+    if (ua.match(re)) {
+      return device;
+    }
+  }
+}
+
+document.querySelector('#device').innerHTML = detectDevice();
+</script>

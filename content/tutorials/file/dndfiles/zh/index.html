@@ -1,0 +1,617 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}埃里克·比德尔曼 (Eric Bidelman) <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}阅读以 JavaScript 编写的本地文件{% endblock %}
+{% block pagetitle %}阅读以 JavaScript 编写的本地文件{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+#drop_zone {
+  border: 2px dashed #bbb;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  padding: 25px;
+  text-align: center;
+  font: 20pt bold 'Vollkorn';
+  color: #bbb;
+}
+.thumb {
+  height: 75px;
+  border: 1px solid #000;
+  margin: 10px 5px 0 0;
+}
+#progress_bar {
+  margin: 10px 0;
+  padding: 3px;
+  border: 1px solid #000;
+  font-size: 14px;
+  clear: both;
+  opacity: 0;
+  -o-transition: opacity 1s linear;
+  -moz-transition: opacity 1s linear;
+  -webkit-transition: opacity 1s linear;
+}
+#progress_bar.loading {
+  opacity: 1.0;
+}
+#progress_bar .percent {
+  background-color: #99ccff;
+  height: auto;
+  width: 0;
+}
+#byte_content {
+  margin: 5px 0;
+  max-height: 100px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#byte_range {
+  margin-top: 5px;
+}
+</style>
+{% endblock %}
+{% block pagebreadcrumb %}阅读以 JavaScript 编写的本地文件{% endblock %}
+{% block date %}2010 年 6 月 18 日{% endblock %}
+{% block updated %}2010 年 12 月 21 日{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">支持</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">不支持</span></span> <span class="browser safari"><span class="browser_name">Safari</span><span class="support">不支持</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">支持</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome 浏览器</span><span class="support">支持</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="本文由 HTML5 性能与集成强力驱动" title="本文由 HTML5 性能与集成强力驱动"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return !!(window.File) && !!(window.FileReader) && !!(window.FileList) && !!(window.Blob);
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction">简介</h2>
+
+  <p>HTML5 终于为我们提供了一种通过 <a href="http://www.w3.org/TR/file-upload/">File API</a> 规范与本地文件交互的标准方式。为了举例说明其功能，可使用 File API 在向服务器发送图片的过程中创建图片的缩略图预览，或者允许应用程序在用户离线时保存文件引用。另外，您可以使用客户端逻辑来验证上传内容的 mimetype 与其文件扩展名是否匹配，或者限制上传内容的大小。</p>
+  <p>该规范通过“本地”文件系统提供了多种文件访问接口：</p>
+  <ol>
+    <li><code>File</code> - 独立文件；提供只读信息，例如名称、文件大小、mimetype 和对文件句柄的引用。</li>
+    <li><code>FileList</code> - <code>File</code> 对象的类数组序列（考虑 <code>&lt;input type="file" multiple&gt;</code> 或者从桌面拖动目录或文件）。</li>
+    <li><code>Blob</code> - 可将文件分割为字节范围。</li>
+  </ol>
+  <p>与以上数据结构结合使用时，<a href="http://dev.w3.org/2006/webapi/FileAPI/#filereader-interface"><code>FileReader</code></a> 接口可用于通过熟悉的 JavaScript 事件处理来异步读取文件。因此，可以监控读取进度、找出错误并确定加载何时完成。这些 API 与 <code>XMLHttpRequest</code> 的事件模型有很多相似之处。</p>
+
+  <p>请注意：在编写此教程时，Chrome 浏览器 6.0 和 Firefox 3.6 均支持处理本地文件所必需的 API。从 Firefox 3.6.3 起，就不支持 <code>File.slice()</code> 方法了。</p>
+
+  <h2 id="toc-selecting-files">选择文件</h2>
+  <p>首先需要检查您的浏览器是否完全支持 File API：</p>
+  <pre class="prettyprint">// Check for the various File API support.
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+  // Great success! All the File APIs are supported.
+} else {
+  alert('The File APIs are not fully supported in this browser.');
+}
+</pre>
+
+  <p>当然，如果您的应用程序只会用到这些 API 中的一小部分，请相应地修改此代码段。</p>
+
+  <h3 id="toc-selecting-files-input">使用表单输入进行选择</h3>
+  <p>要加载文件，最直接的方法就是使用标准 <code>&lt;input type="file"&gt;</code> 元素。JavaScript 会返回选定的 <code>File</code> 对象的列表作为 <code>FileList</code>。以下示例使用“multiple”属性实现了同时选择多个文件：</p>
+  <pre class="prettyprint">&lt;input type="file" id="files" name="files[]" multiple /&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+      output.push('&lt;li&gt;&lt;strong&gt;', escape(f.name), '&lt;/strong&gt; (', f.type || 'n/a', ') - ',
+                  f.size, ' bytes, last modified: ',
+                  f.lastModifiedDate.toLocaleDateString(), '&lt;/li&gt;');
+    }
+    document.getElementById('list').innerHTML = '&lt;ul&gt;' + output.join('') + '&lt;/ul&gt;';
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;
+</pre>
+
+  <p><strong>示例</strong>：使用表单输入进行选择。赶快试试吧！</p>
+  <div class="example">
+    <input type="file" id="files1" name="files1[]" multiple />
+    <output id="file_list"></output>
+  </div>
+
+  <h3 id="toc-selecting-files-dnd">使用拖放操作进行选择</h3>
+  <p>另一种加载文件的方法是在本地将文件从桌面拖放到浏览器。我们可以对前一个示例稍作修改，加入拖放支持。</p>
+  <pre class="prettyprint">&lt;div id="drop_zone">Drop files here&lt;/div&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+      output.push('&lt;li&gt;&lt;strong&gt;', escape(f.name), '&lt;/strong&gt; (', f.type || 'n/a', ') - ',
+                  f.size, ' bytes, last modified: ',
+                  f.lastModifiedDate.toLocaleDateString(), '&lt;/li&gt;');
+    }
+    document.getElementById('list').innerHTML = '&lt;ul&gt;' + output.join('') + '&lt;/ul&gt;';
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  var dropZone = document.getElementById('drop_zone');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>示例</strong>：使用拖放操作进行选择。赶快试试吧！</p>
+  <div class="example">
+    <div id="drop_zone">将文件拖放到此处</div>
+    <output id="file_list2"></output>
+  </div>
+
+  <p>请注意，有些浏览器会将 <code>&lt;input type="file"&gt;</code> 元素视为本地拖放目标。在前一个示例中尝试将文件拖动到输入字段上。</p>
+
+  <h2 id="toc-reading-files">读取文件</h2>
+  <p>现在精彩的部分到了！</p>
+  <p>当您获取了 <code>File</code> 引用后，实例化 <a href="http://dev.w3.org/2006/webapi/FileAPI/#filereader-interface"><code>FileReader</code></a> 对象，以便将其内容读取到内存中。加载结束后，将触发读取程序的 <code>onload</code> 事件，而其 <code>result</code> 属性可用于访问文件数据。</p>
+  <p><code>FileReader</code> 包括四个异步读取文件的选项：</p>
+  <ul>
+    <li><code>FileReader.readAsBinaryString(Blob|File)</code> - <code>result</code> 属性将包含二进制字符串形式的 file/blob 数据。每个字节均由一个 [0..255] 范围内的整数表示。</li>
+    <li><code>FileReader.readAsText(Blob|File, opt_encoding)</code> - <code>result</code> 属性将包含文本字符串形式的 file/blob 数据。该字符串在默认情况下采用“UTF-8”编码。使用可选编码参数可指定其他格式。</li>
+    <li><code>FileReader.readAsDataURL(Blob|File)</code> - <code>result</code> 属性将包含编码为<a href="http://en.wikipedia.org/wiki/Data_URI_scheme">数据网址</a>的 file/blob 数据。</li>
+    <li><code>FileReader.readAsArrayBuffer(Blob|File)</code> - <code>result</code> 属性将包含 <a href="https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/doc/spec/TypedArray-spec.html">ArrayBuffer</a> 对象形式的 file/blob 数据。</li>
+  </ul>
+
+  <p>对您的 <code>FileReader</code> 对象调用其中某一种读取方法后，可使用 <code>onloadstart</code>、<code>onprogress</code>、<code>onload</code>、<code>onabort</code>、<code>onerror</code> 和 <code>onloadend</code> 跟踪其进度。</p>
+  
+  <p>下面的示例从用户选择的内容中过滤掉了图片，对文件调用 <code>reader.readAsDataURL()</code>，并通过将“src”属性设为数据网址来呈现缩略图。</p>
+  <pre class="prettyprint">&lt;style&gt;
+  .thumb {
+    height: 75px;
+    border: 1px solid #000;
+    margin: 10px 5px 0 0;
+  }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="files[]" multiple /&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+
+      // Only process image files.
+      if (!f.type.match('image.*')) {
+        continue;
+      }
+
+      var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function(theFile) {
+        return function(e) {
+          // Render thumbnail.
+          var span = document.createElement('span');
+          span.innerHTML = ['&lt;img class="thumb" src="', e.target.result,
+                            '" title="', escape(theFile.name), '"/&gt;'].join('');
+          document.getElementById('list').insertBefore(span, null);
+        };
+      })(f);
+
+      // Read in the image file as a data URL.
+      reader.readAsDataURL(f);
+    }
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>示例</strong>：读取文件。赶快试试吧！</p>
+  <div class="example">
+    <p>用图片目录试试这个示例吧！</p>
+    <input type="file" id="files3" name="files3[]" multiple /><br>
+    <output id="thumbnails"></output>
+  </div>
+
+  <h3 id="toc-slicing-files">分割文件</h3>
+
+  <p>在某些情况下，将整个文件读取到内存中并不是最好的选择。例如，您要编写一个异步文件上传器。要提高上传速度，一种可行的方法是以彼此独立的字节范围块读取和发送文件。然后，由服务器组件负责按正确顺序重建文件。</p>
+  <p>对我们来说幸运的是，<code>File</code> 接口支持分割方法，因而可以支持此用例。在该方法中，起始字节为第一个参数，终止字节为第二个参数，选项内容类型字符串为第三个参数。该方法的语义近期做了更改，因此已由供应商添加前缀：</p>
+
+  <pre class="prettyprint">
+if (file.webkitSlice) {
+  var blob = file.webkitSlice(<var>startingByte</var>, <var>endindByte</var>);
+} else if (file.mozSlice) {
+  var blob = file.mozSlice(<var>startingByte</var>, <var>endindByte</var>);
+}
+reader.readAsBinaryString(blob);</pre>
+
+  <p>以下示例演示了如何读取文件块。值得注意的是，该示例使用 <code>onloadend</code> 并检查 <code>evt.target.readyState</code>，而不是使用 <code>onload</code> 事件。</p>
+
+<pre class="prettyprint">&lt;style&gt;
+  #byte_content {
+    margin: 5px 0;
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #byte_range { margin-top: 5px; }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="file" /&gt; Read bytes: 
+&lt;span class="readBytesButtons"&gt;
+  &lt;button data-startbyte="0" data-endbyte="4"&gt;1-5&lt;/button&gt;
+  &lt;button data-startbyte="5" data-endbyte="14"&gt;6-15&lt;/button&gt;
+  &lt;button data-startbyte="6" data-endbyte="7"&gt;7-8&lt;/button&gt;
+  &lt;button&gt;entire file&lt;/button&gt;
+&lt;/span&gt;
+&lt;div id="byte_range"&gt;&lt;/div&gt;
+&lt;div id="byte_content"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  function readBlob(opt_startByte, opt_stopByte) {
+
+    var files = document.getElementById('files').files;
+    if (!files.length) {
+      alert('Please select a file!');
+      return;
+    }
+
+    var file = files[0];
+    var start = parseInt(opt_startByte) || 0;
+    var stop = parseInt(opt_stopByte) || file.size - 1;
+
+    var reader = new FileReader();
+
+    // If we use onloadend, we need to check the readyState.
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+        document.getElementById('byte_content').textContent = evt.target.result;
+        document.getElementById('byte_range').textContent = 
+            ['Read bytes: ', start + 1, ' - ', stop + 1,
+             ' of ', file.size, ' byte file'].join('');
+      }
+    };
+
+    if (file.webkitSlice) {
+      var blob = file.webkitSlice(start, stop + 1);
+    } else if (file.mozSlice) {
+      var blob = file.mozSlice(start, stop + 1);
+    }
+    reader.readAsBinaryString(blob);
+  }
+  
+  document.querySelector('.readBytesButtons').addEventListener('click', function(evt) {
+    if (evt.target.tagName.toLowerCase() == 'button') {
+      var startByte = evt.target.getAttribute('data-startbyte');
+      var endByte = evt.target.getAttribute('data-endbyte');
+      readBlob(startByte, endByte);
+    }
+  }, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>示例</strong>：分割文件。赶快试试吧！</p>
+  <div class="example">
+    <input type="file" id="file4" name="file4" /> 读取字节：<span class="readBytesButtons">
+      <button data-startbyte="0" data-endbyte="4">1-5</button>
+      <button data-startbyte="5" data-endbyte="14">6-15</button>
+      <button data-startbyte="6" data-endbyte="7">7-8</button>
+      <button>整个文件</button>
+    </span>
+    <div id="byte_range"></div>
+    <div id="byte_content"></div>
+  </div>
+
+  <h3 id="toc-monitoring-progress">监控读取进度</h3>
+
+  <p>我们在使用异步事件处理时还能顺便获得一项优势，那就是能够监控文件的读取进度；这对于读取大文件、查找错误和预测读取完成时间非常实用。</p>
+
+  <p><code>onloadstart</code> 和 <code>onprogress</code> 事件可用于监控读取进度。</p>
+
+  <p>以下示例演示了如何通过显示进度条来监控读取状态。要查看进度指示器的实际效果，请尝试读取大文件或远程驱动器中的文件。</p>
+
+<pre class="prettyprint">&lt;style&gt;
+  #progress_bar {
+    margin: 10px 0;
+    padding: 3px;
+    border: 1px solid #000;
+    font-size: 14px;
+    clear: both;
+    opacity: 0;
+    -moz-transition: opacity 1s linear;
+    -o-transition: opacity 1s linear;
+    -webkit-transition: opacity 1s linear;
+  }
+  #progress_bar.loading {
+    opacity: 1.0;
+  }
+  #progress_bar .percent {
+    background-color: #99ccff;
+    height: auto;
+    width: 0;
+  }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="file" /&gt;
+&lt;button onclick="abortRead();"&gt;Cancel read&lt;/button&gt;
+&lt;div id="progress_bar"&gt;&lt;div class="percent"&gt;0%&lt;/div&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  var reader;
+  var progress = document.querySelector('.percent');
+
+  function abortRead() {
+    reader.abort();
+  }
+
+  function errorHandler(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  }
+
+  function updateProgress(evt) {
+    // evt is an ProgressEvent.
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded &lt; 100) {
+        progress.style.width = percentLoaded + '%';
+        progress.textContent = percentLoaded + '%';
+      }
+    }
+  }
+
+  function handleFileSelect(evt) {
+    // Reset progress indicator on new file selection.
+    progress.style.width = '0%';
+    progress.textContent = '0%';
+
+    reader = new FileReader();
+    reader.onerror = errorHandler;
+    reader.onprogress = updateProgress;
+    reader.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader.onloadstart = function(e) {
+      document.getElementById('progress_bar').className = 'loading';
+    };
+    reader.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+      progress.style.width = '100%';
+      progress.textContent = '100%';
+      setTimeout("document.getElementById('progress_bar').className='';", 2000);
+    }
+
+    // Read in the image file as a binary string.
+    reader.readAsBinaryString(evt.target.files[0]);
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>示例</strong>：监控读取进度。赶快试试吧！</p>
+  <div class="example">
+    <input type="file" id="file5" name="file5" />
+    <button onclick="example5.abortRead();">取消读取</button>
+    <div id="progress_bar"><div class="percent">0%</div></div>
+    <p><strong>提示</strong>：要查看进度指示器的实际效果，请尝试读取大文件或远程驱动器中的资源。</p>
+  </div>
+
+  <h2 id="toc-references">参考</h2>
+  <ul>
+    <li><a href="http://www.w3.org/TR/file-upload/">File</a> API 规范</li>
+    <li><a href="http://www.w3.org/TR/file-upload/#dfn-filereader">FileReader</a> 接口规范</li>
+    <li><a href="http://www.w3.org/TR/file-upload/#dfn-Blob">Blob</a> 接口规范</li>
+    <li><a href="http://www.w3.org/TR/file-upload/#dfn-fileerror">FileError</a> 接口规范</li>
+    <li><a href="http://www.w3.org/TR/progress-events/#Progress">ProgressEvent</a> 接口规范</li>
+  </ul>
+
+<script>
+var get = function(id) { return document.getElementById(id); }
+
+var example1 = example1 || {};
+example1.handleFileSelect = function(evt) {
+  var files = evt.target.files;
+  var output = [];
+  for (var i = 0, f; f = files[i]; i++) {
+    output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                f.size, ' bytes, last modified: ',
+                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                '</li>');
+  }
+  get('file_list').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+get('files1').addEventListener('change', example1.handleFileSelect, false);
+
+var example2 = example2 || {};
+example2.onDragOver = function(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+  evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+}
+
+example2.onDragFileDrop = function(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+
+  var files = evt.dataTransfer.files;
+  var output = [];
+  for (var i = 0, f; f = files[i]; i++) {
+    output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                f.size, ' bytes, last modified: ',
+                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                '</li>');
+  }
+  get('file_list2').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+
+// Setup the dnd listeners.
+get('drop_zone').addEventListener('dragover', example2.onDragOver, false);
+get('drop_zone').addEventListener('drop', example2.onDragFileDrop, false);
+
+
+var example3 = example3 || {};
+example3.handleFileSelect = function(evt) {
+  var files = evt.target.files; // FileList object.
+
+  // Loop through the FileList and render image files as thumbnails.
+  for (var i = 0, f; f = files[i]; i++) {
+
+    // Only process image files.
+    if (!f.type.match('image.*')) {
+      continue;
+    }
+
+    var reader = new FileReader();
+
+    // Need a closure to capture the file information.
+    reader.onload = (function(theFile) {
+      return function(e) {
+        // Render thumbnail.
+        var span = document.createElement('span');
+        span.innerHTML = ['<img class="thumb" src="', e.target.result,
+                          '" title="', escape(theFile.name), '"/>'].join('');
+        get('thumbnails').insertBefore(span, null);
+      };
+    })(f);
+
+    // Read in the image file as a data URL.
+    reader.readAsDataURL(f);
+  }
+}
+get('files3').addEventListener('change', example3.handleFileSelect, false);
+
+var example4 = example4 || {};
+example4.readBlob = function(opt_startByte, opt_stopByte) {
+  var files = get('file4').files;
+  if (!files.length) {
+    alert('Please select a file!');
+    return;
+  }
+
+  var file = files[0];
+  var start = parseInt(opt_startByte) || 0;
+  var stop = parseInt(opt_stopByte) || file.size - 1;
+
+  var reader = new FileReader();
+
+  reader.onloadend = function(evt) {
+    if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+      get('byte_content').textContent = evt.target.result;
+      get('byte_range').textContent = ['Read bytes: ', start + 1, ' - ', stop + 1,
+                                       ' of ', file.size, ' byte file'].join('');
+    }
+  };
+  //var blob = file.slice(start, (stop - start) + 1);
+  if (file.webkitSlice) {
+    var blob = file.webkitSlice(start, stop + 1);
+  } else if (file.mozSlice) {
+    var blob = file.mozSlice(start, stop + 1);
+  }
+  reader.readAsBinaryString(blob);
+};
+document.querySelector('.readBytesButtons').addEventListener('click', function(evt) {
+  if (evt.target.tagName.toLowerCase() == 'button') {
+    var startByte = evt.target.getAttribute('data-startbyte');
+    var stopByte = evt.target.getAttribute('data-endbyte');
+    example4.readBlob(startByte, stopByte);
+  }
+}, false);
+
+function Example5(id) {
+  var reader_;
+  var progress_ = document.querySelector('.percent');
+  var self = this;
+
+  this.abortRead = function() {
+    reader_.abort();
+  };
+
+  this.errorHandler = function(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  };
+
+  this.updateProgress = function(evt) {
+    // evt is a ProgressEvent.
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded < 100) {
+        progress_.style.width = percentLoaded + '%';
+        progress_.textContent = percentLoaded + '%';
+      }
+    }
+  };
+
+  this.handleFileSelect = function(evt) {
+    // Reset progress indicator on new file selection.
+    progress_.style.width = '0%';
+    progress_.textContent = '0%';
+
+    reader_ = new FileReader();
+    reader_.onerror = self.errorHandler;
+    reader_.onprogress = self.updateProgress;
+    reader_.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader_.onloadstart = function(e) {
+      get('progress_bar').className = 'loading';
+    };
+    reader_.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+      progress_.style.width = '100%';
+      progress_.textContent = '100%';
+      setTimeout("get('progress_bar').className='';", 2000);
+    }
+
+    // Read in the image file as binary string.
+    reader_.readAsBinaryString(evt.target.files[0]);
+  };
+
+  get(id).addEventListener('change', self.handleFileSelect, false);
+};
+var example5 = new Example5('file5');
+</script>
+
+{% endblock %}

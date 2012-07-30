@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block headtitle %}Business{% endblock %}
+
+{% block head %}
+<!--<link rel="stylesheet" media="screen" href="/static/css/feature{% if prod %}.min{% endif %}.css" />-->
+{% endblock %}
+
+{% block body %}
+<div data-import-html>
+  <header class="two_columns persona_header clearfix pattern-bg-lighter">
+    <hgroup>
+      <img src="/static/images/banner-business.png" width="462" height="176">
+      <h1>
+        HTML5 Works Hard<br>
+        <span>And We Mean Business</span>
+      </h1>
+    </hgroup>
+
+    <section>
+      <p>Businesses need to let their users access their core applications quickly and easily.
+      With HTML5, the browser is becoming the main business platform. Features like websockets,
+      offline storage and rich user interface let you create amazing business web applications.
+      HTML5 brings substantial benefits for companies that no other IT model can — in simplicity,
+      cost, security, flexibility and mobility.</p>
+    </section>
+  </header>
+
+  <article class="sectioned">
+    <section class="feed one_half">
+      <h3>{% trans "Business" %} {% trans "Updates" %}</h3>
+      <ul id="updates_list">
+        {% for tut in tutorials %}
+          {% if tut.type != 'tutorial' and tut.type != 'article' %}
+            <li data-pubdate="{{tut.publication_date}}">
+              <span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span> <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}"></span>
+              <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}</a></span>
+              <span class="classes">
+                {% for tag in tut.classes %}
+                  <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
+                {% endfor %}
+              </span>
+            </li>
+          {% endif %}
+        {% empty %}
+          Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+        {% endfor %}
+      </ul>
+      <div><a href="/{{LANGUAGE_CODE}}/tutorials#audience:business">{% trans "Give me everything" %} &rarr;</a></div>
+    </section>
+
+    <section class="tutorials one_half figures">
+      <h3>{% trans "Business" %} {% trans "Tutorials" %}</h3>
+      <ul class="definitions">
+        {% for r in tutorials %}
+          {% if forloop.counter0 < 10 %}
+            {% if r.type == 'tutorial' or r.type == 'article' %}
+            <li>
+              <a href="{{r.url}}">{{r.title}}</a><br>
+              <span>{{r.description|safe|truncatewords:15}}</span>
+              </a>
+            </li>
+            {% endif %}
+          {% endif %}
+        {% empty %}
+          <p>Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.</p>
+        {% endfor %}
+      </ul>
+      <div><a href="/{{LANGUAGE_CODE}}/tutorials#audience:business">{% trans "Give me everything" %} &rarr;</a></div>
+    </section>
+
+    <section>
+      <h3>{% trans "Why move to HTML5 now than later?" %}</h3>
+      <ul>
+        <li>HTML5 can be deployed across multiple platforms and a wide range of mobile devices.</li>
+        <li>It's a less expensive and more productive solution to have one source code for all your platforms. </li>
+        <li>HTML5 contains a lot of features that are very useful and powerful for business:
+          <ul>
+            <li><b>Security</b>: Secure web sockets gives you high throughput on a secure channel.</li>
+            <li><b>Efficiency</b>: Multi-threading with web workers let you do more computational tasks in your clients’ machines.</li>
+            <li><b>Offline</b>: Client-side databases to store data so you can be productive when you don’t have an internet connection.</li>
+          </ul>
+        </li>
+        <li>Lots of other leading companies are moving to HTML5: Adobe, Salesforce, Citrix,  <a href="" target="_blank">Netflix</a>, Twitter etc.</li>
+      </ul>
+    </section>
+
+    <section class="tools">
+      <hgroup>
+        <h3>{% trans "Tools &amp; Frameworks" %}</h3>
+      </hgroup>
+      <div>
+        <ul class="two_columns">
+          <li><a href="https://gist.github.com/350433">localStorage polyfill</a></li>
+          <li><a href="http://code.google.com/p/sessionstorage/">sessionStorage polyfill</a></li>
+          <li><a href="http://amplifyjs.com/">amplifyjs.js</a></li>
+          <li><a href="https://github.com/jensarps/IDBWrapper">IDBWrapper</a> - wrapper library for IndexedDB</li>
+          <li><a href="http://www.sencha.com/products/">Sencha</a></li>
+          <li><a href="http://www.strobecorp.com/">Strobe</a></li>
+          <li><a href="http://code.google.com/webtoolkit/">Google Web Toolkit</a></li>
+          <li><a href="http://code.google.com/closure/library/">Google Closure Library</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="resources">
+      <hgroup>
+        <h3>{% trans "Additional Resources" %}</h3>
+      </hgroup>
+      <div>
+        <ul class="two_columns">
+          <li><a href="http://www.google.com/chromebook/#business-education/">Chromebooks for Business</a></li>
+          <li><a href="http://hacks.mozilla.org/2010/01/offline-web-applications/">Mozilla Hack: Offline Web Applications</a></li>
+          <li><a href="https://developer.mozilla.org/En/Offline_resources_in_Firefox">MDN Documentation: Offline</a></li>
+          <li><a href="http://dev.opera.com/articles/view/offline-applications-html5-appcache/">Running your web applications offline with HTML5 AppCache</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="contributors">
+      <hgroup>
+        <h3>{% trans "Recent Contributors" %}</h3>
+      </hgroup>
+      <ul class="authors">
+        {% for a in authors %}
+          {% if forloop.counter0 < 4 %}
+          <li class="profile" id="{{ a.key.name }}" itemscope itemtype="http://microformats.org/profile/hcard">
+            <a href="/{{LANGUAGE_CODE}}/profiles#{{ a.key.name }}">
+              <img itemprop="photo" alt="{{ a.given_name }} {{ a.family_name }}" title="{{ a.given_name }} {{ a.family_name }}" src="/static/images/profiles/75/{{a.key.name}}.75.png">
+              <h2>
+                <div itemprop="fn">
+                  <div itemprop="n" itemscope>
+                    <span itemprop="given-name">{{ a.given_name }}</span>
+                    <span itemprop="family-name">{{ a.family_name }}</span>
+                  </div>
+                </div>
+              </h2>
+              <h3 itemprop="org" itemscope>
+                <div itemprop="organization-unit">{{ a.unit }}</div>
+                <div itemprop="organization-name">{{ a.org}}</div>
+              </h3>
+            </a>
+          </li>
+          {% endif %}
+          {% empty %}
+          Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  var selfPage = '{{self_pagename}}'; // Need to pass in current page id to persona.js via template.
+</script>
+<script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
+<script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
+{% endblock %}

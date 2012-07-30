@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+Copyright 2010 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Author: Eric Bidelman (ericbidelman@chromium.org)
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<title>HTML5 FileSystem API Terminal</title>
+<link href="http://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" type="text/css" />
+<style>
+::selection {
+  background: #FF5E99;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-size: 12px;
+  font-family: Inconsolata, monospace;
+  color: white;
+  background-color: black;
+  /*-webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;*/
+}
+.dropping {
+  background-image: -webkit-gradient(
+    linear, left bottom, left top,
+    color-stop(0.13, rgb(209,144,23)),
+    color-stop(0.57, rgb(251,173,51)),
+    color-stop(0.79, rgb(255,208,77))
+  );
+  background-image: -moz-linear-gradient(
+    center bottom,
+    rgb(209,144,23) 13%,
+    rgb(251,173,51) 57%,
+    rgb(255,208,77) 79%
+  )
+}
+#container {
+  padding: 1em 1.5em 1em 1em;
+  /*overflow: hidden;
+  white-space: nowrap;*/
+}
+#container output {
+  clear: both;
+  width: 100%;
+}
+#container output h3 {
+  margin: 0;
+}
+#container output pre {
+  margin: 0;
+}
+.input-line {
+  display: -webkit-box;
+  -webkit-box-orient: horizontal;
+  -webkit-box-align: stretch;
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-box-align: stretch;
+  display: box;
+  box-orient: horizontal;
+  box-align: stretch;
+  clear: both;
+}
+.input-line > div:nth-child(2) {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  box-flex: 1;
+}
+.prompt {
+  white-space: nowrap;
+  color: green;
+  margin-right: 7px;
+  display: -webkit-box;
+  -webkit-box-pack: center;
+  -webkit-box-orient: vertical;
+  display: -moz-box;
+  -moz-box-pack: center;
+  -moz-box-orient: vertical;
+  display: box;
+  box-pack: center;
+  box-orient: vertical;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+.cmdline {
+  outline: none;
+  background-color: transparent;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  border: none;
+  color: inherit;
+}
+.folder {
+  color: blue;
+}
+.ls-files {
+  height: 45px;
+  /* Default, but changed by js depending on length of filename */
+  -webkit-column-width: 100px;
+  -moz-column-width: 100px;
+  -o-column-width: 100px;
+  column-width: 100px;
+}
+/* Themes */
+body.cream {
+  color: black;
+  background-color: #fffff3;
+}
+.cream .prompt {
+  color: purple;
+}
+.cream .cmdline {
+  color: black;
+}
+</style>
+</head>
+<body>
+
+<div id="container">
+  <output></output>
+  <div id="input-line" class="input-line">
+    <div class="prompt">$&gt;</div><div><input class="cmdline" autofocus /></div>
+  </div>
+</div>
+
+<script src="terminal.js"></script>
+<script>
+(function() {
+  var term = new Terminal('#input-line .cmdline', '#container output');
+  term.initFS(false, 1024 * 1024);
+
+  if (document.location.hash) {
+    var theme = document.location.hash.substring(1).split('=')[1];
+    term.setTheme(theme);
+  } else if (localStorage.theme) {
+    term.setTheme(localStorage.theme);
+  }
+
+  // Setup the DnD listeners for file drop.
+  var body = document.querySelector('body');
+
+  body.addEventListener('dragenter', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.classList.add('dropping');
+  }, false);
+
+  body.addEventListener('dragover', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }, false);
+
+  body.addEventListener('drop', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.classList.remove('dropping');
+    term.addDroppedFiles(e.dataTransfer.files);
+    term.output('<div>File(s) added!</div>');
+  }, false);
+})();
+</script>
+</body>
+</html>

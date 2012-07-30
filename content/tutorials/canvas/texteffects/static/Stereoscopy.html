@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns = "http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Stereoscopy in canvas</title>
+<head>
+<style>
+img,canvas { vertical-align: middle; padding: 0 10px }
+</style>
+<script type="text/javascript">
+
+var image1 = new Image();
+var image2 = new Image();
+image1.src = "./media/pair1.png";
+image2.src = "./media/pair2.png";
+
+window.onload = function() {
+	// http://www.crystalxp.net/forum/en/Graphic-Tutorials/Miscellaneous-graphic-Tutorials/sujet_20570_1.htm
+	// creating canvas elements
+	var canvas1 = document.createElement('canvas');
+	var canvas2 = document.createElement('canvas');
+	// grabbing 2-dimensional context
+	var canvasContext = canvas1.getContext('2d');
+	var canvasContext2 = canvas2.getContext('2d');
+	// resizing <canvas>'s to the size of the image
+	var width = image1.width;
+	var height = image1.height;
+	canvas1.width = width;
+	canvas1.height = height;
+	canvas2.width = width;
+	canvas2.height = height;
+	// draw the two images to the <canvas>'s
+	canvasContext.drawImage(image1, 0, 0);
+	canvasContext2.drawImage(image2, 0, 0);
+	// grab the pixel data from the <canvas>'s
+	var imgData = canvasContext.getImageData(0, 0, width, height);
+	var imgData2 = canvasContext2.getImageData(0, 0, width, height);
+	var data = imgData.data;
+	var data2 = imgData2.data;
+	// loop through the pixels, and apply effect
+	var xmax = imgData.width;
+	var ymax = imgData.height;
+	for(var y = 0; y < ymax; y++) {
+		 for(var x = 0; x < xmax; x++) {
+			var i = (y * 4) * xmax + x * 4;
+			// seperate colors, and multiply the two layers together
+			data[i] = data[i] * 255 / 0xFF;
+			data[i+1] = 255 * data2[i+1] / 0xFF;
+			data[i+2] = 255 * data2[i+2] / 0xFF;
+		 }
+	}
+	// push the data to become visible on the canvas
+	canvasContext.putImageData(imgData, 0, 0);
+	// push the <canvas> to the content div
+	var d = document.getElementById("content");
+	d.appendChild(image1);
+	d.appendChild(document.createTextNode("+"));
+	d.appendChild(image2);
+	d.appendChild(document.createTextNode("="));
+	d.appendChild(canvas1);
+};
+</script>
+</head>
+<body style="background:#eee; font-size:20px; padding: 10px">
+<b>Stereoscopy in HTML5&rsquo;s &lt;canvas&gt; tag:</b>
+<div id="content" style="padding: 10px 0"></div>
+<li>Inspired by: <a href="http://www.crystalxp.net/forum/en/Graphic-Tutorials/Miscellaneous-graphic-Tutorials/sujet_20570_1.htm">Stereogram in GIMP</a><br>
+<li>Source-images from Stereo World&rsquo;s September/October 2007 issue, via <a href="http://www.ny3d.org/2007/09/stereo_world_presents_its_seco.html">NY3D</a>.
+</body>
+</html>

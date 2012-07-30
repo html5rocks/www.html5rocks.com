@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block headtitle %}Mobile{% endblock %}
+
+{% block head %}
+<!--<link rel="stylesheet" media="screen" href="/static/css/feature{% if prod %}.min{% endif %}.css" />-->
+{% endblock %}
+
+{% block body %}
+<div data-import-html>
+  <header class="two_columns clearfix pattern-bg-lighter">
+    <hgroup>
+      <img src="/static/images/banner-mobile.png" width="462" height="176">
+      <h1>
+        HTML5 Is Everywhere<br>
+        <span>Get Mobile!</span>
+      </h1>
+    </hgroup>
+
+    <section>
+      <p>The mobile web is growing up quickly, and tons of great HTML5 features are already supported on modern mobile browsers. Web developers can use the same set of technologies they know and love to build rich web applications that work across different device types.</p>
+      <p><a href="http://code.google.com/speed/articles/mobile.html">Make the mobile web faster</a></p>
+    </section>
+  </header>
+
+  <article class="sectioned">
+    <section class="feed one_half">
+      <h3>{% trans "Mobile" %} {% trans "Updates" %}</h3>
+      <ul id="updates_list">
+        {% for tut in tutorials %}
+          {% if tut.type != 'tutorial' and tut.type != 'article' %}
+            <li data-pubdate="{{tut.publication_date}}">
+              <span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span> <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}"></span>
+              <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}</a></span>
+              <span class="classes">
+                {% for tag in tut.classes %}
+                  <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
+                {% endfor %}
+              </span>
+            </li>
+          {% endif %}
+        {% empty %}
+          Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+        {% endfor %}
+      </ul>
+      <div><a href="/{{LANGUAGE_CODE}}/tutorials#audience:mobile">{% trans "Give me everything" %} &rarr;</a></div>
+    </section>
+
+    <section class="tutorials one_half">
+      <h3>{% trans "Mobile" %} {% trans "Tutorials" %}</h3>
+      <ul class="definitions">
+      {% for r in tutorials %}
+        {% if forloop.counter0 < 10 %}
+          {% if r.type == 'tutorial' or r.type == 'article' %}
+          <li>
+            <a href="{{r.url}}">{{r.title}}</a><br>
+            <span>{{r.description|safe|truncatewords:15}}</span>
+            </a>
+          </li>
+          {% endif %}
+        {% endif %}
+      {% empty %}
+        <p>Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.</p>
+      {% endfor %}
+      </ul>
+      <div><a href="/{{LANGUAGE_CODE}}/tutorials#audience:mobile">{% trans "Give me everything" %} &rarr;</a></div>
+    </section>
+
+    <section>
+      <hgroup>
+        <h3>{% trans "Frameworks" %}</h3>
+      </hgroup>
+      <ul class="two_columns">
+        <h4>Boilerplate</h4>
+        <li><a href="http://html5boilerplate.com/mobile">html5boilerplate.com/mobile</a> - A best practice baseline for your mobile web app</li>
+        <h4>Packaging frameworks</h4>
+        <li><a href="http://phonegap.com/">phonegap.com</a> - build native applications with web technologies and get access to APIs and app stores</li>
+        <li><a href="http://www.appmobi.com/">appmobi.com</a></li>
+        <h4>Web application frameworks</h4>
+        <li><a href="http://jquerymobile.com/">jquerymobile.com</a> - </li>
+        <li><a href="http://www.sencha.com/">sencha.com</a></li>
+        <li><a href="http://jqtouch.com/">jqtouch.com</a></li>
+        <li><a href="http://sproutcore.com/">sproutcore.com</a></li>
+      </ul>
+    </section>
+
+
+    <section>
+      <hgroup>
+        <h3>{% trans "Development Tools" %}</h3>
+      </hgroup>
+      <ul class="two_columns">
+        <h4>Debugging</h4>
+        <li><a href="http://phonegap.github.com/weinre/">WEINRE</a> - WEb INspector REmote</li>
+        <li><a href="http://www.webkit.org/blog/1620/webkit-remote-debugging/">WebKit Remote Debugging</a></li>
+        <h4>Emulators & Simulators</h4>
+        <li><a href="http://www.mobilexweb.com/emulators">Mobile Emulators and Simulators</a></li>
+        <li><a href="http://developer.android.com/guide/developing/tools/emulator.html">Android Emulator</a></li>
+        <li><a href="http://developer.apple.com/library/ios/#documentation/Xcode/Conceptual/ios_development_workflow/00-About_the_iOS_Application_Development_Workflow/introduction.html">iOS Tools Workflow</a></li>
+        <li><a href="http://smus.com/multi-touch-browser-patch">Multi-Touch for Desktop</a></li>
+        <h4>Performance</h4>
+        <li><a href="http://stevesouders.com/mobileperf/mobileperfbkm.php">Mobile Perf Bookmarklet</a> - links to multiple other bookmarklets useful for mobile.</li>
+        <li><a href="http://jdrop.org">jdrop.org</a> - JSON in the cloud for gathering data</li>
+        <li><a href="http://www.blaze.io/mobile/">blaze.io/mobile</a> - Free Mobile Web Performance Measurement Tool</li>
+        <li><a href="http://pcapperf.appspot.com/">pcapperf.appspot.com</a> - PCAP Web Performance Analyzer</li>
+      </ul>
+    </section>
+
+    <section class="compatibility one_half">
+      <h3>{% trans "Compatibility" %}</h3>
+      <ul>
+      <li><a href="http://caniuse.com">caniuse.com</a> - When can I use...</li>
+      <li><a href="http://mobilehtml5.org">mobilehtml5.org</a> - HTML5 compatibility on mobile and tablet browsers.</li>
+      <li><a href="http://html5test.com/results-mobile.html">html5test.com</a> - How well does your browser support HTML5?</li>
+      <li><a href="http://gs.statcounter.com/#mobile_browser-ww-monthly-201012-201112">statcounter.com</a> - Top mobile browser usage.</li>
+      <li><a href="http://www.quirksmode.org/m/">quirksmode.org mobile tests</a> - PPK's link page to all mobile test cases.</li>
+      </ul>
+    </section>
+
+    <section class="inspiration one_half">
+      <h3>{% trans "Inspiration" %}</h3>
+      <ul>
+      <li><a href="http://mobile-patterns.com/">mobile-patterns.com</a> - Mobile UI Patterns</li>
+      <li><a href="http://pttrns.com/">pttrns.com</a> - Another gallery of Mobile UI</li>
+      <li><a href="http://www.mobileawesomeness.com/">mobileawesomeness.com</a> - the best in mobile web design and developer news.</li>
+      </ul>
+    </section>
+
+    <section class="contributors">
+      <hgroup>
+        <h3>{% trans "Recent Contributors" %}</h3>
+      </hgroup>
+      <ul class="authors">
+        {% for a in authors %}
+          {% if forloop.counter0 < 10 %}
+          <li class="profile" id="{{ a.key.name }}" itemscope itemtype="http://microformats.org/profile/hcard">
+            <a href="/{{LANGUAGE_CODE}}/profiles#{{ a.key.name }}">
+              <img itemprop="photo" alt="{{ a.given_name }} {{ a.family_name }}" title="{{ a.given_name }} {{ a.family_name }}" src="/static/images/profiles/75/{{a.key.name}}.75.png">
+              <h2>
+                <div itemprop="fn">
+                  <div itemprop="n" itemscope>
+                    <span itemprop="given-name">{{ a.given_name }}</span>
+                    <span itemprop="family-name">{{ a.family_name }}</span>
+                  </div>
+                </div>
+              </h2>
+              <h3 itemprop="org" itemscope>
+                <div itemprop="organization-unit">{{ a.unit }}</div>
+                <div itemprop="organization-name">{{ a.org}}</div>
+              </h3>
+            </a>
+          </li>
+          {% endif %}
+          {% empty %}
+          Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+        {% endfor %}
+      </ul>
+    </section>
+  </article>
+
+</div>
+
+<script>
+  var selfPage = '{{self_pagename}}'; // Need to pass in current page id to persona.js via template.
+</script>
+<script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
+<script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
+<!--<script  class="import_script">
+  window.caniuse = {
+    caniusefeatures: [],
+    features: 'mobile'
+  }
+  if (window.loadFeaturePanels) {
+    loadFeaturePanels();
+  }
+</script>-->
+{% endblock %}

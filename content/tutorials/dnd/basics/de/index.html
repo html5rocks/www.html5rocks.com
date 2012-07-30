@@ -1,0 +1,768 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<style>
+figure img { border: 1px solid #ccc; }
+h1,h2,h3,h4 { clear: both; }
+/* Prevent the contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+dd {
+  padding: 5px 0;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -moz-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  -o-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+  margin-bottom: 30px;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -o-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  -o-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  -ms-border-radius-topright: 10px;
+  -o-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+#columns-full .column {
+  -webkit-transition: -webkit-transform 0.2s ease-out;
+  -moz-transition: -moz-transform 0.2s ease-out;
+  -o-transition: -o-transform 0.2s ease-out;
+  -ms-transition: -ms-transform 0.2s ease-out;
+}
+#columns-full .column.over,
+#columns-dragOver .column.over,
+#columns-dragEnd .column.over,
+#columns-almostFinal .column.over {
+  border: 2px dashed #000;
+}
+#columns-full .column.moving {
+  opacity: 0.25;
+  -webkit-transform: scale(0.8);
+  -moz-transform: scale(0.8);
+  -ms-transform: scale(0.8);
+  -o-transform: scale(0.8);
+}
+#columns-full .column .count {
+  padding-top: 15px;
+  font-weight: bold;
+  text-shadow: #fff 0 1px;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.draganddrop;
+{% endblock %}
+
+{% block content %}
+
+  <h2 id="toc-introduction">Einführung</h2>
+
+  <p>Jahrelang haben wir Bibliotheken wie JQuery und Dojo zur Vereinfachung von komplexen Elementen der Benutzeroberfläche wie Animationen, abgerundeten Ecken und Drag &amp; Drop eingesetzt. Ein Blickfang ist für überzeugende, immersive Erfahrungen im Web zweifellos wichtig. Doch warum sollte für gängige Aufgaben, die von allen Entwicklern durchgeführt werden, eine Bibliothek erforderlich sein?</p>
+
+  <p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Drag &amp; Drop</a> (DnD) ist ein HTML5-Spitzenmerkmal! In der Spezifikation sind ein Mechanismus auf Basis von Ereignissen, das JavaScript-API und eine zusätzliche Auszeichnung definiert, durch die deklariert wird, dass buchstäblich jede Art von Element auf einer Seite ziehbar (<code>draggable</code>) sein kann. Gegen nativen Browsersupport für eine bestimmte Funktion kann wohl niemand Einwände haben. Natives DnD bei Browsern führt zu schnelleren, reaktionsfähigeren Web-Apps.</p>
+
+  <h3 id="toc-feature-detection">Funktionserkennung</h3>
+
+  <p>Viele Apps, in denen DnD eingesetzt wird, wären ohne diese Funktion nicht gerade benutzerfreundlich. Stellen Sie sich beispielsweise Schachfiguren vor, die sich nicht bewegen lassen. Hoppla! Auch bei einem schon recht umfassenden Browsersupport ist es wichtig zu bestimmen, ob ein Browser DnD – oder eine beliebige HTML5-Funktion zu diesem Zweck – implementiert, um eine Lösung mit ansprechendem Ausblendeffekt bereitstellen zu können. Wenn DnD nicht verfügbar ist, aktivieren Sie den Fallback der Bibliothek, damit die betreffende App weiter funktioniert.</p>
+
+  <p>Falls Sie ein API verwenden müssen, nutzen Sie grundsätzlich die Funktionserkennung, statt den Header "User-Agent" des Browsers zu durchsuchen. Eine der besseren Bibliotheken für die Funktionserkennung ist <a href="http://www.modernizr.com/">Modernizr</a>. Modernizr legt für jede getestete Funktion eine boolesche Eigenschaft fest. Daher bedarf es zur Prüfung auf DnD nur einer Zeile:</p>
+  <pre class="prettyprint">
+if (Modernizr.draganddrop) {
+  // Browser supports HTML5 DnD.
+} else {
+  // Fallback to a library solution.
+}
+</pre>
+
+  <h2 id="toc-creating-dnd-content">Ziehbare Inhalte erstellen</h2>
+
+  <p>Es ist ganz einfach, ein Objekt als ziehbar zu definieren. Stellen Sie für das Element, das verschiebbar sein soll, das <code>draggable=true</code>-Attribut ein. Die Drag-Funktion lässt sich für nahezu alles aktivieren, unter anderem für Bilder, Links, Dateien oder andere DOM-Knoten.</p>
+
+  <p>Als Beispiel soll zunächst die Erstellung von Spalten dienen, die neu angeordnet werden können. Die grundlegende Auszeichnung könnte zum Beispiel so aussehen:</p>
+
+  <pre class="prettyprint">
+&lt;div id="columns"&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;A&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;B&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;C&lt;/header&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+  <p>In den meisten Browsern sind ausgewählter Text sowie "img"- und "anchor"-Elemente mit einem <code>href</code>-Attribut standardmäßig ziehbar. Durch Ziehen des Logos auf google.com wird beispielsweise ein Doppelbild erzeugt:</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/dnd/img_drag.png" width="500" height="269" title="Bild im Browser ziehen" alt="Bild im Browser ziehen"  />
+    <figcaption>Die meisten Browser unterstützen standardmäßig das Ziehen von Bildern.</figcaption>
+  </figure>
+
+  <p>das in der Adressleiste, einem <code>&lt;input type="file" /&gt;</code>-Element oder sogar auf dem Desktop abgelegt werden kann. Zur Aktivierung der Ziehbarkeit für andere Arten von Inhalten benötigen Sie die HTML5-DnD-APIs.</p>
+
+  <p>Mit ein wenig CSS3-Magie können wir unsere Auszeichnung mit dem Aussehen von Spalten aufpolieren. Durch Hinzufügen von <code>cursor: move</code> wird Nutzern bei verschiebbaren Elementen ein entsprechender visueller Indikator angezeigt:</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -ms-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+&lt;/style&gt;
+</pre>
+
+  <p>Ergebnis – ziehbar, ohne das etwas geschieht:</p>
+  <div id="columns">
+    <div class="column" draggable="true"><header>A</header></div>
+    <div class="column" draggable="true"><header>B</header></div>
+    <div class="column" draggable="true"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">Im Beispiel oben wird von den meisten Browsern ein Doppelbild des gezogenen Inhalts erzeugt. Bei anderen Browsern, insbesondere FF, müssen während des Drag-Vorgangs <a href="#toc-dataTransfer">Daten gesendet werden</a>. Im nächsten Abschnitt beginnen wir damit, unser Spaltenbeispiel etwas interessanter zu gestalten. Dazu fügen wir Listener für die Verarbeitung des Drag/Drop-Ereignismodells hinzu.</p>
+
+  <h2 id="toc-dragging-events">Horchen auf Ziehereignisse</h2>
+
+  <p>Es gibt eine Reihe von verschiedenen Ereignissen zur Überwachung des gesamten Drag &amp; Drop-Vorgangs:</p>
+  <ul>
+    <li><code>dragstart</code></li>
+    <li><code>drag</code></li>
+    <li><code>dragenter</code></li>
+    <li><code>dragleave</code></li>
+    <li><code>dragover</code> </li>
+    <li><code>drop</code></li>
+    <li><code>dragend</code></li>
+  </ul>
+
+  <p>Zur Handhabung des DnD-Ablaufs müssen wir eine Vorstellung vom Quellelement haben, das heißt vom Ursprung des gezogenen Elements, von der Datennutzlast, also vom zu ziehenden Element, und vom Ziel, das heißt vom Bereich, der das abgelegte Element aufnimmt. Das Quellelement kann eine Liste, ein Bild, Link, Dateiobjekt, HTML-Block oder beliebiges anderes Element sein. Das Ziel ist die Drop-Zone oder eine Gruppe von Drop-Zonen, die die Daten aufnimmt, die der Nutzer abzulegen versucht. Vergessen Sie nicht, dass nicht alle Elemente – beispielsweise Bilder – Ziele sein können.</p>
+
+  <h3 id="toc-dragstart">1. Drag-Vorgang starten</h3>
+
+  <p>Nachdem Sie <code>draggable="true"</code>-Attribute für die Inhalte definiert haben, fügen Sie <code>dragstart</code>-Ereignis-Handler hinzu, um die DnD-Sequenz für jede Spalte zu beginnen.</p>
+
+  <p>Durch diesen Code wird die Deckkraft der Spalte auf 40 % festgelegt, wenn der Nutzer beginnt, sie zu ziehen:</p>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+});
+</pre>
+
+  <p>Ergebnis:</p>
+  <div id="columns-dragStart">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="clear:both">Ziel des <code>dragstart</code>-Ereignisses ist unser Quellelement. Daher erhält der Nutzer durch die Einstellung von <code>this.style.opacity</code> auf 40 % ein visuelles Feedback dafür, dass die aktuelle Auswahl verschoben wird. Nach Abschluss des Drag-Vorgangs müssen wir die Deckkraft der Spalten wieder auf 100 % einstellen. Hierzu bietet sich das <code>dragend</code>-Ereignis an. Weitere Infos zu diesem Thema folgen später.</p>
+
+  <h3 id="toc-dragover-dragleave">2. "dragenter", "dragover" und "dragleave"</h3>
+
+  <p>Mit <code>dragenter</code>-, <code>dragover</code>- und <code>dragleave</code>-Ereignis-Handlern können Sie während des Drag-Vorgangs weitere visuelle Hinweise bereitstellen. Wenn beispielsweise während eines Drag-Vorgangs die Maus über einer Spalte bewegt wird, könnten ihre Ränder gestrichelt angezeigt werden. Hierdurch erfahren die Nutzer, dass die Spalten auch Drop-Ziele sind.</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+.column.over {
+  border: 2px dashed #000;
+}
+&lt;/style&gt;
+</pre>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+<span class="new">function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnter(e) {
+  // this / e.target is the current hover target.
+  this.classList.add('over');
+}</span>
+
+<span class="new">function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  <span class="new">col.addEventListener('dragenter', handleDragEnter, false);
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);</span>
+});
+</pre>
+
+  <p>In diesem Code gibt es eine Reihe von Punkten, deren genauere Betrachtung sich lohnt:</p>
+
+  <ul>
+    <li><code>this</code>/<code>e.target</code> ändert sich für jede Art von Ereignis, je nachdem, an welcher Stelle im DnD-Ereignismodell wir uns befinden.</li>
+    <li>Beim Ziehen eines Elements, etwa eines Links, muss das Standardverhalten des Browsers unterbunden werden, nämlich dass zu diesem Link navigiert wird. Rufen Sie dazu <code>e.preventDefault()</code> im <code>dragover</code>-Ereignis auf. Eine weitere bewährte Praxis ist die Verwendung des <code>return false</code>-Befehls im selben Handler. Diese Maßnahmen sind zwar nicht bei allen Browsern erforderlich, doch es schadet nicht, sie durchgängig hinzuzufügen.</li>
+    <li>Mit <code>dragenter</code> wird die 'over'-Klasse anstelle von <code>dragover</code> umgeschaltet. Wenn wir <code>dragover</code> verwenden müssten, würde unsere CSS-Klasse häufig umgeschaltet, weil das <code>dragover</code>-Ereignis beim Bewegen der Maus über der Spalte weiterhin ausgelöst würde. Dies würde letztlich dazu führen, dass der Renderer des Browsers einer hohen unnötigen Arbeitsbelastung ausgesetzt wäre. Es empfiehlt sich stets, die Anzahl der Aktualisierungen auf ein Minimum zu beschränken.</li>
+  </ul>
+
+  <h3 id="toc-dragend">3. Drag-Vorgang abschließen</h3>
+
+  <p>Zur Verarbeitung des eigentlichen Drop-Vorgangs fügen Sie einen Ereignis-Listener für die <code>drop</code>- und <code>dragend</code>-Ereignisse hinzu. In diesem Handler muss das Standardverhalten für Drop-Vorgänge unterbunden werden, in der Regel eine lästige Weiterleitung. Sie können das Eintreten des Ereignisses in DOM durch einen Aufruf von <code>e.stopPropagation()</code> verhindern.</p>
+
+  <p style="padding-top:10px;clear:both">Bei unserem Spaltenbeispiel würde ohne das <code>drop</code>-Ereignis nicht viel geschehen. Zuvor entfernen wir aber mithilfe von <code>dragend</code> die 'over'-Klasse aus jeder Spalte und sorgen so für eine sofortige Verbesserung:</p>
+
+<pre class="prettyprint">
+...
+
+<span class="new">function handleDrop(e) {
+  // this / e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // stops the browser from redirecting.
+  }
+
+  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnd(e) {
+  // this/e.target is the source node.
+
+  [].forEach.call(cols, function (col) {
+    col.classList.remove('over');
+  });
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  col.addEventListener('dragenter', handleDragEnter, false)
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);
+  <span class="new">col.addEventListener('drop', handleDrop, false);
+  col.addEventListener('dragend', handleDragEnd, false);</span>
+});
+</pre>
+
+  <p>Ergebnis:</p>
+  <div id="columns-dragEnd">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">Wenn Sie bis hierhin aufmerksam gefolgt sind, haben Sie möglicherweise bemerkt, dass die Spalte in unserem Beispiel immer noch nicht erwartungsgemäß abgelegt wird. Hier kommt das <code>DataTransfer</code>-Objekt ins Spiel.</p>
+
+  <h2 id="toc-dataTransfer">Das DataTransfer-Objekt</h2>
+
+  <p>Bei DnD spielt die <code>dataTransfer</code>-Eigenschaft eine zentrale Rolle. Sie enthält die bei einer Drag-Aktion gesendeten Daten. <code>dataTransfer</code> wird im <code>dragstart</code>-Ereignis festgelegt und im <code>drop</code>-Ereignis gelesen bzw. verarbeitet. Durch einen Aufruf von <code>e.dataTransfer.setData(format, data)</code> wird der Inhalt des Objekts auf den MIME-Typ und die Datennutzlast festgelegt, die als Argumente weitergegeben werden.</p>
+
+  <p>In unserem Beispiel wird die Datennutzlast auf die HTML-Codierung der Quellspalte festgelegt:</p>
+
+<pre class="prettyprint">
+var dragSrcEl = null;
+
+function handleDragStart(e) {
+  // Target (this) element is the source node.
+  this.style.opacity = '0.4';
+
+  dragSrcEl = this;
+
+  <span class="new">e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);</span>
+}
+</pre>
+
+  <p>Praktischerweise verfügt <code>dataTransfer</code> auch über eine <code>getData(format)</code>-Methode zum Abruf der Drag-Daten anhand des MIME-Typs. Hier sehen Sie die Änderung zur Verarbeitung des Drop-Vorgangs für die Spalte:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  // this/e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // Stops some browsers from redirecting.
+  }
+
+  <span class="new">// Don't do anything if dropping the same column we're dragging.
+  if (dragSrcEl != this) {
+    // Set the source column's HTML to the HTML of the columnwe dropped on.
+    dragSrcEl.innerHTML = this.innerHTML;
+    this.innerHTML = e.dataTransfer.getData('text/html');
+  }</span>
+
+  return false;
+}
+</pre>
+
+  <p>Zur Vereinfachung des Spaltenaustauschs habe ich eine globale Variable <code>dragSrcEl</code> hinzugefügt. In <code>handleDragStart()</code> wird das <code>innerHTML</code>-Element der Quellspalte in dieser Variablen gespeichert und später in <code>handleDrop()</code> gelesen, um den HTML-Code der Quell- und Zielspalte auszutauschen.</p>
+
+  <p>Ergebnis:</p>
+  <div id="columns-almostFinal">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <h3 id="toc-drag-properties">Dragging-Eigenschaften</h3>
+
+  <p><code>dataTransfer</code> stellt Eigenschaften für ein visuelles Feedback an den Nutzer während des Drag-Vorgangs bereit. Mit diesen Eigenschaften lässt sich außerdem steuern, wie jedes Drop-Ziel auf einen bestimmten Datentyp reagiert.</p>
+  
+  <dl>
+    <dt><code>dataTransfer.effectAllowed</code></dt>
+    <dd>Beschränkt, welche Art von Drag-Vorgang der Nutzer für das Element ausführen kann. Diese Eigenschaft wird im Drag &amp; Drop-Verarbeitungsmodell verwendet, um <code>dropEffect</code> während der <code>dragenter</code>- und <code>dragover</code>-Ereignisse zu initialisieren. Sie kann auf folgende Werte eingestellt werden: <code>none</code>, <code>copy</code>, <code>copyLink</code>, <code>copyMove</code>, <code>link</code>, <code>linkMove</code>, <code>move</code>, <code>all</code> und <code>uninitialized</code>.
+    </dd>
+    <dt><code>dataTransfer.dropEffect</code></dt>
+    <dd>Steuert das Feedback, das der Nutzer während der <code>dragenter</code>- und <code>dragover</code>-Ereignisse erhält. Wenn der Nutzer die Maus über ein Zielelement bewegt, zeigt der Cursor des Browsers an, welche Art von Vorgang stattfinden wird, beispielsweise ein Kopiervorgang, eine Verschiebung und so weiter. Der Effekt kann einen der folgenden Werte annehmen: <code>none</code>, <code>copy</code>, <code>link</code> und <code>move</code>.
+    </dd>
+    <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
+    <dd>Statt des standardmäßigen Doppelbilds des Browsers können Sie optional ein Ziehsymbol als Feedback festlegen: 
+<pre class="prettyprint">
+var dragIcon = document.createElement('img');
+dragIcon.src = 'logo.png';
+dragIcon.width = 100;
+e.dataTransfer.setDragImage(dragIcon, -10, -10);</pre>
+    <p>Ergebnis – Sie sollten beim Ziehen dieser Spalten das Google-Logo sehen:</p>
+    <div id="columns-dragIcon">
+      <div class="column"><header>A</header></div>
+      <div class="column"><header>B</header></div>
+      <div class="column"><header>C</header></div>
+    </div>
+    </dd>
+  </dl>
+
+  <h2 id="toc-dnd-files">Dateien ziehen</h2>
+
+  <p>Bei den DnD-APIs ist es möglich, Dateien im Browserfenster vom Desktop in Ihre Web-App zu ziehen. Google Chrome greift diese Idee auf und unterstützt die Möglichkeit, Dateiobjekte aus dem Browser auf den Desktop zu ziehen.</p>
+
+  <h3 id="toc-desktop-dnd-into">Hineinziehen: Vom Desktop in den Browser ziehen</h3>
+
+  <p>Mithilfe von DnD-Ereignissen als weiteren Inhaltsarten lässt sich eine Datei vom Desktop ziehen. Der Hauptunterschied liegt im <code>drop</code>-Handler. Es wird nicht mit <code>dataTransfer.getData()</code> auf die Dateien zugegriffen, sondern die Daten sind in der <code>dataTransfer.files</code>-Eigenschaft enthalten:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  e.stopPropagation(); // Stops some browsers from redirecting.
+  e.preventDefault();
+
+  var files = e.dataTransfer.files;
+  for (var i = 0, f; f = files[i]; i++) {
+    // Read the File objects in this FileList.
+  }
+}
+</pre>
+
+  <p>Eine vollständige Anleitung dazu, wie Sie Dateien vom Desktop in den Browser ziehen, finden Sie unter <a href="/tutorials/file/dndfiles/#toc-selecting-files-dnd">Verwenden von Drag &amp; Drop für die Auswahl</a> in "<a href="/tutorials/file/dndfiles/">Lesen lokaler Dateien in JavaScript</a>".</p>
+
+  <h3 id="toc-desktop-dnd-out">Herausziehen: Ziehen vom Browser auf den Desktop</h3>
+
+  <p>Eine vollständige Anleitung dazu, wie Sie Dateien vom Browser auf den Desktop ziehen, finden Sie unter <a href="http://www.thecssninja.com/javascript/gmail-dragout">Drag out files like Gmail</a>" (Dateien wie Google Mail herausziehen) im CSS-Ninja.</p>
+
+  <h2 id="toc-examples">Beispiele</h2>
+
+  <p>Hier sehen Sie das fertige Produkt, das nun ein wenig aufpoliert und mit einem Zähler für jede Verschiebung versehen ist:</p>
+  <div id="columns-full">
+    <div class="column"><header>A</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>B</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>C</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>D</header><div class="count" data-col-moves="0"></div></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">Beim Spaltenbeispiel besteht der interessante Aspekt darin, dass die Spalten sowohl Drag-Quelle als auch Drop-Ziel sind. In einem gängigeren Szenario sind die Quell- und Zielelemente nicht identisch. Eine Demo finden Sie unter <a href="http://html5demos.com/drag">html5demos.com/drag</a>.</p>
+
+<!--
+  other examples:
+  <li>Rearrange list</li> 
+  <li>Creating an image gallery</li> 
+  <li>Exporting a canvas image</li> 
+-->
+
+  <h2 id="toc-conclusion">Fazit</h2>
+
+  <p>Niemand wird bestreiten, dass das DnD-Modell von HTML5 im Vergleich zu anderen Lösungen wie der JQuery-Benutzeroberfläche ziemlich komplex ist. Wenn Sie jedoch die nativen APIs des Browsers nutzen können, sollten Sie dies grundsätzlich tun! Dies ist letzten Endes der Aspekt, der HTML5 ausmacht: Es geht um das Standardisieren und Verfügbarmachen einer Gruppe von leistungsfähigen APIs, die nativ in den Browser integriert sind. Irgendwann einmal werden gängige Bibliotheken mit implementierter DnD-Funktionalität hoffentlich standardmäßig nativen Support für HTML5 und Fallback-Merkmale zur bedarfsgerechten Anpassung einer JavaScript-Lösung umfassen.</p>
+
+  <h2 id="toc-references">Referenzen</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Drag &amp; Drop</a>-Spezifikation</li> 
+    <li><a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">Drag Operations</a> (Drag-Vorgänge) von MDN (Mozilla Developer Network)</li>
+    <li>"<a href="http://html5doctor.com/native-drag-and-drop/">Native Drag and Drop</a>" (Natives Drag &amp; Drop), Artikel von HTML5 Doctor</li>
+    <li>"<a href="http://www.thecssninja.com/javascript/gmail-dragout">Drag out files like Gmail</a>" (Dateien wie Google Mail herausziehen) im CSS-Ninja</li>
+  </ul>
+
+<script>
+// Using this polyfill for safety.
+Element.prototype.hasClassName = function(name) {
+  return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+};
+
+Element.prototype.addClassName = function(name) {
+  if (!this.hasClassName(name)) {
+    this.className = this.className ? [this.className, name].join(' ') : name;
+  }
+};
+
+Element.prototype.removeClassName = function(name) {
+  if (this.hasClassName(name)) {
+    var c = this.className;
+    this.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+  }
+};
+
+
+var samples = samples || {};
+
+// dragStart
+(function() {
+  var id_ = 'columns-dragStart';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', 'blah'); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+  });
+
+})();
+
+// dragEnd
+(function() {
+  var id_ = 'columns-dragEnd';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+
+    // target element (this) is the source node.
+    this.style.opacity = '1';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+
+})();
+
+// dragIcon
+(function() {
+  var id_ = 'columns-dragIcon';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    var dragIcon = document.createElement('img');
+    dragIcon.src = '/static/images/google_logo_small.png';
+    e.dataTransfer.setDragImage(dragIcon, -10, -10);
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+  });
+
+})();
+
+// Almost final example
+(function() {
+  var id_ = 'columns-almostFinal';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    this.style.opacity = '0.4';
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+    
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+
+// Full example
+(function() {
+  var id_ = 'columns-full';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+
+      // Set number of times the column has been moved.
+      var count = this.querySelector('.count');
+      var newCount = parseInt(count.getAttribute('data-col-moves')) + 1;
+      count.setAttribute('data-col-moves', newCount);
+      count.textContent = 'moves: ' + newCount;
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+</script>
+
+{% endblock %}

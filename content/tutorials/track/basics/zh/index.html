@@ -1,0 +1,411 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="本文由 HTML5 音频/视频强力驱动" title="本文由 HTML5 音频/视频强力驱动"  />
+{% endblock %}
+
+{% block iscompatible %}
+return !!document.createElement("video").textTracks;
+{% endblock %}
+
+{% block head %}
+<style>
+video {
+  max-width: 100%;
+  outline: none;
+}
+div#eric video {
+-webkit-box-reflect: below 5px -webkit-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-moz-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-ms-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-o-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+margin: 0;
+}
+
+div#eric  {
+  text-align: center;
+}
+
+div#eric > div {
+margin-top: 2em;
+text-align: center;
+-webkit-perspective: 800;
+-webkit-transform-style: preserve-3d;
+-moz-perspective: 800;
+-moz-transform-style: preserve-3d;
+-ms-perspective: 800;
+-ms-transform-style: preserve-3d;
+-o-perspective: 800;
+-o-transform-style: preserve-3d;
+}
+
+div#eric > div > div:last-child {
+position: relative;
+top: -36px;
+}
+div#eric > div > div {
+color: black;
+font-family: "Open Sans", sans-serif;
+font-size: 18px;
+height:  25px;
+opacity: 1;
+-webkit-transition: all 500ms ease-in-out;
+-webkit-transform-origin: 50% 100%;
+-webkit-transform: rotateX(-90deg);
+-moz-transition: all 500ms ease-in-out;
+-moz-transform-origin: 50% 100%;
+-moz-transform: rotateX(-90deg);
+-o-transition: all 500ms ease-in-out;
+-o-transform-origin: 50% 100%;
+-o-transform: rotateX(-90deg);
+-ms-transition: all 500ms ease-in-out;
+-ms-transform-origin: 50% 100%;
+-ms-transform: rotateX(-90deg);
+}
+div#eric > div > div.on {
+opacity: 1;
+-webkit-transform: rotateX(0);
+-moz-transform: rotateX(0);
+-o-transform: rotateX(0);
+-ms-transform: rotateX(0);
+}
+.trackNotSupported {
+  display: none;
+}
+.trackNotSupported.show {
+  display: block;
+}
+.warningMessage {
+  color: red;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">HTML5 跟踪元素使用入门</h2>
+
+<p>跟踪元素提供了一种简单的标准方法，供您将字幕、解说、屏幕阅读器说明和章节添加到视频和音频中。</p>
+
+<p>跟踪还可用于其他种类的定时元数据。每个跟踪元素的源数据都是由定时 <code>cues</code> 列表组成的文本文件，插入点可包含 JSON 或 CSV 格式的数据。这种极其强大的结构可让您通过文本搜索、DOM 操作或与媒体播放同步的其他行为实现深层链接和媒体导航。</p>
+
+<p>目前，跟踪元素适用于 <a href="http://ie.microsoft.com/testdrive/" title="Internet Explorer 10 下载">Internet Explorer 10</a> 和 <a href="http://tools.google.com/dlpage/chromesxs" title="Chrome 浏览器 Canary 版下载">Chrome 浏览器 18</a> 及更高版本。Firefox 支持<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Firefox 跟踪元素实施错误报告">尚未实施</a>。在 Chrome 浏览器中，您必须访问 <a href="chrome://flags" title="chrome://flags 页面">chrome://flags</a> 页面启用跟踪元素支持。</p>
+
+<p>下面是一个包含跟踪元素的视频的简单示例。播放视频以查看英语字幕：</p>
+ 
+<video controls class="trackSupported">
+  <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
+  <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
+</video>
+
+<p class="warningMessage trackNotSupported">此演示需要支持跟踪元素的浏览器，例如 <a href="http://tools.google.com/dlpage/chromesxs" title="Google Chrome 浏览器 Canary 版下载">Google Chrome 浏览器 Canary 版</a>。在 Chrome 浏览器中，您必须访问 chrome://flags 页面启用跟踪元素支持。</p>
+
+<p>包含英语和德语字幕的视频元素代码如下所示：</p>
+
+<pre class="prettyprint">
+&lt;video src="foo.ogv"&gt;
+  &lt;track kind="subtitles" label="English subtitles" src="subtitles_en.vtt" srclang="en" default&gt;&lt;/track&gt;
+  &lt;track kind="subtitles" label="Deutsche Untertitel" src="subtitles_de.vtt" srclang="de"&gt;&lt;/track&gt;
+&lt;/video&gt;
+</pre>
+
+<p>在此示例中，视频元素将显示一个选择器，供用户选择字幕语言（但在撰写本文时，该选择器尚未实施）。</p>
+
+<p>请注意，您无法通过 <code>file://</code> 网址使用跟踪元素。要查看有效跟踪，请将文件放到网络服务器上。</p>
+
+<p>每个跟踪元素都有 <code>kind</code> 属性，其值可为 <code>subtitles</code>、<code>captions</code>、<code>descriptions</code>、<code>chapters</code> 或 <code>metadata</code>。跟踪元素 <code>src</code> 属性指向保存定时跟踪插入点数据的文本文件，该文件可采用浏览器可解析的任何格式。Chrome 浏览器支持 WebVTT，具体如下所示：</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+railroad
+00:00:10.000 --> 00:00:12.500
+Left uninspired by the crust of railroad earth
+
+manuscript
+00:00:13.200 --> 00:00:16.900
+that touched the lead to the pages of your manuscript.
+</pre>
+
+<p>跟踪文件中的每一项称为一个插入点。每个插入点均由以箭头分隔的开始时间和结束时间组成，插入点文本位于下一行中。插入点也可以包含 ID：以上示例中的“railroad”和“manuscript”。插入点以空行分隔。</p>
+
+<p>插入点时间的格式为“小时:分钟:秒:毫秒”。请注意！解析过程很严格。如果可以，您必须用零补足位数：小时、分钟和秒必须为两位数（零值为 00），毫秒必须为三位数（零值为 000）。您可以访问 <a href="http://quuz.org/webvtt/">quuz.org/webvtt</a>，使用这个超实用的 WebVTT 验证器检查时间格式错误和时间不连续等问题。</p>
+
+<p>以下演示介绍了如何通过搜索字幕在视频中导航。</p>
+
+<!-- subtitle search example -->
+
+<h2 id="toc-jsoncues">在插入点中使用 HTML 和 JSON</h2>
+
+<p>在 WebVTT 文件中，插入点文本可为多行，前提是每行都不为空。也就是说，插入点可以包含 HTML：</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+&lt;p>Multi-celled organisms have different types of cells that perform specialised functions.&lt;/p>
+&lt;p>Most life that can be seen with the naked eye is multi-cellular.&lt;/p>
+&lt;p>These organisms are though to have evolved around 1 billion years ago with plants, animals and fungi having independent evolutionary paths.&lt;/p>
+</pre>
+
+<p>再进一步，插入点也可以使用 JSON：</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+{
+"title": "Multi-celled organisms",
+"description": "Multi-celled organisms have different types of cells that perform specialised functions.
+  Most life that can be seen with the naked eye is multi-cellular. These organisms are though to
+  have evolved around 1 billion years ago with plants, animals and fungi having independent
+  evolutionary paths.",
+"src": "multiCell.jpg",
+"href": "http://en.wikipedia.org/wiki/Multicellular"
+}
+
+insects
+00:02:18.800 --> 00:03:01.600
+{
+"title": "Insects",
+"description": "Insects are the most diverse group of animals on the planet with estimates for the total
+  number of current species range from two million to 50 million. The first insects appeared around
+  400 million years ago, identifiable by a hard exoskeleton, three-part body, six legs, compound eyes
+  and antennae.",
+"src": "insects.jpg",
+"href": "http://en.wikipedia.org/wiki/Insects"
+}
+</pre>
+
+<p>插入点对结构化数据的支持让跟踪元素变得无比强大而灵活。网络应用可以侦听插入点事件，在事件触发时提取每个插入点的文本，解析相关数据，然后使用结果执行与媒体播放同步的 DOM 更改（或执行其他 JavaScript 或 CSS 任务）。</p>
+
+<h2 id="toc-search">搜索和深层导航</h2>
+
+<p>您也可以通过跟踪向音频和视频添加值，从而让搜索变得更轻松、更强大、更准确。</p>
+<p>插入点包含可编入索引的文本，以及表示内容在媒体中的临时“位置”的开始时间。插入点甚至可以包含有关视频帧中内容位置的数据。结合<a href="http://www.youtube.com/watch?v=LfRRYp6mnu0" title="展示原型媒体片段 URI 实施的 YouTube 视频">媒体片段 URI</a>，跟踪可以提供强大的机制，供您查找和导航到音频和视频中的内容。例如，如果搜索“张三”，返回的结果就会直接链接到视频的插入点文本中出现该姓名的位置。</a>
+
+<p><a href="treeOfLife/index.html" title="展示如何使用原数据跟踪的生命之树演示">生命之树</a>演示这个简单的示例介绍了如何使用元数据跟踪通过字幕搜索实现导航，以及如何通过定时元数据实现与媒体播放同步的 DOM 操作。</p>
+
+<h2 id="toc-cues-js">了解使用 JavaScript 的跟踪和插入点</h2>
+
+<p>音频和视频元素包含会返回 <code>TextTrackList</code> 的 <code>textTracks</code> 属性，其中每个部分都是与 <code>&lt;track&gt;</code> 元素对应的 <code>TextTrack</code>：</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var textTracks = videoElement.textTracks; // one for each track element
+var textTrack = textTracks[0]; // corresponds to the first track element
+var kind = textTrack.kind // e.g. "subtitles"
+var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+</pre>
+
+<p>反过来，每个 <code>TextTrack</code> 都包含会返回 <code>TextTrackCueList</code> 的 <code>cues</code> 属性，其中每个部分都是一个单独的插入点。您可以通过 <code>startTime</code>、<code>endTime</code> 和 <code>text</code>（用于获取插入点的文本内容）等属性访问插入点数据：</p>
+
+<pre class="prettyprint">
+var cues = textTrack.cues;
+var cue = cues[0]; // corresponds to the first cue in a track src file
+var cueId = cue.id // cue.id corresponds to the cue id set in the WebVTT file
+var cueText = cue.text; // "The Web is always changing", for example (or some JSON!)
+</pre>
+
+<p>有时，通过 <code>HTMLTrackElement</code> 了解 <code>TextTrack</code> 对象也是可行的：</p>
+
+<pre class="prettyprint">
+var trackElements = document.querySelectorAll("track");
+// for each track element
+for (var i = 0; i &lt; trackElements.length; i++) {
+  trackElements[i].addEventListener("load", function() {
+    var textTrack = this.track; // gotcha: "this" is an HTMLTrackElement, not a TextTrack object
+    var isSubtitles = textTrack.kind === "subtitles"; // for example...
+    // for each cue
+    for (var j = 0; j &lt; textTrack.cues.length; ++j) {
+      var cue = textTrack.cues[j];
+      // do something
+    }
+}
+</pre>
+
+<p>如此例中所示，系统是通过跟踪元素的 <code>track</code> 属性而非该元素本身访问 <code>TextTrack</code> 属性的。 </p>
+
+<p>您可以在 <code>load</code> 事件触发后访问 <code>TextTrack</code>，但在此之前则不行。</p>
+
+<h2 id="toc-events">跟踪和插入点事件</h2>
+
+<p>插入点事件有两种类型：
+<ul>
+  <li>因插入点而触发的 enter 和 exit 事件</li>
+  <li>因跟踪而触发的 cuechange 事件。 </li>
+</ul>
+</p>
+
+<p>在之前的示例中，您可以通过以下方式添加插入点事件侦听器：</p>
+
+<pre class="prettyprint">
+cue.onenter = function(){
+  // do something
+};
+
+cue.onexit = function(){
+  // do something else
+};
+</pre>
+
+<p>请注意，只有在通过播放进入或退出插入点时，系统才会触发 enter 和 exit 事件。如果用户手动拖动时间轴滑块，就会在另一时间因跟踪而触发 cuechange 事件，但不会触发 enter 和 exit 事件。您可以侦听 cuechange 跟踪事件，然后获取有效插入点，从而解决该问题（请注意，有效插入点可能不止一个）。</p>
+
+<p>在插入点出现更改后，以下示例获取了当前插入点，并尝试通过解析插入点文本创建对象：</p>
+
+<pre class="prettyprint">
+textTrack.oncuechange = function (){
+  // "this" is a textTrack
+  var cue = this.activeCues[0]; // assuming there is only one active cue
+  var obj = JSON.parse(cue.text);
+  // do something
+}
+</pre>
+
+<h2 id="toc-notjustvideo">不仅仅适用于视频</h2>
+
+<p>请注意，跟踪可用于音频和视频，而且您无需使用 HTML 标记形式的音频、视频或跟踪元素即可利用相应的 API。对于这一点，TextTrack API <a href="http://dev.w3.org/html5/spec/video.html#text-track-api" title="W3C TextTrack API 文档">文档</a>中提供了很好的示例，介绍了实施音频“贴图”的巧妙方法：</p>
+
+<pre class="prettyprint">
+var sfx = new Audio('sfx.wav');
+var track = sfx.addTextTrack('metadata'); // previously implemented as addTrack()
+
+// Add cues for sounds we care about.
+track.addCue(new TextTrackCue('dog bark', 12.783, 13.612, '', '', '', true));
+track.addCue(new TextTrackCue('kitten mew', 13.612, 15.091, '', '', '', true));
+
+function playSound(id) {
+  sfx.currentTime = track.getCueById(id).startTime;
+  sfx.play();
+}
+
+playSound('dog bark');
+playSound('kitten mew');
+</pre>
+
+<p><code>addTextTrack</code> 方法带有三个参数：<code>kind</code>（例如“metadata”，如上所示）、<code>label</code>（例如“Sous-titres français”）和 <code>language</code>（例如“fr”）。</p>
+
+<p>以上示例还使用了带有 <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue" title="WHATWG TextTrackCue 文档"><code>TextTrackCue</code></a> 对象的 <code>addCue</code>，TextTrackCue 对象的构造函数带有 <code>id</code>（例如“dog bark”）、<code>startTime</code>、<code>endTime</code>、插入点 <code>text</code>、<a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-settings" title="WebVTT cue settings 文档"><code>webVTT cue settings</code></a> 参数（用于定位、调整字体大小和对齐方式）和 <code>pauseOnExit</code> 布尔值标记（例如，在教育视频中提出问题后暂停播放）。</p>
+
+<p>请注意，<code>startTime</code> 和 <code>endTime</code> 使用以秒为单位的浮点数值，而非在 WebVTT 中使用的“小时:分钟:秒:毫秒”格式。</p>
+
+<p>您也可以通过以插入点作为参数的 <code>removeCue()</code> 删除插入点，例如：</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var track = videoElement.textTracks[0];
+var activeCue = track.activeCues[0];
+track.removeCue(activeCue);
+</pre>
+
+<p>如果您试用一下这段代码，就会发现，调用代码后，系统会立即删除呈现的插入点。</p>
+
+<p>跟踪的 <code>mode</code> 属性可以为 0（在规范中为 <code>TextTrack.OFF</code>，在 Chrome 浏览器中为 <code>TextTrack.DISABLED</code>）、1 (<code>TextTrack.HIDDEN</code>) 或 2 (<code>TextTrack.SHOWING</code>)。如果要使用跟踪事件同时停用默认呈现，您可以使用此属性。观看以下视频了解相关示例（创作者：<a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="埃里克·比德曼 (Eric Bidelman) HTML5 演示画版">埃里克·比德曼 (Eric Bidelman)</a>）：</p>
+
+<div id="eric">
+  <video width="400" controls>
+    <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"'>
+    <track label="English subtitles" kind="subtitles" srclang="en" src="treeOfLife/tracks/developerStories-subtitles-en.vtt" default>
+  </video>
+  <div><div>test1</div><div>asdf2</div></div>
+</div>
+
+<script>
+(function(){
+
+var video = document.querySelector('div#eric video');
+var span1 = document.querySelector('div#eric > div :first-child');
+var span2 = document.querySelector('div#eric > div :last-of-type');
+
+if (!video.textTracks) return;
+
+var track = video.textTracks[0];
+track.mode = TextTrack.HIDDEN;
+
+var idx = 0;
+
+track.oncuechange = function(e) {
+
+  var cue = this.activeCues[0];
+  if (cue) {
+    if (idx == 0) {
+      span2.className = '';
+      span1.classList.remove('on');
+      span1.innerHTML = '';
+      span1.appendChild(cue.getCueAsHTML());
+      span1.classList.add('on');
+    } else {
+      span1.className = '';
+      span2.classList.remove('on');
+      span2.innerHTML = '';
+      span2.appendChild(cue.getCueAsHTML());
+      span2.classList.add('on');
+    }
+
+    idx = ++idx % 2;
+  }
+
+};
+
+})();
+</script>
+
+<p>此示例使用了 <code>getCueAsHTML()</code> 方法，该方法会返回每个插入点的 HTML 版本，系统是通过 WebVTT 插入点文本<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT 插入点文本解析规则文档">解析</a>和 <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT 插入点文本 DOM 结构规则文档">DOM 结构</a>规则将 WebVTT 格式转换成 HTML <code>DocumentFragment</code> 的。如果您只想获取插入点在 <code>src</code> 文件中的原始文本值，请使用插入点的 <code>text</code> 属性。</p>
+
+<p>在这种情况下，您可以使用 <code>getCueAsHTML()</code> 方法，该方法会返回每个插入点的 HTML 版本，系统是通过 WebVTT 插入点文本<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT 插入点文本解析规则文档">解析</a>和 <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT 插入点文本 DOM 结构规则文档">DOM 结构</a>规则将 WebVTT 格式转换成 HTML <code>DocumentFragment</code> 的。如果您只想获取插入点在 <code>src</code> 文件中的原始文本值，请使用插入点的 <code>text</code> 属性。</p>
+
+<h2 id="toc-markup">有关标记的更多信息</h2>
+
+<p>您可以在插入点的时间戳行上添加标记，以指定文字方向、对齐方式和位置。您可以标记插入点文本，以指定语音（例如提供说话者的姓名）和添加格式。您可以通过 CSS 操作字幕和解说，具体如下所示：</p>
+
+<pre class="prettyprint">
+::cue {
+  color: #444;
+  font: 1em sans-serif;
+}
+::cue .warning {
+  color: red;
+  font: bold;
+}
+</pre>
+
+<p>西尔维娅·菲佛 (Silvia Pfeiffer) 的 <a href="http://html5videoguide.net/presentations/WebVTT/#title-slide" title="HTML5 视频辅助功能幻灯片">HTML5 视频辅助功能</a>幻灯片提供了更多标记用例，还介绍了如何构建用于导航的章节跟踪和用于屏幕阅读器的说明跟踪。</p>
+
+<h2 id="toc-finally">最后...</h2>
+
+<p>请将插入点数据存储在文本文件中，而不是在音频或视频文件中对这些数据进行带内编码，这样可以简化字幕和解说，便于访问、搜索和数据传输。</p>
+
+<p>您还可以通过跟踪元素使用与媒体播放关联的定时元数据和动态内容，进而向音频和视频元素添加值。</p>
+
+<p>跟踪元素的强大功能、灵活性和易用性大大促进了网络媒体的开放性和动态性。</p>
+
+<h2 id="toc-more">了解详情</h2>
+
+<ul>
+  <li>WHATWG HTML 现行标准：<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element">http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element</a></li>
+  <li>W3C HTML5 工作草案：<a href="http://dev.w3.org/html5/spec/Overview.html#the-track-element" title="W3C 工作草案跟踪元素文档">http://dev.w3.org/html5/spec/Overview.html#the-track-element</a></li>
+  <li>W3C WebVTT 标准：<a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-timings" title="WebVTT 标准">http://dev.w3.org/html5/webvtt/#webvtt-cue-timings</a></li>
+  <li>定时跟踪格式：<a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a></li>
+  <li>定时跟踪用例：<a href="http://wiki.whatwg.org/wiki/Timed_tracks">http://wiki.whatwg.org/wiki/Timed_tracks</a></li>
+  <li><a href="http://www.bbc.co.uk/blogs/researchanddevelopment/2012/01/implementing-startoffsettime-f.shtml" title="BBC 研发博文">用于实时流式传输的带外定时元数据</a>：肖恩·奥哈尔平 (Sean O'Halpin) 的 BBC 研发博文。</li>
+</ul>
+
+<script>
+$(document).ready(function() {
+  if (!isCompatible()) {
+    var els = document.querySelectorAll('.trackNotSupported');
+    for (var i = 0, el; el = els[i]; ++i) {
+      el.classList.add('show');
+    }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block headtitle %}Author Profiles{% endblock %}
+
+{% block head %}
+<style>
+.page.current {
+  margin: 2em auto;
+}
+th {
+  text-align: right;
+}
+td, th {
+  padding: 3px 5px;
+}
+input[type="text"], textarea {
+  width: 100%;
+}
+form {
+  margin: 1em 0;
+}
+input[required]:not(:invalid) {
+  border: 1px solid green;
+  -webkit-box-shadow: 0 0 3px green;
+  -moz-box-shadow: 0 0 3px green;
+  -o-box-shadow: 0 0 3px green;
+  box-shadow: 0 0 3px green;
+}
+input:invalid {
+  border: 1px solid #e88;
+  -webkit-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  -moz-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  -o-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+}
+input[type='submit'] {
+  margin: 15px auto 25px;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<section>
+  <h2>Add a new author:</h2>
+  <form name="author_form" method="POST" action="/database/author">
+    <table>
+      <!--<tr><th><label for="id_key_name">key_name:</label></th><td><input type="text" name="key_name" id="id_key_name" required /></td></tr>-->
+      {{ author_form }}
+      <tr><th><label for="id_lat">lat:</label></th><td><input type="text" name="lat" id="id_lat" required /></td></tr>
+      <tr><th><label for="id_lon">lon:</label></th><td><input type="text" name="lon" id="id_lon" required /></td></tr>
+      <tr><td colspan="2" style="text-align: right;"><input type="submit" /></td></tr>
+    </table>
+  </form>
+</section>
+  <section>
+  <p>Current authors ({{profile_amount}}):</p>
+  <ol>
+  {% for profile in sorted_profiles %}
+  <li>{{profile.given_name}} {{profile.family_name}} ({{profile.id}}) - {% firstof profile.org %}, {% firstof profile.unit %}</li>
+  {% endfor %}
+  </ol>
+</section>
+{% endblock %}

@@ -1,0 +1,462 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}The Basics of Web Workers{% endblock %}
+{% block pagetitle %}The Basics of Web Workers{% endblock %}
+{% block pagebreadcrumb %}The Basics of Web Workers{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+{% block date %}July 26, 2010{% endblock %}
+{% block updated %}May 24, 2011{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span> <span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.webworkers;
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction-jsconcurrency">Проблема: параллельное выполнение кода JavaScript</h2>
+  <p>Есть несколько моментов, не позволяющих переносить интересные JavaScript-программы на сторону клиента (например, для разгрузки серверов). К ним относятся совместимость браузеров, статическая типизация, доступность и эффективность. К счастью, последняя проблема быстро отходит в прошлое, поскольку разработчики браузеров постоянно повышают скорость функционирования платформ JavaScript.</p>
+
+  <p>Одной из проблем, связанных с JavaScript, остается сам язык. JavaScript – это однопоточная среда, в которой несколько скриптов не могут выполняться одновременно. Например, представим сайт, на котором необходимо управлять событиями интерфейса пользователя, запрашивать и обрабатывать большие объемы данных API и работать с моделью DOM. Очень знакомо, верно? К сожалению, все эти действия не могут выполняться одновременно из-за ограничений в среде выполнения JavaScript браузеров. Скрипты выполняются в пределах одного потока.</p>
+
+  <p>Разработчики имитируют параллельное выполнение кода с помощью таких средств, как методы <code>setTimeout()</code> и <code>setInterval()</code>, технология <code>XMLHttpRequest</code>, а также обработчики событий. Все эти функции выполняются асинхронно, но отсутствие блокировки не обязательно означает параллельное выполнение. Асинхронные события обрабатываются после возврата из текущего выполняющегося скрипта. Приятным моментом является тот факт, что в HTML5 есть более удобный способ реализации параллельного выполнения.</p>
+
+  <h2 id="toc-introduction-jsthreading">Знакомство с объектами Web Worker: многопоточность в JavaScript</h2>
+
+  <p>Спецификация <a href="http://www.whatwg.org/specs/web-workers/current-work/">объектов Web Worker</a> определяет API для создания фоновых скриптов в веб-приложениях. Эти объекты позволяют запускать долговременные скрипты для выполнения задач, требующих большого объема вычислений, не прибегая к блокировке интерфейса пользователя или других скриптов, управляющих взаимодействием пользователя с системой. Они помогают избавиться от надоевшего диалогового окна "Скрипт не отвечает", к которому все уже успели привыкнуть.</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/workers/unresponsive_script.gif" width="450" height="100" title="Диалоговое окно неотвечающего скрипта" alt="Диалоговое окно неотвечающего скрипта"  />
+    <figcaption>Стандартное диалоговое окно неотвечающего скрипта</figcaption>
+  </figure>
+
+  <p>Объекты Web Worker используют потоковую передачу сообщений для реализации параллельности. Они идеально подходят для обновления интерфейса, обеспечения его эффективности и реализации оперативного взаимодействия с пользователями.</p>
+
+  <h3 id="toc-introduction-types">Типы объектов Web Worker</h3>
+
+  <p>Следует заметить, что в <a href="http://www.whatwg.org/specs/web-workers/current-work/">спецификации</a> определяются два типа объектов Web Worker: <a href="http://www.whatwg.org/specs/web-workers/current-work/#dedicated-workers-and-the-worker-interface">выделенные</a> и <a href="http://www.whatwg.org/specs/web-workers/current-work/#sharedworker">общие</a>. В этой статье рассматриваются только выделенные объекты Web Worker (мы будем называть их объектами Web Worker или объектами Worker).</p>
+
+  <h2 id="toc-gettingstarted">Начало работы</h2>
+
+  <p>Объекты Web Worker запускаются в изолированном потоке. По этой причине выполняемый ими код должен храниться в отдельном файле. Однако сначала необходимо создать новый объект <code>Worker</code> на главной странице. Конструктор принимает название скрипта объекта:</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('task.js');
+</pre>
+
+  <p>Если указанный файл существует, браузер создаст новый поток объекта Worker, загружаемый асинхронно. Объект не запускается до полной загрузки и выполнения файла. Если путь к объекту Worker возвращает ошибку 404, его выполнение прекращается без уведомлений.</p>
+
+  <p>После создания объекта Worker его можно запустить с помощью метода <code>postMessage()</code>, как показано ниже.</p>
+  <pre class="prettyprint">
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-gettingstarted-workercomm">Взаимодействие с объектами Worker путем обмена сообщениями</h3>
+
+  <p>Взаимодействие объекта Worker с исходной страницей осуществляется с помощью модели событий и метода <code>postMessage()</code>. В зависимости от типа и версии браузера метод <code>postMessage()</code> принимает строку или объект JSON в качестве единственного аргумента. Новейшие версии современных браузеров поддерживают передачу объектов JSON.</p>
+
+  <p>Ниже приведен пример использования строки для передачи сообщения Hello World объекту Worker в скрипте doWork.js. Объект Worker просто возвращает полученное сообщение.</p>
+
+  <p>Основной скрипт:</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('doWork.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Worker said: ', e.data);
+}, false);
+
+worker.postMessage('Hello World'); // Send data to our worker.
+</pre>
+
+  <p>doWork.js (объект Worker)</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  self.postMessage(e.data);
+}, false);
+</pre>
+
+  <p>Если метод <code>postMessage()</code> вызывается на главной странице, объект Worker обрабатывает сообщение, определяя обработчик <code>onmessage</code> для события <code>message</code>. Информационное наполнение сообщения (в данном случае – Hello World) доступно в объекте <code>Event.data</code>. Хотя этот конкретный пример и не является интересным, он демонстрирует, что метод <code>postMessage()</code> также служит для передачи данных обратно в главный поток. Удобство использования</p>
+
+  <p>Сообщения, передаваемые между главной страницей и объектами Worker, копируются, но общий доступ к ним не предоставляется. Так, в следующем примере свойство msg сообщения JSON доступно в обоих местах. Может показаться, что элемент передается непосредственно объекту Worker, хотя действие выполняется в выделенном пространстве. В действительности при передаче в объект Worker элемент преобразуется в последовательную форму, а обратное преобразование затем происходит в конце пути. Страница и объект Worker не имеют общего доступа к одному экземпляру элемента, и в результате каждый раз при передаче создается его дубликат. Большинство браузеров реализуют эту функцию путем автоматической кодировки и декодирования значения в конечных точках маршрута, используя для этого технологию JSON.</p>
+
+  <p>Ниже приведен более сложный пример, в котором обмен сообщениями осуществляется с помощью объектов JSON.</p>
+
+  <p>Основной скрипт:</p>
+
+  <pre class="prettyprint">
+&lt;button onclick="sayHI()"&gt;Say HI&lt;/button&gt;
+&lt;button onclick="unknownCmd()"&gt;Send unknown command&lt;/button&gt;
+&lt;button onclick="stop()"&gt;Stop worker&lt;/button&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    // Calling worker.terminate() from this script would also stop the worker.
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker = new Worker('doWork2.js');
+
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+&lt;/script&gt;
+</pre>
+
+  <p>doWork2.js</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      self.postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+      self.postMessage('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+      self.close(); // Terminates the worker.
+      break;
+    default:
+      self.postMessage('Unknown command: ' + data.msg);
+  };
+}, false);
+</pre>
+
+  <p><strong>Примечание</strong>. Прекратить работу объекта Worker можно двумя способами: вызвать метод <code>worker.terminate()</code> на главной странице или <code>self.close()</code> в самом объекте.</p>
+
+  <p><strong>Пример</strong>. Запустите этот объект Worker.</p>
+  <div class="example">
+    <button onclick="sayHI()">Поздороваться</button>
+    <button onclick="unknownCmd()">Послать неизвестную команду</button>
+    <button onclick="stop()">Остановить объект Worker</button>
+    <output id="result"></output>
+  </div>
+
+  <h2 id="toc-enviornment">Среда объекта Worker</h2>
+
+  <h3 id="toc-enviornment-scope">Область действия объекта Worker</h3>
+
+  <p>В контексте объекта Worker и <code>self</code>, и <code>this</code> относятся к глобальной области действия объекта. Таким образом, указанный выше пример также можно записать следующим образом:</p>
+
+  <pre class="prettyprint">
+addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+  ...
+}, false);
+</pre>
+
+  <p>Кроме того, можно настроить непосредственно обработчик событий <code>onmessage</code> (хотя разработчики JavaScript всегда предлагают использовать <code>addEventListener</code>).</p>
+
+  <pre class="prettyprint">
+onmessage = function(e) {
+  var data = e.data;
+  ...
+};
+</pre>
+
+  <h3 id="toc-enviornment-features">Функции, доступные для объектов Web Worker</h3>
+
+  <p>В связи со своим многопоточным характером объекты Web Worker имеют доступ только к определенному набору функций JavaScript, указанных ниже.</p>
+  <ul>
+    <li>Объект <code>navigator</code></li>
+    <li>Объект <code>location</code> (только чтение)</li>
+    <li><code>XMLHttpRequest</code></li>
+    <li><code>setTimeout()/clearTimeout()</code> и <code>setInterval()/clearInterval()</code></li>
+    <li><a href="/tutorials/appcache/beginner/">Кэш приложений</a></li>
+    <li>Импорт внешних скриптов с использованием метода <code>importScripts()</code></li>
+    <li><a href="#toc-enviornment-subworkers">Создание других объектов Web Worker</a></li>
+  </ul>
+  <p>Объекты Web Worker не имеют доступа к перечисленным ниже возможностям и элементам.</p>
+  <ul>
+    <li>Модель DOM (она не ориентирована на многопоточное исполнение)</li>
+    <li>Объект <code>window</code></li>
+    <li>Объект <code>document</code></li>
+    <li>Объект <code>parent</code></li>
+  </ul>
+
+  <h3 id="toc-enviornment-loadingscripts">Загрузка внешних скриптов</h3>
+
+  <p>С помощью функции <code>importScripts()</code> можно загружать в объект Worker внешние файлы скриптов и библиотек. Этот метод принимает ноль или более строк, представляющих названия файлов для импорта ресурсов.</p>
+
+  <p>В этом примере в объект загружаются файлы <code>script1.js</code> и <code>script2.js</code>.</p>
+
+  <p>worker.js:</p>
+  <pre class="prettyprint">
+importScripts('script1.js');
+importScripts('script2.js');
+</pre>
+
+  <p>Это также можно записать в виде единого оператора импорта:</p>
+  <pre class="prettyprint">
+importScripts('script1.js', 'script2.js');
+</pre>
+
+  <h3 id="toc-enviornment-subworkers">Субобъекты Worker</h3>
+
+  <p>Объекты Worker могут создавать подчиненные элементы. Они являются удобным инструментом для дальнейшего распределения больших задач на этапе выполнения. Однако субобъекты Worker можно использовать с некоторыми оговорками.</p>
+  <ul>
+    <li>Субобъекты Worker следует размещать в пределах того же источника, где располагается исходная страница. </li>
+    <li>В контексте субобъектов URI связаны с расположением исходного объекта Worker (в отличие от главной страницы).</li>
+  </ul>
+
+  <p>Следует помнить о том, что большинство браузеров создают отдельные процессы для каждого объекта Worker. Прежде чем создавать субобъекты, необходимо проследить за тем, чтобы связанные с ними процессы разумно использовали ресурсы пользовательской системы. Их нерациональное применение может быть связано с копированием сообщений, передаваемых между главными страницами и объектами Worker, вместо их совместного использования. Подробнее об этом можно узнать в разделе <a href="#toc-gettingstarted-workercomm">Взаимодействие с объектами Worker путем обмена сообщениями</a>.</p>
+
+  <p>Чтобы научиться создавать субобъекты Worker, ознакомьтесь с <a href="http://www.whatwg.org/specs/web-workers/current-work/#delegation">этим примером</a> в спецификации.</p>
+
+  <h2 id="toc-inlineworkers">Встраиваемые объекты Web Worker</h2>
+
+  <p>Как поступить в ситуации, когда необходимо сформировать скрипт объекта Web Worker в процессе работы или создать автономную страницу, не использующую отдельные файлы объектов? С новым интерфейсом <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#the-blobbuilder-interface"><code>BlobBuilder</code></a> объекты Web Worker можно "встраивать" в тот же HTML-файл, в котором содержится основной логический блок. Для этого создаются объекты <code>BlobBuilder</code>, в которые код объектов Worker добавляется в качестве строки, как показано ниже.</p>
+<pre class="prettyprint">
+// Prefixed in Webkit, Chrome 12, and FF6: window.WebKitBlobBuilder, window.MozBlobBuilder
+var bb = new BlobBuilder();
+bb.append("onmessage = function(e) { postMessage('msg from worker'); }");
+
+// Obtain a blob URL reference to our worker 'file'.
+// Note: window.webkitURL.createObjectURL() in Chrome 10+.
+var blobURL = window.URL.createObjectURL(bb.getBlob());
+
+var worker = new Worker(blobURL);
+worker.onmessage = function(e) {
+  // e.data == 'msg from worker'
+};
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-inlineworkers-bloburis">URL объектов Blob</h3>
+
+  <p>Работа с интерфейсом начинается с вызова метода <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-createObjectURL"><code>window.URL.createObjectURL()</code></a>. Он создает простую строку URL, которую можно использовать для ссылки на данные, хранящиеся в объекте <code>File</code> или <code>Blob</code> модели DOM. Например:</p>
+
+  <pre class="prettyprint">blob:http://localhost/c745ef73-ece9-46da-8f66-ebes574789b1</pre>
+
+  <p>URL объектов Blob уникальны и сохраняются на протяжении всего времени выполнения программы (например, до выгрузки из памяти объекта <code>document</code>). Если необходимо создать много URL объектов Blob, рекомендуется удалять ненужные ссылки. Сделать это можно путем их передачи методу <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-revokeObjectURL"><code>window.URL.revokeObjectURL()</code></a>, как показано ниже.</p>
+
+  <pre class="prettyprint">
+window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Chrome 10+.
+</pre>
+
+  <p>В браузере Chrome есть удобная страница для просмотра всех созданных URL объектов Blob: <code>chrome://blob-internals/</code>.</p>
+
+  <h3 id="toc-inlineworkers-example">Полный пример</h3>
+
+  <p>Теперь рассмотрим, как JavaScript-код объекта Worker встраивается в страницу. Для этого используется тег <code>&lt;script&gt;</code>, определяющий объект Worker.</p>
+
+  <pre class="prettyprint">
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="utf-8" />
+&lt;/head>
+&lt;body>
+
+  &lt;div id="log"&gt;&lt;/div&gt;
+
+  &lt;script id="worker1" type="javascript/worker"&gt;
+    // This script won't be parsed by JS engines because its type is javascript/worker.
+    self.onmessage = function(e) {
+      self.postMessage('msg from worker');
+    };
+    // Rest of your worker code goes here.
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    function log(msg) {
+      // Use a fragment: browser will only render/reflow once.
+      var fragment = document.createDocumentFragment();
+      fragment.appendChild(document.createTextNode(msg));
+      fragment.appendChild(document.createElement('br'));
+
+      document.querySelector("#log").appendChild(fragment);
+    }
+
+    var bb = new BlobBuilder();
+    bb.append(document.querySelector('#worker1').textContent);
+
+    // Note: window.webkitURL.createObjectURL() in Chrome 10+.
+    var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+    worker.onmessage = function(e) {
+      log("Received: " + e.data);
+    }
+    worker.postMessage(); // Start the worker.
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>Такой подход представляется мне более понятным и правильным. Тег скрипта задается с параметрами <var>id="worker1"</var> и
+  <var>type='javascript/worker'</var> (поэтому браузер не выполняет анализ JavaScript-кода). Этот код извлекается в виде строки с помощью метода <code>document.querySelector('#worker1').textContent</code> и передается в функцию <code>BlobBuilder.append()</code>.</p>
+
+  <h3 id="toc-inlineworkers-loadingscripts">Загрузка внешних скриптов</h3>
+
+  <p>При встраивании кода объекта Worker таким образом метод <code>importScripts()</code> принимает только абсолютные URI. Если попытаться передать ему относительный URI, браузер сообщит об ошибке системы безопасности. Это связано с тем, что объект Worker (теперь создаваемый с использованием URL элемента Blob) разрешается с префиксом <code>blob:</code>, в то время как программа выполняется в другой схеме (как правило, <code>http://</code>). Таким образом, ошибка возникает из-за ограничений, связанных с разным происхождением.</p>
+
+  <p>Один из способов применения метода <code>importScripts()</code> во встроенном объекте Worker – вставка текущего URL основного скрипта путем его передачи объекту Worker и создания абсолютного URL вручную. Это обеспечит импорт внешнего скрипта из того же источника. Предположим, основная программа выполняется в файле http://example.com/index.html:</p>
+    <pre class="prettyprint">
+...
+&lt;script id="worker2" type="javascript/worker"&gt;
+self.onmessage = function(e) {
+  var data = e.data;
+
+  if (data.url) {
+    var url = data.url.href;
+    var index = url.indexOf('index.html');
+    if (index != -1) {
+      url = url.substring(0, index);
+    }
+    importScripts(url + 'engine.js');
+  }
+  ...
+};
+&lt;/script&gt;
+&lt;script&gt;
+  var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+  worker.postMessage(<b>{url: document.location}</b>);
+&lt;/script&gt;
+</pre>
+
+  <h2 id="toc-errors">Обработка ошибок</h2>
+
+  <p>Как и любой логический блок JavaScript, объекты Web Worker требуют обработки любых возникающих ошибок. Если ошибка возникает при выполнении объекта, срабатывает событие <code>ErrorEvent</code>. Интерфейс содержит три полезных свойства для определения причины ошибки: <code>filename</code> – название скрипта объекта Worker, вызвавшего ошибку, <code>lineno</code> – номер строки, в которой возникла ошибка, и <code>message</code> – ее осмысленное описание. Ниже приведен пример настройки обработчика события <code>onerror</code> для печати свойств ошибки.</p>
+
+  <pre class="prettyprint">
+&lt;output id="error" style="color: red;"&gt;&lt;/output&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result').textContent = e.data;
+  }
+
+  var worker = new Worker('workerWithError.js');
+  worker.addEventListener('message', onMsg, false);
+  worker.addEventListener('error', onError, false);
+  worker.postMessage(); // Start worker without a message.
+&lt;/script&gt;
+</pre>
+
+  <p><strong>Пример</strong>: объект workerWithError.js пытается выполнить операцию 1/x, где значение x не указано.</p>
+
+  <div class="example">
+    <button onclick="startErrorWorker()">Запустить</button>
+    <output id="error" style="color:red;"></output>
+    <output id="result2"></output>
+  </div>
+
+  <p>workerWithError.js:</p>
+<pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  postMessage(1/x); // Intentional error.
+};
+</pre>
+
+  <h2 id="toc-security">Немного о безопасности</h2>
+
+  <h3 id="toc-security-local">Ограничение локального доступа</h3>
+
+  <p>В связи с ограничениями безопасности в последних версиях браузера Google Chrome объекты Worker не запускаются локально (например, по адресу <code>file://</code>). Вместо этого они прекращают работу без какого-либо уведомления. Для выполнения программы в схеме <code>file://</code> необходимо запустить Chrome с установленной пометкой <code>--allow-file-access-from-files</code>. <strong>ПРИМЕЧАНИЕ</strong>. Не рекомендуется запускать основной браузер с такой пометкой. Ее следует использовать только для проверки, а не в режиме обычного просмотра страниц.</p>
+
+  <p>Это ограничение не относится к другим браузерам.</p>
+
+  <h3 id="toc-security-origin">Рекомендации по использованию одного источника</h3>
+
+  <p>Скрипты объектов Worker должны представлять собой внешние файлы с той же схемой, что и схема страницы вызова. Поэтому невозможно загрузить скрипт из URL <code>data:</code> или <code>javascript:</code>, а со страницы <code>https:</code> не запускаются скрипты объектов Worker, начинающиеся с URL <code>http:</code>.</p>
+
+  <h2 id="toc-usecases">Примеры использования</h2>
+
+  <p>Какие виды программ используют объекты Web Worker? К сожалению, эти объекты являются относительно новой технологией, и в большинстве существующих примеров и руководств представлена обработка простых чисел. Хотя это не самое захватывающее занятие, оно полезно для понимания принципов работы объектов Web Worker. Ниже приведено несколько идей, о реализации которых можно подумать.</p>
+  <ul>
+    <li>Предварительный выбор или кэширование данных для дальнейшего использования.</li>
+    <li>Синтаксическое выделение кода или другое форматирование текста в реальном времени.</li>
+    <li>Проверка правописания.</li>
+    <li>Анализ видео- и аудиоданных.</li>
+    <li>Фоновые операции ввода-вывода и опрос веб-служб.</li>
+    <li>Обработка больших массивов данных и объемных ответов JSON.</li>
+    <li>Фильтрация изображений на элементе &lt;canvas&gt;.</li>
+    <li>Обновление множества строк в локальной веб-базе данных.</li>
+  </ul>
+
+  <h2 id="toc-examples">Демонстрационные примеры</h2>
+  <ul>
+    <li>Пример из <a href="http://slides.html5rocks.com/#web-workers">слайдов HTML5Rocks</a>.</li>
+    <li><a href="http://htmlfive.appspot.com/static/tracker1.html">Средство отслеживания перемещения</a>.</li>
+    <li><a href="http://people.mozilla.com/~prouget/demos/worker_and_simulatedannealing/index.xhtml">Имитация отжига</a>.</li>
+    <li><a href="http://html5demos.com/worker">Пример демонстрационной программы HTML5</a>.</li>
+  </ul>
+
+  <h2 id="toc-references">Ссылки</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-workers/current-work/">Спецификация объектов Web Worker</a>.</li>
+    <li>Статья <a href="http://developer.mozilla.org/en/Using_web_workers">Использование объектов Web Worker</a> сети разработчиков браузера Mozilla.</li>
+    <li>Статья <a href="http://dev.opera.com/articles/view/web-workers-rise-up/">Распространение объектов Web Worker</a> сообщества Dev.Opera.</li>
+  </ul>
+
+<script>
+  var worker = new Worker('doWork2.js');
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker2 = new Worker('workerWithError.js');
+  worker2.addEventListener('message', onMsg, false);
+  worker2.addEventListener('error', onError, false);
+
+  function startErrorWorker() {
+    worker2.postMessage(); // Start worker without a message.
+  }
+
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result2').textContent = e.data;
+  }
+</script>
+{% endblock %}

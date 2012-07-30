@@ -1,0 +1,912 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Ilmari Heikkinen <ilmari@google.com>{% endblock %}
+{% block pageauthor %}{% profilelinks ilmari %}{% endblock %}
+{% block headtitle %}Chrome Experiments Demo Harness{% endblock %}
+{% block pagetitle %}Chrome Experiments Demo Harness{% endblock %}
+{% block pagebreadcrumb %}Chrome Experiments Demo Harness{% endblock %}
+{% block date %}May 25, 2011{% endblock %}
+{% block updated %}{% endblock %}
+{% block onload %}{% endblock %}
+
+{% block head %}
+<style>
+.example {
+  position: relative;
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+#demoMenu {
+  font-family: sans-serif;
+  z-index: 100;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  color: white;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  vertical-align: top;
+  background-color: rgba(0,0,0,0);
+  -webkit-transform-origin: 50% 0;
+  -webkit-transition-duration: 0.5s;
+  -webkit-transition-timing-function: ease-in-out;
+  -webkit-perspective: 600px;
+  -webkit-perspective-origin: 50% 0;
+  -moz-transform-origin: 50% 0;
+  -moz-transition-duration: 0.5s;
+  -moz-transition-timing-function: ease-in-out;
+  -moz-perspective: 600px;
+  -moz-perspective-origin: 50% 0;
+}
+
+#demoMenu > div:hover {
+  opacity: 0;
+  -webkit-transform: rotateX(90deg);
+  -moz-transform: rotateX(90deg);
+}
+
+#demoMenu > div {
+  vertical-align: top;
+  display: inline-block;
+  font-size: 13px;
+  width: 180px;
+  height: 208px;
+  padding: 0px;
+  margin: 10px;
+  background-color: rgba(0,0,0,0.8);
+  -webkit-box-shadow: 0px 2px 5px rgba(0,0,0,0.75);
+  -webkit-transform-origin: 50% 50%;
+  -webkit-transition-duration: 0.5s;
+  -webkit-transition-timing-function: ease-in-out;
+  -moz-box-shadow: 0px 2px 5px rgba(0,0,0,0.75);
+  -moz-transform-origin: 50% 50%;
+  -moz-transition-duration: 0.5s;
+  -moz-transition-timing-function: ease-in-out;
+}
+
+#demoMenu .image {
+  width: 180px;
+  height: 120px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#demoMenu .image img {
+  width: 180px;
+}
+
+#demoMenu a {
+  color: black;
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  background-color: #30dfff;
+  border-bottom: 1px solid black;
+  text-shadow: 0px 1px 1px rgba(255,235,215,0.5);
+  background: #ffa84c;
+  background: -moz-linear-gradient(top, #ffa84c 0%, #df5b0d 100%);
+  background: -o-linear-gradient(top, #ffa84c 0%,#ff7b0d 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffa84c), color-stop(100%,#df5b0d));
+}
+
+.author {
+  display: block;
+  font-size: 14px;
+}
+
+.info {
+  margin-top: 4px;
+  display: block;
+  color: #ddd;
+  font-size: 12px;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+#container {
+  background-color: white;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  -webkit-transform-origin: 50% 0;
+  -moz-transform-origin: 50% 0;
+  overflow:hidden;
+}
+
+#container h1 {
+  margin: 8px;
+}
+
+#demoFrameContainer {
+  z-index: 1000000;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  -webkit-transition-duration: 0.8s;
+  -moz-transition-duration: 0.8s;
+  opacity: 1;
+}
+
+.demoFrame {
+  border: 0px;
+  -webkit-box-shadow: 0px 0px 20px #000;
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  width: 670px;
+  height: 180px;
+  background-color: #444;
+  overflow:hidden;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 1s;
+  -webkit-transition-timing-function: ease-in-out;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 1s;
+  -moz-transition-timing-function: ease-in-out;
+}
+
+#demoClose {
+  width: 40px;
+  font-size: 40px;
+  position: absolute;
+  text-align: center;
+  right: 0px;
+  top: 19px;
+  cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
+<span class="browser safari"><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
+<span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block iscompatible %}
+  return !!Modernizr.csstransforms3d
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-graphics.png" width="133" height="64" alt="This article is powered by HTML5 Graphics, 3D &amp; Effects" title="This article is powered by HTML5 Graphics, 3D &amp; Effects" />
+{% endblock %}
+
+{% block content %}
+
+<section>
+
+  <h2>The Making of the Chrome Experiments Demo Harness</h2>
+
+  <p>
+    The <a href="/static/demos/demoloop/demoloop.html">Chrome Experiments demo harness</a> is a kiosk-style web app that loops through
+    half a dozen non-interactive demos when idle. When you move the mouse, the demo
+    loop lets you select an interactive demo from a larger list to play with. The
+    loop also has fancy transitions between the demos, with the transition screen
+    showing details about the demo.
+  </p>
+
+  <figure>
+    <img src="thumbs/demo_booth.jpg" alt="Chrome Experiments booth at I/O 2011">
+    <figcaption>
+      One of the Chrome Experiment booths at Google I/O 2011.
+    </figcaption>
+  </figure>
+
+  <p>
+    The goal for the demo loop was to act as an eye-catching show floor presentation
+    at Google I/O 2011. The idea being that visitors see the demo loop, go “Wow!”
+    and come to the Chrome Experiments booth to play around with the interactive
+    demos. Thus getting a feel for some of the awesome things that are possible on
+    the web today.
+  </p>
+
+  <p>
+    To fulfill that goal, the demo loop needed a bunch of great-looking demos
+    (thankfully, the Chrome Experiments site has no lack of those) and an experience
+    as smooth as possible. Each of the demos had to run without slowing down the
+    other demos or the transition animation. Which was quite a challenge, given that
+    the best-looking demos also tended to be the heaviest.
+  </p>
+
+</section>
+
+<section>
+
+  <h2>IFRAME wrangling</h2>
+
+  <p>
+    What I finally ended up with was a bunch of iframes controlled via a
+    window.postMessage protocol. What postMessage lets you do is send a message from
+    one window to another, with a JS object as payload. The receiving window needs
+    to add an event listener for the ‘message’ event that handles the data in the
+    event object. What postMessage allowed me to do is start the current demo
+    without reloading it, and pause all the other demos.
+  </p>
+
+  <p>
+    The final demo sequence worked like this: First, fade out the current demo and
+    stop it. Second, fade in the transition canvas and play the transition
+    animation. Third, stop the transition animation and fade out the transition
+    canvas. And finally, fade in the next demo and start playing it. As you can see,
+    there’s only one demo playing at any given time, meaning that all the demos run
+    as fast as possible. Well, there’s still the extra memory use to contend with,
+    but that’s a bit difficult to get around.
+  </p>
+
+  <figure>
+    <img src="thumbs/demo_running.jpg" alt="Demo running in the loop">
+    <figcaption>
+      A demo running in the loop.
+    </figcaption>
+  </figure>
+
+  <p>
+    I also tried a couple less successful variations, such as relying on
+    requestAnimationFrame pausing hidden demos and removing the iframe elements from
+    the document to stop them. The problem with requestAnimationFrame was that for
+    some reason it didn’t pause the hidden demos. And the problem with removing and
+    re-adding iframe elements to the document was that it caused the iframe to
+    reload itself, causing the first couple seconds of each showing of the demo be
+    filled with loading bars and incomplete content.
+  </p>
+
+  <p>
+    The code for the iframe swapping looks something like this:
+  </p>
+
+<pre style="prettyprint">
+this.currentIframe = getCurrentDemoIframe();
+this.currentIframe.style.display = 'block';
+var self = this;
+setTimeout(function() {
+  if (self.previousIframe && self.previousIframe != self.currentIframe) {
+    self.previousIframe.style.display = 'none';
+    if (self.previousIframe.contentWindow)
+      self.previousIframe.contentWindow.postMessage('pause','*');
+  }
+}, 0);
+this.onTransitionComplete = function() {
+  if (self.currentIframe.contentWindow)
+    self.currentIframe.contentWindow.postMessage('pause','*');
+};
+this.startTransitionAnimation();
+</pre>
+
+  <p>
+    With this bit hooked up to the demo iframe's animation tick function:
+  </p>
+
+<pre style="prettyprint">
+var paused = false;
+window.addEventListener('message', function(ev){
+ paused = (ev.data == 'pause');
+}, false);
+var animloop = function() {
+  if (!paused)
+    tick();
+  requestAnimFrame(animloop, canvas);
+};
+requestAnimFrame(animloop, canvas);
+</pre>
+
+</section>
+
+<section>
+
+  <h2>The interactive demo menu</h2>
+
+  <p>
+    The menu for interactive demos appears when you move the mouse during the demo
+    loop. If you leave the mouse alone for a couple seconds, the menu fades out.
+    The menu has a nice animated transition with the menu items rotating into view.
+    The transition is done using CSS 3D transforms and CSS transitions. Each menu
+    item has a CSS transition duration set to a value that depends on its x-distance
+    from the center of the display, creating a cool staggered transition effect.
+  </p>
+
+  <p>
+    The menu styling is all HTML and CSS. The menu titles use CSS text shadows, a
+    CSS gradient background and a 1px bottom border to create a look of debossed
+    text on a raised background. The menu item thumbnail images are scaled to fill
+    their 180x120 container divs by setting the image width to 180px. The menu item
+    background is set to 80% opacity black, i.e. rgba(0,0,0,0.8), and the menu items
+    have a CSS box-shadow set to pop them from the background.
+  </p>
+
+  <p>Here's an example menu item. It fades out when you hover over it (in the real menu, the menu items fade in when you hover over the menu):</p>
+  <div class="example" style="height: 240px;">
+    <div id="demoMenu">
+      <div>
+        <div class="image">
+          <img src="thumbs/thumb.png">
+        </div>
+        <a href="#">Demo Name</a>
+        <span class="author">
+          Author Name
+        </span>
+        <span class="info">
+          Technologies Used
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <p>The HTML for the menu item is nothing complicated. The demo thumbnail image is inside a div to clip it.</p>
+<pre class="prettyprint collapsible">
+&lt;div id="demoMenu">
+  &lt;div>
+    &lt;div class="image">
+      &lt;img src="thumbs/thumb.png">
+    &lt;/div>
+    &lt;a href="#">Demo Name&lt;/a>
+    &lt;span class="author">
+      Author Name
+    &lt;/span>
+    &lt;span class="info">
+      Technologies Used
+    &lt;/span>
+  &lt;/div>
+&lt;/div>
+</pre>
+
+  <p>The stylesheet for the menu items is way more complex though.</p>
+  <pre class="prettyprint collapsible">
+#demoMenu {
+  z-index: 100;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  color: white;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  vertical-align: top;
+  background-color: rgba(0,0,0,0);
+  -webkit-transform-origin: 50% 0;
+  -webkit-transition-duration: 0.5s;
+  -webkit-transition-timing-function: ease-in-out;
+  -webkit-perspective: 1920px;
+  -webkit-perspective-origin: 50% 0;
+}
+
+#demoMenu > div {
+  vertical-align: top;
+  display: inline-block;
+  font-size: 13px;
+  width: 180px;
+  height: 208px;
+  padding: 0px;
+  margin: 10px;
+  background-color: rgba(0,0,0,0.8);
+  -webkit-box-shadow: 0px 2px 5px rgba(0,0,0,0.75);
+  -webkit-transform-origin: 50% 50%;
+  -webkit-transition-duration: 0.5s;
+  -webkit-transition-timing-function: ease-in-out;
+}
+
+#demoMenu .image {
+  width: 180px;
+  height: 120px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#demoMenu .image img {
+  width: 180px;
+}
+
+#demoMenu a {
+  color: black;
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  background-color: #30dfff;
+  border-bottom: 1px solid black;
+  text-shadow: 0px 1px 1px rgba(255,235,215,0.5);
+  background: #ffa84c;
+  background: -moz-linear-gradient(top, #ffa84c 0%, #df5b0d 100%);
+  background: -o-linear-gradient(top, #ffa84c 0%,#ff7b0d 100%);
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0%,#ffa84c),
+    color-stop(100%,#df5b0d)
+  );
+}
+
+.author {
+  display: block;
+  font-size: 14px;
+}
+
+.info {
+  margin-top: 4px;
+  display: block;
+  color: #ddd;
+  font-size: 12px;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+</pre>
+
+  <p>And here's the bit of hover magic used to demo the menu item fade effect.</p>
+<pre class="prettyprint collapsible">
+#demoMenu > div:hover {
+  opacity: 0;
+  -webkit-transform: rotateX(90deg);
+}
+</pre>
+
+  <p>
+    The menu itself has a 80% opacity white background, and it’s faded in using a
+    CSS transition for the background-color property. The menu title is using the
+    text-transform property to make the text uppercase and letter-spacing to space
+    the letters far apart. I’m also using an eyeballed margin-left to center the
+    letter “A” in the “PICK A DEMO”-text.
+  </p>
+
+  <figure>
+    <img src="thumbs/demo_menu.jpg" alt="The interactive demo menu">
+    <figcaption>
+      The demo menu is all HTML.
+    </figcaption>
+  </figure>
+
+  <p>
+    When you select a demo, the demo loop script creates a new iframe for it and
+    appends it to the demo container. There are fade animations for the iframe
+    container, done using a CSS transition on the opacity property. The iframe is
+    popped out from the background with a large-radius drop shadow. For the
+    close-button I used the UNICODE math operator “⊗”.
+  </p>
+
+  <figure>
+    <img src="thumbs/demo_selected.jpg" alt="Selected demo running">
+    <figcaption>
+      The selected demo running in an inset iframe.
+    </figcaption>
+  </figure>
+
+  <p>
+    The close-button onclick handler removes the demo iframe from the DOM to stop
+    the demo from playing. It also removes the close button itself, and fades out
+    the iframe container with a CSS transition on the opacity property.
+  </p>
+
+  <p>Here's a live version:</p>
+  <div class="example" style="height: 240px;">
+    <div id="demoFrameContainer">
+      <iframe class="demoFrame"></iframe>
+      <div id="demoClose">⊗</div>
+    </div>
+  </div>
+
+  <p>The iframe HTML is very simple:</p>
+<pre class="prettyprint collapsible">
+&lt;div id="demoFrameContainer">
+  &lt;iframe class="demoFrame">&lt;/iframe>
+  &lt;div id="demoClose">⊗&lt;/div>
+&lt;/div>
+</pre>
+
+  <p>All the fancy stuff is in the CSS:</p>
+  <pre class="prettyprint collapsible">
+#demoFrameContainer {
+  z-index: 100;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  -webkit-transition-duration: 0.8s;
+  opacity: 1;
+}
+
+.demoFrame {
+  border: 0px;
+  -webkit-box-shadow: 0px 0px 20px #000;
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  width: 520px;
+  height: 180px;
+  background-color: #444;
+  overflow:hidden;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 1s;
+  -webkit-transition-timing-function: ease-in-out;
+}
+
+#demoClose {
+  width: 40px;
+  font-size: 40px;
+  position: absolute;
+  text-align: center;
+  right: 0px;
+  top: 19px;
+  cursor: pointer;
+}
+</pre>
+
+
+</section>
+
+<section>
+
+  <h2>Transition animation</h2>
+
+  <figure>
+    <img src="thumbs/demo_info.jpg" alt="Demo transition screen">
+    <figcaption>
+      The transition screen displays the name and the author of the demo.
+    </figcaption>
+  </figure>
+
+  <p>
+    The transition animation is done in WebGL using my home-grown Magi library (I
+    wrote it for doing stuff like this.) The timing of the animation is driven by a
+    bunch of if-statements switching over the time since the start of the animation,
+    so no timelines or anything fancy this time, sorry.
+  </p>
+
+  <p>
+    The transition animation consists of four distinct parts:
+  </p>
+
+  <ul>
+    <li>Demo info elements flying in and fading out</li>
+    <li>Rainbow ribbons flying in and out</li>
+    <li>Camera zoom on fade out</li>
+    <li>The “Chrome Experiments”-text fading in and out</li>
+  </ul>
+
+  <p>
+    The author image and demo info texts are moved in by a simple tween. Each of the
+    elements has a frame handler that moves it closer to its target position. The
+    move start times are staggered to create a more interesting motion. To fade out
+    the elements, I’m multiplying the opacity of each of the element pixels with an
+    opacity uniform in the fragment shader.
+  </p>
+
+  <p>
+    Here's a tween function if you're wondering how to make one.
+    It defaults to a sine curve ease-in-out tween:
+  </p>
+<pre class="prettyprint collapsible">
+Tween = {};
+
+Tween.linear = function(t) { return t; };
+Tween.easeInOut = function(t) { return 0.5-0.5*Math.cos(Math.PI*2*t); };
+Tween.easeIn = function(t) { return 1-Math.cos(Math.PI*t); };
+Tween.easeOut = function(t) { return Math.sin(Math.PI*t); };
+
+Tween.tween = function(a, b, t, tweenFunc, dst) {
+  if (!tweenFunc)
+    tweenFunc = this.easeInOut;
+  if (!dst)
+    dst = [];
+  var f = tweenFunc(t);
+  var fc = 1-f;
+  for (var i=0; i&lt;a.length; i++) {
+    dst[i] = a[i]*fc + b[i]*f;
+  }
+  return dst;
+}
+</pre>
+
+  <p>
+    The ribbons are cubic
+    <a href="http://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves</a>
+    swept with a 4-sided polygon over 500
+    points. To fly in the ribbon, I control the vertice count drawn by the ribbon
+    drawArrays-call. For example, to draw just the beginning of the ribbon, you'd draw
+    only 24 verts. To draw up to the middle of the ribbon, you'd draw 24*250 verts. For
+    flying the ribbon out, I control the starting offset of the drawArrays call
+    so that it only draws the end of the ribbon.
+  </p>
+
+  <p>
+    If you're not familiar with how Bézier curves work, the idea is that you
+    recursively interpolate between the curve control points using a parameter
+    (called <i>t</i>)  that ranges between 0 and 1, with 0 mapping to the first
+    control point and1 to the last control point.
+  </p>
+
+  <p>Look at this Wikipedia image. It's the best explanation I've seen thus far:</P>
+  <figure>
+    <img src="Bezier_3_big.gif">
+    <figcaption><a href="http://en.wikipedia.org/wiki/File:Bezier_3_big.gif">Animated interpolation of a cubic Bézier curve.</a></figcaption>
+  </figure>
+
+  <p>
+    To find the point that corresponds to the parameter value <i>t</i> on a Bézier
+    curve, you first interpolate the point at <i>t</i> between each of the subsequent
+    control points. If you end up with more than one point, you use the points
+    as new control points, and interpolate the points at <i>t</i> between them.
+    Repeat until you have only one point left. That point is the Bézier curve
+    point at <i>t</i>.
+  </p>
+
+  <p>Here's a code snippet to evaluate a cubic Bézier curve:</p>
+<pre class="prettyprint collapsible">
+Bezier = {};
+
+Bezier.cubicCoord = function(a, b, c, d, t) {
+  var a3 = a*3, b3 = b*3, c3 = c*3;
+  return a + t*(b3 - a3 + t*(a3-2*b3+c3 + t*(b3-a-c3+d)));
+};
+
+Bezier.cubicPoint3 = function(a,b,c,d, t, dest) {
+  if (dest == null)
+    dest = vec3();
+  dest[0] = this.cubicCoord(a[0], b[0], c[0], d[0], t);
+  dest[1] = this.cubicCoord(a[1], b[1], c[1], d[1], t);
+  dest[2] = this.cubicCoord(a[2], b[2], c[2], d[2], t);
+  return dest;
+};
+
+Bezier.cubicPoint3v = function(p, t, dest) {
+  this.cubicPoint3(p[0], p[1], p[2], p[3], t, dest);
+};
+</pre>
+
+  <p>
+    To sweep a polygon along the Bezier curve, I'm evaluating 500 points from
+    the curve and moving the polygon to each of them. Then I connect the points
+    of the polygons to create the sweep geometry.
+  </p>
+
+  <pre class="prettyprint collapsible">
+SweepGeo = {};
+
+SweepGeo.translatePoly = function(polygon, offset) {
+  var a = [];
+  for (var i=0; i&lt;polygon.length; i++) {
+    var p = polygon[i];
+    a.push(vec3(p[0]+offset[0], p[1]+offset[1], p[2]+offset[2]));
+  }
+  return a;
+};
+
+SweepGeo.createFromBezier = function(path, polygon, count) {
+  var triangles = new Float32Array(polygon.length*3*count);
+  var triIndex = -1;
+  var prev = Bezier.cubicPoint3v(path, 0);
+  var prevPoly = this.translatePoly(polygon, prev);
+
+  // go through the path
+  for (var i=1; i&lt;count; i++) {
+    var t = i/(count-1);
+    var next = Bezier.cubicPoint3v(path, t);
+    var nextPoly = this.translatePoly(polygon, next);
+
+    // add the triangles connecting prevPoly and nextPoly
+    for (var i=0; i&lt;polygon.length; i++) {
+      var j = i > polygon.length-1 ? 0 : i;
+
+      // /|
+      triangles[++triIndex] = prevPoly[i][0];
+        triangles[++triIndex] = prevPoly[i][1];
+        triangles[++triIndex] = prevPoly[i][2];
+      triangles[++triIndex] = nextPoly[j][0];
+        triangles[++triIndex] = nextPoly[j][1];
+        triangles[++triIndex] = nextPoly[j][2];
+      triangles[++triIndex] = nextPoly[i][0];
+        triangles[++triIndex] = nextPoly[i][1];
+        triangles[++triIndex] = nextPoly[i][2];
+
+      // |‾
+      triangles[++triIndex] = prevPoly[i][0];
+        triangles[++triIndex] = prevPoly[i][1];
+        triangles[++triIndex] = prevPoly[i][2];
+      triangles[++triIndex] = prevPoly[j][0];
+        triangles[++triIndex] = prevPoly[j][1];
+        triangles[++triIndex] = prevPoly[j][2];
+      triangles[++triIndex] = nextPoly[j][0];
+        triangles[++triIndex] = nextPoly[j][1];
+        triangles[++triIndex] = nextPoly[j][2];
+    }
+    prev = next;
+    prevPoly = nextPoly;
+  }
+  return triangles;
+};
+</pre>
+
+  <p>Here's a live version with a visualization of the ribbon wireframe. Drag to rotate, scroll to zoom.</p>
+  <div class="example" style="height: 400px;">
+    <div id="ribbonContainer">
+    </div>
+  </div>
+
+
+  <p>
+    The camera zoom uses a similar tween as the demo info elements. The camera
+    moves towards the target point while the canvas element is faded out using
+    a CSS opacity transition.
+  </p>
+
+  <p>
+    The “Chrome Experiments”-text is an HTML element faded in and out with CSS
+    transitions. It transitions over its opacity- and right-properties, with
+    ease-in-out for the transition-timing-function. Very simple to do. In fact, it
+    probably would’ve been faster to do the WebGL animations using a JS
+    implementation of CSS transitions. Something to try next time, eh.
+  </p>
+
+</section>
+<script src="/static/demos/demoloop/magi.js"></script>
+<script src="/static/demos/demoloop/sweepGeo.js"></script>
+<script>
+  closeButtonOnclick = function(ev) {
+    var cont = this.parentNode;
+    var iframe = this.parentNode.getElementsByTagName('iframe')[0];
+    cont.style.opacity = 0;
+    cont.removeChild(iframe);
+    cont.removeChild(this);
+    var self = this;
+    setTimeout(function(){
+      cont.style.opacity = 1;
+      cont.appendChild(iframe);
+      cont.appendChild(self);
+    }, 1200);
+    ev.preventDefault();
+  };
+
+  Ribbons = function(canvas) {
+    this.canvas = canvas;
+    this.display = new Magi.Scene(this.canvas);
+    this.display.useDefaultCameraControls();
+    this.display.bg = [1,1,1,1];
+    vec3.setLeft(this.display.camera.position, [0,0,5]);
+  };
+
+  Ribbons.prototype = {
+    createRibbon : function(path, rot, rot2, color, offset, time_offset) {
+      var pl = createPolyLineFromCubicBezierPath(
+        path,
+        120
+      );
+      var g = createSweepGeo(
+        pl,
+        [vec3(-0.1,0,0), vec3(0.1,0,0), vec3(0.1,0.01,0), vec3(-0.1,0.01,0)]
+      );
+      var vbo = new Magi.VBO(this.display.gl,
+        {size:3, data:g.flatVertices},
+        {size:3, data:g.flatNormals}
+      );
+      vbo.init();
+      var m = new Magi.Node(vbo);
+      m.rtime = 0;
+      m.addFrameListener(function(t,dt) {
+        this.rtime += Math.min(dt, 60);
+        if (this.rtime-time_offset >= 2500) {
+          var offset = Math.floor(Math.max((this.rtime-time_offset)-2500, 0)*3);
+          this.model.length = Math.max(0, g.flatVertices.length/3 - offset);
+          this.model.offset = offset;
+        } else {
+          this.model.offset = 0;
+          this.model.length = Math.min(
+            g.flatVertices.length/3,
+            Math.floor(Math.max(this.rtime-time_offset, 0)*3)
+          );
+        }
+        if (this.rtime > 4000)
+          this.rtime = 0;
+      });
+      m.setAngle(0.5 + rot2);
+      m.setAxis(0,0,1);
+      m.setScale(4);
+      m.material = Magi.DefaultMaterial.get();
+      m.material.floats.LightPos[0] = -1.5;
+      m.material.floats.LightPos[1] = 2.8;
+      m.material.floats.MaterialDiffuse =
+        m.material.floats.MaterialSpecular = color;
+      m.material.floats.LightAmbient = vec4(0.15,0.1,0.05,0.1);
+
+      var vbo2 = new Magi.VBO(this.display.gl,
+        {size:3, data:g.flatVertices},
+        {size:3, data:g.flatNormals}
+      );
+      vbo2.init();
+      vbo2.type = 'LINES';
+      var m2 = new Magi.Node(vbo2);
+      m2.setAngle(0.5 + rot2);
+      m2.setAxis(0,0,1);
+      m2.setScale(4);
+      m2.material = Magi.DefaultMaterial.get();
+      m2.material.floats.LightPos[0] = -1.5;
+      m2.material.floats.LightPos[1] = 2.8;
+      m2.material.floats.MaterialDiffuse =
+        m2.material.floats.MaterialSpecular = vec4(0.5, 0.5, 0.5, 0.1);
+      m2.material.floats.LightAmbient = vec4(0,0,0,0);
+
+      var pivot = new Magi.Node();
+      pivot.setAngle(rot);
+      pivot.position = offset;
+      pivot.appendChild(m);
+      pivot.appendChild(m2);
+      return pivot;
+    },
+
+    ribbonIn : function() {
+      if (this.ribbons != null) {
+        this.ribbons.childNodes.forEach(function(c){
+          c.childNodes[0].rtime = 0;
+        });
+        return;
+      }
+      var pivot = new Magi.Node();
+      this.ribbons = pivot;
+      pivot.setPosition(-4,-3.2,-5);
+      pivot.appendChild(this.createRibbon(
+        [vec3(0,0,0), vec3(0,0,0.5), vec3(0,1,1), vec3(0,1,2.5)],
+        1.0, 0.0, vec4(1,1,0.1,1),
+        vec3(0,-0.25,0), 100
+      ));
+      pivot.appendChild(this.createRibbon(
+        [vec3(0,0,0), vec3(0,0,0.5), vec3(0,0.8,1), vec3(0,0.8,2.5)],
+        1.0, -0.1, vec4(0.1,1,0.1,1),
+        vec3(0,-0.0,0.5), 400
+      ));
+      pivot.appendChild(this.createRibbon(
+        [vec3(0,0,0), vec3(0,0,0.5), vec3(0,1.05,1), vec3(0,1.05,2.5)],
+        1.1, 0.1, vec4(0.1,0.1,1,1),
+        vec3(0.2,0.65,0), 0
+      ));
+      pivot.appendChild(this.createRibbon(
+        [vec3(0,0,0), vec3(0,0,0.5), vec3(0,1,1), vec3(0,1,2.5)],
+        1.1, 0.0, vec4(1,0.1,0.1,1),
+        vec3(0,0.4,0.3), 200
+      ));
+
+      this.display.scene.appendChild(pivot);
+      this.ribbons.childNodes.forEach(function(c){
+        c.childNodes[0].rtime = 0;
+      });
+    }
+  };
+  (function() {
+    document.getElementById('demoClose').onclick = closeButtonOnclick;
+    var ribbonContainer = document.getElementById('ribbonContainer');
+    var ribbonCanvas = document.createElement('canvas');
+    ribbonCanvas.width = 600;
+    ribbonCanvas.height = 400;
+    ribbonContainer.appendChild(ribbonCanvas);
+    var ribbons = new Ribbons(ribbonCanvas);
+    ribbons.ribbonIn();
+    ribbons.display.paused = true;
+    var timeout = 0;
+    window.onscroll = function() {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(function() {
+        ribbons.display.paused = (ribbonContainer.parentNode.offsetTop > window.scrollY+window.innerHeight);
+      }, 30);
+    };
+    window.onscroll();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    button { -webkit-appearance: square-button; }
+    body { background-color: white; margin: 0; padding: 0; overflow: hidden; }
+    h4 { margin-top: 10px; }
+  </style>
+  <body style="font: 75% Lucida Grande, Trebuchet MS">
+    <div id="content">
+      <h4>This iframe content is from a different domain</h4>
+      <button id="send_height">Send iframe height to the parent window in order to resize to fit the content</button>
+      <button id="view_source">View iframe source code</button>
+    </div>
+    <script>
+      var ORIGIN = 'http://playground.html5rocks.com';
+      document.querySelector('#send_height').addEventListener('click', function(e) {
+        // apparently body.offsetHeight is not taking into account the
+        // margin-top of the first element, so we are adding it here manually
+        window.parent.postMessage(
+            { 'newHeight': document.body.offsetHeight + 10 }, ORIGIN
+        );
+      }, false);
+
+      window.addEventListener('message', function(e) {
+        if (e.origin !== ORIGIN) {
+          document.getElementById('content').innerHTML =
+              'The domain you are trying to interact with is not a valid origin.';
+        }
+      }, false);
+
+      // view source
+      document.querySelector('#view_source').addEventListener('click', function(e) {
+        window.open('view-source:' + window.location.href, 'vs');
+      }, false);
+    </script>
+  </body>
+</html>

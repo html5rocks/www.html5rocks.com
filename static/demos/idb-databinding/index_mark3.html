@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>Test for IndexedDB Autosuggest</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="js/support.js"></script>
+<script src="js/jquery-ui-1.8.20.custom.min.js"></script>
+<script src="js/handlebars-1.0.0.beta.6.js"></script>
+<link href="css/vader/jquery-ui-1.8.20.custom.css" rel="stylesheet">
+<script>
+
+// https://developer.mozilla.org/en/IndexedDB/Using_IndexedDB
+var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
+
+var db;
+var template;
+
+$(document).ready(function() {
+	console.log("Startup...");
+
+   	//Create our template
+   	var source   = $("#employeeTemplate").html();
+		template = Handlebars.compile(source);
+
+
+	var openRequest = indexedDB.open("employees",1);
+
+    //handle setup
+    openRequest.onupgradeneeded = function(e) {
+
+        console.log("running onupgradeneeded");
+        var thisDb = e.target.result;
+
+        //Create Employee
+        if(!thisDb.objectStoreNames.contains("employee")) {
+            console.log("I need to make the employee objectstore");
+            var objectStore = thisDb.createObjectStore("employee", { keyPath: "id", autoIncrement:true });  
+            objectStore.createIndex("searchkey", "searchkey", { unique: false });
+        }
+
+
+    }
+
+    openRequest.onsuccess = function(e) {
+    	db = e.target.result;
+
+    	db.onerror = function(e) {
+    		alert("Sorry, an unforseen error was thrown.");
+    		console.log("***ERROR***");
+    		console.dir(e.target);
+    	}
+
+        handleSeed();
+
+    }
+
+});
+
+function handleSeed() {
+	/*
+	This is how we handle the initial data seed. Normally this would be via AJAX
+	*/
+	db.transaction(["employee"], "readonly").objectStore("employee").count().onsuccess = function(e) {
+		var count = e.target.result;
+		if(count == 0 ) {
+			console.log("Need to generate fake data - stand by please...");
+			$("#status").text("Please stand by, loading in our initial data.");
+			var done = 0;
+			//Generate 1k people
+			var trans = db.transaction(["employee"], "readwrite");
+                        var employees = trans.objectStore("employee");
+			for(var i=0; i<1000; i++) {
+				var person = generateFakePerson();
+				//Modify our data to add a searchable field
+				person.searchkey = person.lastname.toLowerCase();
+                                resp = employees.add(person);
+				resp.onsuccess = function(e) {
+					done++;
+					if(done == 1000) {
+						$("#name").removeAttr("disabled");
+						$("#status").text("");
+						setupAutoComplete();
+					} else if(done % 100 == 0) {
+						$("#status").text("Approximately "+Math.floor(done/10) +"% done.");
+					}
+				}
+			}
+		} else {
+			$("#name").removeAttr("disabled");
+			setupAutoComplete();
+		}
+	}
+}
+
+function setupAutoComplete() {
+
+	//Create the autocomplete
+	$("#name").autocomplete({
+		source: function( request, response ) {
+
+			console.log("Going to look for "+request.term);
+
+			$("#displayEmployee").hide();
+
+			var transaction = db.transaction(["employee"], "readonly");
+			var result = [];
+
+			transaction.oncomplete = function(event) {
+				response(result);
+			}
+
+			//TODO: Handle the error and return to it jQuery UI
+			var objectStore = transaction.objectStore("employee");
+
+			//Credit: http://stackoverflow.com/a/8961462/52160
+        	var range = IDBKeyRange.bound(request.term.toLowerCase(), request.term.toLowerCase() + "z");
+            var index = objectStore.index("searchkey");
+
+	        index.openCursor(range).onsuccess = function(event) {
+	        	var cursor = event.target.result;
+	        	if(cursor) {
+	        		result.push({value: cursor.value.lastname + ", " + cursor.value.firstname,person: cursor.value});
+	        		cursor.continue();
+	        	}
+	        };
+
+		},
+		minLength:2,
+		select:function(event,ui) {
+			$("#displayEmployee").show().html(template(ui.item.person));
+		}
+	});
+
+}
+</script>
+
+<script id="employeeTemplate" type="text/x-handlerbars-template">
+<h2>{{lastname}}, {{firstname}}</h2>
+Department: {{department}}<br/>
+Email: <a href='mailto:{{email}}'>{{email}}</a>
+</script>
+
+<style>
+div#displayEmployee {
+	background-color: #c0c0c0;
+	width: 250px;
+	padding: 5px;
+	display:none;
+	border-radius: 7px;
+}
+
+#status {
+	font-style: italic;
+}
+</style>
+</head>
+
+<body>
+
+<form>
+	<p>
+	<label for="name">Name:</label> <input id="name" disabled> <span id="status"></span>
+	</p>
+</form>
+
+<div id="displayEmployee"></div>
+
+</body>
+</html>

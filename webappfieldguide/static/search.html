@@ -1,0 +1,81 @@
+<script type="text/javascript">
+
+  var captionLength = 0;
+  var caption = "";
+
+  function typeSearchBar() {
+    caption = "ENTER SEARCH TERM";
+    type();
+  }
+
+  function type() {
+    $('span.search_caption').html(caption.substr(0, captionLength++));
+    if(captionLength < caption.length + 1) {
+      setTimeout("type()", 50);
+    }
+    else {
+      captionLength = 0;
+      caption = "";
+    }
+  }
+
+  function erase() {
+    caption = "";
+    $("span.search_cursor").hide();
+    type();
+  }
+
+  function cursorAnimation()
+  {
+    $("span.search_cursor")
+      .animate({ opacity: 0 }, "fast", "swing")
+      .animate({ opacity: 1 }, "fast", "swing");
+  }
+
+  var query = null;
+  var searchurl = null;
+
+  $('#cse-search-box').submit(function() {
+    query = $('#s_b').val();
+    searchurl = '\/webappfieldguide\/results.html?q='+query;
+    $('iframe').attr('src', searchurl);
+    return false;
+  });
+
+  $('.the_button').click(function() {
+    $('#cse-search-box').submit();
+  });
+
+</script>
+
+<section class="cf">
+
+  <div class="page one">
+    <div class="image_block centery w80 doasearch">
+      <img src="/webappfieldguide/img/Appward_Illustrations_search.jpg" alt="#" title="#" class="search_img">
+      <p class="caption search_img">Figure S.1 - Answers are only a simple search away.</p>
+      <div class="search_frame">
+        <div class="typing" id="search_typing">
+          <p class="search_p">
+            <span class="search_caption"></span>
+            <span class="search_cursor">|</span>
+          </p>
+        </div>
+        <div class="search_form">
+          <form id="cse-search-box">
+            <input type="search" name="q" value="" class="the_bar" id="s_b" onfocus="erase()" x-webkit-speech/>
+            <a href="#" class="the_button">GO</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div><!-- end page -->
+
+  <div class="page two">
+    <div class="results">
+      <iframe frameborder="0" id="sr_iframe"></iframe>
+    </div>
+  </div><!-- end page two -->
+
+</section>
+

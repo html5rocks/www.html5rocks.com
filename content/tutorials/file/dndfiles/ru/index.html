@@ -1,0 +1,617 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}Reading local files in JavaScript{% endblock %}
+{% block pagetitle %}Reading local files in JavaScript{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+#drop_zone {
+  border: 2px dashed #bbb;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  padding: 25px;
+  text-align: center;
+  font: 20pt bold 'Vollkorn';
+  color: #bbb;
+}
+.thumb {
+  height: 75px;
+  border: 1px solid #000;
+  margin: 10px 5px 0 0;
+}
+#progress_bar {
+  margin: 10px 0;
+  padding: 3px;
+  border: 1px solid #000;
+  font-size: 14px;
+  clear: both;
+  opacity: 0;
+  -o-transition: opacity 1s linear;
+  -moz-transition: opacity 1s linear;
+  -webkit-transition: opacity 1s linear;
+}
+#progress_bar.loading {
+  opacity: 1.0;
+}
+#progress_bar .percent {
+  background-color: #99ccff;
+  height: auto;
+  width: 0;
+}
+#byte_content {
+  margin: 5px 0;
+  max-height: 100px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#byte_range {
+  margin-top: 5px;
+}
+</style>
+{% endblock %}
+{% block pagebreadcrumb %}Reading local files in JavaScript{% endblock %}
+{% block date %}June 18, 2010{% endblock %}
+{% block updated %}December 21, 2010{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span> <span class="browser safari"><span class="browser_name">Safari</span><span class="support">unsupported</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return !!(window.File) && !!(window.FileReader) && !!(window.FileList) && !!(window.Blob);
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction">Введение</h2>
+
+  <p>Наконец появилась возможность взаимодействия с локальными файлами с помощью HTML5. Для этого служит спецификация <a href="http://www.w3.org/TR/file-upload/">API файлов</a>. В частности, API файлов можно использовать для создания уменьшенных изображений при передаче соответствующих картинок на сервер или для того, чтобы приложение могло сохранить ссылку на файл, если пользователя нет в сети. Кроме того, с помощью кода на стороне клиента можно проверить, отвечает ли тип MIME загружаемого файла его расширению, или установить ограничения по размеру.</p>
+  <p>В спецификации указаны некоторые интерфейсы для доступа к файлам в локальной файловой системе.</p>
+  <ol>
+    <li><code>File</code> – отдельный файл. Такая информация, как название, размер файла, тип MIME и ссылка на обработчик, доступна только для чтения.</li>
+    <li><code>FileList</code> – последовательность объектов <code>File</code> в виде массива, позволяющая, например, реализовать функцию <code>&lt;input type="file" multiple&gt;</code> или перетаскивание папки с файлами с рабочего стола.</li>
+    <li><code>Blob</code> – позволяет разделить файл на фрагменты заданной величины.</li>
+  </ol>
+  <p>В сочетании с описанными выше структурами данных интерфейс <a href="http://dev.w3.org/2006/webapi/FileAPI/#filereader-interface"><code>FileReader</code></a> можно использовать для асинхронного чтения файла с помощью знакомых функций обработки событий в JavaScript. Это позволяет отслеживать процесс чтения, обнаруживать ошибки и определять, что загрузка завершена. API во многом напоминают модель событий <code>XMLHttpRequest</code>.</p>
+
+  <p>Примечание. На момент составления этого руководства API, необходимые для работы с локальными файлами, поддерживались в браузерах Chrome 6.0 и Firefox 3.6. Начиная с версии Firefox 3.6.3 метод <code>File.slice()</code> не поддерживается.</p>
+
+  <h2 id="toc-selecting-files">Выбор файлов</h2>
+  <p>Сначала проверьте, поддерживает ли ваш браузер API файлов.</p>
+  <pre class="prettyprint">// Check for the various File API support.
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+  // Great success! All the File APIs are supported.
+} else {
+  alert('The File APIs are not fully supported in this browser.');
+}
+</pre>
+
+  <p>Разумеется, если для работы приложения требуются лишь некоторые из этих API, скорректируйте фрагмент кода соответствующим образом.</p>
+
+  <h3 id="toc-selecting-files-input">Выбор файлов с помощью формы ввода данных</h3>
+  <p>Самый простой способ загрузки файлов – использование стандартного элемента <code>&lt;input type="file"&gt;</code>. JavaScript возвращает список выбранных объектов <code>File</code> в виде объекта <code>FileList</code>. Вот пример использования атрибута multiple для выбора сразу нескольких файлов:</p>
+  <pre class="prettyprint">&lt;input type="file" id="files" name="files[]" multiple /&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+      output.push('&lt;li&gt;&lt;strong&gt;', escape(f.name), '&lt;/strong&gt; (', f.type || 'n/a', ') - ',
+                  f.size, ' bytes, last modified: ',
+                  f.lastModifiedDate.toLocaleDateString(), '&lt;/li&gt;');
+    }
+    document.getElementById('list').innerHTML = '&lt;ul&gt;' + output.join('') + '&lt;/ul&gt;';
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;
+</pre>
+
+  <p><strong>Пример</strong>: выбор файлов с помощью формы ввода данных. Попробуйте сами!</p>
+  <div class="example">
+    <input type="file" id="files1" name="files1[]" multiple />
+    <output id="file_list"></output>
+  </div>
+
+  <h3 id="toc-selecting-files-dnd">Выбор файлов с помощью перетаскивания</h3>
+  <p>Еще одним способом загрузки файлов является их перетаскивание с рабочего стола в браузер. Чтобы включить поддержку перетаскивания, достаточно внести небольшие изменения в код из предыдущего примера.</p>
+  <pre class="prettyprint">&lt;div id="drop_zone">Drop files here&lt;/div&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+      output.push('&lt;li&gt;&lt;strong&gt;', escape(f.name), '&lt;/strong&gt; (', f.type || 'n/a', ') - ',
+                  f.size, ' bytes, last modified: ',
+                  f.lastModifiedDate.toLocaleDateString(), '&lt;/li&gt;');
+    }
+    document.getElementById('list').innerHTML = '&lt;ul&gt;' + output.join('') + '&lt;/ul&gt;';
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  var dropZone = document.getElementById('drop_zone');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>Пример</strong>: выбор файлов с помощью перетаскивания. Попробуйте сами!</p>
+  <div class="example">
+    <div id="drop_zone">Перетащите сюда файлы</div>
+    <output id="file_list2"></output>
+  </div>
+
+  <p>Примечание. Некоторые браузеры обрабатывают элементы <code>&lt;input type="file"&gt;</code> как целевые области для перетаскивания файлов. Попробуйте перетащить файлы в поле ввода в предыдущем примере.</p>
+
+  <h2 id="toc-reading-files">Чтение файлов</h2>
+  <p>А теперь самое интересное.</p>
+  <p>Получив ссылку на объект <code>File</code>, создайте экземпляр объекта <a href="http://dev.w3.org/2006/webapi/FileAPI/#filereader-interface"><code>FileReader</code></a>, который сохранит его содержание в память. Как только завершается загрузка, на стороне пользователя вызывается событие <code>onload</code>. Его атрибут <code>result</code> можно использовать для доступа к данным в файле.</p>
+  <p>Существует четыре метода асинхронного чтения файлов с помощью объекта <code>FileReader</code>.</p>
+  <ul>
+    <li><code>FileReader.readAsBinaryString(Blob|File)</code> – свойство <code>result</code> содержит данные о файле или его фрагменте в виде строки бинарного кода. Каждый байт представлен целым числом от 0 до 255.</li>
+    <li><code>FileReader.readAsText(Blob|File, opt_encoding)</code> – свойство <code>result</code> содержит данные о файле или его фрагменте в виде текстовой строки. По умолчанию используется кодировка UTF-8. Чтобы задать другой формат, используйте необязательный параметр кодировки opt_encoding.</li>
+    <li><code>FileReader.readAsDataURL(Blob|File)</code> – свойство <code>result</code> содержит данные о файле или его фрагменте в виде схемы <a href="http://ru.wikipedia.org/wiki/Data:_URL">data:URL</a>.</li>
+    <li><code>FileReader.readAsArrayBuffer(Blob|File)</code> – свойство <code>result</code> содержит данные о файле или его фрагменте в виде объекта <a href="https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/doc/spec/TypedArray-spec.html">ArrayBuffer</a>.</li>
+  </ul>
+
+  <p>Если для объекта <code>FileReader</code> вызывается один из этих методов, то ход его обработки можно отслеживать с помощью атрибутов <code>onloadstart</code>, <code>onprogress</code>, <code>onload</code>, <code>onabort</code>, <code>onerror</code> и <code>onloadend</code>.</p>
+  
+  <p>В примере ниже из выделенных пользователем файлов выбираются картинки, вызывается функция <code>reader.readAsDataURL()</code> и выводится уменьшенное изображение путем установки для атрибута src значения, представляющего URL данных.</p>
+  <pre class="prettyprint">&lt;style&gt;
+  .thumb {
+    height: 75px;
+    border: 1px solid #000;
+    margin: 10px 5px 0 0;
+  }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="files[]" multiple /&gt;
+&lt;output id="list"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+
+      // Only process image files.
+      if (!f.type.match('image.*')) {
+        continue;
+      }
+
+      var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function(theFile) {
+        return function(e) {
+          // Render thumbnail.
+          var span = document.createElement('span');
+          span.innerHTML = ['&lt;img class="thumb" src="', e.target.result,
+                            '" title="', escape(theFile.name), '"/&gt;'].join('');
+          document.getElementById('list').insertBefore(span, null);
+        };
+      })(f);
+
+      // Read in the image file as a data URL.
+      reader.readAsDataURL(f);
+    }
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>Пример</strong>: чтение файлов. Попробуйте сами!</p>
+  <div class="example">
+    <p>Перетащите сюда папку с картинками.</p>
+    <input type="file" id="files3" name="files3[]" multiple /><br>
+    <output id="thumbnails"></output>
+  </div>
+
+  <h3 id="toc-slicing-files">Разделение файла на фрагменты</h3>
+
+  <p>В некоторых случаях считывание всего файла в память не является оптимальным вариантом. Предположим, вы решили создать инструмент для асинхронной загрузки файлов. Чтобы увеличить ее скорость, можно разделить файл на фрагменты одинаковой величины, которые будут считываться и отправляться по отдельности. На сервере фрагменты будут снова объединяться в нужном порядке.</p>
+  <p>Интерфейс <code>File</code> поддерживает метод slice для разбиения файла на фрагменты. Первым аргументом этого метода является начальный байт файла, вторым – его последний байт, а третьим – необязательная строка с описанием типа содержания. Семантика этого метода недавно была изменена, и теперь необходимо использовать префикс браузера:</p>
+
+  <pre class="prettyprint">
+if (file.webkitSlice) {
+  var blob = file.webkitSlice(<var>startingByte</var>, <var>endindByte</var>);
+} else if (file.mozSlice) {
+  var blob = file.mozSlice(<var>startingByte</var>, <var>endindByte</var>);
+}
+reader.readAsBinaryString(blob);</pre>
+
+  <p>Ниже представлен код для считывания фрагментов файла. Обратите внимание на то, что вместо события <code>onload</code> в нем используется событие <code>onloadend</code>, а также проверяется условие <code>evt.target.readyState</code>.</p>
+
+<pre class="prettyprint">&lt;style&gt;
+  #byte_content {
+    margin: 5px 0;
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #byte_range { margin-top: 5px; }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="file" /&gt; Read bytes: 
+&lt;span class="readBytesButtons"&gt;
+  &lt;button data-startbyte="0" data-endbyte="4"&gt;1-5&lt;/button&gt;
+  &lt;button data-startbyte="5" data-endbyte="14"&gt;6-15&lt;/button&gt;
+  &lt;button data-startbyte="6" data-endbyte="7"&gt;7-8&lt;/button&gt;
+  &lt;button&gt;entire file&lt;/button&gt;
+&lt;/span&gt;
+&lt;div id="byte_range"&gt;&lt;/div&gt;
+&lt;div id="byte_content"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  function readBlob(opt_startByte, opt_stopByte) {
+
+    var files = document.getElementById('files').files;
+    if (!files.length) {
+      alert('Please select a file!');
+      return;
+    }
+
+    var file = files[0];
+    var start = parseInt(opt_startByte) || 0;
+    var stop = parseInt(opt_stopByte) || file.size - 1;
+
+    var reader = new FileReader();
+
+    // If we use onloadend, we need to check the readyState.
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+        document.getElementById('byte_content').textContent = evt.target.result;
+        document.getElementById('byte_range').textContent = 
+            ['Read bytes: ', start + 1, ' - ', stop + 1,
+             ' of ', file.size, ' byte file'].join('');
+      }
+    };
+
+    if (file.webkitSlice) {
+      var blob = file.webkitSlice(start, stop + 1);
+    } else if (file.mozSlice) {
+      var blob = file.mozSlice(start, stop + 1);
+    }
+    reader.readAsBinaryString(blob);
+  }
+  
+  document.querySelector('.readBytesButtons').addEventListener('click', function(evt) {
+    if (evt.target.tagName.toLowerCase() == 'button') {
+      var startByte = evt.target.getAttribute('data-startbyte');
+      var endByte = evt.target.getAttribute('data-endbyte');
+      readBlob(startByte, endByte);
+    }
+  }, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>Пример</strong>: разделение файла на фрагменты. Попробуйте сами!</p>
+  <div class="example">
+    <input type="file" id="file4" name="file4" /> Считать байт: <span class="readBytesButtons">
+      <button data-startbyte="0" data-endbyte="4">1–5</button>
+      <button data-startbyte="5" data-endbyte="14">6–15</button>
+      <button data-startbyte="6" data-endbyte="7">7–8</button>
+      <button>весь файл</button>
+    </span>
+    <div id="byte_range"></div>
+    <div id="byte_content"></div>
+  </div>
+
+  <h3 id="toc-monitoring-progress">Контроль хода чтения</h3>
+
+  <p>Одним из преимуществ асинхронной обработки событий является возможность отслеживать ход чтения: это особенно удобно при работе с большими файлами, для контроля ошибок и для определения момента завершения чтения.</p>
+
+  <p>Ход чтения можно отслеживать с помощью событий <code>onloadstart</code> и <code>onprogress</code>.</p>
+
+  <p>Ниже приведен код, отображающий строку хода чтения. Чтобы оценить его в действии, загрузите файл, имеющий большой размер или находящийся на удаленном диске.</p>
+
+<pre class="prettyprint">&lt;style&gt;
+  #progress_bar {
+    margin: 10px 0;
+    padding: 3px;
+    border: 1px solid #000;
+    font-size: 14px;
+    clear: both;
+    opacity: 0;
+    -moz-transition: opacity 1s linear;
+    -o-transition: opacity 1s linear;
+    -webkit-transition: opacity 1s linear;
+  }
+  #progress_bar.loading {
+    opacity: 1.0;
+  }
+  #progress_bar .percent {
+    background-color: #99ccff;
+    height: auto;
+    width: 0;
+  }
+&lt;/style&gt;
+
+&lt;input type="file" id="files" name="file" /&gt;
+&lt;button onclick="abortRead();"&gt;Cancel read&lt;/button&gt;
+&lt;div id="progress_bar"&gt;&lt;div class="percent"&gt;0%&lt;/div&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  var reader;
+  var progress = document.querySelector('.percent');
+
+  function abortRead() {
+    reader.abort();
+  }
+
+  function errorHandler(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  }
+
+  function updateProgress(evt) {
+    // evt is an ProgressEvent.
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded &lt; 100) {
+        progress.style.width = percentLoaded + '%';
+        progress.textContent = percentLoaded + '%';
+      }
+    }
+  }
+
+  function handleFileSelect(evt) {
+    // Reset progress indicator on new file selection.
+    progress.style.width = '0%';
+    progress.textContent = '0%';
+
+    reader = new FileReader();
+    reader.onerror = errorHandler;
+    reader.onprogress = updateProgress;
+    reader.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader.onloadstart = function(e) {
+      document.getElementById('progress_bar').className = 'loading';
+    };
+    reader.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+      progress.style.width = '100%';
+      progress.textContent = '100%';
+      setTimeout("document.getElementById('progress_bar').className='';", 2000);
+    }
+
+    // Read in the image file as a binary string.
+    reader.readAsBinaryString(evt.target.files[0]);
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+&lt;/script&gt;</pre>
+
+  <p><strong>Пример</strong>: отслеживание хода чтения. Попробуйте сами!</p>
+  <div class="example">
+    <input type="file" id="file5" name="file5" />
+    <button onclick="example5.abortRead();">Отменить чтение</button>
+    <div id="progress_bar"><div class="percent">0%</div></div>
+    <p><strong>Совет.</strong> Чтобы сделать контроль хода чтения еще более наглядным, загрузите файл, имеющий большой размер или находящийся на удаленном диске.</p>
+  </div>
+
+  <h2 id="toc-references">Ссылки</h2>
+  <ul>
+    <li>Спецификация <a href="http://www.w3.org/TR/file-upload/">API файлов</a></li>
+    <li>Спецификация <a href="http://www.w3.org/TR/file-upload/#dfn-filereader">интерфейса FileReader</a></li>
+    <li>Спецификация <a href="http://www.w3.org/TR/file-upload/#dfn-Blob">интерфейса Blob</a></li>
+    <li>Спецификация <a href="http://www.w3.org/TR/file-upload/#dfn-fileerror">интерфейса FileError</a></li>
+    <li>Спецификация <a href="http://www.w3.org/TR/progress-events/#Progress">ProgressEvent</a></li>
+  </ul>
+
+<script>
+var get = function(id) { return document.getElementById(id); }
+
+var example1 = example1 || {};
+example1.handleFileSelect = function(evt) {
+  var files = evt.target.files;
+  var output = [];
+  for (var i = 0, f; f = files[i]; i++) {
+    output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                f.size, ' bytes, last modified: ',
+                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                '</li>');
+  }
+  get('file_list').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+get('files1').addEventListener('change', example1.handleFileSelect, false);
+
+var example2 = example2 || {};
+example2.onDragOver = function(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+  evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+}
+
+example2.onDragFileDrop = function(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+
+  var files = evt.dataTransfer.files;
+  var output = [];
+  for (var i = 0, f; f = files[i]; i++) {
+    output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                f.size, ' bytes, last modified: ',
+                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                '</li>');
+  }
+  get('file_list2').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+
+// Setup the dnd listeners.
+get('drop_zone').addEventListener('dragover', example2.onDragOver, false);
+get('drop_zone').addEventListener('drop', example2.onDragFileDrop, false);
+
+
+var example3 = example3 || {};
+example3.handleFileSelect = function(evt) {
+  var files = evt.target.files; // FileList object.
+
+  // Loop through the FileList and render image files as thumbnails.
+  for (var i = 0, f; f = files[i]; i++) {
+
+    // Only process image files.
+    if (!f.type.match('image.*')) {
+      continue;
+    }
+
+    var reader = new FileReader();
+
+    // Need a closure to capture the file information.
+    reader.onload = (function(theFile) {
+      return function(e) {
+        // Render thumbnail.
+        var span = document.createElement('span');
+        span.innerHTML = ['<img class="thumb" src="', e.target.result,
+                          '" title="', escape(theFile.name), '"/>'].join('');
+        get('thumbnails').insertBefore(span, null);
+      };
+    })(f);
+
+    // Read in the image file as a data URL.
+    reader.readAsDataURL(f);
+  }
+}
+get('files3').addEventListener('change', example3.handleFileSelect, false);
+
+var example4 = example4 || {};
+example4.readBlob = function(opt_startByte, opt_stopByte) {
+  var files = get('file4').files;
+  if (!files.length) {
+    alert('Please select a file!');
+    return;
+  }
+
+  var file = files[0];
+  var start = parseInt(opt_startByte) || 0;
+  var stop = parseInt(opt_stopByte) || file.size - 1;
+
+  var reader = new FileReader();
+
+  reader.onloadend = function(evt) {
+    if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+      get('byte_content').textContent = evt.target.result;
+      get('byte_range').textContent = ['Read bytes: ', start + 1, ' - ', stop + 1,
+                                       ' of ', file.size, ' byte file'].join('');
+    }
+  };
+  //var blob = file.slice(start, (stop - start) + 1);
+  if (file.webkitSlice) {
+    var blob = file.webkitSlice(start, stop + 1);
+  } else if (file.mozSlice) {
+    var blob = file.mozSlice(start, stop + 1);
+  }
+  reader.readAsBinaryString(blob);
+};
+document.querySelector('.readBytesButtons').addEventListener('click', function(evt) {
+  if (evt.target.tagName.toLowerCase() == 'button') {
+    var startByte = evt.target.getAttribute('data-startbyte');
+    var stopByte = evt.target.getAttribute('data-endbyte');
+    example4.readBlob(startByte, stopByte);
+  }
+}, false);
+
+function Example5(id) {
+  var reader_;
+  var progress_ = document.querySelector('.percent');
+  var self = this;
+
+  this.abortRead = function() {
+    reader_.abort();
+  };
+
+  this.errorHandler = function(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  };
+
+  this.updateProgress = function(evt) {
+    // evt is a ProgressEvent.
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded < 100) {
+        progress_.style.width = percentLoaded + '%';
+        progress_.textContent = percentLoaded + '%';
+      }
+    }
+  };
+
+  this.handleFileSelect = function(evt) {
+    // Reset progress indicator on new file selection.
+    progress_.style.width = '0%';
+    progress_.textContent = '0%';
+
+    reader_ = new FileReader();
+    reader_.onerror = self.errorHandler;
+    reader_.onprogress = self.updateProgress;
+    reader_.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader_.onloadstart = function(e) {
+      get('progress_bar').className = 'loading';
+    };
+    reader_.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+      progress_.style.width = '100%';
+      progress_.textContent = '100%';
+      setTimeout("get('progress_bar').className='';", 2000);
+    }
+
+    // Read in the image file as binary string.
+    reader_.readAsBinaryString(evt.target.files[0]);
+  };
+
+  get(id).addEventListener('change', self.handleFileSelect, false);
+};
+var example5 = new Example5('file5');
+</script>
+
+{% endblock %}

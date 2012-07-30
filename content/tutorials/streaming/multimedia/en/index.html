@@ -1,0 +1,145 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block iscompatible %}
+  var video = document.createElement('video');
+  return !!(window.AudioContext || window.webkitAudioContext ||
+            HTMLMediaElement.prototype.sourceAppend ||
+            HTMLMediaElement.prototype.webkitSourceAppend);
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-connectivity-multimedia-performance.png" width="197" height="64" alt="This article is powered by HTML5 Performance/Integration, Multimedia, and Realtime/Connectivity" title="This article is powered by HTML5 Performance/Integration, Multimedia, and Realtime/Connectivity" />
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+<h2 id="toc-into">Introduction</h2>
+
+<p>In this article, I'll cover two techniques for streaming audio/video using a
+few of the newer HTML5 multimedia APIs coming about. The first is the
+<a href="http://html5-mediasource-api.googlecode.com/svn/trunk/draft-spec/mediasource-draft-spec.html">MediaSource API</a>. The second is to use a binary <a href="/tutorials/websockets/basics/">WebSocket</a> to
+"stream" audio chunks to connected peers, then reconstruct the audio for the listeners
+by using the precise playback scheduling of the <a href="/tutorials/webaudio/intro/">Web Audio API</a></p>
+<h2 id="toc-mediasource">Option 1: MediaSource API</h2>
+
+<p>The <a href="http://html5-mediasource-api.googlecode.com/svn/trunk/draft-spec/mediasource-draft-spec.html">MediaSource API</a> is an experimental feature implemented in
+Chrome that extends the <code>HTMLMediaElement</code> (e.g. audio/video) with a simple JavaScript
+API that allows you to append segments (or chunks) of a media file onto an existing
+audio/video element. Such an API could be used to facilitate common use cases like
+adaptive streaming and time shifting live streams.</p>
+<p>What it looks like:</p>
+<pre class="prettyprint"><code>var video = document.querySelector('video');
+video.src = video.webkitMediaSourceURL;
+
+video.addEventListener('webkitsourceopen', function(e) {
+  this.webkitSourceAppend(new Uint8Array(arrayBuffer));
+}, false);
+</code></pre>
+<p>How it works:</p>
+<ol>
+<li>grab a <code>&lt;video&gt;</code> element from the page.</li>
+<li>populate its <code>src</code> with a special URL (<code>video.webkitMediaSourceURL</code>) returned by the API.</li>
+<li>when the <code>webkitsourceopen</code> fires, the <code>&lt;video&gt;</code> is ready to be appended to.</li>
+<li>append a single chunk to the <code>&lt;video&gt;</code> by passing an <code>Uint8Array</code> to <code>webkitSourceAppend()</code>.
+The <code>Uint8Array</code> view is created from an <code>ArrayBuffer</code> containing our video chunk (perhaps <a href="/tutorials/file/xhr2/#toc-reponseTypeArrayBuffer">obtained from XHR2</a>).</li>
+</ol>
+<p class="notice" style="text-align:center;">
+Only the .webm container is supported at this time.
+</p>
+
+<p>The above example only appends a single chunk. In practice however,
+you'll likely be appending chunks until the entire movie is constructed.
+A real-world example might look like this:</p>
+<pre class="prettyprint"><code>Todo
+</code></pre>
+<p>Here, we're using XHR2 to pull down the entire movie. The important bits to note are:</p>
+<ul>
+<li>the <code>xhr.responseType</code> is set to <code>"arraybuffer"</code> to inform the server we're
+interested in downloading the resource as a buffer of raw bytes rather than a string.</li>
+<li>TODO</li>
+</ul>
+<h3 id="toc-mediasource-enable">Enabling</h3>
+
+<p>The MediaSource API is still experimental. Since it is new, the API is behind
+a flag in Chrome 17+. It can be enabled by visiting the <code>about:flags</code> page:</p>
+<p><figure>
+  <img src="aboutflags.png">
+  <figcaption>Enabling the MediaSource API in Chrome's <code>about:flags</code> page.</figcaption>
+</figure></p>
+<p>Alternatively, you can <a href="http://www.chromium.org/developers/how-tos/run-chromium-with-flags">run Chrome</a> with the <code>--enable-media-source</code> flag
+instead of messing with <code>about:flags</code>.</p>
+<h3 id="toc-mediasource-detect">Feature detection</h3>
+
+<pre class="prettyprint"><code>function hasMediaSource() {
+  return !!(HTMLMediaElement.prototype.sourceAppend ||
+            HTMLMediaElement.prototype.webkitSourceAppend);
+}
+
+if (hasMediaSource()) {
+  // Ready to (html5)rock!
+} else {
+  alert("Sorry. Your browser doesn't support the MediaSource API!");
+}
+</code></pre>
+<h3 id="toc-mediasource-chunks">Chunking a file</h3>
+
+<p>Todo</p>
+<pre class="prettyprint"><code>window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder;
+Blob.prototype.slice = Blob.prototype.webkitSlice || Blob.prototype.mozSlice;
+
+var NUM_CHUNKS = 5;
+var FILE = 'test.webm';
+
+var video = document.querySelector('video');
+video.src = video.webkitMediaSourceURL;
+
+video.addEventListener('webkitsourceopen', function(e) {
+  var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
+
+  // Slice the video into NUM_CHUNKS and append each to the media element.
+  for (var i = 0; i &lt; NUM_CHUNKS; ++i) {
+    var startByte = chunkSize * i;
+
+    // file is a video file.
+    var chunk = file.slice(startByte, startByte + chunkSize);
+
+    var reader = new FileReader();
+    reader.onload = (function(idx) {
+      return function(e) {
+        video.webkitSourceAppend(new Uint8Array(e.target.result));
+        logger.log('appending chunk:' + idx);
+        if (idx == NUM_CHUNKS - 1) {
+          video.webkitSourceEndOfStream(HTMLMediaElement.EOS_NO_ERROR);
+        }
+      };
+    })(i);
+
+    reader.readAsArrayBuffer(chunk);
+  }
+}, false);
+</code></pre>
+<p>TODO: Link to DashPlayer</p>
+<h2 id="toc-binarywebsockets">Option 2: Binary WebSocket</h2>
+
+<p>Todo</p>
+<h3 id="toc-binarywebsockets-detect">Feature detection</h3>
+
+<p>Todo</p>
+<h2 id="toc-resources">Additional Resources</h2>
+
+<ul>
+<li><a href="http://html5-demos.appspot.com/static/media-source.html">MediaSource API Demo</a></li>
+<li><a href="http://www.ioncannon.net/utilities/1515/segmenting-webm-video-and-the-mediasource-api/">Segmenting WebM Video and the MediaSource API</a></li>
+<li><a href="http://html5-mediasource-api.googlecode.com/svn/trunk/draft-spec/mediasource-draft-spec.html">MediaSource API spec</a></li>
+<li><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html">Web Audio API spec</a></li>
+<li><a href="http://dev.w3.org/html5/websockets/">WebSocket API</a></li>
+</ul>
+<script>
+</script>
+{% endblock %}

@@ -1,0 +1,421 @@
+{% extends "tutorial.html" %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="この記事は HTML5 Offline &amp; Storage を利用しています" title="この記事は HTML5 Offline &amp; Storage を利用しています"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return ('indexedDB' in window || 'webkitIndexedDB' in window || 'mozIndexedDB' in window);
+{% endblock %}
+
+{% block head %}
+{% if is_mobile %}
+  <script>
+    var html5rocks = {};
+    var indexedDB = window.indexedDB || window.webkitIndexedDB ||
+                    window.mozIndexedDB;
+
+    if ('webkitIndexedDB' in window) {
+      window.IDBTransaction = window.webkitIDBTransaction;
+      window.IDBKeyRange = window.webkitIDBKeyRange;
+    }
+
+    html5rocks.indexedDB = {};
+    html5rocks.indexedDB.db = null;
+
+    html5rocks.indexedDB.onerror = function(e) {
+      console.log(e);
+    };
+
+    html5rocks.indexedDB.open = function() {
+      var request = indexedDB.open("todos");
+
+      request.onsuccess = function(e) {
+        var v = "1.98";
+        html5rocks.indexedDB.db = e.target.result;
+        var db = html5rocks.indexedDB.db;
+        // We can only create Object stores in a setVersion transaction;
+        if(v!= db.version) {
+          var setVrequest = db.setVersion(v);
+
+          // onsuccess is the only place we can create Object Stores
+          setVrequest.onfailure = html5rocks.indexedDB.onerror;
+          setVrequest.onsuccess = function(e) {
+            if(db.objectStoreNames.contains("todo")) {
+              db.deleteObjectStore("todo");
+            }
+
+            var store = db.createObjectStore("todo",
+              {keyPath: "timeStamp"});
+
+            html5rocks.indexedDB.getAllTodoItems();
+          };
+        }
+        else {
+          html5rocks.indexedDB.getAllTodoItems();
+        }
+      };
+
+      request.onfailure = html5rocks.indexedDB.onerror;
+    }
+
+    html5rocks.indexedDB.addTodo = function(todoText) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var data = {
+        "text": todoText,
+        "timeStamp": new Date().getTime()
+      };
+
+      var request = store.put(data);
+
+      request.onsuccess = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.deleteTodo = function(id) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var request = store.delete(id);
+
+      request.onsuccess = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.getAllTodoItems = function() {
+      var todos = document.getElementById("todoItems");
+      todos.innerHTML = "";
+
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      // Get everything in the store;
+      var keyRange = IDBKeyRange.lowerBound(0);
+      var cursorRequest = store.openCursor(keyRange);
+
+      cursorRequest.onsuccess = function(e) {
+        var result = e.target.result;
+        if(!!result == false)
+          return;
+
+        renderTodo(result.value);
+        result.continue();
+      };
+
+      cursorRequest.onerror = html5rocks.indexedDB.onerror;
+    };
+
+    function renderTodo(row) {
+      var todos = document.getElementById("todoItems");
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      var t = document.createTextNode(row.text);
+
+      a.addEventListener("click", function() {
+        html5rocks.indexedDB.deleteTodo(row.timeStamp);
+      }, false);
+
+      a.textContent = " [Delete]";
+      li.appendChild(t);
+      li.appendChild(a);
+      todos.appendChild(li)
+    }
+
+    function addTodo() {
+      var todo = document.getElementById("todo");
+      html5rocks.indexedDB.addTodo(todo.value);
+      todo.value = "";
+    }
+
+    function init() {
+      html5rocks.indexedDB.open();
+    }
+
+    window.addEventListener("DOMContentLoaded", init, false);
+  </script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-intro">はじめに</h2>
+  <p>
+    <a href="http://www.w3.org/TR/IndexedDB/">IndexedDB</a> は HTML5 の新しい機能です。ウェブ データベースはユーザーのブラウザ内でホストされ、保持されます。充実したクエリ機能を備えたアプリケーションをデベロッパーが作成できるようにすることで、オンラインでもオフラインでも使用できる新しいタイプのウェブ アプリケーションが生まれます。
+  </p>
+  <p>
+    この記事のコード例では、ごく単純な ToDo リスト マネージャを作成する方法を示し、HTML5 で使用可能な機能の一部について概要を紹介します。
+  </p>
+  <p class="notice" style="text-align:center;">
+    <a href="/tutorials/webdatabase/todo/">HTML5 WebDatabase を使用した単純な TODO リスト</a>を変換するこのチュートリアルは、IndexedDB への移行がいかに簡単かを示すためのものです。
+  </p>
+  <h2 id="what">IndexedDB とは？</h2>
+  <p>
+    IndexedDB はオブジェクト ストアです。行と列の集合から構成されるテーブルを使用したリレーショナル データベースとは異なります。これは重要かつ基本的な違いであり、アプリケーションを設計、ビルドする方法にも影響します。
+  </p>
+  <p>
+    従来のリレーショナル データストアであれば、「ToDo」アイテムのテーブルを作成し、ユーザーの ToDo データの集合を行に保存することになります。列は名前付きタイプを持つデータです。データを挿入する場合、セマンティクスは通常次のようになります: <code>INSERT INTO Todo(id, data, update_time) VALUES (1, "Test", "01/01/2010");</code>
+  </p>
+  <p>
+    IndexedDB は、データ タイプに応じたオブジェクト ストアを作成し、JavaScript Objects をそのストアに保存する点が異なります。各オブジェクト ストアにインデックスの集合を設定し、データベース全体の効率的なクエリと反復処理を行うことが可能です。
+  </p>
+  <p>
+    また、IndexedDB では Standard Query Language（
+    <abbr title="Standard Query Languag">SQL</abbr>）という表記法は必要とされておらず、SQL の代わりにインデックスに対するクエリを使用し、生成されるカーソルを結果セット全体に対する反復処理に使用します。
+  </p>
+  <p>
+    このチュートリアルは、WebSQL を使用するように作成された既存のアプリケーションを基に、IndexedDB の使用方法を示す実際の例を紹介することのみを目的にしています。
+  </p>
+  <h2 id="why">IndexedDB を使用する理由</h2>
+  <p>
+    2010 年 11 月 18 日、W3C は、Web SQL Database の仕様策定を断念したことを発表しました（<a href="http://www.w3.org/TR/webdatabase/">こちら</a>をご覧ください）。これは、今後はこのテクノロジーを使用しないようにというウェブ デベロッパーに対する勧告でした。実質的にこの仕様は新たに更新されることはなく、ブラウザ ベンダーがこのテクノロジーをサポートすることは推奨されません。
+  </p>
+  <p>
+    それを置き換えるのが IndexedDB であり、このチュートリアルは、クライアント側でのデータの保存と操作のためにデベロッパーが使用するべきデータ ストアを主題にしています。
+  </p>
+  <p>
+    Chrome、Safari、Opera などの主要なブラウザの多くと、ほぼすべての Webkit ベース モバイル デバイスが WebSQL をサポートし、予測可能な将来にわたってサポートを維持する見込みです。
+  </p>
+  <h2 id="toc-prereqs">前提条件</h2>
+  <p>
+    このサンプルでは、名前空間を使用してデータベース ロジックをカプセル化しています。
+  </p>
+  <pre class="prettyprint">
+var html5rocks = {};
+html5rocks.indexedDB = {};
+</pre>
+  <h2 id="toc-transactions">非同期型とトランザクション型</h2>
+  <p>
+    Indexed Database を使用する大部分のケースでは、<a
+      href="http://dev.w3.org/html5/indexeddb/#asynchronous-database-api">Asynchronous API</a> を使用します。Asynchronous API は非ブロック システムであるため、戻り値を通してデータを取得するのではなく、定義済みのコールバック関数に配信されるデータを取得します。
+  </p>
+  <p>
+    HTML による IndexedDB サポートはトランザクション型です。トランザクションの外部でコマンドを実行することや、カーソルをオープンすることはできません。トランザクションには、読み取り/書き込みトランザクション、読み取り専用、スナップショットという複数のタイプがあります。このチュートリアルでは、読み取り/書き込みトランザクションを使用します。
+  </p>
+  <h2 id="toc-step1">ステップ 1. データベースのオープン</h2>
+  <p>データベースに対して処理を実行するには、最初にデータベースをオープンする必要があります。
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.db = null;
+
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos");
+
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.db = e.target.result;
+    // Do some more stuff in a minute
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>「todos」というデータベースをオープンし、html5rocks.indexedDB オブジェクトの変数 <code>db</code> に割り当てます。以降、このチュートリアル全体を通して、この変数を使用してデータベースを参照することができます。</p>
+  <h2 id="toc-step2">ステップ 2. オブジェクト ストアの作成</h2>
+  <p>
+    オブジェクト ストアは、「SetVersion」トランザクションの内部でのみ作成できます。setVersion についてはまだ説明していませんが、これは非常に重要なメソッドです。このメソッドは、コードの中でオブジェクト ストアとインデックスを作成できる唯一の場所です。<em></em>
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos",
+    "This is a description of the database.");
+
+  request.onsuccess = function(e) {
+    var v = "1.0";
+    html5rocks.indexedDB.db = e.target.result;
+    var db = html5rocks.indexedDB.db;
+    // We can only create Object stores in a setVersion transaction;
+    if(v!= db.version) {
+      var setVrequest = db.setVersion(v);
+
+      // onsuccess is the only place we can create Object Stores
+      setVrequest.onfailure = html5rocks.indexedDB.onerror;
+      setVrequest.onsuccess = function(e) {
+        var store = db.createObjectStore("todo",
+          {keyPath: "timeStamp"});
+
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+    }
+
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+}</pre>
+<p>
+    上に示したコードは、実際にはさまざまなことを実行します。呼び出されるとデータベース「todos」をオープンする、「open」メソッドを API に定義します。オープン リクエストはすぐに実行されるのではありません。代わりに <code>IDBRequest</code> が返されます。現在の関数が終了すると、<code>indexedDB.open</code> メソッドが呼び出されます。これは、非同期コールバックを割り当てる方法とは少し異なりますが、コールバックが実行される前に、独自のリスナーを <code>IDBRequest</code> オブジェクトにアタッチする機会があります。
+</p>
+<p>
+    オープン リクエストが成功すると、<code>onsuccess</code> コールバックが実行されます。このコールバックでは、データベース バージョンを確認し、予期した数値と異なる場合は、「setVersion」を呼び出します。</p>
+<p>
+    <em></em>setVersion は、コードの中で、データベースの構造を変更できる唯一の場所です。setVersion では、オブジェクト ストアの作成と削除、インデックスのビルドと削除ができます。<code>setVersion</code> への呼び出しによって <code>IDBRequest</code> オブジェクトが返され、コールバックをアタッチできます。成功したら、オブジェクト ストアの作成を開始します。
+</p>
+<p>
+    オブジェクト ストアは <code>createObjectStore</code> への 1 回の呼び出しで作成されます。メソッドはストアの名前と、パラメータ オブジェクトを受け取ります。パラメータ オブジェクトは非常に重要です。このオブジェクトを使用すると、重要なオプションのプロパティを定義できます。ここでは、<code>keyPath</code> を定義します。これは、ストア内の個々のオブジェクトをユニークにするプロパティです。この例では、「timeStamp」がそのプロパティです。「timeStamp」は、objectStore に保存するすべてのオブジェクトに設定する必要があります。<em></em>
+</p>
+<p>
+    オブジェクト ストアを作成したら、次は <a href="#toc-step4">getAllTodoItems</a> メソッドを呼び出します。
+</p>
+
+  <h2 id="toc-step3">ステップ 3. オブジェクト ストアへのデータの追加</h2>
+  <p>
+    ToDo リスト マネージャを作成しようとしているので、ToDo アイテムをデータベースに追加できることはとても重要です。これは次のように行います。
+  </p>
+
+  <pre class="prettyprint">
+html5rocks.indexedDB.addTodo = function(todoText) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+  var request = store.put({
+    "text": todoText,
+    "timeStamp" : new Date().getTime()
+  });
+
+  request.onsuccess = function(e) {
+    // Re-render all the todo's
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onerror = function(e) {
+    console.log(e.value);
+  };
+};</pre>
+
+  <p>
+    <code>addTodo</code> メソッドはごく単純です。最初にデータベース オブジェクトをすばやく参照し、<code>READ_WRITE</code> トランザクションを開始して、オブジェクト ストアへの参照を取得します。
+  </p>
+  <p>
+    これでアプリケーションはオブジェクト ストアにアクセスできるようになるので、基本的な JSON オブジェクトを使用して単純な <code>put</code> コマンドを発行できます。<code>timeStamp</code> プロパティが使用されていることに注目してください。これは、オブジェクトの一意なキーであり、「keyPath」として使用されます。put への呼び出しが成功すると、onsuccess イベントがトリガーされ、コンテンツを画面にレンダリングすることができます。
+  </p>
+
+  <h2 id="toc-step4">ステップ 4. ストア内のデータのクエリ</h2>
+  <p>
+    データベースにデータを保存したので、次はデータにアクセスする方法が必要です。幸い、その方法は非常にわかりやすくなっています。
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.getAllTodoItems = function() {
+  var todos = document.getElementById("todoItems");
+  todos.innerHTML = "";
+
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  // Get everything in the store;
+  var keyRange = IDBKeyRange.lowerBound(0);
+  var cursorRequest = store.openCursor(keyRange);
+
+  cursorRequest.onsuccess = function(e) {
+    var result = e.target.result;
+    if(!!result == false)
+      return;
+
+    renderTodo(result.value);
+    result.continue();
+  };
+
+  cursorRequest.onerror = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>
+    このサンプルで使用しているコマンドはすべて非同期型なので、データがトランザクション内から返されることはありません。
+  </p>
+  <p>
+    次のコードは、トランザクションを作成し、データに対する keyRange 検索のインスタンスを作成します。keyRange は、ストアからクエリで取り出すデータの単純なサブセットを定義します。ストアの keyPath が数値タイムスタンプであることを受けて、検索の最小値を 0（ストア作成以降すべて）に設定し、すべてのデータが返されるようにします。
+  </p>
+  <p>
+    この時点で、トランザクション、クエリを実行するストアへの参照、反復処理を行う範囲ができています。残っている処理は、カーソルをオープンし、「onsuccess」イベントをアタッチすることだけです。
+  </p>
+  <p>
+    結果はカーソルに対する成功時のコールバックに渡され、結果がレンダリングされます。コールバックは結果ごとに 1 回だけ起動されるので、データ全体に続けて反復処理を行うには、結果オブジェクトに対して「continue」を呼び出す必要があります。
+  </p>
+  <h2>ステップ 4a. Object Store からのデータのレンダリング</h2>
+  <p>
+    データが Object Store から取得されると、カーソル内の各結果に対して <code>renderTodo</code> メソッドが呼び出されます。<em></em>
+  </p>
+
+  <pre class="prettyprint">
+function renderTodo(row) {
+  var todos = document.getElementById("todoItems");
+  var li = document.createElement("li");
+  var a = document.createElement("a");
+  var t = document.createTextNode();
+  t.data = row.text;
+
+  a.addEventListener("click", function(e) {
+    html5rocks.indexedDB.deleteTodo(row.text);
+  });
+
+  a.textContent = " [Delete]";
+  li.appendChild(t);
+  li.appendChild(a);
+  todos.appendChild(li)
+}</pre>
+  <p>
+    特定の ToDo アイテムに関して、テキストを受け取り、アイテムの UI を作成します。この中には（ToDo アイテムを削除できるようにする）削除ボタンも含まれます。
+  </p>
+  <h2 id="toc-step5">ステップ 5. テーブルからのデータの削除</h2>
+  <pre class="prettyprint">
+html5rocks.indexedDB.deleteTodo = function(id) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  var request = store.delete(id);
+
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.getAllTodoItems();  // Refresh the screen
+  };
+
+  request.onerror = function(e) {
+    console.log(e);
+  };
+};</pre>
+  <p>
+    Object Store にデータを <code>put</code> するコードと同様に、データの削除も簡単です。トランザクションを開始し、オブジェクトが含まれているオブジェクト ストアを参照して、オブジェクトのユニークな ID を指定した <code>delete</code> コマンドを実行します。
+  </p>
+  <h2 id="toc-step6">ステップ 6. すべてを統合</h2>
+  <p>
+    ページが読み込まれたら、データベースをオープンし、テーブルを作成して（必要な場合）、既にデータベース内にある ToDo アイテムを表示します。
+  </p>
+  <pre class="prettyprint">
+function init() {
+  html5rocks.indexedDB.open(); // open displays the data previously saved
+}
+
+window.addEventListener("DOMContentLoaded", init, false);
+</pre>
+  <p>
+    DOM からデータを取り出す関数が必要なので、<code>html5rocks.indexedDB.addTodo</code> メソッドを呼び出します。
+  </p>
+  <pre class="prettyprint">
+function addTodo() {
+  var todo = document.getElementById('todo');
+
+  html5rocks.indexedDB.addTodo(todo.value);
+  todo.value = '';
+}</pre>
+  <h2 id="toc-final">最終的な成果</h2>
+{% if is_mobile %}
+  <ul id="todoItems"></ul>
+  <input type="text" id="todo" name="todo"
+      placeholder="What do you need to do?" style="width: 200px;" />
+    <input type="submit" value="Todo アイテムの追加"
+      onclick="addTodo(); return false;" />
+{% else %}
+<iframe src="http://playground.html5rocks.com/?mode=frame&hu=210&hl=150#a_simple_todo_list_using_indexeddb" style="border: none; width: 100%; height: 480px;"></iframe>
+{% endif %}
+
+{% endblock %}

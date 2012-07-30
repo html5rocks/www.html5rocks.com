@@ -1,0 +1,412 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video"  />
+{% endblock %}
+
+{% block iscompatible %}
+return !!document.createElement("video").textTracks;
+{% endblock %}
+
+{% block head %}
+<style>
+video {
+  max-width: 100%;
+  outline: none;
+}
+div#eric video {
+-webkit-box-reflect: below 5px -webkit-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-moz-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-ms-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-o-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+margin: 0;
+}
+
+div#eric  {
+  text-align: center;
+}
+
+div#eric > div {
+margin-top: 2em;
+text-align: center;
+-webkit-perspective: 800;
+-webkit-transform-style: preserve-3d;
+-moz-perspective: 800;
+-moz-transform-style: preserve-3d;
+-ms-perspective: 800;
+-ms-transform-style: preserve-3d;
+-o-perspective: 800;
+-o-transform-style: preserve-3d;
+}
+
+div#eric > div > div:last-child {
+position: relative;
+top: -36px;
+}
+div#eric > div > div {
+color: black;
+font-family: "Open Sans", sans-serif;
+font-size: 18px;
+height:  25px;
+opacity: 1;
+-webkit-transition: all 500ms ease-in-out;
+-webkit-transform-origin: 50% 100%;
+-webkit-transform: rotateX(-90deg);
+-moz-transition: all 500ms ease-in-out;
+-moz-transform-origin: 50% 100%;
+-moz-transform: rotateX(-90deg);
+-o-transition: all 500ms ease-in-out;
+-o-transform-origin: 50% 100%;
+-o-transform: rotateX(-90deg);
+-ms-transition: all 500ms ease-in-out;
+-ms-transform-origin: 50% 100%;
+-ms-transform: rotateX(-90deg);
+}
+div#eric > div > div.on {
+opacity: 1;
+-webkit-transform: rotateX(0);
+-moz-transform: rotateX(0);
+-o-transform: rotateX(0);
+-ms-transform: rotateX(0);
+}
+.trackNotSupported {
+  display: none;
+}
+.trackNotSupported.show {
+  display: block;
+}
+.warningMessage {
+  color: red;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Introducción al elemento de pista de HTML5</h2>
+
+<p>El elemento de pista ofrece una forma sencilla y estandarizada de añadir subtítulos, descripciones para lectores de pantalla y capítulos a archivos de vídeo y audio.</p>
+
+<p>Los elementos de pista también se pueden utilizar para otros tipos de metadatos con tiempos. Los datos de origen de cada elemento de pista están incluidos en un archivo de texto compuesto por una lista de <code>cues</code>. Estos cues pueden incluir datos en formatos como JSON o CSV. Este método es extremadamente potente y permite crear enlaces profundos y navegar por los medios a través de, por ejemplo, la búsqueda de texto o la manipulación de DOM y otros comportamientos sincronizados con la reproducción de medios.</p>
+
+<p>Actualmente, el elemento de pista se encuentra disponible en <a href="http://ie.microsoft.com/testdrive/" title="Descargar Internet Explorer 10">Internet Explorer 10</a> y en <a href="http://tools.google.com/dlpage/chromesxs" title="Descargar Chrome Canary">Chrome 18</a>. Firefox <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Informe de error del elemento de pista en Firefox">todavía no es compatible</a>. En Chrome, debes habilitar la compatibilidad del elemento de pista en la página <a href="chrome://flags" title="chrome://flags page">chrome://flags</a>.</p>
+
+<p>A continuación, se muestra un ejemplo sencillo de un vídeo con un elemento de pista. Reprodúcelo para ver los subtítulos en inglés.</p>
+ 
+<video controls class="trackSupported">
+  <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
+  <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
+</video>
+
+<p class="warningMessage trackNotSupported">Para ver esta demo, debes tener un navegador, por ejemplo, <a href="http://tools.google.com/dlpage/chromesxs" title="Descargar Google Chrome Canary">Google Chrome Canary</a> que sea compatible con el elemento de pista. En Chrome, debes habilitar la compatibilidad del elemento de pista en la página chrome://flags.</p>
+
+<p>El código para un elemento de vídeo con subtítulos en inglés y alemán tendría este aspecto:</p>
+
+<pre class="prettyprint">
+&lt;video src="foo.ogv"&gt;
+  &lt;track kind="subtitles" label="English subtitles" src="subtitles_en.vtt" srclang="en" default&gt;&lt;/track&gt;
+  &lt;track kind="subtitles" label="Deutsche Untertitel" src="subtitles_de.vtt" srclang="de"&gt;&lt;/track&gt;
+&lt;/video&gt;
+</pre>
+
+<p>En este ejemplo, el elemento de vídeo mostraría un selector que ofrecería al usuario la oportunidad de elegir el idioma de los subtítulos (aunque en lo que respecta a la escritura de código, esto aún no se ha implementado).</p>
+
+<p>Ten en cuenta que el elemento de pista no se puede utilizar desde una URL <code>file://</code>. Para ver el funcionamiento de los elementos de pista, sube los archivos a un servidor web.</p>
+
+<p>Cada uno de los elementos de pista tiene un atributo <code>kind</code>, que puede ser <code>subtitles</code>, <code>captions</code>, <code>descriptions</code>, <code>chapters</code> o <code>metadata</code>. El atributo <code>src</code> de elemento de pista indica un archivo de texto que contiene datos para cues de pista con tiempos, que pueden estar en cualquier formato que pueda analizar un navegador. Chrome es compatible con WebVTT, que tiene este aspecto:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+railroad
+00:00:10.000 --> 00:00:12.500
+Poco inspirados por la corteza de tierra de ferrocarril
+
+manuscrito
+00:00:13.200 --> 00:00:16.900
+que tocó el plomo hasta las páginas de tu manuscrito
+</pre>
+
+<p>Cada elemento incluido en un archivo de pista se denomina cue. Cada cue consta de un tiempo de inicio y un tiempo de finalización separados por una flecha y texto situado en la línea inferior. De forma opcional, los cues también pueden tener ID, como "ferrocarril" y "manuscrito" en los ejemplos anteriores. Los cues están separados por una línea en blanco.</p>
+
+<p>Los tiempos de los cues se indican en el formato horas:minutos:segundos:milisegundos. Pero ten cuidado, pues el proceso de análisis es estricto. Los números se deben rellenar con ceros si fuera necesario: las horas, los minutos y los segundos deben tener dos dígitos (00 para un valor de cero) y los milisegundos deben tener tres dígitos (000 para cero). Existe una herramienta de validación de WebVTT en la página <a href="http://quuz.org/webvtt/">quuz.org/webvtt</a>, que comprueba errores en el formato de tiempo y errores como tiempos no secuenciales.</p>
+
+<p>La siguiente demo muestra cómo se pueden buscar subtítulos para navegar por el vídeo.</p>
+
+<!-- subtitle search example -->
+
+<h2 id="toc-jsoncues">Cómo utilizar HTML y JSON en los cues</h2>
+
+<p>El texto de un cue de un archivo WebVTT puede ocupar varias líneas, siempre y cuando ninguna de ellas esté en blanco. Esto significa que los cues pueden incluir código HTML:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+&lt;p>Los organismos pluricelulares están formados por diferentes tipos de células que realizan funciones especializadas.&lt;/p>
+&lt;p>La mayoría de los seres vivos que se pueden ver a simple vista son pluricelulares.&lt;/p>
+&lt;p>Se cree que estos organismos evolucionaron hace aproximadamente mil millones de años dando lugar a líneas evolutivas independientes en plantas, animales y hongos.&lt;/p>
+
+</pre>
+
+<p>¿Por qué no ir más allá? Los cues también pueden utilizar código JSON:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+{
+"title": "Organismos pluricelulares",
+"description": "Los organismos pluricelulares están formados por diferentes tipos de células que realizan funciones especializadas.
+  La mayoría de los seres vivos que se pueden ver a simple vista son pluricelulares. Se cree que estos organismos
+  evolucionaron hace aproximadamente mil millones de años dando lugar a líneas evolutivas independientes
+  en plantas, animales y hongos.",
+"src": "pluricelular.jpg",
+"href": "http://es.wikipedia.org/wiki/Pluricelular"
+}
+
+insectos
+00:02:18.800 --> 00:03:01.600
+{
+"title": "Insectos",
+"description": "Los insectos son el grupo de animales más diverso del planeta. Se estima que actualmente existe un número total
+  de especies que oscila entre los dos y los cincuenta millones. Los primeros insectos aparecieron hace aproximadamente
+  400 millones de años y se caracterizan por un sólido exoesqueleto, un cuerpo formado por tres partes, seis patas, ojos compuestos
+  y antenas.",
+"src": "insectos.jpg",
+"href": "http://es.wikipedia.org/wiki/Insecta"
+}
+</pre>
+
+<p>La capacidad de utilizar datos estructurados en los cues hace que el elemento de pista sea extremadamente potente y flexible. Una aplicación web puede procesar los eventos de cue, extraer el texto de cada cue mientras se ejecuta, analizar los datos y, a continuación, utilizar los resultados para realizar cambios DOM (o realizar otras tareas relacionadas con JavaScript o CSS) sincronizados con la reproducción de medios.</p>
+
+<h2 id="toc-search">Búsqueda y navegación profunda</h2>
+
+<p>Los elementos de pista también pueden añadir valor a archivos de audio y vídeo haciendo que las búsquedas sean más fáciles, rápidas y precisas.</p>
+<p>Los cues incluyen texto que se puede indexar y un tiempo de inicio que hace referencia a la "ubicación" temporal del contenido en el medio. Los cues incluso pueden contener datos sobre la posición de los elementos en un fotograma de vídeo. En combinación con las <a href="http://www.youtube.com/watch?v=LfRRYp6mnu0" title="Vídeo de YouTube en el que se muestra la implementación prototípica de una URI de fragmentos de medios">URI de fragmentos de medios</a>, los elementos de pista pueden proporcionar un potente mecanismo para buscar contenido y navegar por él en archivos de audio y vídeo. Por ejemplo, imagina que realizas una búsqueda sobre "Etta James" que devuelve resultados que enlazan directamente con puntos de vídeos en los que se menciona su nombre en el texto de un cue.</a>
+
+<p>La demo <a href="treeOfLife/index.html" title="demo Árbol de la vida, que muestra el uso de los metadatos">Árbol de la vida</a> es un ejemplo sencillo de cómo se puede utilizar un elemento de pista para habilitar la navegación a través de búsquedas en subtítulos, y también muestra cómo los metadatos con tiempos pueden habilitar la manipulación de DOM sincronizados con la reproducción de medios.</p>
+
+<h2 id="toc-cues-js">Cómo obtener elementos de pista y cues con JavaScript</h2>
+
+<p>Los elementos de audio y vídeo tienen una propiedad <code>textTracks</code> que devuelve un elemento <code>TextTrackList</code>, cuyos componentes son elementos <code>TextTrack</code> que se corresponden con elementos <code>&lt;track&gt;</code>:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var textTracks = videoElement.textTracks; // one for each track element
+var textTrack = textTracks[0]; // corresponds to the first track element
+var kind = textTrack.kind // e.g. "subtitles"
+var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+</pre>
+
+<p>A su vez, cada elemento <code>TextTrack</code>, cuenta con una propiedad <code>cues</code> que devuelve un elemento <code>TextTrackCueList</code>, cuyos componentes son cues individuales. Se puede acceder a los datos del cue mediante propiedades como <code>startTime</code>, <code>endTime</code> y <code>text</code> (utilizadas para obtener el contenido de texto del cue):</p>
+
+<pre class="prettyprint">
+var cues = textTrack.cues;
+var cue = cues[0]; // corresponds to the first cue in a track src file
+var cueId = cue.id // cue.id corresponds to the cue id set in the WebVTT file
+var cueText = cue.text; // "The Web is always changing", for example (or some JSON!)
+</pre>
+
+<p>A veces, tiene sentido obtener objetos <code>TextTrack</code> a través del elemento <code>HTMLTrackElement</code>:</p>
+
+<pre class="prettyprint">
+var trackElements = document.querySelectorAll("track");
+// for each track element
+for (var i = 0; i &lt; trackElements.length; i++) {
+  trackElements[i].addEventListener("load", function() {
+    var textTrack = this.track; // gotcha: "this" is an HTMLTrackElement, not a TextTrack object
+    var isSubtitles = textTrack.kind === "subtitles"; // for example...
+    // for each cue
+    for (var j = 0; j &lt; textTrack.cues.length; ++j) {
+      var cue = textTrack.cues[j];
+      // do something
+    }
+}
+</pre>
+
+<p>Como se observa en este ejemplo, se accede a la propiedades <code>TextTrack</code> mediante la propiedad de un elemento <code>track</code>, no a través del elemento en sí. </p>
+
+<p>A los elementos <code>TextTrack</code> se accede una vez se ha activado el evento <code>load</code>, nunca antes.</p>
+
+<h2 id="toc-events">Eventos de cue y de pista</h2>
+
+<p>Existen dos tipos de evento de cue:
+<ul>
+  <li>eventos de entrada y salida iniciados por cues,</li>
+  <li>eventos "cuechange" activados para elementos de pista. </li>
+</ul>
+</p>
+
+<p>En el ejemplo anterior, los detectores de eventos de cues se pueden haber añadido de la siguiente forma:</p>
+
+<pre class="prettyprint">
+cue.onenter = function(){
+  // do something
+};
+
+cue.onexit = function(){
+  // do something else
+};
+</pre>
+
+<p>Ten en cuenta que los eventos de entrada y salida solo se activan cuando los cues entran o salen mediante la reproducción. Si el usuario arrastra el control deslizante de la línea de tiempo de forma manual, se activará un evento "cuechange" para el elemento de pista en el nuevo punto de tiempo; sin embargo, no se activarán los eventos de entrada y salida. Es posible evitar esto si se detecta el evento de pista "cuechange" y luego se obtienen los cues (ten en cuenta que puede haber más de un cue activo).</p>
+
+<p>En el siguiente ejemplo, se obtiene el cue actual, cuando este cambia, y se intenta crear un objeto analizando el texto del cue.</p>
+
+<pre class="prettyprint">
+textTrack.oncuechange = function (){
+  // "this" is a textTrack
+  var cue = this.activeCues[0]; // assuming there is only one active cue
+  var obj = JSON.parse(cue.text);
+  // do something
+}
+</pre>
+
+<h2 id="toc-notjustvideo">No solo para vídeo</h2>
+
+<p>No olvides que los elementos de pista se pueden utilizar tanto con archivos de audio como de vídeo, y recuerda también que no necesitas elementos de pista, vídeo o audio en el marcado HTML para aprovechar sus API. En la <a href="http://dev.w3.org/html5/spec/video.html#text-track-api" title="documentación del W3C sobre el API TextTrack">documentación</a> sobre el API TextTrack puedes encontrar un buen ejemplo de ello; en él se muestra una manera sencilla de implementar sprites de audio.</p>
+
+<pre class="prettyprint">
+var sfx = new Audio('sfx.wav');
+var track = sfx.addTextTrack('metadata'); // previously implemented as addTrack()
+
+// Add cues for sounds we care about.
+track.addCue(new TextTrackCue('dog bark', 12.783, 13.612, '', '', '', true));
+track.addCue(new TextTrackCue('kitten mew', 13.612, 15.091, '', '', '', true));
+
+function playSound(id) {
+  sfx.currentTime = track.getCueById(id).startTime;
+  sfx.play();
+}
+
+playSound('dog bark');
+playSound('kitten mew');
+</pre>
+
+<p>El método <code>addTextTrack</code> utiliza tres parámetros: <code>kind</code> (por ejemplo, "metadata", como en el ejemplo anterior), <code>label</code> (por ejemplo, "Sous-titres français") y <code>language</code> (por ejemplo, "fr").</p>
+
+<p>El ejemplo anterior también utiliza <code>addCue</code>, que utiliza un objeto <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue" title="documentación de WHATWG sobre TextTrackCue"><code>TextTrackCue</code></a>, cuyo constructor utiliza un elemento <code>id</code> (por ejemplo, "ladrido de perro"), un elemento <code>startTime</code>, un elemento <code>endTime</code>, el elemento <code>text</code> de un cue, un argumento de <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-settings" title="documentación sobre la configuración de cues de WebVTT"><code>configuración de cues de WebVTT</code></a>(para el posicionamiento, el tamaño y la alineación) y un indicador booleano <code>pauseOnExit</code> (por ejemplo, para pausar la reproducción al plantear una pregunta en un vídeo educativo).</p>
+
+<p>Ten en cuenta que <code>startTime</code> y <code>endTime</code> utilizan valores de puntos flotantes en segundos, no en el formato horas:minutos:segundos:milisegundos utilizado por WebVTT.</p>
+
+<p>Los cues también se pueden eliminar con <code>removeCue()</code>, que utiliza el cue como su argumento, por ejemplo:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var track = videoElement.textTracks[0];
+var activeCue = track.activeCues[0];
+track.removeCue(activeCue);
+</pre>
+
+<p>Si pruebas este método, observarás que se elimina un cue representado en cuanto se ejecuta el código.</p>
+
+<p>Los elementos de pista tienen un atributo <code>mode</code>, que puede ser 0 (<code>TextTrack.OFF</code> en la especificación, <code>TextTrack.DISABLED</code> en Chrome), 1 (<code>TextTrack.HIDDEN</code>) o 2 (<code>TextTrack.SHOWING</code>). Esto puede resultar útil si quieres utilizar eventos de pista, pero también desactivar la representación predeterminada. Reproduce el siguiente vídeo (creado por <a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="demo del desplegable Eric Bidelman sobre HTML5">Eric Bidelman</a>) para ver un ejemplo de todo esto.</p>
+
+<div id="eric">
+  <video width="400" controls>
+    <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"'>
+    <track label="English subtitles" kind="subtitles" srclang="en" src="treeOfLife/tracks/developerStories-subtitles-en.vtt" default>
+  </video>
+  <div><div>test1</div><div>asdf2</div></div>
+</div>
+
+<script>
+(function(){
+
+var video = document.querySelector('div#eric video');
+var span1 = document.querySelector('div#eric > div :first-child');
+var span2 = document.querySelector('div#eric > div :last-of-type');
+
+if (!video.textTracks) return;
+
+var track = video.textTracks[0];
+track.mode = TextTrack.HIDDEN;
+
+var idx = 0;
+
+track.oncuechange = function(e) {
+
+  var cue = this.activeCues[0];
+  if (cue) {
+    if (idx == 0) {
+      span2.className = '';
+      span1.classList.remove('on');
+      span1.innerHTML = '';
+      span1.appendChild(cue.getCueAsHTML());
+      span1.classList.add('on');
+    } else {
+      span1.className = '';
+      span2.classList.remove('on');
+      span2.innerHTML = '';
+      span2.appendChild(cue.getCueAsHTML());
+      span2.classList.add('on');
+    }
+
+    idx = ++idx % 2;
+  }
+
+};
+
+})();
+</script>
+
+<p>En este ejemplo, se utiliza el método <code>getCueAsHTML()</code>, que devuelve una versión HTML de cada cue, y realiza una conversión del formato WebVTT a <code>DocumentFragment</code> de HTML utilizando las reglas de <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="documentación sobre reglas de análisis para texto de cues de WebVTT">análisis</a> y <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="documentación sobre reglas de construcción de DOM para texto de cues de WebVTT">construcción de DOM</a> para texto de cues de WebVTT. Utiliza la propiedad <code>text</code> de un cue si solo quieres obtener el valor de texto subyacente del cue tal y como se encuentra en el archivo <code>src</code>.</p>
+
+<p>En este contexto, puede resultar útil utilizar el método <code>getCueAsHTML()</code>, que devuelve una versión HTML de cada cue, y realizar una conversión del formato WebVTT a <code>DocumentFragment</code> de HTML utilizando las reglas de <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="documentación sobre reglas de análisis para texto de cues de WebVTT">análisis</a> y <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="documentación sobre reglas de construcción de DOM para texto de cues de WebVTT">construcción de DOM</a> para texto de cues de WebVTT. Utiliza la propiedad <code>text</code> de un cue si solo quieres obtener el valor de texto subyacente del cue tal y como se encuentra en el archivo <code>src</code>.</p>
+
+<h2 id="toc-markup">Más información sobre marcado</h2>
+
+<p>El marcado se puede añadir a la línea de las marcas de tiempo de un cue para especificar la posición, la alineación y la dirección del texto. El texto de un cue se puede marcar para especificar una voz (por ejemplo, para indicar el nombre de los hablantes) y para añadir formato. Los subtítulos se pueden manipular con CSS de la siguiente forma:</p>
+
+<pre class="prettyprint">
+::cue {
+  color: #444;
+  font: 1em sans-serif;
+}
+::cue .warning {
+  color: red;
+  font: bold;
+}
+</pre>
+
+<p>En las diapositivas sobre la <a href="http://html5videoguide.net/presentations/WebVTT/#title-slide" title="diapositivas sobre la accesibilidad de los vídeos en HTML5">accesibilidad de los vídeos en HTML5</a> de Silvia Pfeiffer, se muestran más ejemplos sobre cómo trabajar con marcas y también se indica cómo crear elementos de pista de capítulo para elementos de pista de descripción y navegación destinados a lectores de pantalla.</p>
+
+<h2 id="toc-finally">Y por último...</h2>
+
+<p>Almacenar datos de cues en archivos de texto, en lugar de codificarlos en banda en archivos de audio o vídeo, hace que la subtitulación resulte más sencilla y puede mejorar la accesibilidad, las búsquedas y la portabilidad de datos.</p>
+
+<p>El elemento de pista también habilita el uso de metadatos con tiempos y contenido dinámico vinculados a la reproducción de medios, lo que a su vez añade valor a los elementos de audio y vídeo.</p>
+
+<p>Debido a su potencia, flexibilidad y simplicidad, el elemento de pista representa un gran paso hacia el aumento de la apertura y el dinamismo de los medios en la Web.</p>
+
+<h2 id="toc-more">Más información</h2>
+
+<ul>
+  <li>Estándar de funcionamiento de HTML de WHATWG: <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element">http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element</a></li>
+  <li>Esquema de funcionamiento de HTML5 del W3C: <a href="http://dev.w3.org/html5/spec/Overview.html#the-track-element" title="documentación del W3C sobre el esquema de funcionamiento del elemento de pista">http://dev.w3.org/html5/spec/Overview.html#the-track-element</a></li>
+  <li>Estándar del W3C sobre WebVTT: <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-timings" title="estándar de WebVTT">http://dev.w3.org/html5/webvtt/#webvtt-cue-timings</a></li>
+  <li>Formatos de pista con tiempos: <a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a></li>
+  <li>Casos prácticos de formatos de pista con tiempos: <a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a></li>
+  <li><a href="http://www.bbc.co.uk/blogs/researchanddevelopment/2012/01/implementing-startoffsettime-f.shtml" title="entrada del blog sobre investigación y desarrollo de la BBC">Out-of-band timed metadata for live streaming</a> (Metadatos con tiempos fuera de banda para emisión en directo): entrada del blog sobre investigación y desarrollo de la BBC publicada por Sean O'Halpin</li>
+</ul>
+
+<script>
+$(document).ready(function() {
+  if (!isCompatible()) {
+    var els = document.querySelectorAll('.trackNotSupported');
+    for (var i = 0, el; el = els[i]; ++i) {
+      el.classList.add('show');
+    }
+  }
+});
+</script>
+{% endblock %}

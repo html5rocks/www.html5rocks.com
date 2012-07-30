@@ -1,0 +1,768 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}Exploring the FileSystem APIs{% endblock %}
+{% block pagetitle %}Exploring the FileSystem APIs{% endblock %}
+{% block head %}
+<style>
+{% if is_mobile %}
+.example {
+  padding: 10px;
+  border: 1px solid #CCC;
+}
+#example-list-fs ul {
+  padding-left: 0;
+}
+#example-list-fs li {
+  list-style: none;
+}
+#example-list-fs img {
+  vertical-align: middle;
+}
+{% endif %}
+
+#terminal-iframe {
+  display: none;
+  border: 1px solid black;
+  width: 100%;
+  height: 300px;
+}
+</style>
+{% endblock %}
+{% block pagebreadcrumb %}Exploring the FileSystem APIs{% endblock %}
+{% block date %}January 4, 2011{% endblock %}
+{% block updated %}January 27, 2012{% endblock %}
+{% block onload %}document.querySelector('#terminal-iframe').style.display='block';{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span> <span class="browser safari"><span class="browser_name">Safari</span><span class="support">unsupported</span></span> <span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="This article is powered by HTML5 Offline &amp; Storage" title="This article is powered by HTML5 Offline &amp; Storage"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return !!(window.requestFileSystem || window.webkitRequestFileSystem);
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction">Введение</h2>
+
+  <p>Я всегда считал, что было бы очень удобно, если бы веб-приложения могли читать и записывать файлы и каталоги. По мере перехода из офлайн в онлайн приложения становятся все более сложными, но дальнейшему развитию Интернета мешает отсутствие API файловых систем. Хранение и использование двоичных данных не должно ограничиваться рабочим столом. К счастью, <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem API</a> решает эту задачу. С его помощью любое веб-приложение может создавать, считывать, просматривать и записывать данные в тестовой среде локальной файловой системы пользователя.</p>
+
+  <p>В API можно выделить несколько аспектов.</p>
+  <ul>
+    <li>Чтение файлов и операции с ними: <code>File</code>/<code>Blob</code>, <code>FileList</code>, <code>FileReader</code>.</li>
+    <li>Создание и запись: <code>BlobBuilder</code>, <code>FileWriter</code>.</li>
+    <li>Доступ к каталогам и файловым системам: <code>DirectoryReader</code>, <code>FileEntry</code>/<code>DirectoryEntry</code>, <code>LocalFileSystem</code>.
+    </li>
+  </ul>
+
+  <h3 id="toc-support">Поддержка браузерами и ограничения на хранение</h3>
+
+  <p>На момент подготовки этой статьи FileSystem API был реализован только в браузере Google Chrome. Специализированного интерфейса для управления файлами и квотами пока не существует. Для хранения данных в системе пользователя может потребоваться <a href="#toc-requesting-quota">запрос квоты</a> для приложения. Для тестирования Chrome можно запускать с флагом <code>--unlimited-quota-for-files</code>. Более того, если вы создаете приложение или расширение для Интернет-магазина Chrome, вместо запроса квоты можно использовать <a href="http://code.google.com/chrome/extensions/manifest.html">файл манифеста</a> с разрешением <code>unlimitedStorage</code>. Со временем будет создано диалоговое окно для предоставления, отзыва или увеличения места в хранилище для приложения.</p>
+
+  <p>При отладке приложения из каталога <code>file://</code> может потребоваться флаг <code>--allow-file-access-from-files</code>. Если его не использовать, возможна ошибка <code>SECURITY_ERR</code> или <code>QUOTA_EXCEEDED_ERR</code>.</p>
+
+  <h2 id="toc-requesting">Обращение к файловой системе</h2>
+
+  <p>Веб-приложение может запрашивать доступ к файловой системе тестовой среды с помощью метода <code>window.requestFileSystem()</code>:</p>
+
+  <pre class="prettyprint">
+// Note: The file system has been prefixed as of Google Chrome 12:
+window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+window.requestFileSystem(<var>type</var>, <var>size</var>, <var>successCallback</var>, <var>opt_errorCallback</var>)
+</pre>
+
+  <dl>
+    <dt><var>type</var></dt>
+    <dd>Доступность хранилища файлов. Возможные значения: <code>window.TEMPORARY</code> и <code>window.PERSISTENT</code>. Данные, которые сохраняются с ключом <code>TEMPORARY</code>, могут быть удалены на усмотрение браузера (напимер, при нехватке места). Ключ <code>PERSISTENT</code> не позволяет удалять данные без разрешения пользователя или приложения, и для него необходима квота, предоставляемая приложению пользователем. См. <a href="#toc-requesting-quota">запрос квоты</a></dd>
+    <dt><var>size</var></dt>
+    <dd>Размер необходимого приложению хранилища (в байтах).</dd>
+    <dt><var>successCallback</var></dt>
+    <dd>Функция обратного вызова, которая вызывается при успешном запросе файловой системы. В качестве аргумента выступает объект <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileSystem"><code>FileSystem</code></a>.</dd>
+    <dt><var>opt_errorCallback</var></dt>
+    <dd>Необязательный вызов для обработки ошибок или при отказе в ответ на запрос файловой системы. В качестве аргумента выступает объект <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileError"><code>FileError</code></a>.</dd>
+  </dl>
+
+  <p>Если функция <code>requestFileSystem()</code> вызывается в первый раз, для приложения создается новое хранилище. Важно понимать, что эта файловая система предназначена для тестирования, а значит, никакое веб-приложение не может получить доступ к данным другой программы. Это также означает невозможность считывать и записывать файлы в произвольную папку на жестком диске пользователя (например, "Мои изображения", "Мои документы" и т. д.).</p>
+
+  <p>Пример использования:</p>
+  <pre class="prettyprint">
+function onInitFs(fs) {
+  console.log('Opened file system: ' + fs.name);
+}
+
+<b>window.requestFileSystem</b>(<b>window.TEMPORARY</b>, 5*1024*1024 /*5MB*/, onInitFs, errorHandler);
+</pre>
+
+  <p>Спецификация FileSystem также определяет API для синхронной работы: интерфейс <code><a href="http://dev.w3.org/2009/dap/file-system/file-dir-sys.html#using-localfilesystemsync">LocalFileSystemSync</a></code>, предназначенный для использования вместе с объектами <a href="/tutorials/#workers">Web Worker</a>. В этом руководстве API для синхронной работы не рассматриваются.</p>
+
+  <p>Далее в настоящем документе мы будем использовать для обработки ошибок, связанных с асинхронными вызовами, один и тот же обработчик:</p>
+
+  <pre class="prettyprint">
+function errorHandler(e) {
+  var msg = '';
+
+  switch (e.code) {
+    case <b>FileError.QUOTA_EXCEEDED_ERR</b>:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case <b>FileError.NOT_FOUND_ERR</b>:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case <b>FileError.SECURITY_ERR</b>:
+      msg = 'SECURITY_ERR';
+      break;
+    case <b>FileError.INVALID_MODIFICATION_ERR</b>:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case <b>FileError.INVALID_STATE_ERR</b>:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  };
+
+  console.log('Error: ' + msg);
+}
+</pre>
+
+  <p>Конечно, обратный вызов для этой ошибки носит общий характер, но идея понятна. Сообщения для пользователей должны быть осмысленными.</p>
+
+  <h3 id="toc-requesting-quota">Запрос квоты хранилища</h3>
+
+  <p>Для использования постоянного хранилища (ключ <code>PERSISTENT</code>) необходимо получить разрешение пользователя на хранение постоянных данных. На временное хранилище (ключ <code>TEMPORARY</code>) это правило не распространяется, поскольку браузер может удалять такую информацию по собственному усмотрению.</p>
+
+  <p>Для использования постоянного хранилища (ключ <code>PERSISTENT</code>) с FileSystem API браузер Chrome запрашивает хранилище, указывая новый API в атрибуте <code>window.webkitStorageInfo</code>:</p>
+
+  <pre class="prettyprint">
+window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
+  window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+}, function(e) {
+  console.log('Error', e);
+});
+</pre>
+
+  <p>Как только пользователь дает разрешение, необходимость в вызове функции <code>requestQuota()</code> отпадает. Все последующие вызовы являются пустыми операциями.</p>
+
+  <p>Существует также <a href="https://groups.google.com/a/chromium.org/group/chromium-html5/browse_thread/thread/9be7a2dc04d9af67">API</a> для запроса текущей степени использования и распределения исходного хранилища: <code>window.webkitStorageInfo.queryUsageAndQuota()</code></p>
+
+  <h2 id="toc-file">Работа с файлами</h2>
+
+  <p>Для работы с файлами в тестовой среде предназначен интерфейс <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>FileEntry</code></a>. Он содержит типы свойств (<code>name</code>, <code>isFile</code> и т. д.) и методов (<code>remove</code>, <code>moveTo</code>, <code>copyTo</code> и т. д.), характерных для стандартной файловой системы.</p>
+
+  <p id="toc-fileentry">Свойства и методы <code>FileEntry</code></p>
+  <pre class="prettyprint">
+fileEntry.isFile === true
+fileEntry.isDirectory === false
+fileEntry.name
+fileEntry.fullPath
+...
+
+fileEntry.getMetadata(successCallback, opt_errorCallback);
+fileEntry.remove(successCallback, opt_errorCallback);
+fileEntry.moveTo(dirEntry, opt_newName, opt_successCallback, opt_errorCallback);
+fileEntry.copyTo(dirEntry, opt_newName, opt_successCallback, opt_errorCallback);
+fileEntry.getParent(successCallback, opt_errorCallback);
+fileEntry.toURL(opt_mimeType);
+
+fileEntry.file(successCallback, opt_errorCallback);
+fileEntry.createWriter(successCallback, opt_errorCallback);
+...
+</pre>
+
+  <p>Чтобы показать, что такое <code>FileEntry</code>, в этом разделе мы разберем несколько примеров выполнения распространенных задач.
+
+  <h3 id="toc-file-creatingempty">Создание файла</h3>
+
+  <p>Для поиска или создания файла можно воспользоваться методом <code>getFile()</code> интерфейса <a href="#toc-direntry">DirectoryEntry</a> файловой системы. После запроса файловой системы обратный вызов возвращает объект <code>FileSystem</code>, содержащий объект <code>DirectoryEntry</code> (<code>fs.root</code>) с указанием на корневую папку файловой системы приложения.</p>
+
+  <p>Приведенный ниже код создает в корневой папке файловой системы приложения пустой файл log.txt.</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: true, exclusive: true}</b>, function(fileEntry) {
+
+    // fileEntry.isFile === true
+    // fileEntry.name == 'log.txt'
+    // fileEntry.fullPath == '/log.txt'
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>После запроса файловой системы обработчику передается объект <code>FileSystem</code>. В пределах обратного вызова можно вызвать функцию <code>fs.root.getFile()</code> с именем файла, который нужно создать. Путь может быть абсолютным или относительным (но он должен быть действительным). Например, не пытайтесь создать файл в несуществующей родительской папке. Вторым аргументом функции <code>getFile()</code> является объект, описывающий поведение функции в случае, если файл не существует. В нашем примере атрибут <code>create: true</code> создает файл, если он не существует, и выдает ошибку в противном случае (<code>exclusive: true</code>). Атрибут (<code>create: false</code>) приводит только к поиску и выдаче файла. Его содержание не перезаписывается ни при каких обстоятельствах, поскольку мы получаем только ссылку на соответствующий файл.</p>
+
+  <h3 id="toc-file-readingbyname">Чтение файла по названию</h3>
+
+  <p>Приведенный ниже код извлекает файл под названием log.txt, читает его содержание с помощью <code>FileReader</code> API и записывает в новый блок &lt;textarea&gt; на странице. Если файл log.txt не существует, выдается ошибка.</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', {}, function(fileEntry) {
+
+    // Get a File object representing the file,
+    // then use FileReader to read its contents.
+    fileEntry.<b>file</b>(function(file) {
+       var reader = new FileReader();
+
+       reader.onloadend = function(e) {
+         var txtArea = document.createElement('textarea');
+         txtArea.value = this.result;
+         document.body.appendChild(txtArea);
+       };
+
+       reader.readAsText(file);
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-file-writing">Запись в файл</h3>
+
+  <p>Приведенный ниже код создает пустой файл под названием log.txt (если он не существует) и заполняет его текстом Lorem Ipsum.</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: true}</b>, function(fileEntry) {
+
+    // Create a FileWriter object for our FileEntry (log.txt).
+    <b>fileEntry.createWriter</b>(function(fileWriter) {
+
+      <b>fileWriter.onwriteend</b> = function(e) {
+        console.log('Write completed.');
+      };
+
+      <b>fileWriter.onerror</b> = function(e) {
+        console.log('Write failed: ' + e.toString());
+      };
+
+      // Create a new Blob and write it to log.txt.
+      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
+      bb.append('Lorem Ipsum');
+      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>На этот раз мы вызываем метод <code>createWriter()</code> объекта FileEntry и получаем элемент <code>FileWriter</code>. В обратном вызове настроены обработчики событий <code>error</code> и <code>writeend</code>. Для записи текстовых данных в файл создается объект blob, в него добавляется текст, после чего он передается функции <code>FileWriter.write()</code>.</p>
+
+  <h3 id="toc-file-appending">Прикрепление данных к файлу</h3>
+
+  <p>Приведенный ниже код добавляет в конец файла log.txt текст Hello World. Если файл не существует, выдается ошибка.</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: false}</b>, function(fileEntry) {
+
+    // Create a FileWriter object for our FileEntry (log.txt).
+    fileEntry.createWriter(function(fileWriter) {
+
+      <b>fileWriter.seek(fileWriter.length); // Start write position at EOF.</b>
+
+      // Create a new Blob and write it to log.txt.
+      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
+      bb.append('Hello World');
+      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-file-user-selected">Создание копий выбранных файлов</h3>
+
+  <p>Приведенный ниже код позволяет пользователю выбрать несколько файлов с помощью атрибута <code>&lt;input type="file" multiple /&gt;</code> и создать их копии в тестовой файловой системе приложения.</p>
+
+  <pre class="prettyprint">&lt;input type="file" id="myfile" <b>multiple</b> /&gt;</pre>
+
+  <pre class="prettyprint">
+document.querySelector('#myfile').onchange = function(e) {
+  var files = <b>this.files</b>;
+
+  window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+    // Duplicate each file the user selected to the app's fs.
+    for (var i = 0, file; file = files[i]; ++i) {
+
+      // Capture current iteration's file in local scope for the getFile() callback.
+      (function(f) {
+        fs.root.getFile(<b>file.name</b>, {create: true, exclusive: true}, function(fileEntry) {
+          fileEntry.createWriter(function(fileWriter) {
+            <b>fileWriter.write(f);</b> // Note: write() can take a File or Blob object.
+          }, errorHandler);
+        }, errorHandler);
+      })(file);
+
+    }
+  }, errorHandler);
+
+};
+</pre>
+
+  <p>Мы использовали для импорта файла элемент input, но ту же задачу можно решить с помощью функции <a href="/tutorials/dnd/basics/#toc-desktop-dnd-into">перетаскивания в HTML5</a>.</p>
+
+  <p>Как указано в комментарии, метод <code>FileWriter.write()</code> может принимать объект <code>Blob</code> или <code>File</code>. Это связано с тем, что <code>File</code> создается на основе <code>Blob</code>, а значит, оба файловых параметра являются blob-объектами.</p>
+
+  <h3 id="toc-file-removing">Удаление файла</h3>
+
+  <p>Приведенный ниже код удаляет файл log.txt.</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getFile('log.txt', {create: false}, function(fileEntry) {
+
+    <b>fileEntry.remove(function() {
+      console.log('File removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-dir">Работа с каталогами</h2>
+
+  <p>Для работы с каталогами в тестовой среде предназначен интерфейс <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-directoryentry-interface"><code>DirectoryEntry</code></a>, который обладает большинством свойств <a href="#toc-fileentry">FileEntry</a> (они наследуются из общего интерфейса <code>Entry</code>). При этом <code>DirectoryEntry</code> поддерживает дополнительные методы для работы с каталогами.</p>
+
+  <p>Свойства и методы <code>DirectoryEntry</code></p>
+  <pre class="prettyprint">
+dirEntry.isDirectory === true
+// See the section on <a href="#toc-fileentry">FileEntry</a> for other inherited properties/methods.
+...
+
+var dirReader = dirEntry.createReader();
+dirEntry.getFile(path, opt_flags, opt_successCallback, opt_errorCallback);
+dirEntry.getDirectory(path, opt_flags, opt_successCallback, opt_errorCallback);
+dirEntry.removeRecursively(successCallback, opt_errorCallback);
+...
+</pre>
+
+  <h3 id="toc-dir-creating">Создание каталогов</h3>
+
+  <p>С помощью метода <code>getDirectory()</code> <code>DirectoryEntry</code> можно считывать и создавать каталоги. Для их поиска или создания можно указывать название или путь.</p>
+
+  <p>Например, приведенный ниже код создает в корневом каталоге папку под названием MyPictures.</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.<b>getDirectory</b>('MyPictures', {create: true}, function(dirEntry) {
+    ...
+  }, errorHandler);
+}, errorHandler);
+  </pre>
+
+  <h3 id="toc-dir-subirs">Подкаталоги</h3>
+
+  <p>Подкаталоги создаются точно так же, как и каталоги. В то же время при попытке создать каталог с несуществующим родительским элементом API выдает ошибку. Решение заключается в том, чтобы создавать каталоги последовательно, что не так просто сделать с асинхронным API.</p>
+
+  <p>Приведенный ниже код создает новую иерархию (music/genres/jazz) в корневой папке файловой системы приложения, добавляя очередной подкаталог после создания его родительской папки.</p>
+
+  <pre class="prettyprint">
+var path = 'music/genres/jazz/';
+
+function createDir(rootDirEntry, folders) {
+  // Throw out './' or '/' and move on to prevent something like '/foo/.//bar'.
+  if (folders[0] == '.' || folders[0] == '') {
+    folders = folders.slice(1);
+  }
+  rootDirEntry.<b>getDirectory</b>(folders[0], <b>{create: true}</b>, function(dirEntry) {
+    // Recursively add the new subfolder (if we still have another to create).
+    if (folders.length) {
+      createDir(dirEntry, folders.slice(1));
+    }
+  }, errorHandler);
+};
+
+function onInitFs(fs) {
+  createDir(fs.root, path.split('/')); // fs.root is a DirectoryEntry.
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>После этого полный путь к структуре music/genres/jazz можно передавать в функцию <code>getDirectory()</code> для создания новых подпапок и файлов. Например:</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getFile('/music/genres/jazz/song.mp3', {create: true}, function(fileEntry) {
+    ...
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-reading">Чтение содержания каталога</h3>
+
+  <p>Чтобы прочитать содержание каталога, создайте объект <code>DirectoryReader</code> и вызовите его метод <code>readEntries()</code>. Разовый вызов <code>readEntries()</code> не гарантирует получение всех содержащихся в каталоге элементов. Это значит, что метод <code>DirectoryReader.readEntries()</code> необходимо вызывать до тех пор, пока не перестанут появляться новые результаты. Это демонстрирует приведенный ниже код.</p>
+
+  <pre class="prettyprint">&lt;ul id="filelist"&gt;&lt;/ul&gt;</pre>
+
+  <pre class="prettyprint">
+function toArray(list) {
+  return Array.prototype.slice.call(list || [], 0);
+}
+
+function listResults(entries) {
+  // Document fragments can improve performance since they're only appended
+  // to the DOM once. Only one browser reflow occurs.
+  var fragment = document.createDocumentFragment();
+
+  entries.forEach(function(entry, i) {
+    var img = <b>entry.isDirectory</b> ? '&lt;img src="folder-icon.gif"&gt;' :
+                                  '&lt;img src="file-icon.gif"&gt;';
+    var li = document.createElement('li');
+    li.innerHTML = [img, '&lt;span&gt;', entry.name, '&lt;/span&gt;'].join('');
+    fragment.appendChild(li);
+  });
+
+  document.querySelector('#filelist').appendChild(fragment);
+}
+
+function onInitFs(fs) {
+
+  var dirReader = <b>fs.root.createReader()</b>;
+  var entries = [];
+
+  // Call the reader.readEntries() until no more results are returned.
+  var readEntries = function() {
+     <b>dirReader.readEntries </b>(function(results) {
+      if (!results.length) {
+        listResults(entries.sort());
+      } else {
+        entries = entries.concat(toArray(results));
+        readEntries();
+      }
+    }, errorHandler);
+  };
+
+  readEntries(); // Start reading dirs.
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-removing">Удаление каталога</h3>
+
+  <p>Метод <code>DirectoryEntry.remove()</code> действует точно так же, как и <a href="#toc-file-removing"><code>FileEntry</code></a>. Разница только в том, что при попытке удаления несуществующего каталога выдается ошибка.</p>
+
+  <p>Приведенный ниже код удаляет пустой каталог jazz из папки /music/genres/.</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getDirectory('music/genres/jazz', {}, function(dirEntry) {
+
+    <b>dirEntry.remove(function() {
+      console.log('Directory removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h4 id="toc-dir-rremoving">Рекурсивное удаление каталога</h4>
+
+  <p>Для удаления ненужного каталога, содержащего элементы, предназначен метод <code>removeRecursively()</code>. Он рекурсивно удаляет каталог и его содержание.</p>
+
+  <p>Приведенный ниже код рекурсивно удаляет папку music, в также все файлы и каталоги, которые она содержит.</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getDirectory('/misc/../music', {}, function(dirEntry) {
+
+    <b>dirEntry.removeRecursively(function() {
+      console.log('Directory removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-copy-rename-move">Копирование, переименование и перемещение</h2>
+
+  <p><code>FileEntry</code> и <code>DirectoryEntry</code> выполняют аналогичные операции.</p>
+
+  <h3 id="toc-dir-move-copy">Копирование элемента</h3>
+
+  <p>Для дублирования существующих элементов в обоих объектах (<code>FileEntry</code> и <code>DirectoryEntry</code>) предусмотрен метод <code>copyTo()</code>. Он автоматически создает рекурсивную копию папок.</p>
+
+  <p>Код в приведенном ниже примере копирует файл me.png из одного каталога в другой.</p>
+
+  <pre class="prettyprint">
+function copy(cwd, src, dest) {
+  cwd.getFile(src, {}, function(fileEntry) {
+
+    cwd.getDirectory(dest, {}, function(dirEntry) {
+      <b>fileEntry.copyTo</b>(dirEntry);
+    }, errorHandler);
+
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  copy(fs.root, '/folder1/me.png', 'folder2/mypics/');
+}, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-move-rename">Перемещение и переименование записи</h3>
+
+  <p>Для перемещения и переименования файлов и каталогов в объектах <code>FileEntry</code> и <code>DirectoryEntry</code> предусмотрен метод <code>moveTo()</code>. Его первый аргумент позволяет указать, в какой родительский каталог нужно переместить файл, а второй – задать его новое название. Если название не указано, сохраняется исходное имя файла.</p>
+
+  <p>В этом примере файл me.png переименовывается в you.png, но не переносится:</p>
+
+  <pre class="prettyprint">
+function rename(cwd, src, newName) {
+  cwd.getFile(src, {}, function(fileEntry) {
+    <b>fileEntry.moveTo</b>(cwd, newName);
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  rename(fs.root, 'me.png', 'you.png');
+}, errorHandler);
+</pre>
+
+  <p>В этом примере файл me.png (расположенный в корневом каталоге) переносится в папку с названием newfolder:</p>
+
+  <pre class="prettyprint">
+function move(src, dirName) {
+  fs.root.getFile(src, {}, function(fileEntry) {
+
+    fs.root.getDirectory(dirName, {}, function(dirEntry) {
+      <b>fileEntry.moveTo</b>(dirEntry);
+    }, errorHandler);
+
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  move('/me.png', 'newfolder/');
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-filesystemurls">filesystem: URL</h2>
+
+  <p>FileSystem API вводит новую схему URL, <code>filesystem:</code>, которую можно использовать для заполнения атрибутов <code>src</code> и <code>href</code>. Например, чтобы вывести на экран изображение и получить для него объект <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>, вызовите метод <code>toURL()</code>, который возвращает <code>filesystem:</code>-URL соответствующего файла.</p>
+
+<pre class="prettyprint">
+var img = document.createElement('img');
+img.src = <b>fileEntry.toURL</b>(); // filesystem:http://example.com/temporary/myfile.png
+document.body.appendChild(img);
+</pre>
+
+  <p>Если у вас уже есть <code>filesystem:</code>-URL, метод <code>resolveLocalFileSystemURL()</code> возвращает объект <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>.</p>
+
+<pre class="prettyprint">
+window.resolveLocalFileSystemURL = window.resolveLocalFileSystemURL ||
+                                   window.webkitResolveLocalFileSystemURL;
+
+var url = 'filesystem:http://example.com/temporary/myfile.png';
+<b>window.resolveLocalFileSystemURL</b>(url, function(fileEntry) {
+  ...
+});
+</pre>
+
+  <h2 id="toc-dir-fullexample">Комбинация возможностей</h2>
+
+  <h3 id="toc-samples-basic">Простой пример</h3>
+  <p>Этот демонстрационный код выдает список файлов и папок в файловой системе.</p>
+
+  {% if is_mobile %}
+  <div id="example-list-fs" class="example">
+    <button>Добавить файлы</button> <button>Список файлов</button> <button>Удалить все файлы</button>
+    <ul id="example-list-fs-ul"></ul>
+  </div>
+  {% else %}
+  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=180&hl=160#filesystem_apis" style="border: none; width: 100%; height: 460px;"></iframe>
+  {% endif %}
+
+  <h3 id="toc-samples-terminal">Терминал HTML5</h3>
+  <p>Эта оболочка воспроизводит некоторые из наиболее распространенных операций в файловой системе UNIX (например, <code>cd</code>, <code>mkdir</code>, <code>rm</code>, <code>open</code> и <code>cat</code>), используя для этого FileSystem API. Чтобы добавить файлы, перетащите их с рабочего стола в открытый ниже терминал.</p>
+  <iframe id="terminal-iframe" src="terminal.html"></iframe>
+
+  <h2 id="toc-usecases">Примеры использования</h2>
+
+  <p>В HTML5 реализовано несколько <a href="/tutorials#offline,storage">вариантов хранения</a>, но API FileSystem отличается тем, что позволяет решать проблемы использования хранилищ со стороны клиента, с которыми не справляются базы данных. Чаще всего это приложения, которые работают с большими объемами двоичных blob-объектов или обмениваются данными с программами за пределами браузера.</p>
+
+  <p>В спецификации приведено несколько примеров использования.</p>
+  <ol>
+    <li>Инструмент для постоянной загрузки
+      <ul>
+      <li>Когда для загрузки выбирается файл или каталог, файлы копируются в локальную тестовую среду и загружаются по частям.</li>
+      <li>В случае сбоя браузера, сети и т. д. загрузку можно возобновить.</li>
+      </ul>
+    </li>
+    <li>Видеоигры, музыка и другие приложения с большим объемом мультимедийных данных
+      <ul>
+      <li>Инструмент загружает один или несколько больших архивов и локально разворачивает их в структуру каталогов.</li>
+      <li>Общий способ загрузки должен работать в любой операционной системе.</li>
+      <li>Данные, которые вскоре понадобятся, могут выбираться в фоновом режиме, чтобы их загрузка при переходе на следующий уровень игры или при активации новой функции не занимала слишком много времени.</li>
+      <li>Загрузчик выбирает элементы непосредственно из локального кэша путем прямого считывания файлов или обработки локальных URL изображений или видеотегов, с помощью программ для загрузки объектов WebGL и т. д.</li>
+      <li>Файлы могут иметь любой двоичный формат.</li>
+      <li>Сжатый архив на сервере обычно намного меньше, чем набор файлов, сжатых по отдельности. Кроме того, один архив вместо 1000 небольших файлов требует меньше обращений. В остальном никакой разницы нет.</li>
+      </ul>
+    </li>
+    <li>Аудио- или фоторедактор с автономным доступом или локальным кэшем для скорости
+      <ul>
+      <li>Blob-объекты могут быть довольно большими и использоваться для чтения и записи.</li>
+      <li>Файлы могут перезаписываться частично (например, только теги ID3/EXIF).</li>
+      <li>Полезной является возможность систематизации файлов проекта с помощью структуры каталогов.</li>
+      <li>У клиентских приложений [iTunes, Picasa] должен быть доступ к измененным файлам.
+      </li></ul>
+    </li>
+    <li>Офлайн-программа для просмотра видео
+      <ul>
+      <li>Загружает большие файлы (больше 1 ГБ) для их последующего просмотра.</li>
+      <li>Требует эффективного поиска и потоковой передачи.</li>
+      <li>Должна уметь передавать URL в видеотеги.</li>
+      <li>Требует доступа к частично загруженным файлам (например, чтобы можно было смотреть первый эпизод DVD-фильма, не дожидаясь полной загрузки).</li>
+      <li>Должна уметь извлекать один эпизод из загруженных данных и передавать его непосредственно в видеотег.</li>
+      </ul>
+    </li>
+    <li>Автономный почтовый веб-клиент
+      <ul>
+      <li>Загружает прикрепленные файлы и хранит их локально.</li>
+      <li>Кэширует выбранные пользователем прикрепленные файлы для их последующей загрузки.</li>
+      <li>Должен уметь обращаться к кэшированным прикрепленным файлам и миниатюрам изображений для отображения и загрузки.</li>
+      <li>Должен уметь вызывать менеджер загрузок UA так же, как при обращении к серверу.</li>
+      <li>Должен уметь загружать электронные письма с прикрепленными файлами как сообщения из нескольких частей, а не отправлять сразу весь файл с помощью XHR-запроса.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2 id="toc-references">Справочные спецификации</h2>
+  <ul>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem</a></li>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html">FileWriter</a></li>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#idl-def-BlobBuilder">BlobBuilder</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-filereader">FileReader</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/">File</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob">Blob</a></li>
+  </ul>
+
+{% if is_mobile %}
+<script>
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+var fs = null;
+
+function errorHandler(e) {
+  var msg = '';
+  switch (e.code) {
+    case FileError.QUOTA_EXCEEDED_ERR:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case FileError.NOT_FOUND_ERR:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case FileError.SECURITY_ERR:
+      msg = 'SECURITY_ERR';
+      break;
+    case FileError.INVALID_MODIFICATION_ERR:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case FileError.INVALID_STATE_ERR:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  };
+  document.querySelector('#example-list-fs-ul').innerHTML = 'Error: ' + msg;
+}
+
+function initFS() {
+  window.requestFileSystem(window.TEMPORARY, 1024*1024, function(filesystem) {
+    fs = filesystem;
+  }, errorHandler);
+}
+
+// Example - Reader Dir Contents.
+(function() {
+  var buttons = document.querySelectorAll('#example-list-fs button');
+  var filelist = document.querySelector('#example-list-fs-ul');
+
+  buttons[0].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+    fs.root.getFile('log.txt', {create: true}, null, errorHandler);
+    fs.root.getFile('song.mp3', {create: true}, null, errorHandler);
+    fs.root.getDirectory('mypictures', {create: true}, null, errorHandler);
+    filelist.innerHTML = 'Files created.';
+  }, false);
+
+  buttons[1].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+
+    var dirReader = fs.root.createReader();
+    dirReader.readEntries(function(entries) {
+      if (!entries.length) {
+        filelist.innerHTML = 'Filesystem is empty.';
+      } else {
+        filelist.innerHTML = '';
+      }
+
+      var fragment = document.createDocumentFragment();
+      for (var i = 0, entry; entry = entries[i]; ++i) {
+        var img = entry.isDirectory ? '<img src="/static/images/tutorials/icon-folder.gif">' :
+                                      '<img src="/static/images/tutorials/icon-file.gif">';
+        var li = document.createElement('li');
+        li.innerHTML = [img, '<span>', entry.name, '</span>'].join('');
+        fragment.appendChild(li);
+      }
+      filelist.appendChild(fragment);
+    }, errorHandler);
+  }, false);
+
+  buttons[2].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+
+    var dirReader = fs.root.createReader();
+    dirReader.readEntries(function(entries) {
+      for (var i = 0, entry; entry = entries[i]; ++i) {
+        if (entry.isDirectory) {
+          entry.removeRecursively(function() {}, errorHandler);
+        } else {
+          entry.remove(function() {}, errorHandler);
+        }
+      }
+      filelist.innerHTML = 'Directory emptied.';
+    }, errorHandler);
+  }, false);
+})();
+
+if (window.requestFileSystem) {
+  initFS();  // Initiate filesystem on page load.
+}
+</script>
+{% endif %}
+
+{% endblock %}

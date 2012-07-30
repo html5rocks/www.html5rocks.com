@@ -1,0 +1,411 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="Artikel powered by HTML5 Audio/Video" title="Artikel powered by HTML5 Audio?/Video"  />
+{% endblock %}
+
+{% block iscompatible %}
+return !!document.createElement("video").textTracks;
+{% endblock %}
+
+{% block head %}
+<style>
+video {
+  max-width: 100%;
+  outline: none;
+}
+div#eric video {
+-webkit-box-reflect: below 5px -webkit-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-moz-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-ms-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-o-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+margin: 0;
+}
+
+div#eric  {
+  text-align: center;
+}
+
+div#eric > div {
+margin-top: 2em;
+text-align: center;
+-webkit-perspective: 800;
+-webkit-transform-style: preserve-3d;
+-moz-perspective: 800;
+-moz-transform-style: preserve-3d;
+-ms-perspective: 800;
+-ms-transform-style: preserve-3d;
+-o-perspective: 800;
+-o-transform-style: preserve-3d;
+}
+
+div#eric > div > div:last-child {
+position: relative;
+top: -36px;
+}
+div#eric > div > div {
+color: black;
+font-family: "Open Sans", sans-serif;
+font-size: 18px;
+height:  25px;
+opacity: 1;
+-webkit-transition: all 500ms ease-in-out;
+-webkit-transform-origin: 50% 100%;
+-webkit-transform: rotateX(-90deg);
+-moz-transition: all 500ms ease-in-out;
+-moz-transform-origin: 50% 100%;
+-moz-transform: rotateX(-90deg);
+-o-transition: all 500ms ease-in-out;
+-o-transform-origin: 50% 100%;
+-o-transform: rotateX(-90deg);
+-ms-transition: all 500ms ease-in-out;
+-ms-transform-origin: 50% 100%;
+-ms-transform: rotateX(-90deg);
+}
+div#eric > div > div.on {
+opacity: 1;
+-webkit-transform: rotateX(0);
+-moz-transform: rotateX(0);
+-o-transform: rotateX(0);
+-ms-transform: rotateX(0);
+}
+.trackNotSupported {
+  display: none;
+}
+.trackNotSupported.show {
+  display: block;
+}
+.warningMessage {
+  color: red;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">HTML5-Track-Element: Erste Schritte</h2>
+
+<p>Das Track-Element bietet eine einfache und standardisierte Möglichkeit, Untertitel, Screenreader-Beschreibungen und Kapitel zu Video- und Audioinhalten hinzuzufügen.</p>
+
+<p>Die Elemente können auch in Verbindung mit anderen zeitgesteuerten Metadaten verwendet werden. Bei den Quelldaten jedes Track-Elements handelt es sich um eine Textdatei, die aus einer Liste mit zeitgesteuerten <code>cues</code> besteht, wobei diese Daten im Format JSON, CSV usw. enthalten können. Es ist ein extrem leistungsstarkes Werkzeug und ermöglicht neben Deep Linking und Mediennavigation über eine Textsuche auch eine DOM-Manipulation sowie sonstige mit der Medienwiedergabe synchronisierte Verhaltensweisen.</p>
+
+<p>Das Track-Element ist zurzeit in <a href="http://ie.microsoft.com/testdrive/" title="Internet Explorer 10 herunterladen">Internet Explorer 10</a> und <a href="http://tools.google.com/dlpage/chromesxs" title="Chrome Canary herunterladen">Chrome 18</a> oder einer höheren Version verfügbar. Für Firefox ist noch <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Fehlerbericht zur Implementierung des Track-Elements in Firefox">keine Implementierung erfolgt</a>. In Chrome muss die Unterstützung des Track-Elements über die Seite <a href="chrome://flags" title="chrome://flags page">chrome://flags</a> aktiviert werden.</p>
+
+<p>Im Folgenden finden Sie ein einfaches Beispiel eines Videos mit einem Track-Element. Starten Sie es, um Untertitel in englischer Sprache anzuzeigen:</p>
+ 
+<video controls class="trackSupported">
+  <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
+  <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
+</video>
+
+<p class="warningMessage trackNotSupported">Für diese Demo ist ein Browser wie <a href="http://tools.google.com/dlpage/chromesxs" title="Google Chrome Canary herunterladen">Google Chrome Canary</a> erforderlich, der das Track-Element unterstützt. In Chrome muss die Unterstützung des Track-Elements auf der Seite chrome://flags aktiviert werden.</p>
+
+<p>Code für ein Videoelement mit englischen und deutschen Untertiteln könnte wie folgt aussehen:</p>
+
+<pre class="prettyprint">
+&lt;video src="foo.ogv"&gt;
+  &lt;track kind="subtitles" label="English subtitles" src="subtitles_en.vtt" srclang="en" default&gt;&lt;/track&gt;
+  &lt;track kind="subtitles" label="Deutsche Untertitel" src="subtitles_de.vtt" srclang="de"&gt;&lt;/track&gt;
+&lt;/video&gt;
+</pre>
+
+<p>In diesem Beispiel würde das Videoelement einen Selektor anzeigen, über den der Nutzer die Sprache der Untertitel auswählen könnte. Zum Zeitpunkt der Entstehung dieses Artikels war diese Funktion jedoch noch nicht implementiert.</p>
+
+<p>Beachten Sie, dass das Track-Element nicht in Verbindung mit einer <code>file://</code>-URL verwendet werden kann. Um die Tracks zu sehen, müssen Sie die Dateien auf einem Webserver hinterlegen.</p>
+
+<p>Jedes Track-Element weist ein Attribut für <code>kind</code> auf. Dies kann entweder <code>subtitles</code>, <code>captions</code>, <code>descriptions</code>, <code>chapters</code> oder <code>metadata</code> sein. Das Attribut <code>src</code> des Track-Elements verweist auf eine Textdatei, die Daten für zeitgesteuerte Track-Cues enthält. Hinsichtlich des Formats gibt es keine speziellen Vorgaben, solange es von einem Browser geparst werden kann. Chrome unterstützt WebVTT, das wie folgt aussieht:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+railroad
+00:00:10.000 --> 00:00:12.500
+Uninspiriert durch die Kruste des Eisenbahnstaubs
+
+manuscript
+00:00:13.200 --> 00:00:16.900
+das die Hinweise auf die Seiten Ihres Manuskripts betraf.
+</pre>
+
+<p>Jedes Element in einer Track-Datei wird als "Cue" bezeichnet. Jeder Cue hat eine Start- und Endzeit, getrennt durch einen Pfeil. Der zugehörige Text befindet sich in der Zeile darunter. Cues können optional auch IDs aufweisen. In den oben genannten Beispielen sind das "railroad" und "manuscript". Cues werden durch eine Leerzeile voneinander getrennt.</p>
+
+<p>Die Zeitangaben erfolgen im Format Stunden:Minuten:Sekunden:Millisekunden. Vorsicht! Der Parsing-Prozess ist strikt. Die Zahlen müssen falls nötig mit Nullen aufgefüllt werden: Stunden, Minuten und Sekunden müssen zwei Ziffern (00 im Falle eines Nullwerts) und Millisekunden drei Ziffern aufweisen (000 im Falle eines Nullwerts). Auf <a href="http://quuz.org/webvtt/">quuz.org/webvtt</a> finden Sie einen ausgezeichneten WetVTT-Validierer. Dieser sucht nach Fehlern bei der Zeitformatierung und Problemen wie nicht sequenziellen Zeitangaben.</p>
+
+<p>Die folgende Demo zeigt, wie Suchtitel durchsucht werden können, um innerhalb eines Videos zu navigieren.</p>
+
+<!-- subtitle search example -->
+
+<h2 id="toc-jsoncues">HTML und JSON in Cues</h2>
+
+<p>Der Text eines Cues in einer WebVTT-Datei kann sich über mehrere Zeilen erstrecken, solange keine der Zeilen leer ist. Das bedeutet, dass Cues HTML enthalten können:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+&lt;p>Mehrzellige Organismen bestehen aus verschiedenen Zellarten, die spezielle Funktionen übernehmen.&lt;/p>
+&lt;p>Die meisten Lebensformen, die sich mit bloßem Auge erkennen lassen, sind mehrzellig.&lt;/p>
+&lt;p>Diese Organismen haben sich vor rund einer Milliarde Jahre entwickelt, wobei Pflanzen, Tiere und Pilze unabhängig voneinander entstanden sind.&lt;/p>
+</pre>
+
+<p>Warum hier aufhören? Cues können auch JSON verwenden:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+{
+"title": "Mehrzellige Organismen",
+"description": "Mehrzellige Organismen bestehen aus verschiedenen Zellarten, die spezielle Funktionen übernehmen.
+  Die meisten Lebensformen, die sich mit bloßem Auge erkennen lassen, sind mehrzellig. Diese Organismen haben sich
+  vor rund einer Milliarde Jahre entwickelt, wobei Pflanzen, Tiere und Pilze unabhängig
+  voneinander entstanden sind.",
+"src": "multiCell.jpg",
+"href": "http://de.wikipedia.org/wiki/Vielzeller"
+}
+
+insects
+00:02:18.800 --> 00:03:01.600
+{
+"title": "Insekten",
+"description": "Insekten sind weltweit die artenreichste Klasse der Tiere. Laut Schätzungen gibt es heute
+  zwischen 2 und 50 Millionen Arten. Die ersten Insekten wurden vor rund
+  400 Millionen Jahren nachgewiesen. Sie zeichnen sich durch einen harten Hautpanzer, einen dreiteiligen Körper, sechs Beine, Facettenaugen
+  und eine Antenne aus.",
+"src": "insects.jpg",
+"href": "http://de.wikipedia.org/wiki/Insekten"
+}
+</pre>
+
+<p>Aufgrund der Möglichkeit, strukturierte Daten in Cues zu verwenden, ist das Track-Element besonders leistungsstark und flexibel. Eine Web-App kann Cue-Ereignisse überwachen, den Text der einzelnen Cues extrahieren, sobald diese ausgelöst werden, die Daten parsen und die Ergebnisse verwenden, um mit der Medienwiedergabe synchronisierte DOM-Änderungen vorzunehmen. Alternativ können auch andere JavaScript- oder CSS-Aufgaben durchgeführt werden.</p>
+
+<h2 id="toc-search">Suche und Tiefennavigation</h2>
+
+<p>Tracks können auch einen Mehrwert für Audio- und Videoinhalte bedeuten, denn damit werden Suchen einfacher, leistungsstarker und präziser.</p>
+<p>Cues enthalten Text, der indexiert werden kann, sowie eine Startzeit, die die zeitliche Position des Inhalts innerhalb der Medien angibt. Cues können sogar Daten zur Position von Elementen innerhalb eines Videoframes enthalten. In Kombination mit <a href="http://www.youtube.com/watch?v=LfRRYp6mnu0" title="YouTube-Video mit Medienfragment-URI-Musterimplementierung">Medienfragment-URIs</a> stellen Tracks eine leistungsstarke Möglichkeit dar, Inhalte in Audio- und Videodateien zu finden und an die entsprechende Stelle zu navigieren. Stellen Sie sich zum Beispiel vor, Sie suchen nach "Etta James" und erhalten Ergebnisse, die direkt auf Stellen in Videos verweisen, an denen ihr Name im Cue-Text erwähnt wird.</a>
+
+<p>Die <a href="treeOfLife/index.html" title="Tree Of Life-Demo, die die Verwendung von Metadaten-Tracks zeigt">Tree Of Life</a>-Demo ist ein einfaches Beispiel dafür, wie ein Metadaten-Track verwendet werden kann, um mithilfe einer Untertitelsuche zu navigieren. Außerdem zeigt sie, wie zeitgesteuerte Metadaten eine Manipulation des DOMs ermöglichen, das mit der Medienwiedergabe synchronisiert ist.</p>
+
+<h2 id="toc-cues-js">Mit JavaScript zu Tracks und Cues gelangen</h2>
+
+<p>Audio- und Videoelemente verfügen über eine <code>textTracks</code>-Eigenschaft, die eine <code>TextTrackList</code> zurückgibt. Jedes Mitglied ist dabei ein <code>TextTrack</code>, der einem <code>&lt;track&gt;</code>-Element entspricht:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var textTracks = videoElement.textTracks; // one for each track element
+var textTrack = textTracks[0]; // corresponds to the first track element
+var kind = textTrack.kind // e.g. "subtitles"
+var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+</pre>
+
+<p>Jeder <code>TextTrack</code> wiederum verfügt über eine <code>cues</code>-Eigenschaft, die eine <code>TextTrackCueList</code> zurückgibt, wobei jedes Mitglied ein individueller Cue ist. Cue-Daten können mit Eigenschaften wie <code>startTime</code>, <code>endTime</code> und <code>text</code> (für den Textinhalt des Cues) aufgerufen werden:</p>
+
+<pre class="prettyprint">
+var cues = textTrack.cues;
+var cue = cues[0]; // corresponds to the first cue in a track src file
+var cueId = cue.id // cue.id corresponds to the cue id set in the WebVTT file
+var cueText = cue.text; // "The Web is always changing", for example (or some JSON!)
+</pre>
+
+<p>Gelegentlich ist es auch sinnvoll, mithilfe von <code>HTMLTrackElement</code> zu <code>TextTrack</code>-Objekten zu gelangen:</p>
+
+<pre class="prettyprint">
+var trackElements = document.querySelectorAll("track");
+// for each track element
+for (var i = 0; i &lt; trackElements.length; i++) {
+  trackElements[i].addEventListener("load", function() {
+    var textTrack = this.track; // gotcha: "this" is an HTMLTrackElement, not a TextTrack object
+    var isSubtitles = textTrack.kind === "subtitles"; // for example...
+    // for each cue
+    for (var j = 0; j &lt; textTrack.cues.length; ++j) {
+      var cue = textTrack.cues[j];
+      // do something
+    }
+}
+</pre>
+
+<p>In diesem Beispiel wird über die <code>track</code>-Eigenschaft eines Track-Elements auf die <code>TextTrack</code>-Eigenschaften zugegriffen, nicht über das Element selbst. </p>
+
+<p>Ein Zugriff auf <code>TextTrack</code>s ist möglich, sobald das <code>load</code>-Ereignis ausgelöst wurde, nicht früher.</p>
+
+<h2 id="toc-events">Track- und Cue-Ereignisse</h2>
+
+<p>Die zwei Arten von Cue-Ereignissen sind:
+<ul>
+  <li>für Cues ausgelöste Eingabe- und Beendigungsereignisse</li>
+  <li>für Tracks ausgelöste Cuechange-Ereignisse </li>
+</ul>
+</p>
+
+<p>Im vorherigen Beispiel könnten Listener für Cue-Ereignisse wie folgt hinzugefügt werden:</p>
+
+<pre class="prettyprint">
+cue.onenter = function(){
+  // do something
+};
+
+cue.onexit = function(){
+  // do something else
+};
+</pre>
+
+<p>Beachten Sie, dass Eingabe- und Beendigungsereignisse nur ausgelöst werden, wenn Cues über die Wiedergabe eingegeben oder beendet werden. Falls der Nutzer den Schieberegler der Zeitleiste manuell nach links oder rechts zieht, wird ein Cuechange-Ereignis für den Track an der neuen Zeitposition ausgelöst, jedoch kein Eingabe- oder Beendigungsereignis. Dies kann umgangen werden, indem das Cuechange-Track-Ereignis überwacht wird und anschließend die aktiven Cues abgerufen werden. Beachten Sie, dass möglicherweise mehrere aktive Cues vorhanden sind.</p>
+
+<p>Im folgenden Beispiel wird der aktuelle Cue abgerufen, sobald sich der Cue ändert. Anschließend wird versucht, durch Parsen des Cue-Texts ein Objekt zu erstellen:</p>
+
+<pre class="prettyprint">
+textTrack.oncuechange = function (){
+  // "this" is a textTrack
+  var cue = this.activeCues[0]; // assuming there is only one active cue
+  var obj = JSON.parse(cue.text);
+  // do something
+}
+</pre>
+
+<h2 id="toc-notjustvideo">Nicht nur für Video</h2>
+
+<p>Tracks können sowohl mit Audio- als auch mit Videoinhalten verwendet werden. Sie benötigen keine Audio-, Video- oder Track-Elemente in HTML-Auszeichnungssprache, um von den Vorteilen der APIs zu profitieren. Die <a href="http://dev.w3.org/html5/spec/video.html#text-track-api" title="TextTrack-API-Dokumentation des W3C">TextTrack-API-Dokumentation</a> hält ein schönes Beispiel bereit und zeigt, wie sich Audio-Sprites ganz einfach implementieren lassen:</p>
+
+<pre class="prettyprint">
+var sfx = new Audio('sfx.wav');
+var track = sfx.addTextTrack('metadata'); // previously implemented as addTrack()
+
+// Add cues for sounds we care about.
+track.addCue(new TextTrackCue('dog bark', 12.783, 13.612, '', '', '', true));
+track.addCue(new TextTrackCue('kitten mew', 13.612, 15.091, '', '', '', true));
+
+function playSound(id) {
+  sfx.currentTime = track.getCueById(id).startTime;
+  sfx.play();
+}
+
+playSound('dog bark');
+playSound('kitten mew');
+</pre>
+
+<p>Die <code>addTextTrack</code>-Methode verwendet drei Parameter: <code>kind</code> (zum Beispiel "metadata", siehe oben), <code>label</code> (zum Beispiel "Sous-titres français") und <code>language</code> (zum Beispiel "fr").</p>
+
+<p>Das oben stehende Beispiel verwendet zudem <code>addCue</code> in Form eines <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue" title="TextTrackCue-Dokumentation von WHATWG"><code>TextTrackCue</code></a>-Objekts. Der entsprechende Konstruktor besteht neben <code>id</code> (zum Beispiel "dog bark"), <code>startTime</code>, <code>endTime</code> und <code>text</code> für den Cue aus einem Argument für die <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-settings" title="Dokumentation zu WebVTT-Cue-Einstellungen"><code>webVTT-Cue-Einstellungen</code></a> hinsichtlich Position, Größe und Ausrichtung sowie einer booleschen <code>pauseOnExit</code>-Kennzeichnung, damit zum Beispiel die Wiedergabe angehalten wird, wenn in einem Lehrvideo eine Frage gestellt wird.</p>
+
+<p>Beachten Sie, dass <code>startTime</code> und <code>endTime</code> als Gleitkommawerte in Sekunden und nicht wie bei WebVTT im Format Stunden:Minuten:Sekunden:Millisekunden angegeben werden.</p>
+
+<p>Cues können auch mit <code>removeCue()</code> entfernt werden. In diesem Fall wird ein Cue als Argument verwendet, zum Beispiel:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var track = videoElement.textTracks[0];
+var activeCue = track.activeCues[0];
+track.removeCue(activeCue);
+</pre>
+
+<p>Beim Ausprobieren werden Sie feststellen, dass ein gerenderter Cue entfernt wird, sobald der Code aufgerufen wird.</p>
+
+<p>Tracks verfügen über ein <code>mode</code>-Attribut: entweder 0 (<code>TextTrack.OFF</code> in der Spezifikation, <code>TextTrack.DISABLED</code> in Chrome), 1 (<code>TextTrack.HIDDEN</code>) oder 2 (<code>TextTrack.SHOWING</code>). Dies kann besonders dann hilfreich sein, wenn Sie Track-Ereignisse verwenden, den standardmäßigen Rendering-Vorgang jedoch deaktivieren möchten. Ein Beispiel hierfür finden Sie im folgenden Video (erstellt von <a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="HTML5-Demo-Präsentation von Eric Bidelman">Eric Bidelman</a>):</p>
+
+<div id="eric">
+  <video width="400" controls>
+    <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"'>
+    <track label="English subtitles" kind="subtitles" srclang="en" src="treeOfLife/tracks/developerStories-subtitles-en.vtt" default>
+  </video>
+  <div><div>test1</div><div>asdf2</div></div>
+</div>
+
+<script>
+(function(){
+
+var video = document.querySelector('div#eric video');
+var span1 = document.querySelector('div#eric > div :first-child');
+var span2 = document.querySelector('div#eric > div :last-of-type');
+
+if (!video.textTracks) return;
+
+var track = video.textTracks[0];
+track.mode = TextTrack.HIDDEN;
+
+var idx = 0;
+
+track.oncuechange = function(e) {
+
+  var cue = this.activeCues[0];
+  if (cue) {
+    if (idx == 0) {
+      span2.className = '';
+      span1.classList.remove('on');
+      span1.innerHTML = '';
+      span1.appendChild(cue.getCueAsHTML());
+      span1.classList.add('on');
+    } else {
+      span1.className = '';
+      span2.classList.remove('on');
+      span2.innerHTML = '';
+      span2.appendChild(cue.getCueAsHTML());
+      span2.classList.add('on');
+    }
+
+    idx = ++idx % 2;
+  }
+
+};
+
+})();
+</script>
+
+<p>Dieses Beispiel verwendet die <code>getCueAsHTML()</code>-Methode, bei der eine HTML-Version jedes Cues zurückgegeben wird. Die Konvertierung vom WebVTT-Format in ein HTML <code>DocumentFragment</code> erfolgt hierbei mithilfe des <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="Dokumentation zu den Regeln von WebVTT-Cue-Text-Parsing">WebVTT-Cue-Text-Parsing</a> sowie der Regeln zum <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="Dokumentation zu den Regeln des DOM-Aufbaus für WebVTT-Cue-Text">DOM-Aufbau</a>. Verwenden Sie die <code>text</code>-Eigenschaft eines Cues, wenn Sie lediglich den reinen Textwert des Cues aus der <code>src</code>-Datei benötigen.</p>
+
+<p>In diesem Zusammenhang kann sich die <code>getCueAsHTML()</code>-Methode als hilfreich erweisen, bei der eine HTML-Version jedes Cues zurückgegeben wird. Die Konvertierung vom WebVTT-Format in ein HTML <code>DocumentFragment</code> erfolgt hierbei mithilfe des <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="Dokumentation zu den Regeln von WebVTT-Cue-Text-Parsing">WebVTT-Cue-Text-Parsing</a> sowie der Regeln zum <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="Dokumentation zu den Regeln des DOM-Aufbaus für WebVTT-Cue-Text">DOM-Aufbau</a>. Verwenden Sie die <code>text</code>-Eigenschaft eines Cues, wenn Sie lediglich den reinen Textwert des Cues aus der <code>src</code>-Datei benötigen.</p>
+
+<h2 id="toc-markup">Weitere Informationen zu Markup</h2>
+
+<p>Markup kann zur Zeitstempelzeile eines Cues hinzugefügt werden, um Textrichtung, Ausrichtung und Position festzulegen. Cue-Text kann so ausgezeichnet werden, dass Sprachinhalte, zum Beispiel der Name des Sprechers, angegeben werden oder eine Formatierung hinzugefügt wird. Untertitel können mit CSS wie folgt bearbeitet werden:</p>
+
+<pre class="prettyprint">
+::cue {
+  color: #444;
+  font: 1em sans-serif;
+}
+::cue .warning {
+  color: red;
+  font: bold;
+}
+</pre>
+
+<p>Die Präsentation zu <a href="http://html5videoguide.net/presentations/WebVTT/#title-slide" title="Präsentation zu Bedienungshilfen für HTML5-Videos">Bedienungshilfen für HTML5-Videos</a> von Silvia Pfeiffer enthält weitere Beispiele zum Arbeiten mit Markup. Darüber hinaus erfahren Sie, wie Sie Kapitel-Tracks für die Navigation und Beschreibungs-Tracks für Screenreader erstellen.</p>
+
+<h2 id="toc-finally">Und last, but not least...</h2>
+
+<p>Speichern Sie Cue-Daten in Textdateien, anstatt eine In-Band-Codierung in Audio- oder Videodateien vorzunehmen. So ist eine Untertitelung unkompliziert und Sie verbessern gleichzeitig die Bedienfreundlichkeit, die Suchmöglichkeiten sowie die Portabilität von Daten.</p>
+
+<p>Das Track-Element ermöglicht auch die Verwendung von zeitgesteuerten Metadaten und dynamischen Inhalten, die mit der Medienwiedergabe verknüpft sind. Dies wiederum bedeutet einen Mehrwert für die Audio- und Videoelemente.</p>
+
+<p>Dank der Leistungsfähigkeit, Flexibilität und Einfachheit des Track-Elements kommen wir einer offeneren und dynamischeren Gestaltung von Medien im Web einen entscheidenden Schritt näher.</p>
+
+<h2 id="toc-more">Weitere Informationen</h2>
+
+<ul>
+  <li>WHATWG: HTML als lebender Standard: <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element">http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element</a></li>
+  <li>HTML5-Arbeitsentwurf des W3C: <a href="http://dev.w3.org/html5/spec/Overview.html#the-track-element" title="Arbeitsentwurf des W3C: Dokumentation zum Track-Element">http://dev.w3.org/html5/spec/Overview.html#the-track-element</a></li>
+  <li>WebVTT-Standard des W3C: <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-timings" title="WebVTT-Standard">http://dev.w3.org/html5/webvtt/#webvtt-cue-timings</a></li>
+  <li>Zeitgesteuerte Track-Formate: <a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a></li>
+  <li>Anwendungsfälle mit zeitgesteuerten Tracks: <a href="http://wiki.whatwg.org/wiki/Timed_tracks">http://wiki.whatwg.org/wiki/Timed_tracks</a></li>
+  <li><a href="http://www.bbc.co.uk/blogs/researchanddevelopment/2012/01/implementing-startoffsettime-f.shtml" title="BBC-Blog-Post zu Forschung und Entwicklung">Zeitgesteuerte Out-of-Band-Metadaten für Live-Streaming</a>: BBC-Blog-Post zu Forschung und Entwicklung von Sean O'Halpin</li>
+</ul>
+
+<script>
+$(document).ready(function() {
+  if (!isCompatible()) {
+    var els = document.querySelectorAll('.trackNotSupported');
+    for (var i = 0, el; el = els[i]; ++i) {
+      el.classList.add('show');
+    }
+  }
+});
+</script>
+{% endblock %}

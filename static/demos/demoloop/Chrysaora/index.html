@@ -1,0 +1,988 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Chrysaora - WebGL</title>
+<link href="css/style.css" rel="stylesheet" type="text/css"> 
+<script type="text/javascript" src="js/lib/jquery-1.4.2.min.js"></script> 
+<script type="text/javascript" src="js/lib/mjs.js"></script> 
+ 
+<script type="text/javascript" src="js/initWin.js"></script> 
+<script type="text/javascript" src="js/initUI.js"></script> 
+<script type="text/javascript" src="js/initUniforms.js"></script> 
+<script type="text/javascript" src="js/initTextures.js"></script> 
+<script type="text/javascript" src="js/initShaders.js"></script> 
+<script type="text/javascript" src="js/initBuffers.js"></script> 
+ 
+<script type="text/javascript" src="js/interact.js"></script> 
+<script type="text/javascript" src="js/debug.js"></script> 
+ 
+<script type="text/javascript" src="js/tick.js"></script> 
+<script type="text/javascript" src="js/simulator.js"></script> 
+<script type="text/javascript" src="js/drawSkybox.js"></script> 
+<script type="text/javascript" src="js/drawJellyfish.js"></script> 
+<script type="text/javascript" src="js/drawPlankton.js"></script> 
+<script type="text/javascript" src="js/drawRays.js"></script> 
+<script type="text/javascript" src="js/drawGrid.js"></script> 
+<script type="text/javascript" src="js/drawScene.js"></script> 
+ 
+<script id="skybox-vs" type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) {	
+  vec3 pos = aVertexPosition;
+	
+	//matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+	
+	gl_Position = vWorldViewProj;
+  
+}
+</script>
+
+<script id="skybox-fs" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision highp float;
+#endif
+  
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+
+void main(void) {  
+  vec4 composit = vec4(vFogCol.rgb, 1.0);
+	
+	vec4 finalColor = composit;
+  
+  gl_FragColor = finalColor;
+}
+</script><script id="jellyfish-vs" type="x-shader/x-vertex"> 
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+uniform mat4 uJoint0;
+uniform mat4 uJoint1;
+uniform mat4 uJoint2;
+uniform mat4 uJoint3;
+uniform mat4 uJoint0InvTranspose;
+uniform mat4 uJoint1InvTranspose;
+uniform mat4 uJoint2InvTranspose;
+uniform mat4 uJoint3InvTranspose;
+uniform float uCurrentJellyfishTime;
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) {
+  
+  //Vertex Animation
+  float dpi = 6.2831853;
+  float pi = 3.14159265;
+  float hpi = 1.570796325;
+  float lenght = 1.50;
+  float time = mod((uCurrentJellyfishTime+aVertexPosition.y*lenght), dpi);
+  float time2 = mod((uCurrentJellyfishTime+aVertexPosition.y*lenght), dpi);
+  
+  if (time < hpi) time = time;
+  else if (time < pi) time = hpi;
+  else if (time < 3.0*hpi) time = (time*2.0-3.0*hpi);
+  
+  float offset = smoothstep(0.0,1.,max(0.,-aVertexPosition.y-0.8)/10.);
+  vec3 anim = (vec3(aVertexColor.x,aVertexColor.y,aVertexColor.z)/8.0
+  *sin((time+time2)/2.0) * (1.-offset));
+  vec3 pos = aVertexPosition + anim;
+  vec3 nrm = aVertexNormal + anim;
+  
+  //skinning
+  float weight = -aVertexPosition.y/3.0;
+  float w0 = max(min(-weight+1.0,1.0),0.0);
+  float w1 = max(min(weight,-weight+2.0),0.0);
+  float w2 = max(min(weight-1.0,-weight+3.0),0.0);
+  float w3 = max(min(weight-2.0,1.0),0.0);
+  pos = vec3(uJoint0 * vec4(pos, 1.0))*w0 +
+				vec3(uJoint1 * vec4(pos, 1.0))*w1 +
+				vec3(uJoint2 * vec4(pos, 1.0))*w2 +
+				vec3(uJoint3 * vec4(pos, 1.0))*w3;
+  nrm = vec3(uJoint0InvTranspose * vec4(nrm, 1.0))*w0 +
+				vec3(uJoint1InvTranspose * vec4(nrm, 1.0))*w1 +
+				vec3(uJoint2InvTranspose * vec4(nrm, 1.0))*w2 +
+				vec3(uJoint3InvTranspose * vec4(nrm, 1.0))*w3;
+  
+  //matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+ 
+  //vertex normal
+  vVertexNormal = normalize(nrm);
+  
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+  
+  //diffuse
+  vec3 lightDir = normalize(uLightPos - vWorld.xyz);
+  float diffuseProduct = max(dot(normalize(vVertexNormal.xyz), lightDir), 0.0);
+  float lightFalloff = pow(max(1.0-(distance(uLightPos, vWorld.xyz)/uLightRadius), 0.0),2.0);
+  vDiffuse = uLightCol.rgb * vec3(diffuseProduct * lightFalloff * uLightCol.a);
+ 
+  //specular
+  vec3 lightReflectDir = reflect(lightDir, vVertexNormal);
+  float specularProduct = pow(max(dot(lightReflectDir, vWorldEyeVec), 0.0), uSpecPower);
+  vSpecular = uLightSpecCol.rgb * vec3(specularProduct * uLightSpecCol.a);
+ 
+  //fresnel
+  float fresnelProduct = pow(1.0-max(abs(dot(vVertexNormal, -vWorldEyeVec)), 0.0), uFresnelPower);
+  vFresnel = uFresnelCol.rgb * vec3(uFresnelCol.a * fresnelProduct);
+ 
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+  
+	//texture coords	
+  vTextureCoord = aTextureCoord;
+ 
+  //ambient color
+  vAmbient = uAmbientCol.rgb * uAmbientCol.a;
+ 
+  gl_Position = vWorldViewProj;
+}
+</script> 
+ 
+<script id="jellyfish-fs" type="x-shader/x-fragment"> 
+#ifdef GL_ES
+precision highp float;
+#endif
+  
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;uniform float uCurrentJellyfishTime;
+uniform vec4 uLightCol;
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+ 
+void main(void) {
+  vec3 caustics = texture2D(uSampler1, vec2((vWorld.x)/24., (vWorld.z-vWorld.y)/48.)).rgb;
+  vec3 colorMap = texture2D(uSampler0, vec2(vTextureCoord.s, vTextureCoord.t)).rgb;
+  float alphaMap = 1.0-texture2D(uSampler2, vec2(vTextureCoord.s, vTextureCoord.t)).r;
+    
+  caustics *= vDiffuse*2.0;
+  
+  vec4 composit = vec4(((vAmbient + vDiffuse + caustics)*colorMap.rgb) + vFresnel + vSpecular*alphaMap, alphaMap*0.9);  
+    
+  composit = vec4(composit.rgb, composit.a*0.8);//add bioluminescence
+  
+  composit.rgb = mix(composit.rgb, vFogCol.rgb, vFogCol.a);//mix with fog
+  
+  vec4 finalColor = composit;
+ 
+  if (uShaderDebug == 0.0) {finalColor = vec4(composit);}//diffuse
+  else if (uShaderDebug == 1.0) {finalColor = vec4(vDiffuse,1.0);}//diffuse
+  else if (uShaderDebug == 2.0) {finalColor = vec4(vAmbient,1.0);}//ambient
+  else if (uShaderDebug == 3.0) {finalColor = vec4(caustics.rgb,1.0);}//caustics
+  else if (uShaderDebug == 4.0) {finalColor = vec4(colorMap.rgb,1.0);}//color
+  else if (uShaderDebug == 5.0) {finalColor = vec4(vSpecular,1.0);}//specular
+  else if (uShaderDebug == 6.0) {finalColor = vec4(vFresnel,1.0);}//fresnel
+  else if (uShaderDebug == 7.0) {finalColor = vec4(vVertexNormal.xyz,1.0);}//normal
+  else if (uShaderDebug == 8.0) {finalColor = vec4(vec3(alphaMap),1.0);}//transparency
+ 
+  gl_FragColor = finalColor;
+}
+</script><script id="vcolor-vs" type="x-shader/x-vertex"> 
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) {
+  vec3 pos = aVertexPosition;
+	
+	//matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+ 
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+ 
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+ 
+  //vertex color
+	vColor = aVertexColor;
+	
+	gl_Position = vWorldViewProj;
+}
+</script> 
+ 
+<script id="vcolor-fs" type="x-shader/x-fragment"> 
+#ifdef GL_ES
+precision highp float;
+#endif
+ 
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;  
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) { 
+  vec4 composit = vec4(vColor, 1.0);
+	
+	//mix with fog
+	composit.rgb = mix(composit.rgb, vFogCol.rgb, vFogCol.a);
+	
+	vec4 finalColor = composit;
+  
+  gl_FragColor = finalColor;
+}
+</script><script id="wire-vs" type="x-shader/x-vertex"> 
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) {
+  vec3 pos = aVertexPosition;
+	
+	//matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+ 
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+ 
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+  
+	//vertex color
+  vColor = aVertexColor;
+	
+	gl_Position = vWorldViewProj;
+}
+</script> 
+ 
+<script id="wire-fs" type="x-shader/x-fragment"> 
+#ifdef GL_ES
+precision highp float;
+#endif
+ 
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;  
+varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+  
+void main(void) {
+  vec4 composit = vec4(vColor.rgb,1.0);
+	
+	//mix with fog
+  composit.rgb = mix(composit.rgb, vFogCol.rgb, vFogCol.a);
+	
+	vec4 finalColor = composit;
+  
+  gl_FragColor = finalColor;
+}
+</script><script id="plankton-vs" type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+uniform vec3 uParticlePosition;
+uniform vec3 uParticleScale;
+uniform vec3 uPBbox;
+uniform mat4 uParticleMatrix;
+uniform float uPID;
+uniform float uPAlpha;
+uniform float uRAlpha;varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+varying float pFade;
+  
+void main(void) {
+  //Vertex Animation
+  vec3 pos = aVertexPosition;
+	  
+  float rotationSpeed = uCurrentTime*sin(uPID);
+  mat4 rotation = mat4(
+        vec4( cos(rotationSpeed),  sin(rotationSpeed),  0.0,  0.0),
+        vec4(-sin(rotationSpeed),  cos(rotationSpeed),  0.0,  0.0),
+        vec4(0.0,   0.0,  1.0,  0.0),
+		    vec4(0.0,   0.0,  0.0,  1.0)
+  );  
+  
+  pos = vec3(uParticleMatrix * rotation * vec4(aVertexPosition, 1.0)) * uParticleScale + uParticlePosition;
+	
+	//matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+	
+  //vertex normal
+  vVertexNormal = normalize((uWorldInvTranspose * vec4(aVertexNormal, 1.)).xyz);
+  
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+  
+  //diffuse light
+	vec3 lightDir = normalize(uLightPos - vWorld.xyz);
+  float diffuseProduct = max(dot(normalize(vVertexNormal.xyz), lightDir), 0.0);
+  float lightFalloff = pow(max(1.0-(distance(uLightPos, vWorld.xyz)/uLightRadius), 0.0),2.0);
+  vDiffuse = uLightCol.rgb * vec3(diffuseProduct * lightFalloff * uLightCol.a);
+
+  //particle fade to bounding box
+  pFade = min(1.0,uPBbox[0]-abs(uParticlePosition[0]));
+  pFade *= min(1.0,uPBbox[1]-abs(uParticlePosition[1]));
+  pFade *= min(1.0,uPBbox[2]-abs(uParticlePosition[2]));
+
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+
+	//texture coords	
+  vTextureCoord = aTextureCoord;
+
+  //vertex color
+  vColor = aVertexColor;
+
+  //ambient color
+  vAmbient = uAmbientCol.rgb * uAmbientCol.a;
+
+	gl_Position = vWorldViewProj;
+}
+</script>
+
+<script id="plankton-fs" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;  
+uniform vec3 uParticlePosition;
+uniform vec3 uParticleScale;
+uniform vec3 uPBbox;
+uniform mat4 uParticleMatrix;
+uniform float uPID;
+uniform float uPAlpha;
+uniform float uRAlpha;varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+varying float pFade;
+
+void main(void) {
+  vec4 composit = vec4(1.0,1.0,1.0,1.0);
+  
+	//color and transpatency
+    vec3 caustics = texture2D(uSampler1, vec2((vWorld.x)/24.+uCurrentTime/20., (vWorld.z-vWorld.y)/48.+uCurrentTime/40.)).rgb;
+    vec4 colorMap = texture2D(uSampler0, vec2((vTextureCoord.s+uPID)*.25, (vTextureCoord.t+floor(uPID*.25))*.25));
+    float transparency = colorMap.r * caustics.r * pFade * uPAlpha;	
+	
+	//mix with fog additive
+	composit = vec4((vAmbient + vDiffuse + caustics)*colorMap.rgb, transparency*(1.0-vFogCol.a));
+	
+	vec4 finalColor = composit;
+  
+  gl_FragColor = finalColor;
+}
+</script><script id="ray-vs" type="x-shader/x-vertex"> 
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec3 aVertexColor;
+attribute vec3 aTextureCoord;
+uniform mat4 uWorld;
+uniform mat4 uView;
+uniform mat4 uViewInv;
+uniform mat4 uWorldView;
+uniform mat4 uWorldViewProj;
+uniform mat4 uWorldInvTranspose;
+ 
+uniform float uNear;
+uniform float uFar;
+uniform vec3 uLightPos;
+uniform float uLightRadius;
+uniform vec4 uLightCol;
+uniform vec4 uLightSpecCol;
+uniform float uSpecPower;
+uniform vec4 uAmbientCol;
+uniform vec4 uFresnelCol;
+uniform float uFresnelPower;
+uniform float uFogDist;
+uniform vec4 uFogTopCol;
+uniform vec4 uFogBottomCol;
+  
+uniform float uCurrentTime;
+uniform vec3 uParticlePosition;
+uniform vec3 uParticleScale;
+uniform vec3 uPBbox;
+uniform mat4 uParticleMatrix;
+uniform float uPID;
+uniform float uPAlpha;
+uniform float uRAlpha;varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+varying float pFade;
+  
+void main(void) {
+ 
+  //Vertex Animation
+  vec3 pos = vec3(uParticleMatrix * vec4(aVertexPosition, 1.0)) + uParticlePosition;
+	
+	//matrices
+  vWorld =               uWorld * vec4(pos, 1.0);
+  vWorldView =           uWorldView * vec4(pos, 1.0);
+  vWorldViewProj =       uWorldViewProj * vec4(pos, 1.0);
+  vWorldInvTranspose =   uWorldInvTranspose * vec4(pos, 1.0);
+  vViewInv =             uViewInv * vec4(pos, 1.0);
+ 
+  //vertex eye vector
+  vWorldEyeVec = normalize(vWorld.xyz - uViewInv[3].xyz); 
+ 
+  //particle fade to bounding box edges
+  pFade = min(1.0,3.0*uPBbox[0]-abs(uParticlePosition[0]));
+  pFade *= min(1.0,3.0*uPBbox[2]-abs(uParticlePosition[2]));
+ 
+  //vertex fog
+  vDepth = (vWorldViewProj.z+uNear)/uFar;
+  float height = smoothstep(uFogBottomCol.a, uFogTopCol.a, (vWorldEyeVec.y+1.0)/2.0);
+  vFogCol = uFogTopCol*height + uFogBottomCol*(1.0-height);
+  vFogCol.a = min(max((uFar-uNear)*vDepth/uFogDist,0.0),1.0);
+	
+	//texture coords	
+  vTextureCoord = aTextureCoord;
+ 
+  //vertex color
+  vColor = aVertexColor;
+	
+	gl_Position = vWorldViewProj;
+}
+</script> 
+ 
+<script id="ray-fs" type="x-shader/x-fragment"> 
+#ifdef GL_ES
+precision highp float;
+#endif
+ 
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+ 
+  
+uniform float uShaderDebug;
+uniform float uCurrentTime;
+uniform float uNear;
+uniform float uFar;  
+uniform vec3 uParticlePosition;
+uniform vec3 uParticleScale;
+uniform vec3 uPBbox;
+uniform mat4 uParticleMatrix;
+uniform float uPID;
+uniform float uPAlpha;
+uniform float uRAlpha;varying vec3 vWorldEyeVec;
+varying vec4 vWorld;
+varying vec4 vWorldView;
+varying vec4 vWorldViewProj;
+varying vec4 vWorldInvTranspose;
+varying vec4 vViewInv;
+varying vec3 vTextureCoord;
+varying vec3 vVertexNormal;
+varying vec3 vColor;
+varying vec3 vSpecular;
+varying vec3 vDiffuse;
+varying vec3 vAmbient;
+varying vec3 vFresnel;
+varying float vDepth;
+varying vec4 vFogCol;
+ 
+varying float pFade;
+ 
+void main(void) {
+  vec4 composit = vec4(1.0,1.0,1.0,1.0);
+  
+	//color and transpatency
+	float colorMap = texture2D(uSampler0, vec2(vTextureCoord.s, vTextureCoord.t)).r;
+  float transparency = colorMap * pFade * uRAlpha *.05;	
+	
+	//mix with fog additive
+	composit = vec4(vec3(vFogCol.rgb)*2.0, transparency*(1.0-vFogCol.a));
+	
+	vec4 finalColor = composit;
+  
+  gl_FragColor = finalColor;
+}
+</script> 
+<script type="text/javascript"> 
+$(document).ready(function(){
+  webGLStart();
+});
+</script> 
+ 
+</head> 
+<body> 
+    <div id="statusBar"> 
+        Time: <span id="current-time"></span> | Frame rate: <span id="frameRate">NaN</span> | Created by <a href="http://aleksandarrodic.com">Aleksandar Rodic</a> using <a href="http://en.wikipedia.org/wiki/WebGL">WebGL</a>. Special thanks to <a href="http://learningwebgl.com/blog/">Giles Thomas</a> | debug console: <a href="javascript:toggleConsole()"><b>[+]</b></a> 
+    </div> 
+    <div id="console"> 
+        <div class="console-field" id="debugCamera"> 
+            <b>camera</b> 
+            near <input type="text" class="textboxDebug" id="near"> 
+            far <input type="text" class="textboxDebug" id="far"> 
+            fov <input type="text" class="textboxDebug" id="fov"><br /> 
+       </div> 
+       <div class="console-field" id="debugShader"> 
+          <b>shader debug</b> 
+            <input type="radio" name="shaderDebug" value="0"> composit <br/> 
+            <input type="radio" name="shaderDebug" value="1"> diffuse <br/> 
+            <input type="radio" name="shaderDebug" value="2"> ambient<br/> 
+            <input type="radio" name="shaderDebug" value="3"> caustics <br/> 
+            <input type="radio" name="shaderDebug" value="4"> color <br/> 
+            <input type="radio" name="shaderDebug" value="5"> specular <br/> 
+            <input type="radio" name="shaderDebug" value="6"> fresnel <br/> 
+            <input type="radio" name="shaderDebug" value="7"> normal <br/> 
+            <input type="radio" name="shaderDebug" value="8"> alpha <br/> 
+            <input type="radio" name="shaderDebug" value="9"> incandescence <br/> 
+        </div> 
+       <div class="console-field" id="debugModel"> 
+          <b>model debug</b> 
+            <input type="checkbox" name="showJellyfish" value="1"> show jellyfish </br> 
+            <input type="checkbox" name="showSkeleton" value="1"> show skeleton </br> 
+            <input type="checkbox" name="showTargets" value="1"> show targets </br> 
+            <input type="checkbox" name="showParticles" value="1"> show particles </br> 
+            <input type="checkbox" name="showRays" value="1"> show rays </br> 
+            <input type="checkbox" name="showGrid" value="1"> show grid </br> 
+            <input type="checkbox" name="showSkybox" value="1"> show skybox </br> 
+        </div> 
+       <div class="console-field" id="debugJellyfish"> 
+          <b>jellyfish debug</b> 
+            <span class="input-section">count</span> 
+            <input type="text" class="textboxDebug" id="jCount" /><br /> 
+            <span class="input-section">size</span> 
+            <input type="text" class="textboxDebug" id="jScale" /> 
+            <input type="text" class="textboxDebug" id="jScaleRandom"  /><br /> 
+            <span class="input-section">Turbulence</span> 
+            <input type="text" class="textboxDebug" id="jTurb" /><br /> 
+            <span class="input-section">speed</span> 
+            <input type="text" class="textboxDebug" id="jSpeed" /><br /> 
+        </div> 
+       <div class="console-field"  id="debugParticle"> 
+          <b>particle debug</b> 
+            <span class="input-section">count</span> 
+            <input type="text" class="textboxDebug" id="pCount" /><br /> 
+            <span class="input-section">bbox</span> 
+            <input type="text" class="textboxDebug" id="pBboxX" /> 
+            <input type="text" class="textboxDebug" id="pBboxY" /> 
+            <input type="text" class="textboxDebug" id="pBboxZ" /><br /> 
+            <span class="input-section">flow</span> 
+            <input type="text" class="textboxDebug" id="pFlowX" /> 
+            <input type="text" class="textboxDebug" id="pFlowY" /> 
+            <input type="text" class="textboxDebug" id="pFlowZ" /><br /> 
+            <span class="input-section">turbulence</span> 
+            <input type="text" class="textboxDebug" id="pTurbAmp" /> 
+            <input type="text" class="textboxDebug" id="pTurbFreq" /><br /> 
+            <span class="input-section">size</span> 
+            <input type="text" class="textboxDebug" id="pScale" /> 
+            <input type="text" class="textboxDebug" id="pScaleRandom" /><br /> 
+            <span class="input-section">alpha</span> 
+            <input type="text" class="textboxDebug" id="pAlpha" /> 
+        </div> 
+       <div class="console-field"  id="debugParticle"> 
+          <b>ray debug</b> 
+            <span class="input-section">ray count</span> 
+            <input type="text" class="textboxDebug" id="rCount" /><br /> 
+            <span class="input-section">ray speed</span> 
+            <input type="text" class="textboxDebug" id="rSpeed" /><br /> 
+            <span class="input-section">alpha</span> 
+            <input type="text" class="textboxDebug" id="rAlpha" /><br /> 
+        </div> 
+        <div class="console-field" id="debugLighting"> 
+          <b>Directional light</b> 
+            <span class="input-section">position</span> 
+            <input type="text" class="textboxDebug" id="lightX" /> 
+            <input type="text" class="textboxDebug" id="lightY" /> 
+            <input type="text" class="textboxDebug" id="lightZ" /><br /> 
+            <span class="input-section">color</span> 
+            <input type="text" class="textboxDebug" id="lightR" /> 
+            <input type="text" class="textboxDebug" id="lightG" /> 
+            <input type="text" class="textboxDebug" id="lightB" /> 
+            <input type="text" class="textboxDebug" id="lightA" /><br /> 
+            <span class="input-section">spec color</span> 
+            <input type="text" class="textboxDebug" id="lightSpecR" /> 
+            <input type="text" class="textboxDebug" id="lightSpecG" /> 
+            <input type="text" class="textboxDebug" id="lightSpecB" /> 
+            <input type="text" class="textboxDebug" id="lightSpecA" /><br /> 
+            <span class="input-section">radius</span> 
+            <input type="text" class="textboxDebug" id="lightRadius" /><br /> 
+            <span class="input-section">spec power</span> 
+            <input type="text" class="textboxDebug" id="lightSpecPower" /><br /> 
+          <b>Ambient light</b> 
+            <span class="input-section">color</span> 
+            <input type="text"  class="textboxDebug" id="ambientR" /> 
+            <input type="text"  class="textboxDebug" id="ambientG" /> 
+            <input type="text"  class="textboxDebug" id="ambientB" /> 
+            <input type="text"  class="textboxDebug" id="ambientA" /> 
+          <b>fog</b> 
+            <span class="input-section">fogTop</span> 
+            <input type="text"  class="textboxDebug" id="fogTopR" /> 
+            <input type="text"  class="textboxDebug" id="fogTopG" /> 
+            <input type="text"  class="textboxDebug" id="fogTopB" /> 
+            <input type="text"  class="textboxDebug" id="fogTopA" /></br> 
+            <span class="input-section">fogBottom</span> 
+            <input type="text"  class="textboxDebug" id="fogBottomR" /> 
+            <input type="text"  class="textboxDebug" id="fogBottomG" /> 
+            <input type="text"  class="textboxDebug" id="fogBottomB" /> 
+            <input type="text"  class="textboxDebug" id="fogBottomA" /></br> 
+            <span class="input-section">fogDistance</span> 
+            <input type="text"  class="textboxDebug" id="fogDist" /> 
+          <b>fresnel</b> 
+            <span class="input-section">color</span> 
+            <input type="text"  class="textboxDebug" id="fresnelR" /> 
+            <input type="text"  class="textboxDebug" id="fresnelG" /> 
+            <input type="text"  class="textboxDebug" id="fresnelB" /> 
+            <input type="text"  class="textboxDebug" id="fresnelA" /><br/> 
+            <span class="input-section">power</span> 
+            <input type="text"  class="textboxDebug" id="fresnelPower" /> 
+          <b>animation</b> 
+            <span class="input-section">lightBlendVector</span> 
+            <input type="text"  class="textboxDebug" id="lightBlendX" /> 
+            <input type="text"  class="textboxDebug" id="lightBlendY" /> 
+        </div> 
+    </div> 
+    <canvas id="webgl-canvas"></canvas> 
+</body> 
+</html>

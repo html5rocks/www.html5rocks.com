@@ -1,0 +1,393 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}Creating a Mobile-First Responsive Web Design{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+
+{% block content %}
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>We're going to walk through how to create an adaptive web experience that's designed mobile-first. This article and <a href="http://bradfrostweb.com/demo/mobile-first/">demo</a> will go over the following:</p>
+
+<ul>
+
+  <li>Why we need to create mobile-first, responsive, adaptive experiences</li>
+  <li>How to structure HTML for an adaptive site in order to optimize performance and prioritize flexibility</li>
+  <li>How to write CSS that defines shared styles first, builds up styles for larger screens with media queries, and uses relative units</li>
+  <li>How to write unobtrusive Javascript to conditionally load in content fragments, take advantage of touch events and geolocation</li>
+  <li>What we could do to further enhance our adaptive experience</li>
+</ul>
+
+<h2 id="toc-theneed">The Need for Adaptivity</h2>
+
+<p>As the web landscape becomes increasingly complex, it's becoming extremely important to deliver solid web experiences to a growing number of contexts. Thankfully, <a href="http://www.alistapart.com/articles/responsive-web-design/">responsive web design</a> gives web creators some tools for making layouts that respond to any screen size. We'll use fluid grids, flexible images and media queries to get the layout looking great regardless of the size of the device's screen dimensions.</p>
+
+<p>However, mobile context is much more than just screen size. Our mobile devices are with us wherever we go, unlocking entire new use cases. Because we constantly have our mobile devices with us, connectivity can be all over the board, ranging from strong wi-fi signals on the couch to 3G or EDGE when out and about. In addition, touch screens open new opportunities to interact directly with content and mobile ergonomics lead to different considerations when designing layout and functionality.</p>
+
+<p>In order to create a site that's truly designed for mobile context and not just for small screens, we want to ensure that we tackle the many challenges of mobile development upfront.  The constraints of the mobile context force us to focus on what content is essential and how to present that content as quickly as possible. Building fast-loading, optimized experiences <a href="http://www.lukew.com/ff/entry.asp?933">mobile first</a> has a trickle down (or up, depending on how you look at it) effect for tablet, desktop and other emerging contexts.</p>
+
+<h2 id="toc-theneed">What We're Making: The Humble Product Detail Page</h2>
+
+<p><b><a href="http://bradfrostweb.com/demo/mobile-first/">View the demo</a></b></p>
+
+<p>The demo we're making is a simple e-commerce product detail page for a fictitious t-shirt company. Why choose this? E-commerce sites can have many use cases across contexts. For example, <a href="http://googlemobileads.blogspot.com/2011/12/look-back-at-2011.html">70% of smartphone owners use their mobile phones to influence in-store purchases</a>. So while we'll make sure that purchasing the product is as easy as possible, we'll also try to make the product reviews accessible and utilize the user's location to enhance the mobile experience.</p>
+
+<h2 id="toc-structure">Structure</h2>
+
+<p>Authoring lean, semantic HTML5 markup keeps adaptive experiences manageable and accessible, and also provides opportunities for enhanced experiences (quick example: using <a href="http://diveintohtml5.info/forms.html">proper HTML5 input types</a> brings up the appropriate virtual keyboard on many touch devices). Semantic markup is extremely portable and can be accessed by many mobile devices, tablets, desktop browsers and future web-enabled devices, regardless of feature set or capability.</p>
+
+<h3 id="toc-structure-viewport">Setting the viewport</h3>
+
+<p>In order to accommodate for sites not optimized for mobile screens, many modern mobile browsers set a larger browser viewport, which allows for better viewing of non-mobile-optimized sites. Users can then pinch-to-zoom in on the content they want.  That's fine for non-mobile experiences, but because we're optimizing our experience for mobile browsers, we'll use the <a href="https://developer.apple.com/library/ios/#DOCUMENTATION/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html">viewport meta tag</a> to set the screen width to the device width:</p>
+
+<pre class="prettyprint">&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</pre>
+
+<p>It's important to note that we're not disabling the user's ability to zoom the page (which you could do by adding user-scalable=no to the content attribute), even though we're optimizing the content for small screens. It's recommended to keep user zooming enabled to keep things as accessible as possible. However, there are use cases to disable user-zooming, such as if you're including <a href="http://bradfrostweb.com/blog/mobile/fixed-position/">fixed positioned elements</a>.</p>
+
+<h3 id="toc-structure-fragments">Content fragments</h3>
+
+<p>In order to keep the experience as lightweight as possible and to improve the perceived loading time, we're creating two additional HTML documents for our auxiliary content, reviews.html andrelated.html. Because this content isn't required for the main use case (buying the product) and includes a number of images, we won't load it by default to keep the initial page size down. By default the content is accessible via links on the page, but if a certain level of javascript support is present, we'll <a href="http://24ways.org/2011/conditional-loading-for-responsive-designs">conditionally load the content</a> when the user requests it or when the resolution reaches a certain breakpoint.</p>
+
+<h3 id="toc-structure-specialchars">HTML Special Characters</h3>
+
+<p>A simple technique to reduce the need for background images (thereby saving HTTP requests) is to use HTML special characters for simple shapes. In the case of our rating stars, we're using &amp;#9733; to create a solid star (&#9733;) and &amp;#9734; to create empty stars (&#9734;) for our ratings. And because it's HTML and not an image, it stays crisp even on high resolution screens.</p>
+
+<h3 id="toc-structure-teluri">The tel: URI Scheme</h3>
+
+<p>Another simple yet effective technique we're including in our footer is a clickable link to the customer service number. This is accomplished by using the tel URI scheme, which looks like this:</p>
+
+<pre class="prettyprint">&lt;a href="tel:+18005550199"&gt;1-800-555-0199&lt;/a&gt;</pre>
+
+<p>We sometimes forget that <a href="http://bradfrostweb.com/blog/mobile/a-tel-tale-sign/">mobile devices can make phone calls</a>, and also that some desktop configurations can launch VoIP applications to initiate a phone call. We're including an easy way for users to facilitate a phone call, which in some cases might make sense (i.e. a mobile user who might prefer finishing the transaction over the phone versus going through a checkout flow on their mobile device).</p>
+
+<p>Now that we have a strong, semantic foundation in place, let's move onto adding style enhancements.</p>
+
+<h2 id="toc-style">Style</h2>
+
+<p>When crafting our CSS, we'll do everything in our power to keep things lightweight and as fluid as possible. We understand that all these devices have many different screen sizes, and that tomorrow's devices won't have the same resolutions as today's. Because screen size is an unknown, we'll use the content itself to determine how the layout should adjust to its container.</p>
+
+<h3 id="toc-style-separatesheet">Separate style sheet for larger screens</h3>
+
+<p>We're creating two separate CSS files, style.css and enhanced.css in order to deliver basic styles for screens less than 40.5em and using media queries to serve up enhanced styles for screens larger than 40.5em.</p>
+
+<pre class="prettyprint">&lt;link rel="stylesheet" type="text/css" href="style.css" media="screen, handheld" /&gt;
+&lt;link rel="stylesheet" type="text/css" href="enhanced.css" media="screen  and (min-width: 40.5em)" /&gt;
+&lt;!--[if (lt IE 9)&amp;(!IEMobile)]&gt;
+&lt;link rel="stylesheet" type="text/css" href="enhanced.css" /&gt;
+&lt;![endif]--&gt;</pre>
+
+<p>We're using the conditional code &lt;!--[if (lt IE 9)&amp;(!IEMobile)]&gt; in order to serve up enhanced.css to non-mobile versions of IE less than version 9, which unfortunately don't support media queries. While this method does indeed add an HTTP request to the mix, it <a href="http://adactio.com/journal/4494/">gives us greater flexibility over our styles</a>. Alternately, we could use <a href="https://github.com/scottjehl/Respond">respond.js</a> to deliver enhanced styles to IE.</p>
+
+<p>We're using the em unit instead of px to maintain consistency with the rest of our relative units and account for user settings like zoom level.  Also, the content should determine the breakpoint (we're using 40.5em as a breakpoint) because device dimensions are too varied and are always changing so are therefore <a href="http://designshack.net/articles/css/responsive-design-why-youre-doing-it-wrong/#comment-42221 ">unreliable</a>.</p>
+
+<h3 id="toc-style-mobilefirst">Mobile-First Styles</h3>
+
+<p>Starting with baseline shared styles and introducing more advanced layout rules when screen size permits keeps code simpler, smaller and more maintainable. Here's just a quick example to demonstrate this point:</p>
+
+<pre class="prettyprint">/*Large screen styles first - Avoid*/
+.product-img {
+  width: 50%;
+  float: left;
+}
+@media screen and (max-width: 40.5em) {
+  .product-img {
+    width: auto;
+    float: none;
+  }
+}</pre>
+
+<p>We want to avoid complexity as much as we can, so here's what a mobile-first approach looks like:</p>
+
+<pre class="prettyprint">
+@media screen and (min-width: 40.5em) {
+  .product-img {
+    width: 50%;
+    float: left;
+  }
+}</pre>
+
+<p>Instead of declaring large screen rules first only to override them for smaller screens, we'll simply define rules as more real estate becomes available. The web by default is a fluid thing so we'll do our best to work with it instead of against it. It's important to note that some mobile browsers (Symbian browsers, Blackberry &lt;OS 6.0, Netfront, WP7 pre-Mango, etc) don't support media queries, so serving base styles by default reaches more devices and browsers. As <a href="http://www.slideshare.net/bryanrieger/rethinking-the-mobile-web-by-yiibu">Bryan Rieger puts it</a>, "the absence of support for @media queries is in fact the first @media query."</p>
+
+<h3 id="toc-style-mediaqueries">Applying Media Queries</h3>
+
+<p>We're continuing our mobile-first style when we apply our media queries. Our related product list starts off two to a row, but increases to 3 in a row when the screen size is at least 28.75em wide (roughly the size of mobile phones in landscape mode) and then to 6 to a row when the screen size is at least 40.5em (roughly tablets in portrait mode or small desktop screens).</p>
+
+<pre class="prettyprint">/*Default styles*/
+.related-products li {
+  float: left;
+  width: 50%;
+}
+
+/*Display 3 per row for medium displays (like mobile phones in landscape or smaller tablets)*/
+@media screen and (min-width: 28.75em) {
+  .related-products li {
+    width: 33.3333333%;
+  }
+}
+/*Display 6 to a row for large displays (like medium tablets and up) */
+@media screen and min-width: 40.5em) {
+  .related-products li {
+    width: 16.6666667%;
+  }
+}</pre>
+
+<p>Assuming small screen by default allows us to support more platforms and also makes it easy add more breakpoints without having to modify existing styles.  Defining styles as they're needed also keeps file size down, reduces complexity and keeps code more maintainable.</p>
+
+<h3 id="toc-style-relativeunits">Using Relative Units</h3>
+
+<p>We're using percentages and em units in our design in order to keep things as flexible as possible. Relative units are far more compatible with the tremendous variance brought on by screen size, pixel density and zoom level.</p>
+
+<p>While media queries are responsive web design's secret sauce, we want our <a href="http://www.alistapart.com/articles/fluidgrids/">fluid grids</a> to do most of the work. Maintaining a whole slew of set-width styles across many media queries can become unwieldy, so we'll make sure the stylesheet's foundation is entirely flexible. Ethan Marcotte <a href="http://www.alistapart.com/articles/fluidgrids/">provides a formula</a> for converting dimensions and font sizes from pixel-based to relative units:</p>
+
+<pre class="prettyprint">target &divide; context = result</pre>
+
+<h3 id="toc-style-usingcss">Using CSS to Reduce Requests</h3>
+
+<p>Too many HTTP requests can be a <a href="http://speakerdeck.com/u/tkadlec/p/optimizing-for-mobile-performance">huge killer for performance</a>, especially on mobile. We're incorporating some CSS techniques to save HTTP requests which will improve the site's performance. Using <a href="http://css-tricks.com/css3-gradients/">CSS gradients</a> instead of background images reduces the amount of image requests and gives us more control over the design. We're including the appropriate vendor prefixes to ensure maximum compatibility (there are <a href="http://www.colorzilla.com/gradient-editor/">tools</a> for this) and hoping that one day that these rules will become standardized to save us some time.</p>
+
+<pre class="prettyprint">/*Using CSS gradients instead of background images*/
+header[role="banner"] {
+  position: relative;
+  background: #111; 
+  background: {% mixin linear-gradient(top, #111 0%, #222 100%); %}
+}</pre>
+
+<p>We're also using <a href="http://bradfrostweb.com/demo/mobile-first/article.html">data URIs</a> instead of background images for some of the smaller icons (for icons like search, social features and location). While data URIs might look a bit ugly and can increase up the stylesheet file size, the reduction of requests results in a <a href="http://tech.groups.yahoo.com/group/mobile-web/message/609">faster perceived download time</a>.</p>
+
+<pre class="prettyprint">/*Using a Data URI for Background Image*/
+.find-nearby {
+  background: url(data:image/png;base64,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) no-repeat 100% 43%;
+}
+</pre>
+
+<h2 id="toc-behavior">Behavior</h2>
+
+<p>Now that we have our structure and style in place, we'll add JavaScript enhancements to add functionality to the navigation, image gallery and auxiliary content.</p>
+
+<h3 id="toc-behavior-navigation">Navigation</h3>
+
+<p>Navigation can be especially tricky for adaptive experiences. Top navigation is common for desktop sites, but top navigation can crowd the screen and push down the primary content on small screens. We want to highlight the product and not the site navigation, so we'll do our best to get the navigation out of the way.
+in our markup we've created a list called #nav-anchors, which will be used to toggle the visibility of the navigation and search bar for small screens.</p>
+
+<pre class="prettyprint">&lt;ul  id="nav-anchors" class="nav-anchors"&gt;
+  &lt;li&gt;&lt;a href="#nav" id="menu-anchor"&gt;Menu&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="#search" id="search-anchor"&gt;Search&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;form id="search" action="#" method="post" class="search reveal"&gt;
+  &lt;fieldset&gt;
+    &lt;legend>Search the Site&lt;/legend&gt;
+    &lt;input type="search" placeholder="Search Store" /&gt;
+    &lt;input type="submit" value="Search" /&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;
+&lt;nav id="nav" class="nav reveal"&gt;
+  &lt;ul role="navigation"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;T-shirts&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Hoodies&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Pants&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</pre>
+
+<p>We'll add a resize listener which will determine whether there's enough room to show the navigation and search bar.</p>
+
+<pre class="prettyprint">$(w).resize(function(){ //Update dimensions on resize
+  sw = document.documentElement.clientWidth;
+  sh = document.documentElement.clientHeight;
+  checkMobile();
+});
+  
+//Check if Mobile
+function checkMobile() {
+  mobile = (sw &gt; breakpoint) ? false : true;
+
+  if (!mobile) { //If Not Mobile
+    $('[role="tabpanel"],#nav,#search').show(); //Show full navigation and search
+  } else { //Hide 
+    if(!$('#nav-anchors a').hasClass('active')) {
+      $('#nav,#search').hide(); //Hide full navigation and search
+    }
+  }
+}</pre>
+
+<h3 id="toc-behavior-gallery">Image Gallery</h3>
+
+<p>By default the image gallery is simply a large image with thumbnail images that click through to their larger counterparts. This means that they're accessible to browsers and devices with poor or no JavaScript support.</p>
+
+<pre class="prettyprint">&lt;div id="product-img" class="product-img"&gt;
+  &lt;figure class="img-container" id="img-container"&gt;
+    &lt;img src="images/product_img_1.jpg" alt="Super Ffly T-shirt" /&gt;
+  &lt;/figure&gt;
+  &lt;nav&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="images/product_img_1.jpg"&gt;&lt;img src="images/product_img_1_thumb.jpg" alt="Super Ffly Men's Shirt" /&gt;&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="images/product_img_2.jpg"&gt;&lt;img src="images/product_img_2_thumb.jpg" alt="Super Ffly Women's Shirt" /&gt;&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="images/product_img_3.png"&gt;&lt;img src="images/product_img_3_thumb.jpg" alt="Ffly Logo" /&gt;&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/div&gt;</pre>
+
+<p>We'll build an image carousel from the available thumbnail images:</p>
+
+<pre class="prettyprint">function buildGallery() {
+  container.html('&lt;div id="img-list"&gt;&lt;ul /&gt;&lt;/div&gt;');
+  imgList = $('#img-list');
+  nav.find('a:first').addClass('active');
+  
+  //For Each Navigation Link
+  nav.find('a').each(function() {
+    var $this = $(this);
+    var href = $this.attr('href');
+      
+    //Prepare list item with image source in data attribute
+    arr += '&lt;li data-imgsrc="'+href+'"&gt;&lt;/li&gt;';
+  });
+  
+  //Append to #img-list
+  imgList.find('ul').append(arr);
+      
+  //Nav Thumbnail Click
+  nav.on('click', 'a', function(e) {
+    var pos = $(this).parent().index();
+    e.preventDefault();
+    loadImg(pos);
+    if(swipeEnabled) {
+      mySwipe.slide(index, 300);
+    }
+    updateNav(pos);
+  });
+}
+</pre>
+
+<p>To enhance the experience further, we're using <a href="http://www.modernizr.com/">Modernizr</a> to detect for the presence of touch events and CSS transitions, and if they are supported, we'll load in a library called <a href="http://swipejs.com/">SwipeJS</a> to make a touch-friendly image carousel.</p>
+
+<pre class="prettyprint">
+Modernizr.load({
+  test: Modernizr.touch &amp;&amp; Modernizr.csstransitions,
+  yep: 'js/swipe.js',
+  complete: function() {
+    if (Modernizr.touch &amp;&amp; Modernizr.csstransitions) {
+      swipeEnabled = true;
+      buildSwipe();
+    }
+  }
+});
+
+//Build Swipe Carousel
+function buildSwipe() {
+  //Initialize Swipe.js
+  w.mySwipe = new Swipe(document.getElementById('img-list'), {
+    callback: function(event, index, elem) {
+      updateNav(index);
+      loadImg(index + 1);
+    } 
+  });
+}</pre>
+
+<p>We now have an accessible image gallery with added enhancements for touch-enabled devices.</p>
+
+<h3 id="toc-behavior-relatedcontent">Related Content</h3>
+
+<p>In order to keep Initial page size down, we're not loading auxiliary content, namely the related t-shirts and product reviews, by default. Instead, they exist as their own HTML pages, which are accessed by links as a default behavior.</p>
+
+<pre class="prettyprint">&lt;section class="aux related-products" id="related-products"&gt;
+  &lt;header id="tab-related"&gt;
+    &lt;a href="related.html"&gt;
+      &lt;h2&gt;Similar T-shirts&lt;/h2&gt;
+    &lt;/a&gt;
+  &lt;/header&gt;
+&lt;/section&gt;
+&lt;section class="aux reviews" id="reviews"&gt;
+  &lt;header id="tab-reviews"&gt;
+    &lt;a href="reviews.html"&gt;
+      &lt;h2>8 Reviews&lt;/h2&gt;
+      &lt;ol class="star"&gt;
+        &lt;li class="on"&gt;&amp;#9733;&lt;/li&gt;
+        &lt;li class="on"&gt;&amp;#9733;&lt;/li&gt;
+        &lt;li class="on"&gt;&amp;#9733;&lt;/li&gt;
+        &lt;li class="on"&gt;&amp;#9733;&lt;/li&gt;
+        &lt;li&gt;&amp;#9734;&lt;/li&gt;
+      &lt;/ol&gt;
+    &lt;/a&gt;
+  &lt;/header&gt;
+&lt;/section&gt;</pre>
+
+<p>We'll pull in the related content when one of two conditions are met:
+When a small-screen user clicks the related shirts or product reviews links
+When the screen has enough room to load in the auxiliary content.</p>
+
+<pre class="prettyprint">//Check if Mobile
+function checkMobile() {
+  if(sw &gt; breakpoint) {
+    mobile = false; //Not Mobile
+  } else {
+    mobile = true; //Mobile
+  }
+  
+  if (!mobile) { //If Not Mobile
+    loadAux(); //Load auxiliary content
+  }
+}
+
+//Set up Auxiliary content
+function loadAux() {
+  var $aux = $('.aux');
+  $aux.each(function(index) {
+    var $this = $(this);
+    var auxLink = $this.find('a');
+    var auxFragment = auxLink.attr('href');
+    var auxContent = $this.find('[role=tabpanel]');
+    if (auxContent.size()===0 &amp;&amp; $this.hasClass('loaded')===false) {
+      loadContent(auxFragment,$this);
+    }
+  });
+}
+
+function loadContent(src,container) { // Load Tab Content
+  container.addClass('loaded');
+  $('&lt;div role="tabpanel" /&gt;').load(src +' #content &gt; div',function() {
+    $(this).appendTo(container);
+  });
+}</pre>
+
+<p>note: we're using screen size to determine when to load in content, but this is in no way perfect. Keep an eye out for <a href="http://davidbcalhoun.com/2010/using-navigator-connection-android">navigator.connection</a> for a better way to determine whether it's worth introducing extra content.</p>
+
+<h3 id="toc-behavior-geolocation">Geolocation</h3>
+
+<p>Leveraging user location to deliver enhanced experiences is an important aspect of mobile development. Thankfully geolocation is one of the best supported Features across mobile browsers (as well as most desktop browsers). The fallback functionality could be a simple form where the user simply inputs their ZIP code to find store near them.</p>
+
+<h2 id="toc-nextsteps">Next Steps</h2>
+
+<h3 id="toc-nextsteps-adaptiveimages">Adaptive Images</h3>
+
+<p>Our demo isn't incorporating many large images, but it's best practice to load in mobile optimized images by default then conditionally load in larger images only when needed. There are <a href="http://www.cloudfour.com/responsive-imgs-part-2/">lots of different techniques for responsive images</a>, both client-side and server side. We've done a lot so far to be mindful of performance, and optimizing images is an easy way to optimize performance even further.</p>
+
+<h3 id="toc-nextsteps-lessjs">Less JS</h3>
+
+<p>Keeping pages as lightweight as possible is important for performance, so we should look to optimize scripts as much as possible. We're using the <a href="http://jquery.com/">jQuery</a> library for our demo, but we're definitely not using all of it.  We could look into using <a href="http://code.google.com/closure/compiler/">Closure Compiler</a> to strip out unused bits of the library to keep things as lightweight as possible while still taking advantage of what jQuery offers. Alternately, we could look into <a href="http://microjs.com/">micro-frameworks</a> like <a href="http://zeptojs.com/">Zepto.js</a> and others, but they typically don't necessarily offer the best cross-browser support. Writing vanilla Javascript could avoid additional heft but can be more difficult to author and harder to maintain. Ultimately, each approach has its pros and cons, just be sure to consider the tradeoffs when making these decisions.</p>
+
+<h3 id="toc-nextsteps-offline">Offline Access</h3>
+
+<p>It's increasingly important to make sure web experiences are accessible offline, especially when considering mobile users with variable connectivity. Thankfully, <a href="http://www.html5rocks.com/en/tutorials/appcache/beginner/">appcache</a> and <a href="http://www.html5rocks.com/en/features/offline">other offline techniques</a> gives us a way to keep our resources accessible even when the user is offline.</p>
+
+<h2 id="toc-wrappingup">Wrapping Up</h2>
+
+<p>We've created an experience that is mindful to user context and adapts both layout and functionality based the browser and device's features. We've also set up a foundation that can adapt to future devices and browsers. Here's some key takeaways:</p>
+
+<ul>
+  <li>Author semantic HTML5 markup as a foundation for adaptive experiences.</li>
+  <li>Create mobile first CSS to keep things lightweight, simple and maintainable.</li>
+  <li>Use relative units like ems and percentages to keep styles as fluid and flexible as possible.</li>
+  <li>Let content determine the breakpoints for media queries.</li>
+  <li>Exploit opportunities to reduce HTTP requests by conditionally-loading content and using HTML characters, CSS gradients, Data URIs and more</li>
+  <li>Author unobtrusive javascript and use tools like Modernizr to detect features.</li>
+  <li>Take advantage of mobile-centric features like touch events, telephone links and geolocation to deliver enhanced experiences to mobile users.</li>
+</ul>
+
+<p>Creating adaptive experiences allows your content to go more places, which means more opportunities to reach potential customers wherever they may be. By adhering to the principles of progressive enhancement and addressing constraints first, we're laying a <a href="http://futurefriend.ly">future-friendly</a> foundation that gives our site a better chance of working in future browsers and environments.</p>
+
+{% endblock %}

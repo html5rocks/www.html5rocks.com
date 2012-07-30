@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block headtitle %}{% trans "Google Developers Live" %}{% endblock %}
+
+{% block head %}
+<style>
+iframe {
+  border: none;
+  width: 100%;
+}
+#youtube {
+	/*width: 500px;*/
+	width: 100%;
+	height: 315px;
+}
+/*#tlkio {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+	width: 450px;
+  height: 315px;
+  display: inline-block;
+}*/
+#tlkio {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+	width: 100%;
+	height: 315px;
+  border:8px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  -webkit-box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  -moz-box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  -o-box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  -ms-box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  box-shadow: 0 1px 2px hsla(0,0%,0%,.2);
+  margin-top: 1em;
+}
+#tlkio iframe {
+	width: 100%;
+  height: 100%;
+}
+#moderator {
+	height: 600px;
+}
+#google_plus_page_link {
+	display: block;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<article class="pattern-bg-lighter">
+	<iframe id="youtube" src="http://www.youtube.com/embed/{{ hangout_url|default:'videoseries?list=PL76A6AE687EEACAE0&amp;hl=en_US' }}"></iframe>
+</article>
+
+<article class="pattern-bg-lighter">
+{% if hangout_url %}
+	<h2>Chat</h2>
+	<div id="tlkio" data-channel="{{ hangout_url }}"></div>
+  <script src="//tlk.io/embed.js"></script>
+{% else %}
+<div style="margin-top: 1em">
+	<h1>HTML5 Rocks Live</h1>
+  <p>We're off the air right now, but check out our past episodes above
+	and stay tuned for future episodes via our <a href="//plus.google.com/102860501900098846931?rel=publisher" target="_blank">Google+ Page</a>.</p>
+</div>
+<!--<div id="google_plus_page_link" class="g-plus" data-href="https://plus.google.com/102860501900098846931?rel=publisher" data-width="300" data-height="131" data-theme="light"></div>-->
+{% endif %}
+</article>
+
+{% if hangout_url %}
+<article class="pattern-bg-lighter">
+	<h2 style="float:left">Questions</h2>
+	<a href="https://www.google.com/moderator/#15/e=200a87&t=200a87.{{ moderator_topic_id|default:'' }}" target="_blank" style="float:right">Ask a Question</a>
+	<iframe id="moderator" src="https://www.google.com/moderator/#15/e=2015a4&t=2015a4.{{ moderator_topic_id|default:'' }}"></iframe>
+	<!--<div id="moderator-embed-target"></div>-->
+	<!--<script src="//www.google.com/moderator/static/moderator-embed-api.js"></script>
+	<script> 
+var mod = new MODERATOR("https://www.google.com/moderator/#1/e=200a87&t=200a87.41"); 
+mod.hl = "{{LANGUAGE_CODE}}"; 
+mod.embed("moderator-embed-target"); 
+</script>-->
+</article>
+{% endif %}
+
+{% endblock %}

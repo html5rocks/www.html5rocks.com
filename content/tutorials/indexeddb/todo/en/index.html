@@ -1,0 +1,511 @@
+{% extends "tutorial.html" %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="This article is powered by HTML5 Offline &amp; Storage" title="This article is powered by HTML5 Offline &amp; Storage" />
+{% endblock %}
+
+{% block iscompatible %}
+  return ('indexedDB' in window || 'webkitIndexedDB' in window || 'mozIndexedDB' in window);
+{% endblock %}
+
+{% block head %}
+{% if is_mobile %}
+  <script>
+    var html5rocks = {};
+    var indexedDB = window.indexedDB || window.webkitIndexedDB ||
+                    window.mozIndexedDB;
+
+    if ('webkitIndexedDB' in window) {
+      window.IDBTransaction = window.webkitIDBTransaction;
+      window.IDBKeyRange = window.webkitIDBKeyRange;
+    }
+
+    html5rocks.indexedDB = {};
+    html5rocks.indexedDB.db = null;
+
+    html5rocks.indexedDB.onerror = function(e) {
+      console.log(e);
+    };
+
+    html5rocks.indexedDB.open = function() {
+      var request = indexedDB.open("todos");
+
+      request.onsuccess = function(e) {
+        var v = "1.98";
+        html5rocks.indexedDB.db = e.target.result;
+        var db = html5rocks.indexedDB.db;
+        // We can only create Object stores in a setVersion transaction;
+        if(v!= db.version) {
+          var setVrequest = db.setVersion(v);
+
+          // onsuccess is the only place we can create Object Stores
+          setVrequest.onfailure = html5rocks.indexedDB.onerror;
+          setVrequest.onsuccess = function(e) {
+            if(db.objectStoreNames.contains("todo")) {
+              db.deleteObjectStore("todo");
+            }
+
+            var store = db.createObjectStore("todo",
+              {keyPath: "timeStamp"});
+
+            html5rocks.indexedDB.getAllTodoItems();
+          };
+        }
+        else {
+          html5rocks.indexedDB.getAllTodoItems();
+        }
+      };
+
+      request.onfailure = html5rocks.indexedDB.onerror;
+    }
+
+    html5rocks.indexedDB.addTodo = function(todoText) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var data = {
+        "text": todoText,
+        "timeStamp": new Date().getTime()
+      };
+
+      var request = store.put(data);
+
+      request.onsuccess = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.deleteTodo = function(id) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var request = store.delete(id);
+
+      request.onsuccess = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.getAllTodoItems = function() {
+      var todos = document.getElementById("todoItems");
+      todos.innerHTML = "";
+
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      // Get everything in the store;
+      var keyRange = IDBKeyRange.lowerBound(0);
+      var cursorRequest = store.openCursor(keyRange);
+
+      cursorRequest.onsuccess = function(e) {
+        var result = e.target.result;
+        if(!!result == false)
+          return;
+
+        renderTodo(result.value);
+        result.continue();
+      };
+
+      cursorRequest.onerror = html5rocks.indexedDB.onerror;
+    };
+
+    function renderTodo(row) {
+      var todos = document.getElementById("todoItems");
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      var t = document.createTextNode(row.text);
+
+      a.addEventListener("click", function() {
+        html5rocks.indexedDB.deleteTodo(row.timeStamp);
+      }, false);
+
+      a.textContent = " [Delete]";
+      li.appendChild(t);
+      li.appendChild(a);
+      todos.appendChild(li)
+    }
+
+    function addTodo() {
+      var todo = document.getElementById("todo");
+      html5rocks.indexedDB.addTodo(todo.value);
+      todo.value = "";
+    }
+
+    function init() {
+      html5rocks.indexedDB.open();
+    }
+
+    window.addEventListener("DOMContentLoaded", init, false);
+  </script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-intro">Introduction</h2>
+  <p>
+    <a href="http://www.w3.org/TR/IndexedDB/">IndexedDB</a> is new
+    in HTML5. Web Databases are hosted and persisted inside a user's browser.
+    By allowing developers to create applications with rich query abilities
+    it is envisioned that a new breed of web applications will emerge that
+    have the ability to work online and off-line.
+  </p>
+  <p>
+    The example code in this article demonstrates how to create a very simple
+    todo list manager. It is a very high level tour of some of the features
+    available in HTML5.
+  </p>
+  <p class="notice" style="text-align:center;">
+    This tutorial is a conversion of our
+    <a href="/tutorials/webdatabase/todo/">A Simple TODO list using
+    HTML5 WebDatabases</a> tutorial and serves to highlight how easy it is to
+    make the transition to IndexedDB.
+  </p>
+  <h2 id="what">What is IndexedDB?</h2>
+  <p>
+    IndexedDB is an Object Store. It is not the same as a Relational Database,
+    which has tables, with collections rows and columns. It is an important
+    and fundamental difference and affects the way that you design and build
+    your applications.
+  </p>
+  <p>
+    In a traditional relational data store we would have a table of "todo" items
+    that store a collection of the users todo data in rows. With columns of
+    named types of data. To insert data, the semantics normally follow:
+    <code>INSERT INTO Todo(id, data, update_time) VALUES (1, "Test", "01/01/2010");</code>
+  </p>
+  <p>
+    IndexedDB differs in that you create an Object Store for a type of data
+    and simply persist Javascript Objects to that store. Each Object Store can
+    have a collection of Indexes that make it efficient to query and iterate
+    across.
+  </p>
+  <p>
+    IndexedDB also does away with the notion of a Standard Query Language (
+    <abbr title="Standard Query Languag">SQL</abbr>), instead it is replaced
+    with a query against an index which produces a cursor that you use to
+    iterate across the result set.
+  </p>
+  <p>
+    This tutorial is solely about giving you a real-world example of how to use
+    IndexedDB given the context of existing applications written to use
+    WebSQL.
+  </p>
+  <h2 id="why">Why IndexedDB?</h2>
+  <p>
+    On November 18, 2010, the <a href="http://www.w3.org/TR/webdatabase/">W3C announced</a> that Web SQL
+    database is a deprecated specification. This is a recommendation for web
+    developers to no longer use the technology as effectively the spec will
+    receive no new updates and browser vendors aren't encouraged to support this
+    technology.
+  </p>
+  <p>
+    The replacement, IndexedDB and the subject of this tutorial is the
+    data-store that developers should use to store and manipulate data on the
+    client-side.
+  </p>
+  <p>
+    Many major browsers including Chrome, Safari, Opera and nearly
+    all Webkit based mobile devices support WebSQL and will likely maintain
+    support for the foreseeable future.
+  </p>
+  <h2 id="toc-prereqs">Pre-requisites</h2>
+  <p>
+    This sample uses a namespace to encapsulate the database logic.
+  </p>
+  <pre class="prettyprint">
+var html5rocks = {};
+html5rocks.indexedDB = {};
+</pre>
+  <h2 id="toc-transactions">Asynchronous and Transactional</h2>
+  <p>
+    In the majority of cases where you are using Indexed Database
+    you will be using the <a
+      href="http://dev.w3.org/html5/indexeddb/#asynchronous-database-api">Asynchronous API</a>. The Asynchronous API
+    is a non-blocking system and as such will not get data
+    through return values, but rather will get data delivered to a defined
+    callback function.
+  </p>
+  <p>
+    The IndexedDB support through HTML is transactional. It is not
+    possible to execute commands or open cursors outside of a transaction.
+    There are several types of transactions: read/write transactions, read only
+    and snapshot. In this tutorial, we will be using Read/Write
+    transactions
+  </p>
+  <h2 id="toc-step1">Step 1. Opening the database</h2>
+  <p>Before we can do anything with the database, it first needs to be opened.
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.db = null;
+
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos");
+
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.db = e.target.result;
+    // Do some more stuff in a minute
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>We have opened a database called "todos" and assigned it to our variable
+  <code>db</code> in the html5rocks.indexedDB object. We can now use this to
+  refer to our database through out this tutorial.</p>
+  <h2 id="toc-step2">Step 2. Creating an Object Store</h2>
+  <p>
+    You can only create object stores inside a "SetVersion" transaction. I
+    haven't covered setVersion yet, but it is a very important method - it is
+    the <em>only place in your code that you can create object stores and indexes</em>.
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos",
+    "This is a description of the database.");
+
+  request.onsuccess = function(e) {
+    var v = "1.0";
+    html5rocks.indexedDB.db = e.target.result;
+    var db = html5rocks.indexedDB.db;
+    // We can only create Object stores in a setVersion transaction;
+    if(v!= db.version) {
+      var setVrequest = db.setVersion(v);
+
+      // onsuccess is the only place we can create Object Stores
+      setVrequest.onfailure = html5rocks.indexedDB.onerror;
+      setVrequest.onsuccess = function(e) {
+        var store = db.createObjectStore("todo",
+          {keyPath: "timeStamp"});
+
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+    }
+
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+}</pre>
+<p>
+    The above code actually does quite a lot. We define an "open" method in our
+    API, which when called will open the database "todos". The open request
+    isn't executed straight away. Instead an <code>IDBRequest</code> is
+    returned. The <code>indexedDB.open</code> method will be called when the
+    current function exits. This is a little different to how we normally assign
+    asynchronous callbacks, but we get the chance to attach our own listeners to
+    the <code>IDBRequest</code> object before the callbacks are executed.
+</p>
+<p>
+    If the open request is successful, our <code>onsuccess</code> callback is
+    executed. In this callback we check the database version and if it is not
+    the same as the number we expect, we call "setVersion".</p>
+<p>
+    SetVersion <em>is the only place</em> in our code that we can alter the
+    structure of the database. In it we can create and delete Object Stores and
+    build and remove indexes. A call to <code>setVersion</code> returns an
+    <code>IDBRequest</code> object where we can attach our callbacks. When
+    successful, we start to create our Object Stores.
+</p>
+<p>
+    Object Stores are created with a single call to
+    <code>createObjectStore</code>. The method takes a name of the store, and an
+    parameter object. The parameter object is very important, it lets you
+    define important optional properties. In our case, we define a
+    <code>keyPath</code> that is the property that makes an individual object in
+    the store unique. That property in this example is "timeStamp". "timeStamp"
+    <em>must</em> be present on every object that is stored in the objectStore.
+</p>
+<p>
+    Once the object store is created we call our method
+    <a href="#toc-step4">getAllTodoItems</a>.
+</p>
+
+  <h2 id="toc-step3">Step 3. Adding data to an object store</h2>
+  <p>
+    We are building a todo list manager so it is pretty important that
+    we are able to add todo items in to the database. This is done as follows:
+  </p>
+
+  <pre class="prettyprint">
+html5rocks.indexedDB.addTodo = function(todoText) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+  var request = store.put({
+    "text": todoText,
+    "timeStamp" : new Date().getTime()
+  });
+
+  request.onsuccess = function(e) {
+    // Re-render all the todo's
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onerror = function(e) {
+    console.log(e.value);
+  };
+};</pre>
+
+  <p>
+    The <code>addTodo</code> method is pretty simple, we first get a quick
+    reference to the database object, initiate a <code>READ_WRITE</code>
+    transaction and get a reference to our object store.
+  </p>
+  <p>
+    Now that the application has access to the Object Store, we can issue a
+    simple <code>put</code> command with a basic JSON object. Notice that there
+    is a <code>timeStamp</code> property, that is our unique key for the object
+    and is used as the "keyPath". When the call to put is successful, our
+    onsuccess event is triggered and we are able to render the contents to the
+    screen.
+  </p>
+
+  <h2 id="toc-step4">Step 4. Querying the data in a store.</h2>
+  <p>
+    Now that the data is in the database, we need a way to get access to the
+    data in a meaningful way. Luckily, it is pretty straightforward:
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.getAllTodoItems = function() {
+  var todos = document.getElementById("todoItems");
+  todos.innerHTML = "";
+
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  // Get everything in the store;
+  var keyRange = IDBKeyRange.lowerBound(0);
+  var cursorRequest = store.openCursor(keyRange);
+
+  cursorRequest.onsuccess = function(e) {
+    var result = e.target.result;
+    if(!!result == false)
+      return;
+
+    renderTodo(result.value);
+    result.continue();
+  };
+
+  cursorRequest.onerror = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>
+    Note that all of these commands used in this sample
+    are asynchronous and as such the data is not returned from inside the
+    transaction.
+  </p>
+  <p>
+    The code makes a transaction and instantiates a keyRange search
+    over the data. The keyRange defines a simple subset of the data we
+    want to query from the store. Given that the keyPath for the store is
+    the numeric timestamp, we set the lowest value of the search to be 0
+    (anything since the epoch) which just so happens to return all of
+    our data.
+  </p>
+  <p>
+    There is now a transaction, a reference to the store we want to query
+    and a range that we wish to iterate over. All that remains is to open
+    the cursor and attach an "onsuccess" event.
+  </p>
+  <p>
+    The results are passed through to the success callback on the
+    cursor, where we render the result.  The callback is only fired once
+    per result, so to ensure you keep iterating across the data you need
+    to ensure you call "continue" on your result object.
+  </p>
+  <h2>Step 4a. Rendering data from an Object Store</h2>
+  <p>
+    Once the data has been fetched from the Object Store, the
+    <code>renderTodo</code> method will be called <em>for each result in the
+    cursor</em>.
+  </p>
+
+  <pre class="prettyprint">
+function renderTodo(row) {
+  var todos = document.getElementById("todoItems");
+  var li = document.createElement("li");
+  var a = document.createElement("a");
+  var t = document.createTextNode();
+  t.data = row.text;
+
+  a.addEventListener("click", function(e) {
+    html5rocks.indexedDB.deleteTodo(row.text);
+  });
+
+  a.textContent = " [Delete]";
+  li.appendChild(t);
+  li.appendChild(a);
+  todos.appendChild(li)
+}</pre>
+  <p>
+    For a given Todo item we simply take the text and make the UI for the item,
+    including a delete button (so that you can delete a todo item.)
+  </p>
+  <h2 id="toc-step5">Step 5. Deleting data from a table</h2>
+  <pre class="prettyprint">
+html5rocks.indexedDB.deleteTodo = function(id) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  var request = store.delete(id);
+
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.getAllTodoItems();  // Refresh the screen
+  };
+
+  request.onerror = function(e) {
+    console.log(e);
+  };
+};</pre>
+  <p>
+    As with the code to <code>put</code> data into an Object Store, deleting
+    data is as simple. Start a transaction, reference the Object Store with your
+    object in and issue a <code>delete</code> command with the unique ID of your
+    object.
+  </p>
+  <h2 id="toc-step6">Step 6. Hooking it all up</h2>
+  <p>
+    When the page loads, open the database and create the table (if
+     needed) and render any todo items that might already be in the database.
+  </p>
+  <pre class="prettyprint">
+function init() {
+  html5rocks.indexedDB.open(); // open displays the data previously saved
+}
+
+window.addEventListener("DOMContentLoaded", init, false);
+</pre>
+  <p>
+    A function that takes the data out of the DOM is needed so,
+    call the <code>html5rocks.indexedDB.addTodo</code> method:
+  </p>
+  <pre class="prettyprint">
+function addTodo() {
+  var todo = document.getElementById('todo');
+
+  html5rocks.indexedDB.addTodo(todo.value);
+  todo.value = '';
+}</pre>
+  <h2 id="toc-final">The final product</h2>
+{% if is_mobile %}
+  <ul id="todoItems"></ul>
+  <input type="text" id="todo" name="todo"
+      placeholder="What do you need to do?" style="width: 200px;" />
+    <input type="submit" value="Add Todo Item"
+      onclick="addTodo(); return false;"/>
+{% else %}
+<iframe src="http://playground.html5rocks.com/?mode=frame&hu=210&hl=150#a_simple_todo_list_using_indexeddb" style="border: none; width: 100%; height: 480px;"></iframe>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,462 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}Web Worker-Grundlagen{% endblock %}
+{% block pagetitle %}Web Worker-Grundlagen{% endblock %}
+{% block pagebreadcrumb %}Web Worker-Grundlagen{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+{% block date %}26. Juli 2010{% endblock %}
+{% block updated %}24. Mai 2011{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">unterstützt</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">nicht unterstützt</span></span> <span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">unterstützt</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">unterstützt</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">unterstützt</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="Artikel powered by HTML5 Performance &amp; Integration" title="Artikel powered by HTML5 Performance &amp; Integration"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.webworkers;
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction-jsconcurrency">Das Problem: Nebenläufigkeit von JavaScript</h2>
+  <p>Es gibt mehrere Hindernisse, die eine Übertragung interessanter Anwendungen von serverlastigen Implementierungen in clientseitige JavaScript-Umgebungen verhindern. Dazu gehören unter anderem Browserkompatibilität, statische Typisierung, Zugriff und Leistung. Glücklicherweise gehört Letzteres zunehmend der Vergangenheit an, da die Browser-Anbieter die Geschwindigkeit ihrer JavaScript-Engines konstant verbessern.</p>
+
+  <p>Ein Aspekt, der weiterhin eine Hürde für JavaScript darstellt, ist die Sprache selbst. JavaScript ist eine Single-Threaded-Umgebung, es können also nicht gleichzeitig mehrere Skripts ausgeführt werden. Stellen Sie sich zum Beispiel eine Website vor, die Benutzeroberflächenereignisse abwickeln, große Mengen von API-Daten abfragen und verarbeiten und das DOM manipulieren muss. Nicht ungewöhnlich, oder? Leider lassen sich diese Prozesse aufgrund von Beschränkungen bei der JavaScript-Laufzeit von Browsern nicht parallel ausführen. Die Skript-Ausführung erfolgt in einem einzigen Thread.</p>
+
+  <p>Mithilfe von Techniken wie <code>setTimeout()</code>, <code>setInterval()</code>, <code>XMLHttpRequest</code> und Ereignis-Handlern ahmen Entwickler eine Nebenläufigkeit nach. Ja, all diese Funktionen werden asynchron ausgeführt, aber blockierungsfrei bedeutet nicht gleichzeitig parallel. Asynchrone Ereignisse werden verarbeitet, nachdem das aktuelle Ausführungsskript ausgesetzt wurde. Die gute Nachricht ist, dass HTML5 bessere Möglichkeiten bietet!</p>
+
+  <h2 id="toc-introduction-jsthreading">Web Worker-Einführung: Threading für JavaScript</h2>
+
+  <p>Die <a href="http://www.whatwg.org/specs/web-workers/current-work/">Web Worker</a>-Spezifikation legt ein API fest, das Hintergrund-Skripts in Ihrer Webanwendung erzeugt. Mit Web Workern können Sie zum Beispiel lange Skripts auslösen, die rechenintensive Aufgaben abwickeln, ohne dabei die Benutzeroberfläche oder andere Skripts daran zu hindern, Interaktionen von Nutzern zu verarbeiten. Sie schaffen Abhilfe und setzen diesem lästigen Dialogfeld, das auf ein nicht reagierendes Skript hinweist und das wir alle lieben, ein Ende:</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/workers/unresponsive_script.gif" width="450" height="100" title="Dialogfeld mit Hinweis auf nicht reagierendes Skript" alt="Dialogfeld mit Hinweis auf nicht reagierendes Skript"  />
+    <figcaption>Häufig angezeigtes Dialogfeld mit Hinweis auf nicht reagierendes Skript</figcaption>
+  </figure>
+
+  <p>Web Worker machen sich eine threadähnliche Nachrichtenweitergabe zunutze, um Parallelität zu erzielen. So profitieren Ihre Nutzer jederzeit von einer aktuellen, leistungsstarken und reaktionsschnellen Benutzeroberfläche.</p>
+
+  <h3 id="toc-introduction-types">Web Worker-Arten</h3>
+
+  <p>Es ist erwähnenswert, dass die <a href="http://www.whatwg.org/specs/web-workers/current-work/">Spezifikation</a> zwei Web Worker-Arten behandelt: <a href="http://www.whatwg.org/specs/web-workers/current-work/#dedicated-workers-and-the-worker-interface">Dedicated Worker</a> und <a href="http://www.whatwg.org/specs/web-workers/current-work/#sharedworker">Shared Worker</a>. In diesem Artikel befassen wir uns lediglich mit Dedicated Workern, wobei ich jeweils von "Web Worker" oder "Worker" spreche.</p>
+
+  <h2 id="toc-gettingstarted">Erste Schritte</h2>
+
+  <p>Web Worker werden in einem isolierten Thread ausgeführt. Aus diesem Grund muss der Code, den sie ausführen, in einer separaten Datei enthalten sein. Bevor wir jedoch dazu kommen, müssen Sie zunächst ein neues <code>Worker</code>-Objekt auf Ihrer Hauptseite erstellen. Der Konstruktor trägt den Namen des Worker-Skripts:</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('task.js');
+</pre>
+
+  <p>Ist die angegebene Datei vorhanden, erzeugt der Browser einen neuen Worker-Thread, der asynchron heruntergeladen wird. Der Worker beginnt erst, wenn die Datei vollständig heruntergeladen und ausgeführt wurde. Falls der Pfad zu Ihrem Worker den Fehler 404 zurückgibt, schlägt der Worker ohne weitere Fehlermeldung fehl.</p>
+
+  <p>Nach der Erstellung des Workers starten Sie ihn mithilfe der <code>postMessage()</code>-Methode:</p>
+  <pre class="prettyprint">
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-gettingstarted-workercomm">Mit einem Worker via Nachrichtenweitergabe kommunizieren</h3>
+
+  <p>Die Kommunikation zwischen Worker und übergeordneter Seite erfolgt auf der Grundlage eines Ereignismodells und der <code>postMessage()</code>-Methode. Je nach Browser bzw. Version akzeptiert die <code>postMessage()</code>-Methode entweder eine Zeichenfolge oder ein JSON-Objekt als einfaches Argument. Die neuesten Versionen der modernen Browser unterstützen die Weitergabe eines JSON-Objekts.</p>
+
+  <p>Im Folgenden finden Sie ein Beispiel, bei dem mithilfe einer Zeichenfolge "Hello World" an einen Worker in doWork.js weitergegeben wird. Der Worker gibt einfach die Nachricht zurück, die er erhalten hat.</p>
+
+  <p>Hauptskript:</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('doWork.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Worker said: ', e.data);
+}, false);
+
+worker.postMessage('Hello World'); // Send data to our worker.
+</pre>
+
+  <p>doWork.js (der Worker):</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  self.postMessage(e.data);
+}, false);
+</pre>
+
+  <p>Wenn <code>postMessage()</code> über die Hauptseite aufgerufen wird, verarbeitet unser Worker diese Nachricht durch Festlegung eines <code>onmessage</code>-Handlers für das <code>message</code>-Ereignis. Die Nutzdaten der Nachricht, in diesem Fall "Hello World", sind in <code>Event.data</code> verfügbar. Obwohl das genannte Beispiel nicht besonders spannend ist, so zeigt es dennoch, dass <code>postMessage()</code> auch eine Möglichkeit darstellt, um Daten zurück an den Haupt-Thread zu übermitteln. Praktisch!</p>
+
+  <p>Nachrichten, die zwischen der Hauptseite und den Workern ausgetauscht werden, werden kopiert, nicht gemeinsam genutzt. Zum Beispiel ist die Eigenschaft "msg" der JSON-Nachricht im nächsten Beispiel an beiden Orten einsehbar. Es scheint, als würde das Objekt direkt an den Worker weitergegeben, obwohl es in einem separaten, dafür vorgesehenen Bereich ausgeführt wird. Tatsächlich wird das Objekt serialisiert, wenn es an den Worker übergeben wird. Anschließend wird die Serialisierung am anderen Ende wieder aufgehoben. Seite und Worker teilen sich nicht die gleiche Instanz, sodass bei jeder Weitergabe ein Duplikat erstellt wird. Die meisten Browser implementieren diese Funktion, indem Sie an beiden Enden automatisch eine JSON-Codierung/-Decodierung des Werts vornehmen.</p>
+
+  <p>Das folgende Beispiel ist etwas komplexer. Darin werden Nachrichten mithilfe von JSON-Objekten weitergegeben.</p>
+
+  <p>Hauptskript:</p>
+
+  <pre class="prettyprint">
+&lt;button onclick="sayHI()"&gt;Say HI&lt;/button&gt;
+&lt;button onclick="unknownCmd()"&gt;Send unknown command&lt;/button&gt;
+&lt;button onclick="stop()"&gt;Stop worker&lt;/button&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    // Calling worker.terminate() from this script would also stop the worker.
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker = new Worker('doWork2.js');
+
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+&lt;/script&gt;
+</pre>
+
+  <p>doWork2.js:</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      self.postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+      self.postMessage('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+      self.close(); // Terminates the worker.
+      break;
+    default:
+      self.postMessage('Unknown command: ' + data.msg);
+  };
+}, false);
+</pre>
+
+  <p><strong>Hinweis</strong>: Ein Worker kann auf zwei Arten beendet werden: durch Aufrufen von <code>worker.terminate()</code> über die Hauptseite oder durch Aufrufen von <code>self.close()</code> im Worker selbst.</p>
+
+  <p><strong>Beispiel</strong>: Führen Sie diesen Worker aus!</p>
+  <div class="example">
+    <button onclick="sayHI()">Hallo sagen</button>
+    <button onclick="unknownCmd()">Unbekannten Befehl senden</button>
+    <button onclick="stop()">Worker beenden</button>
+    <output id="result"></output>
+  </div>
+
+  <h2 id="toc-enviornment">Die Worker-Umgebung</h2>
+
+  <h3 id="toc-enviornment-scope">Geltungsbereich des Workers</h3>
+
+  <p>Im Zusammenhang mit Workern weisen <code>self</code> und <code>this</code> auf den globalen Geltungsbereich des Workers hin. Daher könnte das vorherige Beispiel auch wie folgt geschrieben werden:</p>
+
+  <pre class="prettyprint">
+addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+  ...
+}, false);
+</pre>
+
+  <p>Alternativ könnten Sie den Ereignis-Handler <code>onmessage</code> direkt festlegen, obwohl <code>addEventListener</code> von JavaScript-Ninjas empfohlen wird.</p>
+
+  <pre class="prettyprint">
+onmessage = function(e) {
+  var data = e.data;
+  ...
+};
+</pre>
+
+  <h3 id="toc-enviornment-features">Für Worker verfügbare Funktionen</h3>
+
+  <p>Aufgrund ihres Multithread-Verhaltens können Web Worker nur auf einen Teil der Funktionen von JavaScript zugreifen:</p>
+  <ul>
+    <li>Das <code>navigator</code>-Objekt</li>
+    <li>Das <code>location</code>-Objekt (schreibgeschützt)</li>
+    <li><code>XMLHttpRequest</code></li>
+    <li><code>setTimeout()/clearTimeout()</code> und <code>setInterval()/clearInterval()</code></li>
+    <li>Den <a href="/tutorials/appcache/beginner/">Anwendungscache</a></li>
+    <li>Import externer Skripts mithilfe der <code>importScripts()</code>-Methode</li>
+    <li><a href="#toc-enviornment-subworkers">Erzeugen weiterer Web Worker</a></li>
+  </ul>
+  <p>Worker haben KEINEN Zugriff auf:</p>
+  <ul>
+    <li>Das DOM (nicht threadsicher)</li>
+    <li>Das <code>window</code>-Objekt</li>
+    <li>Das <code>document</code>-Objekt</li>
+    <li>Das <code>parent</code>-Objekt</li>
+  </ul>
+
+  <h3 id="toc-enviornment-loadingscripts">Externe Skripts laden</h3>
+
+  <p>Mithilfe der <code>importScripts()</code>-Funktion können Sie externe Skriptdateien oder -bibliotheken in einen Worker laden. Bei dieser Methode können null oder mehr Zeichenfolgen als Dateinamen der zu importierenden Ressourcen angegeben werden.</p>
+
+  <p>Bei diesem Beispiel werden <code>script1.js</code> und <code>script2.js</code> in den Worker geladen:</p>
+
+  <p>worker.js:</p>
+  <pre class="prettyprint">
+importScripts('script1.js');
+importScripts('script2.js');
+</pre>
+
+  <p>Dies lässt sich auch in einer Importanweisung zusammenfassen:</p>
+  <pre class="prettyprint">
+importScripts('script1.js', 'script2.js');
+</pre>
+
+  <h3 id="toc-enviornment-subworkers">Untergeordnete Worker</h3>
+
+  <p>Worker sind in der Lage, untergeordnete Worker zu erzeugen. So lassen sich große Aufgaben während der Laufzeit noch weiter unterteilen. Untergeordnete Worker haben jedoch auch einige Nachteile:</p>
+  <ul>
+    <li>Beim Hosten untergeordneter Worker müssen Sie sich an der übergeordneten Seite orientieren. </li>
+    <li>URIs in untergeordneten Workern werden in Abhängigkeit vom Speicherort des übergeordneten Workers aufgelöst (im Gegensatz zur Hauptseite).</li>
+  </ul>
+
+  <p>Beachten Sie, dass die meisten Browser für jeden Worker separate Prozesse erzeugen. Bevor Sie eine Worker-Farm erzeugen, vergewissern Sie sich, dass Sie nicht zu viele Systemressourcen des Nutzers beanspruchen. Dies könnte unter anderem der Fall sein, weil Nachrichten, die zwischen der Hauptseite und den Workern ausgetauscht werden, kopiert und nicht gemeinsam genutzt werden. Weitere Informationen finden Sie unter <a href="#toc-gettingstarted-workercomm">Mit einem Worker via Nachrichtenweitergabe kommunizieren</a>.</p>
+
+  <p>Ein <a href="http://www.whatwg.org/specs/web-workers/current-work/#delegation">Beispiel</a> für die Erstellung eines untergeordneten Workers finden Sie in der Spezifikation.</p>
+
+  <h2 id="toc-inlineworkers">Inline-Worker</h2>
+
+  <p>Nehmen wir an, Sie möchten Ihr Worker-Skript spontan erstellen oder eine eigenständige Seite erzeugen, ohne separate Worker-Dateien erstellen zu müssen. Mit der neuen <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#the-blobbuilder-interface"><code>BlobBuilder</code></a>-Oberfläche können Sie Ihren Worker in die gleiche HTML-Datei wir Ihre Hauptlogik "einbetten". Dazu erstellen Sie einen <code>BlobBuilder</code> und hängen den Worker-Code als Zeichenfolge an:</p>
+<pre class="prettyprint">
+// Prefixed in Webkit, Chrome 12, and FF6: window.WebKitBlobBuilder, window.MozBlobBuilder
+var bb = new BlobBuilder();
+bb.append("onmessage = function(e) { postMessage('msg from worker'); }");
+
+// Obtain a blob URL reference to our worker 'file'.
+// Note: window.webkitURL.createObjectURL() in Chrome 10+.
+var blobURL = window.URL.createObjectURL(bb.getBlob());
+
+var worker = new Worker(blobURL);
+worker.onmessage = function(e) {
+  // e.data == 'msg from worker'
+};
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-inlineworkers-bloburis">Blob-URLs</h3>
+
+  <p>Der eigentliche Zauber beginnt mit dem Aufruf an <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-createObjectURL"><code>window.URL.createObjectURL()</code></a>. Bei dieser Methode wird eine einfache URL-Zeichenfolge erstellt, mit der auf Daten verwiesen werden kann, die in einem DOM <code>File</code>- oder <code>Blob</code>-Objekt gespeichert sind. Zum Beispiel:</p>
+
+  <pre class="prettyprint">blob:http://localhost/c745ef73-ece9-46da-8f66-ebes574789b1</pre>
+
+  <p>Blob-URLs sind eindeutig und behalten für die Lebensdauer Ihrer Anwendung ihre Gültigkeit, also bis <code>document</code> entladen wird. Wenn Sie viele Blob-URLs erstellen, ist es ratsam, sich von nicht mehr benötigten Referenzen zu trennen. Um sich von einer Blob-URL zu trennen, geben Sie sie an <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-revokeObjectURL"><code>window.URL.revokeObjectURL()</code></a> weiter:</p>
+
+  <pre class="prettyprint">
+window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Chrome 10+.
+</pre>
+
+  <p>In Chrome finden Sie eine Übersicht mit allen erstellten Blob-URLs: <code>chrome://blob-internals/</code>.</p>
+
+  <h3 id="toc-inlineworkers-example">Vollständiges Beispiel</h3>
+
+  <p>Wenn wir einen Schritt weitergehen, können wir sehen, wie der JS-Code des Workers in unsere Seite eingebettet ist. Bei dieser Technik wird der Worker mithilfe des <code>&lt;script&gt;</code>-Tags definiert:</p>
+
+  <pre class="prettyprint">
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="utf-8" />
+&lt;/head>
+&lt;body>
+
+  &lt;div id="log"&gt;&lt;/div&gt;
+
+  &lt;script id="worker1" type="javascript/worker"&gt;
+    // This script won't be parsed by JS engines because its type is javascript/worker.
+    self.onmessage = function(e) {
+      self.postMessage('msg from worker');
+    };
+    // Rest of your worker code goes here.
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    function log(msg) {
+      // Use a fragment: browser will only render/reflow once.
+      var fragment = document.createDocumentFragment();
+      fragment.appendChild(document.createTextNode(msg));
+      fragment.appendChild(document.createElement('br'));
+
+      document.querySelector("#log").appendChild(fragment);
+    }
+
+    var bb = new BlobBuilder();
+    bb.append(document.querySelector('#worker1').textContent);
+
+    // Note: window.webkitURL.createObjectURL() in Chrome 10+.
+    var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+    worker.onmessage = function(e) {
+      log("Received: " + e.data);
+    }
+    worker.postMessage(); // Start the worker.
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>Meiner Ansicht nach ist dieser neue Ansatz etwas geradliniger und leserlicher. Dabei wird ein Skript-Tag mit <var>id="worker1"</var> und
+  <var>type='javascript/worker'</var> definiert, sodass der Browser nicht das JS parst. Dieser Code wird mithilfe von <code>document.querySelector('#worker1').textContent</code> als Zeichenfolge extrahiert und an <code>BlobBuilder.append()</code> weitergegeben.</p>
+
+  <h3 id="toc-inlineworkers-loadingscripts">Externe Skripts laden</h3>
+
+  <p>Bei Verwendung dieser Techniken zum Einbetten Ihres Worker-Codes funktioniert <code>importScripts()</code> nur, wenn Sie eine absolute URI angeben. Bei der versuchten Weitergabe einer relativen URI gibt der Browser einen Sicherheitsfehler zurück. Der Grund: Der Worker, der nun aus einer Blob-URL erstellt wird, wird mit einem <code>blob:</code>-Prefix aufgelöst, während Ihre App über ein anderes Schema ausgeführt wird, vermutlich <code>http://</code>. Der Fehler wird also durch ursprungsüberschreitende Beschränkungen hervorgerufen.</p>
+
+  <p>Eine Möglichkeit zur Verwendung von <code>importScripts()</code> in einem Inline-Worker besteht darin, die aktuelle URL, über die Ihr Hauptskript ausgeführt wird, einzuspeisen, indem Sie sie an den Inline-Worker weitergeben und die absolute URL manuell erzeugen. So stellen Sie sicher, dass das externe Skript von gleicher Stelle importiert wird. Nehmen wir an, Ihre Haupt-App wird von http://example.com/index.html ausgeführt:</p>
+    <pre class="prettyprint">
+...
+&lt;script id="worker2" type="javascript/worker"&gt;
+self.onmessage = function(e) {
+  var data = e.data;
+
+  if (data.url) {
+    var url = data.url.href;
+    var index = url.indexOf('index.html');
+    if (index != -1) {
+      url = url.substring(0, index);
+    }
+    importScripts(url + 'engine.js');
+  }
+  ...
+};
+&lt;/script&gt;
+&lt;script&gt;
+  var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+  worker.postMessage(<b>{url: document.location}</b>);
+&lt;/script&gt;
+</pre>
+
+  <h2 id="toc-errors">Fehlerbehebung</h2>
+
+  <p>Wie bei jeder JavaScript-Logik möchten Sie sicherlich zurückgegebene Fehler in Ihren Web Workern behandeln. Wenn beim Ausführen eines Workers ein Fehler auftritt, wird ein <code>ErrorEvent</code> ausgelöst. Die Oberfläche liefert drei nützliche Eigenschaften, mit deren Hilfe Sie der Sache auf den Grund gehen können: <code>filename</code> - der Name des Worker-Skripts, das den Fehler verursacht hat, <code>lineno</code> - die Nummer der Zeile, in der der Fehler aufgetreten ist, und <code>message</code> - eine nützliche Beschreibung des Fehlers. In diesem Beispiel zeige ich Ihnen, wie Sie einen <code>onerror</code>-Ereignis-Handler einrichten, um die Fehlereigenschaften auszudrucken:</p>
+
+  <pre class="prettyprint">
+&lt;output id="error" style="color: red;"&gt;&lt;/output&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result').textContent = e.data;
+  }
+
+  var worker = new Worker('workerWithError.js');
+  worker.addEventListener('message', onMsg, false);
+  worker.addEventListener('error', onError, false);
+  worker.postMessage(); // Start worker without a message.
+&lt;/script&gt;
+</pre>
+
+  <p><strong>Beispiel</strong>: workerWithError.js versucht, 1/x durchzuführen, wobei x nicht definiert ist.</p>
+
+  <div class="example">
+    <button onclick="startErrorWorker()">Ausführen</button>
+    <output id="error" style="color:red;"></output>
+    <output id="result2"></output>
+  </div>
+
+  <p>workerWithError.js:</p>
+<pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  postMessage(1/x); // Intentional error.
+};
+</pre>
+
+  <h2 id="toc-security">Ein Wort zum Thema Sicherheit</h2>
+
+  <h3 id="toc-security-local">Lokale Zugriffsbeschränkungen</h3>
+
+  <p>Aufgrund der Sicherheitsbeschränkungen von Google Chrome werden Worker in den neuesten Versionen des Browsers nicht lokal ausgeführt, zum Beispiel über <code>file://</code>. Stattdessen schlagen Sie ohne weitere Fehlermeldung fehl! Um Ihre App über das <code>file://</code>-Schema auszuführen, führen Sie Chrome unter Angabe von <code>--allow-file-access-from-files</code> aus. <strong>Hinweis:</strong> Es wird nicht empfohlen, Ihren primären Browser mit dieser Einstellung auszuführen. Diese sollte nur zu Testzwecken und nicht während des regulären Surfvorgangs verwendet werden.</p>
+
+  <p>Bei anderen Browsern ist eine solche Beschränkung nicht vorgesehen.</p>
+
+  <h3 id="toc-security-origin">Überlegungen zum gleichen Ursprung</h3>
+
+  <p>Bei Worker-Skripts muss es sich um externe Dateien handeln, die das gleiche Schema wie die aufrufende Seite aufweisen. Daher können Sie ein Skript nicht von einer <code>data:</code>- oder <code>javascript:</code>-URL laden und eine <code>https:</code>-Seite kann keine Worker-Skripts starten, die mit <code>http:</code>-URLs beginnen.</p>
+
+  <h2 id="toc-usecases">Anwendungsfälle</h2>
+
+  <p>Welche Arten von Apps würden also Web Worker verwenden? Leider sind Web Worker relativ neu und die Mehrzahl der vorhandenen Beispiele/Anleitungen beinhaltet die Berechnung von Primzahlen. Obwohl dies eher weniger interessant ist, lassen sich die Konzepte von Web Workern damit besser verstehen. Im Folgenden habe ich einige weitere Ideen zusammengestellt, mit denen Sie Ihre grauen Zellen ein wenig anstrengen können:</p>
+  <ul>
+    <li>Daten für die spätere Verwendung im Voraus abrufen und/oder im Zwischenspeicher ablegen</li>
+    <li>Syntaxhervorhebung oder andere Möglichkeiten zur Textformatierung in Echtzeit</li>
+    <li>Rechtschreibprüfung</li>
+    <li>Analyse von Video- oder Audiodaten</li>
+    <li>Hintergrund-E/A oder Abrufen von Webdiensten</li>
+    <li>Verarbeitung großer Arrays oder riesiger JSON-Antworten</li>
+    <li>Filtern von Bildern in &lt;Canvas&gt;</li>
+    <li>Aktualisierung einer großen Anzahl von Zeilen in einer lokalen Webdatenbank</li>
+  </ul>
+
+  <h2 id="toc-examples">Demos</h2>
+  <ul>
+    <li>Beispiele aus <a href="http://slides.html5rocks.com/#web-workers">HTML5Rocks-Präsentationen</a></li>
+    <li><a href="http://htmlfive.appspot.com/static/tracker1.html">Motion-Tracker</a></li>
+    <li><a href="http://people.mozilla.com/~prouget/demos/worker_and_simulatedannealing/index.xhtml">Simulierte Abkühlung</a></li>
+    <li><a href="http://html5demos.com/worker">HTML5demos-Beispiel</a></li>
+  </ul>
+
+  <h2 id="toc-references">Referenzen</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-workers/current-work/">Web Worker-Spezifikation</a></li>
+    <li><a href="http://developer.mozilla.org/en/Using_web_workers">"Using web workers"</a> aus dem Mozilla Developer Network</li>
+    <li><a href="http://dev.opera.com/articles/view/web-workers-rise-up/">"Web Workers rise up!"</a> aus Dev.Opera</li>
+  </ul>
+
+<script>
+  var worker = new Worker('doWork2.js');
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker2 = new Worker('workerWithError.js');
+  worker2.addEventListener('message', onMsg, false);
+  worker2.addEventListener('error', onError, false);
+
+  function startErrorWorker() {
+    worker2.postMessage(); // Start worker without a message.
+  }
+
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result2').textContent = e.data;
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,557 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <ericbidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}Native HTML5 Drag and Drop{% endblock %}
+{% block pagetitle %}Native HTML5 Drag and Drop{% endblock %}
+{% block pagebreadcrumb %}Native HTML5 Drag and Drop{% endblock %}
+{% block date %}September 30, 2010{% endblock %}
+
+{% block head %}
+<style>
+figure img { border: 1px solid #ccc; }
+h1,h2,h3,h4 { clear: both; }
+/* Prevent the contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+dd {
+  padding: 5px 0;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+  margin-bottom: 30px;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+#columns-full .column {
+  -webkit-transition: -webkit-transform 0.2s ease-out;
+  -moz-transition: -moz-transform 0.2s ease-out;
+}
+#columns-full .column.over,
+#columns-dragOver .column.over,
+#columns-dragEnd .column.over,
+#columns-almostFinal .column.over {
+  border: 2px dashed #000;
+}
+#columns-full .column.moving {
+  opacity: 0.25;
+  -webkit-transform: scale(0.8);
+  -moz-transform: scale(0.8);
+}
+#columns-full .column .count {
+  padding-top: 15px;
+  font-weight: bold;
+  text-shadow: #fff 0 1px;
+}
+</style>
+{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie supported"><span class="browser_name">Internet Explorer</span><span class="support">supported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.draganddrop;
+{% endblock %}
+
+{% block content %}
+
+  <h2 id="toc-introduction">Introduction</h2>
+  <p>Drag and drop is one of the most popular features in desktop applications and it is xxx in modern web applications for the browser. HTML5 provides a API that, combined with CSS, lets you add all the behavior and necessary visual elements to make the user interaction easy and understandable.</p>
+  <p>In this article we will provide basic templates for the three most common cases of drag and drop and highlight the main differences between them so the developer chooses the best option based on the requirements of the app.</p>
+
+  <h2 id="toc-common">create common class</h2>
+  <p>create common class with the stoppropagation and such and some default values</p>
+
+  <h2 id="toc-dtb">Use Case 1: move an element into a passive destination container</h2>
+  <style>
+    #example-1 {
+      overflow: hidden;
+    }
+    #example-1 .src-container {
+      float: left;
+      width: 100px;
+      height: 100px;
+      border-radius: 4px;
+      background-color: #ddd;
+      margin-right: 5px;
+    }
+    #example-1 p {
+      padding: 5px;
+      margin: 10px;
+    }
+    #example-1 .src {
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      background-color: #ccc;
+    }
+    #example-1 .dest {
+      float: left;
+      width: 200px;
+      height: 100px;
+      background-color: #cdd;
+      border-radius: 4px;
+    }
+  </style>
+  <div id="example-1">
+    <div id="src-container">
+      <p class="src">drag me</p>
+    </div>
+    <div class="dest">
+      <p>drop here</p>
+    </div>      
+  </div>
+  <p>This is the use case shown the most in tutorials but it's not necesserally the one used the most in web apps. Implementing it is as simple as defining the source elements and the destination container and add all the listeners to them.</p>
+  <p>It's good to know the minimum code that is necessary in order to make the sample work. This part is very important as most problems that developers run into is due to missing this basic structure in their code.</p>
+  <pre>
+(function() {
+var dragElement = document.querySelector('#example-1 .src');
+var dropContainer = document.querySelector('#example-1 .dest');
+
+// source
+dragElement.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+dragElement.addEventListener('dragstart', handleDragStart, false);
+dragElement.addEventListener('dragend', handleDragEnd, false);
+dragElement.addEventListener('drag', handleDrag, false);
+
+// destination
+dropContainer.addEventListener('dragover', handleDragOver, false);
+dropContainer.addEventListener('dragenter', handleDragEnter, false);
+dropContainer.addEventListener('dragleave', handleDragLeave, false);
+dropContainer.addEventListener('drop', handleDrop, false);
+        
+// source handlers
+function handleDragStart(e) {
+  e.dataTransfer.setData('text/html', 'some data');
+}
+function handleDragEnd(e) {}
+function handleDrag(e) {}
+
+// destination handlers
+function handleDragOver(e) {
+  e.preventDefault(); // Allows us to drop.
+  return false;
+}
+function handleDragEnter(e) {}
+function handleDragLeave(e) {}
+function handleDrop(e) {
+  e.stopPropagation(); // stops the browser from redirecting.
+  return false;
+}
+}());
+  </pre>
+  <p>The code seems a little bit long but the only thing we did was to add dragstart, dragend and drag events to the source elements and dragover, dragenter, dragleave and drop events to the destination container. Then we wrote the handler functions as placeholders.</p>
+  <p>Of all the possible listeners we can manipulate in the drag and drop actions we need to cancel the default dragover and drop mouse behaviors with preventDefault and stopPropagation functions. Otherwise, the associated handlers won't be triggered and the drag and drop operation can't be completed by the user.</p>
+  <p>In the dragstart handler we must set some data (even if it's a placeholder) so all the handlers are also triggered and the browser knows what to do during and after the drag and drop operation is completed.</p>
+  <pre>e.dataTransfer.setData('text/html', 'some data');</pre>
+  <p><strong>Note:</strong> Some elements have already some data set by default and we don't need to use setData in those cases such as textareas, input elements with type attribute set to text, text selections or elements with contenteditable attribute set to true.</p>
+  <p>As of this point, the dragend, drag, dragenter and dragleave handlers will be mainly used to add and remove classes to visually style the elements and help the user understand the interaction. Most of the logic to handle the actions related to the content of the elements will be placed in the dragstart and drop handlers.</p>
+  <p>It's always recommended to add all the necessary UI elements to help the user know what elements are draggable or how big the drop area is. CSS is the easiest way to add such elements but we will go through these details at the end of the tutorial after we have seen all the use cases logic. ... and the <a href>Basic Drag and Drop</a> tutorial already explains how to do that in detail</p>
+    
+  <p>With CSSwe are able to change the cursor when the mouse is hovering the different elements. However, if we want to change the mouse pointer while the drag action is being performed then we need to use some Javascript to do so</p>
+    
+  <style>
+    #example-2 {
+      overflow: hidden;
+    }
+    #example-2 .src-container {
+      float: left;
+      width: 100px;
+      height: 100px;
+      border-radius: 4px;
+      background-color: #ddd;
+      margin-right: 5px;
+    }
+    #example-2 p {
+      padding: 5px;
+      margin: 10px;
+    }
+    #example-2 .src {
+      cursor: move;
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      background-color: #ccc;
+    }
+    #example-2 .dest {
+      float: left;
+      width: 200px;
+      height: 100px;
+      background-color: #cdd;
+      border-radius: 4px;
+    }
+      
+    #example-2 .highlight {
+      background-color: yellow;
+      -webkit-transform: scale(1.5);
+    }
+  </style>
+    
+  <div id="example-2">
+    <div class="src-container">
+      <p class="src">drag me</p>
+    </div>
+    <div class="dest">
+      <p>drop here</p>
+    </div>      
+  </div>
+    
+  <p><strong>Note: </strong> As best practice add and remove classes of an element to change its style instead of using the inline syntax of 'element.style.backgroundColor = yellow'. Avoid manipulating classes in methods like dragOver and xxx as it gets triggered several times when the cursor moves. It's more optim to use enter and leave.</p>
+  <p> and here is all what we need to implement simple drag and drop in html5 the rest of the fancy stuff is implemented using css to add the different effects to cursors, origins and destinations. So the rest of the handlers will be used to add and remove css classes to the elements depending on what stage of the drag and drop we are. It's </p>
+  <p>Examples of this drag and drop case can be found in apps like visio, yahoo pipes or ... [editors]</p>
+  <img src="" />
+  <img src="" />
+  <img src="" />
+  <script>
+  (function() {
+    var dragElement = document.querySelector('#example-1 .src');
+    var dropContainer = document.querySelector('#example-1 .dest');
+
+    // source
+    dragElement.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    dragElement.addEventListener('dragstart', handleDragStart, false);
+    dragElement.addEventListener('dragend', handleDragEnd, false);
+    dragElement.addEventListener('drag', handleDrag, false);
+
+    // destination
+    dropContainer.addEventListener('dragover', handleDragOver, false);
+    dropContainer.addEventListener('dragenter', handleDragEnter, false);
+    dropContainer.addEventListener('dragleave', handleDragLeave, false);
+    dropContainer.addEventListener('drop', handleDrop, false);
+        
+    // source handlers
+    function handleDragStart(e) {
+      e.dataTransfer.setData('text/html', 'some data');
+    }
+    function handleDragEnd(e) {}
+    function handleDrag(e) {}
+
+    // destination handlers
+    function handleDragOver(e) {
+      e.preventDefault(); // Allows us to drop.
+      return false;
+    }
+    function handleDragEnter(e) {}
+    function handleDragLeave(e) {}
+    function handleDrop(e) {
+      e.stopPropagation(); // stops the browser from redirecting.
+      e.target.innerHTML = e.dataTransfer.getData('text/html');
+      return false;
+    }
+  }());
+  (function() {
+    var dragElement = document.querySelector('#example-2 .src');
+    var dropContainer = document.querySelector('#example-2 .dest');
+
+    // source
+    dragElement.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    dragElement.addEventListener('dragstart', handleDragStart, false);
+    dragElement.addEventListener('dragend', handleDragEnd, false);
+    dragElement.addEventListener('drag', handleDrag, false);
+
+    // destination
+    dropContainer.addEventListener('dragover', handleDragOver, false);
+    dropContainer.addEventListener('dragenter', handleDragEnter, false);
+    dropContainer.addEventListener('dragleave', handleDragLeave, false);
+    dropContainer.addEventListener('drop', handleDrop, false);
+        
+    // source handlers
+    function handleDragStart(e) {
+      e.dataTransfer.setData('text/html', 'some data');
+    }
+    function handleDragEnd(e) {}
+    function handleDrag(e) {}
+
+    // destination handlers
+    function handleDragOver(e) {
+      e.preventDefault(); // Allows us to drop.
+      return false;
+    }
+    function handleDragEnter(e) {
+      e.target.classList.add('highlight');
+    }
+    function handleDragLeave(e) {
+      e.target.classList.remove('highlight');
+    }
+    function handleDrop(e) {
+      e.stopPropagation(); // stops the browser from redirecting.
+      e.target.innerHTML = e.dataTransfer.getData('text/html');
+      return false;
+    }
+  }());
+  </script>
+    
+    
+  <h2>Use Case 2: Reorder different draggable elements</h3>
+  <style>
+    #example-3 .src {
+      width: 100px;
+      height: 20px;
+      padding: 5px;
+      border-radius: 4px;
+      background-color: #ccc;
+      border: 2px solid #eee;
+    }
+    #example-3 .highlight {
+      border: 2px dashed black;
+      -webkit-transform: scale(1.2);
+      -webkit-transition: -webkit-transform .2s linear;
+    }
+  </style>
+    
+  <div id="example-3">
+    <p class="src" style="background-color: #C1E2F3">list item 0</p>
+    <p class="src" style="background-color: #3792F1">list item 1</p>
+    <p class="src" style="background-color: #5EBA26">list item 2</p>
+    <p class="src" style="background-color: #F9E917">list item 3</p>
+    <p class="src" style="background-color: #FF7A18">list item 4</p>
+    <p class="src" style="background-color: #FF1718">list item 5</p>
+  </div>
+  <p>The second use case is very similar to the first one but this time all the elements act as both source elements and destination containers. This use case is explained more in detail in the <a href>basic drag and drop tutorial</a>. An example of this use case would be any app that wants to have a list of items that can be ordered or modified by the user using drag and drop.</p>
+    
+  <pre>
+(function() {
+var srcElement;
+// source
+this.handleDragStart = function(e) {
+  e.dataTransfer.setData('text/html', e.target.innerHTML);
+  srcElement = e.target;
+};
+this.handleDragEnd = function(e) {};
+this.handleDrag = function(e) {};
+      
+// destination
+this.handleDragOver = function(e) {
+  e.preventDefault(); // Allows us to drop.
+  return false;
+};
+this.handleDragEnter = function(e) {};
+this.handleDragLeave = function(e) {};
+this.handleDrop = function(e) {
+  e.stopPropagation(); // stops the browser from redirecting.
+  srcElement.innerHTML = e.target.innerHTML;
+  e.target.innerHTML = e.dataTransfer.getData('text/html');
+  return false;
+};
+      
+var dragElements = document.querySelectorAll('#example-3 .src');
+for (var i = 0; i &lt; dragElements.length; i++) {
+  dragElements[i].setAttribute('draggable', 'true');  // Enable columns to be draggable.
+  dragElements[i].addEventListener('dragstart', this.handleDragStart, false);
+  dragElements[i].addEventListener('dragend', this.handleDragEnd, false);
+  dragElements[i].addEventListener('drag', this.handleDrag, false);
+
+  dragElements[i].addEventListener('dragover', this.handleDragOver, false);
+  dragElements[i].addEventListener('dragenter', this.handleDragEnter, false);
+  dragElements[i].addEventListener('dragleave', this.handleDragLeave, false);
+  dragElements[i].addEventListener('drop', this.handleDrop, false);
+}
+}());</pre>
+  <script>
+  (function() {
+    var srcElement;
+    // source
+    this.handleDragStart = function(e) {
+      e.dataTransfer.setData('text/html', e.target.innerHTML);
+      srcElement = e.target;
+      this.style.opacity = '0.6';
+    };
+    this.handleDrop = function(e) {
+      e.stopPropagation(); // stops the browser from redirecting.
+      srcElement.innerHTML = e.target.innerHTML;
+      srcElement.style.opacity = 1;
+      e.target.innerHTML = e.dataTransfer.getData('text/html');
+      e.target.classList.remove('highlight');
+      return false;
+    };
+    this.handleDragEnter = function(e) {
+      e.target.classList.add('highlight');
+    };
+    this.handleDragLeave = function(e) {
+      e.target.classList.remove('highlight');
+    };
+      
+    var dragElements = document.querySelectorAll('#example-3 .src');
+    for (var i = 0; i < dragElements.length; i++) {
+      dragElements[i].setAttribute('draggable', 'true');  // Enable columns to be draggable.
+      dragElements[i].addEventListener('dragstart', this.handleDragStart, false);
+      dragElements[i].addEventListener('dragend', this.handleDragEnd, false);
+      dragElements[i].addEventListener('drag', this.handleDrag, false);
+
+      dragElements[i].addEventListener('dragover', this.handleDragOver, false);
+      dragElements[i].addEventListener('dragenter', this.handleDragEnter, false);
+      dragElements[i].addEventListener('dragleave', this.handleDragLeave, false);
+      dragElements[i].addEventListener('drop', this.handleDrop, false);
+    }
+  }());
+  </script>
+  <p>The only thing added to the basic template is some logic in the dragStart handler and in the drop handler in order to swap the innerHTML content of the list elements. More importantly, the main change is that we have added all the handlers to every element of the list in a for loop since every element is acting as a source element and a destination container at the same time</p>
+      
+  <h2>Use Case 3: Move an element around</h2>
+  <style type="text/css" media="screen">
+    #example-4 {
+      width: 400px;
+      height: 300px;
+      background-color: #ddd;
+      border-radius: 10px;
+    }
+    #example-4 .src {
+      width: 100px;
+      height: 100px;
+      margin: 15px;
+      border-radius: 4px;
+      background-color: #ccc;
+      border: 2px solid #eee;
+    }
+      
+  </style>
+  <div id="example-4">
+    <p class="src">drag me</p>
+  </div>
+  <p>An actual example of this case would be an editor where objects need to be moved around to create a diagram or drawing. Think of a visio editor where you drop several objects in the editor area.</p>
+  <p><strong>Note:</strong> The ghost image visually duplicates the source object. Such source object won't dissapear until we complete the drag and drop operation. If you specifically want that behavior or if you need some advanced feature like grid snapping or .... we recommend the use of a <a href>helper library</a>.</p>
+  <p>Taking the initial template we only need to add a reference to the initial mouse position inside the object we are dragging</p>
+  <pre>
+    this.handleDragStart = function(e) {
+      x_ = e.offsetX;
+      y_ = e.offsetY;
+      dragSrcEl_ = this;
+    }
+  </pre>
+  <p>These values will be used when we finish the drop action together with the offset given by the event in the drop handler so we can position the element correctly.</p>
+  <pre>
+    this.handleDrop = function(e) {
+      e.stopPropagation(); // stops the browser from redirecting.
+
+      if (dragSrcEl_ != this) { // ???
+        if (this.innerHTML != '') {
+          // dragSrcEl_.innerHTML = '';
+          // document.querySelector('#caput').innerHTML += this.innerHTML;
+        } else {
+          dragSrcEl_.innerHTML = this.innerHTML;
+        }
+        // this.appendChild(dragSrcEl_);
+        dragSrcEl_.style.position = 'absolute';
+        dragSrcEl_.style.top = (e.offsetY - y_ + e.target.offsetTop) + 'px';
+        dragSrcEl_.style.left = (e.offsetX - x_ + e.target.offsetLeft) + 'px';
+
+        // this.innerHTML = e.dataTransfer.getData('text/plain');
+      }
+  </pre>
+  <p>To make the implementation easier is better to use absolute position on the elements we want to move. Using offset values to get the mouse coordinates or position the element can be more complicated if the DOM tree of the source element or the destination container are more complex. If that's the case then doing such calculations can be solved with any wrapper function to get such coorindates also available in any <a href>Javascript library</a></p>
+  <script>
+  (function() {
+    var dragSrcEl_ = null;
+    var x_, y_;
+    // source
+    this.handleDragStart = function(e) {
+      x_ = e.offsetX;
+      y_ = e.offsetY;
+
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', this.innerHTML);
+
+      dragSrcEl_ = this;
+
+    };
+    this.handleDragEnd = function(e) {};
+    this.handleDrag = function(e) {};
+      
+    // destination
+    this.handleDragOver = function(e) {
+      e.preventDefault(); // Allows us to drop.
+      return false;
+    };
+    this.handleDragEnter = function(e) {};
+    this.handleDragLeave = function(e) {};
+    this.handleDrop = function(e) {
+      e.stopPropagation(); // stops the browser from redirecting.
+        
+      // Don't do anything if we're dropping on the same column we're dragging.
+      // console.log
+      if (dragSrcEl_ != this) {
+        if (this.innerHTML != '') {
+          // dragSrcEl_.innerHTML = '';
+          // document.querySelector('#caput').innerHTML += this.innerHTML;
+        } else {
+          dragSrcEl_.innerHTML = this.innerHTML;
+        }
+        // this.appendChild(dragSrcEl_);
+        dragSrcEl_.style.position = 'absolute';
+        dragSrcEl_.style.top = (e.offsetY - y_ + e.target.offsetTop) + 'px';
+        dragSrcEl_.style.left = (e.offsetX - x_ + e.target.offsetLeft) + 'px';
+
+        // this.innerHTML = e.dataTransfer.getData('text/plain');
+      }
+        
+      return false;
+    };
+      
+    var dragElement = document.querySelector('#example-4 .src');
+    var dropContainer = document.body;
+
+    dragElement.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    dragElement.addEventListener('dragstart', this.handleDragStart, false);
+    dragElement.addEventListener('dragend', this.handleDragEnd, false);
+    dragElement.addEventListener('drag', this.handleDrag, false);
+
+    dropContainer.addEventListener('dragover', this.handleDragOver, false);
+    dropContainer.addEventListener('dragenter', this.handleDragEnter, false);
+    dropContainer.addEventListener('dragleave', this.handleDragLeave, false);
+    dropContainer.addEventListener('drop', this.handleDrop, false);
+
+  }());
+    
+  </script>
+  <p>Browsers automatically set a 'ghost' image of an object next to the mouse pointer while this is being dragged. This image can be modified through the new API but taking advantage of the default behavior we can make an object to be movable at any cordinate of a specified area.</p>
+  <p><a ref="http://www.useragentman.com/blog/2011/12/21/cross-browser-css-cursor-images-in-depth/">External reference</a> to cursors in dnd</p>
+    assume absolute position as the best choice
+    get rid of the source image
+      ghost image is only an image
+    drag on the own element
+      in cases of hierarchy you will need a loop
+      
+  [add sample with 3 cases together?]
+
+{% endblock %}

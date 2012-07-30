@@ -1,0 +1,79 @@
+<html>
+<style>
+#table td {
+  border: 1px solid black;
+  font-family: monospace;
+  padding: 1em;
+  font-size: large;
+  text-wrap: none;
+}
+#table a {
+  text-wrap: none;
+  white-space: nowrap;
+}
+</style>
+<script>
+function makeAquariumURL(address, port, slave, offsetX, offsetY, opt_ui) {
+  return makeURL(
+      "aquarium/aquarium.html", address, port, slave, offsetX, offsetY, opt_ui);
+}
+
+function makeURL(page, address, port, slave, offsetX, offsetY, opt_ui) {
+  var ui = opt_ui || false;
+  return '' +
+      'http://' + address + ':' + port + '/' + page +
+      '?settings={"net":{' +
+      '"sync":true,' +
+      '"slave":' + slave + ',' +
+      '"ui":' + ui + ',' +
+      '"offset":[' + offsetX + "," + offsetY + '],' +
+      '"foo": false}}';
+}
+
+function main() {
+  var url = window.location.href;
+  var address = window.location.hostname;
+  var port = window.location.port;
+  var across = 11;
+  var down = 7;
+  var offX = Math.floor(across / 2);
+  var offY = Math.floor(down / 2);
+
+  var table = document.createElement("table");
+  var tbody = document.createElement("tbody");
+  for (var yy = 0; yy < down; ++yy) {
+    var tr = document.createElement("tr");
+    for (var xx = 0; xx < across; ++xx) {
+      var x = xx - offX;
+      var y = offY - yy;
+      var slave = (x != 0 || y != 0);
+      var ui = !slave;
+      /* if (x != 0 || y != 0)*/ {
+        var td = document.createElement("td");
+        var a = document.createElement("a");
+        a.href = makeAquariumURL(address, port, slave, x, y, ui);
+        var txt = "" + x + "," + y;
+        var text = document.createTextNode(txt);
+        var cx = (1 - Math.abs(x / offX));
+        var cy = (1 - Math.abs(y / offY));
+        var cc = Math.floor(128 + (cx * cy) * 127);
+        var color = "rgb(" + cc + "," + cc + ",255)";
+        td.style.backgroundColor = color; 
+        a.appendChild(text);
+        td.appendChild(a);
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  document.getElementById("table").appendChild(table);
+}
+
+window.onload = main;
+</script>
+<body>
+<div>Must run from a WebGL enabled browser</div>
+<div id="table"></div>
+</body>
+</html>

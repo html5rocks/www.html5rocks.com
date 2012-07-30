@@ -1,0 +1,768 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}埃里克·比德尔曼 (Eric Bidelman) <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}探索 FileSystem API{% endblock %}
+{% block pagetitle %}探索 FileSystem API{% endblock %}
+{% block head %}
+<style>
+{% if is_mobile %}
+.example {
+  padding: 10px;
+  border: 1px solid #CCC;
+}
+#example-list-fs ul {
+  padding-left: 0;
+}
+#example-list-fs li {
+  list-style: none;
+}
+#example-list-fs img {
+  vertical-align: middle;
+}
+{% endif %}
+
+#terminal-iframe {
+  display: none;
+  border: 1px solid black;
+  width: 100%;
+  height: 300px;
+}
+</style>
+{% endblock %}
+{% block pagebreadcrumb %}探索 FileSystem API{% endblock %}
+{% block date %}2011 年 1 月 4 日{% endblock %}
+{% block updated %}2012 年 1 月 27 日{% endblock %}
+{% block onload %}document.querySelector('#terminal-iframe').style.display='block';{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">不支持</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">不支持</span></span> <span class="browser safari"><span class="browser_name">Safari</span><span class="support">不支持</span></span> <span class="browser ff"><span class="browser_name">Firefox</span><span class="support">不支持</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome 浏览器</span><span class="support">支持</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="本文由 HTML5 离线存储强力驱动" title="本文由 HTML5 离线存储强力驱动"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return !!(window.requestFileSystem || window.webkitRequestFileSystem);
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction">简介</h2>
+
+  <p>我常常想，如果网络应用能够读取和写入文件与目录，将会非常方便。从离线转移到在线后，应用变得更加复杂，而文件系统方面的 API 的缺乏也一直阻碍着网络前进。存储二进制数据或与其进行交互不应局限于桌面。令人欣慰的是，由于 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem API</a> 的出现，这一现状终于得到了改变。有了 FileSystem API，网络应用就可以创建、读取、导航用户本地文件系统中的沙盒部分以及向其中写入数据。</p>
+
+  <p>API 被分为以下不同的主题：</p>
+  <ul>
+    <li>读取和处理文件：<code>File</code>/<code>Blob</code>、<code>FileList</code>、<code>FileReader</code></li>
+    <li>创建和写入：<code>BlobBuilder</code>、<code>FileWriter</code></li>
+    <li>目录和文件系统访问：<code>DirectoryReader</code>、<code>FileEntry</code>/<code>DirectoryEntry</code>、<code>LocalFileSystem</code>
+    </li>
+  </ul>
+
+  <h3 id="toc-support">浏览器支持与存储限制</h3>
+
+  <p>在写这篇文章时，只有 Google Chrome 浏览器可以实施此 FileSystem API。目前尚不存在专门用于文件/配额管理的浏览器用户界面。要在用户的系统上存储数据，您的应用可能需要<a href="#toc-requesting-quota">请求配额</a>。不过，可使用 <code>--unlimited-quota-for-files</code> 标记运行 Chrome 浏览器进行测试。此外，如果您要开发的是用于 Chrome 网上应用店的应用或扩展程序，可使用 <code>unlimitedStorage</code> <a href="http://code.google.com/chrome/extensions/manifest.html">清单文件</a>权限，而无需请求配额。最后，用户会收到授予、拒绝或为应用增加存储的权限对话框。</p>
+
+  <p>如果您要通过 <code>file://</code> 调试您的应用，可能需要 <code>--allow-file-access-from-files</code> 标记。不使用这些标记会导致 <code>SECURITY_ERR</code> 或 <code>QUOTA_EXCEEDED_ERR</code> FileError。</p>
+
+  <h2 id="toc-requesting">请求文件系统</h2>
+
+  <p>网络应用可通过调用 <code>window.requestFileSystem()</code> 请求对沙盒文件系统的访问权限：</p>
+
+  <pre class="prettyprint">
+// Note: The file system has been prefixed as of Google Chrome 12:
+window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+window.requestFileSystem(<var>type</var>, <var>size</var>, <var>successCallback</var>, <var>opt_errorCallback</var>)
+</pre>
+
+  <dl>
+    <dt><var>type</var></dt>
+    <dd>文件存储是否应该是持久的。可能的值包括 <code>window.TEMPORARY</code> 和 <code>window.PERSISTENT</code>。通过 <code>TEMPORARY</code> 存储的数据可由浏览器自行决定删除（例如在需要更多空间的情况下）。要清除 <code>PERSISTENT</code> 存储，必须获得用户或应用的明确授权，并且需要用户向您的应用授予配额。请参阅<a href="#toc-requesting-quota">请求配额</a>。</dd>
+    <dt><var>size</var></dt>
+    <dd>应用需要用于存储的大小（以字节为单位）。</dd>
+    <dt><var>successCallback</var></dt>
+    <dd>文件系统请求成功时调用的回调。其参数为 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileSystem"><code>FileSystem</code></a> 对象。</dd>
+    <dt><var>opt_errorCallback</var></dt>
+    <dd>用于处理错误或获取文件系统的请求遭到拒绝时可选的回调。其参数为 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileError"><code>FileError</code></a> 对象。</dd>
+  </dl>
+
+  <p>如果您是首次调用 <code>requestFileSystem()</code>，系统会为您的应用创建新的存储。请注意，这是沙箱文件系统，也就是说，一个网络应用无法访问另一个应用的文件。这也意味着您无法在用户硬盘上的任意文件夹（例如“我的图片”、“我的文档”等）中读/写文件。</p>
+
+  <p>用法示例：</p>
+  <pre class="prettyprint">
+function onInitFs(fs) {
+  console.log('Opened file system: ' + fs.name);
+}
+
+<b>window.requestFileSystem</b>(<b>window.TEMPORARY</b>, 5*1024*1024 /*5MB*/, onInitFs, errorHandler);
+</pre>
+
+  <p>FileSystem 规范还定义了计划用于 <a href="/tutorials/#workers">Web Workers</a> 的同步 API (<code><a href="http://dev.w3.org/2009/dap/file-system/file-dir-sys.html#using-localfilesystemsync">LocalFileSystemSync</a></code>) 接口。不过，本教程不涉及该同步 API。</p>
+
+  <p>在本文档的其余部分中，我们将使用相同的处理程序处理异步调用引发的错误：</p>
+
+  <pre class="prettyprint">
+function errorHandler(e) {
+  var msg = '';
+
+  switch (e.code) {
+    case <b>FileError.QUOTA_EXCEEDED_ERR</b>:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case <b>FileError.NOT_FOUND_ERR</b>:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case <b>FileError.SECURITY_ERR</b>:
+      msg = 'SECURITY_ERR';
+      break;
+    case <b>FileError.INVALID_MODIFICATION_ERR</b>:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case <b>FileError.INVALID_STATE_ERR</b>:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  };
+
+  console.log('Error: ' + msg);
+}
+</pre>
+
+  <p>当然，这种错误回调非常通用，能让您充分理解，但您提供给用户的应是易于一般人理解的讯息。</p>
+
+  <h3 id="toc-requesting-quota">请求存储配额</h3>
+
+  <p>要使用 <code>PERSISTENT</code> 存储，您必须向用户取得存储持久数据的许可。由于浏览器可自行决定删除临时存储的数据，因此这一限制不适用于 <code>TEMPORARY</code> 存储。</p>
+
+  <p>为了将 <code>PERSISTENT</code> 存储与 FileSystem API 配合使用，Chrome 浏览器使用基于 <code>window.webkitStorageInfo</code> 的新 API 以请求存储：</p>
+
+  <pre class="prettyprint">
+window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
+  window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+}, function(e) {
+  console.log('Error', e);
+});
+</pre>
+
+  <p>用户授予许可后，就不必再调用 <code>requestQuota()</code> 了。后续调用为无操作指令。</p>
+
+  <p>您还可以使用 <a href="https://groups.google.com/a/chromium.org/group/chromium-html5/browse_thread/thread/9be7a2dc04d9af67">API</a> 查询源的当前配额使用情况和分配情况：<code>window.webkitStorageInfo.queryUsageAndQuota()</code></p>
+
+  <h2 id="toc-file">使用文件</h2>
+
+  <p>沙盒环境中的文件通过 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>FileEntry</code></a> 接口表示。FileEntry 包含标准文件系统中会有的属性类型（<code>name</code>、<code>isFile</code>...）和方法（<code>remove</code>、<code>moveTo</code>、<code>copyTo</code>...）。</p>
+
+  <p id="toc-fileentry"><code>FileEntry</code> 的属性和方法：</p>
+  <pre class="prettyprint">
+fileEntry.isFile === true
+fileEntry.isDirectory === false
+fileEntry.name
+fileEntry.fullPath
+...
+
+fileEntry.getMetadata(successCallback, opt_errorCallback);
+fileEntry.remove(successCallback, opt_errorCallback);
+fileEntry.moveTo(dirEntry, opt_newName, opt_successCallback, opt_errorCallback);
+fileEntry.copyTo(dirEntry, opt_newName, opt_successCallback, opt_errorCallback);
+fileEntry.getParent(successCallback, opt_errorCallback);
+fileEntry.toURL(opt_mimeType);
+
+fileEntry.file(successCallback, opt_errorCallback);
+fileEntry.createWriter(successCallback, opt_errorCallback);
+...
+</pre>
+
+  <p>为了更好地理解 <code>FileEntry</code>，本部分还提供了执行常规任务的众多技巧。
+
+  <h3 id="toc-file-creatingempty">创建文件</h3>
+
+  <p>您可以使用文件系统的 <code>getFile()</code>（<a href="#toc-direntry">DirectoryEntry</a> 接口的一种方法）查找或创建文件。请求文件系统后，系统会向成功回调传递 <code>FileSystem</code> 对象，其中包含指向该应用相应文件系统的根的 <code>DirectoryEntry</code> (<code>fs.root</code>)。</p>
+
+  <p>以下代码会在该应用相应文件系统的根中创建名为“log.txt”的空白文件：</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: true, exclusive: true}</b>, function(fileEntry) {
+
+    // fileEntry.isFile === true
+    // fileEntry.name == 'log.txt'
+    // fileEntry.fullPath == '/log.txt'
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>请求文件系统后，系统会向成功处理程序传递 <code>FileSystem</code> 对象。我们可以将回调中的 <code>fs.root.getFile()</code> 命名为要创建的文件的文件名。您可以传递绝对路径或相对路径，但该路径必须有效。例如，如果您尝试创建一个其直接父级文件不存在的文件，将会导致出错。<code>getFile()</code> 的第二个参数是在文件不存在时从字面上说明函数行为的对象。在此示例中，<code>create: true</code> 会在文件不存在时创建文件，并在文件存在时 (<code>exclusive: true</code>) 引发错误。如果 <code>create: false</code>，系统只会获取并返回文件。无论是哪种情况，系统都不会覆盖文件内容，因为我们只是获取相关文件的引用路径。</p>
+
+  <h3 id="toc-file-readingbyname">通过名称读取文件</h3>
+
+  <p>以下代码会检索名为“log.txt”的文件，并使用 <code>FileReader</code> API 读取文件内容，然后将其附加到页面上新的 &lt;textarea&gt;。如果 log.txt 不存在，系统将引发错误。</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', {}, function(fileEntry) {
+
+    // Get a File object representing the file,
+    // then use FileReader to read its contents.
+    fileEntry.<b>file</b>(function(file) {
+       var reader = new FileReader();
+
+       reader.onloadend = function(e) {
+         var txtArea = document.createElement('textarea');
+         txtArea.value = this.result;
+         document.body.appendChild(txtArea);
+       };
+
+       reader.readAsText(file);
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-file-writing">写入到文件</h3>
+
+  <p>以下代码会创建名为“log.txt”的空白文件（如果该文件不存在），并在文件中填入“Lorem Ipsum”文字。</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: true}</b>, function(fileEntry) {
+
+    // Create a FileWriter object for our FileEntry (log.txt).
+    <b>fileEntry.createWriter</b>(function(fileWriter) {
+
+      <b>fileWriter.onwriteend</b> = function(e) {
+        console.log('Write completed.');
+      };
+
+      <b>fileWriter.onerror</b> = function(e) {
+        console.log('Write failed: ' + e.toString());
+      };
+
+      // Create a new Blob and write it to log.txt.
+      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
+      bb.append('Lorem Ipsum');
+      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>此时，我们会调用 FileEntry 的 <code>createWriter()</code> 方法获取 <code>FileWriter</code> 对象。在成功回调中为 <code>error</code> 事件和 <code>writeend</code> 事件设置事件处理程序。通过以下操作将文字数据写入文件：创建 Blob，向 Blob 附加文字，然后将 Blob 传递到 <code>FileWriter.write()</code>。</p>
+
+  <h3 id="toc-file-appending">向文件附加文字</h3>
+
+  <p>以下代码会将“Hello World”文字附加到日志文件结尾。如果该文件不存在，系统将引发错误。</p>
+
+  <pre class="prettyprint">
+function onInitFs(fs) {
+
+  <b>fs.root.getFile</b>('log.txt', <b>{create: false}</b>, function(fileEntry) {
+
+    // Create a FileWriter object for our FileEntry (log.txt).
+    fileEntry.createWriter(function(fileWriter) {
+
+      <b>fileWriter.seek(fileWriter.length); // Start write position at EOF.</b>
+
+      // Create a new Blob and write it to log.txt.
+      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
+      bb.append('Hello World');
+      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-file-user-selected">复制用户选定的文件</h3>
+
+  <p>以下代码可让用户使用 <code>&lt;input type="file" multiple /&gt;</code> 选择多个文件，并在应用的沙盒文件系统中复制这些文件。</p>
+
+  <pre class="prettyprint">&lt;input type="file" id="myfile" <b>multiple</b> /&gt;</pre>
+
+  <pre class="prettyprint">
+document.querySelector('#myfile').onchange = function(e) {
+  var files = <b>this.files</b>;
+
+  window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+    // Duplicate each file the user selected to the app's fs.
+    for (var i = 0, file; file = files[i]; ++i) {
+
+      // Capture current iteration's file in local scope for the getFile() callback.
+      (function(f) {
+        fs.root.getFile(<b>file.name</b>, {create: true, exclusive: true}, function(fileEntry) {
+          fileEntry.createWriter(function(fileWriter) {
+            <b>fileWriter.write(f);</b> // Note: write() can take a File or Blob object.
+          }, errorHandler);
+        }, errorHandler);
+      })(file);
+
+    }
+  }, errorHandler);
+
+};
+</pre>
+
+  <p>虽然我们通过输入导入文件，您也可以使用 <a href="/tutorials/dnd/basics/#toc-desktop-dnd-into">HTML5 拖放</a>功能轻松实现相同的目标。</p>
+
+  <p>正如评论中所说的，<code>FileWriter.write()</code> 可接受 <code>Blob</code> 或 <code>File</code>。这是因为 <code>File</code> 继承自 <code>Blob</code>，所以文件对象也是 Blob。</p>
+
+  <h3 id="toc-file-removing">删除文件</h3>
+
+  <p>以下代码会删除“log.txt”文件。</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getFile('log.txt', {create: false}, function(fileEntry) {
+
+    <b>fileEntry.remove(function() {
+      console.log('File removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-dir">使用目录</h2>
+
+  <p>沙盒中的目录通过 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-directoryentry-interface"><code>DirectoryEntry</code></a> 接口表示，该接口共享了 <a href="#toc-fileentry">FileEntry</a> 的大部分属性（继承自常用 <code>Entry</code> 接口）。不过，<code>DirectoryEntry</code> 还可使用其他方法处理目录。</p>
+
+  <p><code>DirectoryEntry</code> 的属性和方法：</p>
+  <pre class="prettyprint">
+dirEntry.isDirectory === true
+// See the section on <a href="#toc-fileentry">FileEntry</a> for other inherited properties/methods.
+...
+
+var dirReader = dirEntry.createReader();
+dirEntry.getFile(path, opt_flags, opt_successCallback, opt_errorCallback);
+dirEntry.getDirectory(path, opt_flags, opt_successCallback, opt_errorCallback);
+dirEntry.removeRecursively(successCallback, opt_errorCallback);
+...
+</pre>
+
+  <h3 id="toc-dir-creating">创建目录</h3>
+
+  <p>使用 <code>DirectoryEntry</code> 的 <code>getDirectory()</code> 方法读取或创建目录。您可以递交名称或路径作为查找或创建所用的目录。</p>
+
+  <p>例如，以下代码会在根目录中创建名为“MyPictures”的目录：</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.<b>getDirectory</b>('MyPictures', {create: true}, function(dirEntry) {
+    ...
+  }, errorHandler);
+}, errorHandler);
+  </pre>
+
+  <h3 id="toc-dir-subirs">子目录</h3>
+
+  <p>创建子目录的方法与创建其他任何目录的方法完全相同。不过，如果您尝试创建其直接父目录不存在的目录，API 将引发错误。相应的解决方法是，依次创建各级目录，而这对异步 API 而言非常麻烦。</p>
+
+  <p>以下代码会在系统创建父文件夹后以递归方式添加各个子文件夹，从而在应用相应 FileSystem 的根中创建新的层次结构 (music/genres/jazz)。</p>
+
+  <pre class="prettyprint">
+var path = 'music/genres/jazz/';
+
+function createDir(rootDirEntry, folders) {
+  // Throw out './' or '/' and move on to prevent something like '/foo/.//bar'.
+  if (folders[0] == '.' || folders[0] == '') {
+    folders = folders.slice(1);
+  }
+  rootDirEntry.<b>getDirectory</b>(folders[0], <b>{create: true}</b>, function(dirEntry) {
+    // Recursively add the new subfolder (if we still have another to create).
+    if (folders.length) {
+      createDir(dirEntry, folders.slice(1));
+    }
+  }, errorHandler);
+};
+
+function onInitFs(fs) {
+  createDir(fs.root, path.split('/')); // fs.root is a DirectoryEntry.
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <p>在“music/genres/jazz”处于合适的位置后，我们就可以将完整路径传递到 <code>getDirectory()</code>，然后在其下方创建新的子文件夹。例如：</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getFile('/music/genres/jazz/song.mp3', {create: true}, function(fileEntry) {
+    ...
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-reading">读取目录内容</h3>
+
+  <p>要读取目录的内容，可先创建 <code>DirectoryReader</code>，然后调用 <code>readEntries()</code> 方法。我们不能保证所有目录条目都能在仅调用一次 <code>readEntries()</code> 的情况下同时返回。也就是说，您需要一直调用 <code>DirectoryReader.readEntries()</code>，直到系统不再返回结果为止。以下代码对此作了说明：</p>
+
+  <pre class="prettyprint">&lt;ul id="filelist"&gt;&lt;/ul&gt;</pre>
+
+  <pre class="prettyprint">
+function toArray(list) {
+  return Array.prototype.slice.call(list || [], 0);
+}
+
+function listResults(entries) {
+  // Document fragments can improve performance since they're only appended
+  // to the DOM once. Only one browser reflow occurs.
+  var fragment = document.createDocumentFragment();
+
+  entries.forEach(function(entry, i) {
+    var img = <b>entry.isDirectory</b> ? '&lt;img src="folder-icon.gif"&gt;' :
+                                  '&lt;img src="file-icon.gif"&gt;';
+    var li = document.createElement('li');
+    li.innerHTML = [img, '&lt;span&gt;', entry.name, '&lt;/span&gt;'].join('');
+    fragment.appendChild(li);
+  });
+
+  document.querySelector('#filelist').appendChild(fragment);
+}
+
+function onInitFs(fs) {
+
+  var dirReader = <b>fs.root.createReader()</b>;
+  var entries = [];
+
+  // Call the reader.readEntries() until no more results are returned.
+  var readEntries = function() {
+     <b>dirReader.readEntries </b>(function(results) {
+      if (!results.length) {
+        listResults(entries.sort());
+      } else {
+        entries = entries.concat(toArray(results));
+        readEntries();
+      }
+    }, errorHandler);
+  };
+
+  readEntries(); // Start reading dirs.
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-removing">删除目录</h3>
+
+  <p><code>DirectoryEntry.remove()</code> 方法的行为与 <a href="#toc-file-removing"><code>FileEntry</code></a> 相应方法的行为非常相似。差别在于：尝试删除非空目录时会引发错误。</p>
+
+  <p>以下代码会从“/music/genres/”删除空的“jazz”目录：</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getDirectory('music/genres/jazz', {}, function(dirEntry) {
+
+    <b>dirEntry.remove(function() {
+      console.log('Directory removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h4 id="toc-dir-rremoving">以递归方式删除目录</h4>
+
+  <p>如果您不需要某个包含条目的目录，不妨使用 <code>removeRecursively()</code>。该方法将以递归方式删除目录及其内容。</p>
+
+  <p>以下代码会以递归方式删除“music”目录及其包含的所有文件和目录：</p>
+
+  <pre class="prettyprint">
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  fs.root.getDirectory('/misc/../music', {}, function(dirEntry) {
+
+    <b>dirEntry.removeRecursively(function() {
+      console.log('Directory removed.');
+    }, errorHandler);</b>
+
+  }, errorHandler);
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-copy-rename-move">复制、重命名和移动</h2>
+
+  <p><code>FileEntry</code> 和 <code>DirectoryEntry</code> 享有共同的操作。</p>
+
+  <h3 id="toc-dir-move-copy">复制条目</h3>
+
+  <p><code>FileEntry</code> 和 <code>DirectoryEntry</code> 均可使用 <code>copyTo()</code> 复制现有条目。该方法会自动以递归方式复制文件夹。</p>
+
+  <p>以下代码示例会将“me.png”文件从一个目录复制到另一个目录：</p>
+
+  <pre class="prettyprint">
+function copy(cwd, src, dest) {
+  cwd.getFile(src, {}, function(fileEntry) {
+
+    cwd.getDirectory(dest, {}, function(dirEntry) {
+      <b>fileEntry.copyTo</b>(dirEntry);
+    }, errorHandler);
+
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  copy(fs.root, '/folder1/me.png', 'folder2/mypics/');
+}, errorHandler);
+</pre>
+
+  <h3 id="toc-dir-move-rename">移动或重命名条目</h3>
+
+  <p><code>FileEntry</code> 和 <code>DirectoryEntry</code> 的 <code>moveTo()</code> 方法可让您移动或重命名文件或目录。其第一个参数是文件要移动到的目标父目录，其第二个参数是文件可选的新名称。如未提供新名称，系统将使用文件的原名称。</p>
+
+  <p>以下示例将“me.png”重命名为“you.png”，但并不移动该文件：</p>
+
+  <pre class="prettyprint">
+function rename(cwd, src, newName) {
+  cwd.getFile(src, {}, function(fileEntry) {
+    <b>fileEntry.moveTo</b>(cwd, newName);
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  rename(fs.root, 'me.png', 'you.png');
+}, errorHandler);
+</pre>
+
+  <p>以下示例将“me.png”（位于根目录中）移动到名为“newfolder”的文件夹。</p>
+
+  <pre class="prettyprint">
+function move(src, dirName) {
+  fs.root.getFile(src, {}, function(fileEntry) {
+
+    fs.root.getDirectory(dirName, {}, function(dirEntry) {
+      <b>fileEntry.moveTo</b>(dirEntry);
+    }, errorHandler);
+
+  }, errorHandler);
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+  move('/me.png', 'newfolder/');
+}, errorHandler);
+</pre>
+
+  <h2 id="toc-filesystemurls">filesystem: 网址</h2>
+
+  <p>FileSystem API 使用新的网址机制，（即 <code>filesystem:</code>），可用于填充 <code>src</code> 或 <code>href</code> 属性。例如，如果您要显示某幅图片且拥有相应的 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>，您可以调用 <code>toURL()</code> 获取该文件的 <code>filesystem:</code> 网址：</p>
+
+<pre class="prettyprint">
+var img = document.createElement('img');
+img.src = <b>fileEntry.toURL</b>(); // filesystem:http://example.com/temporary/myfile.png
+document.body.appendChild(img);
+</pre>
+
+  <p>另外，如果您已具备 <code>filesystem:</code> 网址，可使用 <code>resolveLocalFileSystemURL()</code> 找回 <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>：</p>
+
+<pre class="prettyprint">
+window.resolveLocalFileSystemURL = window.resolveLocalFileSystemURL ||
+                                   window.webkitResolveLocalFileSystemURL;
+
+var url = 'filesystem:http://example.com/temporary/myfile.png';
+<b>window.resolveLocalFileSystemURL</b>(url, function(fileEntry) {
+  ...
+});
+</pre>
+
+  <h2 id="toc-dir-fullexample">将所有内容汇总到一起</h2>
+
+  <h3 id="toc-samples-basic">基本示例</h3>
+  <p>该演示列出了文件系统中的文件/文件夹。</p>
+
+  {% if is_mobile %}
+  <div id="example-list-fs" class="example">
+    <button>添加一些文件 (Add some files)</button> <button>列出文件 (List files)</button> <button>删除所有文件 (Remove all files)</button>
+    <ul id="example-list-fs-ul"></ul>
+  </div>
+  {% else %}
+  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=180&hl=160#filesystem_apis" style="border: none; width: 100%; height: 460px;"></iframe>
+  {% endif %}
+
+  <h3 id="toc-samples-terminal">HTML5 终端</h3>
+  <p>该 Shell 会提取 FileSystem API，以复制 UNIX 文件系统中的一些常用操作（例如 <code>cd</code>、<code>mkdir</code>、<code>rm</code>、<code>open</code> 和 <code>cat</code>）。要添加文件，可将文件从桌面拖放到下方的终端。</p>
+  <iframe id="terminal-iframe" src="terminal.html"></iframe>
+
+  <h2 id="toc-usecases">使用案例</h2>
+
+  <p>HTML5 中提供了若干个<a href="/tutorials#offline,storage">存储选项</a>，但 FileSystem 的目标在于满足没能从数据库获得很好服务的客户端存储使用案例。这些应用一般处理大型二进制 Blob 和/或与浏览器外部环境的应用共享数据。</p>
+
+  <p>该规范列出了几个使用案例：</p>
+  <ol>
+    <li>持久型上传器
+      <ul>
+      <li>选中要上传的文件或目录后，系统会将文件复制到本地沙盒并批次上传。</li>
+      <li>即使发生浏览器崩溃、网络中断等状况，也可在之后重新开始上传。</li>
+      </ul>
+    </li>
+    <li>视频游戏、音乐或其他具有大量媒体资产的应用
+      <ul>
+      <li>下载一个或几个大的压缩包，然后将其本地解压缩到目录结构。</li>
+      <li>任何操作系统均可使用相同的下载模式。</li>
+      <li>对预先抓取即将使用的资产的功能进行后台管理，因此转到下一个游戏级别或激活新功能无需等待下载过程。</li>
+      <li>直接读取文件或将本地 URI 移交至图片标记、视频标记、WebGL 资产加载器等，从而直接通过本地缓存使用这些资产。</li>
+      <li>文件可使用任意二进制格式。</li>
+      <li>在服务器端，压缩后的压缩包通常远远小于单独压缩的文件合集。另外，在其他条件相同的情况下，1 个压缩包涉及的搜索将小于 1000 个小文件。</li>
+      </ul>
+    </li>
+    <li>可使用离线访问权限或本地存储的高速音频/照片编辑器
+      <ul>
+      <li>数据 Blob 很可能是可读写的超大文件。</li>
+      <li>可能需要向文件写入局部内容（例如，仅覆盖 ID3/EXIF 标记）。</li>
+      <li>通过创建目录来整理项目文件这一功能非常有用。</li>
+      <li>修改后的文件应可供客户端应用 [iTunes、Picasa] 访问。
+      </li></ul>
+    </li>
+    <li>离线视频观看者
+      <ul>
+      <li>下载大文件（1 GB 以上）以供今后观看。</li>
+      <li>需要有效的搜索和流式传输。</li>
+      <li>必须能够将 URI 移交至视频标记。</li>
+      <li>应该允许访问部分下载的文件，例如即使您在登机前尚未完成下载，也可以观看 DVD 的第一集。</li>
+      <li>应该能够在下载期间抽取单个剧集，然后将该剧集单独移交至视频标记。</li>
+      </ul>
+    </li>
+    <li>离线网络右键客户端
+      <ul>
+      <li>下载并本地存储附件</li>
+      <li>缓存用户选择的附件以供今后上传。</li>
+      <li>需要能够引用缓存的附件和图片缩略图以供展示和上传。</li>
+      <li>应该能够像与服务器交谈一样触发 UA 的下载管理器。</li>
+      <li>应该能够将带附件的电子邮件视作由多个部分组成的邮件进行上传，而不是通过 XHR 一次发送一个文件。</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2 id="toc-references">参考规范</h2>
+  <ul>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem</a></li>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html">FileWriter</a></li>
+    <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#idl-def-BlobBuilder">BlobBuilder</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-filereader">FileReader</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/">File</a></li>
+    <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob">Blob</a></li>
+  </ul>
+
+{% if is_mobile %}
+<script>
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+var fs = null;
+
+function errorHandler(e) {
+  var msg = '';
+  switch (e.code) {
+    case FileError.QUOTA_EXCEEDED_ERR:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case FileError.NOT_FOUND_ERR:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case FileError.SECURITY_ERR:
+      msg = 'SECURITY_ERR';
+      break;
+    case FileError.INVALID_MODIFICATION_ERR:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case FileError.INVALID_STATE_ERR:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  };
+  document.querySelector('#example-list-fs-ul').innerHTML = 'Error: ' + msg;
+}
+
+function initFS() {
+  window.requestFileSystem(window.TEMPORARY, 1024*1024, function(filesystem) {
+    fs = filesystem;
+  }, errorHandler);
+}
+
+// Example - Reader Dir Contents.
+(function() {
+  var buttons = document.querySelectorAll('#example-list-fs button');
+  var filelist = document.querySelector('#example-list-fs-ul');
+
+  buttons[0].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+    fs.root.getFile('log.txt', {create: true}, null, errorHandler);
+    fs.root.getFile('song.mp3', {create: true}, null, errorHandler);
+    fs.root.getDirectory('mypictures', {create: true}, null, errorHandler);
+    filelist.innerHTML = 'Files created.';
+  }, false);
+
+  buttons[1].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+
+    var dirReader = fs.root.createReader();
+    dirReader.readEntries(function(entries) {
+      if (!entries.length) {
+        filelist.innerHTML = 'Filesystem is empty.';
+      } else {
+        filelist.innerHTML = '';
+      }
+
+      var fragment = document.createDocumentFragment();
+      for (var i = 0, entry; entry = entries[i]; ++i) {
+        var img = entry.isDirectory ? '<img src="/static/images/tutorials/icon-folder.gif">' :
+                                      '<img src="/static/images/tutorials/icon-file.gif">';
+        var li = document.createElement('li');
+        li.innerHTML = [img, '<span>', entry.name, '</span>'].join('');
+        fragment.appendChild(li);
+      }
+      filelist.appendChild(fragment);
+    }, errorHandler);
+  }, false);
+
+  buttons[2].addEventListener('click', function(e) {
+    if (!fs) {
+      return;
+    }
+
+    var dirReader = fs.root.createReader();
+    dirReader.readEntries(function(entries) {
+      for (var i = 0, entry; entry = entries[i]; ++i) {
+        if (entry.isDirectory) {
+          entry.removeRecursively(function() {}, errorHandler);
+        } else {
+          entry.remove(function() {}, errorHandler);
+        }
+      }
+      filelist.innerHTML = 'Directory emptied.';
+    }, errorHandler);
+  }, false);
+})();
+
+if (window.requestFileSystem) {
+  initFS();  // Initiate filesystem on page load.
+}
+</script>
+{% endif %}
+
+{% endblock %}

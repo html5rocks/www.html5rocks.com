@@ -1,0 +1,411 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block iscompatible %}
+return !!document.createElement("video").textTracks;
+{% endblock %}
+
+{% block head %}
+<style>
+video {
+  max-width: 100%;
+  outline: none;
+}
+div#eric video {
+-webkit-box-reflect: below 5px -webkit-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-moz-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-ms-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-o-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+margin: 0;
+}
+
+div#eric  {
+  text-align: center;
+}
+
+div#eric > div {
+margin-top: 2em;
+text-align: center;
+-webkit-perspective: 800;
+-webkit-transform-style: preserve-3d;
+-moz-perspective: 800;
+-moz-transform-style: preserve-3d;
+-ms-perspective: 800;
+-ms-transform-style: preserve-3d;
+-o-perspective: 800;
+-o-transform-style: preserve-3d;
+}
+
+div#eric > div > div:last-child {
+position: relative;
+top: -36px;
+}
+div#eric > div > div {
+color: black;
+font-family: "Open Sans", sans-serif;
+font-size: 18px;
+height:  25px;
+opacity: 1;
+-webkit-transition: all 500ms ease-in-out;
+-webkit-transform-origin: 50% 100%;
+-webkit-transform: rotateX(-90deg);
+-moz-transition: all 500ms ease-in-out;
+-moz-transform-origin: 50% 100%;
+-moz-transform: rotateX(-90deg);
+-o-transition: all 500ms ease-in-out;
+-o-transform-origin: 50% 100%;
+-o-transform: rotateX(-90deg);
+-ms-transition: all 500ms ease-in-out;
+-ms-transform-origin: 50% 100%;
+-ms-transform: rotateX(-90deg);
+}
+div#eric > div > div.on {
+opacity: 1;
+-webkit-transform: rotateX(0);
+-moz-transform: rotateX(0);
+-o-transform: rotateX(0);
+-ms-transform: rotateX(0);
+}
+.trackNotSupported {
+  display: none;
+}
+.trackNotSupported.show {
+  display: block;
+}
+.warningMessage {
+  color: red;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Getting started with the HTML5 track element</h2>
+
+<p>The track element provides a simple, standardized way to add subtitles, captions, screen reader descriptions and chapters to video and audio.</p>
+
+<p>Tracks can also be used for other kinds of timed metadata. The source data for each track element is a text file made up of a list of timed <code>cues</code>, and cues can include data in formats such as JSON or CSV. This is extremely powerful, enabling deep linking and media navigation via text search, for example, or DOM manipulation and other behaviour synchronised with media playback.</p>
+
+<p>The track element is currently available in <a href="http://ie.microsoft.com/testdrive/" title="Internet Explorer 10 download">Internet Explorer 10</a> and <a href="http://tools.google.com/dlpage/chromesxs" title="Chrome Canary download">Chrome 18</a>+. Firefox support is <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Firefox track element implementation bug report">not yet implemented</a>. In Chrome, track element support must be enabled from the <a href="chrome://flags" title="chrome://flags page">chrome://flags</a> page.</p>
+
+<p>Below is a simple example of a video with a track element. Play it to see subtitles in English:</p>
+ 
+<video controls class="trackSupported">
+  <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
+  <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
+</video>
+
+<p class="warningMessage trackNotSupported">This demo requires a browser such as <a href="http://tools.google.com/dlpage/chromesxs" title="Google Chrome Canary download">Google Chrome Canary</a> that supports the track element. In Chrome you must enable track element support on the chrome://flags page.</p>
+
+<p>Code for a video element with subtitles in English and German might look like this:</p>
+
+<pre class="prettyprint">
+&lt;video src="foo.ogv"&gt;
+  &lt;track kind="subtitles" label="English subtitles" src="subtitles_en.vtt" srclang="en" default&gt;&lt;/track&gt;
+  &lt;track kind="subtitles" label="Deutsche Untertitel" src="subtitles_de.vtt" srclang="de"&gt;&lt;/track&gt;
+&lt;/video&gt;
+</pre>
+
+<p>In this example, the video element would display a selector giving the user a choice of subtitle languages. (Though at the time of writing, that hasn't yet been implemented).</p>
+
+<p>Note that the track element cannot be used from a <code>file://</code> URL. To see tracks in action, put files on a web server.</p>
+
+<p>Each track element has an attribute for <code>kind</code>, which can be <code>subtitles</code>, <code>captions</code>, <code>descriptions</code>, <code>chapters</code> or <code>metadata</code>. The track element <code>src</code> attribute points to a text file that holds data for timed track cues, which can potentially be in any format a browser can parse. Chrome supports WebVTT, which looks like this:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+railroad
+00:00:10.000 --> 00:00:12.500
+Left uninspired by the crust of railroad earth
+
+manuscript
+00:00:13.200 --> 00:00:16.900
+that touched the lead to the pages of your manuscript.
+</pre>
+
+<p>Each item in a track file is called a cue. Each cue has a start time and end time separated by an arrow, with cue text in the line below. Cues can optionally also have IDs: 'railroad' and 'manuscript' in the examples above. Cues are separated by an empty line.</p>
+
+<p>Cue times are in hours:minutes:seconds:milliseconds format. Beware! Parsing is strict. Numbers must be zero padded if necessary: hours, minutes and seconds must have two digits (00 for a zero value) and milliseconds must have three digits (000 for zero). There is an excellent WebVTT validator at <a href="http://quuz.org/webvtt/">quuz.org/webvtt</a>, which checks for errors in time formatting, and problems such as non-sequential times.</p>
+
+<p>The following demo shows how subtitles can be searched in order to navigate within a video.</p>
+
+<!-- subtitle search example -->
+
+<h2 id="toc-jsoncues">Using HTML and JSON in cues</h2>
+
+<p>The text of a cue in a WebVTT file can span multiple lines, as long as none of the lines are blank. That means cues can include HTML:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+&lt;p>Multi-celled organisms have different types of cells that perform specialised functions.&lt;/p>
+&lt;p>Most life that can be seen with the naked eye is multi-cellular.&lt;/p>
+&lt;p>These organisms are though to have evolved around 1 billion years ago with plants, animals and fungi having independent evolutionary paths.&lt;/p>
+</pre>
+
+<p>Why stop there? Cues can also use JSON:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+{
+"title": "Multi-celled organisms",
+"description": "Multi-celled organisms have different types of cells that perform specialised functions.
+  Most life that can be seen with the naked eye is multi-cellular. These organisms are though to
+  have evolved around 1 billion years ago with plants, animals and fungi having independent
+  evolutionary paths.",
+"src": "multiCell.jpg",
+"href": "http://en.wikipedia.org/wiki/Multicellular"
+}
+
+insects
+00:02:18.800 --> 00:03:01.600
+{
+"title": "Insects",
+"description": "Insects are the most diverse group of animals on the planet with estimates for the total
+  number of current species range from two million to 50 million. The first insects appeared around
+  400 million years ago, identifiable by a hard exoskeleton, three-part body, six legs, compound eyes
+  and antennae.",
+"src": "insects.jpg",
+"href": "http://en.wikipedia.org/wiki/Insects"
+}
+</pre>
+
+<p>The ability to use structured data in cues makes the track element extremely powerful and flexible. A web app can listen for cue events, extract the text of each cue as it fires, parse the data and then use the results to make DOM changes (or perform other JavaScript or CSS tasks) synchronised with media playback.</p>
+
+<h2 id="toc-search">Search and deep navigation</h2>
+
+<p>Tracks can also add value to audio and video by making search easier, more powerful and more precise.</p>
+<p>Cues include text that can be indexed, and a start time that signifies the temporal 'location' of content within media. Cues could even include data about the position of items within a video frame. Combined with <a href="http://www.youtube.com/watch?v=LfRRYp6mnu0" title="YouTube video showing prototype Media Fragment URI implementation">media fragment URIs</a>, tracks could provide a powerful mechanism for finding and navigating to content within audio and video. For example, imagine a search for 'Etta James' which returns results that link directly to points within videos where her name is mentioned in cue text.</a>
+
+<p>The <a href="treeOfLife/index.html" title="Tree Of Life demo, showing use of metadata track">Tree Of Life</a> demo is a simple example of how a metadata track can be used to enable navigation via subtitle search&ndash;and also shows how timed metadata can enable manipulation of the DOM synchronised with media playback.</p>
+
+<h2 id="toc-cues-js">Getting at tracks and cues with JavaScript</h2>
+
+<p>Audio and video elements have a <code>textTracks</code> property that returns a <code>TextTrackList</code>, each member of which is a <code>TextTrack</code> corresponding to a <code>&lt;track&gt;</code> element:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var textTracks = videoElement.textTracks; // one for each track element
+var textTrack = textTracks[0]; // corresponds to the first track element
+var kind = textTrack.kind // e.g. "subtitles"
+var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+</pre>
+
+<p>Each <code>TextTrack</code>, in turn, has a <code>cues</code> property that returns a <code>TextTrackCueList</code>, each member of which is an individual cue. Cue data can be accessed with properties such as <code>startTime</code>, <code>endTime</code> and <code>text</code> (used to get the text content of the cue):</p>
+
+<pre class="prettyprint">
+var cues = textTrack.cues;
+var cue = cues[0]; // corresponds to the first cue in a track src file
+var cueId = cue.id // cue.id corresponds to the cue id set in the WebVTT file
+var cueText = cue.text; // "The Web is always changing", for example (or some JSON!)
+</pre>
+
+<p>Sometimes it makes sense to get at <code>TextTrack</code> objects via the <code>HTMLTrackElement</code>:</p>
+
+<pre class="prettyprint">
+var trackElements = document.querySelectorAll("track");
+// for each track element
+for (var i = 0; i &lt; trackElements.length; i++) {
+  trackElements[i].addEventListener("load", function() {
+    var textTrack = this.track; // gotcha: "this" is an HTMLTrackElement, not a TextTrack object
+    var isSubtitles = textTrack.kind === "subtitles"; // for example...
+    // for each cue
+    for (var j = 0; j &lt; textTrack.cues.length; ++j) {
+      var cue = textTrack.cues[j];
+      // do something
+    }
+}
+</pre>
+
+<p>As in this example, <code>TextTrack</code> properties are accessed via a track element's <code>track</code> property, not the element itself. </p>
+
+<p><code>TextTrack</code>s are accessible once the <code>load</code> event has fired&ndash;and not before.</p>
+
+<h2 id="toc-events">Track and cue events</h2>
+
+<p>The two types of cue event are:
+<ul>
+  <li>enter and exit events fired for cues</li>
+  <li>cuechange events fired for tracks. </li>
+</ul>
+</p>
+
+<p>In the previous example, cue event listeners could have been added like this:</p>
+
+<pre class="prettyprint">
+cue.onenter = function(){
+  // do something
+};
+
+cue.onexit = function(){
+  // do something else
+};
+</pre>
+
+<p>Be aware that the enter and exit events are only fired when cues are entered or exited via playback. If the user drags the timeline slider manually, a cuechange event will be fired for the track at the new time, but enter and exits events will not be fired. It's possible to get around this by listening for the cuechange track event, then getting the active cues. (Note that there may be more than one active cue.)</p>
+
+<p>The following example gets the current cue, when the cue changes, and attempts to create an object by parsing the cue text:</p>
+
+<pre class="prettyprint">
+textTrack.oncuechange = function (){
+  // "this" is a textTrack
+  var cue = this.activeCues[0]; // assuming there is only one active cue
+  var obj = JSON.parse(cue.text);
+  // do something
+}
+</pre>
+
+<h2 id="toc-notjustvideo">Not just for video</h2>
+
+<p>Don't forget that tracks can be used with audio as well as video&ndash;and that you don't need audio, video or track elements in HTML markup to take advantage of their APIs. The TextTrack API <a href="http://dev.w3.org/html5/spec/video.html#text-track-api" title="W3C TextTrack API documentation">documentation</a> has a nice example of this, showing a neat way to implement audio 'sprites':</p>
+
+<pre class="prettyprint">
+var sfx = new Audio('sfx.wav');
+var track = sfx.addTextTrack('metadata'); // previously implemented as addTrack()
+
+// Add cues for sounds we care about.
+track.addCue(new TextTrackCue('dog bark', 12.783, 13.612, '', '', '', true));
+track.addCue(new TextTrackCue('kitten mew', 13.612, 15.091, '', '', '', true));
+
+function playSound(id) {
+  sfx.currentTime = track.getCueById(id).startTime;
+  sfx.play();
+}
+
+playSound('dog bark');
+playSound('kitten mew');
+</pre>
+
+<p>The <code>addTextTrack</code> method takes three parameters: <code>kind</code> (for example, 'metadata', as above), <code>label</code> (for example, 'Sous-titres français) and <code>language</code> (for example, 'fr').</p>
+
+<p>The example above also uses <code>addCue</code>, which takes a <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue" title="WHATWG TextTrackCue documentation"><code>TextTrackCue</code></a> object, the constructor for which takes an <code>id</code> (e.g. 'dog bark'), a <code>startTime</code>, an <code>endTime</code>, the cue <code>text</code> a <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-settings" title="WebVTT cue settings documentation"><code>webVTT cue settings</code></a> argument (for positioning, size and alignment) and a boolean <code>pauseOnExit</code> flag (for example, to pause playback after asking a question in an educational video).</p>
+
+<p>Note that <code>startTime</code> and <code>endTime</code> use floating point values in seconds, and not the hours:minutes:seconds:milliseconds format used by WebVTT.</p>
+
+<p>Cues can also be removed with <code>removeCue()</code>, which takes a cue as its argument, for example:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var track = videoElement.textTracks[0];
+var activeCue = track.activeCues[0];
+track.removeCue(activeCue);
+</pre>
+
+<p>If you try this out, you'll notice that a rendered cue is removed as soon as the code is called.</p>
+
+<p>Tracks have a <code>mode</code> attribute, which can be 0 (<code>TextTrack.OFF</code> in spec, <code>TextTrack.DISABLED</code> in Chrome), 1 (<code>TextTrack.HIDDEN</code>) or 2 (<code>TextTrack.SHOWING</code>). This can be useful if you want to use track events but turn off default rendering&ndash;play the following video to see an example of this (built by <a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="Eric Bidelman HTML5 demo slide deck">Eric Bidelman</a>):</p>
+
+<div id="eric">
+  <video width="400" controls>
+    <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"'>
+    <track label="English subtitles" kind="subtitles" srclang="en" src="treeOfLife/tracks/developerStories-subtitles-en.vtt" default>
+  </video>
+  <div><div>test1</div><div>asdf2</div></div>
+</div>
+
+<script>
+(function(){
+
+var video = document.querySelector('div#eric video');
+var span1 = document.querySelector('div#eric > div :first-child');
+var span2 = document.querySelector('div#eric > div :last-of-type');
+
+if (!video.textTracks) return;
+
+var track = video.textTracks[0];
+track.mode = TextTrack.HIDDEN;
+
+var idx = 0;
+
+track.oncuechange = function(e) {
+
+  var cue = this.activeCues[0];
+  if (cue) {
+    if (idx == 0) {
+      span2.className = '';
+      span1.classList.remove('on');
+      span1.innerHTML = '';
+      span1.appendChild(cue.getCueAsHTML());
+      span1.classList.add('on');
+    } else {
+      span1.className = '';
+      span2.classList.remove('on');
+      span2.innerHTML = '';
+      span2.appendChild(cue.getCueAsHTML());
+      span2.classList.add('on');
+    }
+
+    idx = ++idx % 2;
+  }
+
+};
+
+})();
+</script>
+
+<p>This example uses the <code>getCueAsHTML()</code> method, which returns an HTML version of each cue, converting from WebVTT format to an HTML <code>DocumentFragment</code> using the WebVTT cue text <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT cue text parsing rules documentation">parsing</a> and <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT cue text DOM construction rule documentation">DOM construction</a> rules. Use the <code>text</code> property of a cue if you just want to get the raw text value of the cue as it is in the <code>src</code> file.</p>
+
+<p>In this context, it can be useful to use the <code>getCueAsHTML()</code> method, which returns an HTML version of each cue, converting from WebVTT format to an HTML <code>DocumentFragment</code> using the WebVTT cue text <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT cue text parsing rules documentation">parsing</a> and <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT cue text DOM construction rule documentation">DOM construction</a> rules. Use the <code>text</code> property of a cue if you just want to get the raw text value of the cue as it is in the <code>src</code> file.</p>
+
+<h2 id="toc-markup">More on markup</h2>
+
+<p>Markup can be added to the timestamp line of a cue to specify text direction, alignment and position. Cue text can be marked up to specify voice (for example, to give the name of speakers) and to add formatting. Subtitles and captions can be manipulated with CSS, like this:</p>
+
+<pre class="prettyprint">
+::cue {
+  color: #444;
+  font: 1em sans-serif;
+}
+::cue .warning {
+  color: red;
+  font: bold;
+}
+</pre>
+
+<p>Silvia Pfeiffer's <a href="http://html5videoguide.net/presentations/WebVTT/#title-slide" title="HTML5 Video Accessibility slides">HTML5 Video Accessibility</a> slides give more examples of working with markup&ndash;as well as showing how to build chapter tracks for navigation and description tracks for screen readers.</p>
+
+<h2 id="toc-finally">And finally...</h2>
+
+<p>Storing cue data in text files, rather than encoding them in-band in audio or video files, makes subtitling and captioning straightforward&ndash;and can improve accessibility, searchability and data portability.</p>
+
+<p>The track element also enables the use of timed metadata and dynamic content linked to media playback, which in turn adds value to the audio and video elements.</p>
+
+<p>Given its power, flexibility and simplicity, the track element is a big step towards making media on the Web more open and more dynamic.</p>
+
+<h2 id="toc-more">Learn more</h2>
+
+<ul>
+  <li>WHATWG HTML Living Standard: <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element">http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element</a></li>
+  <li>W3C HTML5 Working Draft: <a href="http://dev.w3.org/html5/spec/Overview.html#the-track-element" title="W3C Working Draft track element documentation">http://dev.w3.org/html5/spec/Overview.html#the-track-element</a></li>
+  <li>W3C WebVTT standard: <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-timings" title="WebVTT standard">http://dev.w3.org/html5/webvtt/#webvtt-cue-timings</a></li>
+  <li>Timed track formats: <a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a></li>
+  <li>Timed track use cases: <a href="http://wiki.whatwg.org/wiki/Timed_tracks">http://wiki.whatwg.org/wiki/Timed_tracks</a></li>
+  <li><a href="http://www.bbc.co.uk/blogs/researchanddevelopment/2012/01/implementing-startoffsettime-f.shtml" title="BBC Research and Development blog post">Out-of-band timed metadata for live streaming</a>: BBC Research and Development blog post by Sean O'Halpin.</li>
+</ul>
+
+<script>
+$(document).ready(function() {
+  if (!isCompatible()) {
+    var els = document.querySelectorAll('.trackNotSupported');
+    for (var i = 0, el; el = els[i]; ++i) {
+      el.classList.add('show');
+    }
+  }
+});
+</script>
+{% endblock %}

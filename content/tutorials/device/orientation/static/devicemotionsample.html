@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"> 
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	
+	<style type="text/css">
+		body {
+			font-family: sans-serif;
+		}
+	
+	    .main {
+			border: 1px solid black;
+			box-shadow: 10px 10px 5px #888;
+			border-radius: 12px;
+			padding: 20px;
+			background-color: #ddd;
+			margin: 25px;
+			width: 450px;
+			margin-left:auto;
+			margin-right:auto;	
+		}
+		
+		.logo {
+			width:275px;
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+			padding: 15px;
+		}
+		
+		.container {
+			-webkit-perspective: 300; 
+			perspective: 300;
+		}
+	</style>
+
+</head>
+<body>
+	<div class="main">
+		<h2>Device Motion</h2>
+		<table>
+			<tr>
+	    		<td>Event Supported</td><td id="dmEvent"></td>
+	    	</tr>
+			<tr>
+				<td>accelerationIncludingGravity</td><td id="moAccel"></td>
+			</tr>
+			<tr>
+				<td>Calculated Left-Right Tilt</td><td id="moCalcTiltLR"></td>
+			</tr>
+			<tr>
+				<td>Calculated Front-Back Tilt</td><td id="moCalcTiltFB"></td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="container" style="-webkit-perspective: 300; perspective: 300;">
+		<img src="html5_logo.png" id="imgLogo" class="logo">
+	</div>
+	
+	<script type="text/javascript">
+	
+		init2();
+		
+		function init() {
+			if (window.DeviceMotionEvent) {
+				console.log("DeviceMotionEvent supported");
+			} else if ('listenForDeviceMovement' in window) {
+				console.log("DeviceMotionEvent supported [listenForDeviceMovement]");
+			}
+		}
+		
+		function init2() {
+			if ((window.DeviceMotionEvent) || ('listenForDeviceMovement' in window)) {
+				window.addEventListener('devicemotion', deviceMotionHandler3, false);
+			} else {
+				document.getElementById("dmEvent").innerHTML = "Not supported on your device or browser.  Sorry."
+			}
+		}
+		
+		function deviceMotionHandler3(eventData) {
+			// Grab the acceleration including gravity from the results
+			var acceleration = eventData.accelerationIncludingGravity;
+			
+			// Display the raw acceleration data
+			var rawAcceleration = "[" + Math.round(acceleration.x) + ", " + Math.round(acceleration.y) + ", " + Math.round(acceleration.z) + "]";
+			
+			
+			// Z is the acceleration in the Z axis, and tells us if the device is facing up, or down
+			var facingUp = -1;
+			if (acceleration.z > 0) {
+				facingUp = +1;
+			}
+
+			// Convert the value from acceleration to degress
+			//   acceleration.x|y is the acceleration according to gravity, we'll assume we're on Earth and divide 
+			//   by 9.81 (earth gravity) to get a percentage value, and then multiply that by 90 to convert to degrees.				
+			var tiltLR = Math.round(((acceleration.x) / 9.81) * -90);
+			var tiltFB = Math.round(((acceleration.y + 9.81) / 9.81) * 90 * facingUp);
+			
+			// Display the acceleration and calculated values
+			document.getElementById("moAccel").innerHTML = rawAcceleration;
+			document.getElementById("moCalcTiltLR").innerHTML = tiltLR;
+			document.getElementById("moCalcTiltFB").innerHTML = tiltFB;
+			
+			// Apply the 2D rotation and 3D rotation to the image
+			var rotation = "rotate("+ tiltLR +"deg) rotate3d(1,0,0, "+ (tiltFB)+"deg)";
+			document.getElementById("imgLogo").style.webkitTransform = rotation
+			
+		}
+
+	</script>
+	
+</body>
+</html>

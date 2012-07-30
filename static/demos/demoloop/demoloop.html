@@ -1,0 +1,169 @@
+<!doctype HTML>
+<html>
+
+  <head>
+    <title>Chrome Experiments</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="style.css"></link>
+    <script type="text/javascript" src="magi.js"></script>
+    <script type="text/javascript" src="sweepGeo.js"></script>
+    <script type="text/javascript" src="demoloop.js"></script>
+    <script>
+      onresize = function(ev) {
+        var nw = window.innerWidth;
+        var nh = window.innerHeight;
+        var c = byId('container');
+        var f = Math.min(nw/1920, nh/1080);
+        c.style.left = Math.floor((nw - 1920*f)/2)+'px';
+        c.style.top = Math.floor((nh - 1080*f)/2)+'px';
+        var w = Math.floor(1920*f);
+        var h = Math.floor(1080*f);
+        c.style.width = w + 'px';
+        c.style.height = h + 'px';
+        Demos.resize(w,h);
+      };
+      window.addEventListener('resize', onresize, true);
+      var demoMenu = [
+        { name: "Google I/O Countdown",
+          url: "http://www.weareinstrument.com/countdown/",
+          image: "thumbs/countdown_feature.png",
+          author: "Instrument",
+          info: "Canvas 2D" },
+        { name: "Fractal Lab",
+          url: "http://fractal.io",
+          image: "thumbs/FractalLab.png",
+          info: "Fractals with WebGL shaders", 
+          author: "subblue.com" },
+        { name: "Google Body",
+          url: "http://bodybrowser.googlelabs.com",
+          image: "thumbs/Body.png",
+          info: "WebGL",
+          author: "Google" },
+        { name: "The WebGL Globe",
+          url: "http://data-arts.appspot.com/globe",
+          image: "thumbs/Globe.jpg",
+          info: "WebGL",
+          author: "Google Data Arts Team" },
+        { name: "Canopy",
+          url: "http://onecm.com/projects/canopy/",
+          image: "thumbs/Canopy.png",
+          info: "Canvas 2D",
+          author: "Ryan Alexander" },
+        { name: "Canvas Cycle",
+          author: "Joseph Huckaby",
+          url: "http://www.effectgames.com/demos/canvascycle/",
+          info: "Canvas 2D",
+          image: "thumbs/CanvasCycle.png" },
+        { name: "Ball Pool",
+          author: "Mr. doob",
+          url: "http://mrdoob.com/projects/chromeexperiments/ball_pool/",
+          info: "Canvas 2D and CSS transforms",
+          image: "thumbs/BallPool.png" },
+        { name: "Wall of Photos",
+          author: "Cooliris",
+          url: "http://cooliris-wall.appspot.com/",
+          info: "WebGL",
+          image: "thumbs/WallPhotos.png" },
+        { name: "Sketch",
+          author: "Hakim El Hattab",
+          image: "thumbs/Sketch.png",
+          info: "Canvas 2D",
+          url: "http://hakim.se/experiments/html5/sketch/#786af119" },
+        { name: "Typographic Effects",
+          url: "http://www.html5rocks.com/tutorials/canvas/texteffects/Text-Effects.html#spaceage",
+          image: "thumbs/TextEffects.png",
+          info: "Canvas 2D",
+          author: "Michael Deal" },
+        { name: "Z-Type", url: "http://www.phoboslab.org/ztype/", author: "Dominic Szablewski", 
+          info: "Canvas 2D",
+          image: "thumbs/ZType.png" 
+        },
+        { name: "Harmony",
+          url: "http://mrdoob.com/lab/javascript/harmony/",
+          image: "thumbs/Harmony.png",
+          info: "Canvas 2D",
+          author: "Mr.doob" },
+        { name: "Tunnelers",
+          url: "http://ghost-hack.com/post/jsexperiments/tunneler/tunneler.html",
+          image: "thumbs/Tunnelers.png",
+          info: "Canvas 2D",
+          author: "Flux" },
+        { name: "Visualization of Afghan Civilian Casualties",
+          url: "http://plumegraph.org/",
+          image: "thumbs/CCVA.png",
+          info: "WebGL",
+          author: "George Michael Brower" },
+        { name: "HTML5 Logo",
+          author: "Kevin Roast",
+          image: "thumbs/HTML5Logo.png",
+          info: "Canvas 2D",
+          url: 'HTML5Logo/index.html',
+        },
+        { name: "Chrysaora",
+          author: "Aleksandar Rodic",
+          image: 'thumbs/Chrysaora.png',
+          info: "WebGL",
+          url: 'Chrysaora/index.html',
+        },
+        { name: "Clouds",
+          author: "Mr.doob",
+          image: 'thumbs/Clouds.png',
+          info: "WebGL",
+          url: 'Clouds/Clouds.html',
+        },
+        { name: "Aquarium",
+          author: "Human Engines and Gregg Tavares",
+          image: 'aquarium.png',
+          info: "WebGL",
+          url: 'webglsamples/aquarium/aquarium.html',
+        }
+      ];
+      var demos = [
+        { name: "HTML5 Logo",
+          author: "Kevin Roast",
+          image: "HTML5Logo/author.jpg",
+          url: 'HTML5Logo/index.html',
+          info:  "Canvas 2D using the K3D library",
+          duration: 15 },
+        { name: "Chrysaora",
+          author: "Aleksandar Rodic",
+          image: 'Chrysaora/author2.jpg',
+          url: 'Chrysaora/index.html',
+          info: "WebGL using the Three.js library",
+          duration: 30 },
+        { name: "Clouds",
+          author: "Mr.doob",
+          image: 'Clouds/author.png',
+          url: 'Clouds/Clouds.html',
+          info: "WebGL using the Three.js library",
+          duration: 30 },
+        { name: "Aquarium",
+          author: "Human Engines and Gregg Tavares",
+          image: 'aquarium.png',
+          url: 'webglsamples/aquarium/aquarium.html',
+          info: "WebGL using the TDL.js library",
+          duration: 30 }
+      ];
+
+      window.addEventListener('load', function(ev){
+        setTimeout(function(){
+          var cont = document.getElementById('container');
+          Demos = new DemoLoop(demos, cont);
+          onresize();
+          Demos.demoInfoElement = document.getElementById('demoInfo');
+          Demos.startDemoLoop();
+          Demos.setInteractiveDemos(demoMenu);
+        }, 0);
+      }, false);
+    </script>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="demoInfo">
+      </div>
+    </div>
+  </body>
+
+</html>
+

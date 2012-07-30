@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block headtitle %}New Tutorial{% endblock %}
+
+{% block head %}
+<style>
+.page.current {
+  margin: 2em auto;
+}
+th {
+  text-align: right;
+}
+td, th {
+  padding: 3px 5px;
+}
+input[type="text"], textarea {
+  width: 100%;
+}
+form {
+  margin: 1em 0;
+}
+input[required]:not(:invalid) {
+  border: 1px solid green;
+  -webkit-box-shadow: 0 0 3px green;
+  -moz-box-shadow: 0 0 3px green;
+  -o-box-shadow: 0 0 3px green;
+  box-shadow: 0 0 3px green;
+}
+input:invalid {
+  border: 1px solid #e88;
+  -webkit-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  -moz-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  -o-box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+  box-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+}
+ul {
+  padding-left: 0;
+  margin: 0 !important;
+}
+form li {
+  list-style: none;
+  display: inline-block;
+  margin-bottom: 0 !important;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<section>
+  <h2>Add a new resource:</h2>
+  <form name="tutorial_form" method="POST" action="/database/resource">
+    <table>
+      {{ tutorial_form }}
+      <tr><td colspan="2" style="text-align: right;"><input type="hidden" value="{{post_id}}" name="post_id" id="post_id" readonly></td></tr>
+      <tr><td colspan="2" style="text-align: right;"><input type="submit" /></td></tr>
+    </table>
+  </form>
+</section>
+<section>
+  <p>Current resources:</p>
+  <ol>
+  {% for r in resources %}
+  <li><a href="/database/resource/{{r.key.id}}">[Edit]</a> &nbsp; <a href="{{r.url}}" target="_blank">{{r.title}}</a> - {% for tag in r.tags %}{{tag}}{% if not forloop.last %}, {% endif %}{% endfor %} {% if r.draft %}&nbsp; <b>draft</b>{% endif %}</li>
+  {% endfor %}
+  </ol>
+</section>
+{% endblock %}

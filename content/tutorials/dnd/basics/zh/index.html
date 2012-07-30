@@ -1,0 +1,768 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<style>
+figure img { border: 1px solid #ccc; }
+h1,h2,h3,h4 { clear: both; }
+/* Prevent the contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+dd {
+  padding: 5px 0;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -moz-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  -o-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+  margin-bottom: 30px;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -o-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  -o-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  -ms-border-radius-topright: 10px;
+  -o-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+#columns-full .column {
+  -webkit-transition: -webkit-transform 0.2s ease-out;
+  -moz-transition: -moz-transform 0.2s ease-out;
+  -o-transition: -o-transform 0.2s ease-out;
+  -ms-transition: -ms-transform 0.2s ease-out;
+}
+#columns-full .column.over,
+#columns-dragOver .column.over,
+#columns-dragEnd .column.over,
+#columns-almostFinal .column.over {
+  border: 2px dashed #000;
+}
+#columns-full .column.moving {
+  opacity: 0.25;
+  -webkit-transform: scale(0.8);
+  -moz-transform: scale(0.8);
+  -ms-transform: scale(0.8);
+  -o-transform: scale(0.8);
+}
+#columns-full .column .count {
+  padding-top: 15px;
+  font-weight: bold;
+  text-shadow: #fff 0 1px;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.draganddrop;
+{% endblock %}
+
+{% block content %}
+
+  <h2 id="toc-introduction">简介</h2>
+
+  <p>多年来，我们一直使用 JQuery 和 Dojo 等库，以简化动画、圆角和拖放等复杂的用户界面元素。毫无疑问，美观养眼的外观对于创造丰富逼真的网络体验而言非常重要。不过，为什么所有开发人员都执行的常规任务需要使用库？</p>
+
+  <p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">拖放</a> (DnD) 是 HTML5 中的头等公民！该规范定义了基于事件的机制 (JavaScript API) 和附加标记，以标记网页上几乎所有 <code>draggable</code> 的元素类型。我想，应该没人会反对本机浏览器对特定功能的支持。本机浏览器 DnD 意味着更快、更灵活的网络应用。</p>
+
+  <h3 id="toc-feature-detection">功能检测</h3>
+
+  <p>许多使用 DnD 的应用在不使用该功能的情况下表现会很糟糕。例如，您可以想象一下无法移动象棋棋子的情况。太糟糕了！尽管浏览器支持相当完备，但确定浏览器是否实施 DnD（或任何相关的 HTML5 功能）对于提供妥善降级的解决方案而言仍然非常重要。如果 DnD 不可用，可启动后备库维持应用运行。</p>
+
+  <p>如果您需要借助 API，请始终使用功能检测，而非嗅探浏览器的用户代理。<a href="http://www.modernizr.com/">Modernizr</a> 是可用于功能检测的其中一个更出色的库。Modernizr 为其测试的每个功能都设置了布尔值属性。因此只需一行程序即可检测 DnD：</p>
+  <pre class="prettyprint">
+if (Modernizr.draganddrop) {
+  // Browser supports HTML5 DnD.
+} else {
+  // Fallback to a library solution.
+}
+</pre>
+
+  <h2 id="toc-creating-dnd-content">创建可拖动内容</h2>
+
+  <p>制作可拖动对象非常简单。在要设为可移动的元素上设置 <code>draggable=true</code> 属性。可以是任何能启用拖动功能的内容，包括图片、链接、文件或其他 DOM 节点。</p>
+
+  <p>我们可以开始创建可重新排序的列进行举例说明。基本标记格式如下：</p>
+
+  <pre class="prettyprint">
+&lt;div id="columns"&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;A&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;B&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;C&lt;/header&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+  <p>值得注意的是，默认情况下，大部分带有 <code>href</code> 属性的浏览器、文本选择内容、图片元素和定位元素都是可拖动的。例如，拖动 google.com 上的徽标会产生重像：</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/dnd/img_drag.png" width="500" height="269" title="拖动浏览器中的图片" alt="拖动浏览器中的图片"  />
+    <figcaption>默认情况下，大部分浏览器均支持图片拖动。</figcaption>
+  </figure>
+
+  <p>该重像可拖放到地址栏、<code>&lt;input type="file" /&gt;</code> 元素甚至桌面。要将其他类型的内容设为可拖动，您需要使用各种 HTML5 DnD API。</p>
+
+  <p>只需稍微使用下神奇的 CSS3，我们就可以将标记整理成列的样子。添加 <code>cursor: move</code> 可让用户清楚地了解该内容可以移动：</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -ms-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+&lt;/style&gt;
+</pre>
+
+  <p>结果（可拖动，但不会有任何改变）：</p>
+  <div id="columns">
+    <div class="column" draggable="true"><header>A</header></div>
+    <div class="column" draggable="true"><header>B</header></div>
+    <div class="column" draggable="true"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">在以上示例中，大部分浏览器会创建被拖动内容的重像。其他浏览器（尤其是 FF）需要在拖动操作中<a href="#toc-dataTransfer">发送数据</a>。在下一部分中，我们会添加监听器以处理拖/放事件模型，从而使我们的列示例更加有趣。</p>
+
+  <h2 id="toc-dragging-events">监听拖动事件</h2>
+
+  <p>可附加大量不同事件以监听整个拖放过程：</p>
+  <ul>
+    <li><code>dragstart</code></li>
+    <li><code>drag</code></li>
+    <li><code>dragenter</code></li>
+    <li><code>dragleave</code></li>
+    <li><code>dragover</code> </li>
+    <li><code>drop</code></li>
+    <li><code>dragend</code></li>
+  </ul>
+
+  <p>要处理 DnD 流程，我们需要以下概念：源元素（拖动的起源点）、数据有效负载（我们尝试拖放的内容）和目标（接纳拖放内容的区域）。源元素可以是图片、列表、链接、文件对象、HTML 内容等。目标是接纳用户尝试放置的数据的放置区（或放置区组）。请注意，并非所有元素都可以作为目标（例如图片）。</p>
+
+  <h3 id="toc-dragstart">1. 开始拖动</h3>
+
+  <p>在您的内容上定义 <code>draggable="true"</code> 属性后，附加 <code>dragstart</code> 事件处理程序以展开每一列的 DnD 序列。</p>
+
+  <p>该代码会在用户开始拖动时将列的不透明度设为 40%：</p>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+});
+</pre>
+
+  <p>结果：</p>
+  <div id="columns-dragStart">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="clear:both">由于 <code>dragstart</code> 事件的目标是源元素，将 <code>this.style.opacity</code> 设置为 40% 可让用户直观地了解到该元素为当前选择拖动的元素。完成拖动后，我们还需要将列的不透明度恢复到 100%。处理该项操作的一个很明显的位置是 <code>dragend</code> 事件。稍后会有更详细的介绍。</p>
+
+  <h3 id="toc-dragover-dragleave">2. dragenter、dragover 和 dragleave</h3>
+
+  <p><code>dragenter</code>、<code>dragover</code> 和 <code>dragleave</code> 事件处理程序可用于在拖动过程中提供额外的可视化提示。例如，在拖动期间将鼠标悬停在某一列上方时，其边框可能会变成虚线。这样，用户就能知道这些列也是放置的目标区域。</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+.column.over {
+  border: 2px dashed #000;
+}
+&lt;/style&gt;
+</pre>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+<span class="new">function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnter(e) {
+  // this / e.target is the current hover target.
+  this.classList.add('over');
+}</span>
+
+<span class="new">function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  <span class="new">col.addEventListener('dragenter', handleDragEnter, false);
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);</span>
+});
+</pre>
+
+  <p>该代码中有以下几点值得讨论：</p>
+
+  <ul>
+    <li>每种事件类型的 <code>this</code>/<code>e.target</code> 各不相同，具体取决于我们在 DnD 事件模型中所处的位置。</li>
+    <li>如果要拖动链接之类的内容，我们需要阻止浏览器的默认行为，不让其导航至该链接。为实现这一目标，可调用 <code>dragover</code> 事件中的 <code>e.preventDefault()</code>。在同一处理程序中调用 <code>return false</code> 也是个不错的做法。浏览器与这些所需操作会有点不协调，但并不会有所损害。</li>
+    <li>我们使用 <code>dragenter</code> 触发“over”类，而不是使用 <code>dragover</code>。如果我们使用 <code>dragover</code>，系统将反复触发 CSS 类，因为 <code>dragover</code> 事件会在鼠标悬停在列上方时不断启动。这将最终导致浏览器的渲染器进行大量不必要的工作。将重复工作降至最低始终是很好的理念。</li>
+  </ul>
+
+  <h3 id="toc-dragend">3. 完成拖动</h3>
+
+  <p>要处理实际拖动，可为 <code>drop</code> 和 <code>dragend</code> 事件添加事件监听器。在使用该处理程序时，您需要阻止浏览器的默认行为（通常是某种令人困扰的重定向）以便进行拖放。您可以调用 <code>e.stopPropagation()</code>，阻止该事件触发 DOM。</p>
+
+  <p style="padding-top:10px;clear:both">如果没有 <code>drop</code> 事件，我们的列示例不会采取过多操作，不过除了添加该事件外，使用 <code>dragend</code> 从每一列中删除“over”类也可以迅速作出改善：</p>
+
+<pre class="prettyprint">
+...
+
+<span class="new">function handleDrop(e) {
+  // this / e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // stops the browser from redirecting.
+  }
+
+  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnd(e) {
+  // this/e.target is the source node.
+
+  [].forEach.call(cols, function (col) {
+    col.classList.remove('over');
+  });
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  col.addEventListener('dragenter', handleDragEnter, false)
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);
+  <span class="new">col.addEventListener('drop', handleDrop, false);
+  col.addEventListener('dragend', handleDragEnd, false);</span>
+});
+</pre>
+
+  <p>结果：</p>
+  <div id="columns-dragEnd">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">如果到目前为止您一直在密切关注，那么您可能会发现，我们的示例仍然没有如预期般放下该列。输入 <code>DataTransfer</code> 对象。</p>
+
+  <h2 id="toc-dataTransfer">DataTransfer 对象</h2>
+
+  <p><code>dataTransfer</code> 属性正是这一神奇 DnD 功能的动力来源，控制着拖动操作中发送的数据。<code>dataTransfer</code> 可在 <code>dragstart</code> 事件中进行设置，并在 <code>drop</code> 事件中读取/处理。调用 <code>e.dataTransfer.setData(format, data)</code> 会将对象内容设置成 MIME 类型，并将数据有效负载作为参数传递。</p>
+
+  <p>在我们的示例中，数据有效负载被设为源列的实际 HTML：</p>
+
+<pre class="prettyprint">
+var dragSrcEl = null;
+
+function handleDragStart(e) {
+  // Target (this) element is the source node.
+  this.style.opacity = '0.4';
+
+  dragSrcEl = this;
+
+  <span class="new">e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);</span>
+}
+</pre>
+
+  <p><code>dataTransfer</code> 还有用于以 MIME 类型获取拖动数据的 <code>getData(format)</code>，非常方便。以下是用于放下列的修改代码：</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  // this/e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // Stops some browsers from redirecting.
+  }
+
+  <span class="new">// Don't do anything if dropping the same column we're dragging.
+  if (dragSrcEl != this) {
+    // Set the source column's HTML to the HTML of the columnwe dropped on.
+    dragSrcEl.innerHTML = this.innerHTML;
+    this.innerHTML = e.dataTransfer.getData('text/html');
+  }</span>
+
+  return false;
+}
+</pre>
+
+  <p>我添加了名为 <code>dragSrcEl</code> 的全局变量，为促进列的交换提供便利。在 <code>handleDragStart()</code> 中，源列的 <code>innerHTML</code> 存储在该变量中，然后在 <code>handleDrop()</code> 中读取以交换源列和目标列的 HTML。</p>
+
+  <p>结果：</p>
+  <div id="columns-almostFinal">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <h3 id="toc-drag-properties">拖动属性</h3>
+
+  <p><code>dataTransfer</code> 使用的属性在拖动过程中为用户提供了可视化反馈。这些属性还可用于控制每个放置目标响应特定数据类型的方式。</p>
+  
+  <dl>
+    <dt><code>dataTransfer.effectAllowed</code></dt>
+    <dd>限制用户可在元素上执行的“拖动类型”。在拖放处理模型中用于初始化 <code>dragenter</code> 和 <code>dragover</code> 事件中的 <code>dropEffect</code>。该属性可设置为以下值：<code>none</code>、<code>copy</code>、<code>copyLink</code>、<code>copyMove</code>、<code>link</code>、<code>linkMove</code>、<code>move</code>、<code>all</code> 和 <code>uninitialized</code>。
+    </dd>
+    <dt><code>dataTransfer.dropEffect</code></dt>
+    <dd>控制用户在 <code>dragenter</code> 和 <code>dragover</code> 事件期间收到的反馈。当用户将鼠标悬停在目标元素上方时，浏览器的光标会显示即将采取的操作类型（例如复制、移动等）。结果可能呈现为以下某个值：<code>none</code>、<code>copy</code>、<code>link</code>、<code>move</code>。
+    </dd>
+    <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
+    <dd>除了使用浏览器默认的“重像”反馈外，您也可以选择设置拖动图标 
+<pre class="prettyprint">
+var dragIcon = document.createElement('img');
+dragIcon.src = 'logo.png';
+dragIcon.width = 100;
+e.dataTransfer.setDragImage(dragIcon, -10, -10);</pre>
+    <p>结果（您在拖动这些列时看到的应该是 Google 徽标）：</p>
+    <div id="columns-dragIcon">
+      <div class="column"><header>A</header></div>
+      <div class="column"><header>B</header></div>
+      <div class="column"><header>C</header></div>
+    </div>
+    </dd>
+  </dl>
+
+  <h2 id="toc-dnd-files">拖动文件</h2>
+
+  <p>使用各种 DnD API，您就可以将文件从桌面拖动到浏览器窗口中的网络应用。作为这一想法的延伸，Google Chrome 浏览器还支持将文件对象从浏览器拖出到桌面的功能。</p>
+
+  <h3 id="toc-desktop-dnd-into">拖入：从桌面拖动到浏览器</h3>
+
+  <p>将 DnD 事件作为其他内容类型使用即可从桌面拖动文件。主要差别在于您的 <code>drop</code> 处理程序。其数据会包含在 <code>dataTransfer.files</code> 属性中，而非使用 <code>dataTransfer.getData()</code>：</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  e.stopPropagation(); // Stops some browsers from redirecting.
+  e.preventDefault();
+
+  var files = e.dataTransfer.files;
+  for (var i = 0, f; f = files[i]; i++) {
+    // Read the File objects in this FileList.
+  }
+}
+</pre>
+
+  <p>有关将文件从桌面拖动到浏览器的完整指南，请参阅“<a href="/tutorials/file/dndfiles/">使用 JavaScript 读取本地文件</a>”中的<a href="/tutorials/file/dndfiles/#toc-selecting-files-dnd">使用拖放进行选择</a>。</p>
+
+  <h3 id="toc-desktop-dnd-out">拖出：从浏览器拖动到桌面</h3>
+
+  <p>有关将文件从浏览器拖出到桌面的完整指南，请参阅 CSS 帮助资料中的“<a href="http://www.thecssninja.com/javascript/gmail-dragout">拖出文件（如 Gmail）</a>”。</p>
+
+  <h2 id="toc-examples">示例</h2>
+
+  <p>以下为略加修改后的最终版本，且会对每次移动进行计数：</p>
+  <div id="columns-full">
+    <div class="column"><header>A</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>B</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>C</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>D</header><div class="count" data-col-moves="0"></div></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">在这个列示例中有一点很有意思：这些列既是拖动源，也是放置目标。更常见的情况是源元素和目标元素各不相同。访问 <a href="http://html5demos.com/drag">html5demos.com/drag</a> 查看演示。</p>
+
+<!--
+  other examples:
+  <li>Rearrange list</li> 
+  <li>Creating an image gallery</li> 
+  <li>Exporting a canvas image</li> 
+-->
+
+  <h2 id="toc-conclusion">总结</h2>
+
+  <p>毫无疑问，HTML5 的 DnD 模型比 JQuery UI 等其他解决方案更加简单。不过，如果您可以利用浏览器的本机 API，请善加利用！毕竟，这才是 HTML5 的要点，即为浏览器提供丰富的本机 API 集并进行标准化。但愿热门的执行 DnD 功能的库最后会默认添加本机 HTML5 支持，并根据需要添加自定义 JS 解决方案的后备内容。</p>
+
+  <h2 id="toc-references">参考</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">拖放</a>规范</li> 
+    <li>MDC <a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">拖动操作</a></li>
+    <li>html5doctor 上的“<a href="http://html5doctor.com/native-drag-and-drop/">本机拖放</a>”文章</li>
+    <li>CSS 帮助资料中的“<a href="http://www.thecssninja.com/javascript/gmail-dragout">拖出文件（如 Gmail）</a>”</li>
+  </ul>
+
+<script>
+// Using this polyfill for safety.
+Element.prototype.hasClassName = function(name) {
+  return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+};
+
+Element.prototype.addClassName = function(name) {
+  if (!this.hasClassName(name)) {
+    this.className = this.className ? [this.className, name].join(' ') : name;
+  }
+};
+
+Element.prototype.removeClassName = function(name) {
+  if (this.hasClassName(name)) {
+    var c = this.className;
+    this.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+  }
+};
+
+
+var samples = samples || {};
+
+// dragStart
+(function() {
+  var id_ = 'columns-dragStart';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', 'blah'); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+  });
+
+})();
+
+// dragEnd
+(function() {
+  var id_ = 'columns-dragEnd';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+
+    // target element (this) is the source node.
+    this.style.opacity = '1';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+
+})();
+
+// dragIcon
+(function() {
+  var id_ = 'columns-dragIcon';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    var dragIcon = document.createElement('img');
+    dragIcon.src = '/static/images/google_logo_small.png';
+    e.dataTransfer.setDragImage(dragIcon, -10, -10);
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+  });
+
+})();
+
+// Almost final example
+(function() {
+  var id_ = 'columns-almostFinal';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    this.style.opacity = '0.4';
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+    
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+
+// Full example
+(function() {
+  var id_ = 'columns-full';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+
+      // Set number of times the column has been moved.
+      var count = this.querySelector('.count');
+      var newCount = parseInt(count.getAttribute('data-col-moves')) + 1;
+      count.setAttribute('data-col-moves', newCount);
+      count.textContent = 'moves: ' + newCount;
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+</script>
+
+{% endblock %}

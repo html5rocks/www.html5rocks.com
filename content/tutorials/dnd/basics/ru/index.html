@@ -1,0 +1,768 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<style>
+figure img { border: 1px solid #ccc; }
+h1,h2,h3,h4 { clear: both; }
+/* Prevent the contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+dd {
+  padding: 5px 0;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -moz-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  -o-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+  margin-bottom: 30px;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -o-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  -o-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  -ms-border-radius-topright: 10px;
+  -o-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+#columns-full .column {
+  -webkit-transition: -webkit-transform 0.2s ease-out;
+  -moz-transition: -moz-transform 0.2s ease-out;
+  -o-transition: -o-transform 0.2s ease-out;
+  -ms-transition: -ms-transform 0.2s ease-out;
+}
+#columns-full .column.over,
+#columns-dragOver .column.over,
+#columns-dragEnd .column.over,
+#columns-almostFinal .column.over {
+  border: 2px dashed #000;
+}
+#columns-full .column.moving {
+  opacity: 0.25;
+  -webkit-transform: scale(0.8);
+  -moz-transform: scale(0.8);
+  -ms-transform: scale(0.8);
+  -o-transform: scale(0.8);
+}
+#columns-full .column .count {
+  padding-top: 15px;
+  font-weight: bold;
+  text-shadow: #fff 0 1px;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.draganddrop;
+{% endblock %}
+
+{% block content %}
+
+  <h2 id="toc-introduction">Введение</h2>
+
+  <p>Уже много лет мы используем для упрощения сложных элементов интерфейса, таких как анимации, скругленные углы и перетаскивание, библиотеки JQuery и Dojo. Несомненно, внешняя привлекательность важна для создания качественных веб-сайтов, но зачем нужна библиотека для общих задач, которые используют все разработчики?</p>
+
+  <p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Перетаскивание</a> (drag and drop, DnD) – одна из важнейших функций в HTML5. Эта спецификация определяет событийный механизм, API JavaScript и дополнительную метку, показывающую, что все элементы на странице <code>могут перетаскиваться</code>. Вряд ли кто-то будет возражать против встраивания в браузер дополнительных функций. Реализованная в браузере функция перетаскивания означает более быстрые и управляемые веб-приложения.</p>
+
+  <h3 id="toc-feature-detection">Обнаружение функций</h3>
+
+  <p>Многие приложения, в которых используется перетаскивание, не могут без него обходиться. Представьте себе, что вам пришлось бы продумывать шахматную партию, не имея возможности перемещать фигуры. Несмотря на полную поддержку браузера, определять, реализовано ли в нем перетаскивание (или иная функция HTML5, выполняющая те же задачи), нужно для того, чтобы обеспечить решение, способное качественно уменьшать мощность. Если функция перетаскивания недоступна, работу приложения можно реализовать, подключив библиотеку.</p>
+
+  <p>Если вам необходимы возможности API, вместо определения параметра User-Agent браузера используйте обнаружение функций. Одна из лучших библиотек для обнаружения функций называется <a href="http://www.modernizr.com/">Modernizr</a>. Для каждой проверяемой функции Modernizr задает логическое значение. В результате получается очень короткий код проверки на наличие функции перетаскивания:</p>
+  <pre class="prettyprint">
+if (Modernizr.draganddrop) {
+  // Browser supports HTML5 DnD.
+} else {
+  // Fallback to a library solution.
+}
+</pre>
+
+  <h2 id="toc-creating-dnd-content">Создание перетаскиваемого содержания</h2>
+
+  <p>Сделать объект перетаскиваемым очень легко: для этого используется атрибут <code>draggable=true</code>. Перетаскивание можно включать практически для любых элементов, в т. ч. изображений, ссылок, файлов и даже узлов DOM.</p>
+
+  <p>В качестве примера начнем с создания перегруппируемых столбцов. Базовая метка может выглядеть примерно так:</p>
+
+  <pre class="prettyprint">
+&lt;div id="columns"&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;A&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;B&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;C&lt;/header&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+  <p>Следует отметить, что в большинстве браузеров перетаскивание выделенных фрагментов текста, изображений и элементов привязок с атрибутом <code>href</code> поддерживается по умолчанию. Например, при перетаскивании логотипа на веб-сайте google.com возникает фантомное изображение:</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/dnd/img_drag.png" width="500" height="269" title="Перетаскивание изображения в браузере" alt="Перетаскивание изображения в браузере"  />
+    <figcaption>Большинство браузеров поддерживают перетаскивание изображений по умолчанию.</figcaption>
+  </figure>
+
+  <p>Его можно перенести в адресную строку, элемент <code>&lt;input type="file" /&gt;</code> и даже на рабочий стол. Чтобы сделать перетаскиваемыми другие типы содержания, необходимо использовать API перетаскивания HTML5.</p>
+
+  <p>С помощью CSS3 можно представить разметку в виде столбцов. С добавлением атрибута <code>cursor: move</code> пользователи получают визуальный индикатор подвижности элемента:</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -ms-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+&lt;/style&gt;
+</pre>
+
+  <p>Результат (элементы могут перетаскиваться, но ничего не делают):</p>
+  <div id="columns">
+    <div class="column" draggable="true"><header>А</header></div>
+    <div class="column" draggable="true"><header>Б</header></div>
+    <div class="column" draggable="true"><header>В</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">В приведенном выше примере большинство браузеров создают фантомное изображение перетаскиваемого содержания. Другие (в частности FF) в ходе операции перетаскивания требуют <a href="#toc-dataTransfer">отправки данных</a>. В следующем разделе мы сделаем пример со столбцами более интересным, добавив прослушиватели для обработки модели событий перетаскивания.</p>
+
+  <h2 id="toc-dragging-events">Прослушивание событий перетаскивания</h2>
+
+  <p>Для контроля над процессом перетаскивания можно использовать целый ряд событий:</p>
+  <ul>
+    <li><code>dragstart</code></li>
+    <li><code>drag</code></li>
+    <li><code>dragenter</code></li>
+    <li><code>dragleave</code></li>
+    <li><code>dragover</code> </li>
+    <li><code>drop</code></li>
+    <li><code>dragend</code></li>
+  </ul>
+
+  <p>Для обработки алгоритма перетаскивания необходимо понимать, где находятся исходный элемент (откуда начинается перетаскивание), полезные данные (что мы пытаемся перетащить) и цель (область, в которой должен оказаться объект). Исходным элементом может быть изображение, список, ссылка, файловый объект, блок HTML-кода, что угодно. Цель – это зона (или несколько зон) перетаскивания, принимающая данные, которые пользователь пытается перетащить. Помните о том, что не все элементы могут быть целью (например, изображения).</p>
+
+  <h3 id="toc-dragstart">1. Начало перетаскивания</h3>
+
+  <p>Определив в содержании атрибуты <code>draggable="true"</code>, добавьте обработчики событий <code>dragstart</code>, которые будут запускать последовательность перетаскивания для каждого столбца. </p>
+
+  <p>Как только пользователь начнет перетаскивать столбец, этот код уменьшит его непрозрачность до 40%:</p>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+});
+</pre>
+
+  <p>Результат:</p>
+  <div id="columns-dragStart">
+    <div class="column"><header>А</header></div>
+    <div class="column"><header>Б</header></div>
+    <div class="column"><header>В</header></div>
+  </div>
+
+  <p style="clear:both">Поскольку целью события <code>dragstart</code> является наш исходный элемент, установка для атрибута <code>this.style.opacity</code> значения 40% позволит пользователю видеть перемещение выбранного элемента. Нам осталось только вернуть 100-процентную непрозрачность столбцов после перетаскивания. Для решения этой задачи используется событие <code>dragend</code>. Подробнее мы рассмотрим его попозже.</p>
+
+  <h3 id="toc-dragover-dragleave">2. dragenter, dragover и dragleave</h3>
+
+  <p>Для создания дополнительных визуальных подсказок во время перетаскивания можно использовать обработчики событий <code>dragenter</code>, <code>dragover</code> и <code>dragleave</code>. Например, если перетаскиваемый объект оказывается над столбцом, граница последнего становится пунктирной. Это покажет пользователям, что столбцы тоже могут быть целью перетаскивания.</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+.column.over {
+  border: 2px dashed #000;
+}
+&lt;/style&gt;
+</pre>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+<span class="new">function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnter(e) {
+  // this / e.target is the current hover target.
+  this.classList.add('over');
+}</span>
+
+<span class="new">function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  <span class="new">col.addEventListener('dragenter', handleDragEnter, false);
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);</span>
+});
+</pre>
+
+  <p>В этом коде стоит отметить несколько моментов.</p>
+
+  <ul>
+    <li>Атрибут <code>this</code>/<code>e.target</code> отличается для каждого типа событий и зависит от места в модели событий перетаскивания.</li>
+    <li>При перетаскивании такого объекта, как ссылка, необходимо переопределить поведение браузера по умолчанию, т. е. переход по ней. Для этого нужно вызвать функцию <code>e.preventDefault()</code> в событии <code>dragover</code>. Другой вариант – использовать в том же обработчике <code>значение false</code>. Потребность в таких мерах зависит от конкретного браузера, но они определенно не помешают.</li>
+    <li>Для переключения класса over используется событие <code>dragenter</code>, а не <code>dragover</code> Если использовать <code>dragover</code>, наш класс CSS будет переключаться слишком часто, поскольку событие <code>dragover</code> срабатывает при каждом наведении на столбец. В результате обработчику браузера придется выполнять слишком много лишней работы. Чем меньше перерисовок, тем лучше.</li>
+  </ul>
+
+  <h3 id="toc-dragend">3. Завершение перетаскивания</h3>
+
+  <p>Для обработки самого перетаскивания добавьте прослушиватель для событий <code>drop</code> и <code>dragend</code>. В этом обработчике необходимо переопределить поведение браузера по умолчанию для переносов (обычно это что-то вроде переадресации). Запретить событию засорять модель DOM можно с помощью функции <code>e.stopPropagation()</code>. </p>
+
+  <p style="padding-top:10px;clear:both">Наш пример со столбцами не обойдется без события <code>drop</code>, но прежде необходимо кое-что доработать, удалив класс over из каждого столбца с помощью события <code>dragend</code>:</p>
+
+<pre class="prettyprint">
+...
+
+<span class="new">function handleDrop(e) {
+  // this / e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // stops the browser from redirecting.
+  }
+
+  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnd(e) {
+  // this/e.target is the source node.
+
+  [].forEach.call(cols, function (col) {
+    col.classList.remove('over');
+  });
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  col.addEventListener('dragenter', handleDragEnter, false)
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);
+  <span class="new">col.addEventListener('drop', handleDrop, false);
+  col.addEventListener('dragend', handleDragEnd, false);</span>
+});
+</pre>
+
+  <p>Результат:</p>
+  <div id="columns-dragEnd">
+    <div class="column"><header>А</header></div>
+    <div class="column"><header>Б</header></div>
+    <div class="column"><header>В</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">Если вы тщательно следили за происходящим, то заметили, что перетаскивание столбцов в нашем примере по-прежнему не работает так, как нужно. Введем объект <code>DataTransfer</code>.</p>
+
+  <h2 id="toc-dataTransfer">Объект DataTransfer</h2>
+
+  <p>Свойство <code>DataTransfer</code> – это то самое место, где реализуется перетаскивание. Оно содержит часть данных, отправляемых при выполнении этого действия. Объект <code>dataTransfer</code> устанавливается в событии <code>dragstart</code>, а считывается и обрабатывается в событии <code>drop</code>. При вызове функции <code>e.dataTransfer.setData(format, data)</code> содержанию объекта назначается MIME-тип, а полезные данные передаются в качестве аргументов.</p>
+
+  <p>В нашем примере в качестве полезных данных выступает фактический HTML-код исходного столбца:</p>
+
+<pre class="prettyprint">
+var dragSrcEl = null;
+
+function handleDragStart(e) {
+  // Target (this) element is the source node.
+  this.style.opacity = '0.4';
+
+  dragSrcEl = this;
+
+  <span class="new">e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);</span>
+}
+</pre>
+
+  <p>Удобно, что у объекта <code>dataTransfer</code> есть также функция <code>getData(format)</code>, позволяющая доставлять перетаскиваемые данные по MIME-типу. Вот как выглядит измененный процесс перетаскивания столбца:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  // this/e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // Stops some browsers from redirecting.
+  }
+
+  <span class="new">// Don't do anything if dropping the same column we're dragging.
+  if (dragSrcEl != this) {
+    // Set the source column's HTML to the HTML of the columnwe dropped on.
+    dragSrcEl.innerHTML = this.innerHTML;
+    this.innerHTML = e.dataTransfer.getData('text/html');
+  }</span>
+
+  return false;
+}
+</pre>
+
+  <p>Для удобства при перемещении столбцов я добавил глобальную переменную <code>dragSrcEl</code>. В функции <code>handleDragStart()</code> в ней хранится элемент <code>innerHTML</code> исходного столбца. Впоследствии его считывает функция <code>handleDrop()</code>, меняя местами HTML-код исходного и целевого столбцов.</p>
+
+  <p>Результат:</p>
+  <div id="columns-almostFinal">
+    <div class="column"><header>А</header></div>
+    <div class="column"><header>Б</header></div>
+    <div class="column"><header>В</header></div>
+  </div>
+
+  <h3 id="toc-drag-properties">Свойства перетаскивания</h3>
+
+  <p>Объект <code>dataTransfer</code> обладает свойствами, которые создают визуальную подсказку для пользователей в процессе перетаскивания. Их также можно использовать для управления реакцией каждой цели перетаскивания на определенный тип данных.</p>
+  
+  <dl>
+    <dt><code>dataTransfer.effectAllowed</code></dt>
+    <dd>Ограничивает "тип перетаскивания", которое пользователь может выполнять с элементом. Это свойство используется в модели обработки перетаскивания для инициализации объекта <code>dropEffect</code> во время событий <code>dragenter</code> и <code>dragover</code>. Это свойства может принимать следующие значения: <code>none</code>, <code>copy</code>, <code>copyLink</code>, <code>copyMove</code>, <code>link</code>, <code>linkMove</code>, <code>move</code>, <code>all</code> и <code>uninitialized</code>.
+    </dd>
+    <dt><code>dataTransfer.dropEffect</code></dt>
+    <dd>Управляет реакцией, которую пользователь получает во время событий <code>dragenter</code> и <code>dragover</code>. Когда перетаскиваемый объект наводится на целевой элемент, указатель браузера принимает вид, соответствующий типу предполагаемой операции (например, копирование, перенос и т. д.). Свойство может принимать следующие значения: <code>none</code>, <code>copy</code>, <code>link</code>, <code>move</code>.
+    </dd>
+    <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
+    <dd>Вместо использования "фантомного изображения", которое браузер создает по умолчанию, можно задать значок перетаскивания. 
+<pre class="prettyprint">
+var dragIcon = document.createElement('img');
+dragIcon.src = 'logo.png';
+dragIcon.width = 100;
+e.dataTransfer.setDragImage(dragIcon, -10, -10);</pre>
+    <p>Результат (при перетаскивании этих столбцов должен отображаться логотип Google):</p>
+    <div id="columns-dragIcon">
+      <div class="column"><header>А</header></div>
+      <div class="column"><header>Б</header></div>
+      <div class="column"><header>В</header></div>
+    </div>
+    </dd>
+  </dl>
+
+  <h2 id="toc-dnd-files">Перетаскивание файлов</h2>
+
+  <p>С помощью API перетаскивания можно перетаскивать файлы с рабочего стола в веб-приложение, открытое в окне браузера. Кроме того, Google Chrome позволяет перетаскивать файловые объекты из окна браузера на рабочий стол.</p>
+
+  <h3 id="toc-desktop-dnd-into">Перетаскивание с рабочего стола в браузер</h3>
+
+  <p>Перетаскивание файла с рабочего стола выполняется с помощью событий перетаскивания, как и для других типов содержания. Основное отличие заключается в обработчике события <code>drop</code>. Вместо использования объекта <code>dataTransfer.getData()</code> для доступа к файлам данные помещаются в свойство <code>dataTransfer.files</code>:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  e.stopPropagation(); // Stops some browsers from redirecting.
+  e.preventDefault();
+
+  var files = e.dataTransfer.files;
+  for (var i = 0, f; f = files[i]; i++) {
+    // Read the File objects in this FileList.
+  }
+}
+</pre>
+
+  <p>Полное руководство по перетаскиванию файлов с рабочего стола в браузер приведено в разделе <a href="/tutorials/file/dndfiles/#toc-selecting-files-dnd">Перетаскивание как способ выбора</a> статьи <a href="/tutorials/file/dndfiles/">Чтение локальных файлов в JavaScript</a>.</p>
+
+  <h3 id="toc-desktop-dnd-out">Перетаскивание из браузера на рабочий стол</h3>
+
+  <p>Полное руководство по перетаскиванию файлов из браузера на рабочий стол приведено в статье <a href="http://www.thecssninja.com/javascript/gmail-dragout">Перетаскивание файлов как из Gmail</a> на веб-сайте CSS Ninja.</p>
+
+  <h2 id="toc-examples">Примеры</h2>
+
+  <p>Вот конечный вариант с улучшенным внешним видом и счетчиком перемещений:</p>
+  <div id="columns-full">
+    <div class="column"><header>А</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>Б</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>В</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>Г</header><div class="count" data-col-moves="0"></div></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">В этом примере со столбцами интересно то, что каждый из них является одновременно исходным объектом и целью перетаскивания. Чаще всего исходный и целевой элементы различаются. Посмотрите пример: <a href="http://html5demos.com/drag">html5demos.com/drag</a>.</p>
+
+<!--
+  other examples:
+  <li>Rearrange list</li> 
+  <li>Creating an image gallery</li> 
+  <li>Exporting a canvas image</li> 
+-->
+
+  <h2 id="toc-conclusion">Заключение</h2>
+
+  <p>Модель перетаскивания в HTML5 сложнее, чем в других решениях, таких как интерфейс JQuery. Однако если у вас есть возможность задействовать встроенный API браузера, ее нужно использовать. В конце концов, в этом и заключается суть HTML5: стандартизировать и сделать доступным весь набор собственных возможностей браузера. Надеемся, что со временем в популярные библиотеки, в которых используется функция перетаскивания, будет включена поддержка HTML5 по умолчанию и возможность по-разному настраивать JS-решение.</p>
+
+  <h2 id="toc-references">Ссылки</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Перетаскивание</a> – спецификация</li> 
+    <li><a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">Операции перетаскивания</a> из MDC</li>
+    <li>Статья <a href="http://html5doctor.com/native-drag-and-drop/">Встроенная функция перетаскивания</a> на веб-сайте html5doctor</li>
+    <li><a href="http://www.thecssninja.com/javascript/gmail-dragout">Перетаскивание файлов как из Gmail</a> на веб-сайте CSS Ninja</li>
+  </ul>
+
+<script>
+// Using this polyfill for safety.
+Element.prototype.hasClassName = function(name) {
+  return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+};
+
+Element.prototype.addClassName = function(name) {
+  if (!this.hasClassName(name)) {
+    this.className = this.className ? [this.className, name].join(' ') : name;
+  }
+};
+
+Element.prototype.removeClassName = function(name) {
+  if (this.hasClassName(name)) {
+    var c = this.className;
+    this.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+  }
+};
+
+
+var samples = samples || {};
+
+// dragStart
+(function() {
+  var id_ = 'columns-dragStart';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', 'blah'); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+  });
+
+})();
+
+// dragEnd
+(function() {
+  var id_ = 'columns-dragEnd';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+
+    // target element (this) is the source node.
+    this.style.opacity = '1';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+
+})();
+
+// dragIcon
+(function() {
+  var id_ = 'columns-dragIcon';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    var dragIcon = document.createElement('img');
+    dragIcon.src = '/static/images/google_logo_small.png';
+    e.dataTransfer.setDragImage(dragIcon, -10, -10);
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+  });
+
+})();
+
+// Almost final example
+(function() {
+  var id_ = 'columns-almostFinal';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    this.style.opacity = '0.4';
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+    
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+
+// Full example
+(function() {
+  var id_ = 'columns-full';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+
+      // Set number of times the column has been moved.
+      var count = this.querySelector('.count');
+      var newCount = parseInt(count.getAttribute('data-col-moves')) + 1;
+      count.setAttribute('data-col-moves', newCount);
+      count.textContent = 'moves: ' + newCount;
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+</script>
+
+{% endblock %}

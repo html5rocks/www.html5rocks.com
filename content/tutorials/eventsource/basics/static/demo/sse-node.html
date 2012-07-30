@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<title>HTML5 Server-Sent Test</title>
+<style>
+@-webkit-keyframes glowGreen {
+  from {
+    -webkit-box-shadow: rgba(0, 255, 0, 0) 0 0 0;
+  }
+  50% {
+    -webkit-box-shadow: rgba(0, 255, 0, 1) 0 0 10px;
+  }
+  to {
+    -webkit-box-shadow: rgba(0, 255, 0, 0) 0 0 0;
+  }
+}
+@-webkit-keyframes glowRed {
+  from {
+    -webkit-box-shadow: rgba(255, 0, 0, 0) 0 0 0;
+  }
+  50% {
+    -webkit-box-shadow: rgba(255, 0, 0, 1) 0 0 10px;
+  }
+  to {
+    -webkit-box-shadow: rgba(255, 0, 0, 0) 0 0 0;
+  }
+}
+body {
+  font: 12px Arial, sans-serif;
+  background-color: #eee;
+  color: #444;
+}
+#connection {
+  font: 14px Arial, sans-serif;
+  font-weight: bold;
+  vertical-align: middle;
+  color: black;
+}
+#connection div {
+  background-color: orange;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 10px;
+  margin-left: 5px;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+}
+#connection.connected div {
+  background-color: green;
+  -webkit-box-shadow: rgba(0, 255, 0, 0.5) 0px 0px 5px;
+  -webkit-animation-name: glowGreen;
+}
+#connection.disconnected div {
+  background-color: red;
+  -webkit-box-shadow: rgba(255, 0, 0, 0.5) 0px 0px 5px;
+  -webkit-animation-name: glowRed;
+}
+#log {
+  overflow: auto;
+  width: 300px;
+  height: 350px;
+  margin-right: 20px;
+  float: left;
+}
+#log p {
+  margin: 0;
+  padding: 0;
+}
+#log .info {
+  color: navy;
+  font-weight: bold;
+}
+#log .msg {
+  margin-left: 11px;
+}
+.border {
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: white;
+}
+#right-panel div {
+  text-align: left;
+}
+#right-panel {
+  height: 350px;
+  width: 585px;
+  float: left;
+  font-size: 14px;
+  text-align: center;
+}
+button {
+  background: -webkit-gradient(linear, 0% 40%, 0% 70%, from(#F9F9F9), to(#E3E3E3));
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin: 0 8px 0 0;
+  color: black;
+  padding: 5px 8px;
+  outline: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  -webkit-user-select:none;
+  user-select: none;
+  cursor: pointer;
+}
+button:not([disabled]):hover {
+  border: 1px solid #939393;
+}
+button:not([disabled]):active {
+  background: -webkit-gradient(linear, 0% 40%, 0% 70%, from(#E3E3E3), to(#F9F9F9));
+}
+button[disabled] {
+  color: #ccc;
+}
+</style>
+</head>
+<body>
+
+<p>
+  <button onclick="logger.clear()">Clear log</button>
+  <button onclick="closeConnection()">Stop reconnections</button>
+  <span id="connection">Connecting...<div></div></span>
+</p>
+<div class="border" id="log"></div>
+
+<script>
+if (!window.DOMTokenList) {
+  Element.prototype.containsClass = function(name) {
+    return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+  };
+
+  Element.prototype.addClass = function(name) {
+    if (!this.containsClass(name)) {
+      var c = this.className;
+      this.className = c ? [c, name].join(' ') : name;
+    }
+  };
+
+  Element.prototype.removeClass = function(name) {
+    if (this.containsClass(name)) {
+      var c = this.className;
+      this.className = c.replace(
+          new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+    }
+  };
+}
+
+// /events sends messages with text/event-stream mimetype.
+var source = new EventSource('/events');
+
+function Logger(id) {
+  this.el = document.getElementById(id);
+}
+
+Logger.prototype.log = function(msg, opt_class) {
+  var fragment = document.createDocumentFragment();
+  var p = document.createElement('p');
+  p.className = opt_class || 'info';
+  p.textContent = msg;
+  fragment.appendChild(p);
+  this.el.appendChild(fragment);
+};
+
+Logger.prototype.clear = function() {
+  this.el.textContent = '';
+};
+
+var logger = new Logger('log');
+
+function closeConnection() {
+  source.close();
+  logger.log('> Connection was closed');
+  updateConnectionStatus('Disconnected', false);
+}
+
+function updateConnectionStatus(msg, connected) {
+  var el = document.querySelector('#connection');
+  if (connected) {
+    if (el.classList) {
+      el.classList.add('connected');
+      el.classList.remove('disconnected');
+    } else {
+      el.addClass('connected');
+      el.removeClass('disconnected');
+    }
+  } else {
+    if (el.classList) {
+      el.classList.remove('connected');
+      el.classList.add('disconnected');
+    } else {
+      el.removeClass('connected');
+      el.addClass('disconnected');
+    }
+  }
+  el.innerHTML = msg + '<div></div>';
+}
+
+source.addEventListener('message', function(e) {
+  if (e.origin != 'http://localhost:8000') {
+    alert('Origin was not http://localhost:8000');
+    return;
+  }
+
+  logger.log('lastEventID: ' + (e.lastEventId || '--') +
+             ', server time: ' + e.data, 'msg');
+}, false);
+
+source.addEventListener('open', function(e) {
+  logger.log('> Connection was opened');
+  updateConnectionStatus('Connected', true);
+}, false);
+
+source.addEventListener('error', function(e) {
+  if (e.eventPhase == 2) { //EventSource.CLOSED
+    logger.log('> Connection was closed');
+    updateConnectionStatus('Disconnected', false);
+  }
+}, false);
+</script>
+</body>
+</html>

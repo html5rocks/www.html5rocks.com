@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>WebGL Aquarium Notes</title>
+<style>
+BODY {
+  font-family: sans-serif;
+}
+PRE {
+  background-color: #ccc;
+  margin-left: 4em;
+  margin-right: 4em;
+}
+TABLE TD {
+  border: 1px solid black;
+  padding: 0.5em;
+  vertical-align: top;
+}
+</style>
+</head>
+<body>
+<h1>The WebGL Aquarium</h1>
+<h2>Controls</h2>
+<ul>
+  <li>Use the mouse to change various settings.</li>
+  <li>Click the * to bring up more settings.</li>
+  <li>Press SPACE to change the view.</li>
+  <li>Press L for sharks with frikken lasers. Looks best from an outside view.</li>
+</ul>
+<h2>Running across multiple machines</h2>
+<p>The Aquarium demo can by run synchronized across multiple machines.</p>
+
+<p>You can see an example at <a href="http://www.youtube.com/watch?v=64TcBiqmVko">http://www.youtube.com/watch?v=64TcBiqmVko</a></p>
+
+<p>To run it across multiple machines each machine must be running a browser that supports WebGL and WebSockets. Chromium for example. Next, the clocks of the 5 machines must be in sync. Then start the server. <a href="../server/README.html">See here for instructions</a>. Finally run the Aquarium with a URL in the following format.</p>
+<pre>http://address_of_server:port_of_server/aquarium/aquarium.html?settings={net:{sync:true,rotYMult:mult}}</pre>
+<p>Where <i>address_of_server</i> is the domain name or ip address of the server, <i>port_of_server</i> is the port of the server, and <i>mult</i> is 0 for the center machine, positive for machines to the right of the server and negative for machines to the left.</p>
+<p>In other words, if the server is "myserver.com" and your running on port 4000 and you had 5 machines, A, B, C, D, E in that order left to right and you wanted machine C to be the master the URLs would for each machine would be:</p>
+<pre>
+Machine A: http://myserver.com:4000/aquarium/aquarium.html?settings={net:{sync:true,port:4000,ui:false,slave:true,rotYMult:-2}}
+Machine B: http://myserver.com:4000/aquarium/aquarium.html?settings={net:{sync:true,port:4000,ui:false,slave:true,rotYMult:-1}}
+Machine C: http://myserver.com:4000/aquarium/aquarium.html?settings={net:{sync:true,port:4000,ui:true,slave:false,rotYMult:0}}
+Machine D: http://myserver.com:4000/aquarium/aquarium.html?settings={net:{sync:true,port:4000,ui:false,slave:true,rotYMult:-1}}
+Machine E: http://myserver.com:4000/aquarium/aquarium.html?settings={net:{sync:true,port:4000,ui:false,slave:true,rotYMult:-2}}
+</pre>
+<p>At that point, settings changed on the master should be propagated to the slaves.</p>
+<h3>Options:</h3>
+<table>
+<tr><td>ui:</td><td>boolean</td><td><p>Whether or not to display a user interface.</p></td></tr>
+<tr><td>sync:</td><td>boolean</td><td><p>Whether or not to get settings from a server</p></td></tr>
+<tr><td>slave:</td><td>boolean</td><td><p>Whether or not to send settings to the server. False = send</p></td></tr>
+<tr><td>rotYMult:</td><td>number</td><td><p>The amount to multiply the field of view for each monitor.</p></td></tr>
+<tr><td>fovMult:</td><td>number</td><td><p>The amount to multiply the field of view offset for each monitor.</p><p>The system computes the field of view for the monitor and multiplies by both rotYMult and fovMult to compute how much to rotate the view for each monitor. Think of rotYMult as a per machine setting and fovMult as a global setting.</p></td></tr>
+<tr><td>offset:</td><td>array</td><td><p>The amount to offset the frustum. Used to make a large virtual monitor. Example: offset:[-1,0] would define a monitor 1 unit left of the center monitor.</p></td></tr>
+<tr><td>offsetMult:</td><td>number</td><td><p>Amount to multiply the offset by. Think of offset as a per machine setting and offsetMult as a global setting.</p></tr>
+</table>
+<h2>Implemenation Notes:</h2>
+<p>The aquarium runs almost entirely based on a clock. When in networked mode that clock is the system time of day clock. That means the position of the camera and every fish will be the same across machines if their clocks are in sync. Otherwise, using node.js and the socket.io library the master sends a JSON string with any new settings to the server. The server then broadcasts those settings to each of the machines.</p>
+</body>
+</html>
+

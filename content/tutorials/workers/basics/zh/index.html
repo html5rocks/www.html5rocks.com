@@ -1,0 +1,462 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}埃里克·比德尔曼 (Eric Bidelman) <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}Web Worker 的基本信息{% endblock %}
+{% block pagetitle %}Web Worker 的基本信息{% endblock %}
+{% block pagebreadcrumb %}Web Worker 的基本信息{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+{% block date %}2010 年 7 月 26 日{% endblock %}
+{% block updated %}2011 年 5 月 24 日{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">支持</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">不支持</span></span> <span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">支持</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">支持</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome 浏览器</span><span class="support">支持</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="本文由 HTML5 性能与集成强力驱动" title="本文由 HTML5 性能与集成强力驱动"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.webworkers;
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction-jsconcurrency">问题：JavaScript 并行性</h2>
+  <p>要将有趣的应用（例如从侧重服务器端的实施）移植到客户端 JavaScript，存在很多制约瓶颈。其中包括浏览器兼容性、静态类型、可访问性和性能。幸运的是，随着浏览器供应商快速提高 JavaScript 引擎的速度，性能已不再是瓶颈。</p>
+
+  <p>仍在阻碍 JavaScript 的实际上是语言本身。JavaScript 属于单线程环境，也就是说无法同时运行多个脚本。例如，假设有一个网站，它需要处理 UI 事件，查询并处理大量 API 数据以及操作 DOM。这很常见，不是吗？遗憾的是，由于受到浏览器 JavaScript 运行时的限制，所有这些操作都无法同时进行。脚本是在单个线程中执行的。</p>
+
+  <p>开发人员会使用 <code>setTimeout()</code>、<code>setInterval()</code>、<code>XMLHttpRequest</code> 和事件处理程序等技术模拟“并行”。所有这些功能确实都是异步运行的，但没有阻碍未必就意味着并行。系统会在生成当前执行脚本后处理异步事件。好消息是，HTML5 为我们提供了优于这些技巧的技术。</p>
+
+  <h2 id="toc-introduction-jsthreading">Web Worker 简介：为 JavaScript 引入线程技术</h2>
+
+  <p><a href="http://www.whatwg.org/specs/web-workers/current-work/">Web Worker</a> 规范定义了在网络应用中生成背景脚本的 API。您可以通过 Web Worker 执行一些操作，例如触发长时间运行的脚本以处理计算密集型任务，同时却不会阻碍 UI 或其他脚本处理用户互动。这有助于解决令人讨厌的“无响应脚本”对话框（大家都有些爱上它了吧）问题：</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/workers/unresponsive_script.gif" width="450" height="100" title="Unresponsive script dialog" alt="无响应脚本对话框"  />
+    <figcaption>常见无响应脚本对话框。</figcaption>
+  </figure>
+
+  <p>Worker 利用类似线程的消息传递实现并行。这非常适合您确保对 UI 的刷新、性能以及对用户的响应。</p>
+
+  <h3 id="toc-introduction-types">Web Worker 的类型</h3>
+
+  <p>值得注意的是，<a href="http://www.whatwg.org/specs/web-workers/current-work/">规范</a>中介绍了两种 Web Worker：<a href="http://www.whatwg.org/specs/web-workers/current-work/#dedicated-workers-and-the-worker-interface">专用 Worker</a> 和 <a href="http://www.whatwg.org/ pecs/web-workers/current-work/#sharedworker">共用 Worker</a>。本文只涉及专用 Worker，并在全文中将其称为“Web Worker”或“Worker”。</p>
+
+  <h2 id="toc-gettingstarted">使用入门</h2>
+
+  <p>Web Worker 在独立线程中运行。因此，它们执行的代码需要保存在一个单独的文件中。但在保存代码前，我们要先在您的主网页上创建新的 <code>Worker</code> 对象。构造函数采用 Worker 脚本的名称：</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('task.js');
+</pre>
+
+  <p>如果指定的异步下载文件存在，浏览器就会生成新的 Worker 线程。在完全下载并执行文件之前，系统不会生成 Worker。如果指向您 Worker 的路径返回 404，Worker 就会在不显示任何提示的情况下失败。</p>
+
+  <p>创建 Worker 之后，通过调用 <code>postMessage()</code> 方法启动：</p>
+  <pre class="prettyprint">
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-gettingstarted-workercomm">通过消息传递与 Worker 通信</h3>
+
+  <p>Worker 与其父网页之间的通信是通过事件模型和 <code>postMessage()</code> 方法实现的。<code>postMessage()</code> 可以接受字符串或 JSON 对象作为单个参数，具体取决于您的浏览器/版本。新式浏览器的最新版支持传递 JSON 对象。</p>
+
+  <p>以下示例使用字符串将“Hello World”传递给了 doWork.js 中的 Worker。Worker 直接返回了传递给它的消息。</p>
+
+  <p>主脚本：</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('doWork.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Worker said: ', e.data);
+}, false);
+
+worker.postMessage('Hello World'); // Send data to our worker.
+</pre>
+
+  <p>doWork.js (Worker)：</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  self.postMessage(e.data);
+}, false);
+</pre>
+
+  <p>在主网页中调用 <code>postMessage()</code> 时，我们的 Worker 通过定义 <code>message</code> 事件的 <code>onmessage</code> 处理程序来处理消息。您可以在 <code>Event.data</code> 中访问消息有效负载（此示例中为“Hello World”）。虽然这个特殊的示例并不精彩，但它说明 <code>postMessage()</code> 也是您将数据传回主线程的一种方法。很方便！</p>
+
+  <p>在主网页和 Worker 之间传递的消息是复制而不是共享的。例如，下一示例中 JSON 消息的“msg”属性在两个位置中均可访问。即使对象运行在单独的专用空间中，系统似乎也会将其直接传递给 Worker。实际发生的情况是，系统将对象传递给 Worker 后，会将其序列化，随后在另一端解取消序列化。由于网页和 Worker 并不共享同一实例，因此每次传递时都要进行复制。大部分浏览器通过在任一端上对值进行自动 JSON 编码/解码来实施此功能。</p>
+
+  <p>下面是一个使用 JSON 对象传递消息的更复杂的示例。</p>
+
+  <p>主脚本：</p>
+
+  <pre class="prettyprint">
+&lt;button onclick="sayHI()"&gt;Say HI&lt;/button&gt;
+&lt;button onclick="unknownCmd()"&gt;Send unknown command&lt;/button&gt;
+&lt;button onclick="stop()"&gt;Stop worker&lt;/button&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    // Calling worker.terminate() from this script would also stop the worker.
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker = new Worker('doWork2.js');
+
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+&lt;/script&gt;
+</pre>
+
+  <p>doWork2.js：</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      self.postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+      self.postMessage('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+      self.close(); // Terminates the worker.
+      break;
+    default:
+      self.postMessage('Unknown command: ' + data.msg);
+  };
+}, false);
+</pre>
+
+  <p><strong>请注意</strong>：停止 Worker 的方法有两种：在主网页中调用 <code>worker terminate()</code>，或在 Worker 本身内部调用 <code>self.close()</code>。</p>
+
+  <p><strong>示例</strong>：运行此 Worker！</p>
+  <div class="example">
+    <button onclick="sayHI()">打招呼</button>
+    <button onclick="unknownCmd()">发送未知命令</button>
+    <button onclick="stop()">停止 Worker</button>
+    <output id="result"></output>
+  </div>
+
+  <h2 id="toc-enviornment">Worker 环境</h2>
+
+  <h3 id="toc-enviornment-scope">Worker 作用域</h3>
+
+  <p>就 Worker 来说，<code>self</code> 和 <code>this</code> 指的都是 Worker 的全局作用域。因此，上一示例也可以写成：</p>
+
+  <pre class="prettyprint">
+addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+  ...
+}, false);
+</pre>
+
+  <p>或者，您可以直接设置 <code>onmessage</code> 事件处理程序（虽然 JavaScript 高手们总是会推荐 <code>addEventListener</code>）。</p>
+
+  <pre class="prettyprint">
+onmessage = function(e) {
+  var data = e.data;
+  ...
+};
+</pre>
+
+  <h3 id="toc-enviornment-features">适用于 Worker 的功能</h3>
+
+  <p>由于 Web Worker 的多线程行为，所以它们只能使用 JavaScript 功能的子集：</p>
+  <ul>
+    <li><code>navigator</code> 对象</li>
+    <li><code>location</code> 对象（只读）</li>
+    <li><code>XMLHttpRequest</code></li>
+    <li><code>setTimeout()/clearTimeout()</code> 和 <code>setInterval()/clearInterval()</code></li>
+    <li><a href="/tutorials/appcache/beginner/">应用缓存</a></li>
+    <li>使用 <code>importScripts()</code> 方法导入外部脚本</li>
+    <li><a href="#toc-enviornment-subworkers">生成其他 Web Worker</a></li>
+  </ul>
+  <p>Worker 无法使用：</p>
+  <ul>
+    <li>DOM（非线程安全）</li>
+    <li><code>window</code> 对象</li>
+    <li><code>document</code> 对象</li>
+    <li><code>parent</code> 对象</li>
+  </ul>
+
+  <h3 id="toc-enviornment-loadingscripts">加载外部脚本</h3>
+
+  <p>您可以通过 <code>importScripts()</code> 函数将外部脚本文件或库加载到 Worker 中。该方法采用零个或多个字符串表示要导入的资源的文件名。</p>
+
+  <p>此示例将 <code>script1.js</code> 和 <code>script2.js</code> 加载到了 Worker 中：</p>
+
+  <p>worker.js：</p>
+  <pre class="prettyprint">
+importScripts('script1.js');
+importScripts('script2.js');
+</pre>
+
+  <p>也可以写成单个导入语句：</p>
+  <pre class="prettyprint">
+importScripts('script1.js', 'script2.js');
+</pre>
+
+  <h3 id="toc-enviornment-subworkers">子 Worker</h3>
+
+  <p>Worker 可以生成子 Worker。这对于在运行时进一步拆分大任务来说非常重要。但是，子 Worker 还有几点注意事项：</p>
+  <ul>
+    <li>子 Worker 必须托管在与父网页相同的来源中。 </li>
+    <li>子 Worker 中的 URI 应相对于父 Worker 的位置进行解析（与主网页不同）。</li>
+  </ul>
+
+  <p>请注意，大部分浏览器会为每个 Worker 生成单独的进程。在您开始生成 Worker 场之前，请注意不要占用太多的用户系统资源。这样做的一个原因是，在主网页和 Worker 之间传递的消息是复制而不是共享的。请参阅<a href="#toc-gettingstarted-workercomm">通过消息传递与 Worker 通信</a>。</p>
+
+  <p>有关子 Worker 生成方法的示例，请参阅规范中的<a href="http://www.whatwg.org/specs/web-workers/current-work/#delegation">相关示例</a>。</p>
+
+  <h2 id="toc-inlineworkers">内嵌 Worker</h2>
+
+  <p>如果您想即时创建 Worker 脚本，或者在不创建单独 Worker 文件的情况下创建独立网页，那该怎么做呢？在新 <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#the-blobbuilder-interface"><code>BlobBuilder</code></a> 界面中，您可以创建 <code>BlobBuilder</code> 并以字符串形式附上 Worker 代码，从而在与主逻辑相同的 HTML 文件中“内嵌”Worker：</p>
+<pre class="prettyprint">
+// Prefixed in Webkit, Chrome 12, and FF6: window.WebKitBlobBuilder, window.MozBlobBuilder
+var bb = new BlobBuilder();
+bb.append("onmessage = function(e) { postMessage('msg from worker'); }");
+
+// Obtain a blob URL reference to our worker 'file'.
+// Note: window.webkitURL.createObjectURL() in Chrome 10+.
+var blobURL = window.URL.createObjectURL(bb.getBlob());
+
+var worker = new Worker(blobURL);
+worker.onmessage = function(e) {
+  // e.data == 'msg from worker'
+};
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-inlineworkers-bloburis">Blob 网址</h3>
+
+  <p>对 <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-createObjectURL"><code>window.URL.createObjectURL()</code></a> 的调用十分奇妙。此方法创建了一个简单的网址字符串，该字符串可用于 DOM <code>File</code> 或 <code>Blob</code> 对象中存储的参考数据。例如：</p>
+
+  <pre class="prettyprint">blob:http://localhost/c745ef73-ece9-46da-8f66-ebes574789b1</pre>
+
+  <p>Blob 网址是唯一的，且只要应用存在，该网址就会一直有效（例如直到卸载 <code>document</code> 为止）。如果您要创建很多 Blob 网址，最好发布不再需要的参考资料。您可以通过将 Blob 网址传递给 <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-revokeObjectURL"><code>window.URL.revokeObjectURL()</code></a> 来明确发布该网址：</p>
+
+  <pre class="prettyprint">
+window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Chrome 10+.
+</pre>
+
+  <p>在 Chrome 浏览器中，有一个很实用的页面可供您查看创建的所有 Blob 网址：<code>chrome://blob-internals/</code>。</p>
+
+  <h3 id="toc-inlineworkers-example">完整示例</h3>
+
+  <p>再进行一个步骤，我们就会清楚如何将 Worker 的 JavaScript 代码内嵌在网页中了。此技术使用 <code>&lt;script&gt;</code> 标签定义 Worker：</p>
+
+  <pre class="prettyprint">
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="utf-8" />
+&lt;/head>
+&lt;body>
+
+  &lt;div id="log"&gt;&lt;/div&gt;
+
+  &lt;script id="worker1" type="javascript/worker"&gt;
+    // This script won't be parsed by JS engines because its type is javascript/worker.
+    self.onmessage = function(e) {
+      self.postMessage('msg from worker');
+    };
+    // Rest of your worker code goes here.
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    function log(msg) {
+      // Use a fragment: browser will only render/reflow once.
+      var fragment = document.createDocumentFragment();
+      fragment.appendChild(document.createTextNode(msg));
+      fragment.appendChild(document.createElement('br'));
+
+      document.querySelector("#log").appendChild(fragment);
+    }
+
+    var bb = new BlobBuilder();
+    bb.append(document.querySelector('#worker1').textContent);
+
+    // Note: window.webkitURL.createObjectURL() in Chrome 10+.
+    var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+    worker.onmessage = function(e) {
+      log("Received: " + e.data);
+    }
+    worker.postMessage(); // Start the worker.
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>在我看来，这种新方法稍显清晰明了。它通过  <var>id="worker1"</var>  和 
+  <var>type='javascript/worker'</var>  定义脚本标记（这样浏览器就不会解析 JavaScript 了）。系统会使用 <code>document.querySelector('#worker1').textContent</code> 以字符串形式提取该代码并将其传递给 <code>BlobBu lder.append()</code>。</p>
+
+  <h3 id="toc-inlineworkers-loadingscripts">加载外部脚本</h3>
+
+  <p>在使用这些技术内嵌 Worker 代码时，<code>importScripts()</code> 只会在您提供绝对 URI 的情况下生效。如果您尝试传递相对 URI，浏览器就会提示出现安全错误。原因：系统会通过 <code>blob:</code> 前缀解析 Worker（现在通过 Blob 网址创建），而您的应用会通过其他（可能为 <code>http://</code>）方案运行。因此，失败原因在于跨源限制。</p>
+
+  <p>在内嵌 Worker 中利用 <code>importScripts()</code> 的一种方法是，通过将相关网址传递给内嵌 Worker 并手动构建绝对网址来“导入”运行您主脚本的当前网址。这可以确保外部脚本是从同一来源导入的。假设您的主应用是在 http://example.com/index.html 上运行的：</p>
+    <pre class="prettyprint">
+...
+&lt;script id="worker2" type="javascript/worker"&gt;
+self.onmessage = function(e) {
+  var data = e.data;
+
+  if (data.url) {
+    var url = data.url.href;
+    var index = url.indexOf('index.html');
+    if (index != -1) {
+      url = url.substring(0, index);
+    }
+    importScripts(url + 'engine.js');
+  }
+  ...
+};
+&lt;/script&gt;
+&lt;script&gt;
+  var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+  worker.postMessage(<b>{url: document.location}</b>);
+&lt;/script&gt;
+</pre>
+
+  <h2 id="toc-errors">处理错误</h2>
+
+  <p>与任何 JavaScript 逻辑一样，您需要处理 Web Worker 中出现的任何错误。如果在执行 Worker 时出现错误，就会触发 <code>ErrorEvent</code>。相关界面中包含用于找出错误内容的三个实用属性：<code>filename</code> - 导致错误的 Worker 脚本的名称；<code>lineno</code> - 出现错误的行号；以及 <code>message</code> - 有关错误的实用说明。以下示例设置了 <code>onerror</code> 事件处理程序以便打印错误内容：</p>
+
+  <pre class="prettyprint">
+&lt;output id="error" style="color: red;"&gt;&lt;/output&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result').textContent = e.data;
+  }
+
+  var worker = new Worker('workerWithError.js');
+  worker.addEventListener('message', onMsg, false);
+  worker.addEventListener('error', onError, false);
+  worker.postMessage(); // Start worker without a message.
+&lt;/script&gt;
+</pre>
+
+  <p><strong>示例</strong>：workerWithError.js 尝试执行 1/x，其中 x 未定义。</p>
+
+  <div class="example">
+    <button onclick="startErrorWorker()">运行</button>
+    <output id="error" style="color:red;"></output>
+    <output id="result2"></output>
+  </div>
+
+  <p>workerWithError.js：</p>
+<pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  postMessage(1/x); // Intentional error.
+};
+</pre>
+
+  <h2 id="toc-security">安全说明</h2>
+
+  <h3 id="toc-security-local">本地访问限制</h3>
+
+  <p>由于 Google Chrome 浏览器的安全限制，Worker 无法在最新版浏览器中本地运行（例如通过 <code>file://</code>），且会在不显示任何提示的情况下失败！要通过 <code>file://</code> 方案运行您的应用，请使用 <code>--allow-file-access-from-files</code> 标记设置来运行 Chrome 浏览器。<strong>请注意</strong>：不推荐使用此标记设置来运行您的主浏览器。此标记设置仅供测试用，请勿用于常规浏览。</p>
+
+  <p>其他浏览器不存在相同的限制。</p>
+
+  <h3 id="toc-security-origin">同源注意事项</h3>
+
+  <p>Worker 脚本必须是将相同方案作为调用网页的外部文件。因此，您无法通过 <code>data:</code> 网址或 <code>javascript:</code> 网址加载脚本，且 <code>https:</code> 网页无法启动以 <code>http:</code> 网址开头的 Worker 脚本。</p>
+
+  <h2 id="toc-usecases">用例</h2>
+
+  <p>那么，哪种应用可以利用 Web Worker 呢？很遗憾，Web Worker 仍相对较新，且已有的示例/教程中大部分都会涉及素数的计算。虽然这没什么趣味性，但却可以帮助您理解 Web Worker 的概念。下面列出了更多概念供您活跃思维：</p>
+  <ul>
+    <li>预先抓取和/或缓存数据以便稍后使用</li>
+    <li>突出显示代码语法或其他实时文本格式</li>
+    <li>拼写检查程序</li>
+    <li>分析视频或音频数据</li>
+    <li>背景 I/O 或网络服务轮询</li>
+    <li>处理较大数组或超大 JSON 响应</li>
+    <li>&lt;canvas&gt; 中的图片过滤</li>
+    <li>更新本地网络数据库中的多行内容</li>
+  </ul>
+
+  <h2 id="toc-examples">演示</h2>
+  <ul>
+    <li>来自 <a href="http://slides.html5rocks.com/#web-workers">HTML5Rocks 幻灯片</a>的示例</li>
+    <li><a href="http://htmlfive.appspot.com/static/tracker1.html">移动跟踪</a></li>
+    <li><a href="http://people.mozilla.com/~prouget/demos/worker_and_simulatedannealing/index.xhtml">模拟退火</a></li>
+    <li><a href="http://html5demos.com/worker">HTML5demos 示例</a></li>
+  </ul>
+
+  <h2 id="toc-references">参考资料</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-workers/current-work/">Web Worker</a> 规范</li>
+    <li>来自 Mozilla 开发人员网络的 <a href="http://developer.mozilla.org/en/Using_web_workers">“使用 Web Worker”</a></li>
+    <li>来自 Dev.Opera 的<a href="http://dev.opera.com/articles/view/web-workers-rise-up/">“Web Worker 潮流！”</a></li>
+  </ul>
+
+<script>
+  var worker = new Worker('doWork2.js');
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker2 = new Worker('workerWithError.js');
+  worker2.addEventListener('message', onMsg, false);
+  worker2.addEventListener('error', onError, false);
+
+  function startErrorWorker() {
+    worker2.postMessage(); // Start worker without a message.
+  }
+
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result2').textContent = e.data;
+  }
+</script>
+{% endblock %}

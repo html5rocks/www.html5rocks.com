@@ -1,0 +1,431 @@
+<!doctype html>
+<head>
+<title>CORS Test Server</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family:Verdana, Arial, Helvetica, sans-serif;
+    font-size:14px;
+  }
+  #content {
+    width: 1120px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .column {
+    float: left;
+    margin-right: 20px;
+    padding: 8px;
+  }
+  #request {
+    width: 400px;
+  }
+  #xhrevents {
+    width: 200px;
+  }
+  #response {
+    width: 400px;
+  }
+  #server {
+    margin-bottom: 10px;
+  }
+  #client {
+  }
+  #response {
+  }
+  #response_content {
+    width: 100%;
+    height: 50%;
+  }
+  label{
+    display: block;
+    float: left;
+    text-align: right;
+    white-space: nowrap;
+    width: 140px;
+  }
+  #response_events {
+    float: left;
+  }
+  #response_details {
+    float: left;
+  }
+</style>
+</head>
+<body>
+
+<div id="corsnotsupported" style="display:none;">
+Oops, looks like your browser doesn't support CORS!
+</div>
+
+<div id="content">
+<fieldset id="request" class="column">
+<legend>Request Details</legend>
+<fieldset id="server">
+  <legend>
+    Server
+  </legend>
+
+  <label for="server_enable">Enable CORS:</label>
+  <input type="checkbox" id="server_enable" checked />
+  <br />
+
+  <label for="server_httpstatus">HTTP Status:</label>
+  <input type="text" id="server_httpstatus" value="200" />
+  <br />
+
+  <label for="server_credentials">Allow Credentials:</label>
+  <input type="checkbox" id="server_credentials" />
+  <br />
+
+  <label for="server_methods">Allow Methods:</label>
+  <input type="text" id="server_methods" />
+  <br />
+
+  <label for="server_headers">Allow Headers:</label>
+  <input type="text" id="server_headers" />
+  <br />
+
+  <label for="server_headers">Expose Headers:</label>
+  <input type="text" id="server_expose_headers" />
+  <br />
+</fieldset>
+
+<fieldset id="client">
+  <legend>
+    Client
+  </legend>
+
+  <label for="client_method">HTTP Method</label>
+  <input type="text" id="client_method" value="GET" />
+  <br />
+
+  <label for="client_credentials">With Credentials:</label>
+  <input type="checkbox" id="client_credentials" />
+  <br />
+
+  <label for="client_headers">Headers</label><br />
+  <textarea id="client_headers"></textarea>
+  <br />
+
+</fieldset>
+
+  <input type="submit" id="client_sendRequest" value="Send Request" class=".button" onclick="sendRequest(); return false;" />
+
+</fieldset>
+
+  <fieldset id="response" class="column">
+    <legend>
+      Response Details
+    </legend>
+
+    <div id="response_details">
+    <div id="response_status">Status: <span id="response_status_content"></span></div>
+    <div id="response_statusText">Status Text: <span id="response_statusText_content"></span></div>
+    <div id="response_headers">Headers: <pre id="response_headers_content"></pre></div>
+    <div id="response_body">Body:<br /> <textarea id="response_body_content"></textarea></div>
+    </div>
+  </fieldset>
+
+<fieldset id="xhrevents" class="column">
+  <legend>
+    XHR Events
+  </legend>
+
+
+    <div id="response_events"><div id="response_events_content"></div></div>
+</fieldset>
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+<script>
+
+  // TODO: Help descriptions for each item
+  // TODO: Detect if CORS is supported and display a message if it isn't.
+  // TODO: Is there a way to trap on thrown errors?  Or show console.log messages on the page?
+  // TODO: Detect if there is a mismatch and we expect an error.
+
+  // Browser bugs:
+  // Setting custom headers on GET requests in WebKit
+  // Setting cookies in Safari?
+  // Reading response headers from Chrome?
+
+  var serverUrl = 'http://localhost:8080/cors/server';
+
+  function loadQueryString(str) {
+    if (typeof(str) != 'string' || str.length == 0) {
+      return {};
+    }
+    if (str.indexOf('?') == 0) {
+      str = str.substring(1);
+    }
+    if (str.length == 0) {
+      return {};
+    }
+
+    var qs = {};
+    var pairs = str.split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      var parts = pairs[i].split('=');
+      if (parts.length < 1 || parts.length > 3) {
+        continue;
+      }
+      var key = parts[0].split('.');
+      var value = parts.length == 2 ? decodeURIComponent(parts[1]) : null;
+      var location = qs;
+      for (var j = 0; j < key.length; j++) {
+        var subkey = decodeURIComponent(key[j]);
+        if (!location.hasOwnProperty(subkey)) {
+          location[subkey] = {};
+        }
+        if (j == key.length - 1) {
+          location[subkey] = value;
+        } else {
+          location = location[subkey];
+        }
+      }
+    }
+
+    return qs;
+  }
+
+  function getServerSettings() {
+    var settings = {};
+    settings.enable = $('#server_enable').attr('checked');
+    settings.credentials = $('#server_credentials').attr('checked');
+    settings.httpstatus = $('#server_httpstatus').val();
+    settings.methods = $('#server_methods').val();
+    settings.headers = $('#server_headers').val();
+    settings.exposeHeaders = $('#server_expose_headers').val();
+    return settings;
+  }
+
+  function getClientSettings() {
+    var settings = {};
+    settings.method = $('#client_method').val();
+    settings.credentials = $('#client_credentials').attr('checked');
+    settings.headers = parseHeaders($('#client_headers').val());
+    return settings;
+  }
+
+  function getSettings() {
+    var settings = {};
+    settings.server = getServerSettings();
+    settings.client = getClientSettings();
+    return settings;
+  }
+
+  function getOrigin(location) {
+    if (location.origin) {
+      return location.origin;
+    }
+    // Firefox 3.6 doesn't have window.location.origin, construct the origin
+    // header manually.
+    return location.protocol + '//' + location.host;
+  }
+
+  function getRequestUrl(settings) {
+    var url = serverUrl + '?';
+    if (!settings.enable) {
+      url += 'enable=false&';
+    }
+    if (settings.credentials) {
+      url += 'credentials=true&';
+    }
+    if (settings.httpstatus) {
+      url += 'httpstatus=' + encodeURIComponent(settings.httpstatus) + '&';
+    }
+    if (settings.methods) {
+      url += 'methods=' + encodeURIComponent(settings.methods) + '&';
+    }
+    if (settings.headers) {
+      url += 'headers=' + encodeURIComponent(settings.headers) + '&';
+    }
+    if (settings.exposeHeaders) {
+      url += 'exposeHeaders=' + encodeURIComponent(settings.exposeHeaders) + '&';
+    }
+    return url;
+  }
+
+  function parseHeaders(headerStr) {
+    var headers = {};
+    if (!headerStr) {
+      return headers;
+    }
+    var headerPairs = headerStr.split('\n');
+    for (var i = 0; i < headerPairs.length; i++) {
+      var headerPair = headerPairs[i];
+      var index = headerPair.indexOf(': ');
+      if (index > 0) {
+        var key = $.trim(headerPair.substring(0, index));
+        var val = $.trim(headerPair.substring(index + 2));
+        headers[key] = val;
+      }
+    }
+    return headers;
+  }
+
+  function createCORSRequest(method, url){
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+      xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined"){
+      xhr = new XDomainRequest();
+      xhr.open(method, url);
+    } else {
+      xhr = null;
+    }
+    return xhr;
+  }
+
+  function resetResponseDivs() {
+    $('#response_events_content').empty();
+    $('#response_status_content').empty();
+    $('#response_statusText_content').empty();
+    $('#response_headers_content').empty();
+    $('#response_body_content').empty();
+  }
+
+  function logEvent(msg) {
+    $('#response_events_content').append(msg + '<br>');
+  }
+
+  function logXhr(xhr) {
+    $('#response_status_content').text(xhr.status);
+    if ('statusText' in xhr) {
+      // Firefox doesn't allow access to statusText when there's an error.
+      $('#response_statusText_content').text(xhr.statusText);
+    }
+    $('#response_headers_content').text(xhr.getAllResponseHeaders());
+    $('#response_body_content').text(xhr.responseText);
+  }
+
+  function handleReadyStateChange(event) {
+    logEvent('readystatechange');
+  }
+
+  function handleLoadStart(event) {
+    logEvent('loadstart');
+  }
+
+  function handleProgress(event) {
+    logEvent('progress');
+  }
+
+  function handleAbort(event) {
+    logEvent('abort');
+  }
+
+  function handleError(event) {
+    logEvent('error');
+    logXhr(event.currentTarget);
+  }
+
+  function handleLoad(event) {
+    logEvent('load');
+    logXhr(event.currentTarget);
+  }
+
+  function handleTimeout(event) {
+    logEvent('timeout');
+  }
+
+  function handleLoadEnd(event) {
+    logEvent('loadend');
+  }
+
+  function sendRequest() {
+    resetResponseDivs();
+    var settings = getSettings();
+    var requestUrl = getRequestUrl(settings.server);
+    var xhr = createCORSRequest(settings.client.method, requestUrl);
+    if (settings.client.credentials) {
+      xhr.withCredentials = true;
+    }
+    var headers = settings.client.headers;
+    for (var name in headers) {
+      if (!headers.hasOwnProperty(name)) {
+        continue;
+      }
+      xhr.setRequestHeader(name, headers[name]);
+    }
+    xhr.onreadystatechange = handleReadyStateChange;
+    xhr.onloadstart = handleLoadStart;
+    xhr.onprogress = handleProgress;
+    xhr.onabort = handleAbort;
+    xhr.onerror = handleError;
+    xhr.onload = handleLoad;
+    xhr.ontimeout = handleTimeout;
+    xhr.onloadend = handleLoadEnd;
+    xhr.send();
+  }
+
+  function getClientHeaders(headers) {
+    var retstr = '';
+    for (var name in headers) {
+      if (!headers.hasOwnProperty(name)) {
+        continue;
+      }
+      var value = headers[name];
+      retstr += name + ': ' + value + '\r\n';
+    }
+    return retstr;
+  }
+
+  function initializeDefaults(qs) {
+    if ('server' in qs) {
+      var server = qs['server'];
+      serverUrl = server['url'] || serverUrl;
+      if (server['enable'] == 'false') {
+        $('#server_enable').attr('checked', false);
+      }
+      if (server['credentials'] == 'true') {
+        $('#server_credentials').attr('checked', true);
+      }
+      if (server['methods']) {
+        $('#server_methods').val(server['methods']);
+      }
+      if (server['headers']) {
+        $('#server_headers').val(server['headers']);
+      }
+      if (server['exposeHeaders']) {
+        $('#server_expose_headers').val(server['exposeHeaders']);
+      }
+    }
+    if ('client' in qs) {
+      var client = qs['client'];
+      if (client['method']) {
+        $('#client_method').val(client['method']);
+      }
+      if (client['credentials'] == 'true') {
+        $('#client_credentials').attr('checked', true);
+      }
+      if ('headers' in client) {
+        $('#client_headers').val(getClientHeaders(client['headers']));
+      }
+    }
+  }
+
+  function isCorsSupported() {
+    var xhr = new XMLHttpRequest();
+    return "withCredentials" in xhr;
+  }
+
+  $(document).ready(function(){
+    if (isCorsSupported()) {
+      var qs = loadQueryString(window.location.search || null);
+      initializeDefaults(qs);
+    } else {
+      $('#content').hide();
+      $('#corsnotsupported').show();
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %}
+
+{% block head %}
+  <script>
+  $(document).ready(function() {
+    // Scroll the updates into view, changing the width and margins of the
+    // container to simulate movement from the edges of the window.
+    /*$('#updates_badge').click(function() {
+      $('#start').css({'width': '100%'});//, 'margin-top': '-1.5em'});
+      $('#logo').animate({
+        left: -2500
+      }, 300);
+      $('#updates').animate({
+        left: 0
+      }, 300, function() {
+        $('#start').animate({
+          width: '1000px',
+          margin: '0 auto'
+        }, 300);
+      });
+    });*/
+
+    // function hideScrollToTechnologyArrow() {
+    //   $('#scroll-technology').css('position', 'relative').animate({
+    //     top: -200,
+    //     opacity: 0,
+    //     height: 0
+    //   }, 600);
+    // }
+
+    // $('#scroll-technology').click( function() {
+    //   $.scrollTo('#intro', 600, {margin: true, offset: -25});
+    //   //hideScrollToTechnologyArrow();
+    //   $('body').addClass('scrolled');
+    // });
+
+    // $('#scroll-authors').click( function() {
+    //   $.scrollTo('#authors', 600, {margin: true, offset: -25});
+    // });
+
+    var top = $('html, body').offset().top;
+    var waterMark = document.querySelector('.watermark');
+
+    $(window).scroll(function(event) {
+      // Get the position of the vertical scroll.
+      var y = $(this).scrollTop();
+
+      if (y > top) {
+        waterMark.classList.add('fadeIn');
+
+        if (!$('body').hasClass('scrolled')) {
+          //hideScrollToTechnologyArrow();
+          $('body').addClass('scrolled');
+        }
+      } else {
+        waterMark.classList.remove('fadeIn');
+
+        $('body').removeClass('scrolled');
+
+        // // Reappear the 'Scroll to Technology' arrow.
+        // $('#scroll-technology').css('position', 'relative').animate({
+        //   top: 0,
+        //   opacity: 1,
+        //   height: 100
+        // }, 600);
+      }
+    });
+  });
+  </script>
+{% endblock %}
+
+{% block body %}
+
+<header id="start">
+  <!--
+  <div id="logo">
+    <img src="/static/images/logo.png" width="459" height="364">
+    <img id="updates_badge" src="/static/images/updates_badge.png" width="101" height="102">
+  </div>
+  -->
+  <section id="updates" class="feed pattern-bg">
+    <img src="/static/images/site_title.png" id="updates_title">
+    <h2>{% trans "Latest Articles" %}
+      <a href="http://feeds.feedburner.com/html5rocks" style="vertical-align:text-top;" target="_blank">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJpSURBVDjLfVNJT1NRGL0/wY0/wonaEesOAxoTF4bEpY1GFGGBqEUhggjYaCVIcIKC1TiHiCEBiXEhVdm4EDaaKI2WofTRlqbYR8sbOhzfd5v3tEK8i5d3F+fcM3wf+3x065bZc9t6F5rNCLeYsXTJgkibBUK7FcsdVkS7bIh57Ihfs2PFa0fihgOx6w4QhrCMfmKXnYi4y7DcbEK8zYxEhwVJjxW/vDaIPXak+xxYv1MOqX8PlEEn1PtOKP4KTsLoZQLHvQeRfjeAzPsBiE9O/Rec9e+F7HMiqiljJJteXvXX4O9TkEUon4awPlS5KThzq5xbY+SZZCf7DkGa8kH9Mo58SvjDpKwh+/biBnCq245opw2MAtvMszxah0IiaPDkPl4tASc9Nh40ow+B089ruexceBrqVC/kB5Vcdj44YZDIr5sM8Eq71larBYyqopczw6dLMuDSR11cdm52wshltaeCg6MtVLtGQD3rsqVHh6FOdqEgCgaJOuLisvVcMgEfBwtuExYvmMEoyQ1VPd5vSC9oQPH2PqRHzhfvksjB4YYyLLh3g9GE6eD83AcUhBkemPKwylCSHrvCZROYTtR7BPP1uzB3ViOg8SSwOl5v2M9HprlsOXCz6ORbgMuWvk7ye/KlF6GTOxE6YwKj2SbZ2eFq7pmOOvOCp732tJbfs8J3Ljv1pr9IMHYXP47vwM8GjYAWQx8S5Vk1pFd1JVUlB2uQuHeCe15qPQCh+xjmm6oQdG1HqFGzQAtBi/HvkOhV6YGRZ5JNLxN4sbG4kUxfZ1oMaoTGk4aLhoR6pqoobQqMPJNsellf598J2Or0Mh3FtwAAAABJRU5ErkJggg==" width="16" height="16" alt="{% trans "RSS" %}" />
+      </a>
+    </h2>
+    <ul id="updates_list">
+      {% for tut in tutorials %}
+        {% if forloop.counter0 < 5 %}
+          <li data-pubdate="{{tut.publication_date}}">
+            <span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span> <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}" width="20" height="20"></span>
+            <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}</a></span>
+            <span class="classes">
+              {% for tag in tut.classes %}
+                <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
+              {% endfor %}
+            </span>
+          </li>
+        {% endif %}
+      {% empty %}
+        Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+      {% endfor %}
+    </ul>
+    <span class="share" style="right:320px;left: auto;position: absolute;bottom:initial;">
+      <ul>
+        <li class="googleplus"><div class="g-plusone" data-size="medium" data-count="true" data-href="{{disqus_url}}"></div></li>
+        <li class="facebook" data-url="{{disqus_url}}"></li>
+        <li class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-url="{{disqus_url}}" data-lang="{{LANGUAGE_CODE}}" data-related="ChromiumDev:News and announcements for developers from the Google Chrome team and makers of HTML5 Rocks.">{% trans "Tweet" %}</a></li>
+      </ul>
+    </span>
+    <p><a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "See more &rarr;" %}</a></p>
+  </section>
+</header>
+
+<article id="intro" class="clearfix sectioned">
+  <header class="two_columns clearfix pattern-bg">
+    <hgroup>
+      <h1>{% trans "Welcome to HTML5ROCKS" %}</h1>
+      <h2>{% trans "What kind of HTML dev do you think you are?" %}</h2>
+    </hgroup>
+    <p>
+      {% blocktrans %}
+      HTML5 is the ubiquitous platform for the web. Whether you're a mobile web
+      developer, an enterprise with specific business needs, or a serious game
+      dev looking to explore the web as a new platform, HTML5 has something for
+      you! Choose your path:
+      {% endblocktrans %}
+    </p>
+  </header>
+
+  <div class="clearfix thirds">
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/mobile">
+        <h2>{% trans "Mobile" %}</h2>
+        <p>
+          {% blocktrans %}
+          Web developers can use the same set of technologies they know and love
+          to build rich web applications that work across different device
+          types.
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/gaming">
+        <h2>{% trans "Gaming" %}</h2>
+        <p>
+          {% blocktrans %}
+          High performance 2D/3D graphics, offline asset storage, rich audio
+          APIs, and socket-based networking let you create compelling modern
+          games and reach users like never before.
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/business">
+        <h2>{% trans "Business" %}</h2>
+        <p>
+          {% blocktrans %}
+          HTML5 brings substantial benefits for companies that no other IT model
+          can &ndash; in simplicity, cost, security, flexibility and mobility.
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+  </div>
+</article>
+
+<!--
+<a id="scroll-technology" class="nav arrow_down">{% trans "Or get straight to the tech!" %}</a>
+-->
+
+<article id="technology" class="clearfix sectioned">
+  <section id="classes" class="pattern-bg">
+    <header class="two_columns">
+      <hgroup>
+        <h1>{% trans "HTML5 Features" %}</h1>
+      </hgroup>
+      <p>
+        {% blocktrans %}
+        HTML5 is making the web platform more powerful in a number of different
+        areas. Try learning by major HTML5 feature groups.
+        {% endblocktrans %}
+      </p>
+    </header>
+    <ul>
+      <li class="offline"><a href="/{{LANGUAGE_CODE}}/features/offline"><h3>{% trans "Offline" %}</h3></a></li>
+      <li class="storage"><a href="/{{LANGUAGE_CODE}}/features/storage"><h3>{% trans "Storage" %}</h3></a></li>
+      <li class="connectivity"><a href="/{{LANGUAGE_CODE}}/features/connectivity"><h3>{% trans "Connectivity" %}</h3></a></li>
+      <li class="file_access"><a href="/{{LANGUAGE_CODE}}/features/file_access"><h3>{% trans "File Access" %}</h3></a></li>
+      <li class="semantics"><a href="/{{LANGUAGE_CODE}}/features/semantics"><h3>{% trans "Semantics" %}</h3></a></li>
+      <li class="multimedia"><a href="/{{LANGUAGE_CODE}}/features/multimedia"><h3>{% trans "Audio/Video" %}</h3></a></li>
+      <li class="graphics"><a href="/{{LANGUAGE_CODE}}/features/graphics"><h3>{% trans "3D/Graphics" %}</h3></a></li>
+      <li class="presentation"><a href="/{{LANGUAGE_CODE}}/features/presentation"><h3>{% trans "Presentation" %}</h3></a></li>
+      <li class="performance"><a href="/{{LANGUAGE_CODE}}/features/performance"><h3>{% trans "Performance" %}</h3></a></li>
+      <li class="nuts_and_bolts"><a href="/{{LANGUAGE_CODE}}/features/nuts_and_bolts"><h3>{% trans "Nuts &amp; Bolts" %}</h3></a></li>
+    </ul>
+  </section>
+
+  <div class="clearfix thirds">
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/why">
+        <h2>{% trans "Why HTML5?" %}</h2>
+        <p>
+          <strong>{% trans "Why you should care." %}</strong>
+          <br>
+          {% blocktrans %}
+          HTML5 introduces many cutting-edge features that enable developers to
+          create web apps&hellip;
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/tutorials/">
+        <h2>{% trans "Updates" %}</h2>
+        <p>
+          <strong>{% trans "Learn what's new." %}</strong><br>
+          {% blocktrans %}
+          Articles, tutorials, case studies, and demos that show you how to use
+          HTML5 features.
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+
+    <section class="one_third link_target pattern-bg">
+      <a href="/{{LANGUAGE_CODE}}/resources">
+        <h2>{% trans "Resources" %}</h2>
+        <p>
+          <strong>{% trans "All HTML5, all the time." %}</strong><br>
+          {% blocktrans %}
+          Cultivated list of additional resources to help you on your HTML5
+          learning voyage.
+          {% endblocktrans %}
+        </p>
+      </a>
+    </section>
+  </div>
+</article>
+
+<!--
+{% if not is_mobile %}
+<a id="scroll-authors" class="nav arrow_down">{% trans "Contributors" %}</a>
+
+<article id="authors" class="clearfix sectioned">
+  <header class="two_columns clearfix pattern-bg">
+    <hgroup>
+      <h1>{% trans "HTML5 Gurus Rock" %}</h1>
+      <h2>{% trans "Community" %}</h2>
+    </hgroup>
+    <p>
+      {% blocktrans %}
+      HTML5Rocks is <a href="http://code.google.com/p/html5rocks/" rel="external">open source</a>
+      and community driven. Tweak the code or <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" rel="external">contribute</a>
+      a new tutorial. We'd love to have your help and expertise!
+      {% endblocktrans %}
+      <div id="google_plus_page_link">
+        <a href="https://plus.google.com/102860501900098846931?prsrc=3">
+          {% trans "<strong>Follow us</strong> on <span>Google+</span>" %}
+        </a>
+      </div>
+    </p>
+  </header>
+
+  <div class="authors_wrapper">
+  {% for profile in sorted_profiles %}
+    <article class="profile pattern-bg" id="{{profile.id}}" itemscope itemtype="http://microformats.org/profile/hcard">
+      <a href="/{{LANGUAGE_CODE}}/profiles#{{profile.id}}">
+      <section>
+        <img itemprop="photo" alt="{{profile.given_name}} {{profile.family_name}}" title="{{profile.given_name}} {{profile.family_name}}" src="/static/images/profiles/75/{{profile.id}}.75.png">
+        <hgroup>
+          <h2>
+            <div itemprop="fn">
+              <div itemprop="n" itemscope>
+                <span itemprop="given-name">{{profile.given_name}}</span>
+                <span itemprop="family-name">{{profile.family_name}}</span>
+              </div>
+            </div>
+          </h2>
+          <h3 itemprop="org" itemscope>
+            {% if profile.unit %}<div itemprop="organization-unit">{{profile.unit}}</div>{% endif %}
+            {% if profile.org %}<div itemprop="organization-name">{{profile.org}}</div>{% endif %}
+          </h3>
+        </hgroup>
+      </section>
+      </a>
+    </article>
+  {% endfor %}
+  </div>
+</article>
+{% endif %}
+-->
+
+<script>
+{% if not is_mobile %}
+  (function(){
+    var kkeys = [], konami = "38,38,40,40,37,39,37,39,66,65";
+    document.addEventListener('keydown', function hdl(e) {
+      kkeys.push( e.keyCode );
+      if ( kkeys.toString().indexOf( konami ) >= 0 ){
+        document.removeEventListener('keydown', hdl, false);
+          var ref    = document.getElementsByTagName('script')[0],
+              script = document.createElement('script');
+          // thx a bunch erkie!  github.com/erkie/erkie.github.com
+          script.src = '/static/js/boom/asteroids.min.js';
+          ref.parentNode.insertBefore(script, ref);
+      }
+    }, false);
+  })();
+{% endif %}
+
+var selfPage = '{{self_pagename}}'; // Need to pass in current page id to persona.js via template.
+</script>
+<script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
+<script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
+{% endblock %}

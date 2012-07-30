@@ -1,0 +1,849 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<style>
+figure img { border: 1px solid #ccc; }
+h1,h2,h3,h4 { clear: both; }
+/* Prevent the contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+dd {
+  padding: 5px 0;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -moz-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  -o-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+  margin-bottom: 30px;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -o-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  -o-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  -ms-border-radius-topright: 10px;
+  -o-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+#columns-full .column {
+  -webkit-transition: -webkit-transform 0.2s ease-out;
+  -moz-transition: -moz-transform 0.2s ease-out;
+  -o-transition: -o-transform 0.2s ease-out;
+  -ms-transition: -ms-transform 0.2s ease-out;
+}
+#columns-full .column.over,
+#columns-dragOver .column.over,
+#columns-dragEnd .column.over,
+#columns-almostFinal .column.over {
+  border: 2px dashed #000;
+}
+#columns-full .column.moving {
+  opacity: 0.25;
+  -webkit-transform: scale(0.8);
+  -moz-transform: scale(0.8);
+  -ms-transform: scale(0.8);
+  -o-transform: scale(0.8);
+}
+#columns-full .column .count {
+  padding-top: 15px;
+  font-weight: bold;
+  text-shadow: #fff 0 1px;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.draganddrop;
+{% endblock %}
+
+{% block content %}
+
+  <h2 id="toc-introduction">Introduction</h2>
+
+  <p>For years, we've been using libraries like JQuery and Dojo to simplify
+  complex UI elements like animations, rounded corners, and drag and drop.
+  There's no doubt, eye-candy is important for making rich, immersive experiences on the web.
+  But why should a library be required for common tasks that all developers are using?</p>
+
+  <p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Drag and drop</a>
+  (DnD) is a first class citizen in HTML5! The spec defines an event-based mechanism, JavaScript API,
+  and additional markup for declaring that just about any type of element be <code>draggable</code> on a page.
+  I don't think anyone can argue against native browser support for a particular feature.
+  Native browser DnD means faster, more responsive web apps.</p>
+
+  <h3 id="toc-feature-detection">Feature Detection</h3>
+
+  <p>Many apps that utilize DnD would have a poor experience without it. For example, imagine a chess game
+  pieces that don't move. Oops! Although browser support is fairly complete,
+  determining if a browser implements DnD (or any HTML5 feature for that matter) is important
+  for providing a solution that degrades nicely. When/where DnD isn't available, fire up that library fallback
+  to maintain a working app.</p>
+
+  <p>If you need to rely on an API, always use feature detection rather than sniffing the browser's User-Agent.
+  One of the better libraries for feature detection is called <a href="http://www.modernizr.com/">Modernizr</a>.
+  Modernizr sets a boolean property for each feature it tests. Thus, checking for DnD is a one-liner:</p>
+  <pre class="prettyprint">
+if (Modernizr.draganddrop) {
+  // Browser supports HTML5 DnD.
+} else {
+  // Fallback to a library solution.
+}
+</pre>
+
+  <h2 id="toc-creating-dnd-content">Creating draggable content</h2>
+
+  <p>Making an object draggable is simple. Set the <code>draggable=true</code> attribute
+  on the element you want to make moveable. Just about anything can be drag-enabled,
+  including images, links, files, or other DOM nodes.</p>
+
+  <p>As an example, let's start creating rearrangeable columns. The basic markup may look something like this:</p>
+
+  <pre class="prettyprint">
+&lt;div id="columns"&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;A&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;B&lt;/header&gt;&lt;/div&gt;
+  &lt;div class="column" draggable="true"&gt;&lt;header&gt;C&lt;/header&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+  <p>It's worth noting that in most browsers, text selections, img elements, and anchor
+  elements with an <code>href</code> attribute are draggable by default. For example, dragging
+  the logo on google.com produces a ghost image:</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/dnd/img_drag.png" width="500" height="269" title="Dragging an image in the browser" alt="Dragging an image in the browser" />
+    <figcaption>Most browsers support dragging an image by default.</figcaption>
+  </figure>
+
+  <p>which can be dropped in the address bar, a <code>&lt;input type="file" /&gt;</code> element, or even
+  the desktop. If you want to enable other types of content to be draggable, you'll need to leverage the HTML5
+  DnD APIs.</p>
+
+  <p>Using a little CSS3 magic we can spruce up our markup to look like columns.
+  Adding <code>cursor: move</code> gives users a visual indicator that something is moveable:</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.column {
+  height: 150px;
+  width: 150px;
+  float: left;
+  border: 2px solid #666666;
+  background-color: #ccc;
+  margin-right: 5px;
+  -webkit-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 3px #000;
+  -ms-box-shadow: inset 0 0 3px #000;
+  box-shadow: inset 0 0 3px #000;
+  text-align: center;
+  cursor: move;
+}
+.column header {
+  color: #fff;
+  text-shadow: #000 0 1px;
+  box-shadow: 5px;
+  padding: 5px;
+  background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -webkit-gradient(linear, left top, right top,
+                               color-stop(0, rgb(0,0,0)),
+                               color-stop(0.50, rgb(79,79,79)),
+                               color-stop(1, rgb(21,21,21)));
+  background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+  border-bottom: 1px solid #ddd;
+  -webkit-border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -ms-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -webkit-border-top-right-radius: 10px;
+  -ms-border-top-right-radius: 10px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+}
+&lt;/style&gt;
+</pre>
+
+  <p>Result (draggable but won't do anything):</p>
+  <div id="columns">
+    <div class="column" draggable="true"><header>A</header></div>
+    <div class="column" draggable="true"><header>B</header></div>
+    <div class="column" draggable="true"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">In the example above, most browsers will
+  create a ghost image of the content being dragged. Others (FF in particular) will require
+  some <a href="#toc-dataTransfer">data be sent</a> in the drag operation.
+  In the next section, we'll start to make our column
+  example more interesting by adding listeners to process the drag/drop event model.</p>
+
+  <h2 id="toc-dragging-events">Listening for Dragging Events</h2>
+
+  <p>There are a number of different events to attach to for monitoring the entire drag and drop process:</p>
+  <ul>
+    <li><code>dragstart</code></li>
+    <li><code>drag</code></li>
+    <li><code>dragenter</code></li>
+    <li><code>dragleave</code></li>
+    <li><code>dragover</code> </li>
+    <li><code>drop</code></li>
+    <li><code>dragend</code></li>
+  </ul>
+
+  <p>To handle the DnD flow, we need the notion of a source element (where the drag originates), the data payload
+  (what we're trying to drop), and a target (an area to catch the drop). The source element can be an image, list,
+  link, file object, block of HTML...you name it. The target is the drop zone (or set of drop zones) that accepts
+  the data the user is trying to drop. Keep in mind that not all elements can be targets (e.g. images).</p>
+
+  <h3 id="toc-dragstart">1. Starting a Drag</h3>
+
+  <p>Once you have <code>draggable="true"</code> attributes defined on your content, attach
+  <code>dragstart</code> event handlers to kick off the DnD sequence for each column.</p>
+
+  <p>This code will set the column's opacity to 40% when the user begins dragging it:</p>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+});
+</pre>
+
+  <p>Result:</p>
+  <div id="columns-dragStart">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="clear:both">Since the <code>dragstart</code> event's target is our source element,
+  setting <code>this.style.opacity</code> to 40% gives the user visual feedback that the element
+  is the current selection being moved. One thing that we still need to do is return the columns opacity
+  to 100% once the drag is done. An obvious place to handle that is the <code>dragend</code> event.
+  More on this later.</p>
+
+  <h3 id="toc-dragover-dragleave">2. dragenter, dragover, and dragleave</h3>
+
+  <p><code>dragenter</code>, <code>dragover</code>, and <code>dragleave</code> event handlers can be used to
+  provide additional visual cues during the drag process. For example, when a column is hovered over during a drag,
+  its border could become dashed. This will let users know the columns are also drop targets.</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+.column.over {
+  border: 2px dashed #000;
+}
+&lt;/style&gt;
+</pre>
+
+<pre class="prettyprint">
+function handleDragStart(e) {
+  this.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+<span class="new">function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnter(e) {
+  // this / e.target is the current hover target.
+  this.classList.add('over');
+}</span>
+
+<span class="new">function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  <span class="new">col.addEventListener('dragenter', handleDragEnter, false);
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);</span>
+});
+</pre>
+
+  <p>There are a couple of points worth covering in this code:</p>
+
+  <ul>
+    <li>The <code>this</code>/<code>e.target</code> changes for each
+    type of event, depending on where we are in the DnD event model.</li>
+    <li>In the case of dragging something like a link, we need to prevent the browser's
+    default behavior, which is to navigate to that link. To do this, call <code>e.preventDefault()</code>
+    in the <code>dragover</code> event. Another good practice is to <code>return false</code> in that same handler.
+    Browsers are somewhat inconsistent about needing these, but they don't hurt to add.</li>
+    <li><code>dragenter</code> is used to toggle the 'over' class instead
+    of the <code>dragover</code>. If we were to use <code>dragover</code>,
+    our CSS class would be toggled many times as the event <code>dragover</code> continued
+    to fire on a column hover. Ultimately, that would cause the browser's renderer to do a
+    large amount of unnecessary work. Keeping redraws to a minimum is always a good idea.</li>
+  </ul>
+
+  <h3 id="toc-dragend">3. Completing a Drag</h3>
+
+  <p>To process the actual drop, add an event listener for the <code>drop</code>
+  and <code>dragend</code> events. In this handler, you'll need to prevent
+  the browser's default behavior for drops, which is typically some sort of annoying redirect.
+  You can prevent the event from bubbling up the DOM by calling <code>e.stopPropagation()</code>.</p>
+
+  <p style="padding-top:10px;clear:both">Our column example won't do much without the
+  <code>drop</code> event in place, but before we do that, an immediate improvement
+  is to use <code>dragend</code> to remove the 'over' class from each column:</p>
+
+<pre class="prettyprint">
+...
+
+<span class="new">function handleDrop(e) {
+  // this / e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // stops the browser from redirecting.
+  }
+
+  // See the section on the DataTransfer object.
+
+  return false;
+}</span>
+
+<span class="new">function handleDragEnd(e) {
+  // this/e.target is the source node.
+
+  [].forEach.call(cols, function (col) {
+    col.classList.remove('over');
+  });
+}</span>
+
+var cols = document.querySelectorAll('#columns .column');
+[].forEach.call(cols, function(col) {
+  col.addEventListener('dragstart', handleDragStart, false);
+  col.addEventListener('dragenter', handleDragEnter, false)
+  col.addEventListener('dragover', handleDragOver, false);
+  col.addEventListener('dragleave', handleDragLeave, false);
+  <span class="new">col.addEventListener('drop', handleDrop, false);
+  col.addEventListener('dragend', handleDragEnd, false);</span>
+});
+</pre>
+
+  <p>Result:</p>
+  <div id="columns-dragEnd">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">If you've been following closely up until now,
+  you may notice that our example still doesn't drop the column as expected.
+  Enter the <code>DataTransfer</code> object.</p>
+
+  <h2 id="toc-dataTransfer">The DataTransfer object</h2>
+
+  <p>The <code>dataTransfer</code> property is where all the DnD magic happens.
+  It holds the piece of data sent in a drag action. <code>dataTransfer</code> is
+  set in the <code>dragstart</code> event and read/handled in the <code>drop</code> event.
+  Calling <code>e.dataTransfer.setData(format, data)</code>
+  will set the object's content to the mimetype and data payload passed as arguments.</p>
+
+  <p>In our example, the data payload is set to the actual HTML of the source column:</p>
+
+<pre class="prettyprint">
+var dragSrcEl = null;
+
+function handleDragStart(e) {
+  // Target (this) element is the source node.
+  this.style.opacity = '0.4';
+
+  dragSrcEl = this;
+
+  <span class="new">e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);</span>
+}
+</pre>
+
+  <p>Conveniently, <code>dataTransfer</code> also has a <code>getData(format)</code>
+  for fetching the drag data by mimetype. Here is the modification to process the column drop:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  // this/e.target is current target element.
+
+  if (e.stopPropagation) {
+    e.stopPropagation(); // Stops some browsers from redirecting.
+  }
+
+  <span class="new">// Don't do anything if dropping the same column we're dragging.
+  if (dragSrcEl != this) {
+    // Set the source column's HTML to the HTML of the columnwe dropped on.
+    dragSrcEl.innerHTML = this.innerHTML;
+    this.innerHTML = e.dataTransfer.getData('text/html');
+  }</span>
+
+  return false;
+}
+</pre>
+
+  <p>I've added a global var named <code>dragSrcEl</code> as a convenience to facilitate the column swap.
+  In <code>handleDragStart()</code>, the <code>innerHTML</code> of the source column is stored in that variable and later
+  read in <code>handleDrop()</code> to swap the source column and target column's HTML.</p>
+
+  <p>Result:</p>
+  <div id="columns-almostFinal">
+    <div class="column"><header>A</header></div>
+    <div class="column"><header>B</header></div>
+    <div class="column"><header>C</header></div>
+  </div>
+
+  <h3 id="toc-drag-properties">Dragging properties</h3>
+
+  <p>The <code>dataTransfer</code> exposes properties to provide
+  visual feedback to the user during the drag process. These properties can also
+  be used to control how each drop target responds to a particular data type.</p>
+  
+  <dl>
+    <dt><code>dataTransfer.effectAllowed</code></dt>
+    <dd>Restricts what 'type of drag' the user can perform on the element. It is used in the
+    drag-and-drop processing model to initialize the <code>dropEffect</code> during the
+    <code>dragenter</code> and <code>dragover</code> events. The property can be set to the
+    following values: <code>none</code>, <code>copy</code>, <code>copyLink</code>, <code>copyMove</code>,
+    <code>link</code>, <code>linkMove</code>, <code>move</code>, <code>all</code>, and <code>uninitialized</code>.
+    </dd>
+    <dt><code>dataTransfer.dropEffect</code></dt>
+    <dd>Controls the feedback that the user is given during the <code>dragenter</code> and
+    <code>dragover</code> events. When the user hovers over a target element, the browser's cursor will
+    indicate what type of operation is going to take place (e.g. a copy, a move, etc.). The effect can
+    take on one of the following values: <code>none</code>, <code>copy</code>, <code>link</code>, <code>move</code>.
+    </dd>
+    <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
+    <dd>Instead of using the browser's default 'ghost image' feedback, you can optionally set a drag
+    icon 
+<pre class="prettyprint">
+var dragIcon = document.createElement('img');
+dragIcon.src = 'logo.png';
+dragIcon.width = 100;
+e.dataTransfer.setDragImage(dragIcon, -10, -10);</pre>
+    <p>Result (you should see the Google logo when dragging these columns):</p>
+    <div id="columns-dragIcon">
+      <div class="column"><header>A</header></div>
+      <div class="column"><header>B</header></div>
+      <div class="column"><header>C</header></div>
+    </div>
+    </dd>
+  </dl>
+
+  <h2 id="toc-dnd-files">Dragging Files</h2>
+
+  <p>With the DnD APIs, it is possible to drag files from the desktop to your web app
+  in the browser window. As an extension to this idea, Google Chrome supports the ability to drag file
+  objects out from the browser to the desktop.</p>
+
+  <h3 id="toc-desktop-dnd-into">Drag-in: dragging from the desktop to the browser</h3>
+
+  <p>Dragging a file from the desktop is achieved by using the DnD events as other types of content.
+  The main difference is in your <code>drop</code> handler. Instead of using
+  <code>dataTransfer.getData()</code> to access the files, their data will be contained
+  in the <code>dataTransfer.files</code> property:</p>
+
+<pre class="prettyprint">
+function handleDrop(e) {
+  e.stopPropagation(); // Stops some browsers from redirecting.
+  e.preventDefault();
+
+  var files = e.dataTransfer.files;
+  for (var i = 0, f; f = files[i]; i++) {
+    // Read the File objects in this FileList.
+  }
+}
+</pre>
+
+  <p>For a complete guide to dragging files from desktop to the browser, see
+  <a href="/tutorials/file/dndfiles/#toc-selecting-files-dnd">Using drag and drop for selecting</a>
+  in "<a href="/tutorials/file/dndfiles/">Reading local files in JavaScript</a>".</p>
+
+  <h3 id="toc-desktop-dnd-out">Drag-out: dragging from the browser to the desktop</h3>
+
+  <p>For a complete guide to dragging files our from the browser to the desktop, see 
+  "<a href="http://www.thecssninja.com/javascript/gmail-dragout">Drag out files like Gmail</a>" from the CSS Ninja.</p>
+
+  <h2 id="toc-examples">Examples</h2>
+
+  <p>Here is the final product with a little more polish and a counter for each move:</p>
+  <div id="columns-full">
+    <div class="column"><header>A</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>B</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>C</header><div class="count" data-col-moves="0"></div></div>
+    <div class="column"><header>D</header><div class="count" data-col-moves="0"></div></div>
+  </div>
+
+  <p style="padding-top:10px;clear:both">The interesting thing about the column sample is that
+  the columns are both drag source and a drop target. A more common scenario is for the source
+  and target elements to be different. See <a href="http://html5demos.com/drag">html5demos.com/drag</a> for a demo.</p>
+
+<!--
+  other examples:
+  <li>Rearrange list</li> 
+  <li>Creating an image gallery</li> 
+  <li>Exporting a canvas image</li> 
+-->
+
+  <h2 id="toc-conclusion">Conclusion</h2>
+
+  <p>No one will argue that HTML5's DnD model is complicated compared to other solutions like JQuery UI.
+  However, any time you can take advantage of the browser's native APIs, do so!
+  After all, that's the whole point of HTML5...which is to standardize and make available
+  a rich set of APIs that are native to the browser. Hopefully popular libraries that
+  implement DnD functionality will eventually include native HTML5 support by default,
+  and fallback to a customize JS solution as needed.</p>
+
+  <h2 id="toc-references">References</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">Drag and Drop</a> specification</li> 
+    <li><a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">Drag Operations</a> from MDC</li>
+    <li>"<a href="http://html5doctor.com/native-drag-and-drop/">Native Drag and Drop</a>" article from html5doctor</li>
+    <li>"<a href="http://www.thecssninja.com/javascript/gmail-dragout">Drag out files like Gmail</a>" from the CSS Ninja</li>
+  </ul>
+
+<script>
+// Using this polyfill for safety.
+Element.prototype.hasClassName = function(name) {
+  return new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)").test(this.className);
+};
+
+Element.prototype.addClassName = function(name) {
+  if (!this.hasClassName(name)) {
+    this.className = this.className ? [this.className, name].join(' ') : name;
+  }
+};
+
+Element.prototype.removeClassName = function(name) {
+  if (this.hasClassName(name)) {
+    var c = this.className;
+    this.className = c.replace(new RegExp("(?:^|\\s+)" + name + "(?:\\s+|$)", "g"), "");
+  }
+};
+
+
+var samples = samples || {};
+
+// dragStart
+(function() {
+  var id_ = 'columns-dragStart';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', 'blah'); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+  });
+
+})();
+
+// dragEnd
+(function() {
+  var id_ = 'columns-dragEnd';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML); // needed for FF.
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+
+    // target element (this) is the source node.
+    this.style.opacity = '1';
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+
+})();
+
+// dragIcon
+(function() {
+  var id_ = 'columns-dragIcon';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    var dragIcon = document.createElement('img');
+    dragIcon.src = '/static/images/google_logo_small.png';
+    e.dataTransfer.setDragImage(dragIcon, -10, -10);
+
+    // Target element (this) is the source node.
+    this.style.opacity = '0.4';
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    // Enable columns to be draggable.
+    col.setAttribute('draggable', 'true');
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+  });
+
+})();
+
+// Almost final example
+(function() {
+  var id_ = 'columns-almostFinal';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    this.style.opacity = '0.4';
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+    
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    this.style.opacity = '1';
+
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+
+// Full example
+(function() {
+  var id_ = 'columns-full';
+  var cols_ = document.querySelectorAll('#' + id_ + ' .column');
+  var dragSrcEl_ = null;
+
+  this.handleDragStart = function(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+
+    dragSrcEl_ = this;
+
+    // this/e.target is the source node.
+    this.addClassName('moving');
+  };
+
+  this.handleDragOver = function(e) {
+    if (e.preventDefault) {
+      e.preventDefault(); // Allows us to drop.
+    }
+  
+    e.dataTransfer.dropEffect = 'move';
+
+    return false;
+  };
+
+  this.handleDragEnter = function(e) {
+    this.addClassName('over');
+  };
+
+  this.handleDragLeave = function(e) {
+    // this/e.target is previous target element.
+    this.removeClassName('over');
+  };
+
+  this.handleDrop = function(e) {
+    // this/e.target is current target element.
+
+    if (e.stopPropagation) {
+      e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    // Don't do anything if we're dropping on the same column we're dragging.
+    if (dragSrcEl_ != this) {
+      dragSrcEl_.innerHTML = this.innerHTML;
+      this.innerHTML = e.dataTransfer.getData('text/html');
+
+      // Set number of times the column has been moved.
+      var count = this.querySelector('.count');
+      var newCount = parseInt(count.getAttribute('data-col-moves')) + 1;
+      count.setAttribute('data-col-moves', newCount);
+      count.textContent = 'moves: ' + newCount;
+    }
+
+    return false;
+  };
+
+  this.handleDragEnd = function(e) {
+    // this/e.target is the source node.
+    [].forEach.call(cols_, function (col) {
+      col.removeClassName('over');
+      col.removeClassName('moving');
+    });
+  };
+
+  [].forEach.call(cols_, function (col) {
+    col.setAttribute('draggable', 'true');  // Enable columns to be draggable.
+    col.addEventListener('dragstart', this.handleDragStart, false);
+    col.addEventListener('dragenter', this.handleDragEnter, false);
+    col.addEventListener('dragover', this.handleDragOver, false);
+    col.addEventListener('dragleave', this.handleDragLeave, false);
+    col.addEventListener('drop', this.handleDrop, false);
+    col.addEventListener('dragend', this.handleDragEnd, false);
+  });
+})();
+</script>
+
+{% endblock %}

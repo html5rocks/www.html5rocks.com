@@ -1,0 +1,462 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ericbidelman %}{% endblock %}
+{% block headtitle %}ウェブ ワーカーの基本{% endblock %}
+{% block pagetitle %}ウェブ ワーカーの基本{% endblock %}
+{% block pagebreadcrumb %}ウェブ ワーカーの基本{% endblock %}
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+{% block date %}2010 年 7 月 26 日{% endblock %}
+{% block updated %}2011 年 5 月 24 日{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">サポート済み</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">未サポート</span></span> <span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">サポート済み</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">サポート済み</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">サポート済み</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="この記事は HTML5 Performance &amp; Integration を利用しています" title="この記事は HTML5 Performance &amp; Integration を利用しています"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.webworkers;
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-introduction-jsconcurrency">JavaScript の並行処理という問題</h2>
+  <p>面白いアプリケーションがあっても、（サーバーに置かれた容量の大きい実装などから）クライアントサイドの JavaScript へ移植しようとすると、数々のボトルネックを解消する必要があります。たとえば、ブラウザの互換性、静的型付け、アクセシビリティ、パフォーマンスなどの問題があります。幸い、ブラウザの JavaScript エンジンの処理速度は急速に改善されているので、これらの問題は過去のものとなりつつあります。</p>
+
+  <p>JavaScript の障害として残っているのは、実のところ言語そのものです。JavaScript は単一スレッド環境であり、複数のスクリプトを同時に実行することはできません。たとえば、UI イベントの処理、大量の API データのクエリと処理、DOM 操作をサイトで行わなければならない状況を思い浮かべてみてください。よくある状況ですが、残念なことにブラウザの JavaScript 実行時の制約により、すべてを同時に実行することはできません。スクリプトの実行は単一スレッド内で行われます。</p>
+
+  <p>デベロッパーたちは、<code>setTimeout()</code>、<code>setInterval()</code>、<code>XMLHttpRequest</code>、イベント ハンドラなどの手法を使って疑似の「並行処理」を実現しています。確かにこれらの機能はすべて非同期で実行されますが、「ノンブロッキング」は並行処理でなければならないことはありません。非同期イベントは、現在実行中のスクリプトの結果が生成された後で処理されます。HTML5 では、このような裏技よりも良い方法を使用できます。</p>
+
+  <h2 id="toc-introduction-jsthreading">ウェブ ワーカーの概要: JavaScript にスレッド機能を追加する</h2>
+
+  <p><a href="http://www.whatwg.org/specs/web-workers/current-work/">ウェブ ワーカー</a>の仕様（英語）では、ウェブ アプリケーションでバックグラウンド スクリプトを生成するための API が定義されています。ウェブ ワーカーを使用すると、UI や他のスクリプトによるユーザー インタラクションの処理をブロックすることなく、長時間実行のスクリプトによる計算集約型のタスクの処理などができるようになります。これまでいつも表示されていた「応答のないスクリプト」というエラー メッセージを目にすることもなくなります:</p>
+
+  <figure class="center">
+    <img src="/static/images/screenshots/workers/unresponsive_script.gif" width="450" height="100" title="Unresponsive script dialog" alt="「応答のないスクリプト」エラー メッセージ"  />
+    <figcaption>よくある「応答のないスクリプト」エラー メッセージ</figcaption>
+  </figure>
+
+  <p>ワーカーでは、スレッド形式のメッセージ パッシングによって並列性が実現されます。常に最新の状態を反映した UI、パフォーマンスと応答性の高い UI をユーザーに提供するには、ワーカーを使用するのが最適です。</p>
+
+  <h3 id="toc-introduction-types">ウェブ ワーカーのタイプ</h3>
+
+  <p>ウェブ ワーカーの<a href="http://www.whatwg.org/specs/web-workers/current-work/">仕様</a>には、<a href="http://www.whatwg.org/specs/web-workers/current-work/#dedicated-workers-and-the-worker-interface">専用ワーカー</a>と<a href="http://www.whatwg.org/specs/web-workers/current-work/#sharedworker">共有ワーカー</a>（リンク先はいずれも英語）という 2 種類のウェブ ワーカーについての記述がありますが、この記事では専用ワーカーのみを取り上げ、このワーカーを「ウェブ ワーカー」または「ワーカー」と呼ぶことにします。</p>
+
+  <h2 id="toc-gettingstarted">ワーカーを使用する</h2>
+
+  <p>ウェブ ワーカーは独立したスレッドで動作するので、ウェブ ワーカーによって実行されるコードは個別のファイルに格納する必要があります。しかしその前に、最初の作業としてメイン ページで新しい <code>Worker</code> オブジェクトを作成する必要があります。このコンストラクタはワーカー スクリプトの名前をとります。</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('task.js');
+</pre>
+
+  <p>指定されたファイルが存在する場合、ブラウザは新しいワーカー スレッドを生成します。このスレッドは非同期でダウンロードされます。ファイルのダウンロードが完了してファイルが実行されるまで、ワーカーは開始されません。ワーカーへのパスで 404 が返された場合、ワーカーはエラーを返すことなく失敗します。</p>
+
+  <p>ワーカーを作成したら、<code>postMessage()</code> メソッドを呼び出してワーカーを開始します:</p>
+  <pre class="prettyprint">
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-gettingstarted-workercomm">メッセージ パッシングによりワーカーと通信する</h3>
+
+  <p>ワーカーと親ファイルの通信は、イベント モデルと <code>postMessage()</code> メソッドを使って行われます。ブラウザの種類とバージョンによって、<code>postMessage()</code> は文字列または JSON オブジェクトを単一の引数として受け入れることができます。近年のブラウザの最新バージョンでは、JSON オブジェクトの受け渡しがサポートされています。</p>
+
+  <p>下記は、文字列を使って「Hello World」を doWork.js のワーカーに渡す例です。このワーカーは単純に、渡されたメッセージを返します。</p>
+
+  <p>メイン スクリプト:</p>
+
+  <pre class="prettyprint">
+var worker = new Worker('doWork.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Worker said: ', e.data);
+}, false);
+
+worker.postMessage('Hello World'); // Send data to our worker.
+</pre>
+
+  <p>doWork.js（ワーカー）:</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  self.postMessage(e.data);
+}, false);
+</pre>
+
+  <p><code>postMessage()</code> がメイン ページから呼び出されると、ワーカーはそのメッセージを <code>message</code> イベントの <code>onmessage</code> ハンドラを定義して処理します。メッセージのペイロード（この場合は「Hello World」）には <code>Event.data</code> でアクセスできます。この例はそれほど面白いものではありませんが、<code>postMessage()</code> はデータをメイン スレッドに送り戻す手段としても使用できる便利なメソッドであることがわかるかと思います。</p>
+
+  <p>メイン ページとワーカーの間で受け渡されるメッセージはコピーされ、共有はされません。たとえば、次の例にある JSON メッセージの「msg」プロパティにはどちらの側でもアクセスできます。オブジェクトは、分離された専用の領域で実行されていてもワーカーに直接渡されているように見えます。実際の動作は、オブジェクトはワーカーに渡されるときにシリアル化され、その後メイン ページ側に渡ったときにシリアル化が解除されます。ページとワーカーは同じインスタンスを共有しないので、結果として、受け渡しごとに複製が作成されることになります。ほとんどのブラウザは、いずれかの側で値を自動的に JSON にエンコード/デコードすることにより、この機能を実装しています。</p>
+
+  <p>下記はもう少し複雑な、JSON オブジェクトを使ってメッセージを受け渡す例です。</p>
+
+  <p>メイン スクリプト:</p>
+
+  <pre class="prettyprint">
+&lt;button onclick="sayHI()"&gt;Say HI&lt;/button&gt;
+&lt;button onclick="unknownCmd()"&gt;Send unknown command&lt;/button&gt;
+&lt;button onclick="stop()"&gt;Stop worker&lt;/button&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    // Calling worker.terminate() from this script would also stop the worker.
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker = new Worker('doWork2.js');
+
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+&lt;/script&gt;
+</pre>
+
+  <p>doWork2.js:</p>
+
+  <pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      self.postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+      self.postMessage('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+      self.close(); // Terminates the worker.
+      break;
+    default:
+      self.postMessage('Unknown command: ' + data.msg);
+  };
+}, false);
+</pre>
+
+  <p><strong>注</strong>: ワーカーを停止するには、メイン ページから <code>worker.terminate()</code> を呼び出す方法と、ワーカー自体の内部で <code>self.close()</code> を呼び出す方法の 2 通りがあります。</p>
+
+  <p><strong>例</strong>: このワーカーを実行してみてください。</p>
+  <div class="example">
+    <button onclick="sayHI()">Say HI</button>
+    <button onclick="unknownCmd()">Send unknown command</button>
+    <button onclick="stop()">Stop worker</button>
+    <output id="result"></output>
+  </div>
+
+  <h2 id="toc-enviornment">ワーカーを取り巻く環境</h2>
+
+  <h3 id="toc-enviornment-scope">ワーカーのスコープ</h3>
+
+  <p>ワーカーのコンテキストでは、<code>self</code> と <code>this</code> はいずれもワーカーのグローバル スコープを参照します。したがって、上記の例は次のように記述することもできます:</p>
+
+  <pre class="prettyprint">
+addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'start':
+      postMessage('WORKER STARTED: ' + data.msg);
+      break;
+    case 'stop':
+  ...
+}, false);
+</pre>
+
+  <p>または、<code>onmessage</code> イベント ハンドラを直接設定することもできます（ただし JavaScript を使いこなすデベロッパーたちは常に <code>addEventListener</code> の方をすすめています）。</p>
+
+  <pre class="prettyprint">
+onmessage = function(e) {
+  var data = e.data;
+  ...
+};
+</pre>
+
+  <h3 id="toc-enviornment-features">ワーカーで使用できる機能</h3>
+
+  <p>ウェブ ワーカーの動作はマルチスレッドになるので、アクセスできるのは次の JavaScript 機能のサブセットのみとなります:</p>
+  <ul>
+    <li><code>navigator</code> オブジェクト</li>
+    <li><code>location</code> オブジェクト（読み取り専用）</li>
+    <li><code>XMLHttpRequest</code></li>
+    <li><code>setTimeout()/clearTimeout()</code> と <code>setInterval()/clearInterval()</code></li>
+    <li><a href="/tutorials/appcache/beginner/">アプリケーション キャッシュ</a></li>
+    <li><code>importScripts()</code> メソッドを使った外部スクリプトのインポート</li>
+    <li><a href="#toc-enviornment-subworkers">他のウェブ ワーカーの生成</a></li>
+  </ul>
+  <p>ワーカーで次の機能にはアクセスできません:</p>
+  <ul>
+    <li>DOM（非スレッドセーフ）</li>
+    <li><code>window</code> オブジェクト</li>
+    <li><code>document</code> オブジェクト</li>
+    <li><code>parent</code> オブジェクト</li>
+  </ul>
+
+  <h3 id="toc-enviornment-loadingscripts">外部スクリプトを読み込む</h3>
+
+  <p><code>importScripts()</code> 関数を使って外部スクリプト ファイルやライブラリをワーカーに読み込むことができます。このメソッドは、インポートするリソースのファイル名を表すゼロ以上の文字列をとります。</p>
+
+  <p>次は、<code>script1.js</code> と <code>script2.js</code> をワーカーに読み込む例です:</p>
+
+  <p>worker.js:</p>
+  <pre class="prettyprint">
+importScripts('script1.js');
+importScripts('script2.js');
+</pre>
+
+  <p>上記は 1 つのインポート ステートメントとして次のように記述することもできます:</p>
+  <pre class="prettyprint">
+importScripts('script1.js', 'script2.js');
+</pre>
+
+  <h3 id="toc-enviornment-subworkers">サブワーカー</h3>
+
+  <p>ワーカーは子ワーカーを生成できるので、実行時に大きなタスクを細かく分割するのに便利です。ただし、サブワーカーを使用する際は気を付けることがいくつかあります:</p>
+  <ul>
+    <li>サブワーカーは親ページと同じ生成元内でホストされる必要があります。 </li>
+    <li>サブワーカー内の URI は（メイン ページではなく）親ワーカーからの相対位置として解決されます。</li>
+  </ul>
+
+  <p>ほとんどのブラウザでは、ワーカーごとに個別のプロセスが生成されます。ワーカー ファームを生成しようとするときには、ユーザーのシステム リソースを多く消費してしまわないように注意してください。この理由の 1 つは、メイン ページとワーカーの間で受け渡しされるメッセージは共有されずにコピーされるためです。<a href="#toc-gettingstarted-workercomm">メッセージ パッシングを使ってワーカーと通信する</a>をご覧ください。</p>
+
+  <p>サブワーカーを生成する方法の例については、仕様内の<a href="http://www.whatwg.org/specs/web-workers/current-work/#delegation">こちらの例</a>をご覧ください。</p>
+
+  <h2 id="toc-inlineworkers">インライン ワーカー</h2>
+
+  <p>ワーカー スクリプトをその場で作成する必要があるときや、別途ワーカー ファイルを作成せずに自己完結型のページを作成したいときはどうすればよいでしょうか。新しい <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#the-blobbuilder-interface"><code>BlobBuilder</code></a>（リンク先は英語）インターフェースを使用すると、メイン ロジックと同じ HTML ファイルにワーカーを組み込んでインライン ワーカーにできます。これには、次のように <code>BlobBuilder</code> を作成しワーカー コードを文字列として追加します:</p>
+<pre class="prettyprint">
+// Prefixed in Webkit, Chrome 12, and FF6: window.WebKitBlobBuilder, window.MozBlobBuilder
+var bb = new BlobBuilder();
+bb.append("onmessage = function(e) { postMessage('msg from worker'); }");
+
+// Obtain a blob URL reference to our worker 'file'.
+// Note: window.webkitURL.createObjectURL() in Chrome 10+.
+var blobURL = window.URL.createObjectURL(bb.getBlob());
+
+var worker = new Worker(blobURL);
+worker.onmessage = function(e) {
+  // e.data == 'msg from worker'
+};
+worker.postMessage(); // Start the worker.
+</pre>
+
+  <h3 id="toc-inlineworkers-bloburis">Blob URL</h3>
+
+  <p>ポイントとなるのは <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-createObjectURL"><code>window.URL.createObjectURL()</code></a>（リンク先は英語）の呼び出しです。このメソッドでは単純な URL 文字列が作成されますが、これを DOM の <code>File</code> オブジェクトまたは <code>Blob</code> オブジェクトに格納されているデータの参照に使用できます。たとえば次のようにできます:</p>
+
+  <pre class="prettyprint">blob:http://localhost/c745ef73-ece9-46da-8f66-ebes574789b1</pre>
+
+  <p>Blob URL は一意な URL で、アプリケーションの実行期間中（<code>document</code> がアンロードされるまで）有効です。Blob URL を多く作成する場合は、不要になった参照から解放していくことをおすすめします。Blob URL を明示的に解放するには、Blob URL を <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-revokeObjectURL"><code>window.URL.revokeObjectURL()</code></a>（リンク先は英語）に渡します:</p>
+
+  <pre class="prettyprint">
+window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Chrome 10+.
+</pre>
+
+  <p>Chrome では、<code>chrome://blob-internals/</code> とアドレスバーに入力すると、作成したすべての Blob URL を確認できるので便利です。</p>
+
+  <h3 id="toc-inlineworkers-example">全体の例</h3>
+
+  <p>もう一歩進んで、ワーカーの JS コードをページに組み込む（インラインにする）スマートな方法を紹介しましょう。この手法では、<code>&lt;script&gt;</code> タグを使用してワーカーを定義します:</p>
+
+  <pre class="prettyprint">
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="utf-8" />
+&lt;/head>
+&lt;body>
+
+  &lt;div id="log"&gt;&lt;/div&gt;
+
+  &lt;script id="worker1" type="javascript/worker"&gt;
+    // This script won't be parsed by JS engines because its type is javascript/worker.
+    self.onmessage = function(e) {
+      self.postMessage('msg from worker');
+    };
+    // Rest of your worker code goes here.
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    function log(msg) {
+      // Use a fragment: browser will only render/reflow once.
+      var fragment = document.createDocumentFragment();
+      fragment.appendChild(document.createTextNode(msg));
+      fragment.appendChild(document.createElement('br'));
+
+      document.querySelector("#log").appendChild(fragment);
+    }
+
+    var bb = new BlobBuilder();
+    bb.append(document.querySelector('#worker1').textContent);
+
+    // Note: window.webkitURL.createObjectURL() in Chrome 10+.
+    var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+    worker.onmessage = function(e) {
+      log("Received: " + e.data);
+    }
+    worker.postMessage(); // Start the worker.
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>どちらかというと、この新しい方法の方がすっきりして読みやすいと思います。ここではスクリプト タグの定義として <var>id="worker1"</var> と
+  <var>type='javascript/worker'</var> を指定しています（したがってブラウザは JS を解析しません）。このコードは <code>document.querySelector('#worker1').textContent</code> を使って文字列として抽出され、<code>BlobBuilder.append()</code> に渡されます。</p>
+
+  <h3 id="toc-inlineworkers-loadingscripts">外部スクリプトを読み込む</h3>
+
+  <p>以上の手法を使ってワーカー コードをインラインにした場合、<code>importScripts()</code> が動作するには絶対 URI の指定が必要になります。相対 URI を渡そうとすると、ブラウザはセキュリティ エラーを返します。その理由は、（この時点で Blob URL から作成されている）ワーカーは <code>blob:</code> プレフィックスを使って解決されるのに対し、アプリは別のスキーム（おそらく <code>http://</code>）から実行されることになるためです。つまり、クロスドメイン制約によりエラーが発生します。</p>
+
+  <p>インライン ワーカーで <code>importScripts()</code> を利用する 1 つの方法としては、メイン スクリプト実行元の現在の URL を指定します。具体的には、URL をインライン ワーカーに渡し、手動で絶対 URL を作成します。これで、外部スクリプトが同一生成元からインポートされるようにできます。メイン アプリの実行元が http://example.com/index.html であるとすると、次のようになります:</p>
+    <pre class="prettyprint">
+...
+&lt;script id="worker2" type="javascript/worker"&gt;
+self.onmessage = function(e) {
+  var data = e.data;
+
+  if (data.url) {
+    var url = data.url.href;
+    var index = url.indexOf('index.html');
+    if (index != -1) {
+      url = url.substring(0, index);
+    }
+    importScripts(url + 'engine.js');
+  }
+  ...
+};
+&lt;/script&gt;
+&lt;script&gt;
+  var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+  worker.postMessage(<b>{url: document.location}</b>);
+&lt;/script&gt;
+</pre>
+
+  <h2 id="toc-errors">エラーを処理する</h2>
+
+  <p>どの JavaScript ロジックでも言えることですが、ウェブ ワーカーで発生するエラーの処理を考える必要があります。実行中のワーカーでエラーが発生した場合は、<code>ErrorEvent</code> が発生します。インターフェースの 3 つのプロパティを確認すると、原因を突き止める参考になります。1 つ目は <code>filename</code> で、これはエラーの原因となったワーカー スクリプトの名前を表します。2 つ目は <code>lineno</code> で、これはエラーが発生した行番号を表します。3 つ目は <code>message</code> で、これはエラーのわかりやすい説明です。エラーのプロパティを出力する <code>onerror</code> イベント ハンドラのセットアップ例を次に示します:</p>
+
+  <pre class="prettyprint">
+&lt;output id="error" style="color: red;"&gt;&lt;/output&gt;
+&lt;output id="result"&gt;&lt;/output&gt;
+
+&lt;script&gt;
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result').textContent = e.data;
+  }
+
+  var worker = new Worker('workerWithError.js');
+  worker.addEventListener('message', onMsg, false);
+  worker.addEventListener('error', onError, false);
+  worker.postMessage(); // Start worker without a message.
+&lt;/script&gt;
+</pre>
+
+  <p><strong>例</strong>: workerWithError.js が 1/x を実行しようとする例を示します（x は未定義の値です）。</p>
+
+  <div class="example">
+    <button onclick="startErrorWorker()">実行</button>
+    <output id="error" style="color:red;"></output>
+    <output id="result2"></output>
+  </div>
+
+  <p>workerWithError.js:</p>
+<pre class="prettyprint">
+self.addEventListener('message', function(e) {
+  postMessage(1/x); // Intentional error.
+};
+</pre>
+
+  <h2 id="toc-security">セキュリティについて</h2>
+
+  <h3 id="toc-security-local">ローカル アクセスでの制約</h3>
+
+  <p>Google Chrome のセキュリティ制約により、このブラウザの最新バージョンではワーカーをローカルで実行すること（<code>file://</code> など）はできなくなります。実行しようとすると失敗し、その際エラーは返されません。<code>file://</code> スキームからアプリを実行するには、<code>--allow-file-access-from-files</code> フラグ セットを指定して Chrome を実行します。<strong>注</strong>: このフラグ セットを使ってメインのブラウザを実行することはおすすめしません。これはテスト目的でのみ使用し、通常のブラウザ利用では使用しないでください。</p>
+
+  <p>他のブラウザにこれと同じ制約はありません。</p>
+
+  <h3 id="toc-security-origin">同一生成元に関する注意事項</h3>
+
+  <p>ワーカー スクリプトは、呼び出しページと同じスキームを指定した外部ファイルである必要があります。つまり、<code>data:</code> URL や <code>javascript:</code> URL からスクリプトを読み込むことはできません。また、<code>https:</code> ページは <code>http:</code> URL で始まるワーカー スクリプトを開始できません。</p>
+
+  <h2 id="toc-usecases">使用例</h2>
+
+  <p>それでは、どのようなアプリでウェブ ワーカーを活用できるでしょうか。残念ながらウェブ ワーカーは比較的新しい技術で、現在出回っているサンプルやチュートリアルの大半は素数計算が中心です。面白みには欠けますが、ウェブ ワーカーの概念を理解する上では参考になります。下記にその他のアイデアをいくつか挙げます:</p>
+  <ul>
+    <li>（後でデータを使用する目的での）データのプリフェッチ/キャッシュ</li>
+    <li>コード構文のハイライト表示、その他のリアルタイムでのテキスト書式設定</li>
+    <li>スペル チェック</li>
+    <li>動画データや音声データの解析</li>
+    <li>バックグラウンド I/O やウェブサービスのポーリング</li>
+    <li>大きな配列や膨大な JSON 応答の処理</li>
+    <li>&lt;canvas&gt; での画像フィルタリング</li>
+    <li>ローカル ウェブ データベースの行の大量更新</li>
+  </ul>
+
+  <h2 id="toc-examples">デモ</h2>
+  <ul>
+    <li><a href="http://slides.html5rocks.com/#web-workers">HTML5Rocks スライド</a>のサンプル コード</li>
+    <li><a href="http://htmlfive.appspot.com/static/tracker1.html">モーション トラッカー</a>（英語）</li>
+    <li><a href="http://people.mozilla.com/~prouget/demos/worker_and_simulatedannealing/index.xhtml">シミュレーテッド アニーリング</a>（英語）</li>
+    <li><a href="http://html5demos.com/worker">HTML5 のデモ サンプル</a></li>
+  </ul>
+
+  <h2 id="toc-references">参考資料</h2>
+  <ul>
+    <li><a href="http://www.whatwg.org/specs/web-workers/current-work/">ウェブ ワーカー</a>の仕様（英語）</li>
+    <li>Mozilla Developer Network の <a href="http://developer.mozilla.org/ja/Using_web_workers">Using web workers</a></li>
+    <li>Dev.Opera サイトの <a href="http://dev.opera.com/articles/view/web-workers-rise-up/">Web Workers rise up!</a>（英語）</li>
+  </ul>
+
+<script>
+  var worker = new Worker('doWork2.js');
+  worker.addEventListener('message', function(e) {
+    document.getElementById('result').textContent = e.data;
+  }, false);
+
+  function sayHI() {
+    worker.postMessage({'cmd': 'start', 'msg': 'Hi'});
+  }
+
+  function stop() {
+    worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
+  }
+
+  function unknownCmd() {
+    worker.postMessage({'cmd': 'foobard', 'msg': '???'});
+  }
+
+  var worker2 = new Worker('workerWithError.js');
+  worker2.addEventListener('message', onMsg, false);
+  worker2.addEventListener('error', onError, false);
+
+  function startErrorWorker() {
+    worker2.postMessage(); // Start worker without a message.
+  }
+
+  function onError(e) {
+    document.getElementById('error').textContent = [
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+  }
+
+  function onMsg(e) {
+    document.getElementById('result2').textContent = e.data;
+  }
+</script>
+{% endblock %}

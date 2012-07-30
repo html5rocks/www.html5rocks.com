@@ -1,0 +1,411 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="この記事は HTML5 Audio/Video を利用しています" title="この記事は HTML5 Audio/Video を利用しています"  />
+{% endblock %}
+
+{% block iscompatible %}
+return !!document.createElement("video").textTracks;
+{% endblock %}
+
+{% block head %}
+<style>
+video {
+  max-width: 100%;
+  outline: none;
+}
+div#eric video {
+-webkit-box-reflect: below 5px -webkit-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-moz-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-ms-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+-o-box-reflect: below 5px -moz-linear-gradient(top, transparent, transparent 80%, rgba(255,255,255,0.2));
+margin: 0;
+}
+
+div#eric  {
+  text-align: center;
+}
+
+div#eric > div {
+margin-top: 2em;
+text-align: center;
+-webkit-perspective: 800;
+-webkit-transform-style: preserve-3d;
+-moz-perspective: 800;
+-moz-transform-style: preserve-3d;
+-ms-perspective: 800;
+-ms-transform-style: preserve-3d;
+-o-perspective: 800;
+-o-transform-style: preserve-3d;
+}
+
+div#eric > div > div:last-child {
+position: relative;
+top: -36px;
+}
+div#eric > div > div {
+color: black;
+font-family: "Open Sans", sans-serif;
+font-size: 18px;
+height:  25px;
+opacity: 1;
+-webkit-transition: all 500ms ease-in-out;
+-webkit-transform-origin: 50% 100%;
+-webkit-transform: rotateX(-90deg);
+-moz-transition: all 500ms ease-in-out;
+-moz-transform-origin: 50% 100%;
+-moz-transform: rotateX(-90deg);
+-o-transition: all 500ms ease-in-out;
+-o-transform-origin: 50% 100%;
+-o-transform: rotateX(-90deg);
+-ms-transition: all 500ms ease-in-out;
+-ms-transform-origin: 50% 100%;
+-ms-transform: rotateX(-90deg);
+}
+div#eric > div > div.on {
+opacity: 1;
+-webkit-transform: rotateX(0);
+-moz-transform: rotateX(0);
+-o-transform: rotateX(0);
+-ms-transform: rotateX(0);
+}
+.trackNotSupported {
+  display: none;
+}
+.trackNotSupported.show {
+  display: block;
+}
+.warningMessage {
+  color: red;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">HTML5 の track 要素の基礎</h2>
+
+<p>track 要素を使用すると、動画/音声ファイルに字幕やキャプション、スクリーン リーダーのテキスト、チャプターを簡単に、標準化された方法で追加することができます。</p>
+
+<p>track はその他の時間指定用メタデータにも使用できます。各 track 要素のソース データは、時間情報を含む「キュー<code></code>」のリストからなるテキスト ファイルです。キューには JSON や CSV といった形式のデータを含めることができます。便利なこの要素を使用すると、たとえばテキスト検索からのディープリンクやメディア ナビゲーションが可能になります。あるいはメディア再生と同期した DOM 操作やその他の動作も実現できます。</p>
+
+<p>track 要素は現在、<a href="http://ie.microsoft.com/testdrive/" title="Internet Explorer 10 のダウンロード">Internet Explorer 10</a> と <a href="http://tools.google.com/dlpage/chromesxs" title="Chrome Canary のダウンロード">Chrome 18</a> 以上で使用できます。Firefox は<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Firefox での track 要素の実装に関するバグ レポート">未サポート</a>です（リンク先はいずれも英語）。Chrome の場合、track 要素のサポートを有効にするには <a href="chrome://flags" title="chrome://flags page">chrome://flags</a> のページで設定する必要があります。</p>
+
+<p>次は track 要素を使った動画の簡単な例です。動画を再生すると英語の字幕が表示されます:</p>
+ 
+<video controls class="trackSupported">
+  <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
+  <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
+</video>
+
+<p class="warningMessage trackNotSupported">このデモを確認するには、track 要素をサポートしているブラウザ（<a href="http://tools.google.com/dlpage/chromesxs" title="Google Chrome Canary のダウンロード">Google Chrome Canary</a> など）が必要です。Chrome の場合、chrome://flags のページで track 要素のサポートを有効にする必要があります。</p>
+
+<p>英語とドイツ語の字幕を表示する video 要素のコードは次のようになります:</p>
+
+<pre class="prettyprint">
+&lt;video src="foo.ogv"&gt;
+  &lt;track kind="subtitles" label="English subtitles" src="subtitles_en.vtt" srclang="en" default&gt;&lt;/track&gt;
+  &lt;track kind="subtitles" label="Deutsche Untertitel" src="subtitles_de.vtt" srclang="de"&gt;&lt;/track&gt;
+&lt;/video&gt;
+</pre>
+
+<p>この例では、video 要素によってセレクタが表示され、ユーザーが字幕の言語を選べるようになっています（記事執筆時点でこの機能はまだ実装されていません）。</p>
+
+<p>track 要素は <code>file://</code> の URL からは利用できないのでご注意ください。track の動作を確認するには、ファイルをウェブサーバーに置く必要があります。</p>
+
+<p>track 要素ごとに、<code>kind</code> 属性で <code>subtitles</code>、<code>captions</code>、<code>descriptions</code>、<code>chapters</code>、<code>metadata</code> のいずれかの値を指定します。track 要素の <code>src</code> 属性では、時間指定トラックのキューのデータを含んだテキストファイルを指定します。ブラウザで解析できる形式であれば、どのようなファイル形式も可能です。Chrome では WebVTT がサポートされており、次のようになります:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+railroad
+00:00:10.000 --> 00:00:12.500
+Left uninspired by the crust of railroad earth
+
+manuscript
+00:00:13.200 --> 00:00:16.900
+that touched the lead to the pages of your manuscript.
+</pre>
+
+<p>トラック ファイルの各セグメントはキューと呼ばれます。各キューでは、最初の行に開始時間と終了時間を矢印で区切って指定し、その次の行にキューのテキストを指定します。必要であれば、キューに ID を指定することもできます（上記の例では「railroad」と「manuscript」が ID です）。キューの間は空の行で区切ります。</p>
+
+<p>キューの時間形式は hh:mm:ss.sss となります。解析では厳密さが要求されるので、桁数が不足する場合は 0 を使って埋める必要があります。hh、mm、ss の部分は 2 桁（値ゼロの場合は 00）で、sss の部分は 3 桁（値ゼロの場合は 000）となります。<a href="http://quuz.org/webvtt/">quuz.org/webvtt</a>（英語）にある WebVTT 検証ツールはおすすめです。このツールでは、時間形式のエラーや、時間が順番になっていないなどの問題をチェックできます。</p>
+
+<p>以下のデモは、字幕を検索して動画内の特定部分にアクセスできる方法を示しています。</p>
+
+<!-- subtitle search example -->
+
+<h2 id="toc-jsoncues">キューで HTML と JSON を使用する</h2>
+
+<p>WebVTT ファイル内のキューのテキストは、複数の行で指定することができます（ただし空白行は指定できません）。つまり、下記のようにキューに HTML を含めることができます。</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+&lt;p>Multi-celled organisms have different types of cells that perform specialised functions.&lt;/p>
+&lt;p>Most life that can be seen with the naked eye is multi-cellular.&lt;/p>
+&lt;p>These organisms are though to have evolved around 1 billion years ago with plants, animals and fungi having independent evolutionary paths.&lt;/p>
+</pre>
+
+<p>さらに、キューでは JSON も使用できます:</p>
+
+<pre class="prettyprint">
+WEBVTT FILE
+
+multiCell
+00:01:15.200 --> 00:02:18.800
+{
+"title": "Multi-celled organisms",
+"description": "Multi-celled organisms have different types of cells that perform specialised functions.
+  Most life that can be seen with the naked eye is multi-cellular. These organisms are though to
+  have evolved around 1 billion years ago with plants, animals and fungi having independent
+  evolutionary paths.",
+"src": "multiCell.jpg",
+"href": "http://en.wikipedia.org/wiki/Multicellular"
+}
+
+insects
+00:02:18.800 --> 00:03:01.600
+{
+"title": "Insects",
+"description": "Insects are the most diverse group of animals on the planet with estimates for the total
+  number of current species range from two million to 50 million. The first insects appeared around
+  400 million years ago, identifiable by a hard exoskeleton, three-part body, six legs, compound eyes
+  and antennae.",
+"src": "insects.jpg",
+"href": "http://en.wikipedia.org/wiki/Insects"
+}
+</pre>
+
+<p>キューで構造化データを使用できる track 要素は強力で柔軟性の高い要素と言えます。ウェブ アプリでは、キュー イベントをリッスンし各キューの実行時にテキストを抽出してデータを解析した後、その解析結果を使ってメディア再生と同期した DOM 変更（または他の JavaScript や CSS のタスクの実行）を行うことができます。</p>
+
+<h2 id="toc-search">検索とディープリンクによるアクセス</h2>
+
+<p>track 要素を使うと、音声/動画ファイルに対し、検索をより簡単、強力、正確に行えるという付加価値を与えることもできます。</p>
+<p>キューのテキストはインデックスに登録可能で、キューの開始時間はメディア内でのコンテンツの時間的位置を示す役割を果たします。キューには動画フレーム内のオブジェクト位置に関するデータも含めることができます。track 要素を <a href="http://www.youtube.com/watch?v=LfRRYp6mnu0" title="Media Fragment URI 実装のプロトタイプを紹介した YouTube 動画">Media Fragment URI</a>（リンク先は英語）と組み合わせて使用すると、音声/動画ファイル内のコンテンツを見つけてそのコンテンツに移動できるという優れた仕組みを提供できます。たとえば、「Etta James」と検索して返された結果をクリックすると、動画内で「Etta James」というテキストを含むキュー テキストがある位置に直接アクセスできるようになります。</a>
+
+<p><a href="treeOfLife/index.html" title="メタデータとしての track の使用法を示した Tree Of Life デモ">Tree Of Life</a> デモでは、track をメタデータとして使用して字幕検索からのナビゲーションを行う簡単な例を確認できます。このデモでは、時間指定用メタデータによってメディア再生と同期した DOM 操作を行う例も紹介しています。</p>
+
+<h2 id="toc-cues-js">JavaScriptを使って track とキューにアクセスする</h2>
+
+<p>audio 要素と video 要素には <code>textTracks</code> というプロパティがあり、このプロパティでは <code>TextTrackList</code> が返されます。このリストのメンバーである <code>TextTrack</code> は、1 つ 1 つが <code>&lt;track&gt;</code> 要素に対応します:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var textTracks = videoElement.textTracks; // one for each track element
+var textTrack = textTracks[0]; // corresponds to the first track element
+var kind = textTrack.kind // e.g. "subtitles"
+var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+</pre>
+
+<p>それぞれの <code>TextTrack</code> には <code>cues</code> というプロパティがあり、このプロパティでは <code>TextTrackCueList</code> が返されます。このメンバーの 1 つ 1 つが個々のキューに対応します。キュー データには、<code>startTime</code>、<code>endTime</code> などのプロパティを使ってアクセスできます。<code>text</code> プロパティでキューのテキスト コンテンツを取得することもできます:</p>
+
+<pre class="prettyprint">
+var cues = textTrack.cues;
+var cue = cues[0]; // corresponds to the first cue in a track src file
+var cueId = cue.id // cue.id corresponds to the cue id set in the WebVTT file
+var cueText = cue.text; // "The Web is always changing", for example (or some JSON!)
+</pre>
+
+<p><code>HTMLTrackElement</code> を使って <code>TextTrack</code> オブジェクトを取得すると効率的な場合もあります:</p>
+
+<pre class="prettyprint">
+var trackElements = document.querySelectorAll("track");
+// for each track element
+for (var i = 0; i &lt; trackElements.length; i++) {
+  trackElements[i].addEventListener("load", function() {
+    var textTrack = this.track; // gotcha: "this" is an HTMLTrackElement, not a TextTrack object
+    var isSubtitles = textTrack.kind === "subtitles"; // for example...
+    // for each cue
+    for (var j = 0; j &lt; textTrack.cues.length; ++j) {
+      var cue = textTrack.cues[j];
+      // do something
+    }
+}
+</pre>
+
+<p>この例に示すとおり、<code>TextTrack</code> プロパティには track 要素そのものではなく track 要素の <code>track</code> プロパティを使ってアクセスします。 </p>
+
+<p><code>TextTrack</code> には <code>load</code> イベントが発生した後でアクセスすることができます。発生前はアクセスできません。</p>
+
+<h2 id="toc-events">track とキューのイベント</h2>
+
+<p>キュー イベントには次の 2 種類があります:
+<ul>
+  <li>キューに発生した enter イベントと exit イベント</li>
+  <li>track に発生した cuechange イベント </li>
+</ul>
+</p>
+
+<p>上記の例では、キュー イベントのリスナーを次のように追加できます:</p>
+
+<pre class="prettyprint">
+cue.onenter = function(){
+  // do something
+};
+
+cue.onexit = function(){
+  // do something else
+};
+</pre>
+
+<p>enter イベントと exit イベントは、再生によってキューに入った（またはキューから出た）場合にのみ発生します。ユーザーがタイムラインのスライダーを手動でドラッグした場合は、track の新しい時間位置で cuechange イベントが発生しますが、enter イベントと exit イベントは発生しません。この動作を回避することもできます。回避するには、cuechange track イベントをリッスンして、有効なキューを取得します（有効なキューは 1 つとは限らないので注意が必要です）。</p>
+
+<p>下記は、キューが変わったときに現在のキューを取得し、キュー テキストを解析してオブジェクトを作成しようとする例です:</p>
+
+<pre class="prettyprint">
+textTrack.oncuechange = function (){
+  // "this" is a textTrack
+  var cue = this.activeCues[0]; // assuming there is only one active cue
+  var obj = JSON.parse(cue.text);
+  // do something
+}
+</pre>
+
+<h2 id="toc-notjustvideo">動画以外の用途</h2>
+
+<p>track は動画だけでなく音声ファイルとも組み合わせて使用できます。また、HTML マークアップの audio、video、track 要素を使用しなくても、track の API を活用することができます。TextTrack API に関する<a href="http://dev.w3.org/html5/spec/video.html#text-track-api" title="W3C TextTrack API に関するドキュメント">ドキュメント</a>（英語）では、この良い例として、音声の「スプライト」を効率良く実装する方法が示されています:</p>
+
+<pre class="prettyprint">
+var sfx = new Audio('sfx.wav');
+var track = sfx.addTextTrack('metadata'); // previously implemented as addTrack()
+
+// Add cues for sounds we care about.
+track.addCue(new TextTrackCue('dog bark', 12.783, 13.612, '', '', '', true));
+track.addCue(new TextTrackCue('kitten mew', 13.612, 15.091, '', '', '', true));
+
+function playSound(id) {
+  sfx.currentTime = track.getCueById(id).startTime;
+  sfx.play();
+}
+
+playSound('dog bark');
+playSound('kitten mew');
+</pre>
+
+<p><code>addTextTrack</code> メソッドは <code>kind</code>（上記の「metadata」など）、<code>label</code>（「Sous-titres français」など）、<code>language</code>（「fr」など）の 3 つのパラメータをとります。</p>
+
+<p>上記の例では <code>addCue</code> も使用されていますが、これは <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue" title="WHATWG TextTrackCue に関するドキュメント"><code>TextTrackCue</code></a> オブジェクトをとります。このオブジェクトのコンストラクタは、<code>id</code>（「dog bark」など）、<code>startTime</code>、<code>endTime</code>、キューの <code>text</code>、<a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-settings" title="WebVTT のキュー設定に関するドキュメント"><code>webVTT cue settings</code></a> 引数（位置、サイズ、整列の指定用）、ブール値の <code>pauseOnExit</code> フラグ（教育動画で質問後に再生を一時停止するなどに使用）をとります（リンク先はすべて英語）。</p>
+
+<p><code>startTime</code> と <code>endTime</code> では、WebVTT で使用される hh:mm:ss:sss の形式ではなく、浮動小数点値の秒数が使用されます。</p>
+
+<p><code>removeCue()</code> を使ってキューを削除することもできます。この引数にはキューを次のように指定します:</p>
+
+<pre class="prettyprint">
+var videoElement = document.querySelector("video");
+var track = videoElement.textTracks[0];
+var activeCue = track.activeCues[0];
+track.removeCue(activeCue);
+</pre>
+
+<p>これを試してみると、レンダリングされたキューがコード呼び出し後すぐに削除されることがわかります。</p>
+
+<p>track 要素には <code>mode</code> 属性を指定でき、値は 0（仕様上では <code>TextTrack.OFF</code>、Chrome では <code>TextTrack.DISABLED</code>）、1（<code>TextTrack.HIDDEN</code>）、2（<code>TextTrack.SHOWING</code>）のいずれかになります。この属性は、track イベントを使用するけれどデフォルトのレンダリングは無効にするという場合に便利です。次の動画でこの例を確認できます（<a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="Eric Bidelman 氏による HTML5 デモのスライドショー">Eric Bidelman 氏</a>（リンク先は英語）による制作）:</p>
+
+<div id="eric">
+  <video width="400" controls>
+    <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"'>
+    <track label="English subtitles" kind="subtitles" srclang="en" src="treeOfLife/tracks/developerStories-subtitles-en.vtt" default>
+  </video>
+  <div><div>test1</div><div>asdf2</div></div>
+</div>
+
+<script>
+(function(){
+
+var video = document.querySelector('div#eric video');
+var span1 = document.querySelector('div#eric > div :first-child');
+var span2 = document.querySelector('div#eric > div :last-of-type');
+
+if (!video.textTracks) return;
+
+var track = video.textTracks[0];
+track.mode = TextTrack.HIDDEN;
+
+var idx = 0;
+
+track.oncuechange = function(e) {
+
+  var cue = this.activeCues[0];
+  if (cue) {
+    if (idx == 0) {
+      span2.className = '';
+      span1.classList.remove('on');
+      span1.innerHTML = '';
+      span1.appendChild(cue.getCueAsHTML());
+      span1.classList.add('on');
+    } else {
+      span1.className = '';
+      span2.classList.remove('on');
+      span2.innerHTML = '';
+      span2.appendChild(cue.getCueAsHTML());
+      span2.classList.add('on');
+    }
+
+    idx = ++idx % 2;
+  }
+
+};
+
+})();
+</script>
+
+<p>この例では、<code>getCueAsHTML()</code> メソッドが使用されています。このメソッドは、WebVTT キュー テキストの<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT キュー テキストの解析に関するドキュメント">解析</a>結果と <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT キュー テキストの DOM 構造規則に関するドキュメント">DOM 構造</a>の規則に基づいて WebVTT 形式から HTML の <code>DocumentFragment</code> への変換を行い、各キューの HTML バージョンを返します（リンク先はいずれも英語）。変換前のキュー テキスト値を <code>src</code> ファイルの状態で取得するだけの場合は、キューの <code>text</code> プロパティを使用します。</p>
+
+<p>この状況では <code>getCueAsHTML()</code> メソッドを使用するのが便利です。このメソッドは WebVTT キュー テキストの<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-parsing-rules" title="WebVTT キュー テキストの解析に関するドキュメント">解析</a>結果と <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/infrastructure.html#webvtt-cue-text-dom-construction-rules" title="WebVTT キュー テキストの DOM 構造規則に関するドキュメント">DOM 構造</a>の規則に基づいて WebVTT 形式から HTML の <code>DocumentFragment</code> への変換を行い、各キューの HTML バージョンを返します（リンク先はいずれも英語）。変換前のキュー テキスト値を <code>src</code> ファイルの状態で取得するだけの場合は、キューの <code>text</code> プロパティを使用します。</p>
+
+<h2 id="toc-markup">マークアップについての補足</h2>
+
+<p>キューのタイムスタンプ行にマークアップを追加して、テキストの方向、整列、位置を指定できます。また、キュー テキストにマークアップを追加して、音声の紹介（話し手の名前紹介など）や書式の追加ができます。字幕とキャプションは CSS で操作でき、たとえば次のようになります:</p>
+
+<pre class="prettyprint">
+::cue {
+  color: #444;
+  font: 1em sans-serif;
+}
+::cue .warning {
+  color: red;
+  font: bold;
+}
+</pre>
+
+<p>Silvia Pfeiffer 氏による <a href="http://html5videoguide.net/presentations/WebVTT/#title-slide" title="HTML5 動画のユーザー補助に関するスライド">HTML5 動画のユーザー補助</a>スライド（英語）では、マークアップの使い方、ナビゲーション用のチャプター トラックやスクリーン リーダーのテキスト トラックの作成方法についてさらに例が紹介されています。</p>
+
+<h2 id="toc-finally">まとめ</h2>
+
+<p>キュー データを音声/動画ファイルに帯域内エンコードする代わりにテキスト ファイルに保存する方法で、字幕とキャプションを簡単に作成できます。この方法には、ユーザー補助の機能を高めることができるというメリット、検索やデータ移植がしやすくなるというメリットもあります。</p>
+
+<p>track 要素を使用すると、時間指定用メタデータやメディア再生にリンクした動的コンテンツを使用できるようにもなり、これによって audio 要素と video 要素に付加価値を与えることができます。</p>
+
+<p>強力で柔軟、シンプルな track 要素は、ウェブ上のメディアをさらにオープンで動的なものにする大きな飛躍と言えます。</p>
+
+<h2 id="toc-more">関連資料</h2>
+
+<ul>
+  <li>WHATWG HTML 現行の標準: <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element">http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#the-track-element</a>（英語）</li>
+  <li>W3C HTML5 草案: <a href="http://dev.w3.org/html5/spec/Overview.html#the-track-element" title="W3C 草案の track 要素に関するドキュメント">http://dev.w3.org/html5/spec/Overview.html#the-track-element</a>（英語）</li>
+  <li>W3C WebVTT 現行の標準: <a href="http://dev.w3.org/html5/webvtt/#webvtt-cue-timings" title="WebVTT Living Standard">http://dev.w3.org/html5/webvtt/#webvtt-cue-timings</a>（英語）</li>
+  <li>時間指定トラックの形式: <a href="http://wiki.whatwg.org/wiki/Timed_track_formats">http://wiki.whatwg.org/wiki/Timed_track_formats</a>（英語）</li>
+  <li>時間指定トラックの使用例: <a href="http://wiki.whatwg.org/wiki/Timed_tracks">http://wiki.whatwg.org/wiki/Timed_tracks</a>（英語）</li>
+  <li><a href="http://www.bbc.co.uk/blogs/researchanddevelopment/2012/01/implementing-startoffsettime-f.shtml" title="BBC Research and Development のブログ投稿">ライブ ストリーミングのための帯域外の時間指定用メタデータ</a>: Sean O'Halpin 氏による BBC Research and Development のブログ投稿（英語）</li>
+</ul>
+
+<script>
+$(document).ready(function() {
+  if (!isCompatible()) {
+    var els = document.querySelectorAll('.trackNotSupported');
+    for (var i = 0, el; el = els[i]; ++i) {
+      el.classList.add('show');
+    }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,671 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}欧内斯特·德尔加多 (Ernest Delgado) <ernestd@chromium.org>{% endblock %}
+{% block pageauthor %}{% profilelinks ernestd %}{% endblock %}
+{% block headtitle %}HTML5 视频{% endblock %}
+{% block pagetitle %}HTML5 视频{% endblock %}
+{% block pagebreadcrumb %}HTML5 视频{% endblock %}
+{% block head %}
+<style>
+video, canvas {
+  width: 200px;
+  height: 112px;
+  border: 1px solid black;
+}
+
+.video-container {
+  display: inline-block;
+  text-align: center;
+}
+
+.video_stream { color: blue; }
+.audio_stream { color: red; }
+.file_format { color: green; }
+
+/* video-js */
+#control-icons {
+  position: absolute;
+  background-color: white;
+  margin-left: 177px;
+  border: 1px solid #ccc;
+}
+
+#volume-mix {
+  position: absolute;
+  margin-left: 140px;
+  margin-top: 130px;
+}
+
+/* video-css */
+#video-css {
+  -moz-transition: all 0.3s ease-out;  /* FF3.7+ */
+  -o-transition: all 0.3s ease-out;  /* Opera 10.5 */
+  -webkit-transition: all 0.3s ease-out;  /* Saf3.2+, Chrome */ 
+}
+
+@-webkit-keyframes crawl {
+  0% { -webkit-transform: translate(0, 10px);  }
+  25% { -webkit-transform: translate(2px, 5px); }
+  50% { -webkit-transform: translate(0, 0); }
+  75% { -webkit-transform: translate(-2px, 5px); }
+  1000% { -webkit-transform: translate(0, 10px);  }
+}
+
+#video-css.enhanced {
+  border: 1px solid white;
+  
+  -moz-box-shadow: 0px 0px 4px #ffffff; /* FF3.5+ */
+  -webkit-box-shadow: 5px 44px 28px #333; /* Saf3.0+, Chrome */
+  box-shadow: 0px 0px 4px #ffffff; /* Opera 10.5, IE 9.0 */
+
+  -moz-transform: translate(0, -10px);  /* FF3.5+ */
+  -o-transform: translate(0, -10px);  /* Opera 10.5 */
+  -webkit-transform: translate(0, -10px);  /* Saf3.1+, Chrome */
+  
+  -webkit-animation-name: crawl;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: ease-in-out;
+}
+
+/* video-svg */
+.offscreen { position: absolute; left: -2000px; }
+
+#canvas-draw-frames, #canvas-svg-draw { 
+  display: none;
+}
+</style>
+{% endblock %}
+{% block date %}2010 年 8 月 3 日{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">支持</span></span> <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">不支持</span></span> <span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">支持</span></span> <span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">支持</span></span> <span class="browser chrome supported"><span class="browser_name">Chrome 浏览器</span><span class="support">支持</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="本文由 HTML5 多媒体强力驱动" title="本文由 HTML5 多媒体强力驱动"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return Modernizr.video;
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-intro">简介</h2>
+  <p>
+    视频标记是 HTML5 功能中备受关注的一个。视频标记通常在媒体中替代 Flash，但并不仅止于此。虽然它加入其他常见 HTML 标记的行列不久，但其能力和在各浏览器之间的支持范围正以惊人的速度增加。如您将在本教程中所看到的，其主要优势在于，自然集成了 CSS 和 JavaScript 等其他网络开发堆栈层以及其他 HTML 标记。
+  </p>
+  <p>
+    本教程将让您对视频标记有基本了解，并为您显示各种集成其他 HTML5 功能的不同示例，例如 &lt;canvas&gt;。
+  </p>
+  <h2 id="toc-markup">1. 标记</h2>
+  <p>
+    要使 HTML 视频在您的网站上运行，必须包含以下几行。
+  </p>
+<pre class="prettyprint">
+&lt;video>
+  &lt;source src="movie.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+  &lt;source src="movie.webm" type='video/webm; codecs="vp8, vorbis"' />
+&lt;/video></pre>
+  <p>
+    此代码段使用 &lt;source&gt; 标记，可让您添加多种格式作为后备类型，以免用户的浏览器不支持其中某个格式。<em></em>有关详情，请参阅下一部分。
+  </p>
+  <p>
+    您还可以使用能够使语法非常接近图片标记的语法的单个视频格式。此语法不久将成为最常使用的语法，届时所有浏览器都支持一种常用视频格式。
+  </p>
+<pre class="prettyprint">&lt;video src="movie.webm">&lt;/video></pre>
+  <p>
+    目前前一种情况较为常见，因此我们主要着眼于前一种情况。您需要注意的最重要的一点是，确保您的服务器使用 <em></em><code>Content-Type</code> 标头以正确的 MIME 类型提供视频文件。否则，视频可能无法正常运行，即使是在网站的本地副本中也不例外。在 Apache httpd.conf 中，只需要添加以下几行即可：
+  </p>
+<pre class="prettyprint">
+AddType video/ogg .ogv
+AddType video/mp4 .mp4
+AddType video/webm .webm
+</pre>
+  <p>
+    如果您的应用通过 Google App Engine 应用提供，您需要向 app.yaml 添加以下形式的内容（每种格式对应一个）：
+  </p>
+<pre class="prettyprint">
+- url: /(.*\.ogv)
+  static_files: videos_folder/\1
+  mime_type: video/ogg
+  upload: videos_folder/(.*\.ogv)
+</pre>
+  <p>
+    要提高客户端性能，请务必在处理多种格式时指明 source 标记中的 type 属性。<em></em><em></em>这样，浏览器就能确定可下载并播放的格式。换言之，浏览器不会下载其无法播放的格式，以便提高网站的性能。
+  </p>
+  
+  <h2 id="toc-formats">2. 视频格式</h2>
+  <p>
+    考虑可作为 zip 文件的<span class="file_format">视频格式</span>，其中包含已编码的<span class="video_stream">视频流</span>和<span class="audio_stream">音频流</span>。您应留意以下三种用于网络的格式（webm、mp4 和 ogv）：
+  </p>
+  <ul>
+    <li><span class="file_format">.mp4</span> = <span class="video_stream">H.264</span> + <span class="audio_stream">AAC</span></li>
+    <li><span class="file_format">.ogg/.ogv</span> = <span class="video_stream">Theora</span> + <span class="audio_stream">Vorbis</span></li>
+    <li><span class="file_format">.webm</span> = <span class="video_stream">VP8</span> + <span class="audio_stream">Vorbis</span></li>
+  </ul>
+  <p>
+    视频标记发展的速度实在令人欢欣鼓舞。就在一年前，Safari 还是唯一在稳定版本中支持视频标记的浏览器。而现在，所有新型浏览器均支持 HTML5 视频，包括即将推出的 IE9。至于编解码器，Firefox 浏览器、Chrome 浏览器和 Opera 浏览器都已通过 <a href="http://webmproject.org">WebM 项目</a>同意支持 .webm 作为常用视频格式。如果该编解码器已安装到计算机（我们希望以后不会将此作为必需要求），Internet Explorer 也将予以支持。<em></em>
+  </p>
+  <p>
+    请注意：在写这篇文章时，Safari 尚不支持 .webm 格式。<em></em>
+  </p>
+  <p>
+    以下内容显示了您的浏览器仅能呈现我们提到的三种格式中一种或两种格式的原理（如果您看到了三种格式，应该感到幸运！）：
+  </p>
+  {% if is_mobile %}
+  <div class="video-container">
+    <p>.mp4</p>
+    <video poster="star.png" controls>
+      <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    </video>
+  </div>
+  <div class="video-container">
+    <p>.webm</p>
+    <video poster="star.png" controls>
+      <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+    </video>
+  </div>
+  <div class="video-container">
+    <p>.ogv</p>
+    <video poster="star.png" controls>
+      <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+    </video>
+  </div>
+  {% else %}
+  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=180&hl=180#video_formats" style="border: none; width: 100%; height: 480px;"></iframe>
+  {% endif %}
+
+  <p>
+    在写这篇文章时（2010 年 8 月），此代码段是最安全的格式组合，可让您确保所有浏览器都能显示您的视频：
+  </p>
+<pre class="prettyprint">
+&lt;video>
+  &lt;source src="movie.webm" type='video/webm; codecs="vp8, vorbis"' />
+  &lt;source src="movie.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+  &lt;source src="movie.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  Video tag not supported. Download the video &lt;a href="movie.webm">here&lt;/a>.
+&lt;video></pre>
+  <p>
+    请注意：由于 iPad 中的错误，您需要将 .mp4 作为首选才能在该设备上加载视频，<em></em>直到该错误修复为止。
+  </p>
+
+  <p>
+    正如我之前提到的，几乎所有浏览器供应商都同意支持常用视频格式。因此，再过不到一年的时间，最可能在网络上使用的代码将如下所示：
+  </p>
+<pre class="prettyprint">
+&lt;video>
+  &lt;source src="movie.webm" type='video/webm; codecs="vp8, vorbis"' />
+  &lt;source src="movie.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+  Video tag not supported. Download the video &lt;a href="movie.webm">here&lt;/a>.
+&lt;video></pre>
+  
+  <p>
+    使用 .mp4 格式的其中一个主要问题是，其视频编解码器 (h.264) 不是开放的编解码器，且公司为使用 .mp4 格式而需要提供的许可非常难以理解。您可以参阅<a href="http://diveintohtml5.info/video.html#licensing">这个视频章节</a>了解关于该格式的详情。
+  </p>
+  <p>
+    关于 .mp4 格式的另一个问题是，根据用于解码视频的配置文件，其 type 属性必须比其他格式更加具体。<em></em>虽然“avc1.42E01E, mp4a.40.2”最为常用，您还是应该仔细检查此<a href="http://wiki.whatwg.org/wiki/Video_type_parameters#MPEG-4">配置文件列表</a>进行确认。
+  </p>
+  <p>
+    虽然 Microsoft 宣布在即将推出的 IE 版本（即 IE9）中支持视频标记和其他 HTML5 元素，但与其他主要浏览器相比，迁移到新版本的用户所占的比例还是较低。那么我们就来看看以下部分：
+  </p>
+  
+  <h2 id="toc-fallback">3. 对当前不支持视频标记的 IE 版本采取哪些措施？</h2>
+  <p>
+    可使用以下两个插件作为可能的解决方案：
+  </p>
+  <h3 id="toc-fallback-cf">Chrome 浏览器内嵌框架</h3>
+  <p>使用 <a href="http://code.google.com/chrome/chromeframe/">Chrome 浏览器内嵌框架插件</a>的优势在于，安装后，Internet Explorer 将支持旧版 IE 不支持的最新 HTML、JavaScript 和 CSS 标准功能。该插件还会为网络开发人员带来其他好处，即他们可以使用新的网络功能对应用进行编码，且该应用可供 IE 用户使用。试想一下，这将为网络开发人员节省多少时间，因为他们无需为针对 IE 的二次修改和解决方案进行编码。</p>
+  <h3 id="toc-fallback-flash">后备 Flash</h3>
+  <p>您还可以使用 Flash 作为后备。您可能需要再次将视频编码成 Flash 播放器兼容的格式，具体取决于您的视频格式。好消息是，Adobe 已承诺在他们的 Flash 播放器中支持 webm 格式，不过具体时间尚不清楚。<em></em>与 Chrome 浏览器内嵌框架插件相比，这一解决方案最大的缺陷在于，您获得的 Flash 播放器不会保存您之前为视频标记设置的自定义用户界面或改进功能。有关此技术的详情，可参阅 <a href="http://tutorials.html5rocks.com/tutorials/audio/quick/#toc-step3">HTML5 音频实施快速指南</a>教程。</p>
+  
+  <h2 id="toc-encode">4. 为您的视频编码</h2>
+  <p>
+    如果您需要将现有视频编码成我们在上一部分中提到的格式，可以使用 Windows 版和苹果机版 <a href="http://www.mirovideoconverter.com/">Miro Converter</a> 轻松获得所需格式。该程序无法让您调整太多设置，但能支持最常用的网络输出内容，包括我们在本教程中使用的三种格式。从本质上看，该软件实际上封装了 <a href="http://ffmpeg.org/">ffmpeg</a> 和 <a href="http://v2v.cc/~j/ffmpeg2theora/">ffmpeg2theora</a>，可让您通过命令行在 Windows、苹果机和 Linux 中使用，并能让您指定更多参数。访问 <a href="http://diveintohtml5.info/video.html#webm-cli">divintohtml5.org</a> 了解关于该工具的详情。
+  </p>
+
+  <h2 id="toc-fun">5. 有趣内容</h2>
+  <p>
+    正如我们在简介部分所说的，视频标记加入 HTML5 系列后最大的优势在于与其他网络开发堆栈层的集成。在以下示例中，我们对可能的应对措施进行了概述。
+  </p>
+  <h3 id="toc-fun-html">5.1. 视频 + 其他 HTML</h3>
+  <p>
+    视频播放器现可使用所有常用的 HTML 属性。例如，在以下代码段中，我们通过 tabindex 使键盘能够控制播放器。<em></em>一些可用于视频标记的新属性也可供音频标记共用，如 loop 和 autoplay，这两种属性的含义不言自明。<em></em><em></em>poster 属性指示最初加载视频和最后加载视频时显示的图片，controls 属性用于表明我们希望浏览器为我们自动呈现控制按钮，而非由我们自行创建自定义控制按钮。<em></em><em></em>使用 preload 属性可让我们在网页加载后立即在后台下载视频，即使视频尚未开始播放也是如此。<em></em>
+  </p>
+<pre class="prettyprint">
+&lt;video <em>poster="star.png" autoplay loop controls tabindex="0"</em>&gt;
+  &lt;source src="movie.webm" type='video/webm; codecs="vp8, vorbis"' /&gt;
+  &lt;source src="movie.ogv" type='video/ogg; codecs="theora, vorbis"' /&gt;
+&lt;/video&gt;
+</pre>
+  <p>
+    将视频标记作为本机浏览器元素进行高度集成解决了过去与第三方嵌入式播放器之间可能存在的问题，例如下拉菜单和覆盖在播放器上的 iframe 或动态调整视频周围其他 HTML 元素的大小时怪异的布局行为。<em></em>
+  </p>
+  <p>
+    由于系统不会将视频当作嵌入式外来对象处理，因此用户还可以体验到其他一些好处。例如，即使焦点位于播放器自身，页面滚动或敲击键盘等操作也是完全有效的。
+  </p>
+
+  <p>
+    <em></em>请注意：如果您要尝试编写<a href="http://dev.w3.org/html5/html-author/#polyglot-documents">支持多种语法的文档</a>以将 XHTML 语法纳入 HTML5 范围内，那么代码中的属性应采取以下格式：
+  </p>
+<pre class="prettyprint">
+&lt;video <em>poster="star.png" autoplay="autoplay" loop="loop" controls="controls" tabindex="0"</em>&gt;
+  &lt;source src="movie.webm" type='video/webm; codecs="vp8, vorbis"' /&gt;
+  &lt;source src="movie.ogv" type='video/ogg; codecs="theora, vorbis"' /&gt;
+&lt;/video&gt;
+</pre>
+
+  <h3 id="toc-fun-js">5.2. 视频 + JS</h3>
+  <p>
+    视频标记附带一系列属性和方法，可让您很好地控制来源于 JS 代码的视频。在<a href="http://www.w3.org/2010/05/video/mediaevents.html">以下示例</a>中，您可以实时查看这些属性和方法。
+  </p>
+  <p>
+    和其他任何 HIML 元素一样，您可以向视频标记附加常用事件，例如拖动事件、鼠标事件、焦点事件等。不过，视频元素会附带众多新事件，用于检测（和控制）视频播放、暂停或结束播放的时间。加载视频资源可能有很多注意事项，因此可使用多个事件对加载过程进行良好的控制，无论是在网络级别（loadstart、progress、suspend、abort、error、emptied、stalled）还是在缓冲级别（<code>loadedmetadata</code>、loadeddata、waiting、playing、canplay、canplaythrough）。
+  </p>
+  <p>
+    其中最简单的方法是，附加 canplay 事件，以便开始执行与视频相关的操作。
+  </p>
+<pre class="prettyprint">
+video.addEventListener('canplay', function(e) {
+  this.volume = 0.4;
+  this.currentTime = 10;
+  this.play();
+}, false);
+</pre>
+  <p>
+    目前互联网上提供了若干个自定义的播放器控制按钮。在以下示例中，我们使用了一些元素来同时控制两段视频，并使用 <em>playbackRate</em> 属性模拟了快进效果。使用滑块切换两个视频的音量。
+  </p>
+  <div id="control-icons">
+    <img src="control-skip-180.png" id="rw" />
+    <img src="control.png" id="play" />
+    <img src="control-double.png" id="ff" />
+  </div>
+  <input type="range" min="0" max="100" value="25" id="volume-mix" />
+
+  <video poster="star.png" id="video-left" tabindex="0">
+    <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+    <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  </video>
+
+  <video poster="star.png" id="video-right" tabindex="0">
+    <source src="chromeicon.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    <source src="chromeicon.webm" type='video/webm; codecs="vp8, vorbis"' />
+    <source src="chromeicon.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  </video>
+
+  <h3 id="toc-fun-css">5.3. 视频 + CSS</h3>
+  <p>
+    正如您所猜测的，由于视频标记是 DOM 中的头等公民，您可以使用传统的 CSS（如边框、不透明度等）使视频标记样式化。另外还有个很酷的功能，那就是您可以使用投影、遮罩、渐变、转换、切换和动画等最新的 CSS3 属性使视频标记样式化。
+  </p>
+  <p>
+    将鼠标悬停在下一段视频上方，实际查看部分效果。
+  </p>
+  <video poster="star.png" id="video-css">
+    <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+    <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  </video>
+  
+<pre class="prettyprint">
+#video-css.enhanced {
+  border: 1px solid white;
+  -moz-box-shadow: 0px 0px 4px #ffffff; /* FF3.5+ */
+  -webkit-box-shadow: 5px 44px 28px #333; /* Saf3.0+, Chrome */
+  box-shadow: 0px 0px 4px #ffffff; /* Opera 10.5, IE 9.0 */
+
+  -moz-transform: translate(0, 10px);  /* FF3.5+ */
+  -o-transform: translate(0, 10px);  /* Opera 10.5 */
+  -webkit-transform: translate(0, 10px);  /* Saf3.1+, Chrome */
+}
+</pre>
+
+  <h3 id="toc-fun-canvas">5.4. 视频 + canvas</h3>
+  <p>
+    画布是另一个在与视频标记一起使用时存在多种可能的 HTML5 元素。
+  </p>
+  <p>
+    在以下示例中，我们使用 &lt;canvas&gt; 元素的两个功能来导入和导出图片。其中第一个是 drawImage 方法，可让您从三个不同的来源导入图片：图片元素、其他画布元素和 &lt;video&gt; 元素！<em></em><em></em>这就意味着，我们每次运行这个方法时，系统都会将视频当前的帧导入并渲染到画布。
+  </p>
+  <p>
+    我们使用的第二个 &lt;canvas&gt; 标记功能是 toDataURL 方法，可让您将画布内容导出到图片。<em></em>点击以下视频的播放键，查看如何每隔 1.5 秒创建视频图片。我们用来导入/导出的画布实际上处于隐藏状态。<em></em>
+  </p>
+  <video poster="star.png" id="video-canvas-frames" controls>
+    <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+    <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  </video>
+  <canvas id="canvas-draw-frames"></canvas>
+  <div id="frames"></div>
+  <p>
+    在以下代码中，您可以看到我们如何通过以视频元素为源的 drawImage 方法简单地创造相隔 1.5 秒的间隔。
+  </p>
+<pre class="prettyprint">
+video_dom.addEventListener('play', function() {
+  video_dom.width = canvas_draw.width = video_dom.offsetWidth;
+  video_dom.height = canvas_draw.height = video_dom.offsetHeight;
+  var ctx_draw = canvas_draw.getContext('2d');
+  draw_interval = setInterval(function() {
+    // import the image from the video
+    ctx_draw.drawImage(video_dom, 0, 0, video_dom.width, video_dom.height);
+    // export the image from the canvas
+    var img = new Image();
+    img.src = canvas_draw.toDataURL('image/png');
+    img.width = 40;
+    frames.appendChild(img);
+  }, 1500)
+}, false);
+</pre>
+  <p>
+    在以下示例中，我们作出了进一步解释。如果您加快从视频导入和渲染图片的频率，您就能够在画布中实际模拟相同的视频帧速率。这样，您就可以变换画布中的各种花样，就像在视频中操作一样。
+  </p>
+  <p>
+    左侧是播放的原视频。中间是我们用来以 33 毫秒为间隔导入图片的画布。右侧是另一个画布，该画布会在从第一个画布导入图片的同时尝试所有转换方式。我们之所以要使用两个画布，是因为这样做比使用单个画布同时进行图片导入和转换的效果要好。
+  </p>
+  {% if is_mobile %}
+  <video poster="star.png" id="video-canvas-fancy" controls>
+    <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+    <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+    <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+  </video>
+  <canvas id="canvas-copy-fancy"></canvas>
+  <canvas id="canvas-draw-fancy"></canvas>
+  {% else %}
+  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=180&hl=160#video_+_canvas" style="border: none; width: 100%; height: 460px;"></iframe>
+  {% endif %}
+
+  <p>
+    <a href="https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/doc/spec/WebGL-spec.html">WebGL</a> 也可使用同样的图片导入技术。您可以使用 WebGL 执行一些操作，例如导入视频帧并将其渲染到旋转的 3D 立方体上。您可以访问 <a href="https://developer.mozilla.org/en/WebGL/Animating_textures_in_WebGL">MDC 网站</a>查看关于此类实施的更多详情。
+  </p>
+  <h3 id="toc-fun-svg">5.5. Video + SVG</h3>
+  <p>
+    SVG 以编程方式渲染和处理矢量图形，除此之外还附带了其他功能，如 <a href="http://en.wikipedia.org/wiki/SVG_filter_effects">SVG 滤镜效果</a>。您可以通过这些滤镜定位指定的 DOM 元素及应用一些可直接使用的效果，如模糊、合成、瓦片等。在写这篇文章时（2010 年 8 月），Firefox 4 和 IE9 支持内嵌 SVG，可定位带有 HTML 和 CSS 的视频元素（在本示例中，我们使用 JavaScript 和画布让尚不支持内嵌 SVG 的浏览器也可使用这项功能）：
+  </p>
+<pre class="prettyprint">
+&lt;svg id='image' version="1.1" xmlns="http://www.w3.org/2000/svg"> 
+  &lt;defs>
+    &lt;filter id="myblur"> 
+      &lt;feGaussianBlur stdDeviation="1" /> 
+    &lt;/filter>
+  &lt;/defs>
+&lt;/svg>
+&lt;style>
+  video { filter:url(#myblur); border: 2px solid red; }
+&lt;/style>
+</pre>
+  <div class="video-container">
+    <p>点击此处切换模糊滤镜</p>
+    <video poster="star.png" id="video-svg">
+      <source src="Chrome_ImF.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+      <source src="Chrome_ImF.webm" type='video/webm; codecs="vp8, vorbis"' />
+      <source src="Chrome_ImF.ogv" type='video/ogg; codecs="theora, vorbis"' />
+    </video>
+  </div>
+  <div id="svg"></div>
+  <canvas id="canvas-svg-draw"></canvas>
+
+  <h2 id="toc-conclusion">未曾发掘的功能以及与 Flash 之间的差别</h2>
+  <p>
+    毫无疑问，将视频标记作为本机元素为视频与您的其他网络应用之间的集成提供了最好的环境。每天都会出现新的<a href="http://www.craftymind.com/2010/04/20/blowing-up-html5-video-and-mapping-it-into-3d-space/">功能</a>、<a href="http://demos.hacks.mozilla.org/openweb/WARMCSS/">示例</a>、<a href="http://dev.opera.com/articles/view/custom-html5-video-player-with-css3-and-jquery/">视频控制</a>和<a href="http://yayquery.github.com/jquery-singalong/">相关的用户界面组件</a>。
+  </p>
+  <p>
+    视频元素和其他存在时间更久且提供全屏查看、<a href="http://dev.w3.org/html5/html-device/">麦克风和相机</a>访问权限或<a href="http://www.whatwg.org/specs/web-apps/current-work/#stream-api">流式传输</a>支持功能的技术之间的比较几乎是不可避免的。所有这些功能目前在规范和浏览器支持中均有涉及。如果视频功能仍能保持迄今为止的发展速度，那么很可能在今后一年内，我们就能正式推出这些功能并支持各种新型浏览器。
+  </p>
+  <!-- <p>
+    If you run into any issues on implementing any of the video tag features in your browsers, please give us feedback and file a bug at [Safari], [Chrome], [Firefox], [Internet Explorer].
+  </p> -->
+  <script>
+    // video-js
+    (function() {
+      var v1 = document.querySelector('#video-left')
+      var v2 = document.querySelector('#video-right')
+      var rw = document.querySelector('#rw')
+      var play = document.querySelector('#play')
+      var ff = document.querySelector('#ff')
+      var volume = document.querySelector('#volume-mix')
+      var volume_value = 0;
+      rw.addEventListener('click', function() {
+        v1.pause();
+        v2.pause();
+        v1.currentTime = 0;
+        v2.currentTime = 0;
+      }, false);
+      ff.addEventListener('click', function() {
+        v1.play();
+        v2.play();
+        v1.playbackRate = 3;
+        v2.playbackRate = 3;
+      }, false);
+      play.addEventListener('click', function() {
+        if (v1.paused && v2.paused) {
+          v1.play();
+          v2.play();        
+        } else {
+          v1.pause();
+          v2.pause();
+        }
+      }, false);
+      v1.addEventListener('play', function() {
+        setVolume();
+      }, false);
+      volume.addEventListener('change', function() {
+        setVolume();
+      }, false);
+      function setVolume() {
+        volume_value = volume.value - 50;
+        if (volume_value < 0) {
+          v2.volume = 0;
+          v1.volume = (volume_value * (-1) * 2) / 100;
+        } else {
+          v1.volume = 0;
+          v2.volume = (volume_value * 2) / 100;
+        }
+      }
+    })();
+    
+    // video-css
+    (function() {
+      var video_css = document.querySelector('#video-css');
+      video_css.addEventListener('mouseover', function() {
+        this.className = 'enhanced';
+        try { // some bug in chrome is throwing an exception here
+          this.currentTime = '8';          
+        } catch(err) {}
+        this.play();
+        tryRoundedCorners();
+      }, false);
+      video_css.addEventListener('mouseout', function() {
+        this.pause();
+        try { // some bug in chrome is throwing an exception here
+          this.currentTime = 0;
+        } catch(err) {}
+        this.className = '';
+      }, false);
+
+      function tryRoundedCorners() {
+        setTimeout(function() {
+          video_css.style.borderRadius = '60px';
+        }, 3000);
+        setTimeout(function() {
+          video_css.style.borderRadius = '0';
+        }, 6000);      
+      }
+    })();
+    
+    // video + canvas (sample 1)
+    (function() {
+      var video_dom = document.querySelector('#video-canvas-frames');
+      var canvas_draw = document.querySelector('#canvas-draw-frames');
+      var frames = document.querySelector('#frames');
+      var draw_interval = null;
+      
+      video_dom.addEventListener('play', function() {
+        video_dom.width = canvas_draw.width = video_dom.offsetWidth;
+        video_dom.height = canvas_draw.height = video_dom.offsetHeight;
+        var ctx_draw = canvas_draw.getContext('2d');
+        draw_interval = setInterval(function() {
+          ctx_draw.drawImage(video_dom, 0, 0, video_dom.width, video_dom.height);
+          var img = new Image();
+          img.src = canvas_draw.toDataURL('image/png');
+          img.width = 40;
+          frames.appendChild(img);
+        }, 1500)
+      }, false);
+      video_dom.addEventListener('pause', function() {
+        clearInterval(draw_interval);
+      }, false);
+      video_dom.addEventListener('ended', function() {
+        clearInterval(draw_interval);
+      }, false);
+    })();
+
+  {% if is_mobile %}
+    // video + canvas (sample 2)
+    (function() {
+      var video_dom = document.querySelector('#video-canvas-fancy');
+      var canvas_copy = document.querySelector('#canvas-copy-fancy');
+      var canvas_draw = document.querySelector('#canvas-draw-fancy');
+      var draw_interval = null;
+      var ctx_copy = null;
+      var ctx_draw = null;
+      
+      var offsets = [];
+      var inertias = [];
+      var slices = 4;
+      var out_padding = 100;
+      var interval = null;
+
+      var inertia = -2.0;
+      
+      video_dom.addEventListener('canplay', function() {
+        canvas_copy.width = canvas_draw.width = video_dom.videoWidth;
+        canvas_copy.height = video_dom.videoHeight;
+        canvas_draw.height = video_dom.videoHeight + out_padding;
+        ctx_copy = canvas_copy.getContext('2d');
+        ctx_draw = canvas_draw.getContext('2d');
+      }, false);
+      
+      
+      for (var i = 0; i < slices; i++) {
+        offsets[i] = 0;
+        inertias[i] = inertia;
+        inertia += 0.4;
+      }
+      
+      video_dom.addEventListener('play', function() {
+        processEffectFrame();
+        if (interval == null) {
+          interval = window.setInterval(function() { processEffectFrame() }, 33);
+        }        
+      }, false);
+      
+      function processEffectFrame() {
+        var slice_width = video_dom.videoWidth / slices;
+        ctx_copy.drawImage(video_dom, 0 ,0);
+        ctx_draw.clearRect(0, 0,  canvas_draw.width, canvas_draw.height);
+        for (var i = 0; i < slices; i++) {
+          var sx = i * slice_width;
+          var sy = 0;
+          var sw = slice_width;
+          var sh = video_dom.videoHeight;
+          var dx = sx;
+          var dy = offsets[i] + sy + out_padding;
+          var dw = sw;
+          var dh = sh;
+          ctx_draw.drawImage(canvas_copy, sx, sy, sw, sh, dx, dy, dw, dh);
+          if (Math.abs(offsets[i] + inertias[i]) < out_padding) {
+            offsets[i] += inertias[i];
+          } else {
+            inertias[i] = -inertias[i];
+          }
+        }
+      };
+      
+      video_dom.addEventListener('pause', function() {
+        window.clearInterval(interval);
+        interval = null;
+      }, false);
+      video_dom.addEventListener('ended', function() {
+        clearInterval(interval);
+      }, false);  
+    })();
+  {% endif %}
+
+    // video + svg
+    // insert SVG using script until SVG in HTML5 is more widely supported
+    // (currently supported in IE 9 and Firefox 4 only)
+    (function() {
+      window.addEventListener('DOMContentLoaded', function() {
+        var container = document.getElementById('svg');
+        var svgns = 'http://www.w3.org/2000/svg';
+        var xlinkns = 'http://www.w3.org/1999/xlink';
+        var svg = document.createElementNS(svgns, 'svg');
+        svg.setAttribute('width', 200);
+        svg.setAttribute('height', 112);
+        svg.setAttribute('class', 'offscreen');
+
+        // our linearGradient
+        var defs = document.createElementNS(svgns, 'defs');
+        var filter = document.createElementNS(svgns, 'filter');
+        filter.setAttribute('id', 'myblur');
+        var feGaussianBlur = document.createElementNS(svgns, 'feGaussianBlur');
+        feGaussianBlur.setAttribute('stdDeviation', '2');
+        filter.appendChild(feGaussianBlur);
+        defs.appendChild(filter);
+        svg.appendChild(defs);
+
+        var imageEl = document.createElementNS(svgns, 'image');
+        imageEl.setAttributeNS(xlinkns, "href", "star.png");
+        imageEl.setAttribute('id', 'image-data-el');
+        imageEl.setAttribute('width', 200);
+        imageEl.setAttribute('height', 112);
+        var g = document.createElementNS(svgns, "g");
+        g.appendChild(imageEl);
+        svg.appendChild(g);
+
+        container.appendChild(svg);
+
+        var video_dom = document.querySelector('#video-svg');
+        var canvas_draw = document.querySelector('#canvas-svg-draw');
+        var draw_interval = null;
+        var ctx_draw = null;
+        var image_data = null;
+        var image_data_el = document.querySelector('#image-data-el');
+
+        video_dom.addEventListener('canplay', function() {
+          video_dom.width = canvas_draw.width = video_dom.offsetWidth;
+          video_dom.height = canvas_draw.height = video_dom.offsetHeight;
+          ctx_draw = canvas_draw.getContext('2d');
+        }, false);
+
+        video_dom.addEventListener('click', function() {
+          this.play();
+          this.style.display = 'none';
+          svg.setAttribute('class', '');
+          image_data_el.style.filter = 'url(#myblur)';
+        }, false);
+
+        svg.addEventListener('click', function() {
+          video_dom.pause();
+          video_dom.style.display = 'block';
+          svg.setAttribute('class', 'offscreen');
+        }, false);
+
+        video_dom.addEventListener('play', function() {
+          draw_interval = setInterval(function() {
+            ctx_draw.drawImage(video_dom, 0, 0, video_dom.width, video_dom.height);
+            image_data = canvas_draw.toDataURL('image/png');
+            image_data_el.setAttributeNS(xlinkns, "href", image_data);
+          }, 33);
+        }, false);
+        video_dom.addEventListener('pause', function() {
+          clearInterval(draw_interval);
+        }, false);
+        video_dom.addEventListener('ended', function() {
+          clearInterval(draw_interval);
+        }, false);
+      }, false);
+    })();
+  </script>
+  
+{% endblock %}

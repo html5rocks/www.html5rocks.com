@@ -1,0 +1,267 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<script>
+function customPrettyPrintLanguage() {
+  PR['registerLangHandler'](                                                                                                       
+    PR['createSimpleLexer'](
+      [],
+      [
+        [PR['PR_PUNCTUATION'], /^;/],
+        [PR['PR_TYPE'], /(default|script|object|style|img|media|frame|font|connect|)-src/],
+        [PR['PR_TYPE'], /(form-action|sandbox|script-nonce|plugin-types|frame-options|report-uri)/],
+        [PR['PR_STRING'], /^'(?:[^']|'')*(?:'|$)/],
+        [PR['PR_KEYWORD'], /^[a-zA-Z-]+:[ \r\n]/],
+        [PR['PR_PLAIN'], /^\w+/]
+      ]), ['csp']);
+}
+</script>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!--
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Graphics, 3D &amp; Effects" title="This article is powered by HTML5 Graphics, 3D &amp; Effects" />
+-->
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+
+<p>The web&rsquo;s security model is rooted in the <a href="http://en.wikipedia.org/wiki/Same_origin_policy"><em>same origin policy</em></a>. Code from <code>https://mybank.com</code> should only have access to <code>https://mybank.com</code>&rsquo;s data, and <code>https://evil.example.com</code> should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system. </p>
+
+<p><a href="http://en.wikipedia.org/wiki/Cross-site_scripting">Cross-site scripting (XSS)</a> attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page&rsquo;s security origin. The <a href="http://ha.ckers.org/xss.html">XSS Cheat Sheet</a> is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects <em>any</em> code at all, it&rsquo;s pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys™. We&rsquo;d obviously like to prevent that if possible. </p>
+
+<p>This tutorial highlights one promising new defense that can significantly reduce the risk and impact of XSS attacks in modern browsers: Content Security Policy (CSP).</p>
+
+<h2 id="source-whitelists">Source Whitelists</h2>
+
+<p>The core issue exploited by XSS attacks is the browser&rsquo;s inability to distinguish between script that&rsquo;s intended to be part of your application, and script that&rsquo;s been maliciously injected by a third-party. For example, the Google +1 button at the top of this article loads and executes code from <code>https://apis.google.com/js/plusone.js</code> in the context of this page&rsquo;s origin. We trust that code, but we can&rsquo;t expect the browser to figure out on it&rsquo;s own that code from <code>apis.google.com</code> is awesome, while code from <code>apis.evil.example.com</code> probably isn&rsquo;t. The browser happily downloads and executes any code a page requests, regardless of source.</p>
+
+<p>Instead of blindly trusting <em>everything</em> that a server delivers, CSP defines the <code>Content-Security-Policy</code> HTTP header that allows you to create a whitelist of sources of trusted content, and instructs the browser to only execute or render resources from those sources. Even if an attacker can find a hole through which to inject script, the script won&rsquo;t match the whitelist, and therefore won&rsquo;t be executed.</p>
+
+<p>Since we trust <code>apis.google.com</code> to deliver valid code, and we trust ourselves to do the same, let&rsquo;s define a policy that only allows script to execute when it comes from one of those two sources:</p>
+
+<pre class="prettyprint lang-csp"><code>Content-Security-Policy: script-src 'self' https://apis.google.com
+</code></pre>
+
+<p>Simple, right? As you probably guessed, <strong><code>script-src</code></strong> is a directive that controls a set of script-related privileges for a specific page. We&rsquo;ve specified <code>'self'</code> as one valid source of script, and <code>https://apis.google.com</code> as another. The browser will dutifully download and execute JavaScript from <code>apis.google.com</code> over HTTPS, as well as from the current page&rsquo;s origin.</p>
+
+<p>With this policy defined, the browser will simply throw an error instead of loading script from any other source. When a clever attacker does manage to inject code into your site, she&rsquo;ll run headlong into an error message, rather than the success she was expecting:</p>
+
+<p><img src="csp-error.png" alt="Console error: &quot;Refused to load the script 'http://evil.example.com/evil.js' because it violates the following Content Security Policy directive: &quot;script-src 'self' https://apis.google.com&quot;.&quot;" /></p>
+
+<h3 id="policy-applies-to-a-wide-variety-of-resources">Policy applies to a wide variety of resources</h3>
+
+<p>While script resources are the most obvious security risks, CSP provides a rich set of policy directives that enable fairly granular control over the resources that a page is allowed to load. You&rsquo;ve already seen <code>script-src</code>, so the concept should be clear. Let&rsquo;s quickly walk through the rest of the resource directives:</p>
+
+<ul>
+  <li><strong><code>connect-src</code></strong> limits the origins to which you can connect (via XHR, WebSockets, and EventSource).</li>
+  <li><strong><code>font-src</code></strong> specifies the origins that can serve web fonts. Google&rsquo;s Web Fonts could be enabled via <code>font-src https://themes.googleusercontent.com</code></li>
+  <li><strong><code>frame-src</code></strong> lists the origins that can be embedded as frames. For example: <code>frame-src https://youtube.com</code> would enable embedding YouTube videos, but no other origins.</li>
+  <li><strong><code>img-src</code></strong> defines the origins from which images can be loaded.</li>
+  <li><strong><code>media-src</code></strong> restricts the origins allowed to deliver video and audio.</li>
+  <li><strong><code>object-src</code></strong> allows control over Flash and other plugins.</li>
+  <li><strong><code>style-src</code></strong> is <code>script-src</code>&rsquo;s counterpart for stylesheets.</li>
+</ul>
+
+<p>By default, directives are wide open. If you don&rsquo;t set a specific policy for a directive, let&rsquo;s say <code>font-src</code>, then that directive behaves by default as though you&rsquo;d specified <code>*</code> as the valid source (e.g. you could load fonts from everywhere, without restriction).</p>
+
+<p>You can override this default behavior by specifying a <strong><code>default-src</code></strong> directive. This directive, as you might suspect, will define the defaults for any directive you leave unspecified. If <code>default-src</code> is set to <code>https://example.com</code>, and you fail to specify a <code>font-src</code> directive, then you can load fonts from <code>https://example.com</code>, and nowhere else. We specified only <code>script-src</code> in our earlier examples, which means that images, fonts, and so on can be loaded from any origin.</p>
+
+<p>You can use as many or as few of these directives as makes sense for your specific application, simply listing each in the HTTP header, separating directives with semicolons. You&rsquo;ll want to make sure that you list <em>all</em> required resources of a specific type in a <em>single</em> directive. If wrote something like <code>script-src https://host1.com; script-src https://host2.com</code> the second directive would simply be ignored. <code>script-src https://host1.com https://host2.com</code> would correctly specify both origins as valid.</p>
+
+<p>If, for example, you have an application that loads all of it&rsquo;s resources from a content delivery network (say, <code>https://cdn.example.net</code>), and know that you don&rsquo;t need framed content or any plugins at all, then your policy might look like the following:</p>
+
+<pre class="prettyprint lang-csp"><code>Content-Security-Policy: default-src https://cdn.example.net; frame-src 'none'; object-src 'none'
+</code></pre>
+
+<h3 id="implementation-details">Implementation Details</h3>
+
+<p>Before moving further, it&rsquo;s important to note that the canonical header I&rsquo;ve used in the examples is <code>Content-Security-Policy</code>, but current browsers have implemented the feature behind a prefix: Firefox uses <code>X-Content-Security-Policy</code>, and WebKit-based browsers (Safari and Chrome) use <code>X-WebKit-CSP</code>. The implementations are quite similar, however, and are converging rapidly on the standard. This article will continue to use <code>Content-Security-Policy</code>, as browsers will migrate to that header, but the prefixes are essential for the moment.</p>
+
+<p>Regardless of the header you use, policy is defined on a page-by-page basis: you&rsquo;ll need to send the HTTP header along with every response that you&rsquo;d like to ensure is protected. This provides a lot of flexibility, as you can fine-tune the policy for specific pages based on their specific needs. Perhaps one set of pages in your site has a +1 button, while others don&rsquo;t: you could allow the button code to be loaded only when necessary.</p>
+
+<p>The source list in each directive is fairly flexible. You can specify sources by scheme (<code>data:</code>, <code>https:</code>), or ranging in specificity from hostname-only (<code>example.com</code>, which matches any origin on that host: any scheme, any port) to a fully qualified URI (<code>https://example.com:443</code>, which matches only HTTPS, only <code>example.com</code>, and only port 443). Wildcards are accepted, but only as a scheme, a port, or in the leftmost position of the hostname: <code>*://*.example.com:*</code> would match all subdomains of <code>example.com</code> (but <em>not</em> <code>example.com</code> itself), using any scheme, on any port.</p>
+
+<p>Four keywords are also accepted in the source list:</p>
+
+<ul>
+  <li><strong><code>'none'</code></strong>, as you might expect, matches nothing.</li>
+  <li><strong><code>'self'</code></strong> matches the current origin, but not its subdomains.</li>
+  <li><strong><code>'unsafe-inline'</code></strong> allows inline JavaScript and CSS (we&rsquo;ll touch on this in more detail in a bit).</li>
+  <li><strong><code>'unsafe-eval'</code></strong> allows text-to-JavaScript mechanisms like <code>eval</code> (we&rsquo;ll get to this too).</li>
+</ul>
+
+<p>These keywords require single-quotes. <code>script-src 'self'</code> authorizes the execution of JavaScript from the current host. <code>script-src self</code> allows JavaScript from a server named &ldquo;<code>self</code>&rdquo; (and <em>not</em> from the current host), which probably isn&rsquo;t what you meant.</p>
+
+<h3 id="sandboxing">Sandboxing</h3>
+
+<p>There&rsquo;s one more directive worth talking about: <strong><code>sandbox</code></strong>. It&rsquo;s a bit different than the others we&rsquo;ve looked at, as is places restrictions on actions the page can take, rather than on resources that the page can load. If the <code>sandbox</code> directive is present, the page will be treated as though it was loaded inside of an <code>iframe</code> with a <code>sandbox</code> attribute. This can have a wide range of effects on the page: forcing the page into a unique origin, and preventing form submission, among others. It&rsquo;s a bit beyond the scope of this article, but you can find full details on valid sandboxing attributes in the <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/origin-0.html#sandboxing-flag-set">&ldquo;sandboxing flag set&rdquo; section of the HTML5 spec</a>.</p>
+
+<h2 id="inline-code-considered-harmful">Inline Code Considered Harmful</h2>
+
+<p>It should be clear that CSP is based on whitelisting origins, as that&rsquo;s an unambiguous way of instructing the browser to treat specific sets of resources as acceptable and to reject the rest. Origin-based whitelisting doesn&rsquo;t, however, solve the biggest threat posed by XSS attacks: inline script injection. If an attacker can inject a script tag that directly contains some malicious payload (<code>&lt;script&gt;sendMyDataToEvilDotCom();&lt;/script&gt;</code>), the browser has no mechanism by which to distinguish it from a legitimate inline script tag. CSP solves this problem by banning inline script entirely: <a href="https://www.youtube.com/watch?v=aCbfMkh940Q">it&rsquo;s the only way to be sure</a>.</p>
+
+<p>This ban includes not only scripts embedded directly in <code>script</code> tags, but also inline event handlers and <code>javascript:</code> URLs. You&rsquo;ll need to move the content of <code>script</code> tags into an external file, and replace <code>javascript:</code> URLs and <code>&lt;a ... onclick="[JAVASCRIPT]"&gt;</code> with appropriate <code>addEventListener</code> calls. For example, you might rewrite the following from:</p>
+
+<pre class="prettyprint"><code>&lt;script&gt;
+  function doAmazingThings() {
+    alert('YOU AM AMAZING!');
+  }
+&lt;/script&gt;
+&lt;button onclick='doAmazingThings();'&gt;Am I amazing?&lt;/button&gt;
+</code></pre>
+
+<p>to something more like:</p>
+
+<pre class="prettyprint"><code>&lt;!-- amazing.html --&gt;
+&lt;script src='amazing.js'&gt;&lt;/script&gt;
+&lt;button id='amazing'&gt;Am I amazing?&lt;/button&gt;
+</code></pre>
+<pre class="prettyprint"><code>// amazing.js
+function doAmazingThings() {
+  alert('YOU AM AMAZING!');
+}
+document.addEventListener('DOMContentReady', function () {
+  document.getElementById('amazing')
+          .addEventListener('click', doAmazingThings);
+});
+</code></pre>
+
+<p>The rewritten code has a number of advantages above and beyond working well with CSP; it&rsquo;s already best practice, regardless of your use of CSP. Inline JavaScript mixes structure and behavior in exactly the way you shouldn&rsquo;t. External resources are easier for browsers to cache, more understandable for developers, and conducive to compilation and minification. You&rsquo;ll write better code if you do the work to move code into external resources. </p>
+
+<p>Inline style is treated in the same way: both the <code>style</code> attribute and <code>style</code> tags should be consolidated into external stylesheets to protect against a variety of <a href="http://scarybeastsecurity.blogspot.com/2009/12/generic-cross-browser-cross-domain.html">surprisingly clever</a> data exfiltration methods that CSS enables. </p>
+
+<p>If you really, absolutely must have inline script and style, you can enable it by adding <code>'unsafe-inline'</code> as an allowed source in a <code>script-src</code> or <code>style-src</code> directive. But please don&rsquo;t. Banning inline script is the biggest security win CSP provides, and banning inline style likewise hardens your application. It&rsquo;s a little bit of effort up front to ensure that things work correctly after moving all the code out-of-line, but that&rsquo;s a tradeoff that&rsquo;s well worth making.</p>
+
+<h2 id="eval-too">Eval Too</h2>
+
+<p>Even when an attacker can&rsquo;t inject script directly, she might be able to trick your application into converting otherwise inert text into executable JavaScript and executing it on her behalf. <code>eval()</code>, <code>new Function()</code>, <code>setTimeout([string], ...)</code>, <code>and setInterval([string], ...)</code> are all vectors through which injected text might end up executing something unexpectedly malicious. CSP&rsquo;s default response to this risk is, unsurprisingly, to block all of these vectors completely.</p>
+
+<p>This has a more than few impacts on the way you build applications:</p>
+
+<ul>
+  <li>Parse JSON via the built-in <code>JSON.parse</code>, rather than relying on <code>eval</code>. Native JSON operations are available in <a href="http://caniuse.com/#feat=json">every browser since IE8</a>, and they&rsquo;re completely safe.</li>
+  <li>
+    <p>Rewrite any <code>setTimeout</code> or <code>setInterval</code> calls you&rsquo;re currently making with inline functions rather than strings. For example:</p>
+
+    <pre class="prettyprint"><code>setTimeout("document.querySelector('a').style.display = 'none';", 10);
+</code></pre>
+
+    <p>would be better written as:</p>
+
+    <pre class="prettyprint"><code>setTimeout(function () {
+  document.querySelector('a').style.display = 'none';
+}, 10);
+</code></pre>
+  </li>
+  <li>Avoid inline templating at runtime: Many templating libraries use <code>new Function()</code> liberally to speed up template generation at runtime. It&rsquo;s a nifty application of dynamic programming, but comes at the risk of evaluating malicious text. Some frameworks support CSP out of the box, falling back to a robust parser in the absence of <code>eval</code>; <a href="http://docs.angularjs.org/api/angular.module.ng.$compileProvider.directive.ngCsp">AngularJS&rsquo;s ng-csp directive</a> is a good example of this.</li>
+</ul>
+
+<p>You&rsquo;re even better off, however, if your templating language of choice offers precompilation (<a href="http://handlebarsjs.com/precompilation.html">Handlebars does</a>, for instance). Precompiling your templates can make the user experience even faster than the fastest runtime implementation, and it&rsquo;s safer too. Win, win!
+If eval and its text-to-JavaScript brethren are completely essential to your application, you can enable them by adding <code>'unsafe-eval'</code> as an allowed source in a <code>script-src</code> directive. But, again, please don&rsquo;t. Banning the ability to execute strings makes it much more difficult for an attacker to execute unauthorized code on your site. </p>
+
+<h2 id="reporting">Reporting</h2>
+
+<p>CSP&rsquo;s ability to block untrusted resources client-side is a huge win for your users, but it would be quite helpful indeed to get some sort of notification sent back to the server so that you can identify and squash any bugs that allow malicious injection in the first place. To this end, you can instruct the browser to <code>POST</code> JSON-formatted violation reports to a location specified in a <strong><code>report-uri</code></strong> directive.</p>
+
+<pre class="prettyprint lang-csp"><code>Content-Security-Policy: default-src 'self'; ...; report-uri /my_amazing_csp_report_parser;
+</code></pre>
+
+<p>Those reports will look something like the following:</p>
+
+<pre class="prettyprint"><code>{
+  "csp-report": {
+    "document-uri": "http://example.org/page.html",
+    "referrer": "http://evil.example.com/",
+    "blocked-uri": "http://evil.example.com/evil.js",
+    "violated-directive": "script-src 'self' https://apis.google.com",
+    "original-policy": "script-src 'self' https://apis.google.com; report-uri http://example.org/my_amazing_csp_report_parser"
+  }
+}
+</code></pre>
+
+<p>It contains a good chunk of information that will help you track down the specific cause of the violation, including the page on which the violation occurred (<strong><code>document-uri</code></strong>), that page&rsquo;s referrer (referrer, note that the key is <em>not</em> misspelled), the resource that violated the page&rsquo;s policy (<strong><code>blocked-uri</code></strong>), the specific directive it violated (<strong><code>violated-directive</code></strong>), and the page&rsquo;s complete policy (<strong><code>original-policy</code></strong>).</p>
+
+<h3 id="report-only">Report-Only</h3>
+
+<p>If you&rsquo;re just starting out with CSP, it makes sense to evaluate the current state of your application before rolling out a draconian policy to your users. As a stepping stone to a complete deployment, you can ask the browser to monitor a policy, reporting violations, but not enforcing the restrictions. Instead of sending a <code>Content-Security-Policy</code> header, send a <code>Content-Security-Policy-Report-Only</code> header.</p>
+
+<pre class="prettyprint"><code>Content-Security-Policy-Report-Only: default-src 'self'; ...; report-uri /my_amazing_csp_report_parser;
+</code></pre>
+
+<p>The policy specified in report-only mode won&rsquo;t block restricted resources, but it will send violation reports to the location you specify. You can even send <em>both</em> headers, enforcing one policy while monitoring another. This is a great way to evaluate the effect of changes to your application&rsquo;s CSP: turn on reporting for a new policy, monitor the violation reports and fix any bugs that turn up, then start enforcing the new policy once you&rsquo;re satisfied with its effect.</p>
+
+<h2 id="real-world-usage">Real World Usage</h2>
+
+<p>CSP is quite usable in Chrome 16+ and Firefox 4+, and it&rsquo;s expected to gain at least limited support in IE 10. Safari&rsquo;s current implementation is lacking, but WebKit nightlies work just as well as Chrome, so there&rsquo;s hope for the next iteration of Safari. Massive sites like Twitter have deployed the header (<a href="http://engineering.twitter.com/2011/03/improving-browser-security-with-csp.html">Twitter&rsquo;s case study</a> is worth a read), and the standard is very much ready for you to start playing around on your own sites.</p>
+
+<p>The first step towards crafting a policy for your application is to evaluate the resources you&rsquo;re actually loading. Once you think you have a handle on how things are put together in your app, set up a policy based on those requirements. Let&rsquo;s walk through a few common use-cases, and determine how we&rsquo;d best be able to support them within the protective confines of CSP:</p>
+
+<h3 id="use-case-1-social-media-widgets">Use Case #1: Social media widgets</h3>
+
+<ul>
+  <li>
+    <p>Google&rsquo;s <a href="http://www.google.com/intl/en/webmasters/+1/button/index.html">+1 button</a> includes script from <code>https://apis.google.com</code>, and embeds an <code>iframe</code> from <code>https://plusone.google.com</code>. You&rsquo;ll need a policy that includes both these origins in order to embed the button. A minimal policy would be <code>script-src https://apis.google.com; frame-src https://plusone.google.com</code>. You&rsquo;ll also need to ensure that the snippet of JavaScript that Google provides is pulled out into an external JavaScript file.</p>
+  </li>
+  <li>
+    <p>Facebook&rsquo;s <a href="http://developers.facebook.com/docs/reference/plugins/like/">Like button</a> has a number of implementation options. I&rsquo;d recommend sticking with the <code>iframe</code> version, as it&rsquo;s safely sandboxed from the rest of your site. That would require a <code>frame-src https://facebook.com</code> directive to function properly. Note that, by default, the <code>iframe</code> code Facebook provides loads a relative URL, <code>//facebook.com</code>. Please change that to explicitly specify HTTPS: <code>https://facebook.com</code>. There&rsquo;s no reason to use HTTP if you don&rsquo;t have to.</p>
+  </li>
+  <li>
+    <p>Twitter&rsquo;s <a href="https://twitter.com/about/resources/buttons">Tweet button</a> relies on access to a script and frame, both hosted at <code>https://platform.twitter.com</code> (Twitter likewise provides a relative URL by default: please edit the code to specify HTTPS when copy/pasting it locally). You&rsquo;ll be all set with <code>script-src https://platform.twitter.com; frame-src https://platform.twitter.com</code>, as long as you move the JavaScript snippet Twitter provides out into an external JavaScript file.</p>
+  </li>
+  <li>
+    <p>Other platforms will have similar requirements, and can be addressed similarly. I&rsquo;d suggest just setting a <code>default-src</code> of <code>'none'</code>, and watching your console to determine which resources you&rsquo;ll need to enable to make the widgets work.</p>
+  </li>
+</ul>
+
+<p>Including multiple widgets is straightforward: simply combine the policy directives, remembering to merge all resources of a single type into a single directive. If you wanted all three, the policy would look like:</p>
+
+<pre class="prettyprint"><code>script-src https://apis.google.com https://platform.twitter.com; frame-src https://plusone.google.com https://facebook.com https://platform.twitter.com
+</code></pre>
+
+<h3 id="use-case-2-lockdown">Use Case #2: Lockdown</h3>
+
+<p>Assume for a moment that you run a banking site, and want to make very sure that only those resources you&rsquo;ve written yourself can be loaded. In this scenario, start with a default policy that blocks absolutely everything (<code>default-src 'none'</code>), and build up from there.</p>
+
+<p>Let&rsquo;s say the bank loads all images, style, and script from a CDN at <code>https://cdn.mybank.net</code>, and connects via XHR to <code>https://api.mybank.com/</code> to pull various bits of data down. Frames are used, but only for pages local to the site (no third-party origins). There&rsquo;s no Flash on the site, no fonts, no nothing. The most restrictive CSP header that we could send in this scenario is:</p>
+
+<pre class="prettyprint lang-csp"><code>Content-Security-Policy: default-src 'none'; script-src https://cdn.mybank.net; style-src https://cdn.mybank.net; img-src https://cdn.mybank.net; connect-src https://api.mybank.com; frame-src 'self'
+</code></pre>
+
+<h3 id="use-case-3-ssl-only">Use Case #3: SSL Only</h3>
+
+<p>A wedding-ring discussion forum admin wants to ensure that all resources are only loaded via secure channels, but doesn&rsquo;t really write much code; rewriting large chunks of the third-party forum software that&rsquo;s filled to the brim with inline script and style is beyond his abilities. The following policy would be effective:</p>
+
+<pre class="prettyprint lang-csp"><code>Content-Security-Policy: default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'
+</code></pre>
+
+<p>Even though <code>https:</code> was specified in <code>default-src</code>, the script and style directives don&rsquo;t automatically inherit that source. Each directive overwrites the default completely for that specific type of resource.</p>
+
+<h2 id="the-future">The Future</h2>
+
+<p>The W3C&rsquo;s <a href="http://www.w3.org/2011/webappsec/">Web Application Security Working Group</a> is working through the details of the Content Security Policy specification, and a 1.0 version containing the functionality outlined in this article is fairly close to <a href="http://lists.w3.org/Archives/Public/public-webappsec/2012Jun/0011.html">moving to Last Call</a>. The group isn&rsquo;t sitting around patting themselves on the back, however: CSP 1.1 is being actively discussed on the <a href="http://lists.w3.org/Archives/Public/public-webappsec/">public-webappsec@ mailing list</a>, and browser vendors are <a href="https://lists.webkit.org/pipermail/webkit-dev/2012-May/020559.html">hard at work</a> solidifying and improving their implementations.</p>
+
+<p>CSP 1.1 has a few interesting bits on the drawing board, a few are worth highlighting here:</p>
+
+<ul>
+  <li>
+    <p><strong>Policy injection via <code>meta</code> tags:</strong> CSP&rsquo;s preferred delivery mechanism is an HTTP header. It can be very useful, however, to set a policy on a page directly in the markup, or via script. There&rsquo;s some healthy debate about whether or not setting policy from within the same document to which the policy should apply, but it appears to have a solid enough use-case to make it into the next iteration. The <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#html-meta-element--experimenta"><code>meta</code> element portion of the spec</a> is far enough along that WebKit has already implemented the feature, so you can play around with it now in Chrome: throw <code>&lt;meta http-equiv="X-WebKit-CSP" content="[POLICY GOES HERE]"&gt;</code> in the head of your document, and you&rsquo;re good to go.</p>
+
+    <p>You can even inject a policy at runtime by adding the <code>meta</code> tag via script. A good first step towards a fully locked-down application is to inject an appropriate policy after your application has loaded all the resources it needs, and &ldquo;booted up&rdquo;. This gives you a mostly secure site (there&rsquo;s still significant risk of attack during this vulnerable phase), but allows you to reap some of the advantage of CSP while migrating to the HTTP header.</p>
+  </li>
+  <li>
+    <p><strong>DOM API:</strong> If this feature makes it into the next iteration of CSP, you&rsquo;ll have the ability to query a page&rsquo;s current policy via JavaScript, which will enable you to make runtime decisions about implementations, and gracefully settle on something that will work for the environment in which your code finds itself. If <code>eval()</code> is available, for example, your code might implement some feature differently. This will be particularly useful for framework authors; the API spec is still very much in flux, and you&rsquo;ll find the most up-to-date iteration in the <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-interfaces">&ldquo;Script Interfaces&rdquo; section of the draft spec</a>.</p>
+  </li>
+  <li>
+    <p><strong>New directives:</strong> A variety of new directives are being discussed, including <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-nonce--experimental"><strong><code>script-nonce</code></strong></a>, which would enable inline script only for explicitly specified script elements; <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#plugin-types--experimental"><strong><code>plugin-types</code></strong></a>, which would limit the <code>MIME</code> types of content for which plugins could be loaded; <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#form-action--experimental"><strong><code>form-action</code></strong></a>, which would allow form submission to only specific origins; and a few others that are <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#frame-options--experimental">currently less completely specified</a>.</p>
+  </li>
+</ul>
+
+<p>If you&rsquo;re interested in the discussion around these upcoming features, <a href="http://lists.w3.org/Archives/Public/public-webappsec/">skim the mailing list archives</a>, or join in yourself.</p>
+
+{% endblock %}

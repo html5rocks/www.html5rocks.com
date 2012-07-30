@@ -1,0 +1,50 @@
+<!doctype html>
+<head>
+  <title>Media query-based device class detection</title>
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+</head>
+<h1>Detecting device type based on features</h1>
+
+Basic logic:
+<pre>
+if (hasTouch) {
+  if (isSmall) {
+    device = PHONE;
+  } else {
+    device = TABLET;
+  }
+} else {
+  device = DESKTOP;
+}
+</pre>
+
+<h2>
+Device detected: <span id="device"></span>
+</h2>
+
+<script src="modernizr.js"></script>
+<script>
+function hasTouch() {
+  return Modernizr.touch;
+}
+
+function isSmall() {
+  return window.matchMedia("(max-width: 650px)").matches;
+}
+
+function detectDevice() {
+  if (hasTouch()) {
+    if (isSmall()) {
+      device = 'phone';
+    } else {
+      device = 'tablet';
+    }
+  } else {
+    device = 'desktop';
+  }
+  return device;
+}
+
+document.querySelector('#device').innerHTML = detectDevice();
+
+</script>
