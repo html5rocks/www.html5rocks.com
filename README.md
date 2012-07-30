@@ -1,4 +1,6 @@
-www.html5rocks.com
-==================
+HTML5 Rocks!
+===
 
-....a top-notch resource for web developers
+HTML5Rocks.com is an open source project!
+
+![HTML5Rocks Screenshot](/html5rocks/www.html5rocks.com/raw/master/static/images/screenshots/landing_page.png)
