@@ -31,6 +31,8 @@ As of version 20 of Chrome (version 20.0.1132.57, to be exact), CSS Regions is e
 4. Click on the *Enable* link.
 5. Click on the *Relaunch Now* button at the bottom.
 
+For more information on Chrome's flags, see my blog post on [All About Chrome Flags](http://blogs.adobe.com/cantrell/archives/2012/07/all-about-chrome-flags.html).
+
 Once you've relaunched your browser, you're free to start experimenting with CSS Regions.
 
 <h3 id="toc-region-overciew">An Overview of CSS Regions</h3>
