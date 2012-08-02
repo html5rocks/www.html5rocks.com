@@ -4,7 +4,7 @@
 
 - [Localize content](/html5rocks/www.html5rocks.com/wiki/Localization-Guide)
 - [File or fix bugs](/html5rocks/www.html5rocks.com/issues)
-- Author an article, tutorial, or case study
+- [Author an article, tutorial, or case study](/html5rocks/www.html5rocks.com/wiki/Contributors-Guide)
 
 [![HTML5Rocks Screenshot](/html5rocks/www.html5rocks.com/raw/master/static/images/screenshots/landing_page.png)](http://www.html5rocks.com)
 
