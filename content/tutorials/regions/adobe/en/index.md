@@ -129,7 +129,8 @@ Note that the text inside the "content" div doesn't have any knowledge of its pr
 <h3 id="toc-cssom">The CSS Object Model</h3>
 
 <p class="notice" style="text-align:center;">
-This section doesn't show vendor prefixes, but you should write code that works across browsers!
+To be concise, this section uses only one vendor prefix (<code>webkit</code>),
+but you should write code that works across browsers that support this feature!
 </p>
 
 The [CSS Object Model][cssom-spec], or CSSOM, defines JavaScript APIs for working with CSS. Below is a list of the new APIs related to CSS Regions:
