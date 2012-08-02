@@ -35,6 +35,7 @@
   -o-transition: opacity 1s linear;
   -moz-transition: opacity 1s linear;
   -webkit-transition: opacity 1s linear;
+  -ms-transition: opacity 1s linear;
 }
 #progress_bar.loading {
   opacity: 1.0;
@@ -54,17 +55,6 @@
   margin-top: 5px;
 }
 </style>
-{% endblock %}
-{% block pagebreadcrumb %}Reading local files in JavaScript{% endblock %}
-{% block date %}June 18, 2010{% endblock %}
-{% block updated %}December 21, 2010{% endblock %}
-
-{% block browsersupport %}
-<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
-<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
-<span class="browser safari"><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
-<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
-<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
 {% endblock %}
 
 {% block html5badge %}
@@ -91,9 +81,6 @@
   <p>When used in conjunction with the above data structures, the <a href="http://dev.w3.org/2006/webapi/FileAPI/#filereader-interface"><code>FileReader</code></a> interface
   can be used to asynchronously read a file through familiar JavaScript event handling. Thus, it is possible to monitor the progress of a read, catch errors,
   and determine when a load is complete. In many ways the APIs resemble <code>XMLHttpRequest</code>'s event model.</p>
-
-  <p>Note: At the time of writing this tutorial, the necessary APIs for working with local files are
-  supported in Chrome 6.0 and Firefox 3.6. As of Firefox 3.6.3, the <code>File.slice()</code> method is not supported.</p>
 
   <h2 id="toc-selecting-files">Selecting files</h2>
   <p>The first thing to do is check that your browser fully supports the File API:</p>
@@ -267,15 +254,10 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
   for reconstructing the file content in the correct order.</p>
   <p>Lucky for us, the <code>File</code> interface supports a slice method to support this use case.
   The method takes a starting byte as its first argument, ending byte as its second, and
-  an option content type string as a third. The semantics of this method changed recently,
-  so it has been vendor-prefixed:</p>
+  an option content type string as a third.</p>
 
   <pre class="prettyprint">
-if (file.webkitSlice) {
-  var blob = file.webkitSlice(<var>startingByte</var>, <var>endindByte</var>);
-} else if (file.mozSlice) {
-  var blob = file.mozSlice(<var>startingByte</var>, <var>endindByte</var>);
-}
+var blob = file.slice(<var>startingByte</var>, <var>endindByte</var>);
 reader.readAsBinaryString(blob);</pre>
 
   <p>The following example demonstrates reading chunks of a file. Something worth noting is that it uses the
@@ -327,11 +309,7 @@ reader.readAsBinaryString(blob);</pre>
       }
     };
 
-    if (file.webkitSlice) {
-      var blob = file.webkitSlice(start, stop + 1);
-    } else if (file.mozSlice) {
-      var blob = file.mozSlice(start, stop + 1);
-    }
+    var blob = file.slice(start, stop + 1);
     reader.readAsBinaryString(blob);
   }
   
@@ -571,13 +549,7 @@ example4.readBlob = function(opt_startByte, opt_stopByte) {
                                        ' of ', file.size, ' byte file'].join('');
     }
   };
-  //var blob = file.slice(start, (stop - start) + 1);
-  if (file.webkitSlice) {
-    var blob = file.webkitSlice(start, stop + 1);
-  } else if (file.mozSlice) {
-    var blob = file.mozSlice(start, stop + 1);
-  }
-  reader.readAsBinaryString(blob);
+  reader.readAsBinaryString(file.slice(start, stop + 1));
 };
 document.querySelector('.readBytesButtons').addEventListener('click', function(evt) {
   if (evt.target.tagName.toLowerCase() == 'button') {
