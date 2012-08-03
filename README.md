@@ -8,4 +8,4 @@
 
 [![HTML5Rocks Screenshot](/html5rocks/www.html5rocks.com/raw/master/static/images/screenshots/landing_page.png)](http://www.html5rocks.com)
 
-*HTML5Rocks is by [Google](github.com/google)*
+*HTML5Rocks is by [Google](https://github.com/google)*
