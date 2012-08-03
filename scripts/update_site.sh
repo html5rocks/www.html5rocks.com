@@ -35,7 +35,8 @@ do
 done
 
 ./compress_js_css.sh
-./cachebust.py
+# Cache busting is handled by the GAE PageSpeed feature generating unique URLs.
+#./cachebust.py
 echo \# `date` >> ../cache.appcache
 appcfg.py update ../
 
