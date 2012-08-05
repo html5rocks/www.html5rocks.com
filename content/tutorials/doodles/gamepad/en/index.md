@@ -19,7 +19,7 @@ Ephemeral as they are, interactive doodles tend to be pretty complex under the h
 
 We embedded it straight below, or you can access the gamepad tester [separately](gamepad-tester/tester.html).
 
-<iframe src="gamepad-tester/iframe.html" seamless></iframe>
+<iframe src="gamepad-tester/tester.html" seamless></iframe>
 
 <h2 id="toc-support">What browsers support it today?</h2>
 
