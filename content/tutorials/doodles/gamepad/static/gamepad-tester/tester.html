@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+<!--
+  Copyright 2012 Google Inc. All Rights Reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+
+  @author mwichary@google.com (Marcin Wichary)
+-->
+
+<title>Gamepad API tester</title>
+<meta charset='utf-8'>
+
+<script src='gamepad.js'></script>
+<script src='tester.js'></script>
+<link href='styles.css' rel='stylesheet'></link>
+
+<h1>
+  Gamepad API tester
+</h1>
+<h2>
+  Part of <a href='../'>the article</a> explaining Gamepad API.
+</h2>
+<div id='menu'>
+  <input type='radio' name='mode' value='visual' id='mode-visual' checked><label
+      for='mode-visual'>Visual mode</label>
+  <input type='radio' name='mode' value='raw' id='mode-raw'><label
+      for='mode-raw'>Raw mode</label>
+</div>
+
+<div id='no-gamepad-support'>
+  Your browser does not seem to support Gamepad API, or it might be
+  we’re not detecting it very well. Sorry!
+</div>
+<div id='no-gamepads-connected'>
+  No gamepads seem to be connected. Be sure to plug in a gamepad and then
+  press any of its buttons to activate it.
+</div>
+
+<ul id='gamepads'>
+  <li class='template'>
+    <div class='buttons'>
+      <div class='face' name='button-1'></div>
+      <div class='face' name='button-2'></div>
+      <div class='face' name='button-3'></div>
+      <div class='face' name='button-4'></div>
+
+      <div class='top-shoulder' name='button-left-shoulder-top'></div>
+      <div class='top-shoulder' name='button-right-shoulder-top'></div>
+      <div class='bottom-shoulder' name='button-left-shoulder-bottom'></div>
+      <div class='bottom-shoulder' name='button-right-shoulder-bottom'></div>
+
+      <div class='select-start' name='button-select'></div>
+      <div class='select-start' name='button-start'></div>
+
+      <div class='stick' name='stick-1'></div>
+      <div class='stick' name='stick-2'></div>
+
+      <div class='face' name='button-dpad-top'></div>
+      <div class='face' name='button-dpad-bottom'></div>
+      <div class='face' name='button-dpad-left'></div>
+      <div class='face' name='button-dpad-right'></div>
+    </div>
+
+    <div class='labels'>
+      <label for='button-1'>?</label>
+      <label for='button-2'>?</label>
+      <label for='button-3'>?</label>
+      <label for='button-4'>?</label>
+
+      <label for='button-left-shoulder-top'>?</label>
+      <label for='button-right-shoulder-top'>?</label>
+      <label for='button-left-shoulder-bottom'>?</label>
+      <label for='button-right-shoulder-bottom'>?</label>
+
+      <label for='button-select'>?</label>
+      <label for='button-start'>?</label>
+
+      <label for='stick-1'>?</label>
+      <label for='stick-2'>?</label>
+
+      <label for='button-dpad-top'>?</label>
+      <label for='button-dpad-bottom'>?</label>
+      <label for='button-dpad-left'>?</label>
+      <label for='button-dpad-right'>?</label>
+
+      <label for='stick-1-axis-x'>?</label>
+      <label for='stick-1-axis-y'>?</label>
+      <label for='stick-2-axis-x'>?</label>
+      <label for='stick-2-axis-y'>?</label>
+      <div class='extra-inputs'></div>
+    </div>
+    <div class='index'></div>
+    <marquee class='name' scrolldelay='50' scrollamount='2'></marquee>
+  </li>
+</ul>
+
+<script>
+  // Switch visuals if in an iframe
+  if (window !== top) {
+    document.body.classList.add('iframe');
+  }
+
+  // Attach event listeners to mode radio buttons
+  document.querySelector('#mode-visual').
+      addEventListener('click', tester.updateMode, false);
+  document.querySelector('#mode-raw').
+      addEventListener('click', tester.updateMode, false);
+
+  tester.init();
+  gamepadSupport.init();
+</script>
