@@ -6,11 +6,11 @@ Let the novices keep their keyboards for adventure games, their precious multi-t
 
 But wait. Aren't you out of luck if you want to support a gamepad in your web app? Not anymore. The brand new [Gamepad API](http://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html) comes to the rescue, allowing you to use JavaScript to read the state of any gamepad controller attached to your computer. It's so fresh off the presses, that it only landed in Chrome 21 last week – and it's also on the verge of being supported in Firefox (currently available in a [special build](http://people.mozilla.com/~tmielczarek/gamepad/)).
 
-That turned out to be pretty great timing, because we get a chance to use it recently in the Hurdles 2012 Google doodle. This article will briefly explain how we added Gamepad API to the doodle, and what we learned during the process.
+That turned out to be pretty great timing, because we get a chance to use it recently in the [Hurdles 2012 Google doodle](http://www.google.com/doodles/hurdles-2012). This article will briefly explain how we added Gamepad API to the doodle, and what we learned during the process.
 
 <figure>
 <a href="http://www.google.com/doodles/hurdles-2012">![Hurdles 2012 Google doodle](screenshot.png "Hurdles 2012 Google doodle")</a>
-<figcaption>Hurdles 2012 Google doodle</figcaption>
+<figcaption>[Hurdles 2012 Google doodle](http://www.google.com/doodles/hurdles-2012)</figcaption>
 </figure>
 
 <h2 id="toc-tester">Gamepad tester</h2>
@@ -26,7 +26,7 @@ We embedded it straight below, or you can access the gamepad tester [separately]
 As of early August 2012:
 
 * Chrome 21 and newer on Windows, Mac, Linux, and Chrome OS
-* [special builds](http://people.mozilla.com/~tmielczarek/gamepad/) of Firefox with Gamepad API support.
+* [special builds of Firefox](http://people.mozilla.com/~tmielczarek/gamepad/) with Gamepad API support.
 
 <h2 id="toc-gamepadsused">What gamepads can be used?</h2>
 
@@ -37,7 +37,7 @@ Generally, any modern gamepad that is supported by your system natively should w
 <figcaption>Gamepads</figcaption>
 </figure>
 
-This is a photo of some controllers we used for testing our doodle – "Yes, mom, that really is what I do at work." If your controller doesn't work, or if the controls are mapped incorrectly, please [file a bug against Chrome](https://code.google.com/p/chromium/issues/entry?template=Defect%20report%20from%20user&cc=scottmg@chromium.org&labels=Type-Feature,Pri-2,Area-Internals,Feature-Gamepad) or Firefox [https://bugzilla.mozilla.org/]. (Please test in the absolutely newest version of each browser to make sure it's not already fixed.)
+This is a photo of some controllers we used for testing our doodle – "Yes, mom, that really is what I do at work." If your controller doesn't work, or if the controls are mapped incorrectly, please [file a bug against Chrome](https://code.google.com/p/chromium/issues/entry?template=Defect%20report%20from%20user&cc=scottmg@chromium.org&labels=Type-Feature,Pri-2,Area-Internals,Feature-Gamepad) or [Firefox](https://bugzilla.mozilla.org/) . (Please test in the absolutely newest version of each browser to make sure it's not already fixed.)
 
 <p class="notice"><b>Note:</b> Some gamepads have a switch at the back telling them to use a different mode of operation. Toggling that might make them work better.</p>
 
@@ -130,7 +130,7 @@ If you only care about one gamepad, getting its data might be as simple as:
 
     var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
 
-If you want to be a bit more clever, or support more than one player simultaneously, you will need to add a few more lines of code to react to more complex scenarious (two or more gamepads connected, some of them getting disconnected mid-way, etc.). You can look at the [source code](gamepad-tester/gamepad.js) of our tester, function `pollGamepads()`, for one approach on how to solve this.
+If you want to be a bit more clever, or support more than one player simultaneously, you will need to add a few more lines of code to react to more complex scenarious (two or more gamepads connected, some of them getting disconnected mid-way, etc.). You can look at the [source code](https://github.com/html5rocks/www.html5rocks.com/blob/master/content/tutorials/doodles/gamepad/static/gamepad-tester/gamepad.js#L187) of our tester, function `pollGamepads()`, for one approach on how to solve this.
 
 <h3 id="toc-events">Events</h3>
 
