@@ -1,0 +1,169 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Paul Lewis <paul@aerotwist.com>{% endblock %}
+{% block pageauthor %}{% profilelinks paullewis %}{% endblock %}
+{% block headtitle %}Working with the canvas and HiDPI Devices{% endblock %}
+{% block pagetitle %}Working with the canvas and HiDPI Devices{% endblock %}
+{% block head %}
+
+{% endblock %}
+{% block pagebreadcrumb %}Working with the canvas and HiDPI Devices{% endblock %}
+{% block date %}August 08, 2012{% endblock %}
+{% block updated %}{% endblock %}
+{% block onload %}{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">supported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">supported</span></span>
+<span class="browser safari"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block iscompatible %}
+  return !!Modernizr.canvas
+{% endblock %}
+
+
+{% block content %}
+
+<h2 id="toc-intro">Introduction</h2>
+
+<p>HiDPI screens are lovely, they make everything look smoother and cleaner. But they also present a new set of challenges to developers. In this article we are going to take a look into the unique challenges of drawing images in the canvas in the context of HiDPI screens.</p>
+
+<h2 id="toc-1">The devicePixelRatio property</h2>
+
+<p>Let's start at the beginning. Back before we had HiDPI screens a pixel was a pixel (if we ignore zooming and scaling for a bit) and that was it, you didn't really need to change anything around. If you set something to be 100px wide that was all there was to it. Then the first few HiDPI mobile handsets started popping up with the slightly enigmatic devicePixelRatio property on the window object and available for use in media queries. What this property allowed us to do was understand the ratio of how pixel values (which we call the logical pixel value) in - say - CSS would translate to the <em>actual</em> number of pixels the device would use when it came to rendering. In the case of an iPhone 4S, which has a devicePixelRatio of 2, you will see that a 100px logical value equates to a 200px device value.</p>
+
+<p>That's interesting, but what does that mean for us developers? Well in the early days we all started to notice that our images were being upscaled by these devices. We were creating images at the logical pixel width of our elements and, when they were drawn out, they would be upscaled by the devicePixelRatio and they'd be blurry.</p>
+
+<figure>
+    <img src="html5rocks-blurry.png" />
+    <figcaption>Figure 1 - An image being upscaled and blurred due to the devicePixelRatio</figcaption>
+</figure>
+
+<p>The de facto solution to this has been to create images scaled up by the devicePixelRatio and then use CSS to scale it down by the same amount. So when the device scales it back up using the devicePixelRatio it won't have been scaled beyond its original size and it will no longer be blurry. Problem solved. (Of course that in general terms probably means you're sending images that are overly large for normal DPI devices, but that's a different issue!)</p>
+
+<h2 id="toc-2">Introducing the backing store</h2>
+
+<p>What about the canvas? Well that's what we will cover in this article, and to warn you upfront we will be primarily marking out an implementation difference between Chrome and Safari 6 on desktop. There is a newly-exposed, prefixed (and verbosely named) property on each canvas context: webkitBackingStorePixelRatio. Right now Mozilla, Opera and Microsoft do not have an analogous property available in their canvas contexts, but it may well appear in the future.</p>
+
+<p>With that said, the webkitBackingStorePixelRatio property tells us in the given browser what the backing store size is in relation to the canvas element itself. In case you're wondering what the backing store is, whenever you draw anything into the canvas's context, you're really having the browser write it to the underlying storage for the canvas (called its backing store). When the browser comes to draw the canvas to the screen it uses the backing store's data. That means that webkitBackingStorePixelRatio tells us the dimensions of the backing store in relation to the canvas's dimensions. In case you're wondering why you can't use the devicePixelRatio to determine the backing store size, the answer is that they aren't guaranteed to match. Despite presenting the same devicePixelRatio value, Chrome and Safari 6 can and do have entirely different approaches for the backing store size (and therefore the webkitBackingStorePixelRatio) on HiDPI devices. The net result is that we can't rely on devicePixelRatio to know how the browser is going to scale images that are written into the canvas.</p>
+
+<p>OK, so we know what the webkitBackingStorePixelRatio is, but we need to know what its implications are. For the sake of simplicity let's say we have a canvas that is <strong>200px wide</strong> and a webkitBackingStorePixelRatio value of <strong>2</strong>. Our underlying backing store, therefore, will be <strong>400px wide</strong>. It's worth noting that there's nothing to say for sure that the ratio will be 2, it could just as easily be some other value, depending on the browser and device.</p>
+
+<figure>
+    <img src="canvas-backingstore.png" />
+    <figcaption>Figure 2 - The canvas element and how it relates to its backing store</figcaption>
+</figure>
+
+<p>When the browser gets to drawing out the canvas it is scaled down according to its logical pixel value of <strong>200px</strong>, the value that we chose earlier. But then the devicePixelRatio takes over and it will be scaled back up again. If we assume that our devicePixelRatio is also 2, the same as our webkitBackingStoreRatio, it will be <strong>400px</strong> wide. Again, its might not be 2; the Nexus 7, for instance, has a devicePixelRatio of around 1.325. You'd be forgiven for being very confused at this point, but you can think of it like this:</p>
+
+<figure>
+    <img src="canvas-backingstore-device.png" />
+    <figcaption>Figure 3 - The canvas element being scaled and rescaled</figcaption>
+</figure>
+
+<p>Now we're getting closer. We know what the webkitBackingStorePixelRatio and devicePixelRatio values are used for, but we now need to talk about the implementation differences.</p>
+
+<h2 id="toc-3">Implementation Differences</h2>
+
+<p>On a HiDPI device such as a Macbook Pro with Retina display, Safari 6 carries a webkitBackingStorePixelRatio value of <strong>2</strong> and a devicePixelRatio of 2 whereas Chrome uses a webkitBackingStorePixelRatio value of <strong>1</strong> and a devicePixelRatio of 2. This means that if you draw an image into a canvas in Safari it will <em>automatically</em> double the dimensions of the image when writing it to the canvas's backing store, so after scaling down to the logical pixel size and back up again through the devicePixelRatio you will arrive back at the size you specified. In Chrome, however, the image will be written to the backing store at the exact size you specify which means that after the devicePixelRatio is applied it will be upscaled and blurry. A picture tells a thousand words, so below is an image that has been written to a canvas context:</p>
+
+<figure>
+    <img src="comparison.png" />
+    <figcaption>Figure 4 - Side by side comparison of HiDPI rendering in Chrome and Safari 6</figcaption>
+</figure>
+
+<p>You'll notice that by default Chrome's rendering is blurry compared to Safari 6's because our image is being written into the canvas backing store at the width we specify then upscaled by the devicePixelRatio.</p>
+
+<p>That leaves two questions: <em>why does Chrome <strong>not<strong> automatically upscale backing stores in the same way as Safari 6</em> and <em>how can you as a developer ensure that you can draw images at the scale you choose?</em></p>
+
+<p>Let's deal with the automatic upscaling question first. As I mentioned earlier there is no guarantee that the backing store ratio will be 2, it could be completely different, possibly more than 2. But if you consider a value of 2 then your backing store will be double the canvas size in both width and height, and that means four times the amount of memory is required to service your canvas element. If you have multiple canvas elements or your code is running in a memory-constrained environment such as on mobile then you're more likely to exhaust your resources. By not doing the upscaling automatically you have the option to do it or not, it's totally your call.</p>
+
+<p>That leaves us with what you can do to manually upscale your canvas. The answer is pretty simple: upsize your canvas width and height by devicePixelRatio / webkitBackingStorePixelRatio and then use CSS to scale it back down to the logical pixel size you want. Taking our above case where Chrome reports a webkitBackingStorePixelRatio of 1 and a devicePixelRatio of 2 we would scale the dimensions of the canvas by 2 / 1, i.e. multiply them by 2, then we would use CSS to scale it back down.</p>
+
+<p>Finally the last thing we need to account for is that since we have scaled up our canvas manually (and reduced it back down using CSS) we now have to make sure we scale up the width, height and positions of our images proportionally.</p>
+
+<p>The code for that looks like this:</p>
+
+<pre class="prettyprint">
+/**
+ * Writes an image into a canvas taking into
+ * account the backing store pixel ratio and
+ * the device pixel ratio.
+ *
+ * @author Paul Lewis
+ * @param {Object} opts The params for drawing an image to the canvas
+ */
+function drawImage(opts) {
+
+    if(!opts.canvas) {
+        throw("A canvas is required");
+    }
+    if(!opts.image) {
+        throw("Image is required");
+    }
+
+    // get the canvas and context
+    var canvas = opts.canvas,
+        context = canvas.getContext('2d'),
+        image = opts.image,
+
+    // now default all the dimension info
+        srcx = opts.srcx || 0,
+        srcy = opts.srcy || 0,
+        srcw = opts.srcw || image.naturalWidth,
+        srch = opts.srch || image.naturalHeight,
+        desx = opts.desx || srcx,
+        desy = opts.desy || srcy,
+        desw = opts.desw || srcw,
+        desh = opts.desh || srch,
+        auto = opts.auto,
+
+    // finally query the various pixel ratios
+        devicePixelRatio = window.devicePixelRatio || 1,
+        backingStoreRatio = context.webkitBackingStorePixelRatio ||
+                            context.mozBackingStorePixelRatio ||
+                            context.msBackingStorePixelRatio ||
+                            context.oBackingStorePixelRatio ||
+                            context.backingStorePixelRatio || 1,
+
+        ratio = devicePixelRatio / backingStoreRatio;
+
+    // ensure we have a value set for auto.
+    // If auto is set to false then we
+    // will simply not upscale the canvas
+    // and the default behaviour will be maintained
+    if (typeof auto === 'undefined') {
+        auto = true;
+    }
+
+    // upscale the canvas if the two ratios don't match
+    if (auto && devicePixelRatio !== backingStoreRatio) {
+
+        var oldWidth = canvas.width;
+        var oldHeight = canvas.height;
+
+        canvas.width = oldWidth * ratio;
+        canvas.height = oldHeight * ratio;
+
+        canvas.style.width = oldWidth + 'px';
+        canvas.style.height = oldHeight + 'px';
+
+        // now scale the context to counter
+        // the fact that we've manually scaled
+        // our canvas element
+        context.scale(ratio, ratio);
+
+    }
+
+    context.drawImage(pic, srcx, srcy, srcw, srch, desx, desy, desw, desh);
+}
+</pre>
+
+<p>If you want to see what that looks like (and you have access to a HiDPI screen) take a look at <a href="demo/index.html">the demo page</a> which shows the code automatically scaling the canvas in Chrome (as well as ensuring the image is drawn at the correct size and position) while leaving Safari 6 unaffected. It's important that we only apply this in the situation where the backing store is not automatically scaling up content because if we manually upscale it and then the browser does the same we would find ourselves in the position where the content is upscaled twice which could push memory consumption through the roof.</p>
+
+<p>Going forward we are going to see an increasing number of devices and screen ratios. Understanding how the browser manipulates the images and canvases in your applications through the backing store's pixel ratio and the device pixel ratio is key to ensuring the best possible performance and quality.</p>
+
+{% endblock %}
