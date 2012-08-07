@@ -1,6 +1,6 @@
 {% extends "tutorial.html" %}
 
-{% block headauthor %}Paul Lewis <paul@aerotwist.com>{% endblock %}
+{% block headauthor %}Paul Lewis <paullewis@google.com>{% endblock %}
 {% block pageauthor %}{% profilelinks paullewis %}{% endblock %}
 {% block headtitle %}Working with Canvas and HiDPI Devices{% endblock %}
 {% block pagetitle %}Working with Canvas and HiDPI Devices{% endblock %}
@@ -68,7 +68,7 @@
 
 <h2 id="toc-3">Implementation Differences</h2>
 
-<p>On a HiDPI device such as a Macbook Pro with Retina display, Safari 6 carries a webkitBackingStorePixelRatio value of <strong>2</strong> and a devicePixelRatio of 2 whereas Chrome uses a webkitBackingStorePixelRatio value of <strong>1</strong> and a devicePixelRatio of 2. This means that if you draw an image into a canvas in Safari it will <em>automatically</em> double the dimensions of the image when writing it to the canvas's backing store, so after scaling down to the logical pixel size and back up again through the devicePixelRatio you will arrive back at the size you specified. In Chrome, however, the image will be written to the backing store at the exact size you specify which means that after the devicePixelRatio is applied it will be upscaled and blurry. A picture tells a thousand words, so below is an image that has been written to a canvas context:</p>
+<p>On a HiDPI device such as a Macbook Pro with Retina display, Safari 6 carries a webkitBackingStorePixelRatio value of <strong>2</strong> and a devicePixelRatio of 2 whereas Chrome uses a webkitBackingStorePixelRatio value of <strong>1</strong> and a devicePixelRatio of 2. This means that if you draw an image into a canvas in Safari it will <em>automatically</em> double the dimensions of the image when writing it to the canvas's backing store, so after scaling down to the logical pixel size and back up again through the devicePixelRatio you will arrive back at the size you specified. In Chrome, however, the image will be written to the backing store at the exact size you specify which means that after the devicePixelRatio is applied it will be upscaled and blurry. A picture speaks a thousand words, so below is an HTML5 Rocks image that has been drawn into a canvas:</p>
 
 <figure>
     <img src="comparison.png" />
@@ -77,7 +77,7 @@
 
 <p>You'll notice that by default Chrome's rendering is blurry compared to Safari 6's because our image is being written into the canvas backing store at the width we specify then upscaled by the devicePixelRatio.</p>
 
-<p>That leaves two questions: <em>why does Chrome <strong>not<strong> automatically upscale backing stores in the same way as Safari 6</em> and <em>how can you as a developer ensure that you can draw images at the scale you choose?</em></p>
+<p>That leaves two questions: <em>why does Chrome <strong>not</strong> automatically upscale backing stores in the same way as Safari 6</em> and <em>how can you as a developer ensure that you can draw images at the scale you choose?</em></p>
 
 <p>Let's deal with the automatic upscaling question first. As I mentioned earlier there is no guarantee that the backing store ratio will be 2, it could be completely different, possibly more than 2. But if you consider a value of 2 then your backing store will be double the canvas size in both width and height, and that means four times the amount of memory is required to service your canvas element. If you have multiple canvas elements or your code is running in a memory-constrained environment such as on mobile then you're more likely to exhaust your resources. By not doing the upscaling automatically you have the option to do it or not, it's totally your call.</p>
 
