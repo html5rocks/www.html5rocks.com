@@ -1,0 +1,261 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}John McCutchan <john@johnmccutchan.com>{% endblock %}
+{% block pageauthor %}{% profilelinks johnmccutchan %}{% endblock %}
+{% block headtitle %}Pointer Lock and First Person Shooter Controls{% endblock %}
+{% block pagetitle %}Pointer Lock and First Person Shooter Controls{% endblock %}
+{% block pagebreadcrumb %}Pointer Lock and First Person Shooter Controls{% endblock %}
+
+{% block head %}
+<style>
+  figure img { border: 1px solid #ccc; }
+</style>
+{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">supported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-graphics.png" width="133" height="64" alt="This article is powered by HTML5 Graphics, 3D &amp; Effects" title="This article is powered by HTML5 Graphics, 3D &amp; Effects" />
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+
+{% block content %}
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>The Pointer Lock API ....</p>
+
+<h2 id="toc-topic">Pointer Lock Mechanics</h2>
+
+<div id="simple-pointer-lock">
+	<p>Click me!</p>
+</div>
+
+<h3 id="toc-topic-subtopic">Activating</h3>
+
+<pre class="prettyprint">
+// Example code snippet goes here.
+</pre>
+
+<h3 id="toc-topic-subtopic">Event Handling</h3>
+
+<pre class="prettyprint">
+// Example code snippet goes here.
+</pre>
+
+
+
+<h2 id="toc-topic">First Person Shooter Controls Example</h2>
+
+<h3 id="toc-topic-subtopic">Strafing</h3>
+<h3 id="toc-topic-subtopic">Yaw</h3>
+<h3 id="toc-topic-subtopic">Pitch</h3>
+
+<h2 id="toc-references">References</h2>
+<ul>
+  <li></li>
+  <li></li>
+  <li></li>
+</ul>
+
+<script>
+
+SimpleFullscreenControl = function() {
+	var that = this;
+	this.element = undefined;
+	this.changeCallback = function() {
+		that.fullscreenChange();
+	}
+}
+
+SimpleFullscreenControl.prototype.enterFullscreenHook = function(element) {
+	console.log('overload enterFullscreenHook');
+}
+
+SimpleFullscreenControl.prototype.leaveFullscreenHook = function(element) {
+	console.log('overload leaveFullscreenHook');
+}
+
+SimpleFullscreenControl.prototype.attach = function(divId) {
+	if (this.element != undefined) {
+		detach();
+	}
+	this.element = document.getElementById(divId);
+	if (this.element == null) {
+		this.element = undefined;
+		console.log('could not find ' + divId + 'did not attach full screen control.');
+		return;
+	}
+	document.addEventListener('fullscreenchange', this.changeCallback, false);
+	document.addEventListener('mozfullscreenchange', this.changeCallback, false);
+	document.addEventListener('webkitfullscreenchange', this.changeCallback, false);
+}
+
+SimpleFullscreenControl.prototype.detach = function() {
+	this.leaveFullscreen();
+	this.element = undefined;
+	document.removeEventListener('fullscreenchange', this.changeCallback, false);
+	document.removeEventListener('mozfullscreenchange', this.changeCallback, false);
+	document.removeEventListener('webkitfullscreenchange', this.changeCallback, false);
+}
+
+SimpleFullscreenControl.prototype.fullscreenChange = function() {
+	if (document.webkitFullscreenElement === this.element ||
+		document.mozFullscreenElement === this.element ||
+		document.mozFullScreenElement === this.element) {
+		this.enterFullscreenHook(this.element);
+	} else {
+		this.leaveFullscreenHook(this.element);
+	}
+}
+
+SimpleFullscreenControl.prototype.enterFullscreen = function() {
+	this.element.requestFullscreen = this.element.requestFullscreen    ||
+									 this.element.mozRequestFullscreen ||
+									 this.element.webkitRequestFullscreen;
+	this.element.requestFullscreen();
+}
+
+SimpleFullscreenControl.prototype.leaveFullscreen = function() {
+	document.webkitCancelFullScreen();
+}
+
+SimplePointerLockControl = function() {
+	var that = this;
+	this.element = undefined;
+	this.changeCallback = function() {
+		that.pointerLockChange();
+	}
+	this.moveCallback = function(e) {
+		var movementX = e.movementX       ||
+                 		e.mozMovementX    ||
+                  		e.webkitMovementX ||
+                  		0,
+      		movementY = e.movementY       ||
+                  		e.mozMovementY    ||
+                  		e.webkitMovementY ||
+                  		0;
+		that.pointerMoveHook(movementX, movementY);
+	}
+}
+
+SimplePointerLockControl.prototype.lockHook = function(element) {
+	console.log('overload lockHook');
+}
+
+SimplePointerLockControl.prototype.unlockHook = function(element) {
+	console.log('overload unlockHook');
+}
+
+SimplePointerLockControl.prototype.pointerMoveHook = function(x, y) {
+	console.log('overload pointerMoveHook -- (' + x + ',' + y + ')');
+}
+
+SimplePointerLockControl.prototype.attach = function(divId) {
+	if (this.element != undefined) {
+		this.detach();
+	}
+	this.element = document.getElementById(divId);
+	if (this.element == null) {
+		this.element = undefined;
+		console.log('could not find ' + divId + 'did not attach pointer lock control.');
+		return;
+	}
+	document.addEventListener('pointerlockchange', this.changeCallback, false);
+	document.addEventListener('mozpointerlockchange', this.changeCallback, false);
+	document.addEventListener('webkitpointerlockchange', this.changeCallback, false);
+}
+
+SimplePointerLockControl.prototype.detach = function() {
+	this.unlock();
+	this.element = undefined;
+	document.removeEventListener('pointerlockchange', this.changeCallback, false);
+	document.removeEventListener('mozpointerlockchange', this.changeCallback, false);
+	document.removeEventListener('webkitpointerlockchange', this.changeCallback, false);
+
+}
+
+SimplePointerLockControl.prototype.pointerLockChange = function() {
+	if (document.mozPointerLockElement === this.element ||
+		document.webkitPointerLockElement === this.element) {
+		this.lockHook(this.element);
+		document.addEventListener("mousemove", this.moveCallback, false);
+	} else {
+		document.removeEventListener("mousemove", this.moveCallback, false);
+		this.unlockHook(this.element);
+	}
+}
+
+SimplePointerLockControl.prototype.lock = function() {
+	this.element.requestPointerLock = this.element.requestPointerLock    ||
+									  this.element.mozRequestPointerLock ||
+									  this.element.webkitRequestPointerLock;
+	this.element.requestPointerLock();
+}
+
+SimplePointerLockControl.prototype.unlock = function() {
+	document.webkitExitPointerLock();
+}
+
+SimplePointerLockControl.prototype.islocked = function() {
+	return document.pointerLockElement == this.element;
+}
+
+installHooks = function() {
+	window.simpleFullscreenControl.enterFullscreenHook = function(element) {
+		console.log('booting out of fullscreen');
+		window.simpleFullscreenControl.leaveFullscreen();
+	}
+
+	window.simpleFullscreenControl.leaveFullscreenHook = function(element) {
+		console.log('out of fullscreen');
+	}
+	window.simplePointerLockControl.lockHook = function(element) {
+		this.element.innerHTML = '<p></p>';
+	}
+	window.simplePointerLockControl.unlockHook = function(element) {
+		var html = '<p>Click me!</p>'
+		this.element.innerHTML = html;
+	}
+	window.simplePointerLockControl.pointerMoveHook = function(x, y) {
+		var html = '<p>(' + x + ',' + y + ')</p>';
+		this.element.innerHTML = html;
+	}
+}
+
+installEvents = function(divId) {
+	var element = document.getElementById(divId);
+	if (element == null) {
+		console.log('could not find ' + divId + 'could not install click handler');
+		return;
+	}
+	element.addEventListener('click', function() {
+		window.simplePointerLockControl.lock();
+	}, false);
+	console.log('installed click handler in ' + divId);
+}
+
+pointerLockMain = function() {
+	window.simpleFullscreenControl = new SimpleFullscreenControl();
+	window.simpleFullscreenControl.attach('simple-pointer-lock');
+	window.simplePointerLockControl = new SimplePointerLockControl();
+	window.simplePointerLockControl.attach('simple-pointer-lock');
+
+	installHooks();
+	installEvents('simple-pointer-lock');
+}
+
+window.onload = pointerLockMain;
+
+</script>
+
+{% endblock %}
