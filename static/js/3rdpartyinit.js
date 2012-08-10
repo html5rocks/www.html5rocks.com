@@ -1,25 +1,24 @@
 
 window.thirdParty = {
 
-    delay: 500,
-
     init: function() {
-      $(window).load(function() {
-        setTimeout(function() {
-          //thirdParty.GA(); // moved to base.html to record hits immediately.
-          thirdParty.plus1();
-          thirdParty.twitter();
-          thirdParty.facebook();
-          $('.share').css('display', 'block');
-        }, thirdParty.delay);
-      });
+      $('.share').before('<span class="share preview" onmouseover="thirdParty.load(this);"><img src="/static/images/share.png"></span>');
+    },
+
+    load: function(el) {
+      $(el).remove();
+      //thirdParty.GA(); // moved to base.html to record hits immediately.
+      thirdParty.plus1();
+      thirdParty.twitter();
+      thirdParty.facebook();
+      $('.share').css('display', 'block');
     },
 
     facebook: function() {
 
       $('li.facebook').not(':has("iframe")').html(function() {
 
-        var html = '<iframe src="http://www.facebook.com/plugins/like.php?href='+
+        var html = '<iframe src="//www.facebook.com/plugins/like.php?href='+
           this.getAttribute('data-url') +
           '&amp;layout=button_count&amp;show_faces=false&amp;width=80&amp;action=like'+
           '&amp;font=arial&amp;colorscheme=light&amp;height=21" scrolling="no" '+
@@ -43,7 +42,7 @@ window.thirdParty = {
       window.___gcfg = { lang: document.documentElement.lang, parsetags: 'explicit' };
 
       $.ajax({
-        url : 'https://apis.google.com/js/plusone.js',
+        url : '//apis.google.com/js/plusone.js',
         dataType : 'script', cache: true,
         success : function(){
           gapi.plusone.go();
