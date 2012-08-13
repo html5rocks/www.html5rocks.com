@@ -1,6 +1,6 @@
 !function() {
 
-  var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
+  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   var IDBTransaction = window.webkitIDBTransaction || window.mozIDBTransaction || window.IDBTransaction // TODO moz
   var IDBKeyRange = window.webkitIDBKeyRange || window.mozIDBKeyRange || window.IDBKeyRange // TODO moz
 
