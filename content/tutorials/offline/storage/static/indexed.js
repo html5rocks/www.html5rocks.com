@@ -54,7 +54,10 @@
 
         // now call the handler outside of
         // the 'versionchange' callstack
-        setTimeout(handler, 0);
+        var transaction = ev.target.result;
+        transaction.oncomplete = function() {
+          handler();
+        };
       };
     },
 

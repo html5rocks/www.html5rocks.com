@@ -143,11 +143,10 @@ indexedDB.open = function() {
 
         var store = db.createObjectStore("todo", {keyPath: "timeStamp"});
 
-        // since we can't do any other requests
-        // during a versionchange we need to
-        // attempt the getAllTodoItems() call
-        // outside of the onsuccess call stack
-        setTimeout(todoDB.indexedDB.getAllTodoItems, 0);
+        var transaction = e.target.result;
+        transaction.oncomplete = function() {
+          todoDB.indexedDB.getAllTodoItems();
+        }
       };
     } else {
       todoDB.indexedDB.getAllTodoItems();
