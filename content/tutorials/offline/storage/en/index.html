@@ -210,7 +210,7 @@ varies
 <p>For <strong>localStorage</strong>, we do a simple check to see if the store exists. If not, we'll create a new array and store it against the localStorage "checkins" key. We use JSON to convert the structure to a string first, since, in most browsers, localStorage only stores strings.</p>
 
 <pre class="prettyprint">
-  if (!localStorage.checkins) localStorage.checkins = JSON.stringify([]);
+if (!localStorage.checkins) localStorage.checkins = JSON.stringify([]);
 </pre>
 
 <p>For <strong>Web SQL Database</strong>, we need to create the database structure if it doesn't exist. <tt>openDatabase</tt> fortunately creates the database automatically if it doesn't exist, and, likewise, we use the SQL phrase "if not exists" to ensure the new checkins table is not overridden if it is already present. We have to define the structure of the data upfront, i.e. the name and type of each column in the checkins table. Each row will represent a single checkin.</p>
@@ -218,7 +218,7 @@ varies
 <pre class="prettyprint">
 this.db = openDatabase('geomood', '1.0', 'Geo-Mood Checkins', 8192);
 this.db.transaction(function(tx) {
-  tx.executeSql("create table if not exists " + 
+  tx.executeSql("create table if not exists " +
     "checkins(id integer primary key asc, time integer, latitude float," +
               "longitude float, mood string)",
     [],
@@ -232,23 +232,50 @@ this.db.transaction(function(tx) {
 <p>Another thing we do here is creating a mood index, so we will later be able to quickly search for all checkins matching a particular mood.</p>
 
 <pre class="prettyprint">
-    setup: function(handler) {
-      var openRequest = indexedDB.open("geomood", "Geo-Mood Checkins");
-      openRequest.onsuccess = function(ev) {
-        db = ev.target.result;
-        db.onerror = function(ev) { console.log("db error", arguments, ev.target.webkitErrorMessage); }
-        db.version==version ? handler() : indexedStore.reset(handler);
-      }
-    },
-    reset: function(handler) {
-      var versionRequest = db.setVersion(version);
-      versionRequest.onsuccess = function(ev) {
-        if (db.objectStoreNames.contains("checkins")) db.deleteObjectStore("checkins");
-        var checkinsStore = db.createObjectStore("checkins", { keyPath: "time" });
-        checkinsStore.createIndex("moodIndex", "mood", { unique: false });
-        handler();
-      }
-    },
+setup: function(handler) {
+
+  // attempt to open the database
+  var openRequest = indexedDB.open("geomood", "Geo-Mood Checkins");
+
+  // assign the database for access outside
+  // the callback and then either upgrade
+  // the database if needed or carry on
+  openRequest.onsuccess = function(ev) {
+
+    db = ev.target.result;
+    db.onerror = function(ev) {
+      console.log("db error", arguments, ev.target.webkitErrorMessage);
+    };
+
+    if(db.version === version) {
+      handler();
+    } else {
+      indexedStore.reset(handler);
+    }
+  };
+},
+
+reset: function(handler) {
+
+  // update the db version
+  var versionRequest = db.setVersion(version);
+
+  versionRequest.onsuccess = function(ev) {
+
+    // remove the store if it exists
+    if (db.objectStoreNames.contains("checkins")) {
+      db.deleteObjectStore("checkins");
+    }
+
+    // create a store, and an index
+    var checkinsStore = db.createObjectStore("checkins", { keyPath: "time" });
+    checkinsStore.createIndex("moodIndex", "mood", { unique: false });
+
+    // now call the handler outside of
+    // the 'versionchange' callstack
+    setTimeout(handler, 0);
+  };
+}
 </pre>
 
 <p>Finally, <strong>FileSystem</strong> setup. We'll store each checkin in its own file, JSON-encoded, and all of them inside a "checkins/" directory. Again, this is not the most appropriate use of FileSystem API, but good for demonstration purposes.</p>
@@ -256,36 +283,36 @@ this.db.transaction(function(tx) {
 <p>The setup gets a handle on the overall FileSystem, using it to check for the "checkins" directory. If it's not there, we create it with getDirectory.
 
 <pre class="prettyprint">
-  setup: function(handler) {
-    requestFileSystem(
-      window.PERSISTENT,
-      1024*1024,
-      function(fs) {
-        fs.root.getDirectory(
-          "checkins",
-          {}, // no "create" option, so this is a read op
-          function(dir) { 
-            checkinsDir = dir;
-            handler();
-          },
-          function() {
-            fs.root.getDirectory(
-              "checkins",
-              {create: true},
-              function(dir) {
-                checkinsDir = dir;
-                handler();
-              },
-              onError
-            );
-          }
-        );
-      },
-      function(e) {
-        console.log("error "+e.code+"initialising - see http://goo.gl/YW0TI");
-      }
-    );
-  }
+setup: function(handler) {
+  requestFileSystem(
+    window.PERSISTENT,
+    1024*1024,
+    function(fs) {
+      fs.root.getDirectory(
+        "checkins",
+        {}, // no "create" option, so this is a read op
+        function(dir) {
+          checkinsDir = dir;
+          handler();
+        },
+        function() {
+          fs.root.getDirectory(
+            "checkins",
+            {create: true},
+            function(dir) {
+              checkinsDir = dir;
+              handler();
+            },
+            onError
+          );
+        }
+      );
+    },
+    function(e) {
+      console.log("error "+e.code+"initialising - see http://goo.gl/YW0TI");
+    }
+  );
+}
 </pre>
 
 <h3 id="save">Saving a Checkin</h3>
@@ -313,23 +340,23 @@ store.db.transaction(function(tx) {
 </pre>
 
 <p>Once the store is set up, saving in IndexedDB is almost as simple as Web Storage, with the advantage of working asynchronously, in a transaction:</p>
-<pre class="prettyprint">>
-    var store = db.transaction([], IDBTransaction.READ_WRITE, 0).objectStore("checkins");
-    var request = store.put(checkin);
-    request.onsuccess = handler;
+<pre class="prettyprint">
+var store = db.transaction(["checkins"], 'readwrite').objectStore("checkins");
+var request = store.put(checkin);
+request.onsuccess = handler;
 </pre>
 
 <p>With FileStore, once we create a file and get a handle on it, we can use <a href="http://www.w3.org/TR/file-writer-api/">the FileWriter API</a> to populate it:</p>
-<pre class="prettyprint">>
-      fs.root.getFile("checkins/" + checkin.time, {create: true, exclusive: true}, function(file) {
-        file.createWriter(function(writer) {
-          writer.onerror = fileStore.onError;
-          var bb = new WebKitBlobBuilder;
-          bb.append(JSON.stringify(checkin));
-          writer.write(bb.getBlob("text/plain"));
-          handler();
-        }, fileStore.onError);
-      }, fileStore.onError);
+<pre class="prettyprint">
+fs.root.getFile("checkins/" + checkin.time, {create: true, exclusive: true}, function(file) {
+  file.createWriter(function(writer) {
+    writer.onerror = fileStore.onError;
+    var bb = new WebKitBlobBuilder;
+    bb.append(JSON.stringify(checkin));
+    writer.write(bb.getBlob("text/plain"));
+    handler();
+  }, fileStore.onError);
+}, fileStore.onError);
 </pre>
 
 <h3 id="search">Searching for Matching Checkins</h3>
@@ -369,10 +396,11 @@ store.db.transaction(function(tx) {
 <p>Naturally enough, the IndexedDB solution uses an index, the index on "mood we created earlier, called "moodIndex". We use a cursor to iterate through each checkin matching the query. Note that this cursor pattern can also be used against an entire store; so, with indexes, it's like we get a window into the store where we can only see matching objects (similar to a "view" in traditional databases).</p>
 
 <pre class="prettyprint">
-var store = db.transaction([], IDBTransaction.READ_ONLY, 0).objectStore("checkins");
+var store = db.transaction(["checkins"], 'readonly').objectStore("checkins");
 var request = moodQuery ?
   store.index("moodIndex").openCursor(new IDBKeyRange.only(moodQuery)) :
   store.openCursor();
+
 request.onsuccess = function(ev) {
   var cursor = request.result;
   if (cursor) {
@@ -384,7 +412,7 @@ request.onsuccess = function(ev) {
 
 <p>As with many traditional filesystems, there's no indexing, so a search algorithm (like that used by the Unix "grep" command) must iterate through each file. We extract a <a href="http://www.w3.org/TR/FileAPI/#dfn-filereader">Reader</a> from the checkins directory, which lets us walk through each file via <code>readEntries()</code>. For each file, we again extract a reader, and inspect its contents via <code>readAsText()</code>. As these operations are asynchronous, we need to chain calls together, which is the function served by <code>readNext()</code>.</p>
 
-<pre>
+<pre class="prettyprint">
 checkinsDir.createReader().readEntries(function(files) {
   var reader, fileCount=0, checkins=[];
   var readNextFile = function() {
@@ -428,7 +456,7 @@ store.db.transaction(function(tx) {
 <p>Unfortunately, Indexed Database doesn't offer any counting facility, so we have to iterate through all checkins.</p>
 <pre class="prettyprint">
 var count = 0;
-var request = db.transaction([], IDBTransaction.READ_ONLY, 0).objectStore("checkins").openCursor();
+var request = db.transaction(["checkins"], 'readonly').objectStore("checkins").openCursor();
 request.onsuccess = function(ev) {
   var cursor = request.result;
   cursor ? ++count && cursor["continue"]() : handler(count);
@@ -438,10 +466,10 @@ request.onsuccess = function(ev) {
 
 <p>For FileSystem, a directory reader's <code>readEntries()</code> method provides a list of files, so we can just return the length of that list.</p>
 
-<pre>
-      checkinsDir.createReader().readEntries(function(files) {
-        handler(files.length);
-      });
+<pre class="prettyprint">
+checkinsDir.createReader().readEntries(function(files) {
+  handler(files.length);
+});
 </pre>
 
 <h2 id="summary">Summary</h3>

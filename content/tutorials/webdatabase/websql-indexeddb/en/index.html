@@ -57,8 +57,8 @@
     </tr>
     <tr>
       <td>Transaction</td>
-      <td>Lock can happen on databases, tables, or rows on READ_WRITE transactions</td>
-      <td>Lock can happen on database VERSION_CHANGE transaction, on an objectStore READ_ONLY and READ_WRITE transactions. </td>
+      <td>Lock can happen on databases, tables, or rows on 'readwrite' transactions</td>
+      <td>Lock can happen on database 'versionchange' transaction, on an objectStore 'readonly' and 'readwrite' transactions. </td>
     </tr>
     <tr>
       <td>Transaction Commits</td>
@@ -143,7 +143,11 @@ indexedDB.open = function() {
 
         var store = db.createObjectStore("todo", {keyPath: "timeStamp"});
 
-        todoDB.indexedDB.getAllTodoItems();
+        // since we can't do any other requests
+        // during a versionchange we need to
+        // attempt the getAllTodoItems() call
+        // outside of the onsuccess call stack
+        setTimeout(todoDB.indexedDB.getAllTodoItems, 0);
       };
     } else {
       todoDB.indexedDB.getAllTodoItems();
@@ -194,12 +198,12 @@ function addTodo() {
 
 <h4>IndexedDB - Adding item</h4>
 <p>
-  We first get a quick reference to the database object todoDB.indexedDB.db, initiate a READ_WRITE transaction and get a reference to our object store.
+  We first get a quick reference to the database object todoDB.indexedDB.db, initiate a <code>'readwrite'</code> transaction and get a reference to our object store.
   There are three types of transactions:
 <ul>
-  <li>READ_WRITE - Allows records contained in object stores to be added, read, modified, and removed.</li>
-  <li>READ_ONLY - Allows records contained in object stores to be read.</li>
-  <li>VERSION_CHANGE - Used to create or update object store and indexes.</li>
+  <li><code>'readwrite'</code> - Allows records contained in object stores to be added, read, modified, and removed.</li>
+  <li><code>'readonly'</code> - Allows records contained in object stores to be read.</li>
+  <li><code>'versionchange'</code> - Used to create or update object store and indexes.</li>
 </ul>
 
 Now that the application has access to the object store, we can issue a simple put command with a basic JSON object. Notice that there is a timeStamp property. That is our unique key for the object and is used as the "keyPath". When the call to put is successful, our onsuccess event is triggered, and we are able to render the contents on the screen.
@@ -208,7 +212,7 @@ Now that the application has access to the object store, we can issue a simple p
 <pre class="prettyprint">
 indexedDB.addTodo = function() {
   var db = todoDB.indexedDB.db;
-  var trans = db.transaction(['todo'], IDBTransaction.READ_WRITE);
+  var trans = db.transaction(['todo'], 'readwrite');
   var store = trans.objectStore('todo');
 
   var data = {
@@ -273,7 +277,7 @@ function showAll() {
 </pre>
 
 <h4>IndexedDB - Retrieving data</h4>
-<p>We open a transaction on our object store. This is set to READ_ONLY, because we only wish to retrieve data. Next, we open a cursor and iterate with it on our list of todos. All of these commands used in this sample are asynchronous and, as such, the data is not returned from inside the transaction.
+<p>We open a transaction on our object store. This is set to 'readonly', because we only wish to retrieve data. Next, we open a cursor and iterate with it on our list of todos. All of these commands used in this sample are asynchronous and, as such, the data is not returned from inside the transaction.
 </p>
 
 <pre class="prettyprint">
@@ -284,12 +288,12 @@ function showAll() {
   request.onsuccess = function(event) {
     // Enumerate the entire object store.
     var db = todoDB.indexedDB.db;
-    var trans = db.transaction(["todo"], IDBTransaction.READ_ONLY);
+    var trans = db.transaction(["todo"], 'readonly');
     var request = trans.objectStore("todo").openCursor();
     var ul = document.createElement("ul");
 
     request.onsuccess = function(event) {
-      // This hack is to allow our code to run with Firefox (older versions then 6)
+      // This hack is to allow our code to run with Firefox (older versions than 6)
       var cursor = request.result || event.result;
 
       // If cursor is null then we've completed the enumeration - so update the DOM
@@ -335,7 +339,7 @@ function deleteTodo(id, text) {
 indexedDB.deleteTodo = function(id, text) {
   if (confirm("Are you sure you want to Delete " + text + "?")) {
     var db = todoDB.indexedDB.db;
-    var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE);
+    var trans = db.transaction(["todo"], 'readwrite');
     var store = trans.objectStore("todo");
 
     var request = store.delete(id);
