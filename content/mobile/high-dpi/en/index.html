@@ -1,0 +1,509 @@
+{% extends "tutorial.html" %}
+
+{% block head %}
+<style>
+  iframe { width: 100%; height: 340px; border: 0; overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
+<span class="browser ie supported"><span class="browser_name">Internet Explorer</span><span class="support">supported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block content %}
+<h2 id="toc-intro">Introduction</h2>
+
+<p>One of the features of today's complex device landscape is that there's
+a very wide range of screen pixel densities available. Application
+developers need to support all of these screens, which is quite
+challenging. On the mobile web, the challenges are compounded by several
+extenuating circumstances:</p>
+
+<ul>
+<li>The broadest variety of devices on different platforms and form factors.</li>
+<li>Constrained network bandwidth and battery.</li>
+</ul>
+
+<p>The goal of here is to <strong>serve the best quality apps as quickly and
+efficiently as possible</strong>. This article will cover some useful
+techniques for doing this today and in the near future.</p>
+
+<h3 id="toc-avoid">Avoid images if possible</h3>
+
+<p>Before opening this can of worms, remember that the web has many
+powerful technologies that are largely resolution- and DPI-independent.
+Specifically, text, SVG and much of CSS will "just work" because of the
+automatic pixel scaling feature of the web (via <code>devicePixelRatio</code>).</p>
+
+<p>That said, you can't always avoid raster images. For example, you may be
+given assets that would be quite hard to replicate in pure SVG/CSS, or
+you are dealing with a photograph. While you could convert the image
+into SVG automatically, vectorizing photographs makes little sense
+because the scaled-up version wouldn't look good.</p>
+
+<h2 id="toc-bg">Background</h2>
+
+<h3 id="toc-history">A very short history of display density</h3>
+
+<p>In the early days, computer displays had a pixel density of 72 or 96dpi
+(<a href="http://en.wikipedia.org/wiki/Dots_per_inch">dots per inch</a>).</p>
+
+<p>Displays gradually improved in pixel density, largely driven by the
+mobile use case, in which users generally hold their phones closer to
+their face, making pixels more visible. By 2008, 150dpi phones were the
+new norm. The trend in increased display density continued, and today's
+new phones sport 300dpi displays (branded "Retina" by Apple).</p>
+
+<p>The holy grail, of course, are displays in which pixels are completely
+invisible. For the phone form factor, the current generation of
+Retina/HiDPI displays may be close to that ideal. But new classes of
+hardware and wearables will continue to drive increased pixel density.</p>
+
+<p>In practice, low density images look the same on new screens as they did
+on old ones, but compared to the crisp imagery high density users are
+used to seeing, the low density image will look jarring and pixelated:</p>
+
+<figure>
+<img src="/static/demos/high-dpi/baboon1x.jpg"/>
+<img src="/static/demos/high-dpi/baboon2x.jpg" style="width: 200px"/>
+<figcaption>Baboons at differing pixel densities.</figcaption>
+</figure>
+
+<h3 id="toc-pixels-web">Pixels on the web</h3>
+
+<p>When the web was designed, 99% of displays were 96dpi (or <a href="http://blogs.msdn.com/b/fontblog/archive/2005/11/08/490490.aspx">pretended to
+be</a>), and few provisions were made for variation on this
+front. More recently, some provisions were made to address the
+variability, and captured in the <a href="http://inamidst.com/stuff/notes/csspx">HTML specification</a>:</p>
+
+<blockquote>
+  <p>It is recommended that the reference pixel be the visual angle of one
+  pixel on a device with a pixel density of 96dpi and a distance from
+  the reader of an arm's length. For a nominal arm's length of 28
+  inches, the visual angle is therefore about 0.0213 degrees.</p>
+</blockquote>
+
+<p>Though somewhat awkward, browser and device vendors tend to roughly
+follow this guideline, sizing pixels according to this angular
+definition. Wait, but what does "sizing pixels" mean? Since nobody
+except the screen's hardware manufacturer can affect the physical
+properties of your screen, we need a notion of logical pixels, to
+abstract the physical screen pixels. This isn't a new concept by any
+stretch – simply consider what happens when you change the resolution on
+your display.</p>
+
+<h3 id="toc-logical-px">Logical pixels through device pixel ratio</h3>
+
+<p>The <a href="http://www.quirksmode.org/blog/archives/2010/04/a_pixel_is_not.html">web's pixels are logical</a> too. Luckily the conversion
+between logical and physical (at least, as far as the browser knows)
+pixels is straightforward, expressed through the device pixel ratio:</p>
+
+<pre class="prettyprint"><code>physicalPixels = window.devicePixelRatio * virtualPixels
+</code></pre>
+
+<p>So, every pixel gets automatically scaled according to the formula
+above.</p>
+
+<p>For example, on a device with <code>devicePixelRatio = 1.2</code>, every time you
+say "100px", that gets scaled by a 1.2 to render as 120 physical pixels.</p>
+
+<h3 id="toc-calculating-dpr">Calculating device pixel ratio</h3>
+
+<p>Suppose you're a smartphone vendor trying to decide what to set
+devicePixelRatio. You have a 180 DPI screen and want to follow the spec.
+The calculation takes three steps:</p>
+
+<p>Compute ideal angular pixel size Taking into account actual distance the
+device is held from, compute device pixel size Work backwards from that
+to calculate devicePixelRatio</p>
+
+<p>As per the spec, we want our logical pixels to be as large as 1px on a
+96 DPI screen held away at 28 inches, or 1/96in. Since it's a
+smartphone, we might find that people hold the phone closer to their
+screen than a laptop. Let's estimate that distance to be 18 inches.
+Then, the target size of a physical pixel on our device, 18in away is
+<code>(18/28) * (1/96) = n</code>. Thus the virtual density for the device is
+<code>1/n</code>, or <code>(28/18) * 96 ~= 150px/in = 150dpi = d</code>.</p>
+
+<figure>
+<img src="/static/demos/high-dpi/calculate-dpr.png"/>
+<figcaption>A diagram to help calculate devicePixelRatio.</figcaption>
+</figure>
+
+<p>So, we have a pixel size of d, but our device has its own constraints: a
+physical DPI of 180px/in.  However, physical pixels on our denser screen
+are 1/180in. To convert between the two, we take the ratio:</p>
+
+<pre class="prettyprint"><code>devicePixelRatio = physicalPixels / virtualPixels
+  = (1/physicalDPI) / (1/virtualDPI)
+  = virtualDPI / physicalDPI
+  ~= 180 / 150 = 1.2
+</code></pre>
+
+<p>Historically, device vendors have tended to round devicePixelRatios.
+Apple's iPhone and iPad report devicePixelRatio of 1, and their retina
+equivalents report 2. Relatively round ratios can be better because they
+may lead to fewer <a href="http://ejohn.org/blog/sub-pixel-problems-in-css/">sub-pixel artifacts</a>. However, the reality of the
+device landscape is much more varied, and Android phones often have
+devicePixelRatios of 1.5. Notably, the Nexus 7 tablet has a
+devicePixelRatio of ~1.33, which was arrived at by a calculation similar
+to the one above. Expect to see more of the same in the future, and
+never assume that your clients will have integer devicePixelRatios.</p>
+
+<h2 id="toc-tech-overview">Overview of HiDPI image techniques</h2>
+
+<p>There are many many techniques for solving the problem of showing the
+best quality images as fast as possible:</p>
+
+<p>Single image approaches: use one image, but do something clever with it.
+These approaches have the drawback that you will inevitably sacrifice
+performance, since you will be downloading HiDPI images even on older
+devices with lower DPI.</p>
+
+<ul>
+<li>Heavily compressed HiDPI image</li>
+<li>Totally awesome image format</li>
+<li>Progressive image format</li>
+</ul>
+
+<p>Multiple image approaches: use multiple images, but do something clever
+to pick which to load. These approaches have inherent overhead for the
+developer to create multiple versions of the same asset and then figure
+out a decision strategy. Here are the options:</p>
+
+<ul>
+<li>JavaScript</li>
+<li>Server side</li>
+<li>CSS media queries</li>
+<li>Built-in browser features (<code>image-set()</code>, <code>img srcset</code>)</li>
+</ul>
+
+<h3 id="toc-compress">Approach: heavily compressed HiDPI image</h3>
+
+<p>Images already <a href="http://httparchive.org/interesting.php#bytesperpage">comprise a whopping 60% of bandwidth</a> spent downloading an
+average website. By serving HiDPI images to all clients, we will
+increase this number. How much bigger will it grow?</p>
+
+<p>Here are a few data points:</p>
+
+<ul>
+<li>12kb at 1x / 49kb at 2x (200x200, 91 quality)</li>
+<li>0.5mb at 1x / 2mb at 2x (2580x1938, 93 quality)</li>
+</ul>
+
+<p>I ran some tests which generated 1x and 2x image fragments with JPEG
+quality at 90, 50 and 20. Here are the <a href="#">original images</a>, and
+the <a href="/static/demos/high-dpi/process_images.sh">shell script</a> I used (employing <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a>):</p>
+
+<figure>
+<a href="/static/demos/high-dpi/tile1.jpg"><img src="/static/demos/high-dpi/tile1.jpg" style="width: 600px"/></a>
+<a href="/static/demos/high-dpi/tile2.jpg"><img src="/static/demos/high-dpi/tile2.jpg" style="width: 600px"/></a>
+<a href="/static/demos/high-dpi/tile3.jpg"><img src="/static/demos/high-dpi/tile3.jpg" style="width: 600px"/></a>
+<figcaption>Samples of images at different compressions and pixel
+densities.</figcaption>
+</figure>
+
+<p>Turns out that compressing gives pretty good results, but of course
+incurs image quality penalties, which you can see quite clearly if you
+view the above images close up. These artifacts may not be acceptable
+in cases where high quality images are key. Of course, JPEGs (covered
+above) are just one option. There are <a href="http://www.labnol.org/software/tutorials/jpeg-vs-png-image-quality-or-bandwidth/5385/">many tradeoffs</a>
+between existing widely implemented image formats. One particular image
+format is on the horizon too, which brings us to...</p>
+
+<h3 id="toc-new-image-format">Approach: totally awesome image
+format</h3>
+
+<p>WebP is a pretty <a href="https://developers.google.com/speed/webp/docs/webp_lossless_alpha_study">compelling image format</a> that compresses
+very well while keeping high image fidelity. Of course, it's <a href="http://caniuse.com/#search=webp">not quite
+implemented</a> everywhere yet!</p>
+
+<p>One way is check for WebP support is via JavaScript. You load a 1px
+image via data-uri, wait for either loaded or error events fired, and
+then verify that the size is correct:</p>
+
+<pre class="prettyprint"><code>var hasWebP = false;
+(function() {
+  var img = new Image();
+  img.onload = function() {
+    hasWebP = !!(img.height &gt; 0 &amp;&amp; img.width &gt; 0);
+  };
+  img.onerror = function() {
+    hasWebP = false;
+  };
+  img.src = 'http://www.gstatic.com/webp/gallery/1.webp';
+})();
+</code></pre>
+
+<p>(borrowed from <a href="http://stackoverflow.com/questions/5573096/detecting-webp-support">this StackOverflow question</a>)</p>
+
+<p>A better way of doing this is directly in CSS using the <a href="http://www.w3.org/TR/css3-images/#image-notation">image()
+function</a>. Rather than doing detection, you can specify
+images and fallbacks. So if you have a webp image and jpeg fallback, you
+can write the following:</p>
+
+<pre class="prettyprint"><code>#pic {
+  background: image("foo.webp", "foo.jpg");
+}
+</code></pre>
+
+<p>There are a few problems with this approach. Firstly, <code>image()</code> is not
+at all widely implemented. Secondly, while WebP compression blows JPEG
+out of the water, it's still a relatively incremental improvement –
+about 30% smaller based on this <a href="https://developers.google.com/speed/webp/gallery1">WebP gallery</a>. Thus, WebP
+alone isn't enough to address the high DPI problem.</p>
+
+<h3 id="toc-prog">Approach: progressive image formats</h3>
+
+<p>Progressive image formats like JPEG 2000, Progressive JPEG, Progressive
+PNG and GIF have the (somewhat debated) benefit of seeing the image come
+into place before it's fully loaded. They may incur some size overhead,
+though there is conflicting evidence about this. <a href="http://www.codinghorror.com/blog/2005/12/progressive-image-rendering.html">Jeff Atwood
+claimed</a> that progressive mode "adds about 20% to the size of PNG images, and
+about 10% to the size of JPEG and GIF images". However, <a href="http://www.yuiblog.com/blog/2008/12/05/imageopt-4/">Stoyan Stefanov
+claimed</a> that for large files, progressive mode is more efficient (in
+most cases).</p>
+
+<p>At first glance, progressive images look very promising in the context
+of serving the best  quality images as fast as possible. The idea is
+that the browser can stop downloading and decoding an image once it
+knows that additional data won't increase the image quality (ie. all of
+the fidelity improvements are sub-pixel). After all, it's easy to
+terminate connections in HTTP!</p>
+
+<p>While connections are easy to terminate, they are often expensive to
+restart. For a site with many images, the most efficient approach is to
+keep a single HTTP connection alive, reusing it for as long as possible.
+If the connection is terminated prematurely because one image has been
+downloaded enough, the browser then needs to create a new connection,
+which can be really <a href="http://serverfault.com/questions/387627/why-do-mobile-networks-have-high-latencies-how-can-they-be-reduced">slow in low latency</a> environments.</p>
+
+<p>One workaround to this is to use the <a href="http://stackoverflow.com/questions/1434647/using-the-http-range-header-with-a-range-specifier-other-than-bytes">HTTP Range</a> request, which lets
+browsers specify a range of bytes to fetch. A smart browser could make a
+HEAD request to get at the header, process it, decide how much of the
+image is actually needed, and then fetch. Unfortunately HTTP Range is
+poorly supported in web servers, making this approach impractical.</p>
+
+<p>Finally, an obvious limitation of this approach is that you don't get to
+choose which image to load, only varying fidelities of the same image.
+As a result, this doesn't address the "<a href="http://blog.cloudfour.com/a-framework-for-discussing-responsive-images-solutions/">art direction</a>" use case.</p>
+
+<h3 id="toc-js">Approach: JavaScript to decide which image to load</h3>
+
+<p>The first, and most obvious approach to deciding which image to load is
+to use JavaScript in the client. This approach lets you find out
+everything about your user agent and do the right thing. You can
+determine device pixel ratio via window.devicePixelRatio, get screen
+width and height, and even potentially do some network connection
+sniffing via navigator.connection or issuing a fake request, like the
+<a href="https://github.com/adamdbradley/foresight.js">foresight.js library</a> does. Once you've collected all of
+this information, you can decide which image to load.</p>
+
+<p>There are approximately <a href="https://docs.google.com/a/google.com/spreadsheet/ccc?key=0Al0lI17fOl9DdDgxTFVoRzFpV3VCdHk2NTBmdVI2OXc#gid=0">one million JavaScript libraries</a> that
+do the above, and unfortunately none of them are particularly
+outstanding.</p>
+
+<p>One big drawback to this approach is that using JavaScript means that
+you will delay image loading until the after the look-ahead parser has
+finished. Which essentially means that you're blocking on page load.
+More on this in <a href="http://blog.cloudfour.com/the-real-conflict-behind-picture-and-srcset/">Jason Grigsby's article</a>.</p>
+
+<h3 id="toc-server">Approach: decide what image to load on the server</h3>
+
+<p>You can defer the decision to the server-side by writing custom request
+handlers for each image you serve. Such a handler would check for retina
+support based on User-Agent (the only piece of information relayed to
+the server). Then, based on whether the server-side logic wants to serve
+HiDPI assets, you load the appropriate asset (named according to some
+known convention).</p>
+
+<p>Unfortunately, the User-Agent doesn't necessarily provide enough
+information to decide whether a device should receive high or low
+quality images. Also, it goes without saying that anything related to
+User-Agent is a hack and should be avoided if possible.</p>
+
+<h3 id="toc-css">Approach: use CSS media queries</h3>
+
+<p>Using CSS media queries, because you declare what things you want to
+have happen. Being declarative, you let the browser handle your
+intention, and optimize the heck out of it. In addition to the most
+common use of media queries - checking for page size - you can also
+check for devicePixelRatio. The media query is device-pixel-ratio, and
+has associated min and max variants, as you might expect. If you want to
+load high DPI images if the device pixel ratio exceeds a threshold,
+here's what you might do:</p>
+
+<pre class="prettyprint"><code>#my-image { background: (low.png); }
+
+@media only screen and (min-device-pixel-ratio: 1.5) {
+  #my-image { background: (high.png); }
+}
+</code></pre>
+
+<p>It gets a little more complicated with all of the vendor prefixes mixed
+in, especially because of insane <a href="https://developer.mozilla.org/en/CSS/Media_queries#-moz-device-pixel-ratio">differences in placement</a> of
+"min" and "max" prefixes:</p>
+
+<pre class="prettyprint"><code>@media only screen and (min--moz-device-pixel-ratio: 1.5),
+    (-o-min-device-pixel-ratio: 3/2),
+    (-webkit-min-device-pixel-ratio: 1.5),
+    (min-device-pixel-ratio: 1.5) {
+
+  #my-image {
+    background:url(high.png);
+  }
+}
+</code></pre>
+
+<p>In light of the above complexity, I highly recommend using a CSS
+preprocessor. Using compass, the above looks much more sane:</p>
+
+<pre class="prettyprint"><code>#my-image { background: (low.png); }
+
+@media only screen and (@min-device-pixel-ratio: 1.5) {
+  #my-image { background: (high.png); }
+}
+</code></pre>
+
+<p>With this approach, you regain the benefits of look-ahead parsing, which
+was lost with the JS solution. You also gain the flexibility of choosing
+your responsive breakpoints (eg. you can have low, mid and high DPI
+images), which was lost with the server-side approach.</p>
+
+<p>Unfortunately it's still a little unwieldy, and leads to strange looking
+CSS (or requires preprocessing). Also, this approach is restricted to
+CSS properties, so there's no way to set an <code>&lt;img src&gt;</code>, and your images
+must all be elements with a background. Finally, by relying strictly on
+device pixel ratio, you can end up in situations where your High-DPI
+smartphone ends up downloading a massive 2x image asset while on an EDGE
+connection. This isn't the best user experience.</p>
+
+<h3 id="toc-bf">Approach: use new browser features</h3>
+
+<p>There's been a lot of recent discussion around web platform support for
+the high DPI image problem. Apple recently broke into the space,
+bringing the <a href="http://dev.w3.org/csswg/css4-images/#image-set-notation">image-set()</a> CSS function to WebKit. As a result, both
+Safari and Chrome support it. Since it's a CSS function, image-set()
+doesn't address the problem for <code>&lt;img&gt;</code> tags. Enter
+<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/embedded-content-1.html#attr-img-srcset">@srcset</a>, which addresses this issue but (at the time of
+writing) has no reference implementations (yet!). The next section goes
+deeper into image-set and srcset.</p>
+
+<h2 id="toc-bff">Browser features for high DPI support</h2>
+
+<p>Ultimately, the decision about which approach you take depends on your
+particular requirements. That said, keep in mind that all of them have
+drawbacks. Looking forward, however, once image-set and srcset are
+widely supported, they will be the appropriate solutions to this
+problem. For the time being, let's talk about some best practices that
+can bring us as close to that ideal future as possible.</p>
+
+<p>Firstly, how are these two different? Well, <code>image-set()</code> is a CSS
+function, appropriate for use as a value of the background CSS property.
+srcset is an attribute specific to <code>&lt;img&gt;</code> elements, with similar syntax.
+Both of these tags let you specify image declarations, but the srcset
+attribute lets you also configure which image to load based on viewport
+size.</p>
+
+<h3 id="toc-image-set">Best practices for image-set</h3>
+
+<p>The image-set() CSS function is available prefixed as
+-webkit-image-set(). The syntax is quite simple, taking a one or more
+comma separated image declarations, which consist of a URL string or
+url() function followed by the associated resolution. For example:</p>
+
+<pre class="prettyprint"><code>background-image:  -webkit-image-set(
+  url(icon1x.jpg) 1x,
+  url(icon2x.jpg) 2x
+);
+</code></pre>
+
+<p>What this tells the browser is that there are two images to choose from.
+One of them is optimized for 1x displays, and the other for 2x displays.
+The browser then gets to choose which one to load, based on a variety of
+factors, which might even include network speed. Instead of specifying
+Nx, you can also specify a certain device pixel density in dpi.</p>
+
+<p>This works well, except browsers that don't support the
+-webkit-image-set will have no image as a result. Use a fallback (or
+series of fallbacks) to address that issue:</p>
+
+<pre class="prettyprint"><code>background-image: url(icon1x.jpg);
+background-image: -webkit-image-set(
+  url(icon1x.jpg) 1x,
+  url(icon2x.jpg) 2x
+);
+/* This will be useful if image-set gets into the platform, unprefixed.
+   Also include other prefixed versions of this */
+background-image: image-set(
+  url(icon1x.jpg) 1x,
+  url(icon2x.jpg) 2x
+);
+</code></pre>
+
+<p>The above will load the appropriate asset in browsers that support
+image-set, and fall back to the 1x asset otherwise. The obvious caveat
+is that while <code>image-set()</code> browser support is low, most user agents will
+get the 1x asset.</p>
+
+<p><a href="/static/demos/high-dpi/image-set/index.html">This demo</a> uses the <code>image-set()</code> to load the correct
+image, falling back to the 1x asset if this CSS function isn't
+supported.</p>
+
+<p>At this point, you may be wondering why not just polyfill image-set()
+and call it a day? As it turns out, it's quite difficult to implement
+efficient polyfills for CSS functions. For a detailed explanation why,
+see this <a href="http://lists.w3.org/Archives/Public/www-style/2012Jul/0023.html">www-style discussion</a>.</p>
+
+<h3 id="toc-srcset">Image srcset</h3>
+
+<p>Here is how an img srcset looks like:</p>
+
+<pre class="prettyprint"><code>&lt;img alt="my awesome image"
+  src="banner.jpeg"
+  srcset="banner-HD.jpeg 2x, banner-phone.jpeg 100w, banner-phone-HD.jpeg 100w 2x"&gt;
+</code></pre>
+
+<p>As you can see, in addition to x resolutions, the srcset element also
+takes w and h values which correspond to the size of the viewport,
+attempting to serve the most relevant version. The above would serve
+banner-phone.jpeg to devices with viewport width under 100px,
+banner-phone-HD.jpeg to small screen high DPI devices, banner-HD.jpeg to
+high DPI devices with screens greater than 100px, and banner.jpeg to
+everything else.</p>
+
+<p>Because the srcset attribute on img elements is not implemented in most
+browsers, it may be tempting to replace your img elements with <code>&lt;div&gt;</code>s
+with backgrounds and use the image-set approach. This will work, with
+caveats. The drawback here is that the <code>&lt;img&gt;</code> tag has long-time
+semantic value. In practice, this is important mostly for web crawlers
+and accessibility reasons.</p>
+
+<p>One handy feature of srcset  is that it comes with a natural fallback.
+In the case where the srcset attribute is not implemented, all browsers
+know to process the src attribute. Also, since it's just an HTML
+attribute, it's possible to create <a href="http://jsfiddle.net/sturobson/2t3xt/16/">polyfills with
+JavaScript</a>.</p>
+
+<h2 id="toc-conclusion">Conclusion</h2>
+
+<p>There is no magic bullet for solving the problem of high DPI images.</p>
+
+<p>The easiest solution is to avoid images entirely, opting for SVG and CSS
+instead. However, this isn't always realistic, especially if you have
+high quality imagery on your site.</p>
+
+<p>Approaches in JS, CSS and using the server-side all have their strengths
+and weaknesses. The most promising approach, however, is to leverage new
+browser features. Though browser support for image-set and srcset is
+still incomplete, there are reasonable fallbacks to use today.</p>
+
+<p>The best approach you can take is to use <code>image-set()</code> with fallbacks to
+regular images, and <code>srcset</code> with a polyfill. If you are willing to
+compromise on image quality, look into serving heavily compressed 2x
+images.</p>
+{% endblock %}
