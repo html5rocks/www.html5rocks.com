@@ -29,29 +29,35 @@
 
 <h2 id="toc-introduction">Introduction</h2>
 
+<p>
+The Pointer Lock API helps properly implement first-person shooter controls in a browser game. Without relative mouse movement the player's cursor could, for example, hit the right edge of the screen and any further movements to the right would be discounted - the view would not continue to pan right, and the player would not be able to pursue the bad guys and strafe them with his machine gun. The player is going to get fragged and become frustrated. With pointer lock this suboptimal behaviour can't happen. </p>
+
 <p>The <a href="https://developer.mozilla.org/en-US/docs/API/Pointer_Lock_API">Pointer Lock API</a> allows your application to do the following:
 <ul>
 	<li>Get access to raw mouse data including relative mouse movements</li>
 	<li>Route all mouse events to a specific element</li>
 </ul>
 <p>
-As a side eeffect of enabling pointer lock the mouse cursor is hidden allowing you to choose to draw an application specific-pointer if you desire. Relative mouse movement is the mouse pointer position delta from the previous frame regardless of absolute position.  For example, if the the mouse pointer moved from (640, 480) to (520, 490) the relative movement was (-120, 10).
+As a side effect of enabling pointer lock, the mouse cursor is hidden allowing you to choose to draw an application-specific pointer if you desire, or leave the mouse pointer hidden so that the user can move the frame with the mouse. Relative mouse movement is the mouse pointer position's delta from the previous frame regardless of absolute position.  For example, if the the mouse pointer moved from (640, 480) to (520, 490) the relative movement was (-120, 10). See below for an interactive example showing raw mouse position deltas.
 </p>
-<p>
-The Pointer Lock API is required to properly implement first person shooter controls. Without relative mouse movement the player's cursor could, for example, hit the right edge of the screen and any further movements to the right would be discounted. The player is going to get fragged and become frustrated. With pointer lock this suboptimal behaviour can't happen. This tutorial covers two topics: the nuts and bolts of activating and processing pointer lock events, and implementing the first person shooter control scheme. That's right, when you're finished reading this article you will know how to use pointer lock and implement Quake style controls for your very own browser game!
+
+
+<p>This tutorial covers two topics: the nuts and bolts of activating and processing pointer lock events, and implementing the first-person shooter control scheme. That's right, when you're finished reading this article you will know how to use pointer lock and implement Quake-style controls for your very own browser game!
 </p>
 
 <h2 id="toc-topic">Pointer Lock Mechanics</h2>
 
 <h3 id="toc-topic-subtopic">Feature Detection</h3>
 
-<p>To determine if the user's browser supports pointer lock you need to check for <code>pointerLockElement</code> or a browser vendor prefixed version in <code>document</code>. In code:</p>
+<p>To determine if the user's browser supports pointer lock you need to check for <code>pointerLockElement</code> or a vendor-prefixed version in the document object. In code:</p>
 
 <pre class="prettyprint">
 	var havePointerLock = 'pointerLockElement' in document    ||
 			      'mozPointerLockElement' in document ||
 			      'webkitPointerLockElement' in document;
 </pre>
+
+<p>Currently pointer lock is only available in Firefox and Chrome. Opera and IE do not yet support it.</p>
 
 <!--
 <div id="have-pointer-lock-result">Does my browser support pointer lock? <p class="red">No</p></div>
@@ -69,9 +75,10 @@ if (havePointerLock) {
 }
 </script>
 -->
+
 <h3 id="toc-topic-subtopic">Activating</h3>
 
-<p>Activating pointer lock is a two step process. First your application requests pointer lock be enabled for a specific element and immediately after the user gives permission a <code>pointerlockchange</code> event fires. The user can cancel pointer lock at any time by pressing the escape key. Your application can also progrmamatically exit pointer lock. When pointer lock is cancelled a <code>pointerlockchange</code> event fires.
+<p>Activating pointer lock is a two step process. First your application requests pointer lock be enabled for a specific element, and immediately after the user gives permission, a <code>pointerlockchange</code> event fires. The user can cancel pointer lock at any time by pressing the escape key. Your application can also progrmamatically exit pointer lock. When pointer lock is cancelled a <code>pointerlockchange</code> event fires.
 </p>
 
 <pre class="prettyprint">
@@ -107,9 +114,9 @@ document.addEventListener('webkitpointerlockchange', changeCallback, false);
 document.addEventListener("mousemove", this.moveCallback, false);
 </pre>
 
-<p class="notice">NOTE: Because of cross browser prefixing, you will have to listen for <code>pointerlockchange</code>, <code>mozpointerlockchange</code>, and <code>webkitpointerlockchange</code>events to be cross browser compatible</p>
+<p class="notice">NOTE: Because of browser prefixing, you will have to listen for <code>pointerlockchange</code>, <code>mozpointerlockchange</code>, and <code>webkitpointerlockchange</code>events to be cross-browser compatible.</p>
 
-<p>Inside your <code>pointerlockchange</code> callback you must check if the pointer had just been locked or unlocked. Determining if pointer lock was enabled is simple: check if document.pointerLockElement is equal to the element that pointer lock was requested for. If it is, your application successfully locked the pointer and if it is not, the pointer was unlocked by the user or your own code.</p>
+<p>Inside your <code>pointerlockchange</code> callback you must check if the pointer has just been locked or unlocked. Determining if pointer lock was enabled is simple: check if document.pointerLockElement is equal to the element that pointer lock was requested for. If it is, your application successfully locked the pointer and if it is not, the pointer was unlocked by the user or your own code.</p>
 
 <pre class="prettyprint">
 if (document.pointerLockElement === requestedElement ||
@@ -148,7 +155,7 @@ function moveCallback(e) {
 }
 </pre>
 
-<p class="notice">NOTE: The movement fields also have browser vendor prefixes</p>
+<p class="notice">NOTE: The movement fields also have vendor-prefixes</p>
 
 <h3 id="toc-topic-subtopic">Interactive Example</h3>
 <p>Interactive example time. When you click on the 'Click me!' box, your pointer will be locked and the relative mouse movements will be displayed. The raw data is displayed with no extra processing. You should be able to see that the origin is in the upper left hand of the screen with positive movements going to the right and down.</p>
@@ -165,15 +172,15 @@ document.addEventListener('mozpointerlockerror', errorCallback, false);
 document.addEventListener('webkitpointerlockerror', errorCallback, false);
 </pre>
 
-<h3 id="toc-topic-subtopic">Fullscreen Required?</h3>
+<h3 id="toc-topic-subtopic">Full-screen Required?</h3>
 
-<p>Originally pointer lock was tied to the fullscreen API. Meaning that an element must be in fullscreen mode before it could have the pointer locked to it. That is no longer true and pointer lock can be used for any element in your application fullscreen or not.</p>
+<p>Originally pointer lock was tied to the FullScreen API. Meaning that an element must be in fullscreen mode before it can have the pointer locked to it. That is no longer true and pointer lock can be used for any element in your application full-screen or not.</p>
 
-<h2 id="toc-topic">First Person Shooter Controls Example</h2>
+<h2 id="toc-topic">First-Person Shooter Controls Example</h2>
 
-<p>Now that we have pointer lock enabled and receivingb events, it's time for a practical example. Have you ever wanted to know how the controls in Quake work? Strap in because I'm about to explain them with code!</p>
+<p>Now that we have pointer lock enabled and receiving events, it's time for a practical example. Have you ever wanted to know how the controls in Quake work? Strap in because I'm about to explain them with code!</p>
 
-<p>First person shooter controls are built around four core mechanics:</p>
+<p>First-person shooter controls are built around four core mechanics:</p>
 
 <ul>
   <li>Moving forward and backward along the current look vector</li>
@@ -186,14 +193,14 @@ document.addEventListener('webkitpointerlockerror', errorCallback, false);
 
 <h3 id="toc-topic-subtopic">Movement</h3>
 
-<p>First on deck is movement. In the demo below movement is mapped to the standard W, A, S, and D keys. The W and S keys drive the camera forwards and backwards. While the A and D keys drive the camera to the left and right. Moving the camera forwards and backwards is simple:</p>
+<p>First on deck is movement. In the demo below movement is mapped to the standard W, A, S, and D keys. The W and S keys drive the camera forward and backward. While the A and D keys drive the camera to the left and right. Moving the camera forward and backward is simple:</p>
 
 <pre class="prettyprint">
 // Forward direction
 var forwardDirection = vec3.create(cameraLookVector);
 // Speed
 var forwardSpeed = dt * cameraSpeed;
-// Forward or backwards depending on keys held
+// Forward or backward depending on keys held
 var forwardScale = 0.0;
 forwardScale += keyState.W ? 1.0 : 0.0;
 forwardScale -= keyState.S ? 1.0 : 0.0;
@@ -211,7 +218,7 @@ var strafeDirection = vec3.create();
 vec3.cross(cameraLookVector, cameraUpVector, strafeDirection);
 </pre>
 
-<p>Once you have the strafe direction, implementing strafe movement is the same as moving forwards or backwards.</p>
+<p>Once you have the strafe direction, implementing strafe movement is the same as moving forward or backward.</p>
 
 <p>Below is a demo that only has movement implemented. We will build to a completely working demo by the end.</p>
 
@@ -248,8 +255,8 @@ vec3.add(this.lookAtPoint, frontDirection);
 
 <canvas id="webGLFrontBufferPitch" style="margin-left: auto; margin-right: auto; display:block; padding-left: 0; padding-right: 0;"></canvas>
 
-<h3 id="toc-topic-subtopic">Interactive Example</h3>
-<p>Below is a fully working interactive example that combines pointer lock and first person shooter controls. Click on the element to active the control.</p>
+<h3 id="toc-topic-subtopic">Putting it all together</h3>
+<p>Below is a fully working interactive example that combines pointer lock and first-person shooter controls. Click on the element to active the control.</p>
 
 <canvas id="webGLFrontBuffer" style="margin-left: auto; margin-right: auto; display:block; padding-left: 0; padding-right: 0;"></canvas>
 
