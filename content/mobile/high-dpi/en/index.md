@@ -60,8 +60,8 @@ used to seeing, the low density image will look jarring and pixelated:
 
 When the web was designed, 99% of displays were 96dpi (or [pretended to
 be][pretend-96dpi]), and few provisions were made for variation on this
-front. More recently, some provisions were made to address the
-variability, and captured in the [HTML specification][html-px]:
+front. More recently, the [HTML specification][html-px] tackled some of
+the problem by defining a reference pixel:
 
 > It is recommended that the reference pixel be the visual angle of one
 > pixel on a device with a pixel density of 96dpi and a distance from
@@ -133,17 +133,20 @@ Apple's iPhone and iPad report devicePixelRatio of 1, and their retina
 equivalents report 2. Relatively round ratios can be better because they
 may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality of the
 device landscape is much more varied, and Android phones often have
-devicePixelRatios of 1.5. Notably, the Nexus 7 tablet has a
-devicePixelRatio of ~1.33, which was arrived at by a calculation similar
-to the one above. Expect to see more of the same in the future, and
-never assume that your clients will have integer devicePixelRatios.
+devicePixelRatios of 1.5. The Nexus 7 tablet has a devicePixelRatio of
+~1.33, which was arrived at by a calculation similar to the one above.
+Expect to see more devices with variable devicePixelRatios in the future.
+Because of this, you should never assume that your clients will have
+integer devicePixelRatios.
 
 [sub-pixel]: http://ejohn.org/blog/sub-pixel-problems-in-css/
 
 <h2 id="toc-tech-overview">Overview of HiDPI image techniques</h2>
 
 There are many many techniques for solving the problem of showing the
-best quality images as fast as possible:
+best quality images as fast as possible, broadly falling into two
+categories: optimizing single images, and optimizing selection between
+multiple images.
 
 Single image approaches: use one image, but do something clever with it.
 These approaches have the drawback that you will inevitably sacrifice
@@ -228,8 +231,7 @@ then verify that the size is correct:
 (borrowed from [this StackOverflow question][detect-webp])
 
 A better way of doing this is directly in CSS using the [image()
-function][css-image]. Rather than doing detection, you can specify
-images and fallbacks. So if you have a webp image and jpeg fallback, you
+function][css-image]. So if you have a WebP image and JPEG fallback, you
 can write the following:
 
     #pic {
@@ -260,11 +262,10 @@ claimed][stoyan] that for large files, progressive mode is more efficient (in
 most cases).
 
 At first glance, progressive images look very promising in the context
-of serving the best  quality images as fast as possible. The idea is
+of serving the best quality images as fast as possible. The idea is
 that the browser can stop downloading and decoding an image once it
 knows that additional data won't increase the image quality (ie. all of
-the fidelity improvements are sub-pixel). After all, it's easy to
-terminate connections in HTTP!
+the fidelity improvements are sub-pixel).
 
 While connections are easy to terminate, they are often expensive to
 restart. For a site with many images, the most efficient approach is to
@@ -358,15 +359,6 @@ in, especially because of insane [differences in placement][moz-wtf] of
       }
     }
 
-In light of the above complexity, I highly recommend using a CSS
-preprocessor. Using compass, the above looks much more sane:
-
-    #my-image { background: (low.png); }
-
-    @media only screen and (@min-device-pixel-ratio: 1.5) {
-      #my-image { background: (high.png); }
-    }
-
 With this approach, you regain the benefits of look-ahead parsing, which
 was lost with the JS solution. You also gain the flexibility of choosing
 your responsive breakpoints (eg. you can have low, mid and high DPI
@@ -429,8 +421,10 @@ url() function followed by the associated resolution. For example:
 What this tells the browser is that there are two images to choose from.
 One of them is optimized for 1x displays, and the other for 2x displays.
 The browser then gets to choose which one to load, based on a variety of
-factors, which might even include network speed. Instead of specifying
-Nx, you can also specify a certain device pixel density in dpi.
+factors, which might even include network speed, if the user-agent is
+smart enough (not currently implemented as far as I know). Instead of
+specifying Nx, you can also specify a certain device pixel density in
+dpi.
 
 This works well, except browsers that don't support the
 -webkit-image-set will have no image as a result. Use a fallback (or
@@ -459,8 +453,8 @@ supported.
 
 At this point, you may be wondering why not just polyfill image-set()
 and call it a day? As it turns out, it's quite difficult to implement
-efficient polyfills for CSS functions. For a detailed explanation why,
-see this [www-style discussion][www-style].
+efficient polyfills for CSS functions. (For a detailed explanation why,
+see this [www-style discussion][www-style]).
 
 [www-style]: http://lists.w3.org/Archives/Public/www-style/2012Jul/0023.html
 [image-set-demo]: /static/demos/high-dpi/image-set/index.html
@@ -481,6 +475,8 @@ banner-phone-HD.jpeg to small screen high DPI devices, banner-HD.jpeg to
 high DPI devices with screens greater than 100px, and banner.jpeg to
 everything else.
 
+#### Using image-set for image elements
+
 Because the srcset attribute on img elements is not implemented in most
 browsers, it may be tempting to replace your img elements with `<div>`s
 with backgrounds and use the image-set approach. This will work, with
@@ -488,13 +484,42 @@ caveats. The drawback here is that the `<img>` tag has long-time
 semantic value. In practice, this is important mostly for web crawlers
 and accessibility reasons.
 
-One handy feature of srcset  is that it comes with a natural fallback.
+If you end up using `-webkit-image-set`, you might be tempted to use the
+background CSS property. The drawback of this approach is that you need
+to specify image size, which might actually be unknown if you are using
+a non-1x image. Rather than doing this, you can use the content CSS
+property as follows:
+
+    <div id="my-content-image"
+      style="content: -webkit-image-set(
+        url(icon1x.jpg) 1x,
+        url(icon2x.jpg) 2x);">
+    </div>
+
+See [this example][srcset-as-image-set] of the above technique in
+action, with an additional fallback to `url()` for browsers that don't
+support image-set.
+
+[srcset-as-image-set]: /static/demos/high-dpi/image-set/as-content.html
+
+#### Polyfilling srcset
+
+One handy feature of srcset is that it comes with a natural fallback.
 In the case where the srcset attribute is not implemented, all browsers
 know to process the src attribute. Also, since it's just an HTML
 attribute, it's possible to create [polyfills with
 JavaScript][srcset-polyfill].
 
-[srcset-polyfill]: http://jsfiddle.net/sturobson/2t3xt/16/
+This polyfill comes with [unit tests][srcset-tests] to ensure that it's
+as close to the [specification][srcset] as possible. In addition, there
+are checks in place that prevent the polyfill from executing any code if
+srcset is implemented natively.
+
+This is a [demo of the polyfill][srcset-poly-demo] in action.
+
+[srcset-polyfill]: https://github.com/borismus/srcset-polyfill
+[srcset-poly-demo]: /static/demos/high-dpi/srcset-polyfill/demo/index.html
+[srcset-tests]: https://github.com/borismus/srcset-polyfill/blob/master/tests/srcset-tests.js
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
@@ -511,5 +536,5 @@ still incomplete, there are reasonable fallbacks to use today.
 
 The best approach you can take is to use `image-set()` with fallbacks to
 regular images, and `srcset` with a polyfill. If you are willing to
-compromise on image quality, look into serving heavily compressed 2x
-images.
+compromise on image quality, it may be worthwhile to consider serving
+heavily compressed 2x images.
