@@ -91,8 +91,8 @@ pixels is straightforward, expressed through the device pixel ratio:
 So, every pixel gets automatically scaled according to the formula
 above.
 
-For example, on a device with `devicePixelRatio = 1.2`, every time you
-say "100px", that gets scaled by a 1.2 to render as 120 physical pixels.
+For example, on a device with `devicePixelRatio = 2`, every time you
+say "100px", that gets scaled by a 2 to render as 200 physical pixels.
 
 [csspx]: http://www.quirksmode.org/blog/archives/2010/04/a_pixel_is_not.html
 
@@ -102,42 +102,41 @@ Suppose you're a smartphone vendor trying to decide what to set
 devicePixelRatio. You have a 180 DPI screen and want to follow the spec.
 The calculation takes three steps:
 
-Compute ideal angular pixel size Taking into account actual distance the
-device is held from, compute device pixel size Work backwards from that
-to calculate devicePixelRatio
+1. Taking into account actual distance the device is held from, compute
+   ideal number of pixels in an inch.
+2. Take the ratio between virtual and physical pixel counts to calculate
+   devicePixelRatio.
 
-As per the spec, we want our logical pixels to be as large as 1px on a
-96 DPI screen held away at 28 inches, or 1/96in. Since it's a
-smartphone, we might find that people hold the phone closer to their
-screen than a laptop. Let's estimate that distance to be 18 inches.
-Then, the target size of a physical pixel on our device, 18in away is
-`(18/28) * (1/96) = n`. Thus the virtual density for the device is
-`1/n`, or `(28/18) * 96 ~= 150px/in = 150dpi = d`.
+As per the spec, we know that at 28 inches, we want there to be 96
+virtual pixels per inch. However, since it's a smartphone, we might find
+that people hold our phone closer to their screen than a laptop. Let's
+estimate that distance to be 18 inches. Thus the virtual density for
+the device is `(28/18) * 96`, which is approximately 150 pixels per inch
+(ppi).
 
 <figure>
 <img src="/static/demos/high-dpi/calculate-dpr.png"/>
 <figcaption>A diagram to help calculate devicePixelRatio.</figcaption>
 </figure>
 
-So, we have a pixel size of d, but our device has its own constraints: a
-physical DPI of 180px/in.  However, physical pixels on our denser screen
-are 1/180in. To convert between the two, we take the ratio:
+So, we have a pixel size of 150ppi, but our device has its own constraints: a
+physical DPI of 180ppi. In other words, every inch contains 180 physical
+pixels and 150 virtual ones. To convert between the two, we take the
+ratio, reversing the equation above.
 
     devicePixelRatio = physicalPixels / virtualPixels
-      = (1/physicalDPI) / (1/virtualDPI)
-      = virtualDPI / physicalDPI
       ~= 180 / 150 = 1.2
 
-Historically, device vendors have tended to round devicePixelRatios.
-Apple's iPhone and iPad report devicePixelRatio of 1, and their retina
+Historically, device vendors have tended to round `devicePixelRatio`s.
+Apple's iPhone and iPad report `devicePixelRatio` of 1, and their retina
 equivalents report 2. Relatively round ratios can be better because they
 may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality of the
 device landscape is much more varied, and Android phones often have
-devicePixelRatios of 1.5. The Nexus 7 tablet has a devicePixelRatio of
+`devicePixelRatio`s of 1.5. The Nexus 7 tablet has a `devicePixelRatio` of
 ~1.33, which was arrived at by a calculation similar to the one above.
-Expect to see more devices with variable devicePixelRatios in the future.
+Expect to see more devices with variable `devicePixelRatio`s in the future.
 Because of this, you should never assume that your clients will have
-integer devicePixelRatios.
+integer `devicePixelRatio`s.
 
 [sub-pixel]: http://ejohn.org/blog/sub-pixel-problems-in-css/
 
@@ -165,9 +164,9 @@ out a decision strategy. Here are the options:
 - JavaScript
 - Server side
 - CSS media queries
-- Built-in browser features (`image-set()`, `img srcset`)
+- Built-in browser features (`image-set()`, `<img srcset>`)
 
-<h3 id="toc-compress">Approach: heavily compressed HiDPI image</h3>
+<h3 id="toc-compress">Heavily compressed HiDPI image</h3>
 
 Images already [comprise a whopping 60% of bandwidth][60%] spent downloading an
 average website. By serving HiDPI images to all clients, we will
@@ -205,7 +204,7 @@ format is on the horizon too, which brings us to...
 [tradeoffs]: http://www.labnol.org/software/tutorials/jpeg-vs-png-image-quality-or-bandwidth/5385/
 [images]: #
 
-<h3 id="toc-new-image-format">Approach: totally awesome image
+<h3 id="toc-new-image-format">Totally awesome image
 format</h3>
 
 WebP is a pretty [compelling image format][webp-good] that compresses
@@ -250,7 +249,7 @@ alone isn't enough to address the high DPI problem.
 [detect-webp]: http://stackoverflow.com/questions/5573096/detecting-webp-support
 [css-image]: http://www.w3.org/TR/css3-images/#image-notation
 
-<h3 id="toc-prog">Approach: progressive image formats</h3>
+<h3 id="toc-prog">Progressive image formats</h3>
 
 Progressive image formats like JPEG 2000, Progressive JPEG, Progressive
 PNG and GIF have the (somewhat debated) benefit of seeing the image come
@@ -290,12 +289,12 @@ As a result, this doesn't address the "[art direction][art]" use case.
 [art]: http://blog.cloudfour.com/a-framework-for-discussing-responsive-images-solutions/
 [range]: http://stackoverflow.com/questions/1434647/using-the-http-range-header-with-a-range-specifier-other-than-bytes
 
-<h3 id="toc-js">Approach: JavaScript to decide which image to load</h3>
+<h3 id="toc-js">JavaScript to decide which image to load</h3>
 
 The first, and most obvious approach to deciding which image to load is
 to use JavaScript in the client. This approach lets you find out
 everything about your user agent and do the right thing. You can
-determine device pixel ratio via window.devicePixelRatio, get screen
+determine device pixel ratio via `window.devicePixelRatio`, get screen
 width and height, and even potentially do some network connection
 sniffing via navigator.connection or issuing a fake request, like the
 [foresight.js library][foresight.js] does. Once you've collected all of
@@ -314,7 +313,7 @@ More on this in [Jason Grigsby's article][jason].
 [js-libs]: https://docs.google.com/a/google.com/spreadsheet/ccc?key=0Al0lI17fOl9DdDgxTFVoRzFpV3VCdHk2NTBmdVI2OXc#gid=0
 [jason]: http://blog.cloudfour.com/the-real-conflict-behind-picture-and-srcset/
 
-<h3 id="toc-server">Approach: decide what image to load on the server</h3>
+<h3 id="toc-server">Decide what image to load on the server</h3>
 
 You can defer the decision to the server-side by writing custom request
 handlers for each image you serve. Such a handler would check for retina
@@ -328,13 +327,13 @@ information to decide whether a device should receive high or low
 quality images. Also, it goes without saying that anything related to
 User-Agent is a hack and should be avoided if possible.
 
-<h3 id="toc-css">Approach: use CSS media queries</h3>
+<h3 id="toc-css">Use CSS media queries</h3>
 
 Using CSS media queries, because you declare what things you want to
 have happen. Being declarative, you let the browser handle your
 intention, and optimize the heck out of it. In addition to the most
 common use of media queries - checking for page size - you can also
-check for devicePixelRatio. The media query is device-pixel-ratio, and
+check for `devicePixelRatio`. The media query is device-pixel-ratio, and
 has associated min and max variants, as you might expect. If you want to
 load high DPI images if the device pixel ratio exceeds a threshold,
 here's what you might do:
@@ -374,16 +373,16 @@ connection. This isn't the best user experience.
 
 [moz-wtf]: https://developer.mozilla.org/en/CSS/Media_queries#-moz-device-pixel-ratio
 
-<h3 id="toc-bf">Approach: use new browser features</h3>
+<h3 id="toc-bf">Use new browser features</h3>
 
 There's been a lot of recent discussion around web platform support for
 the high DPI image problem. Apple recently broke into the space,
 bringing the [image-set()][image-set-spec] CSS function to WebKit. As a result, both
-Safari and Chrome support it. Since it's a CSS function, image-set()
+Safari and Chrome support it. Since it's a CSS function, `image-set()`
 doesn't address the problem for `<img>` tags. Enter
 [@srcset][srcset-spec], which addresses this issue but (at the time of
 writing) has no reference implementations (yet!). The next section goes
-deeper into image-set and srcset.
+deeper into `image-set` and srcset.
 
 [image-set-spec]: http://dev.w3.org/csswg/css4-images/#image-set-notation
 [srcset-spec]: http://www.whatwg.org/specs/web-apps/current-work/multipage/embedded-content-1.html#attr-img-srcset
@@ -393,7 +392,7 @@ deeper into image-set and srcset.
 
 Ultimately, the decision about which approach you take depends on your
 particular requirements. That said, keep in mind that all of them have
-drawbacks. Looking forward, however, once image-set and srcset are
+drawbacks. Looking forward, however, once `image-set` and srcset are
 widely supported, they will be the appropriate solutions to this
 problem. For the time being, let's talk about some best practices that
 can bring us as close to that ideal future as possible.
@@ -408,10 +407,10 @@ size.
 
 <h3 id="toc-image-set">Best practices for image-set</h3>
 
-The image-set() CSS function is available prefixed as
--webkit-image-set(). The syntax is quite simple, taking a one or more
+The `image-set()` CSS function is available prefixed as
+`-webkit-image-set()`. The syntax is quite simple, taking a one or more
 comma separated image declarations, which consist of a URL string or
-url() function followed by the associated resolution. For example:
+`url()` function followed by the associated resolution. For example:
 
     background-image:  -webkit-image-set(
       url(icon1x.jpg) 1x,
@@ -427,7 +426,7 @@ specifying Nx, you can also specify a certain device pixel density in
 dpi.
 
 This works well, except browsers that don't support the
--webkit-image-set will have no image as a result. Use a fallback (or
+`-webkit-image-set` will have no image as a result. Use a fallback (or
 series of fallbacks) to address that issue:
 
     background-image: url(icon1x.jpg);
@@ -451,7 +450,7 @@ get the 1x asset.
 image, falling back to the 1x asset if this CSS function isn't
 supported.
 
-At this point, you may be wondering why not just polyfill image-set()
+At this point, you may be wondering why not just polyfill `image-set()`
 and call it a day? As it turns out, it's quite difficult to implement
 efficient polyfills for CSS functions. (For a detailed explanation why,
 see this [www-style discussion][www-style]).
@@ -461,21 +460,21 @@ see this [www-style discussion][www-style]).
 
 <h3 id="toc-srcset">Image srcset</h3>
 
-Here is how an img srcset looks like:
+Here is an example of srcset:
 
     <img alt="my awesome image"
       src="banner.jpeg"
       srcset="banner-HD.jpeg 2x, banner-phone.jpeg 100w, banner-phone-HD.jpeg 100w 2x">
 
-As you can see, in addition to x resolutions, the srcset element also
-takes w and h values which correspond to the size of the viewport,
-attempting to serve the most relevant version. The above would serve
-banner-phone.jpeg to devices with viewport width under 100px,
-banner-phone-HD.jpeg to small screen high DPI devices, banner-HD.jpeg to
-high DPI devices with screens greater than 100px, and banner.jpeg to
-everything else.
+As you can see, in addition to x declarations that `image-set` provides,
+the srcset element also takes w and h values which correspond to the
+size of the viewport, attempting to serve the most relevant version. The
+above would serve banner-phone.jpeg to devices with viewport width under
+100px, banner-phone-HD.jpeg to small screen high DPI devices,
+banner-HD.jpeg to high DPI devices with screens greater than 100px, and
+banner.jpeg to everything else.
 
-#### Using image-set for image elements
+<h4 id="toc-image-set-srcset">Using image-set for image elements</h4>
 
 Because the srcset attribute on img elements is not implemented in most
 browsers, it may be tempting to replace your img elements with `<div>`s
@@ -486,9 +485,8 @@ and accessibility reasons.
 
 If you end up using `-webkit-image-set`, you might be tempted to use the
 background CSS property. The drawback of this approach is that you need
-to specify image size, which might actually be unknown if you are using
-a non-1x image. Rather than doing this, you can use the content CSS
-property as follows:
+to specify image size, which is unknown if you are using a non-1x image.
+Rather than doing this, you can use the content CSS property as follows:
 
     <div id="my-content-image"
       style="content: -webkit-image-set(
@@ -496,15 +494,16 @@ property as follows:
         url(icon2x.jpg) 2x);">
     </div>
 
-See [this example][srcset-as-image-set] of the above technique in
-action, with an additional fallback to `url()` for browsers that don't
-support image-set.
+This will automatically scale the image based on devicePixelRatio. See
+[this example][srcset-as-image-set] of the above technique in action,
+with an additional fallback to `url()` for browsers that don't support
+`image-set`.
 
 [srcset-as-image-set]: /static/demos/high-dpi/image-set/as-content.html
 
-#### Polyfilling srcset
+<h4 id="toc-polyfill">Polyfilling srcset</h4>
 
-One handy feature of srcset is that it comes with a natural fallback.
+One handy feature of `srcset` is that it comes with a natural fallback.
 In the case where the srcset attribute is not implemented, all browsers
 know to process the src attribute. Also, since it's just an HTML
 attribute, it's possible to create [polyfills with
@@ -531,7 +530,7 @@ high quality imagery on your site.
 
 Approaches in JS, CSS and using the server-side all have their strengths
 and weaknesses. The most promising approach, however, is to leverage new
-browser features. Though browser support for image-set and srcset is
+browser features. Though browser support for `image-set` and `srcset` is
 still incomplete, there are reasonable fallbacks to use today.
 
 The best approach you can take is to use `image-set()` with fallbacks to
