@@ -127,16 +127,15 @@ ratio, reversing the equation above.
     devicePixelRatio = physicalPixels / virtualPixels
       ~= 180 / 150 = 1.2
 
-Historically, device vendors have tended to round `devicePixelRatio`s.
-Apple's iPhone and iPad report `devicePixelRatio` of 1, and their retina
+Historically, device vendors have tended to round `devicePixelRatios`
+(DPRs). Apple's iPhone and iPad report DPR of 1, and their retina
 equivalents report 2. Relatively round ratios can be better because they
-may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality of the
-device landscape is much more varied, and Android phones often have
-`devicePixelRatio`s of 1.5. The Nexus 7 tablet has a `devicePixelRatio` of
-~1.33, which was arrived at by a calculation similar to the one above.
-Expect to see more devices with variable `devicePixelRatio`s in the future.
-Because of this, you should never assume that your clients will have
-integer `devicePixelRatio`s.
+may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality
+of the device landscape is much more varied, and Android phones often
+have DPRs of 1.5. The Nexus 7 tablet has a DPR of ~1.33, which was
+arrived at by a calculation similar to the one above. Expect to see
+more devices with variable DPRs in the future. Because of this, you
+should never assume that your clients will have integer DPRs.
 
 [sub-pixel]: http://ejohn.org/blog/sub-pixel-problems-in-css/
 
