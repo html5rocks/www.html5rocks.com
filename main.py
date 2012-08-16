@@ -202,8 +202,11 @@ class ContentHandler(webapp.RequestHandler):
     # TODO: memcache this db query.
     template_data['gdl_page_url'] = ''
     live_data = models.LiveData.all().get() # Return first result.
-    if live_data:
-      template_data['gdl_page_url'] = live_data.gdl_page_url
+
+    # Show banner if we have a URL and are under 60 minutes since it was saved.
+    if (live_data and
+        (datetime.datetime.now() - live_data.updated).seconds / 60 < 60):
+        template_data['gdl_page_url'] = live_data.gdl_page_url
 
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
