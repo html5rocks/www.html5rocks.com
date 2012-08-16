@@ -93,9 +93,6 @@ class Resource(DictModel):
 
     key += '|%s' % (str(limit),)
 
-    #import logging
-    #logging.info(key)
-
     results = memcache.get(key)
     if results is None:
       query = self.all()
@@ -173,13 +170,10 @@ class LiveData(db.Model):
   """GDU metadata for the site."""
 
   gdl_page_url = db.StringProperty()
-  #moderator_topic_id = db.StringProperty()
+  updated = db.DateTimeProperty(auto_now=True)
 
 
 class LiveForm(djangoforms.ModelForm):
-
-  #class Meta:
-  #  model = LiveData
 
   gdl_page_url = forms.CharField(label='GDL Page URL',
       help_text='<b>NOTE: this will put a banner across the site when set.</b><br>Ex: https://developers.google.com/live/shows/aVFdhKIDDA/')
