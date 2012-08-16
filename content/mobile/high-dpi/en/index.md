@@ -3,16 +3,17 @@
 One of the features of today's complex device landscape is that there's
 a [very wide range of screen pixel densities][variety-dpi] available.
 Some devices feature very high resolution displays, while others
-straggle behind.  Application developers need to support a range of
+straggle behind. Application developers need to support a range of
 pixel densities, which can be quite challenging. On the mobile web, the
 challenges are compounded by several factors:
 
-- The broadest variety of devices on different platforms and form factors.
+- Huge variety of devices on different platforms and form factors.
 - Constrained network bandwidth and battery.
 
-The goal of here is to **serve the best quality apps as quickly and
-efficiently as possible**. This article will cover some useful
-techniques for doing this today and in the near future.
+In terms of images, the goal of web app developers is to **serve the
+best quality images as quickly and efficiently as possible**. This
+article will cover some useful techniques for doing this today and in
+the near future.
 
 [variety-dpi]: http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 
