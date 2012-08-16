@@ -198,14 +198,15 @@ class ContentHandler(webapp.RequestHandler):
     if not 'category' in template_data:
       template_data['category'] = _('this feature')
 
-    # Add H5RLive hangout url.
+    # Add GDL url.
     # TODO: memcache this db query.
-    template_data['hangout_url'] = ''
-    template_data['moderator_topic_id'] = ''
+    template_data['gdl_page_url'] = ''
     live_data = models.LiveData.all().get() # Return first result.
-    if live_data:
-      template_data['hangout_url'] = live_data.hangout_url
-      template_data['moderator_topic_id'] = live_data.moderator_topic_id
+
+    # Show banner if we have a URL and are under 60 minutes since it was saved.
+    if (live_data and
+        (datetime.datetime.now() - live_data.updated).seconds / 60 < 60):
+        template_data['gdl_page_url'] = live_data.gdl_page_url
 
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
@@ -596,8 +597,7 @@ class DBHandler(ContentHandler):
       entity = models.LiveData.all().get()
       if entity:
         live_form = models.LiveForm(instance=entity, initial={
-            'hangout_url': entity.hangout_url,
-            'moderator_topic_id': entity.moderator_topic_id
+            'gdl_page_url': entity.gdl_page_url
             })
       else:
         live_form = models.LiveForm()
@@ -701,8 +701,7 @@ class DBHandler(ContentHandler):
       if live_data is None:
         live_data = models.LiveData()
       
-      live_data.hangout_url = self.request.get('hangout_url') or None
-      live_data.moderator_topic_id = self.request.get('moderator_topic_id') or None
+      live_data.gdl_page_url = self.request.get('gdl_page_url') or None
 
       live_data.put()
 

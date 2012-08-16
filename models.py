@@ -93,9 +93,6 @@ class Resource(DictModel):
 
     key += '|%s' % (str(limit),)
 
-    #import logging
-    #logging.info(key)
-
     results = memcache.get(key)
     if results is None:
       query = self.all()
@@ -172,16 +169,11 @@ class TutorialForm(djangoforms.ModelForm):
 class LiveData(db.Model):
   """GDU metadata for the site."""
 
-  hangout_url = db.StringProperty()
-  moderator_topic_id = db.StringProperty()
+  gdl_page_url = db.StringProperty()
+  updated = db.DateTimeProperty(auto_now=True)
 
 
 class LiveForm(djangoforms.ModelForm):
 
-  #class Meta:
-  #  model = LiveData
-
-  hangout_url = forms.CharField(label='Hangout URL',
-      help_text='The YouTube video ID to embed. For example: http://www.youtube.com/embed/<b>eRZ4pO0gVWw</b><br><b>NOTE: this will put a banner across the site when set.</b>')
-  moderator_topic_id = forms.CharField(label='Moderator topic ID',
-      help_text='This is the last part of the "t" param in the moderator URL. For example: google.com/moderator/#15/e=2015a4&t=2015a4.<b>41</b><br>If not value is specified, past topics will show')
+  gdl_page_url = forms.CharField(label='GDL Page URL',
+      help_text='<b>NOTE: this will put a banner across the site when set.</b><br>Ex: https://developers.google.com/live/shows/aVFdhKIDDA/')

@@ -12,7 +12,7 @@
 {% if is_mobile %}
   <script>
     var html5rocks = {};
-    var indexedDB = window.indexedDB || window.webkitIndexedDB ||
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB ||
                     window.mozIndexedDB;
 
     if ('webkitIndexedDB' in window) {
@@ -31,11 +31,11 @@
       var request = indexedDB.open("todos");
 
       request.onsuccess = function(e) {
-        var v = "1.98";
+        var v = 1;
         html5rocks.indexedDB.db = e.target.result;
         var db = html5rocks.indexedDB.db;
-        // We can only create Object stores in a setVersion transaction;
-        if(v!= db.version) {
+        // We can only create Object stores in a versionchange transaction;
+        if (v != db.version) {
           var setVrequest = db.setVersion(v);
 
           // onsuccess is the only place we can create Object Stores
@@ -47,12 +47,14 @@
 
             var store = db.createObjectStore("todo",
               {keyPath: "timeStamp"});
-
+            e.target.transaction.oncomplete = function() {
+              html5rocks.indexedDB.getAllTodoItems();
+            };
+          };
+        } else {
+          request.transaction.oncomplete = function() {
             html5rocks.indexedDB.getAllTodoItems();
           };
-        }
-        else {
-          html5rocks.indexedDB.getAllTodoItems();
         }
       };
 
@@ -61,7 +63,7 @@
 
     html5rocks.indexedDB.addTodo = function(todoText) {
       var db = html5rocks.indexedDB.db;
-      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var trans = db.transaction(["todo"], "readwrite");
       var store = trans.objectStore("todo");
 
       var data = {
@@ -82,7 +84,7 @@
 
     html5rocks.indexedDB.deleteTodo = function(id) {
       var db = html5rocks.indexedDB.db;
-      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var trans = db.transaction(["todo"], "readwrite");
       var store = trans.objectStore("todo");
 
       var request = store.delete(id);
@@ -101,7 +103,7 @@
       todos.innerHTML = "";
 
       var db = html5rocks.indexedDB.db;
-      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var trans = db.transaction(["todo"], "readwrite");
       var store = trans.objectStore("todo");
 
       // Get everything in the store;
@@ -264,21 +266,23 @@ html5rocks.indexedDB.open = function() {
   refer to our database through out this tutorial.</p>
   <h2 id="toc-step2">Step 2. Creating an Object Store</h2>
   <p>
-    You can only create object stores inside a "SetVersion" transaction. I
-    haven't covered setVersion yet, but it is a very important method - it is
-    the <em>only place in your code that you can create object stores and indexes</em>.
+    You can only create object stores inside a "versionchange"
+    transaction. The only way to start a "versionchange" transaction
+    is through the setVersion method. This method will soon be
+    replaced by the onupgradeneeded callback. Until then, setVersion is
+    the <em>only place in your code that you can create object stores
+    and indexes</em>.
   </p>
   <pre class="prettyprint">
 html5rocks.indexedDB.open = function() {
-  var request = indexedDB.open("todos",
-    "This is a description of the database.");
+  var request = indexedDB.open("todos");
 
   request.onsuccess = function(e) {
     var v = "1.0";
     html5rocks.indexedDB.db = e.target.result;
     var db = html5rocks.indexedDB.db;
     // We can only create Object stores in a setVersion transaction;
-    if(v!= db.version) {
+    if (v!= db.version) {
       var setVrequest = db.setVersion(v);
 
       // onsuccess is the only place we can create Object Stores
@@ -286,12 +290,15 @@ html5rocks.indexedDB.open = function() {
       setVrequest.onsuccess = function(e) {
         var store = db.createObjectStore("todo",
           {keyPath: "timeStamp"});
-
+        e.target.transaction.oncomplete = function() {
+          html5rocks.indexedDB.getAllTodoItems();
+        };
+      };
+    } else {
+      request.transaction.oncomplete = function() {
         html5rocks.indexedDB.getAllTodoItems();
       };
     }
-
-    html5rocks.indexedDB.getAllTodoItems();
   };
 
   request.onfailure = html5rocks.indexedDB.onerror;
@@ -306,9 +313,10 @@ html5rocks.indexedDB.open = function() {
     the <code>IDBRequest</code> object before the callbacks are executed.
 </p>
 <p>
-    If the open request is successful, our <code>onsuccess</code> callback is
-    executed. In this callback we check the database version and if it is not
-    the same as the number we expect, we call "setVersion".</p>
+    If the open request is successful, our <code>onsuccess</code>
+    callback is executed. In this callback we check the database
+    version and if it is not the same as the number we expect, we call
+    "setVersion" to start a "versionchange" transaction.</p>
 <p>
     SetVersion <em>is the only place</em> in our code that we can alter the
     structure of the database. In it we can create and delete Object Stores and
@@ -327,7 +335,10 @@ html5rocks.indexedDB.open = function() {
 </p>
 <p>
     Once the object store is created we call our method
-    <a href="#toc-step4">getAllTodoItems</a>.
+    <a href="#toc-step4">getAllTodoItems</a>. You cannot create a new
+    transaction during a "versionchange" transaction, so we can't
+    call <a href="#toc-step4">getAllTodoItems</a> until the oncomplete
+    callback is run.
 </p>
 
   <h2 id="toc-step3">Step 3. Adding data to an object store</h2>
@@ -339,7 +350,7 @@ html5rocks.indexedDB.open = function() {
   <pre class="prettyprint">
 html5rocks.indexedDB.addTodo = function(todoText) {
   var db = html5rocks.indexedDB.db;
-  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var trans = db.transaction(["todo"], "readwrite");
   var store = trans.objectStore("todo");
   var request = store.put({
     "text": todoText,
@@ -358,7 +369,7 @@ html5rocks.indexedDB.addTodo = function(todoText) {
 
   <p>
     The <code>addTodo</code> method is pretty simple, we first get a quick
-    reference to the database object, initiate a <code>READ_WRITE</code>
+    reference to the database object, initiate a <code>"readwrite"</code>
     transaction and get a reference to our object store.
   </p>
   <p>
@@ -381,7 +392,7 @@ html5rocks.indexedDB.getAllTodoItems = function() {
   todos.innerHTML = "";
 
   var db = html5rocks.indexedDB.db;
-  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var trans = db.transaction(["todo"], "readwrite");
   var store = trans.objectStore("todo");
 
   // Get everything in the store;
@@ -455,7 +466,7 @@ function renderTodo(row) {
   <pre class="prettyprint">
 html5rocks.indexedDB.deleteTodo = function(id) {
   var db = html5rocks.indexedDB.db;
-  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var trans = db.transaction(["todo"], "readwrite");
   var store = trans.objectStore("todo");
 
   var request = store.delete(id);
