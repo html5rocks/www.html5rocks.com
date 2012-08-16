@@ -1,10 +1,11 @@
 <h2 id="toc-intro">Introduction</h2>
 
 One of the features of today's complex device landscape is that there's
-a very wide range of screen pixel densities available. Application
-developers need to support all of these screens, which is quite
-challenging. On the mobile web, the challenges are compounded by several
-extenuating circumstances:
+a [very wide range of screen pixel densities][variety-dpi] available.
+Some devices feature very high resolution displays, while others
+straggle behind.  Application developers need to support a range of
+pixel densities, which can be quite challenging. On the mobile web, the
+challenges are compounded by several factors:
 
 - The broadest variety of devices on different platforms and form factors.
 - Constrained network bandwidth and battery.
@@ -12,6 +13,8 @@ extenuating circumstances:
 The goal of here is to **serve the best quality apps as quickly and
 efficiently as possible**. This article will cover some useful
 techniques for doing this today and in the near future.
+
+[variety-dpi]: http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
 
 <h3 id="toc-avoid">Avoid images if possible</h3>
 
@@ -39,14 +42,17 @@ their face, making pixels more visible. By 2008, 150dpi phones were the
 new norm. The trend in increased display density continued, and today's
 new phones sport 300dpi displays (branded "Retina" by Apple).
 
-The holy grail, of course, are displays in which pixels are completely
+The holy grail, of course, is a display in which pixels are completely
 invisible. For the phone form factor, the current generation of
 Retina/HiDPI displays may be close to that ideal. But new classes of
-hardware and wearables will continue to drive increased pixel density.
+hardware and wearables will likely continue to drive increased pixel
+density.
 
 In practice, low density images look the same on new screens as they did
 on old ones, but compared to the crisp imagery high density users are
-used to seeing, the low density image will look jarring and pixelated:
+used to seeing, the low density image will look jarring and pixelated.
+The following is a rough simulation of how a 1x image will look on a 2x
+display. In contrast, the 2x image looks quite good.
 
 <figure>
 <img src="/static/demos/high-dpi/baboon1x.jpg"/>
@@ -102,17 +108,17 @@ Suppose you're a smartphone vendor trying to decide what to set
 devicePixelRatio. You have a 180 DPI screen and want to follow the spec.
 The calculation takes three steps:
 
-1. Taking into account actual distance the device is held from, compute
-   ideal number of pixels in an inch.
+1. Taking into account the actual distance the device is held from,
+   compute ideal number of pixels in an inch.
 2. Take the ratio between virtual and physical pixel counts to calculate
    devicePixelRatio.
 
 As per the spec, we know that at 28 inches, we want there to be 96
-virtual pixels per inch. However, since it's a smartphone, we might find
-that people hold our phone closer to their screen than a laptop. Let's
-estimate that distance to be 18 inches. Thus the virtual density for
-the device is `(28/18) * 96`, which is approximately 150 pixels per inch
-(ppi).
+virtual pixels per inch. However, we might find that people tend to hold
+their smartphone closer to eyes than a laptop. Let's estimate the
+smartphone viewing distance to be 18 inches. Thus the virtual density
+for the device is `(28/18) * 96`, which is approximately 150 pixels per
+inch (ppi).
 
 <figure>
 <img src="/static/demos/high-dpi/calculate-dpr.png"/>
@@ -128,7 +134,7 @@ ratio, reversing the equation above.
       ~= 180 / 150 = 1.2
 
 Historically, device vendors have tended to round `devicePixelRatios`
-(DPRs). Apple's iPhone and iPad report DPR of 1, and their retina
+(DPRs). Apple's iPhone and iPad report DPR of 1, and their Retina
 equivalents report 2. Relatively round ratios can be better because they
 may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality
 of the device landscape is much more varied, and Android phones often
@@ -149,7 +155,8 @@ multiple images.
 Single image approaches: use one image, but do something clever with it.
 These approaches have the drawback that you will inevitably sacrifice
 performance, since you will be downloading HiDPI images even on older
-devices with lower DPI.
+devices with lower DPI. Here are some approaches for the single image
+case:
 
 - Heavily compressed HiDPI image
 - Totally awesome image format
@@ -228,9 +235,10 @@ then verify that the size is correct:
 
 (borrowed from [this StackOverflow question][detect-webp])
 
-A better way of doing this is directly in CSS using the [image()
-function][css-image]. So if you have a WebP image and JPEG fallback, you
-can write the following:
+[Modernizr][modernizr] ships with a similar check using
+`Modernizr.webp`. A better way of doing this is directly in CSS using
+the [image() function][css-image]. So if you have a WebP image and JPEG
+fallback, you can write the following:
 
     #pic {
       background: image("foo.webp", "foo.jpg");
@@ -247,6 +255,7 @@ alone isn't enough to address the high DPI problem.
 [webp-gallery]: https://developers.google.com/speed/webp/gallery1
 [detect-webp]: http://stackoverflow.com/questions/5573096/detecting-webp-support
 [css-image]: http://www.w3.org/TR/css3-images/#image-notation
+[modernizr]: http://modernizr.github.com/Modernizr/test/
 
 <h3 id="toc-prog">Progressive image formats</h3>
 
@@ -315,7 +324,7 @@ More on this in [Jason Grigsby's article][jason].
 <h3 id="toc-server">Decide what image to load on the server</h3>
 
 You can defer the decision to the server-side by writing custom request
-handlers for each image you serve. Such a handler would check for retina
+handlers for each image you serve. Such a handler would check for Retina
 support based on User-Agent (the only piece of information relayed to
 the server). Then, based on whether the server-side logic wants to serve
 HiDPI assets, you load the appropriate asset (named according to some
@@ -328,14 +337,13 @@ User-Agent is a hack and should be avoided if possible.
 
 <h3 id="toc-css">Use CSS media queries</h3>
 
-Using CSS media queries, because you declare what things you want to
-have happen. Being declarative, you let the browser handle your
-intention, and optimize the heck out of it. In addition to the most
-common use of media queries - checking for page size - you can also
-check for `devicePixelRatio`. The media query is device-pixel-ratio, and
-has associated min and max variants, as you might expect. If you want to
-load high DPI images if the device pixel ratio exceeds a threshold,
-here's what you might do:
+Being declarative, CSS media queries let you state your intention, and
+let the browser do the right thing on your behalf. In addition to the most
+common use of media queries &mdash; matching device size &mdash; you can
+also match `devicePixelRatio`. The associated media query is
+device-pixel-ratio, and has associated min and max variants, as you
+might expect. If you want to load high DPI images if the device pixel
+ratio exceeds a threshold, here's what you might do:
 
     #my-image { background: (low.png); }
 
@@ -359,8 +367,8 @@ in, especially because of insane [differences in placement][moz-wtf] of
 
 With this approach, you regain the benefits of look-ahead parsing, which
 was lost with the JS solution. You also gain the flexibility of choosing
-your responsive breakpoints (eg. you can have low, mid and high DPI
-images), which was lost with the server-side approach.
+your responsive breakpoints (for example, you can have low, mid and high
+DPI images), which was lost with the server-side approach.
 
 Unfortunately it's still a little unwieldy, and leads to strange looking
 CSS (or requires preprocessing). Also, this approach is restricted to
@@ -381,7 +389,7 @@ Safari and Chrome support it. Since it's a CSS function, `image-set()`
 doesn't address the problem for `<img>` tags. Enter
 [@srcset][srcset-spec], which addresses this issue but (at the time of
 writing) has no reference implementations (yet!). The next section goes
-deeper into `image-set` and srcset.
+deeper into `image-set` and `srcset`.
 
 [image-set-spec]: http://dev.w3.org/csswg/css4-images/#image-set-notation
 [srcset-spec]: http://www.whatwg.org/specs/web-apps/current-work/multipage/embedded-content-1.html#attr-img-srcset
@@ -421,8 +429,8 @@ One of them is optimized for 1x displays, and the other for 2x displays.
 The browser then gets to choose which one to load, based on a variety of
 factors, which might even include network speed, if the user-agent is
 smart enough (not currently implemented as far as I know). Instead of
-specifying Nx, you can also specify a certain device pixel density in
-dpi.
+specifying 1x or 2x, you can also specify a certain device pixel density
+in dpi.
 
 This works well, except browsers that don't support the
 `-webkit-image-set` will have no image as a result. Use a fallback (or
@@ -463,7 +471,7 @@ Here is an example of srcset:
 
     <img alt="my awesome image"
       src="banner.jpeg"
-      srcset="banner-HD.jpeg 2x, banner-phone.jpeg 100w, banner-phone-HD.jpeg 100w 2x">
+      srcset="banner-HD.jpeg 2x, banner-phone.jpeg 640w, banner-phone-HD.jpeg 640w 2x">
 
 As you can see, in addition to x declarations that `image-set` provides,
 the srcset element also takes w and h values which correspond to the
@@ -473,7 +481,7 @@ above would serve banner-phone.jpeg to devices with viewport width under
 banner-HD.jpeg to high DPI devices with screens greater than 100px, and
 banner.jpeg to everything else.
 
-<h4 id="toc-image-set-srcset">Using image-set for image elements</h4>
+<h3 id="toc-image-set-srcset">Using image-set for image elements</h3>
 
 Because the srcset attribute on img elements is not implemented in most
 browsers, it may be tempting to replace your img elements with `<div>`s
@@ -500,7 +508,7 @@ with an additional fallback to `url()` for browsers that don't support
 
 [srcset-as-image-set]: /static/demos/high-dpi/image-set/as-content.html
 
-<h4 id="toc-polyfill">Polyfilling srcset</h4>
+<h3 id="toc-polyfill">Polyfilling srcset</h3>
 
 One handy feature of `srcset` is that it comes with a natural fallback.
 In the case where the srcset attribute is not implemented, all browsers
@@ -513,7 +521,7 @@ as close to the [specification][srcset] as possible. In addition, there
 are checks in place that prevent the polyfill from executing any code if
 srcset is implemented natively.
 
-This is a [demo of the polyfill][srcset-poly-demo] in action.
+Here is a [demo of the polyfill][srcset-poly-demo] in action.
 
 [srcset-polyfill]: https://github.com/borismus/srcset-polyfill
 [srcset-poly-demo]: /static/demos/high-dpi/srcset-polyfill/demo/index.html
