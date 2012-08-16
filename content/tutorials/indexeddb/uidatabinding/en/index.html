@@ -28,7 +28,7 @@
 <h2 id="toc-gettingstarted">Getting Started</h2>
 
 
-<p>We've got multiple parts to this demo, so to start things off simply, let's look at the HTML portion. 
+<p>We've got multiple parts to this demo, so to start things off simply, let's look at the HTML portion.
 
 <pre class="prettyprint">
 &lt;form>
@@ -42,12 +42,12 @@
 
 <p>Not a lot, right? There are three main aspects to this UI that we care about. First is the field, “name” that will be used for autocomplete. It loads disabled and will be enabled later via JavaScript. The span next to it is used during the initial seed to provide updates to the user. Finally, the div with the id displayEmployee will be used when you select an employee from the autosuggest.
 
-<p>Now let's take a look at the JavaScript. There's a lot to digest here so we'll take it step by step. The full code will be available at the end so you can see it in it's entirety. 
+<p>Now let's take a look at the JavaScript. There's a lot to digest here so we'll take it step by step. The full code will be available at the end so you can see it in it's entirety.
 
 <p>First off - there are some prefix issues we have to worry about among the browsers that support IndexedDB. Here's some code from the Mozilla documentation modified to provide simple aliases for the core IndexedDB components our application needs.
 
 <pre class="prettyprint">
-var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
+window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
 var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 </pre>
@@ -217,7 +217,7 @@ person.searchkey = person.lastname.toLowerCase();
 
 <p>As this is a client-specific modification, it's done here as opposed to on the back-end server (or in our case, the imaginary back-end server).
 
-<p>To perform the database additions in a performant fashion, you should reuse the transaction for all the batched writes. If you create a new transaction for each write, the browser may cause a disk write for each transaction, and that's going to make your performance terrible when adding a lot of items (think "1 minute to write a 1000 objects"-terrible). 
+<p>To perform the database additions in a performant fashion, you should reuse the transaction for all the batched writes. If you create a new transaction for each write, the browser may cause a disk write for each transaction, and that's going to make your performance terrible when adding a lot of items (think "1 minute to write a 1000 objects"-terrible).
 
 <figure>
 <img src="https://lh3.googleusercontent.com/4m9jpgYPPGItefHJqK5xCrJuw5n4phWX0EI0g_e0ty0Ykal3_pKsB7HF1n-9Eowh1GfzVMG6ZNbsLFAKbMOajjUlwvbukrsF03G805QWyXR3cN5WF5k">
@@ -274,7 +274,7 @@ function setupAutoComplete() {
 }
 </pre>
 
-<p>The most complex part of this code is the creation of the source property. The jQuery UI's Autocomplete control allows you to define a source property that can be customized to meet any possible need - even our IndexedDB data. The API provides you with the request (basically what was typed into the form field) and a response callback. You are responsible for sending an array of results back to that callback. 
+<p>The most complex part of this code is the creation of the source property. The jQuery UI's Autocomplete control allows you to define a source property that can be customized to meet any possible need - even our IndexedDB data. The API provides you with the request (basically what was typed into the form field) and a response callback. You are responsible for sending an array of results back to that callback.
 
 <p>The first thing we do is hide the displayEmployee div. This is used to display an individual employee and if one is previously loaded up, to clear it out. Now we can start searching.
 
@@ -293,7 +293,7 @@ function setupAutoComplete() {
 
 <h2 id="toc-wrapping-up">Wrapping Up</h2>
 
-<p>You can find the complete application attached <a href="/static/demos/idb-databinding/indexdbautocomplete.zip">here as a zip file</a>. You can also see <a href="/static/demos/idb-databinding/index_mark3.html">the demo here</a>. 
+<p>You can find the complete application attached <a href="/static/demos/idb-databinding/indexdbautocomplete.zip">here as a zip file</a>. You can also see <a href="/static/demos/idb-databinding/index_mark3.html">the demo here</a>.
 
 <p class="notice">Note - if you want to remove the data and test the 'seed' process again, simply go <a href="/static/demos/idb-databinding/delete.html">here</a>.
 

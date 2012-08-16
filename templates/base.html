@@ -58,8 +58,8 @@
 </head>
 <body data-href="{{self_pagename}}" onload="{% block onload %}{% endblock %}" class="pattern-bg">
 
-  {% if hangout_url %}
-    <a href="/live" id="livebanner" alt="Watch HTML5Rocks LIVE" title="Watch HTML5Rocks LIVE">On Air <span class="record"></span></a>
+  {% if gdl_page_url %}
+    <a href="{{gdl_page_url}}" id="livebanner" alt="Watch HTML5Rocks LIVE" title="Watch HTML5Rocks LIVE">On Air <span class="record"></span></a>
   {% endif %}
 
   <header class="main">
@@ -77,14 +77,6 @@
         <li><a class="why" href="/{{LANGUAGE_CODE}}/why">{% trans "Why HTML5?" %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/profiles" class="profiles">{% trans "Who We Are" %}</a></li>
         <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/README.md" target="_blank">{% trans "Contribute" %}</a></li>
-        <!--<li><a href="https://github.com/html5rocks/www.html5rocks.com/issues/new" onclick="
-try{
-  userfeedback.api.startFeedback({
-    'productId': '81821',
-    'locale': '{{LANGUAGE_CODE}}' || 'en'
-  });
-  return false;
-}catch(e){}">Send Feedback</a></li>-->
         <li id="search_show">
           <a href="#search_form">
             {% trans "Search" %}
@@ -352,27 +344,7 @@ try{
     {% block body %}{% endblock %}
   </div>
 
-<!--
-  <footer>
-    <span>
-      <a href="http://www.w3.org/html/logo/">
-        <img src="/static/images/identity/HTML5_Badge_64.png" align="left" title="{% trans "HTML5 Logo" %}" alt="{% trans "HTML5 Logo" %}" class="footer-badge"/>
-      </a>
-    </span>
-    <span>
-      <a href="/{{LANGUAGE_CODE}}/tos.html" {% ifequal current 'tos' %}class="current"{% endifequal %}>{% trans "Terms" %}</a> -
-      <a href="/{{LANGUAGE_CODE}}/privacy.html" {% ifequal current 'privacy' %}class="current"{% endifequal %}>{% trans "Privacy" %}</a> -
-      <a href="http://code.google.com/p/html5rocks/issues/entry">{% trans "Report bug or request a feature" %}</a> -
-      <a href="http://twitter.com/ChromiumDev">{% trans "Follow us on Twitter" %}</a> -
-      <a href="/{{LANGUAGE_CODE}}/profiles" {% ifequal current 'profiles' %}class="current"{% endifequal %}>{% trans "About Authors" %}</a>
-    </span>
-    <span class="madeby">{% trans "Made by Google" %}| <img src="/static/images/google_logo_small.png" width="50" height="20" alt=""></span>
-    <p>{% trans "This site contains information on APIs that are not part of the W3C HTML5 specification." %}</p>
-  </footer>
--->
-
   <script>
-
   (function() {
     {% if is_mobile %}
       // Hides mobile browser's address bar when page is done loading.
@@ -458,6 +430,7 @@ try{
   <script>
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-15028909-1']);
+  _gaq.push(['_setSiteSpeedSampleRate', 50]);
   _gaq.push(['_trackPageview']);
 
   (function() {
@@ -471,7 +444,8 @@ try{
   <script defer src="/static/js/app{% if prod %}.min{% endif %}.js"></script>
 
   <script defer src="/static/js/search{% if prod %}.min{% endif %}.js"></script>
+  {% if not is_mobile %}
   <script defer src="/static/js/3rdpartyinit{% if prod %}.min{% endif %}.js"></script>
-  <!--<script defer src="//www.gstatic.com/feedback/api.js"></script>-->
+  {% endif %}
 </body>
 </html>
