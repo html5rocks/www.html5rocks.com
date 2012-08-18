@@ -84,7 +84,7 @@ window.requestFileSystem(<var>type</var>, <var>size</var>, <var>successCallback<
     <dd>Whether the file storage should be persistent.
     Possible values are <code>window.TEMPORARY</code> or <code>window.PERSISTENT</code>.
     Data stored using <code>TEMPORARY</code> can be removed at the browser's discretion
-    (for example if more space is needed). <code>PERSISTENT</code> storage cannot cleared
+    (for example if more space is needed). <code>PERSISTENT</code> storage cannot be cleared
     unless explicitly authorized by the user or the app and requires the user to grant
     quota to your app. See <a href="#toc-requesting-quota">requesting quota</a>.</dd>
     <dt><var>size</var></dt>
@@ -209,7 +209,7 @@ fileEntry.createWriter(successCallback, opt_errorCallback);
 
   <h3 id="toc-file-creatingempty">Creating a file</h3>
 
-  <p>You can look up or create a file with the file system's <code>getFile()</code>,
+  <p>You can look up or create a file with the file system's <code>getFile()</code> method,
   a method of the <a href="#toc-direntry">DirectoryEntry</a> interface.
   After requesting a file system, the success callback is passed a <code>FileSystem</code>
   object that contains a <code>DirectoryEntry</code> (<code>fs.root</code>) pointing to
@@ -248,7 +248,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
   <h3 id="toc-file-readingbyname">Reading a file by name</h3>
 
   <p>The following code retrieves the file called "log.txt",
-  its contents are read using the <code>FileReader</code> API and appends to new
+  its contents are read using the <code>FileReader</code> API and appended to a new
   &lt;textarea&gt; on the page. If log.txt doesn't exist,
   an error is thrown.</p>
 
@@ -384,8 +384,8 @@ document.querySelector('#myfile').onchange = function(e) {
   to achieve the same objective.</p>
 
   <p>As noted in the comment, <code>FileWriter.write()</code> can accept a <code>Blob</code>
-  or <code>File</code>. This is because <code>File</code> inherits from <code>Blob</code>,
-  and are therefore file objects are blobs.</p>
+  or <code>File</code>. This is because <code>File</code> inherits from <code>Blob</code>.
+  Therefore, all file objects are blobs.</p>
 
   <h3 id="toc-file-removing">Removing a file</h3>
 
@@ -613,7 +613,8 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <h3 id="toc-dir-move-rename">Moving or renaming an entry</h3>
 
-  <p>The <code>FileEntry</code> and <code>DirectoryEntry</code> <code>moveTo()</code>
+  <p>The <code>moveTo()</code> method present in
+  <code>FileEntry</code> and <code>DirectoryEntry</code>
   allows you to move or rename a file or directory.
   Its first argument is the parent directory to move the file under, and its second
   is an optional new name for the file. If a new name isn't provided, the file's
