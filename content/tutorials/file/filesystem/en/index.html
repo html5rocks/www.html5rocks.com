@@ -300,9 +300,9 @@ function onInitFs(fs) {
       };
 
       // Create a new Blob and write it to log.txt.
-      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
-      bb.append('Lorem Ipsum');
-      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+      var blob = new Blob(['Lorem Ipsum'], {type: 'text/plain'});
+
+      <b>fileWriter.write</b>(blob);
 
     }, errorHandler);
 
@@ -335,9 +335,9 @@ function onInitFs(fs) {
       <b>fileWriter.seek(fileWriter.length); // Start write position at EOF.</b>
 
       // Create a new Blob and write it to log.txt.
-      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
-      bb.append('Hello World');
-      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+      var blob = new Blob(['Hello World'], {type: 'text/plain'});
+
+      <b>fileWriter.write</b>(blob);
 
     }, errorHandler);
 
@@ -366,7 +366,7 @@ document.querySelector('#myfile').onchange = function(e) {
 
       // Capture current iteration's file in local scope for the getFile() callback.
       (function(f) {
-        fs.root.getFile(<b>file.name</b>, {create: true, exclusive: true}, function(fileEntry) {
+        fs.root.getFile(<b>f.name</b>, {create: true, exclusive: true}, function(fileEntry) {
           fileEntry.createWriter(function(fileWriter) {
             <b>fileWriter.write(f);</b> // Note: write() can take a File or Blob object.
           }, errorHandler);
