@@ -79,8 +79,6 @@ instead of messing with `about:flags`.
 
 Todo
 
-    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder;
-    Blob.prototype.slice = Blob.prototype.webkitSlice || Blob.prototype.mozSlice;
 
     var NUM_CHUNKS = 5;
     var FILE = 'test.webm';

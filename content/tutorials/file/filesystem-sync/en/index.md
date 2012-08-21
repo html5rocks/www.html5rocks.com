@@ -171,14 +171,11 @@ described in [Basics of Web Workers](/tutorials/workers/basics/).
 
     function loadInlineWorker(selector, callback) {
       window.URL = window.URL || window.webkitURL || null;
-      window.BlobBuilder = window.WebKitBlobBuilder ||
-                           window.MozBlobBuilder || window.BlobBuilder;
 
       var script = document.querySelector(selector);
       if (script.type === 'javascript/worker') {
-        var bb = new BlobBuilder();
-        bb.append(script.textContent);
-        callback(new Worker(window.URL.createObjectURL(bb.getBlob()));
+        var blob = new Blob([script.textContent]);
+        callback(new Worker(window.URL.createObjectURL(blob));
       }
     }
     </script>
@@ -367,8 +364,6 @@ expanding it to download a set of files.
 
     self.requestFileSystemSync = self.webkitRequestFileSystemSync ||
                                  self.requestFileSystemSync;
-    self.BlobBuilder = self.BlobBuilder ||
-                       self.WebKitBlobBuilder || self.MozBlobBuilder;
 
     function makeRequest(url) {
       try {
@@ -403,12 +398,12 @@ expanding it to download a set of files.
 
         postMessage('Got file entry.');
 
-        var bb = new BlobBuilder();
-        bb.append(makeRequest(data.url)); // Append the arrayBuffer XHR response.
+        var arrayBuffer = makeRequest(data.url);
+        var blob = new Blob([new Uint8Array(arrayBuffer)], {type: data.type});
 
         try {
           postMessage('Begin writing');
-          fileEntry.createWriter().write(bb.getBlob(data.type));
+          fileEntry.createWriter().write(blob);
           postMessage('Writing complete');
           postMessage(fileEntry.toURL());
         } catch (e) {
