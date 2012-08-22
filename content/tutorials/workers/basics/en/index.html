@@ -281,17 +281,16 @@ importScripts('script1.js', 'script2.js');
   <h2 id="toc-inlineworkers">Inline Workers</h2>
 
   <p>What if you want to create your worker script on the fly, or create a self-contained
-  page without having to create separate worker files? With the new <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#the-blobbuilder-interface"><code>BlobBuilder</code></a>
-  interface, you can "inline" your worker in the same HTML file as your main logic by creating a
-  <code>BlobBuilder</code> and appending the worker code as a string:</p>
+  page without having to create separate worker files? With <code>Blob()</code>,
+  you can "inline" your worker in the same HTML file as your main logic by creating
+  a URL handle to the worker code as a string:</p>
 <pre class="prettyprint">
-// Prefixed in Webkit, Chrome 12, and FF6: window.WebKitBlobBuilder, window.MozBlobBuilder
-var bb = new BlobBuilder();
-bb.append("onmessage = function(e) { postMessage('msg from worker'); }");
+window.URL = window.URL || window.webkiURL;
+
+var blob = new Blob(["onmessage = function(e) { postMessage('msg from worker'); }"]);
 
 // Obtain a blob URL reference to our worker 'file'.
-// Note: window.webkitURL.createObjectURL() in Chrome 10+.
-var blobURL = window.URL.createObjectURL(bb.getBlob());
+var blobURL = window.URL.createObjectURL(blob);
 
 var worker = new Worker(blobURL);
 worker.onmessage = function(e) {
@@ -343,6 +342,8 @@ window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Ch
   &lt;/script&gt;
 
   &lt;script&gt;
+    window.URL = window.URL || window.webkiURL;
+
     function log(msg) {
       // Use a fragment: browser will only render/reflow once.
       var fragment = document.createDocumentFragment();
@@ -352,11 +353,9 @@ window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Ch
       document.querySelector("#log").appendChild(fragment);
     }
 
-    var bb = new BlobBuilder();
-    bb.append(document.querySelector('#worker1').textContent);
+    var blob = new Blob([document.querySelector('#worker1').textContent]);
 
-    // Note: window.webkitURL.createObjectURL() in Chrome 10+.
-    var worker = new Worker(window.URL.createObjectURL(bb.getBlob()));
+    var worker = new Worker(window.URL.createObjectURL(blob));
     worker.onmessage = function(e) {
       log("Received: " + e.data);
     }
@@ -370,7 +369,7 @@ window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Ch
   It defines a script tag with <var>id="worker1"</var> and
   <var>type='javascript/worker'</var> (so the browser doesn't parse the JS). That code is extracted as a
   string using <code>document.querySelector('#worker1').textContent</code> and passed to
-  <code>BlobBuilder.append()</code>.</p>
+  <code>Blob()</code> to create the file.</p>
 
   <h3 id="toc-inlineworkers-loadingscripts">Loading External Scripts</h3>
 

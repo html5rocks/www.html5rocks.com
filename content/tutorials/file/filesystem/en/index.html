@@ -47,7 +47,7 @@
     <li>Reading and manipulating files:
       <code>File</code>/<code>Blob</code>, <code>FileList</code>, <code>FileReader</code></li>
     <li>Creating and writing:
-      <code>BlobBuilder</code>, <code>FileWriter</code></li>
+      <code>Blob()</code>, <code>FileWriter</code></li>
     <li>Directories and file system access:
       <code>DirectoryReader</code>, <code>FileEntry</code>/<code>DirectoryEntry</code>, <code>LocalFileSystem</code>
     </li>
@@ -300,9 +300,9 @@ function onInitFs(fs) {
       };
 
       // Create a new Blob and write it to log.txt.
-      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
-      bb.append('Lorem Ipsum');
-      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+      var blob = new Blob(['Lorem Ipsum'], {type: 'text/plain'});
+
+      <b>fileWriter.write</b>(blob);
 
     }, errorHandler);
 
@@ -335,9 +335,9 @@ function onInitFs(fs) {
       <b>fileWriter.seek(fileWriter.length); // Start write position at EOF.</b>
 
       // Create a new Blob and write it to log.txt.
-      var bb = new BlobBuilder(); // Note: window.WebKitBlobBuilder in Chrome 12.
-      bb.append('Hello World');
-      <b>fileWriter.write</b>(bb.getBlob('text/plain'));
+      var blob = new Blob(['Hello World'], {type: 'text/plain'});
+
+      <b>fileWriter.write</b>(blob);
 
     }, errorHandler);
 
@@ -366,7 +366,7 @@ document.querySelector('#myfile').onchange = function(e) {
 
       // Capture current iteration's file in local scope for the getFile() callback.
       (function(f) {
-        fs.root.getFile(<b>file.name</b>, {create: true, exclusive: true}, function(fileEntry) {
+        fs.root.getFile(<b>f.name</b>, {create: true, exclusive: true}, function(fileEntry) {
           fileEntry.createWriter(function(fileWriter) {
             <b>fileWriter.write(f);</b> // Note: write() can take a File or Blob object.
           }, errorHandler);
@@ -785,7 +785,6 @@ var url = 'filesystem:http://example.com/temporary/myfile.png';
   <ul>
     <li><a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem</a></li>
     <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html">FileWriter</a></li>
-    <li><a href="http://dev.w3.org/2009/dap/file-system/file-writer.html#idl-def-BlobBuilder">BlobBuilder</a></li>
     <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-filereader">FileReader</a></li>
     <li><a href="http://dev.w3.org/2006/webapi/FileAPI/">File</a></li>
     <li><a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob">Blob</a></li>

@@ -167,22 +167,17 @@ xhr.send();
   </dl>
 
   <p>With this new awesomeness, we can rework the previous example, but this time,
-  fetch the image as an <code>ArrayBuffer</code> instead of a string. Handing the
-  buffer over to the <code>BlobBuilder</code> API creates a <code>Blob</code>:</p>
+  fetch the image as an <code>Blob</code> instead of a string:</p>
 
   <pre class="prettyprint">
-BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/path/to/image.png', true);
-<b>xhr.responseType = 'arraybuffer';</b>
+<b>xhr.responseType = 'blob';</b>
 
 <b>xhr.onload</b> = function(e) {
   if (this.status == 200) {
-    var bb = new BlobBuilder();
-    bb.append(<b>this.response</b>); // Note: not xhr.responseText
-
-    var blob = bb.getBlob('image/png');
+    // Note: .response instead of .responseText
+    var blob = new Blob([this.response], {type: 'image/png'});
     ...
   }
 };
@@ -384,7 +379,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
   <p>We can also send <code>File</code> or <code>Blob</code> data using XHR.
   Keep in mind all <code>File</code>s are <code>Blob</code>s, so either works here.</p>
 
-  <p>This example creates a new text file from scratch using the <code>BlobBuilder</code> API
+  <p>This example creates a new text file from scratch using the <code>Blob()</code> constructor
   and uploads that <code>Blob</code> to the server. The code also sets up a handler
   to inform the user of the upload's progress:</p>
 
@@ -409,13 +404,7 @@ function upload(blobOrFile) {
   xhr.send(<b>blobOrFile</b>);
 }
 
-// Take care of vendor prefixes.
-BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
-var bb = new <b>BlobBuilder</b>();
-<b>bb.append</b>('hello world');
-
-upload(<b>bb.getBlob('text/plain')</b>);
+upload(<b>new Blob(['hello world'], {type: 'text/plain'})</b>);
 </pre>
 
   <h3 id="toc-send-arraybuffer">Uploading a chunk of bytes: xhr.send(ArrayBuffer)</h3>
@@ -496,8 +485,8 @@ xhr.send();
 
   <p>Let's say you have an image gallery and want to fetch a bunch
   of images then save them locally using the <a href="/tutorials/file/filesystem/">HTML5 File System</a>.
-  One way to accomplish this would be to request images as <code>ArrayBuffer</code>s,
-  build a <code>Blob</code> from the data, and write the blob using <code>FileWriter</code>:</p>
+  One way to accomplish this would be to request images as <code>Blob</code>s
+  and write them out using <code>FileWriter</code>:</p>
 
 <pre class="prettyprint">
 window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
@@ -508,7 +497,7 @@ function onError(e) {
 
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/path/to/image.png', true);
-<b>xhr.responseType = 'arraybuffer';</b>
+<b>xhr.responseType = 'blob';</b>
 
 <b>xhr.onload</b> = function(e) {
 
@@ -519,10 +508,9 @@ xhr.open('GET', '/path/to/image.png', true);
         writer.onwrite = function(e) { ... };
         writer.onerror = function(e) { ... };
 
-        <b>var bb = new BlobBuilder();</b>
-        <b>bb.append</b>(<b>xhr.response</b>);
+        var blob = new Blob([<b>xhr.response</b>], {type: 'image/png'});
 
-        <b>writer.write</b>(bb.getBlob('image/png'));
+        <b>writer.write</b>(blob);
 
       }, onError);
     }, onError);
@@ -544,9 +532,6 @@ xhr.send();
   used to get around Google App Engine's 32MB http request limit.</p>
 
 <pre class="prettyprint">
-window.BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder ||
-                     window.BlobBuilder;
-
 function upload(blobOrFile) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/server', true);
@@ -564,15 +549,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
   var end = BYTES_PER_CHUNK;
 
   while(start &lt; SIZE) {
-
-    // Note: blob.slice has changed semantics and been prefixed. See http://goo.gl/U9mE5.
-    if ('mozSlice' in blob) {
-      var chunk = blob.mozSlice(start, end);
-    } else {
-      var chunk = blob.webkitSlice(start, end);
-    }
-
-    upload(chunk);
+    upload(blob.slice(start, end));
 
     start = end;
     end = start + BYTES_PER_CHUNK;
@@ -641,8 +618,6 @@ function upload(blobOrFile) {
 }
 
 document.querySelector('#afile').addEventListener('change', function() {
-  window.BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
   var blob = this.files[0];
 
   const BYTES_PER_CHUNK = parseInt(document.querySelector('#numChunks').value);
@@ -657,16 +632,7 @@ document.querySelector('#afile').addEventListener('change', function() {
   var end = BYTES_PER_CHUNK;
 
   while(start < SIZE) {
-
-    // Note: blob.slice has changed semantics and been prefixed.
-    // See http://groups.google.com/a/chromium.org/group/chromium-apps/browse_thread/thread/5bd921ad25449471/40a69d12b69072ec
-    if ('mozSlice' in blob) {
-      var chunk = blob.mozSlice(start, end);
-    } else {
-      var chunk = blob.webkitSlice(start, end);
-    }
-
-    upload(chunk);
+    upload(blob.slice(start, end));
 
     start = end;
     end = start + BYTES_PER_CHUNK;
