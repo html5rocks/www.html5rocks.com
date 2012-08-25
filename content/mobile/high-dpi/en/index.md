@@ -513,7 +513,7 @@ attribute, it's possible to create [polyfills with
 JavaScript][srcset-polyfill].
 
 This polyfill comes with [unit tests][srcset-tests] to ensure that it's
-as close to the [specification][srcset] as possible. In addition, there
+as close to the [specification][srcset-spec] as possible. In addition, there
 are checks in place that prevent the polyfill from executing any code if
 srcset is implemented natively.
 
