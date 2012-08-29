@@ -28,7 +28,7 @@
   <p>
     The main difference with a desktop or a native environment is that browsers do not give access to the threading model
     and provide a single thread for everything accessing the user interface (i.e. the DOM). This means that all the
-    application logic accessing and modifying the user interface elements is always in the same thread, hence, the
+    application logic accessing and modifying the user interface elements is always in the same thread, hence the
     importance of keeping all the application work units as small and efficient as possible and taking advantage of any
     asynchronous capabilities the browser offers as much as possible. 
   </p>    
@@ -39,17 +39,14 @@
   <h2 id="toc-browserasync">Browser Asynchronous APIs</h2>
   
   <p>
-    Luckily, Browsers provide a number of asynchronous APIs such as the commonly used XHR (or 'AJAX') APIs, as well
-    as SQLite, HTML5 Web workers, and the HTML5 GeoLocation APIs to name a few. Even some DOM related actions are
-    exposed asynchronously such CSS3 animation via the transitionEnd events.     
+    Luckily, Browsers provide a number of asynchronous APIs such as the commonly used XHR (XMLHttpRequest or 'AJAX') APIs, as well
+    as IndexedDB, SQLite, HTML5 Web workers, and the HTML5 GeoLocation APIs to name a few. Even some DOM related actions are
+    exposed asynchronously, such CSS3 animation via the transitionEnd events.     
   </p>
   
   <p>
     The way browsers expose asynchronous programming to the application logic is via events or callbacks.     
-  </p>
-  
-  <p>
-    In event based asynchronous APIs, developers register an event handler for a given object 
+    In event-based asynchronous APIs, developers register an event handler for a given object 
     (e.g. HTML Element or other DOM objects) and then call the action. The browser will perform 
     the action usually in a different thread, and trigger the event in the main thread when appropriate.     
   </p>
@@ -93,7 +90,7 @@ flyingCarElemen.classList.add('makeItFly')
 </pre>
 
   <p>
-    Other browser APIs, such as SQLite and HTML5 Geolocation are callback based, meaning
+    Other browser APIs, such as SQLite and HTML5 Geolocation, are callback based, meaning
     that the developer passes a function as argument that will get called back by the
     underlying implementation with the corresponding resolution.     
   </p>
@@ -119,10 +116,10 @@ navigator.geolocation.getCurrentPosition(function(position){
 </section>
 
 <section>
-  <h2 id="toc-async-application">Making Application Asynchronous Ready</h2>
+  <h2 id="toc-async-application">Making Applications Asynchronous-Ready</h2>
   <p>
-    Beyond browser’s built-in asynchronous API, well architected applications should
-    expose their low level API in a asynchronous fashion as well, especially when they do any
+    Beyond the browser’s built-in asynchronous APIs, well architected applications should
+    expose their low level APIs in an asynchronous fashion as well, especially when they do any
     sort of I/O or computational heavy processing. For example, APIs to get data should
     be asynchronous, and should NOT look like this:    
   </p>
@@ -134,21 +131,21 @@ alert("We got data: " + data);
 </pre>
 
   <p>
-    This API design requires the getData to be blocking which will freeze the user
+    This API design requires the <b>getData()</b> to be blocking, which will freeze the user
     interface until the data is fetched. If the data is local in the JavaScript context
     then this might not be an issue, however if the data needs to be fetched from the
-    network or even locally in a sqlite or index store this could have dramatic impact on
+    network or even locally in a SQLite or index store this could have dramatic impact on
     the user experience.    
   </p>  
   
   <p>
     The right design is to proactively make all application API that could take some time
-    to process, asynchronous from the beginning as retrofitting synchrounous application code
-    to be asynchrounous can be a daunting task.    
+    to process, asynchronous from the beginning as retrofitting synchronous application code
+    to be asynchronous can be a daunting task.    
   </p>  
   
   <p>
-    For example the simplistic getData API would become something like:
+    For example the simplistic getData() API would become something like:
   </p>
   
 <pre class="prettyprint lang-js">
@@ -159,8 +156,8 @@ getData(function(data){
 
   <p>
     The nice thing about this approach is that this forces the application UI code to be
-    asynchronous centric from the beginning and allows the underlying APIs to decide if
-    it needs to be asynchronous or not in a later stage. 
+    asynchronous-centric from the beginning and allows the underlying APIs to decide if
+    they need to be asynchronous or not in a later stage. 
   </p>  
   
   <p>
@@ -179,11 +176,11 @@ getData(function(data){
     One catch of asynchronous programing is that the traditional try/catch way to handle
     failures does not really work anymore, as errors usually happen in another thread.
     Consequently, the callee needs to have a structured way to notify the caller when
-    something went wrong during the processing.     
+    something goes wrong during the processing.     
   </p>
   
   <p>
-    In an event based asynchronous API this is often accomplished by the application code
+    In an event-based asynchronous API this is often accomplished by the application code
     querying the event or object when receiving the event. For callback based
     asynchronous APIs, the best practice is to have a second argument that takes a
     function that would be called in case of a failure with the appropriate error
@@ -277,12 +274,9 @@ dataPromise.done(function(data){
   <p>
     Here, we get the <em>dataPromise</em> object first and then call the <em>.done</em> method to register
     a function we want to get called back when the data gets resolved. We can also call
-    the <em>.fail</em> method to handle the eventual failure.      
-  </p>
-   
-  <p>
-    Note that we can have as many <em>.done</em> or <em>.fail</em> calls as we need since the underlying
-    Promise implementation (jQuery code) will handle the registration and callbacks.      
+    the <em>.fail</em> method to handle the eventual failure.  Note that we can have as many <em>.done</em>
+    or <em>.fail</em> calls as we need since the underlying Promise implementation (jQuery code) will 
+    handle the registration and callbacks.      
   </p>
   
   <p>
@@ -350,18 +344,68 @@ function getData(){
     and other promise functions (e.g., then and pipe) and calling deferred.reject will 
     call all the fail() functions. 
   </p>  
-    
+</section>
+<section>
+  <h2 id="toc-use-cases">Use Cases</h2>
+
+  <p>
+    Here are some good use cases where Deferred can be very useful:
+  </p>
+
+  <p>
+    <b>Data Access:</b> Exposing data access APIs as $.Deferred is often the right design. 
+    This is obvious for remote data, as synchronous remote calls would completely ruin the 
+    user experience, but is also true for local data as often the lower level APIs (e.g., 
+    SQLite and IndexedDB) are asynchronous themselves. The Deferred API''s $.when and .pipe 
+    are extremely powerful to synchronize and chain asynchronous sub-queries.
+  </p>
+  <p>
+    <b>UI Animations:</b> Orchestrating one or more animations with transitionEnd events 
+    can be quite tedious, especially when the animations are a mixed of CSS3 animation 
+    and JavaScript (as it is often the case). Wrapping the animation functions as Deferred 
+    can significantly reduce the code complexity and improve flexibility. Even a simple 
+    generic wrapper function like cssAnimation(className) that will return the Promise 
+    object that gets resolved on transitionEnd could be of a great help.
+  </p>
+
+  <p>
+    <b>UI Component Display:</b> This is a little bit more advanced, but advanced HTML 
+    Component frameworks should use the Deferred as well. Without going too much into 
+    the details (this will be the subject of another post), when an application needs to 
+    display different parts of the user interface, having the lifecycle of those 
+    components encapsulated in Deferred allows greater control of the timing. 
+  </p>
+
+  <p>
+    <b>Any browser asynchronous API:</b> For normalization purpose, it is often a good 
+    idea to wrap the browser API calls as Deferred. This takes literally 4 to 5 lines 
+    of code each, but will greatly simplify any application code. As show in the above 
+    getData/getLocation pseudo code, this allows the applications code to have one 
+    asynchronous model across all types of API (browsers, application specifics, and 
+    compound).
+  </p>
+
+  <p>
+    <b>Caching:</b> This is kind of a side benefit, but can be very useful in some 
+    occasion. Because the Promise APIs (e.g., .done(..) and .fail(..)) can be called 
+    before or after the asynchronous call is performed, the Deferred object can be 
+    used as a caching handle for an asynchronous call. For example, a CacheManager 
+    could just keep track of Deferred for given requests, and return the Promise of 
+    the matching Deferred if it has not be invalidated. The beauty is that the caller 
+    does not have to know if the call has already been resolved or is in the process 
+    of being resolved, its callback function will get called exactly the same way. 
+  </p>
 </section>
 
 <section>
   <h2 id="toc-conclusion">Conclusion</h2>
   
   <p>
-    While the $.Deferred concept is simple, it can take time to get a good handle on.
+    While the $.Deferred concept is simple, it can take time to get a good handle on it.
     However, given the nature of the browser environment, mastering asynchronous
     programing in JavaScript is a must for any serious HTML5 application developer and
-    the Promise pattern (and the jQuery implementation) are tremendous tools to make
-    asynchronous programming reliable and powerful.    
+    the Promise pattern (and the jQuery implementation) are tremendous tools 
+    to make asynchronous programming reliable and powerful.    
   </p>  
 </section>
 
