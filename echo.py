@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2011 Google Inc.
+# Copyright 2012 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,22 +17,17 @@
 __author__ = ('ericbidelman@html5rocks.com (Eric Bidelman)')
 
 
-# Google App Engine Imports
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
+import webapp2
+import settings
 
-class MainHandler(webapp.RequestHandler):
+
+class MainHandler(webapp2.RequestHandler):
   def get(self):
     self.response.out.write('Nothing to see here.')
 
   def post(self):
     self.response.out.write(self.request.body)
 
-def main():
-  application = webapp.WSGIApplication([
-    ('/echoserver', MainHandler)
-  ], debug=False)
-  run_wsgi_app(application)
 
-if __name__ == '__main__':
-  main()
+routes = [('/echoserver', MainHandler)]
+app = webapp2.WSGIApplication(routes, debug=settings.DEBUG)
