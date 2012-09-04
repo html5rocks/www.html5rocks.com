@@ -174,14 +174,17 @@ class TutorialForm(forms.Form): #djangoforms.ModelForm):
         self.fields[field].widget.attrs['required'] = 'required'
 
 
-class LiveData(db.Model):
+class LiveData(DictModel):
   """GDU metadata for the site."""
 
   gdl_page_url = db.StringProperty()
   updated = db.DateTimeProperty(auto_now=True)
 
 
-class LiveForm(forms.Form): #djangoforms.ModelForm):
+class LiveForm(forms.Form):
 
-  gdl_page_url = forms.CharField(label='GDL Page URL',
+  gdl_page_url = forms.CharField(required=False, label='GDL Page URL',
       help_text='<b>NOTE: this will put a banner across the site when set.</b><br>Ex: https://developers.google.com/live/shows/aVFdhKIDDA/')
+
+  def __init__(self, *args, **keyargs):
+    super(LiveForm, self).__init__(*args, **keyargs)

@@ -580,7 +580,7 @@ class DBHandler(ContentHandler):
 
       entity = models.LiveData.all().get()
       if entity:
-        live_form = models.LiveForm(instance=entity, initial={
+        live_form = models.LiveForm(entity.to_dict(), initial={
             'gdl_page_url': entity.gdl_page_url
             })
       else:
@@ -687,6 +687,7 @@ class DBHandler(ContentHandler):
       
       live_data.gdl_page_url = self.request.get('gdl_page_url') or None
 
+      #if live_data.gdl_page_url is not None:
       live_data.put()
 
       return self.redirect('/database/live')
