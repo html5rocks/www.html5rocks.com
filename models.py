@@ -1,6 +1,6 @@
 from google.appengine.api import memcache
 from google.appengine.ext import db
-from google.appengine.ext.db import djangoforms
+#from google.appengine.ext.db import djangoforms
 from django import forms
 
 import settings
@@ -49,17 +49,25 @@ class Author(DictModel):
   lanyrd = db.BooleanProperty(default=False)
 
 
-class AuthorForm(djangoforms.ModelForm):
-  class Meta:
-    model = Author
-    # exlucde geo_location field from form. Handle lat/lon separately
-    exclude = ['geo_location']
+class AuthorForm(forms.Form):
+  given_name = forms.CharField(required=True)
+  family_name = forms.CharField(required=True)
+  org = forms.CharField(required=True)
+  unit = forms.CharField(required=True)
+  city = forms.CharField(required=False)
+  state = forms.CharField(required=False)
+  country = forms.CharField(required=True)
+  homepage = forms.URLField(required=False)
+  google_account = forms.CharField(required=False)
+  twitter_account = forms.CharField(required=False)
+  email = forms.EmailField(required=False)
+  lanyrd = forms.BooleanField(required=False, initial=False)
 
   def __init__(self, *args, **keyargs):
     super(AuthorForm, self).__init__(*args, **keyargs)
 
-    for field in self.fields:
-      if (self.Meta.model.properties()[field].required):
+    for field, val in self.fields.iteritems():
+      if (val.required):
         self.fields[field].widget.attrs['required'] = 'required'
 
 
@@ -127,7 +135,7 @@ class Resource(DictModel):
     return tutorials_by_author
 
 
-class TutorialForm(djangoforms.ModelForm):
+class TutorialForm(forms.Form): #djangoforms.ModelForm):
   import datetime
 
   class Meta:
@@ -173,7 +181,7 @@ class LiveData(db.Model):
   updated = db.DateTimeProperty(auto_now=True)
 
 
-class LiveForm(djangoforms.ModelForm):
+class LiveForm(forms.Form): #djangoforms.ModelForm):
 
   gdl_page_url = forms.CharField(label='GDL Page URL',
       help_text='<b>NOTE: this will put a banner across the site when set.</b><br>Ex: https://developers.google.com/live/shows/aVFdhKIDDA/')

@@ -716,8 +716,19 @@ class DBHandler(ContentHandler):
 
         author.put()
 
-      except db.Error:
-        pass
+      except db.Error, e:
+        # TODO: Doesn't repopulate lat/lng or return errors for it.
+        form = models.AuthorForm(self.request.POST)
+        if not form.is_valid():
+          sorted_profiles = models.get_sorted_profiles(update_cache=True)
+          template_data = {
+            'sorted_profiles': sorted_profiles,
+            'profile_amount': len(sorted_profiles),
+            'author_form': form
+          }
+          return self.render(data=template_data,
+                             template_path='database/author_new.html',
+                             relpath=relpath)
       else:
         self.redirect('/database/author')
 
