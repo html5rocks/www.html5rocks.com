@@ -22,7 +22,6 @@ import glob
 import logging
 import os
 import re
-import simplejson
 import urllib2
 import webapp2
 import yaml
@@ -37,6 +36,7 @@ from html5lib import treebuilders, treewalkers
 
 from django.template.loader import render_to_string
 from django.utils import feedgenerator
+from django.utils import simplejson
 from django.utils import translation
 from django.utils.translation import ugettext as _
 
