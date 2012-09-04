@@ -1,9 +1,17 @@
 application: html5rocks-hrd
 version: master
-runtime: python
+runtime: python27
+threadsafe: yes
 api_version: 1
 
-default_expiration: "30d"
+env_variables:
+  DJANGO_SETTINGS_MODULE: 'settings'
+
+libraries:
+- name: webapp2
+  version: "latest"
+- name: django
+  version: "latest" #version: "1.3"
 
 inbound_services:
 - warmup
@@ -15,6 +23,8 @@ pagespeed:
   - CollapseWhitespace
   - ImageAddDimensions
   - RemoveComments
+
+default_expiration: "30d"
 
 handlers:
 
@@ -174,20 +184,33 @@ handlers:
   static_files: static/robots.txt
   upload: static/robots.txt
 
-- url: /database/live
-  script: main.py
-  login: required
+# - url: /database/live
+#   script: main.py
+#   login: required
 
-- url: /database/.*
-  script: main.py
-  login: admin
+# - url: /database/.*
+#   script: main.py
+#   login: admin
 
-- url: /admin/.*
-  script: $PYTHON_LIB/google/appengine/ext/admin
-  login: admin
+# - url: /admin/.*
+#   script: $PYTHON_LIB/google/appengine/ext/admin
+#   login: admin
 
-- url: /echoserver
-  script: echo.py
+# - url: /echoserver
+#   script: echo.py
 
 - url: .*
-  script: main.py
+  script: main.app
+
+
+skip_files:
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?index\.yaml
+- ^(.*/)?index\.yml
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?.*\.scss$
+- ^(.*/)?.*\.psd$

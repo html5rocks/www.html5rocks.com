@@ -1,4 +1,5 @@
 {% extends "tutorial.html" %}
+{% load verbatim from templatefilters %}
 
 {% block html5badge %}
 <img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="This article is powered by HTML5 Offline & Storage" title="This article is powered by HTML5 Offline & Storage" />
@@ -40,7 +41,7 @@
 &lt;div id="displayEmployee">&lt;/div>
 </pre>
 
-<p>Not a lot, right? There are three main aspects to this UI that we care about. First is the field, “name” that will be used for autocomplete. It loads disabled and will be enabled later via JavaScript. The span next to it is used during the initial seed to provide updates to the user. Finally, the div with the id displayEmployee will be used when you select an employee from the autosuggest.
+<p>Not a lot, right? There are three main aspects to this UI that we care about. First is the field, "name" that will be used for autocomplete. It loads disabled and will be enabled later via JavaScript. The span next to it is used during the initial seed to provide updates to the user. Finally, the div with the id displayEmployee will be used when you select an employee from the autosuggest.
 
 <p>Now let's take a look at the JavaScript. There's a lot to digest here so we'll take it step by step. The full code will be available at the end so you can see it in it's entirety.
 
@@ -63,20 +64,22 @@ var template;
 
 <pre class="prettyprint">
 $(document).ready(function() {
-console.log("Startup...");
+  console.log("Startup...");
+  ...
+});
 </pre>
 
 <p>Our demo makes use of <a href="http://handlebarsjs.com/">Handlebars.js</a> to display the employee details. That isn't used till later, but we can go ahead and compile our template now and get it out of the way. We've got a script block set up as a Handlebars-recognized type. It isn't terribly fancy, but does make it easier to display the dynamic HTML.
 
-<pre class="prettyprint">
 {% verbatim %}
+<pre class="prettyprint">
 &lt;script id="employeeTemplate" type="text/x-handlerbars-template">
 &lt;h2>{{lastname}}, {{firstname}}&lt;/h2>
 Department: {{department}}&lt;br/>
 Email: &lt;a href='mailto:{{email}}'>{{email}}&lt;/a>
 &lt;/script>
-{% endverbatim %}
 </pre>
+{% endverbatim %}
 
 <p>This is then compiled back in our JavaScript like so:
 

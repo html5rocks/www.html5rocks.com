@@ -12,18 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import os
-import logging
 import time
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
 
-import django.template
+from django import template
 
-register = webapp.template.create_template_register()
+register = template.Library()
 
-class TOCNode(django.template.Node):
+
+class TOCNode(template.Node):
   def render(self, context):
     if not context.has_key('toc'):
       return ''
@@ -44,16 +40,15 @@ class TOCNode(django.template.Node):
     return output
 
 
+@register.tag(name='toc')
 def do_toc(parser, token):
   return TOCNode()
 
-register.tag('toc', do_toc)
 
-
-class ProfileLink(django.template.Node):
+class ProfileLink(template.Node):
   def __init__(self, ids):
     self.ids = ids
-    self.profiles = [] #common.get_profiles()
+    self.profiles = []
 
   def render(self, context):
     names = []
@@ -67,12 +62,11 @@ class ProfileLink(django.template.Node):
     return ',<br> '.join(names)
 
 
+@register.tag(name='profilelinks')
 def do_profile_links(parser, token):
   ids = token.split_contents()
   ids.pop(0)  # Remove tag name.
   return ProfileLink(ids)
-
-register.tag('profilelinks', do_profile_links)
 
 
 class ProfileLinkSimple(ProfileLink):
@@ -91,15 +85,14 @@ class ProfileLinkSimple(ProfileLink):
     return ', '.join(names)
 
 
+@register.tag(name='simpleprofilelink')
 def do_simple_profile_link(parser, token):
   ids = token.split_contents()
   ids.pop(0)  # Remove tag name.
   return ProfileLinkSimple(ids)
 
-register.tag('simpleprofilelink', do_simple_profile_link)
 
-
-class MixinAnnotation(django.template.Node):
+class MixinAnnotation(template.Node):
 
   def __init__(self, props):
     self.prop = props[0]
@@ -131,13 +124,11 @@ class MixinAnnotation(django.template.Node):
                                                          prefix_list, tooltip_id,
                                                          self.prop, self.val))
 
-
+@register.tag(name='mixin')
 def do_mixin_annotation(parser, token):
   props = token.split_contents()
   props.pop(0)  # Remove tag name
   return MixinAnnotation(props)
-
-register.tag('mixin', do_mixin_annotation)
 
 
 """
@@ -153,7 +144,7 @@ blocks of jQuery templates and this will try its best
 to output the contents with no changes.
 """
 
-class VerbatimNode(django.template.Node):
+class VerbatimNode(template.Node):
 
   def __init__(self, text):
     self.text = text
@@ -169,14 +160,14 @@ def verbatim(parser, token):
     token = parser.tokens.pop(0)
     if token.contents == 'endverbatim':
       break
-    if token.token_type == django.template.TOKEN_VAR:
+    if token.token_type == template.TOKEN_VAR:
       text.append('{{')
-    elif token.token_type == django.template.TOKEN_BLOCK:
+    elif token.token_type == template.TOKEN_BLOCK:
       text.append('{%')
     text.append(token.contents)
-    if token.token_type == django.template.TOKEN_VAR:
+    if token.token_type == template.TOKEN_VAR:
       text.append('}}')
-    elif token.token_type == django.template.TOKEN_BLOCK:
+    elif token.token_type == template.TOKEN_BLOCK:
       text.append('%}')
 
   return VerbatimNode(''.join(text))

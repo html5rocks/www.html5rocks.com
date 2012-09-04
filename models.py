@@ -3,20 +3,20 @@ from google.appengine.ext import db
 from google.appengine.ext.db import djangoforms
 from django import forms
 
-import common
+import settings
 
 def get_profiles(update_cache=False):
-  profiles = memcache.get('%s|profiles' % (common.MEMCACHE_KEY_PREFIX))
+  profiles = memcache.get('%s|profiles' % (settings.MEMCACHE_KEY_PREFIX))
   if profiles is None or update_cache:
     profiles = {}
-    authors = Author.all().fetch(limit=common.MAX_FETCH_LIMIT)
+    authors = Author.all().fetch(limit=settings.MAX_FETCH_LIMIT)
 
     for author in authors:
       author_id = author.key().name()
       profiles[author_id] = author.to_dict()
       profiles[author_id]['id'] = author_id
 
-    memcache.set('%s|profiles' % (common.MEMCACHE_KEY_PREFIX), profiles)
+    memcache.set('%s|profiles' % (settings.MEMCACHE_KEY_PREFIX), profiles)
 
   return profiles
 
@@ -81,9 +81,9 @@ class Resource(DictModel):
 
   @classmethod
   def get_all(self, order=None, limit=None, qfilter=None):
-    limit = limit or common.MAX_FETCH_LIMIT
+    limit = limit or settings.MAX_FETCH_LIMIT
 
-    key = '%s|tutorials' % (common.MEMCACHE_KEY_PREFIX,)
+    key = '%s|tutorials' % (settings.MEMCACHE_KEY_PREFIX,)
 
     if order is not None:
       key += '|%s' % (order,)
@@ -108,7 +108,7 @@ class Resource(DictModel):
   @classmethod
   def get_tutorials_by_author(self, author_id):
     tutorials_by_author = memcache.get(
-        '%s|tutorials_by|%s' % (common.MEMCACHE_KEY_PREFIX, author_id))
+        '%s|tutorials_by|%s' % (settings.MEMCACHE_KEY_PREFIX, author_id))
     if tutorials_by_author is None:
       tutorials_by_author1 = Author.get_by_key_name(author_id).author_one_set
       tutorials_by_author2 = Author.get_by_key_name(author_id).author_two_set
@@ -121,7 +121,7 @@ class Resource(DictModel):
       tutorials_by_author.sort(key=lambda x: x.publication_date, reverse=True)
 
       memcache.set(
-          '%s|tutorials_by|%s' % (common.MEMCACHE_KEY_PREFIX, author_id),
+          '%s|tutorials_by|%s' % (settings.MEMCACHE_KEY_PREFIX, author_id),
           tutorials_by_author)
 
     return tutorials_by_author
