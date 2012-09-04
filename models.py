@@ -67,7 +67,7 @@ class AuthorForm(forms.Form):
     super(AuthorForm, self).__init__(*args, **keyargs)
 
     for field, val in self.fields.iteritems():
-      if (val.required):
+      if val.required:
         self.fields[field].widget.attrs['required'] = 'required'
 
 
@@ -135,42 +135,44 @@ class Resource(DictModel):
     return tutorials_by_author
 
 
-class TutorialForm(forms.Form): #djangoforms.ModelForm):
+class TutorialForm(forms.Form):
   import datetime
 
-  class Meta:
-    model = Resource
-    #exclude = ['update_date']
-    #fields = ['title', 'url', 'author', 'description', 'tags']
+  title = forms.CharField(required=True)
+
+  description = forms.CharField(
+      widget=forms.Textarea(attrs={'required': 'required', 'rows': 5, 'cols': 20}),
+      help_text=('Description for this resource. If tutorial, a summary of the '
+                 'tutorial. <br>Can include markup.'))
 
   sorted_profiles = get_sorted_profiles(update_cache=True)
   author = forms.ChoiceField(choices=[(p['id'],
       '%s %s' % (p['given_name'], p['family_name'])) for p in sorted_profiles])
   second_author = author
 
-  browsers = ['Chrome', 'FF', 'Safari', 'Opera', 'IE']
-  browser_support = forms.MultipleChoiceField(
-      widget=forms.CheckboxSelectMultiple, choices=[(b,b) for b in browsers])
-
-  tags = forms.CharField(
-      help_text='Comma separated list (e.g. offline, performance, demo, ...)')
-  description = forms.CharField(
-      widget=forms.Textarea(attrs={'rows': 5, 'cols': 20}),
-      help_text=('Description for this resource. If tutorial, a summary of the '
-                 'tutorial. <br>Can include markup.'))
-  publication_date = forms.DateField(label='Publish date',
-                                     initial=datetime.date.today)
-  update_date = forms.DateField(label='Updated date')#,initial=datetime.date.today)
   url = forms.CharField(label='URL',
       help_text='An abs. or relative url (e.g. /tutorials/feature/something)')
   social_url = forms.CharField(label='Social URL',
-      help_text='A relative URL that should be used for social widgets (G+)')
+      help_text='A relative URL that should be used for social widgets (G+)', required=False)
+
+  browsers = ['Chrome', 'FF', 'Safari', 'Opera', 'IE']
+  browser_support = forms.MultipleChoiceField(
+      widget=forms.CheckboxSelectMultiple, choices=[(b,b) for b in browsers], required=False)
+
+  publication_date = forms.DateField(label='Publish date',
+                                     initial=datetime.date.today)
+  update_date = forms.DateField(label='Updated date', required=False)#,initial=datetime.date.today)
+
+  tags = forms.CharField(
+      help_text='Comma separated list (e.g. offline, performance, demo, ...)')
+
+  draft = forms.BooleanField(required=False, initial=True)
 
   def __init__(self, *args, **keyargs):
     super(TutorialForm, self).__init__(*args, **keyargs)
 
-    for field in self.fields:
-      if self.Meta.model.properties()[field].required and field != 'browser_support':
+    for field, val in self.fields.iteritems():
+      if val.required and field != 'browser_support':
         self.fields[field].widget.attrs['required'] = 'required'
 
 

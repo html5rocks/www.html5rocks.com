@@ -656,12 +656,13 @@ class DBHandler(ContentHandler):
             if len(b) == 2:
               browser_support[browser_support.index(b)] = b.upper()
 
-          tutorial_form = models.TutorialForm(instance=post, initial={
-              'author': author_id,
-              'second_author': second_author_id or author_id,
-              'browser_support': browser_support,
-              'tags': ', '.join(post.tags)
-          })
+          form_data = post.to_dict()
+          form_data['tags'] = ', '.join(post.tags)
+          form_data['author'] = author_id
+          form_data['second_author'] = second_author_id or author_id
+          form_data['browser_support'] = browser_support
+
+          tutorial_form = models.TutorialForm(form_data)
 
       template_data = {
         'tutorial_form': tutorial_form,
