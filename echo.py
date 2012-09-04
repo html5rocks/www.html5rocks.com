@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-__author__ = ('ericbidelman@html5rocks.com (Eric Bidelman)')
+__author__ = 'ericbidelman@html5rocks.com (Eric Bidelman)'
 
 
 import webapp2

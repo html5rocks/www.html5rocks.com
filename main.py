@@ -88,7 +88,7 @@ class ContentHandler(webapp2.RequestHandler):
     return browser.find('Android') != -1 or browser.find('iPhone') != -1
 
   def get_toc(self, path):
-    # Only have TOC on tutorial pages.
+    # Only have TOC on tutorial pages. Don't do work for others.
     if not (re.search('/tutorials', path) or re.search('/mobile', path)):
       return ''
 
@@ -936,5 +936,5 @@ routes = [
 
 app = webapp2.WSGIApplication(routes, debug=settings.DEBUG)
 app.error_handlers[404] = handle_404
-if settings.PROD and settings.DEBUG:
+if settings.PROD and not settings.DEBUG:
   app.error_handlers[500] = handle_500
