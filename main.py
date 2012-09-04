@@ -22,47 +22,29 @@ import glob
 import logging
 import os
 import re
+import simplejson
 import urllib2
 import webapp2
 import yaml
 
+# App libs.
 import settings
 import models
 
 # Libraries
 import html5lib
-from html5lib import treebuilders, treewalkers, serializer
-from html5lib.filters import sanitizer
+from html5lib import treebuilders, treewalkers
 
-from django import http
-from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils import feedgenerator
-from django.utils import simplejson
 from django.utils import translation
 from django.utils.translation import ugettext as _
 
 # Google App Engine Imports
-from google.appengine.api import datastore_errors
+#from google.appengine.api import datastore_errors
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.ext import db
-#from google.appengine.ext import webapp
-#from google.appengine.ext.webapp import template
-#from google.appengine.ext.webapp.util import run_wsgi_app
-
-from django.template.loader import render_to_string
-
-#template.register_template_library('templatetags.templatefilters')
-
-
-# class LoggingHandler(webapp2.RequestHandler):
-
-#   def __init__(self, request, response):
-#     self.initialize(request, response)
-
-#     # Settings can't be global in python 2.7 env.
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 
 class ContentHandler(webapp2.RequestHandler):
@@ -313,9 +295,9 @@ class ContentHandler(webapp2.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business'])):
-      path = os.path.join(self.BASEDIR, 'content', relpath, 'index.html')
+      path = os.path.join('content', relpath, 'index.html')
     else:
-      path = os.path.join(self.BASEDIR, 'content', relpath)
+      path = os.path.join('content', relpath)
 
     # Render the .html page if it exists. Otherwise, check that the Atom feed
     # the user is requesting has a corresponding .html page that exists.
@@ -357,7 +339,7 @@ class ContentHandler(webapp2.RequestHandler):
       #                 ...
       #
       # So, to determine if an HTML page exists for the requested language
-      # `split` the file's path, add in the locale, and check existance:
+      # `split` the file's path, add in the locale, and check existence:
       logging.info('Building request for `%s` in locale `%s`', path, locale)
       (dir, filename) = os.path.split(path)
       if os.path.isfile(os.path.join(dir, locale, filename)):
@@ -490,16 +472,14 @@ class ContentHandler(webapp2.RequestHandler):
       self.render(data=data, template_path=path + '.html', relpath=relpath)
 
     else:
-      self.render(status=404, message='Page Not Found',
-                  template_path=os.path.join(self.BASEDIR, 'templates/404.html'))
+      self.render(status=404, message='Page Not Found', template_path='404.html')
 
   def handle_exception(self, exception, debug_mode):
     if debug_mode:
       super(ContentHandler, self).handle_exception(exception, debug_mode)
     else:
       # Display a generic 500 error page.
-      self.render(status=500, message='Server Error',
-                  template_path=os.path.join(self.BASEDIR, 'templates/500.html'))
+      self.render(status=500, message='Server Error', template_path='500.html')
 
 
 class DBHandler(ContentHandler):
