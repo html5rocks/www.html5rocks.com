@@ -173,15 +173,12 @@ class ContentHandler(webapp2.RequestHandler):
     logging.info("path after removing lang: %s" % path_no_lang)
 
     pagename = ''
-    if (path_no_lang == ''):
+    if path_no_lang == '':
       pagename = 'home'
     else:
       pagename = re.sub('\/', '-', path_no_lang)
       pagename = re.sub('/$|-$', '', pagename)
       pagename = re.sub('^-', '', pagename)
-
-
-    logging.info(template_path)
 
     # Add template data to every request.
     template_data = {
@@ -217,12 +214,11 @@ class ContentHandler(webapp2.RequestHandler):
     # Show banner if we have a URL and are under 60 minutes since it was saved.
     if (live_data and
         (datetime.datetime.now() - live_data.updated).seconds / 60 < 60):
-        template_data['gdl_page_url'] = live_data.gdl_page_url
+      template_data['gdl_page_url'] = live_data.gdl_page_url
 
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
     self.response.headers.add_header('X-UA-Compatible', 'IE=Edge,chrome=1')
-    #self.response.out.write(template.render(template_path, template_data))
     self.response.out.write(render_to_string(template_path, template_data))
 
   def render_atom_feed(self, template_path, data):
@@ -262,17 +258,13 @@ class ContentHandler(webapp2.RequestHandler):
 
     self._set_cache_param()
 
-    # Handle bug redirects before anything else, as it's trivial:
-    if (relpath == 'i18n-bug'):
-      return self.redirect(("http://code.google.com/p/html5rocks/issues/"
-                            "entry?template=Bug%20in%20i18n/l10n"))
-    if (relpath == 'new-bug'):
-      return self.redirect(("http://code.google.com/p/html5rocks/issues/"
-                            "entry?template=Defect%20report%20from%20user"))
+    # Handle bug redirects before anything else, as it's trivial.
+    if relpath == 'new-bug':
+      return self.redirect('https://github.com/html5rocks/www.html5rocks.com/issues/new')
 
     # Handle humans before locale, to prevent redirect to /en/
     # (but still ensure it's dynamic, ie we can't just redirect to a static url)
-    if (relpath == 'humans.txt'):
+    if relpath == 'humans.txt':
       self.response.headers['Content-Type'] = 'text/plain'
       sorted_profiles = models.get_sorted_profiles()
       return self.render(data={'sorted_profiles': sorted_profiles,
