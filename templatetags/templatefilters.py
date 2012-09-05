@@ -38,7 +38,7 @@ class TOCNode(django.template.Node):
       else:
         output += "</li>"
       level = entry['level']
-      output += "<li><a href='#%s' onclick='$.scrollTo(\"#%s\", 800, {offset: {top: -35}})'>%s</a>" % (entry['id'], entry['id'], entry['text'])
+      output += "<li><a href='#%s' onclick='$.scrollTo(\"#%s\", 800, {offset: {top: -35}})'>%s</a>" % (entry['id'], entry['id'], entry.get('text', ''))
 
     output += "</li></ul>" * level
     return output
