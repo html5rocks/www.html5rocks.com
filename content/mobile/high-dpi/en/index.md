@@ -22,13 +22,16 @@ future.
 Before opening this can of worms, remember that the web has many
 powerful technologies that are largely resolution- and DPI-independent.
 Specifically, text, SVG and much of CSS will "just work" because of the
-automatic pixel scaling feature of the web (via `devicePixelRatio`).
+automatic pixel scaling feature of the web (via
+[devicePixelRatio][dpr-intro]).
 
 That said, you can't always avoid raster images. For example, you may be
 given assets that would be quite hard to replicate in pure SVG/CSS, or
 you are dealing with a photograph. While you could convert the image
 into SVG automatically, vectorizing photographs makes little sense
 because scaled-up versions usually don't look good.
+
+[dpr-intro]: http://www.quirksmode.org/blog/archives/2012/06/devicepixelrati.html
 
 <h2 id="toc-bg">Background</h2>
 
@@ -129,15 +132,22 @@ is the following:
 
 Historically, device vendors have tended to round `devicePixelRatios`
 (DPRs). Apple's iPhone and iPad report DPR of 1, and their Retina
-equivalents report 2. Relatively round ratios can be better because they
-may lead to fewer [sub-pixel artifacts][sub-pixel]. However, the reality
-of the device landscape is much more varied, and Android phones often
-have DPRs of 1.5. The Nexus 7 tablet has a DPR of ~1.33, which was
-arrived at by a calculation similar to the one above. Expect to see
-more devices with variable DPRs in the future. Because of this, you
-should never assume that your clients will have integer DPRs.
+equivalents report 2. The [CSS specification][round-dpr] recommends that
+
+> the pixel unit refer to the whole number of device pixels that best
+> approximates the reference pixel.
+
+One reason why round ratios can be better is because they may lead to
+fewer [sub-pixel artifacts][sub-pixel].
+
+However, the reality of the device landscape is much more varied, and
+Android phones often have DPRs of 1.5. The Nexus 7 tablet has a DPR of
+~1.33, which was arrived at by a calculation similar to the one above.
+Expect to see more devices with variable DPRs in the future. Because of
+this, you should never assume that your clients will have integer DPRs.
 
 [sub-pixel]: http://ejohn.org/blog/sub-pixel-problems-in-css/
+[round-dpr]: http://www.w3.org/TR/CSS21/syndata.html#length-units
 
 <h2 id="toc-tech-overview">Overview of HiDPI image techniques</h2>
 
