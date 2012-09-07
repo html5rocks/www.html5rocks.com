@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2010 Google Inc.
+# Copyright 2012 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License")
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,7 @@
 # limitations under the License.
 #
 
-__author__ = ('kurrik@html5rocks.com (Arne Kurrik) ',
-              'ericbidelman@html5rocks.com (Eric Bidelman)')
+__author__ = 'ericbidelman@html5rocks.com (Eric Bidelman)'
 
 # Standard Imports
 import datetime
@@ -24,44 +23,33 @@ import logging
 import os
 import re
 import urllib2
+import webapp2
 import yaml
 
-# Use Django 1.2.
-from google.appengine.dist import use_library
-use_library('django', '1.2')
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
-
-import common
+# App libs.
+import settings
 import models
 
 # Libraries
 import html5lib
-from html5lib import treebuilders, treewalkers, serializer
-from html5lib.filters import sanitizer
+from html5lib import treebuilders, treewalkers
 
-from django import http
-from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils import feedgenerator
 from django.utils import simplejson
 from django.utils import translation
 from django.utils.translation import ugettext as _
 
 # Google App Engine Imports
-from google.appengine.api import datastore_errors
+#from google.appengine.api import datastore_errors
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
 
-template.register_template_library('templatetags.templatefilters')
 
-BASEDIR = os.path.dirname(__file__)
+class ContentHandler(webapp2.RequestHandler):
 
-class ContentHandler(webapp.RequestHandler):
-
+  BASEDIR = os.path.dirname(__file__)
   FEED_RESULTS_LIMIT = 20
   FEATURE_PAGE_WHATS_NEW_LIMIT = 10
 
@@ -82,12 +70,14 @@ class ContentHandler(webapp.RequestHandler):
     return browser.find('Android') != -1 or browser.find('iPhone') != -1
 
   def get_toc(self, path):
-    if not (re.search('', path) or re.search('/mobile/', path)):
+    # Only have TOC on tutorial pages. Don't do work for others.
+    if not (re.search('/tutorials', path) or re.search('/mobile', path)):
       return ''
 
-    toc = memcache.get('%s|toc|%s' % (common.MEMCACHE_KEY_PREFIX, path))
+    toc = memcache.get('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path))
     if toc is None or not self.request.cache:
-      template_text = template.render(path, {})
+      template_text = render_to_string(path, {})
+
       parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
       dom_tree = parser.parse(template_text)
       walker = treewalkers.getTreeWalker("dom")
@@ -108,12 +98,12 @@ class ContentHandler(webapp.RequestHandler):
         elif element['type'] == 'EndTag' and current is not None:
           toc.append(current)
           current = None
-      memcache.set('%s|toc|%s' % (common.MEMCACHE_KEY_PREFIX, path), toc, 3600)
+      memcache.set('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path), toc, 3600)
 
     return toc
 
   def get_feed(self, path):
-    articles = memcache.get('%s|feed|%s' % (common.MEMCACHE_KEY_PREFIX, path))
+    articles = memcache.get('%s|feed|%s' % (settings.MEMCACHE_KEY_PREFIX, path))
     if articles is None or not self.request.cache:
       # DB query is memcached in get_all(). Limit to last several results
       tutorials = models.Resource.get_all(order='-publication_date',
@@ -139,7 +129,7 @@ class ContentHandler(webapp.RequestHandler):
 
       # Cache feed for 24hrs.
       memcache.set(
-          '%s|feed|%s' % (common.MEMCACHE_KEY_PREFIX, path), articles, 86400)
+          '%s|feed|%s' % (settings.MEMCACHE_KEY_PREFIX, path), articles, 86400)
 
     return articles
 
@@ -165,7 +155,7 @@ class ContentHandler(webapp.RequestHandler):
     logging.info("path after removing lang: %s" % path_no_lang)
 
     pagename = ''
-    if (path_no_lang == ''):
+    if path_no_lang == '':
       pagename = 'home'
     else:
       pagename = re.sub('\/', '-', path_no_lang)
@@ -180,7 +170,7 @@ class ContentHandler(webapp.RequestHandler):
       'host': '%s://%s' % (self.request.scheme, self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
-      'prod': common.PROD
+      'prod': settings.PROD
     }
 
     # If the tutorial contains a social URL override, use it.
@@ -206,12 +196,12 @@ class ContentHandler(webapp.RequestHandler):
     # Show banner if we have a URL and are under 60 minutes since it was saved.
     if (live_data and
         (datetime.datetime.now() - live_data.updated).seconds / 60 < 60):
-        template_data['gdl_page_url'] = live_data.gdl_page_url
+      template_data['gdl_page_url'] = live_data.gdl_page_url
 
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
     self.response.headers.add_header('X-UA-Compatible', 'IE=Edge,chrome=1')
-    self.response.out.write(template.render(template_path, template_data))
+    self.response.out.write(render_to_string(template_path, template_data))
 
   def render_atom_feed(self, template_path, data):
     prefix = '%s://%s' % (self.request.scheme, self.request.host)
@@ -250,17 +240,13 @@ class ContentHandler(webapp.RequestHandler):
 
     self._set_cache_param()
 
-    # Handle bug redirects before anything else, as it's trivial:
-    if (relpath == 'i18n-bug'):
-      return self.redirect(("http://code.google.com/p/html5rocks/issues/"
-                            "entry?template=Bug%20in%20i18n/l10n"))
-    if (relpath == 'new-bug'):
-      return self.redirect(("http://code.google.com/p/html5rocks/issues/"
-                            "entry?template=Defect%20report%20from%20user"))
+    # Handle bug redirects before anything else, as it's trivial.
+    if relpath == 'new-bug':
+      return self.redirect('https://github.com/html5rocks/www.html5rocks.com/issues/new')
 
     # Handle humans before locale, to prevent redirect to /en/
     # (but still ensure it's dynamic, ie we can't just redirect to a static url)
-    if (relpath == 'humans.txt'):
+    if relpath == 'humans.txt':
       self.response.headers['Content-Type'] = 'text/plain'
       sorted_profiles = models.get_sorted_profiles()
       return self.render(data={'sorted_profiles': sorted_profiles,
@@ -309,9 +295,9 @@ class ContentHandler(webapp.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business'])):
-      path = os.path.join(BASEDIR, 'content', relpath, 'index.html')
+      path = os.path.join('content', relpath, 'index.html')
     else:
-      path = os.path.join(BASEDIR, 'content', relpath)
+      path = os.path.join('content', relpath)
 
     # Render the .html page if it exists. Otherwise, check that the Atom feed
     # the user is requesting has a corresponding .html page that exists.
@@ -353,7 +339,7 @@ class ContentHandler(webapp.RequestHandler):
       #                 ...
       #
       # So, to determine if an HTML page exists for the requested language
-      # `split` the file's path, add in the locale, and check existance:
+      # `split` the file's path, add in the locale, and check existence:
       logging.info('Building request for `%s` in locale `%s`', path, locale)
       (dir, filename) = os.path.split(path)
       if os.path.isfile(os.path.join(dir, locale, filename)):
@@ -425,7 +411,7 @@ class ContentHandler(webapp.RequestHandler):
 
         if r.url.startswith('/'):
           # Localize title and description if article is localized.
-          filepath = os.path.join(BASEDIR, 'content', r.url[1:], self.locale,
+          filepath = os.path.join(self.BASEDIR, 'content', r.url[1:], self.locale,
                                   'index.html')
           if os.path.isfile(filepath):
             if r.title:
@@ -466,7 +452,7 @@ class ContentHandler(webapp.RequestHandler):
       for r in updates:
         if r.url.startswith('/'):
           # Localize title if article is localized.
-          filepath = os.path.join(BASEDIR, 'content', r.url[1:], self.locale,
+          filepath = os.path.join(self.BASEDIR, 'content', r.url[1:], self.locale,
                                   'index.html')
           if r.url.startswith('/') and os.path.isfile(filepath) and r.title:
             r.title = _(r.title)
@@ -486,16 +472,14 @@ class ContentHandler(webapp.RequestHandler):
       self.render(data=data, template_path=path + '.html', relpath=relpath)
 
     else:
-      self.render(status=404, message='Page Not Found',
-                  template_path=os.path.join(BASEDIR, 'templates/404.html'))
+      self.render(status=404, message='Page Not Found', template_path='404.html')
 
   def handle_exception(self, exception, debug_mode):
     if debug_mode:
       super(ContentHandler, self).handle_exception(exception, debug_mode)
     else:
       # Display a generic 500 error page.
-      self.render(status=500, message='Server Error',
-                  template_path=os.path.join(BASEDIR, 'templates/500.html'))
+      self.render(status=500, message='Server Error', template_path='500.html')
 
 
 class DBHandler(ContentHandler):
@@ -591,12 +575,12 @@ class DBHandler(ContentHandler):
 
       # Restrict access to this page to admins and whitelisted users. 
       if (not users.is_current_user_admin() and
-          user.email() not in common.WHITELISTED_USERS):
+          user.email() not in settings.WHITELISTED_USERS):
         return self.redirect('/')
 
       entity = models.LiveData.all().get()
       if entity:
-        live_form = models.LiveForm(instance=entity, initial={
+        live_form = models.LiveForm(entity.to_dict(), initial={
             'gdl_page_url': entity.gdl_page_url
             })
       else:
@@ -622,32 +606,32 @@ class DBHandler(ContentHandler):
                          relpath=relpath)
 
     elif (relpath == 'drop_all'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')  
       self._NukeDB()
 
     elif (relpath == 'load_tutorials'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')  
       self._AddTestResources()
 
     elif (relpath == 'load_authors'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')  
       self._AddTestAuthors()
 
     elif (relpath == 'load_playground_samples'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')  
       self._AddTestPlaygroundSamples()
 
     elif (relpath == 'load_studio_samples'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')  
       self._AddTestStudioSamples()
 
     elif (relpath == 'load_all'):
-      if common.PROD:
+      if settings.PROD:
         return self.response.out.write('Handler not allowed in production.')
 
       # TODO(ericbidelman): Make this async.
@@ -672,18 +656,19 @@ class DBHandler(ContentHandler):
             if len(b) == 2:
               browser_support[browser_support.index(b)] = b.upper()
 
-          tutorial_form = models.TutorialForm(instance=post, initial={
-              'author': author_id,
-              'second_author': second_author_id or author_id,
-              'browser_support': browser_support,
-              'tags': ', '.join(post.tags)
-          })
+          form_data = post.to_dict()
+          form_data['tags'] = ', '.join(post.tags)
+          form_data['author'] = author_id
+          form_data['second_author'] = second_author_id or author_id
+          form_data['browser_support'] = browser_support
+
+          tutorial_form = models.TutorialForm(form_data)
 
       template_data = {
         'tutorial_form': tutorial_form,
         # get_all() not used b/c we don't care about caching on this page.
         'resources': (models.Resource.all().order('-publication_date')
-                                     .fetch(limit=common.MAX_FETCH_LIMIT)),
+                                     .fetch(limit=settings.MAX_FETCH_LIMIT)),
         'post_id': post_id and int(post_id) or ''
       }
       return self.render(data=template_data,
@@ -703,6 +688,7 @@ class DBHandler(ContentHandler):
       
       live_data.gdl_page_url = self.request.get('gdl_page_url') or None
 
+      #if live_data.gdl_page_url is not None:
       live_data.put()
 
       return self.redirect('/database/live')
@@ -732,8 +718,19 @@ class DBHandler(ContentHandler):
 
         author.put()
 
-      except db.Error:
-        pass
+      except db.Error, e:
+        # TODO: Doesn't repopulate lat/lng or return errors for it.
+        form = models.AuthorForm(self.request.POST)
+        if not form.is_valid():
+          sorted_profiles = models.get_sorted_profiles(update_cache=True)
+          template_data = {
+            'sorted_profiles': sorted_profiles,
+            'profile_amount': len(sorted_profiles),
+            'author_form': form
+          }
+          return self.render(data=template_data,
+                             template_path='database/author_new.html',
+                             relpath=relpath)
       else:
         self.redirect('/database/author')
 
@@ -903,15 +900,26 @@ class TagsHandler(ContentHandler):
     return self._get(tag, order=order, limit=limit)
 
 
-def main():
-  application = webapp.WSGIApplication([
-    ('/api/(.*)', APIHandler),
-    ('/database/(.*)/(.*)', DBHandler),
-    ('/database/(.*)', DBHandler),
-    ('/tags/(.*)/(.*)', TagsHandler),
-    ('/(.*)', ContentHandler)
-  ], debug=not common.PROD)
-  run_wsgi_app(application)
+def handle_404(request, response, exception):
+  response.write('Oops! Not Found.')
+  response.set_status(404)
 
-if __name__ == '__main__':
-  main()
+def handle_500(request, response, exception):
+  logging.exception(exception)
+  response.write('Oops! Internal Server Error.')
+  response.set_status(500)
+
+
+# App URL routes.
+routes = [
+  ('/api/(.*)', APIHandler),
+  ('/database/(.*)/(.*)', DBHandler),
+  ('/database/(.*)', DBHandler),
+  ('/tags/(.*)/(.*)', TagsHandler),
+  ('/(.*)', ContentHandler)
+]
+
+app = webapp2.WSGIApplication(routes, debug=settings.DEBUG)
+app.error_handlers[404] = handle_404
+if settings.PROD and not settings.DEBUG:
+  app.error_handlers[500] = handle_500

@@ -1,4 +1,5 @@
 {% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
 
 {% block head %}
 <style>
@@ -23,8 +24,9 @@
 {% block content %}
   {% include "warning.html" %}
 
-  <div><figure><img src="images/lens.jpg"></figure></div>
-  <h2 id="toc-introduction">Introduction</h2>
+<figure><img src="images/lens.jpg"></figure>
+
+<h2 id="toc-introduction">Introduction</h2>
   <p>Filters are a powerful tool that web authors can use to achieve interesting visual effects. In this article we’ll cover the history of filter effects, what they do and how to use them. We’ll cover examples of all the predefined filters defined for CSS with some examples. We’ll also cover performance considerations for using them on desktop and mobile devices since knowing the speed impact of filters is important for a good user experience. Finally we’ll review the current state of implementation in modern browsers.
   </p>
 <h2 id="toc-history">The past, present and future of filter effects</h2>
@@ -43,10 +45,10 @@ Deja Vu sometimes strikes a web developer when seeing ‘filter’ in CSS styles
 So what does a filter do exactly? The easiest way to think of a filter is as a post processing step that does something magical after all your page content has been laid out and drawn.
 </p>
 <p>
-When a browser loads a web page it needs to apply styles, perform layout and then render the page so there’s something to look at. Filters kick in after all those steps and just before the page is copied to the screen. What they do is take a snapshot of the rendered page as a bitmap image, then perform some graphics magic on the pixels in the snapshot and then draw the result over the top of the original page image. One way to think of them is like a filter placed on the front of a camera lens. What you’re seeing through the lens is the outside world modified by the effect of the filter.
+When a browser loads a web page it needs to apply styles, perform layout and then render the page so there's something to look at. Filters kick in after all those steps and just before the page is copied to the screen. What they do is take a snapshot of the rendered page as a bitmap image, then perform some graphics magic on the pixels in the snapshot and then draw the result over the top of the original page image. One way to think of them is like a filter placed on the front of a camera lens. What you’re seeing through the lens is the outside world modified by the effect of the filter.
 </p>
 <p>
-This of course means that there’s time consumed when drawing a page with filters on it, but using them properly will have minimal impact on the speed of your site.
+This of course means that there's time consumed when drawing a page with filters on it, but using them properly will have minimal impact on the speed of your site.
 </p>
 <p>
 Also, just as you can stack a number of filters in front of each other on your camera lens, you can apply an arbitrary number of filters one after the other to achieve all sorts of effects.
@@ -68,7 +70,7 @@ Note: The description and examples below use the official W3C syntax that will b
 Using filters from CSS is done by using the ‘filter’ property applied to any visible element on your web page. For a very simple example you could write something like
 </p>
 <pre class="prettyprint">
-	<code>div { {% mixin filter: grayscale(100%); %} }</code>
+<code>div { {% mixin filter: grayscale(100%); %} }</code>
 </pre>
 <p>
 and that would make the content inside all &lt;div&gt; elements on the page turn gray. Great for making your page look like a TV image from the 1940s.
@@ -87,7 +89,7 @@ and that would make the content inside all &lt;div&gt; elements on the page turn
 Most filters take some form of parameter to control how much filtering is done. So for example if you wanted to style your content to be half way between the original color and a grayscale version you’d do it like this:
 </p>
 <pre class="prettyprint">
-	<code>div { {% mixin filter: grayscale(50%); %} }</code>
+<code>div { {% mixin filter: grayscale(50%); %} }</code>
 </pre>
 <p>
 	<figure>
@@ -98,7 +100,7 @@ Most filters take some form of parameter to control how much filtering is done. 
 If you want to apply a number of different filters one after another, it’s easy - just place them in order in your CSS like so:
 </p>
 <pre class="prettyprint">
-	<code>div { {% mixin filter: grayscale(100%) sepia(100%); %} }</code>
+<code>div { {% mixin filter: grayscale(100%) sepia(100%); %} }</code>
 </pre>
 <p>
 That example will first make all the original color grayscale and then apply a sepia effect, and would end up looking like:</p>
