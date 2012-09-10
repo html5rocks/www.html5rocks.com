@@ -28,7 +28,8 @@
 
 <h2 id="toc-introduction">Introduction</h2>
 
-<p>Daniel Clifford gave an <a href="">excellent talk at Google I/O</a> on tips and tricks to improve JavaScript performance in V8.  Daniel encouraged us to "demand faster" - to carefully analyze performance differences between C++ and JavaScript, and write code mindfully of how JavaScript works.  A summary of the most important points of Daniel's talk are captured in this article.</p>
+<p>Daniel Clifford gave an <a href="">excellent talk at Google I/O</a> on tips and tricks to improve JavaScript performance in V8.  Daniel encouraged us to "demand faster" - to carefully analyze performance differences between C++ and JavaScript, and write code mindfully of how JavaScript works.  A summary of the most important points of Daniel's talk are captured in this article, and we'll also keep this article updated
+	as performance guidance changes.</p>
 
 <h2 id="toc-mostimportant">The Most Important Advice</h2>
 
@@ -47,7 +48,7 @@
 
 <h2 id="toc-topic-hiddenclasses">Hidden Classes</h3>
 
-<p>JavaScript has limited compile-time type information: types can be changed at runtime, so it's natural to believe that it is expensive to reason about JS types at compile time.  This might lead you to question how JavaScript performance could ever get anywhere close to C++.  However, V8 has hidden types created internally for objects at runtime; objects with the same hidden class can then use the same optimized generated code.</p>
+<p>JavaScript has limited compile-time type information: types can be changed at runtime, so it's natural to expect that it is expensive to reason about JS types at compile time.  This might lead you to question how JavaScript performance could ever get anywhere close to C++.  However, V8 has hidden types created internally for objects at runtime; objects with the same hidden class can then use the same optimized generated code.</p>
 
 <p>For example:</p>
 <pre class="prettyprint">function Point(x, y) {
@@ -61,7 +62,7 @@ var p2 = new Point(33, 44);
 p2.z = 55;
 // warning! p1 and p2 now have different hidden classes!</pre>
 
-<p>Until the object instance p2 has additional member ".z" added, p1 and p2 internally have the same hidden class - which optimizes usage.  The more you can avoid causing the hidden classes to diverge, the better performance you'll obtain.</p>
+<p>Until the object instance p2 has additional member ".z" added, p1 and p2 internally have the same hidden class - so V8 can generate a single version of optimized assembly for JavaScript code that manipulates either p1 or p2.  The more you can avoid causing the hidden classes to diverge, the better performance you'll obtain.</p>
 
 <h3>Therefore:</h3>
 <ul>
@@ -71,7 +72,13 @@ p2.z = 55;
 
 <h2 id="toc-topic-numbers">Numbers</h3>
 
-<p>V8 uses tagging to represent values efficiently when types can change.  It's best to use number types consistently, and it's most optimal to use 31-bit signed integers.
+<p>V8 uses tagging to represent values efficiently when types can change.  V8 infers from the values that you use what number type you are dealing with. Once V8 has made this inference, it uses tagging to represent values efficiently, because these types can change dynamically. However, there is sometimes a cost to changing these type tags, so it's best to use number types consistently, and in general it is most optimal to use 31-bit signed integers where appropriate.</p>
+
+<p>For example:</p>
+<pre class="prettyprint">var i = 42;  // this is a 31-bit signed integer
+var j = 4.2;  // this is a double-precision floating point number</pre>
+
+
 
 <h3>Therefore:</h3>
 <ul>
@@ -111,9 +118,11 @@ a[1] = 88;
 a[2] = 0.5;   // Allocates, converts
 a[3] = true; // Allocates, converts</pre>
 
-would be more performant as
+is less efficient than:
+
 <pre class="prettyprint">var a = [77, 88, 0.5, true];</pre>
-because the assignment of a[2] causes the Array to be converted to an Array of unboxed doubles, but then the assignment of a[3] causes it to be re-converted back to an untyped Array.
+
+because in the first example the individual assignments are performed one after another, and the assignment of a[2] causes the Array to be converted to an Array of unboxed doubles, but then the assignment of a[3] causes it to be re-converted back to an Array that can contain any values (Numbers or objects).  In the second case, the compiler knows the types of all of the elements in the literal, and the hidden class can be determined up front.
 
 <h3>Therefore:</h3>
 <ul>
@@ -140,7 +149,7 @@ because the assignment of a[2] causes the Array to be converted to an Array of u
 <ul>
 	<li>Monomorphic use of operations is preferred over polymorphic operations<li>
 </ul>
-<p>Operations are monomorphic if the hidden classes of inputs are always the same - otherwise they are polymorphic.  For example, the second add() call in this example causes polymorphism:
+<p>Operations are monomorphic if the hidden classes of inputs are always the same - otherwise they are polymorphic, meaning some of the arguments can change type across different calls to the operation.  For example, the second add() call in this example causes polymorphism:
 
 <pre class="prettyprint">function add(x, y) {
   return x + y;
@@ -150,7 +159,7 @@ add(1, 2);      // + in add is monomorphic
 add("a", "b");  // + in add becomes polymorphic</pre>
 
 <h2>The Optimizing Compiler</h2>
-<p>In parallel with the full compiler, V8 re-compiles "hot" functions (that is, functions that are run many times) with an optimizing compiler.  This compiler uses type feedback to make the compiled code faster - in fact, it takes the types taken from ICs we just talked about!.</p>
+<p>In parallel with the full compiler, V8 re-compiles "hot" functions (that is, functions that are run many times) with an optimizing compiler.  This compiler uses type feedback to make the compiled code faster - in fact, it uses the types taken from ICs we just talked about!</p>
 
 <p>In the optimizing compiler, operations get speculatively inlined (directly placed where they are called).  This speeds execution (at the cost of memory footprint), but also enables other optimizations.  Monomorphic functions and constructors can be inlined entirely (that's another reason why monomorphism is a good idea in V8).</p>
 
@@ -158,7 +167,7 @@ add("a", "b");  // + in add becomes polymorphic</pre>
 <pre class="prettyprint">d8 --trace-opt primes.js</pre>
 (this logs names of optimized functions to stdout.)</p>
 
-<p>Not all functions can be optimized, however - some features prevent the optimizing compiler from running on a given function (a "bail-out").  In particular, the optimizing compiler bails out on functions with try {} catch {} blocks!
+<p>Not all functions can be optimized, however - some features prevent the optimizing compiler from running on a given function (a "bail-out").  In particular, the optimizing compiler currently bails out on functions with try {} catch {} blocks!
 
 <h3>Therefore:</h3>
 <ul>
@@ -175,7 +184,7 @@ try {
 </li>
 </ul>
 
-<p>You can examine how the optimizing compiler is bailing out on functions by using "--trace-bailout" with d8:
+<p>This guidance will probably change in the future, as we enable try/catch blocks in the optimizing compiler. You can examine how the optimizing compiler is bailing out on functions by using "--trace-bailout" with d8:
 <pre class="prettyprint">d8 --trace-bailout primes.js</pre>
 
 <h2>De-optimization</h2>
@@ -189,6 +198,7 @@ try {
 <p>You can, as with other optimizations, get a log of functions that V8 had to deoptimize with a logging flag:
 <pre class="prettyprint">d8 --trace-deopt primes.js</pre>
 
+<h2>Other V8 Tools</h2>
 <p>By the way, you can also pass V8 tracing options to Chrome on startup:
 <pre class="prettyprint">"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --js-flags="--trace-opt --trace-deopt --trace-bailout"</pre>
 
