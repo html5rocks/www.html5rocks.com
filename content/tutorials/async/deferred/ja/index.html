@@ -30,71 +30,64 @@
 </section>
 
 <section>
-  <h2 id="toc-browserasync">Browser Asynchronous APIs</h2>
-  
+  <h2 id="toc-browserasync">ブラウザの非同期API</h2>
+
   <p>
-    Luckily, Browsers provide a number of asynchronous APIs such as the commonly used XHR (XMLHttpRequest or 'AJAX') APIs, as well
-    as IndexedDB, SQLite, HTML5 Web workers, and the HTML5 GeoLocation APIs to name a few. Even some DOM related actions are
-    exposed asynchronously, such CSS3 animation via the transitionEnd events.     
+    幸いにもブラウザは一般的に使用されるXHR(XMLHttpRequestか'AJAX')API、そしてIndexedDB、SQLite、HTML5ウェブワーカーや、わずかに知られる例としてはHTML5ジオロケーションAPIなどのようないくつかの非同期APIを備えています。transitionEndイベントのようなCSS3アニメーションなどのDOMに関連したいくつかのアクションも非同期にされています。
   </p>
-  
+
   <p>
-    The way browsers expose asynchronous programming to the application logic is via events or callbacks.     
-    In event-based asynchronous APIs, developers register an event handler for a given object 
-    (e.g. HTML Element or other DOM objects) and then call the action. The browser will perform 
-    the action usually in a different thread, and trigger the event in the main thread when appropriate.     
+    ブラウザがアプリケーションロジックに提供する非同期プログラミングにはイベントまたはコールバックという手段があります。イベントベースの非同期APIでは、開発者は与えられたオブジェクト(例えばHTMLエレメントもしくは他のDOMオブジェクト)に対してイベントハンドラを登録して、適切な時にメインスレッドのイベントを発火させます。
   </p>
-  
-  <p>For example, code using the XHR API, an event based asynchronous API, would look like this:</p>
-  
+
+  <p>例として、イベントベースの非同期APIであるXHR APIを使用したコードはこのような感じになります：</p>
+
 <pre class="prettyprint collapsible lang-js">
-// Create the XHR object to do GET to /data resource  
+// /data以下のリソースをGETで取得する為にXHRオブジェクトを作成します
 var xhr = new XMLHttpRequest();
 xhr.open("GET","data",true);
 
-// register the event handler
+// イベントハンドラを登録します
 xhr.addEventListener('load',function(){
   if(xhr.status === 200){
       alert("We got data: " + xhr.response);
   }
 },false) 
 
-// perform the work
+// 動作させます
 xhr.send();
 </pre>
 
   <p>
-    The CSS3 transitionEnd event is another example of a event based asynchronous API. 
+    CSS3のtransitionEndイベントを使ったイベントベースの非同期APIの他の例です。
   </p>
 <pre class="prettyprint lang-js">
-// get the html element with id 'flyingCar'  
+// idが'flyingCar'のHTMLエレメントを取得する
 var flyingCarElem = document.getElementById("flyingCar");
 
-// register an event handler 
+// イベントハンドラの登録
 // ('transitionEnd' for FireFox, 'webkitTransitionEnd' for webkit) 
 flyingCarElem.addEventListener("transitionEnd",function(){
-  // will be called when the transition has finished.
+  // transitionが完了したら呼ばれます
   alert("The car arrived");
 });
 
-// add the CSS3 class that will trigger the animation
-// Note: some browers delegate some transitions to the GPU , but 
-//       developer does not and should not have to care about it.
+// アニメーションの発火のためCSS3のクラスを付けます
+// 注意: いくつかのブラウザはあるtransitionをGPUに譲ってしまいます。
+//       しかし、開発者はこの事を気にしてはいけないし、するべきでもありません。
 flyingCarElemen.classList.add('makeItFly') 
 </pre>
 
   <p>
-    Other browser APIs, such as SQLite and HTML5 Geolocation, are callback based, meaning
-    that the developer passes a function as argument that will get called back by the
-    underlying implementation with the corresponding resolution.     
+    SQLiteやHTML5ジオロケーションのような他のブラウザAPIはコールバックベースになります。これは開発者が引数として関数を渡す事により、問題を解決する実装の基本とするという意味です。
   </p>
-  
+
   <p>
-    For example, for HTML5 Geolocation, the code looks like this:
+    例えば、HTML5ジオロケーションではこのようなコードになります。
   </p>
 
 <pre class="prettyprint lang-js">
-// call and pass the function to callback when done.
+// 完了した際に呼び出すコールバック関数を渡す
 navigator.geolocation.getCurrentPosition(function(position){  
             alert('Lat: ' + position.coords.latitude + ' ' +  
                   'Lon: ' + position.coords.longitude);  
@@ -102,10 +95,7 @@ navigator.geolocation.getCurrentPosition(function(position){
 </pre>
 
   <p>
-    In this case, we just call a method and pass a function that will get called back with the 
-    requested result. This allows the browser to implement
-    this functionality synchronously or asynchronously and give a single API to the developer regardless
-    of the implementation details.     
+    この場合、メソッドを呼び出し、要求の解決の為コールバックとして関数を渡すだけです。ブラウザはこれを同期・非同期に関わらず単一の機能として実装し、開発者には実装の詳細に関わらず、単一のAPIとして提供できるわけです。
   </p>
 </section>
 
