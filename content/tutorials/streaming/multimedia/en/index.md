@@ -27,20 +27,10 @@ We can't!...without multiple videos elements and some JS hackery.
 The MediaSource API is here to solve these issues. With it, we can tell
 an audio/video element to behave differently.
 
-<h3 id="toc-mediasource-enable">Enabling</h3>
-
-The MediaSource API is still experimental and behind
-a flag in Chrome 23. It can be enabled by visiting the `about:flags` page:
-
-<figure>
-  <img src="aboutflags.png">
-  <figcaption>Enabling the MediaSource API in Chrome's <code>about:flags</code> page.</figcaption>
-</figure>
-
-Alternatively, you can [run Chrome](http://www.chromium.org/developers/how-tos/run-chromium-with-flags) with the `--enable-media-source` flag
-instead of messing with `about:flags`.
-
 <h3 id="toc-mediasource-detect">Feature detection</h3>
+
+The MediaSource API is still experimental but is enabled by default in Chrome 23,
+with a vendor prefix:
 
     function hasMediaSource() {
       return !!(window.MediaSource || window.WebKitMediaSource);
