@@ -25,6 +25,7 @@
 
 {% block content %}
   <p class="notice">Google Chrome supports <a href="http://www.chromium.org/developers/design-documents/desktop-notifications/api-specification">an older version of the spec</a>. The <a href="http://www.w3.org/TR/notifications/">newer version at W3C</a> is not currently implemented.</p>
+  <p class="notice">Update (Sept'12): Notifications with HTML content have been deprecated. Samples and text have been modified accordingly.</p>
   <h2 id="toc-introduction">Introduction</h2>
   <p>The <a href="http://www.chromium.org/developers/design-documents/desktop-notifications/api-specification">Notifications API</a> allows you to display notifications to the user for given events,
   both passively (new emails, tweets or calendar events) and on user interactions regardless of which tab has focus.
@@ -44,26 +45,15 @@ else {
   console.log("Notifications are not supported for this Browser/OS version yet.");
 }</pre>
 
-  <h2 id="toc-step2">Step 2: Create the notifications.</h2>
-  <p>There are two types of notifications depending on their content: plain text and HTML. If your application is using both types of notifications you might as well create a function that decides which one to use based on an options parameter.</p>
-  <pre class="prettyprint">
-function createNotificationInstance(options) {
-  if (options.notificationType == 'simple') {
-    return window.webkitNotifications.createNotification(
-        'icon.png', 'Notification Title', 'Notification content...');
-  } else if (options.notificationType == 'html') {
-    return window.webkitNotifications.createHTMLNotification('http://someurl.com');
-  }
-}</pre>
-
-  <h2 id="toc-step3">Step 3: Let the user grant permissions to a website to show notifications.</h2>
+  <h2 id="toc-step3">Step 2: Let the user grant permissions to a website to show notifications.</h2>
   <p>Any of the constructors we mentioned will throw a security error if the user hasn't manually granted permissions to the website to show notifications.</p>
   <p>To handle the exception you can use a try-catch statement but you can also use the <em>checkPermission</em> method for the same purpose.</p>
   <pre class="prettyprint">
 document.querySelector('#show_button').addEventListener('click', function() {
   if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
     // function defined in step 2
-    createNotificationInstance({ notificationType: 'html' });
+    window.webkitNotifications.createNotification(
+        'icon.png', 'Notification Title', 'Notification content...');
   } else {
     window.webkitNotifications.requestPermission();
   }
@@ -80,12 +70,13 @@ document.querySelector('#show_button').addEventListener('click', function() {
   action, like mouse or keyboard events, in order to avoid unsolicited infobars. In this case, the user action is the click on the button with id "show_button".</p>
   <p>The snippet above will never work if the user hasn't explicitly clicked on a button or link that triggers the <em>requestPermission</em> at some point.</p>
 
-  <h2 id="toc-step4">Step 4: Attach listeners and other actions</h2>
+  <h2 id="toc-step4">Step 3: Attach listeners and other actions</h2>
   <pre class="prettyprint">
 <span class="old">document.querySelector('#show_button').addEventListener('click', function() {
   if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
     // function defined in step 2
-    </span><span class="new">notification_test = </span><span class="old">createNotificationInstance({notificationType: 'html'});
+    </span><span class="new">notification_test = </span><span class="old">window.webkitNotifications.createNotification(
+      'icon.png', 'Notification Title', 'Notification content...');
     </span><span class="new">notification_test.ondisplay = function() { ... do something ... };
     notification_test.onclose = function() { ... do something else ... };
     notification_test.show();</span><span class="old">
