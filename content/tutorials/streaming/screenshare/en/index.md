@@ -1,4 +1,4 @@
-In the past couple of years, I've helped a few different companies achieve screensharing-like functionality using only browser technologies. From my experience, implementing a VNC solely in web platform technologies (i.e. no plugins) is a hard problem. There are a lot of things to consider and a lot of challenges to overcome. Relaying mouse pointer position, forwarding keystrokes, and achieving full 24-bit color repaints at 60fps are just a few of the issues.
+In the past couple of years, I've helped a few different companies achieve screensharing-like functionality using only browser technologies. From my experience, implementing [VNC](http://en.wikipedia.org/wiki/Virtual_Network_Computing) solely in web platform technologies (i.e. no plugins) is a hard problem. There are a lot of things to consider and a lot of challenges to overcome. Relaying mouse pointer position, forwarding keystrokes, and achieving full 24-bit color repaints at 60fps are just a few of the issues.
 
 <h2 id="toc-intro">Capturing tab content</h2>
 
