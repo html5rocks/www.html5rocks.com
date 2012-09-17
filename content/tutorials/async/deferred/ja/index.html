@@ -145,24 +145,19 @@ getData(function(data){
 </section>
 
 <section>
-  <h2 id="toc-handling-failures">Handling Failures</h2>
-  
+  <h2 id="toc-handling-failures">例外の処理</h2>
+
   <p>
-    One catch of asynchronous programing is that the traditional try/catch way to handle
-    failures does not really work anymore, as errors usually happen in another thread.
-    Consequently, the callee needs to have a structured way to notify the caller when
-    something goes wrong during the processing.     
+    非同期プログラミングの一つの問題として、エラーが別のスレッドでいつでも起き得るので、伝統的な例外処理であるtry/catchが
+    実質的にどこにも使えないという点があります。従って関数の呼び出し元で処理中に何かしらエラーが起きた時には、
+    関数の呼び出し先では構造化された方法でエラーが通知される必要があります。
   </p>
-  
+
   <p>
-    In an event-based asynchronous API this is often accomplished by the application code
-    querying the event or object when receiving the event. For callback based
-    asynchronous APIs, the best practice is to have a second argument that takes a
-    function that would be called in case of a failure with the appropriate error
-    information as argument.     
+    イベントベースの非同期APIではイベントを受け取った際にアプリケーションのコードがイベントやオブジェクトを問い合わせする事で、解決する事が多いです。コールバックベースの非同期APIでのベストプラクティスは、失敗した場合に備えて呼ばれる関数の第2引数として、適切なエラー情報を引数として取る事です。
   </p>
-  
-  <p>Our getData call would look like this:</p>
+
+  <p>先程のgetDataが呼ばれる場合はこうなります：</p>
 
 <pre class="prettyprint lang-js">
 // getData(successFunc,failFunc);  
