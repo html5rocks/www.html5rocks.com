@@ -100,38 +100,34 @@ navigator.geolocation.getCurrentPosition(function(position){
 </section>
 
 <section>
-  <h2 id="toc-async-application">Making Applications Asynchronous-Ready</h2>
+  <h2 id="toc-async-application">非同期化しやすいアプリケーションを作る</h2>
   <p>
-    Beyond the browser’s built-in asynchronous APIs, well architected applications should
-    expose their low level APIs in an asynchronous fashion as well, especially when they do any
-    sort of I/O or computational heavy processing. For example, APIs to get data should
-    be asynchronous, and should NOT look like this:    
+    良く設計されたアプリケーションは、ブラウザの組み込みの非同期API以上に、低レベルAPIにおける非同期のやり方を公開すべきです。
+    I/OのソートやCPUに負荷がかかる処理をする場合は特にそうです。例えば、APIがデータを取得する際は非同期であるべきですし、
+    この例のようにはすべきではありません。:
   </p>
 
 <pre class="prettyprint lang-js">
-// WRONG: this will make the UI freeze when getting the data  
+// 間違い: この処理はデータの取得時にUIをフリーズさせてしまいます。
 var data = getData();
 alert("We got data: " + data);
 </pre>
 
   <p>
-    This API design requires the <b>getData()</b> to be blocking, which will freeze the user
-    interface until the data is fetched. If the data is local in the JavaScript context
-    then this might not be an issue, however if the data needs to be fetched from the
-    network or even locally in a SQLite or index store this could have dramatic impact on
-    the user experience.    
-  </p>  
-  
-  <p>
-    The right design is to proactively make all application API that could take some time
-    to process, asynchronous from the beginning as retrofitting synchronous application code
-    to be asynchronous can be a daunting task.    
-  </p>  
-  
-  <p>
-    For example the simplistic getData() API would become something like:
+    このAPIの設計では<b>getData()</b>をデータを取得するまでUIをフリーズさせてしまうブロッキング状態にしてしまいます。
+    もしデータがJavaScriptのコンテキストの中でローカルなものであればそれ程の問題にはなりませんが、もしデータの取得に
+    ネットワークやローカルのSQLiteやインデックスストアでの操作が必要ならば、UIにとても大きなインパクトを与えかねません。
   </p>
-  
+
+  <p>
+    正しい設計としては、積極的に時間がかかる可能性のある全てのアプリケーションAPIを非同期にする事ですが、
+    最初から同期的に書かれているアプリケーションのコードを非同期にするのは大変な作業になります。
+  </p>
+
+  <p>
+    例として単純化されたgetData() APIはこのようになるでしょう。:
+  </p>
+
 <pre class="prettyprint lang-js">
 getData(function(data){
    alert("We got data: " + data);
@@ -139,18 +135,13 @@ getData(function(data){
 </pre>
 
   <p>
-    The nice thing about this approach is that this forces the application UI code to be
-    asynchronous-centric from the beginning and allows the underlying APIs to decide if
-    they need to be asynchronous or not in a later stage. 
-  </p>  
-  
-  <p>
-    Note that not all the application API need or should be asynchronous. The rule of
-    thumb is that any API that does any type of I/O or heavy processing (anything that
-    can take longer than 15ms) should be exposed asynchronously from the start even if
-    the first implementation is synchronous.     
+    このアプローチで良い事は、アプリケーションUIのコードを最初から非同期中心のコードにできる事と、基本APIを非同期が必要かどうかを後から決める事ができる点です。
   </p>
-  
+
+  <p>
+    注意点として、全てのアプリケーションAPIを非同期にする必要もすべきでも無いという事です。重要なルールはどのようなタイプのI/O、または重たい処理(15ms以上のどのような処理でも)でもそうですが、最初の実行が同期的だったとしても、初めから非同期処理として公開されるべきという点です。
+  </p>
+
 </section>
 
 <section>
