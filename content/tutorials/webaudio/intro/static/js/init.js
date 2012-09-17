@@ -14,7 +14,7 @@ var BUFFERS_TO_LOAD = {
   crowd: 'sounds/clapping-crowd.wav',
   drums: 'sounds/blueyellow.wav',
   organ: 'sounds/organ-echo-chords.wav',
-  techno: 'sounds/techno.mp3'
+  techno: 'sounds/techno.wav'
 };
 
 // Stops all playing sources
