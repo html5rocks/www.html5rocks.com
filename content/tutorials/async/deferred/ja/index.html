@@ -171,22 +171,20 @@ getData(function(data){
 </section>
 
 <section>
-  <h2 id="toc-async-with-deferred">Putting it together with $.Deferred</h2>
-  
+  <h2 id="toc-async-with-deferred">$.Deferredを使ってまとめる</h2>
+
   <p>
-    One limitation of the above callback approach is that it can become really cumbersome
-    to write even moderately advanced synchronization logic.     
+    上記のコールバックアプローチの限界の1つとして、ちょっと高度な同期的なロジックを書くだけでも本当に面倒になり得るという事です。
   </p>
 
   <p>
-    For example, if you need to wait for two asynchronous API to be done before doing a
-    third one, code complexity can rise quickly.     
-  </p>  
-  
+    例えば、もし3番目の実行をする前に2個のAPIの実行完了を待たなければならないとすると、コードの複雑さは飛躍的に高まります。
+  </p>
+
   <pre class="prettyprint lang-js">
-// first do the get data.   
+// 最初のデータ取得
 getData(function(data){
-  // then get the location
+  // その後に場所の取得
   getLocation(function(location){
     alert("we got data: " + data + " and location: " + location);
   },function(ex){
@@ -196,50 +194,42 @@ getData(function(data){
   alert("getData failed: " + ex);
 });
 </pre>
-  
+
   <p>
-    Things can even get more complex when the application needs to make the same call
-    from multiple parts of the application, as every call will have to perform these multi
-    step calls, or the application will have to implement its own caching mechanism.     
+    アプリケーションが複数のパーツから複数の呼び出し段階毎に同じ振る舞いをしなければいけない場合は事態はもっと複雑になる事もありますし、アプリケーションは自前のキャッシュ機構を実装しなければいけないでしょう。
   </p>
-  
+
   <p>
-    Luckily, there is a relatively old pattern, called Promises (kind of similar to
-    <a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a> in Java) and a robust and modern implementation 
-    in jQuery core called <a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a> that provides a simple and powerful solution to asynchronous programing.    
-  </p>  
-  
-  <p>
-    To make it simple, the Promises pattern defines that the asynchronous API returns a
-    Promise object which is kind of a “Promise that the result will be resolved with the
-    corresponding data.” To get the resolution, the caller gets the Promise object and
-    calls a <em>done(successFunc(data))</em> which will tell the Promise object to call this
-    <em>successFunc</em> when the “data” is resolved.     
+    幸運にも、Promiseと呼ばれる比較的古いパターン(近いものとしてJavaで言う<a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a>があります)と、jQueryコアで<a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a>と呼ばれる強固でモダンな実装が、非同期プログラミングのシンプルで強力な解決として存在しています。
   </p>
-  
+
   <p>
-    So, the getData call example above becomes like this:     
+    単純化の為、Promiseパターンは非同期APIが「対応するデータによって解決するはずである結果を保障」するようなPromiseオジェクトを返すように定義します。問題解決の為、関数呼び出し元でPromiseオブジェクトを取得し、Promiseオブジェクトが"データ"が分析完了した時に呼び出す<em>successFunc</em>を<em>done(successFunc(data))</em>として呼び出します。
   </p>
-  
+
+  <p>
+    ですので、上記のgetDataの呼び出し例はこのようになります：
+  </p>
+
 <pre class="prettyprint lang-js">
-// get the promise object for this API  
+// このAPIのために、Promiseオブジェクトを取得する
 var dataPromise = getData();
 
-// register a function to get called when the data is resolved
+// データの分析完了した時に呼び出される関数を登録する
 dataPromise.done(function(data){
   alert("We got data: " + data);
 });
 
-// register the failure function
+// エラー時の関数を登録する
 dataPromise.fail(function(ex){
   alert("oops, some problem occured: " + ex);
 });
 
-// Note: we can have as many dataPromise.done(...) as we want. 
+// 注意：登録したいだけdataPromise.done(...)は登録できます。
 dataPromise.done(function(data){
   alert("We asked it twice, we get it twice: " + data);
 });
-</pre>  
+</pre>
 
   <p>
     Here, we get the <em>dataPromise</em> object first and then call the <em>.done</em> method to register
@@ -248,16 +238,16 @@ dataPromise.done(function(data){
     or <em>.fail</em> calls as we need since the underlying Promise implementation (jQuery code) will 
     handle the registration and callbacks.      
   </p>
-  
+
   <p>
     With this pattern, it is relatively easy to implement more advanced synchronization
-    code, and jQuery already provides the most common one such a <a href="http://api.jquery.com/jQuery.when/">$.when</a>.     
+    code, and jQuery already provides the most common one such a <a href="http://api.jquery.com/jQuery.when/">$.when</a>.
   </p>
-  
+
   <p>
     For example, the nested <em>getData</em>/<em>getLocation</em> callback above would become something like:
   </p>
-  
+
 <pre class="prettyprint lang-js">
 // assuming both getData and getLocation return their respective Promise
 var combinedPromise = $.when(getData(), getLocation())
@@ -265,23 +255,23 @@ var combinedPromise = $.when(getData(), getLocation())
 // function will be called when both getData and getLocation resolve
 combinePromise.done(function(data,location){
   alert("We got data: " + dataResult + " and location: " + location);
-});  
+});
 </pre>
 
   <p>
     And the beauty of it all is that jQuery.Deferred makes it very easy for developers to
     implement the asynchronous function. For example, the getData could look something like this: 
   </p>
-  
+
 <pre class="prettyprint lang-js">
 function getData(){
   // 1) create the jQuery Deferred object that will be used
   var deferred = $.Deferred();
-  
+
   // ---- AJAX Call ---- //
   XMLHttpRequest xhr = new XMLHttpRequest();
   xhr.open("GET","data",true);
-  
+
   // register the event handler
   xhr.addEventListener('load',function(){
     if(xhr.status === 200){
@@ -292,18 +282,18 @@ function getData(){
       deferred.reject("HTTP error: " + xhr.status);
     }
   },false) 
-  
+
   // perform the work
   xhr.send();
   // Note: could and should have used jQuery.ajax. 
   // Note: jQuery.ajax return Promise, but it is always a good idea to wrap it
   //       with application semantic in another Deferred/Promise  
   // ---- /AJAX Call ---- //
-  
+
   // 2) return the promise of this deferred
   return deferred.promise();
 }
-  
+
 </pre>
 
   <p>
@@ -313,7 +303,7 @@ function getData(){
     reject it (3.2). Doing the deferred.resolve will trigger all the done(...) functions 
     and other promise functions (e.g., then and pipe) and calling deferred.reject will 
     call all the fail() functions. 
-  </p>  
+  </p>
 </section>
 <section>
   <h2 id="toc-use-cases">Use Cases</h2>
