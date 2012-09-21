@@ -530,6 +530,65 @@ The browser doesn't give you a lot of details on why the error occurred, it only
 
 <p>While CORS lays the groundwork for making cross-domain requests, the CORS headers are not a substitute for sound security practices. You shouldn't rely on the CORS header for securing resources on your site. Use the CORS headers to give the browser directions on cross-domain access, but use some other security mechanism, such as cookies or <a href="http://oauth.net/2/">OAuth2</a>, if you need additional security restrictions on your content.</p>
 
+<h2 id="toc-cors-from-jquery">
+CORS from JQuery
+</h2>
+
+<p>JQuery's <code><a href="http://api.jquery.com/jQuery.ajax/">$.ajax()</a></code> method can be used to make both regular XHR and CORS requests. A few notes about JQuery's implementation:</p>
+
+<ul>
+<li>JQuery's CORS implementation doesn't support IE's XDomainRequest object. But there are JQuery plugins that enable this. See <a href="http://bugs.jquery.com/ticket/8283">http://bugs.jquery.com/ticket/8283</a> for details.</li>
+<li>The <code>$.support.cors</code> boolean will be set to <code>true</code> if the browser supports CORS (This returns <code>false</code> in IE, see bullet above). This can be a quick way to check for CORS support.</li>
+</ul>
+
+<p>Here's sample code for making a CORS request with JQuery. The comments give more details on how certain properties interact with CORS.</p>
+
+<pre class="prettyprint">
+$.ajax({
+
+  // The 'type' property sets the HTTP method.
+  // A value of 'PUT' or 'DELETE' will trigger a preflight request.
+  type: 'GET',
+
+  // The URL to make the request to.
+  url: 'http://updates.html5rocks.com',
+
+  // The 'contentType' property sets the 'Content-Type' header.
+  // The JQuery default for this property is
+  // 'application/x-www-form-urlencoded; charset=UTF-8', which does not trigger
+  // a preflight. If you set this value to anything other than
+  // application/x-www-form-urlencoded, multipart/form-data, or text/plain,
+  // you will trigger a preflight request.
+  contentType: 'text/plain',
+
+  xhrFields: {
+    // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+    // This can be used to set the 'withCredentials' property.
+    // Set the value to 'true' if you'd like to pass cookies to the server.
+    // If this is enabled, your server must respond with the header
+    // 'Access-Control-Allow-Credentials: true'.
+    withCredentials: false 
+  },
+
+  headers: {
+    // Set any custom headers here.
+    // If you set any non-simple headers, your server must include these
+    // headers in the 'Access-Control-Allow-Headers' response header.
+  },
+
+  success: function() {
+    // Here's where you handle a successful response.
+  },
+
+  error: function() {
+    // Here's where you handle an error response.
+    // Note that if the error was due to a CORS issue,
+    // this function will still fire, but there won't be any additional
+    // information about the error.
+  }
+});
+</pre>
+
 <h2 id="toc-cross-domain-from-chrome-extensions">
 Cross-Domain from Chrome Extensions
 </h2>
