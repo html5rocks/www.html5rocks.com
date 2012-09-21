@@ -209,7 +209,7 @@ function createCORSRequest(method, url) {
 
 // Helper method to parse the title tag from the response.
 function getTitle(text) {
-  return text.match('&lt;title>(.*)?&lt;/title>')[1];
+  return text.match('&lt;title&gt;(.*)?&lt;/title&gt;')[1];
 }
 
 // Make the actual CORS request.
@@ -554,13 +554,12 @@ The server doesn't need to include any additional CORS headers or do any more wo
 </p>
 
 <h2 id="toc-known-bugs">
-Known Bugs
+Known Issues
 </h2>
 <p>
-CORS support is still being actively developed in all browsers; here's a list of known bugs (as of 11/13/2011):
+CORS support is still being actively developed in all browsers; here's a list of known issues (as of 9/21/2012):
 <ol>
-<li>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - The getAlLResponseHeaders() method on the XMLHttpRequest object should return all simple response headers and any response header included in the Access-Control-Expose-Headers response header. In Chrome/Safari, only simple response headers are included, while Firefox doesn't return ANY response headers (Link to: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>, <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">WebKit bug</a>).</li>
-<li>Non-simple headers on GET/POST requests bypass preflight request - In Safari, a request with a simple HTTP method (GET or POST), but non-simple request headers, do not issue a preflight request, and the non-simple header is not included as part of the request (Link to: <a href="https://bugs.webkit.org/show_bug.cgi?id=50773">WebKit bug</a>).</li>
+<li>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - Firefox doesn't return response headers when calling getAllResponseHeaders(). (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>). A similar <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">bug in WebKit</a> has been fixed.</li>
 <li>No error information provided to onerror handler - When the onerror handler is fired, the status code is 0, and there is no statusText. This may be by design, but it can be confusing when trying to debug why CORS requests are failing.</li>
 </ol>
 </p>
