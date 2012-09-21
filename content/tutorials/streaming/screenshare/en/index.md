@@ -15,7 +15,7 @@ One approach for mirroring a tab was demonstrated by +[Rafael Weinstein](https:/
 Essentially, the tab that the presenter is sharing watches for changes to the page and sends diffs to the viewer using a websocket. As the user scrolls or interacts with the page, the observers pick up these changes and report them back to the viewer using Rafael's [mutation summary library](https://code.google.com/p/mutation-summary/). This keeps things performant. The entire page isn't sent for every frame.
 
 <figure><iframe width="480" height="360" src="http://www.youtube.com/embed/eRZ4pO0gVWw?hd=1#t=106s" frameborder="0" allowfullscreen></iframe>
-<figcaption>[FULL SOURCE](https://code.google.com/p/mutation-summary/source/browse/#git%2Fexamples%2Fscreen_sharing_extension)</figcaption>
+<figcaption><a href="https://code.google.com/p/mutation-summary/source/browse/#git%2Fexamples%2Fscreen_sharing_extension">FULL SOURCE</a></figcaption>
 </figure>
 
 As Rafael points out in the video, this is merely a proof of concept. Still, I think it's a neat way to combine a newer platform feature like Mutation Observers with an older one like Websockets.
@@ -94,7 +94,7 @@ But for tab sharing, we need to continuously capture the tab and send it to view
 the flow. If you're not interested in [the code](https://github.com/ebidel/html5demos/tree/master/screenshoter), here's a short video of things in action:
 
 <figure><iframe width="480" height="360" src="http://www.youtube.com/embed/2Ke_qEZGMeo?hd=1" frameborder="0" allowfullscreen></iframe>
-<figcaption>[FULL SOURCE](https://github.com/ebidel/html5demos/tree/master/screenshoter)</figcaption>
+<figcaption><a href="https://github.com/ebidel/html5demos/tree/master/screenshoter">FULL SOURCE</a></figcaption>
 </figure>
 
 <h3 id="toc-improvements">Future Improvements</h3>
@@ -108,7 +108,7 @@ the current script doesn't consider.
 At [Google I/O 2012](https://developers.google.com/events/io/sessions/gooio2012/204/), I demonstrated another approach for screensharing the contents of a browser tab. However, this one is a cheat. It requires a Chrome Extension API: not pure HTML5 magic.
 
 <figure><iframe width="480" height="360" src="http://www.youtube.com/embed/X_ek1wSe66o?hd=1#t=2318s" frameborder="0" allowfullscreen></iframe>
-<figcaption>[FULL SOURCE](https://github.com/ebidel/html5can/tree/master/demos/screenshare)</figcaption>
+<figcaption><a href="https://github.com/ebidel/html5can/tree/master/demos/screenshare">FULL SOURCE</a></figcaption>
 </figure>
 
 The [source](https://github.com/ebidel/html5can/tree/master/demos/screenshare) for
@@ -153,7 +153,7 @@ The framerate is surprisingly good for this one, but it could be even better. On
 
 Last but not least!
 
-The future of screensharing in the browser will be realized by [WebRTC](webrtc.org). In August 14, 2012, the team proposed a [WebRTC Tab Content Capture](http://www.chromium.org/developers/design-documents/extensions/proposed-changes/apis-under-development/webrtc-tab-content-capture) API for sharing tab contents:
+The future of screensharing in the browser will be realized by [WebRTC](http://webrtc.org). In August 14, 2012, the team proposed a [WebRTC Tab Content Capture](http://www.chromium.org/developers/design-documents/extensions/proposed-changes/apis-under-development/webrtc-tab-content-capture) API for sharing tab contents:
 
 > *The proposed APIs enable tab output to be captured as a media stream, and transmitted using WebRTC.  Supporting APIs are also defined to notify and query the capture status for tabs....This API enables a special form of screencasting, but in which users are able to share the contents of a tab rather than sharing their entire desktop.*
 
