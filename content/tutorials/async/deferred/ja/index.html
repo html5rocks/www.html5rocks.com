@@ -299,54 +299,35 @@ function getData(){
   </p>
 </section>
 <section>
-  <h2 id="toc-use-cases">Use Cases</h2>
+  <h2 id="toc-use-cases">使用例</h2>
 
   <p>
-    Here are some good use cases where Deferred can be very useful:
+    ここではDeferredが大変便利だという、良い使用例をいくつか見ていきます。
   </p>
 
   <p>
-    <b>Data Access:</b> Exposing data access APIs as $.Deferred is often the right design. 
-    This is obvious for remote data, as synchronous remote calls would completely ruin the 
-    user experience, but is also true for local data as often the lower level APIs (e.g., 
-    SQLite and IndexedDB) are asynchronous themselves. The Deferred API''s $.when and .pipe 
-    are extremely powerful to synchronize and chain asynchronous sub-queries.
+    <b>データアクセス：</b>データアクセスAPIを$.Deferredで公開するのは、しばしば正しい設計になります。
+    同期的なリモートの呼び出しはユーザーエクスペリエンスを完璧に壊してしまう為、この設計はリモートデータの扱いにおいては明らかです。
+    また、ローカルデータで頻繁に非同期で処理される低レベルAPI(例えばSQLiteやIndexedDBなど)を使う場合も当てはまります。
+    Deferred APIの$.whenや.pipeは同期や非同期のサブクエリの連鎖を非常に威力を発揮します。
   </p>
   <p>
-    <b>UI Animations:</b> Orchestrating one or more animations with transitionEnd events 
-    can be quite tedious, especially when the animations are a mixed of CSS3 animation 
-    and JavaScript (as it is often the case). Wrapping the animation functions as Deferred 
-    can significantly reduce the code complexity and improve flexibility. Even a simple 
-    generic wrapper function like cssAnimation(className) that will return the Promise 
-    object that gets resolved on transitionEnd could be of a great help.
+    <b>UIアニメーション：</b>1つ、またはそれ以上のtransitionEndイベントを使ったアニメーションの編集するとなると、とても長ったらしいものになりかねません。特にCSS3アニメーションとJavaScriptを混ぜ合わせたアニメーションの場合はそうなります(良くあるケースですが)。
+    アニメーション関数をDeferredとしてラップするとコードの複雑さをかなり減らす事ができ、柔軟さを改善させます。
+    Promiseオジェクトを返し、transitionEndの解決をするcssAnimation(class名)というようなシンプルで一般的なラッパーでさえ、非常に助けになるでしょう。
   </p>
 
   <p>
-    <b>UI Component Display:</b> This is a little bit more advanced, but advanced HTML 
-    Component frameworks should use the Deferred as well. Without going too much into 
-    the details (this will be the subject of another post), when an application needs to 
-    display different parts of the user interface, having the lifecycle of those 
-    components encapsulated in Deferred allows greater control of the timing. 
+    <b>UIコンポーネント表示：</b>これは、ほんの少し高度ですが、先進的なHTMLコンポーネントフレームワークはDeferredを良く使うべきでしょう。詳細はここには書きませんが(他のエントリの題材になるでしょう)、アプリケーションが別々のユーザーインターフェースのパーツを表示する必要があった場合に、それらのコンポーネントのライフサイクルをDeferredで内包する事によりタイミングの調整が非常にしやすくなります。
   </p>
 
   <p>
-    <b>Any browser asynchronous API:</b> For normalization purpose, it is often a good 
-    idea to wrap the browser API calls as Deferred. This takes literally 4 to 5 lines 
-    of code each, but will greatly simplify any application code. As show in the above 
-    getData/getLocation pseudo code, this allows the applications code to have one 
-    asynchronous model across all types of API (browsers, application specifics, and 
-    compound).
+    <b>ブラウザの全ての非同期API：</b>標準化する目的では、ブラウザAPIの呼び出しをDeferredでラップするのは、多くの場合において良いアイデアです。それぞれのコードにたった4~5行書くだけですが、どんなアプリケーションのコードでもとてもシンプルにしてくれます。
+    上で紹介した、getData/getLocationの疑似コードのように、アプリケーションのコードの全てのタイプのAPI(ブラウザ、アプリケーション固有のもの、これらを組み合わせたもの)を1つの非同期モデルでまとめて書くことができます。
   </p>
 
   <p>
-    <b>Caching:</b> This is kind of a side benefit, but can be very useful in some 
-    occasion. Because the Promise APIs (e.g., .done(..) and .fail(..)) can be called 
-    before or after the asynchronous call is performed, the Deferred object can be 
-    used as a caching handle for an asynchronous call. For example, a CacheManager 
-    could just keep track of Deferred for given requests, and return the Promise of 
-    the matching Deferred if it has not be invalidated. The beauty is that the caller 
-    does not have to know if the call has already been resolved or is in the process 
-    of being resolved, its callback function will get called exactly the same way. 
+    <b>キャッシュ：</b>これはどちらかというと副次的な利点となりますが、ある場合においてはとても便利です。理由としてPromise API(例えば、.done(...)や.fail(...)など)は非同期呼び出しが実行された以前でも以後でも呼び出しできるからです。Deferredオジェクトは非同期呼び出しのキャッシュ処理として使えるのです。例えば、与えられたリクエストに対するDeferredを追跡しつづけ、無効でなければマッチしたDeferredのPromiseを返します。この優れた点は呼び出し元は既に解決されたのか、解決の途中なのかを知る必要が無いという点です。コールバック関数は正確に同じ方法で呼ばれます。
   </p>
 </section>
 
