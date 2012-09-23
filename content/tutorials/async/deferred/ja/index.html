@@ -54,7 +54,7 @@ xhr.addEventListener('load',function(){
   }
 },false) 
 
-// 動作させます
+// 処理の実行
 xhr.send();
 </pre>
 
@@ -73,7 +73,7 @@ flyingCarElem.addEventListener("transitionEnd",function(){
 });
 
 // アニメーションの発火のためCSS3のクラスを付けます
-// 注意: いくつかのブラウザはあるtransitionをGPUに譲ってしまいます。
+// 注意: いくつかのブラウザはいくつかのtransitionをGPUに譲ってしまいます。
 //       しかし、開発者はこの事を気にしてはいけないし、するべきでもありません。
 flyingCarElemen.classList.add('makeItFly') 
 </pre>
@@ -104,7 +104,7 @@ navigator.geolocation.getCurrentPosition(function(position){
   <p>
     良く設計されたアプリケーションは、ブラウザの組み込みの非同期API以上に、低レベルAPIにおける非同期のやり方を公開すべきです。
     I/OのソートやCPUに負荷がかかる処理をする場合は特にそうです。例えば、APIがデータを取得する際は非同期であるべきですし、
-    この例のようにはすべきではありません。:
+    この例のようにはすべきでありません。:
   </p>
 
 <pre class="prettyprint lang-js">
@@ -115,12 +115,12 @@ alert("We got data: " + data);
 
   <p>
     このAPIの設計では<b>getData()</b>をデータを取得するまでUIをフリーズさせてしまうブロッキング状態にしてしまいます。
-    もしデータがJavaScriptのコンテキストの中でローカルなものであればそれ程の問題にはなりませんが、もしデータの取得に
-    ネットワークやローカルのSQLiteやインデックスストアでの操作が必要ならば、UIにとても大きなインパクトを与えかねません。
+    もしデータがJavaScriptのコンテキストの中でローカルなものであればそれ程の問題にはなりませんが、データの取得に
+    ネットワークやローカルのSQLiteやインデックスストアでの操作が必要ならば、UIにとても大きな影響を与えかねません。
   </p>
 
   <p>
-    正しい設計としては、積極的に時間がかかる可能性のある全てのアプリケーションAPIを非同期にする事ですが、
+    正しい設計としては、時間がかかる可能性のある全てのアプリケーションAPIを積極的に非同期にする事ですが、
     最初から同期的に書かれているアプリケーションのコードを非同期にするのは大変な作業になります。
   </p>
 
@@ -148,7 +148,7 @@ getData(function(data){
   <h2 id="toc-handling-failures">例外の処理</h2>
 
   <p>
-    非同期プログラミングの一つの問題として、エラーが別のスレッドでいつでも起き得るので、伝統的な例外処理であるtry/catchが
+    非同期プログラミングの一つの問題として、エラーが別のスレッドで常に起きるかもしれないので、伝統的な例外処理であるtry/catchが
     実質的にどこにも使えないという点があります。従って関数の呼び出し元で処理中に何かしらエラーが起きた時には、
     関数の呼び出し先では構造化された方法でエラーが通知される必要があります。
   </p>
@@ -160,7 +160,7 @@ getData(function(data){
   <p>先程のgetDataが呼ばれる場合はこうなります：</p>
 
 <pre class="prettyprint lang-js">
-// getData(successFunc,failFunc);  
+// getData(successFunc,failFunc);
 getData(function(data){
   alert("We got data: " + data);
 }, function(ex){
@@ -174,7 +174,7 @@ getData(function(data){
   <h2 id="toc-async-with-deferred">$.Deferredを使ってまとめる</h2>
 
   <p>
-    上記のコールバックアプローチの限界の1つとして、ちょっと高度な同期的なロジックを書くだけでも本当に面倒になり得るという事です。
+    上記のコールバックアプローチの限界の1つとして、ちょっと高度な同期的なロジックを書くだけでも本当に面倒になるかもしれない点があります。
   </p>
 
   <p>
@@ -200,11 +200,11 @@ getData(function(data){
   </p>
 
   <p>
-    幸運にも、Promiseと呼ばれる比較的古いパターン(近いものとしてJavaで言う<a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a>があります)と、jQueryコアで<a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a>と呼ばれる強固でモダンな実装が、非同期プログラミングのシンプルで強力な解決として存在しています。
+    幸運にも、Promiseと呼ばれる比較的古いパターン(近いものとしてJavaで言う<a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a>があります)と、jQueryコアで<a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a>と呼ばれる強固でモダンな実装が、非同期プログラミングのシンプルで強力な解決策として存在しています。
   </p>
 
   <p>
-    単純化の為、Promiseパターンは非同期APIが「対応するデータによって解決するはずである結果を保障」するようなPromiseオジェクトを返すように定義します。問題解決の為、関数呼び出し元でPromiseオブジェクトを取得し、Promiseオブジェクトが"データ"が分析完了した時に呼び出す<em>successFunc</em>を<em>done(successFunc(data))</em>として呼び出します。
+    単純にする為、Promiseパターンは非同期APIが「対応するデータによって解決するはずである結果を保障」するようなPromiseオジェクトを返すように定義します。問題解決の為、関数呼び出し元でPromiseオブジェクトを取得し、Promiseオブジェクトが"データ"が分析完了した時に呼び出す<em>successFunc</em>を<em>done(successFunc(data))</em>として呼び出します。
   </p>
 
   <p>
@@ -232,11 +232,11 @@ dataPromise.done(function(data){
 </pre>
 
   <p>
-    さて、<em>dataPromise</em>オジェクトを最初に取得してから、<em>.done</em>メソッドをデータを取得した時にコールバックさせたい関数を登録するために呼んでます。また<em>.fail</em>メソッドを処理の結果起こるエラーの処理の為に呼んでいます。注意点として、<em>.done<em>と<em>.fail</em>は基本のPromeseの実装(jQueryのコード)が関数の登録やコールバックを処理し続ける限り、必要な呼べるという点です。
+    さて、<em>dataPromise</em>オジェクトを最初に取得してから、<em>.done</em>メソッドをデータを取得した時にコールバックさせたい関数を登録するために呼んでます。また<em>.fail</em>メソッドを処理の結果起こるエラーの処理の為に呼んでいます。注意点として、<em>.done<em>と<em>.fail</em>は基本のPromeseの実装(jQueryのコード)が関数の登録やコールバックを処理し続ける限り、必要なだけ呼べるという点です。
   </p>
 
   <p>
-    このパターンでは、比較的簡単にもっと高度な同期的コードの実装ができますし、jQueryは一番普通な実装である<a href="http://api.jquery.com/jQuery.when/">$.when</a>のようなものを既に用意しています。
+    このパターンでは、比較的簡単にもっと高度な同期的コードの実装ができますし、jQueryは一番知られている実装である<a href="http://api.jquery.com/jQuery.when/">$.when</a>のようなものを既に用意しています。
   </p>
 
   <p>
@@ -277,7 +277,7 @@ function getData(){
     }
   },false) 
 
-  // 作業の実行
+  // 処理の実行
   xhr.send();
   // 注意点: jQuery.ajaxを使えますし、使うべきです
   // 注意点: jQuery.ajaxはPromeseを返しますが、他のDeferred/Promise中のアプリケーションの意図を
@@ -302,14 +302,14 @@ function getData(){
   <h2 id="toc-use-cases">使用例</h2>
 
   <p>
-    ここではDeferredが大変便利だという、良い使用例をいくつか見ていきます。
+    ここではDeferredが大変便利に使える、良い使用例をいくつか見ていきます。
   </p>
 
   <p>
-    <b>データアクセス：</b>データアクセスAPIを$.Deferredで公開するのは、しばしば正しい設計になります。
-    同期的なリモートの呼び出しはユーザーエクスペリエンスを完璧に壊してしまう為、この設計はリモートデータの扱いにおいては明らかです。
+    <b>データアクセス：</b>データアクセスAPIを$.Deferredで公開するのは、大概の場合正しい設計になります。
+    同期的なリモートの呼び出しはユーザーエクスペリエンスを完璧に壊してしまう為、この設計はリモートデータの扱いにおいては明らかに正しいです。
     また、ローカルデータで頻繁に非同期で処理される低レベルAPI(例えばSQLiteやIndexedDBなど)を使う場合も当てはまります。
-    Deferred APIの$.whenや.pipeは同期や非同期のサブクエリの連鎖を非常に威力を発揮します。
+    Deferred APIの$.whenや.pipeは同期や非同期のサブクエリの連鎖に非常な威力を発揮します。
   </p>
   <p>
     <b>UIアニメーション：</b>1つ、またはそれ以上のtransitionEndイベントを使ったアニメーションの編集するとなると、とても長ったらしいものになりかねません。特にCSS3アニメーションとJavaScriptを混ぜ合わせたアニメーションの場合はそうなります(良くあるケースですが)。
@@ -322,7 +322,7 @@ function getData(){
   </p>
 
   <p>
-    <b>ブラウザの全ての非同期API：</b>標準化する目的では、ブラウザAPIの呼び出しをDeferredでラップするのは、多くの場合において良いアイデアです。それぞれのコードにたった4~5行書くだけですが、どんなアプリケーションのコードでもとてもシンプルにしてくれます。
+    <b>ブラウザの全ての非同期API：</b>標準化する目的で、ブラウザAPIの呼び出しをDeferredでラップするのは、多くの場合において良いアイデアです。それぞれのコードにたった4~5行書くだけですが、どんなアプリケーションのコードでもとてもシンプルにしてくれます。
     上で紹介した、getData/getLocationの疑似コードのように、アプリケーションのコードの全てのタイプのAPI(ブラウザ、アプリケーション固有のもの、これらを組み合わせたもの)を1つの非同期モデルでまとめて書くことができます。
   </p>
 
