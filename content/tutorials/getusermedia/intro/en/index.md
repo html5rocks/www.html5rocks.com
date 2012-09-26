@@ -57,10 +57,7 @@ HTML Media Capture only allows you to record a media file or take a snapshot in 
 one of the first implementations. Check out [this video](http://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api) to see it in action.
 - Chrome for Android (0.16)
 - Firefox Mobile 10.0
-
-My recommendation is to stay clear from this one unless you're working with one
-of the mobile browsers above. Vendors are moving towards `getUserMedia()`.
-It's very unlikely anyone else will implement HTML Media Capture in the long term.
+- iOS6 Safari and Chrome (partial support)
 
 <h3 id="toc-round2">Round 2: device element</h3>
 
