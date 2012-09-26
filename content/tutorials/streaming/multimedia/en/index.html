@@ -65,12 +65,12 @@ if (hasMediaSource()) {
   alert("Bummer. Your browser doesn't support the MediaSource API!");
 }
 </code></pre>
-<h3 id="mediasource-init">Initialization</h3>
+<h3 id="mediasource-init">Getting started</h3>
 
 <p>Using the MediaSource API starts off with our old buddy, HTML5 <code>&lt;video&gt;</code>:</p>
 <pre class="prettyprint"><code>&lt;video controls autoplay&gt;&lt;/video&gt;
 </code></pre>
-<p class="notice" style="text-align:center"><strong>Note:</strong> Although we're going to use <code>&lt;video&gt;</code> for the examples in this section, the same can be applied to <code>&lt;audio&gt;</code>.</p>
+<p class="notice" style="text-align:center"><strong>Note:</strong> the examples in this section use <code>&lt;video&gt;</code>, but the same concepts apply to <code>&lt;audio&gt;</code>.</p>
 
 <p>Next, create a <code>MediaSource</code> object:</p>
 <pre class="prettyprint"><code>window.MediaSource = window.MediaSource || window.WebKitMediaSource;
@@ -80,21 +80,16 @@ var ms = new MediaSource();
 its the video's <code>src</code> to a file URL, we're going to create a blob <a href="https://developer.mozilla.org/en-US/docs/DOM/window.URL.createObjectURL">blob: URL</a> handle
 to the <code>MediaSource</code>.  This makes the media element feel special. It knows we're going to do more with it than just feed it a URL. We're going to feed it video data! Yum.</p>
 <p>The rest of the setup looks like this:</p>
-<pre class="prettyprint"><code>window.MediaSource = window.MediaSource || window.WebKitMediaSource;
-
-var ms = new MediaSource();
-ms.addEventListener('webkitsourceopen', onSourceOpen.bind(ms), false);
+<pre class="prettyprint"><code>ms.addEventListener('webkitsourceopen', onSourceOpen.bind(ms), false);
 
 // Use MediaSource to supply video data.
 var video = document.querySelector('video');
-video.src = window.URL.createObjectURL(ms);
+video.src = window.URL.createObjectURL(ms); // blob URL pointing to the MediaSource.
 
 function onSourceOpen(e) {
   // this.readyState === 'open'. Add source buffer that expects webm chunks.
   var sourceBuffer = ms.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
 
-  // Append chunks of a webm file.
-  sourceBuffer.append(webmChunk);
   ....
 }
 </code></pre>
@@ -102,8 +97,14 @@ function onSourceOpen(e) {
 Only the .webm container is supported at this time.
 </p>
 
-<p>When <code>sourceopen</code> fires on the <code>MediaSource</code>, our <code>&lt;video&gt;</code> is ready to accept data. We create a <code>SourceBuffer</code> (<code>.addSourceBuffer()</code>) and pass it a mimetype. This gives the buffer indication of what video format it should expect from us (webm in this case). Lastly, a single chunk of video is dynamically added to the <code>&lt;video&gt;</code> using <code>sourceBuffer.append()</code>.
-This method takes a <code>Uint8Array</code> typed array.</p>
+<p><code>sourceopen</code> fires after settings the video's <code>.src</code> to a blob URL
+pointing to the media source. When this happens, the <code>&lt;video&gt;</code> is ready to accept incoming data and we can create a new <code>SourceBuffer</code> in the event callback. The mimetype passed to <code>.addSourceBuffer()</code> indicates what format the <code>&lt;video&gt;</code> should expect to be handed (webm in this case).</p>
+<p>Once we have things setup, chunks of .webm can be dynamically added to the
+<code>&lt;video&gt;</code> by appending them to the <code>SourceBuffer</code>:</p>
+<pre class="prettyprint"><code>// Append a chunk of a webm file.
+sourceBuffer.append(webmChunk);
+</code></pre>
+<p>This method takes a <code>Uint8Array</code> typed array.</p>
 <h3 id="toc-appending-chunks">Appending chunks of media</h3>
 
 <p>The previous example appended a single chunk of webm to our <code>&lt;video&gt;</code>. However,
@@ -111,10 +112,9 @@ for the purposes of streaming, we need API functionality that lets us continuous
 append new video chunks as they come in from the server. Since most people
 don't have their media split into a bunch of pieces, there are a couple of ways
 to do this.</p>
-<p>If your server supports it, you can request portions of a resource using the <code>Range</code> header. Two APIs that support partial resources out of the box are the <a href="https://developers.google.com/google-apps/documents-list/#downloading_documents_and_files">Google Drive API</a> and the <a href="https://developers.google.com/appengine/docs/python/blobstore/overview#Serving_a_Blob">App Engine BlobStore API</a> (via <code>X-AppEngine-BlobRange</code>).</p>
-<p>We can combine this with XHR to pull down the media. It supports custom headers
-using <code>setRequestHeader()</code>.</p>
-<p>As an example, one can request the first 500 bytes of a file with something like this:</p>
+<p><strong><h4 id="toc-range-headers">Using range requests</h4></strong></p>
+<p>If your server supports it, you can request portions of a file using the <code>Range</code> header. Two APIs that support partial resources out of the box are the <a href="https://developers.google.com/google-apps/documents-list/#downloading_documents_and_files">Google Drive API</a> and the <a href="https://developers.google.com/appengine/docs/python/blobstore/overview#Serving_a_Blob">App Engine BlobStore API</a> (via <code>X-AppEngine-BlobRange</code>).</p>
+<p>You can set custom headers on an XHR request using <code>setRequestHeader()</code>. For instance, here's an example of requesting the first 500 bytes of a file:</p>
 <pre class="prettyprint"><code>var xhr = new XMLHttpRequest();
 xhr.open('GET', '/path/to/video.webm', true);
 xhr.responseType = 'blob';
@@ -129,14 +129,16 @@ xhr.send();
 This first portion contains the .webm container file header information.
 If your videos are constructed correctly, there's nothing special you need to do
 here. Just make sure this first chunk is indeed the first one you append.</p>
-<p>Then for subsequent appends, request the appropriate byte ranges and go to town:</p>
+<p>Then for subsequent appends, request the appropriate byte range and go to town:</p>
 <pre class="prettyprint"><code>sourceBuffer.append(webMChunk2);
 sourceBuffer.append(webMChunk3);
 ...
 </code></pre>
-<p>The second way to cut up a file is to do things ahead of time on the server. This
-can even be done on the client using the File APIs. For example, here's an snippet
-that XHRs in a file and splices it into pieces <code>File.slice()</code>:</p>
+<p><strong><h4 id="toc-slicing-file">Slicing a file</h4></strong></p>
+<p>The second way to dice a file is to do things ahead of time on the server.
+However, for demonstration purposes, we can do so client-side using the File APIs. </p>
+<p>As an example, here's how to use XHR to request a file and slice it into pieces
+using <code>File.slice()</code>:</p>
 <pre class="prettyprint"><code>var FILENAME = 'test.webm';
 var NUM_CHUNKS = 5;
 
@@ -202,70 +204,8 @@ I've created the following script to do that for you. It uses <code>file.slice()
 break up a .webm file into <code>NUM_CHUNKS</code> pieces.</p>
 <p><b>Select a .webm file:</b><input type="file" id="file-import">
 <button id="example-split-file-button">Split file</button>
-<p id="example-download-links"></p></p>
-<script>
-var FILE = '/static/videos/mediasource_test.webm';
-var NUM_CHUNKS = 5;
-
-var downloadLinks = document.querySelector('#example-download-links');
-var splitFileButton = document.querySelector('#example-split-file-button');
-var fileImport = document.querySelector('#file-import');
-
-fileImport.addEventListener('change', function(e) {
-  var f = e.target.files[0];
-  if (!f.type.match('.*/webm')) {
-    alert('Please select a .webm file');
-    return;
-  }
-});
-
-splitFileButton.addEventListener('click', function(e) {
-  get(FILE, function(file) {
-    //var file = new Blob([blob], {type: 'video/webm'});
-    var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
-
-console.log('num chunks:' + NUM_CHUNKS);
-    console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
-
-var fileNameParts = FILE.split('.');
-
-for (var i = 0; i < NUM_CHUNKS; ++i) {
-      var startByte = chunkSize * i;
-
-console.log(startByte, startByte + chunkSize);
-
-var chunk = file.slice(startByte, startByte + chunkSize, file.type);
-
-var a = document.createElement('a');
-      a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
-      a.textContent = 'Download chunk ' + i;
-      a.title = chunk.size + ' byte';
-      // blob urls created from file parts use original file. See crbug.com/145156.
-      a.href = window.URL.createObjectURL(chunk);
-      downloadLinks.appendChild(a);
-    }
-  });
-});
-
-function get(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.responseType = 'blob';
-
-//xhr.setRequestHeader('Range', 'bytes=5-12');
-
-xhr.onload = function(e) {
-    if (this.status != 200) {
-      alert("Unexpected status code " + this.status + " for " + url);
-      return false;
-    }
-    callback(this.response);
-  };
-
-xhr.send();
-}
-</script>
-
+<p id="example-download-links"></p>
+<div id="piechart"></div></p>
 <p>Here, we're using XHR2 to pull down the entire webm movie. The important bits to note are:</p>
 <h3 id="toc-mediasource-chunks">Chunking a file</h3>
 
@@ -319,5 +259,116 @@ http://downloads.webmproject.org/adaptive-demo/adaptive/dash-player.html</p>
 <li><a href="http://dev.w3.org/html5/websockets/">WebSocket API</a></li>
 </ul>
 <script>
+</script><script>
+(function() {
+
+var FILE = '/static/videos/mediasource_test.webm';
+var NUM_CHUNKS = 5;
+
+var downloadLinks = document.querySelector('#example-download-links');
+var splitFileButton = document.querySelector('#example-split-file-button');
+var fileImport = document.querySelector('#file-import');
+
+fileImport.addEventListener('change', function(e) {
+  var f = e.target.files[0];
+  if (!f.type.match('.*/webm')) {
+    alert('Please select a .webm file');
+    return;
+  }
+});
+
+splitFileButton.addEventListener('click', function(e) {
+  get(FILE, function(file) {
+    //var file = new Blob([blob], {type: 'video/webm'});
+    var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
+
+    console.log('num chunks:' + NUM_CHUNKS);
+    console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
+
+    var fileNameParts = FILE.split('.');
+
+    for (var i = 0; i < NUM_CHUNKS; ++i) {
+      var startByte = chunkSize * i;
+
+    console.log(startByte, startByte + chunkSize);
+
+      var chunk = file.slice(startByte, startByte + chunkSize, file.type);
+
+      var a = document.createElement('a');
+      a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
+      a.textContent = 'Download chunk ' + i;
+      a.title = chunk.size + ' byte';
+      // blob urls created from file parts use original file. See crbug.com/145156.
+      a.href = window.URL.createObjectURL(chunk);
+      downloadLinks.appendChild(a);
+    }
+  });
+});
+
+function get(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'blob';
+
+  //xhr.setRequestHeader('Range', 'bytes=5-12');
+
+  xhr.onload = function(e) {
+    if (this.status != 200) {
+      alert("Unexpected status code " + this.status + " for " + url);
+      return false;
+    }
+    callback(this.response);
+  };
+
+  xhr.send();
+}
+
+
+// Piechart code from http://blog.yojimbocorp.com/2012/01/17/creating-a-simple-pie-chart-with-html5-canvas/
+
+function PieChart(el, width, height, data, opt_padding) {
+  this.el = el;
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = width;
+  this.canvas.height = height;
+
+  var PADDING = opt_padding || 15; // px.
+  this.R = Math.min(width, height) / 2 - PADDING;
+
+  this.data = data;
+}
+
+PieChart.prototype.render = function() {
+  var lastPosition = 0;
+  var colors = ['#ff2c00', '#FF8500', '#0776A0', '#00B945', '#000'];
+
+  var center = [this.canvas.width / 2, this.canvas.height / 2];
+
+  var total = this.data.reduce(function(previousValue, currentValue, i) {
+    return previousValue + currentValue
+  });
+
+  var ctx = this.canvas.getContext('2d');
+
+  for (var i = 0; i < this.data.length; ++i) {
+    ctx.fillStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(center[0], center[1]);
+    ctx.arc(center[0], center[1], this.R, lastPosition,
+            lastPosition + (Math.PI * 2 * (this.data[i] / total)), false);
+    ctx.lineTo(center[0], center[1]);
+    ctx.fill();
+    lastPosition += Math.PI * 2 * (this.data[i] / total);
+  }
+
+  this.el.appendChild(this.canvas);
+}
+
+var data = [75, 34, 34, 32, 95];
+var pie = new PieChart(document.querySelector('#piechart'), 150, 150, data);
+pie.render();
+
+})();
 </script>
+
 {% endblock %}

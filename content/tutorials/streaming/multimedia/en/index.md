@@ -42,13 +42,13 @@ with a vendor prefix:
       alert("Bummer. Your browser doesn't support the MediaSource API!");
     }
 
-<h3 id="mediasource-init">Initialization</h3>
+<h3 id="mediasource-init">Getting started</h3>
 
 Using the MediaSource API starts off with our old buddy, HTML5 `<video>`:
 
     <video controls autoplay></video>
 
-<p class="notice" style="text-align:center"><strong>Note:</strong> Although we're going to use <code>&lt;video&gt;</code> for the examples in this section, the same can be applied to <code>&lt;audio&gt;</code>.</p>
+<p class="notice" style="text-align:center"><strong>Note:</strong> the examples in this section use <code>&lt;video&gt;</code>, but the same concepts apply to <code>&lt;audio&gt;</code>.</p>
 
 Next, create a `MediaSource` object:
 
@@ -61,21 +61,16 @@ to the `MediaSource`.  This makes the media element feel special. It knows we're
 
 The rest of the setup looks like this:
 
-    window.MediaSource = window.MediaSource || window.WebKitMediaSource;
-
-    var ms = new MediaSource();
     ms.addEventListener('webkitsourceopen', onSourceOpen.bind(ms), false);
 
     // Use MediaSource to supply video data.
     var video = document.querySelector('video');
-    video.src = window.URL.createObjectURL(ms);
+    video.src = window.URL.createObjectURL(ms); // blob URL pointing to the MediaSource.
 
     function onSourceOpen(e) {
       // this.readyState === 'open'. Add source buffer that expects webm chunks.
       var sourceBuffer = ms.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
-      
-      // Append chunks of a webm file.
-      sourceBuffer.append(webmChunk);
+
       ....
     }
 
@@ -83,7 +78,15 @@ The rest of the setup looks like this:
 Only the .webm container is supported at this time.
 </p>
 
-When `sourceopen` fires on the `MediaSource`, our `<video>` is ready to accept data. We create a `SourceBuffer` (`.addSourceBuffer()`) and pass it a mimetype. This gives the buffer indication of what video format it should expect from us (webm in this case). Lastly, a single chunk of video is dynamically added to the `<video>` using `sourceBuffer.append()`.
+`sourceopen` fires after settings the video's `.src` to a blob URL
+pointing to the media source. When this happens, the `<video>` is ready to accept incoming data and we can create a new `SourceBuffer` in the event callback. The mimetype passed to `.addSourceBuffer()` indicates what format the `<video>` should expect to be handed (webm in this case).
+
+Once we have things setup, chunks of .webm can be dynamically added to the
+`<video>` by appending them to the `SourceBuffer`:
+
+    // Append a chunk of a webm file.
+    sourceBuffer.append(webmChunk);
+
 This method takes a `Uint8Array` typed array.
 
 <h3 id="toc-appending-chunks">Appending chunks of media</h3>
@@ -94,12 +97,11 @@ append new video chunks as they come in from the server. Since most people
 don't have their media split into a bunch of pieces, there are a couple of ways
 to do this.
 
-If your server supports it, you can request portions of a resource using the `Range` header. Two APIs that support partial resources out of the box are the [Google Drive API](https://developers.google.com/google-apps/documents-list/#downloading_documents_and_files) and the [App Engine BlobStore API](https://developers.google.com/appengine/docs/python/blobstore/overview#Serving_a_Blob) (via `X-AppEngine-BlobRange`).
+**<h4 id="toc-range-headers">Using range requests</h4>**
 
-We can combine this with XHR to pull down the media. It supports custom headers
-using `setRequestHeader()`.
+If your server supports it, you can request portions of a file using the `Range` header. Two APIs that support partial resources out of the box are the [Google Drive API](https://developers.google.com/google-apps/documents-list/#downloading_documents_and_files) and the [App Engine BlobStore API](https://developers.google.com/appengine/docs/python/blobstore/overview#Serving_a_Blob) (via `X-AppEngine-BlobRange`).
 
-As an example, one can request the first 500 bytes of a file with something like this:
+You can set custom headers on an XHR request using `setRequestHeader()`. For instance, here's an example of requesting the first 500 bytes of a file:
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/path/to/video.webm', true);
@@ -116,15 +118,19 @@ This first portion contains the .webm container file header information.
 If your videos are constructed correctly, there's nothing special you need to do
 here. Just make sure this first chunk is indeed the first one you append.
 
-Then for subsequent appends, request the appropriate byte ranges and go to town:
+Then for subsequent appends, request the appropriate byte range and go to town:
 
     sourceBuffer.append(webMChunk2);
     sourceBuffer.append(webMChunk3);
     ...
 
-The second way to cut up a file is to do things ahead of time on the server. This
-can even be done on the client using the File APIs. For example, here's an snippet
-that XHRs in a file and splices it into pieces `File.slice()`:
+**<h4 id="toc-slicing-file">Slicing a file</h4>**
+
+The second way to dice a file is to do things ahead of time on the server.
+However, for demonstration purposes, we can do so client-side using the File APIs. 
+
+As an example, here's how to use XHR to request a file and slice it into pieces
+using `File.slice()`:
 
     var FILENAME = 'test.webm';
     var NUM_CHUNKS = 5;
@@ -195,69 +201,7 @@ break up a .webm file into `NUM_CHUNKS` pieces.
 <b>Select a .webm file:</b><input type="file" id="file-import">
 <button id="example-split-file-button">Split file</button>
 <p id="example-download-links"></p>
-
-<script>
-var FILE = '/static/videos/mediasource_test.webm';
-var NUM_CHUNKS = 5;
-
-var downloadLinks = document.querySelector('#example-download-links');
-var splitFileButton = document.querySelector('#example-split-file-button');
-var fileImport = document.querySelector('#file-import');
-
-fileImport.addEventListener('change', function(e) {
-  var f = e.target.files[0];
-  if (!f.type.match('.*/webm')) {
-    alert('Please select a .webm file');
-    return;
-  }
-});
-
-splitFileButton.addEventListener('click', function(e) {
-  get(FILE, function(file) {
-    //var file = new Blob([blob], {type: 'video/webm'});
-    var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
-
-    console.log('num chunks:' + NUM_CHUNKS);
-    console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
-
-    var fileNameParts = FILE.split('.');
-
-    for (var i = 0; i < NUM_CHUNKS; ++i) {
-      var startByte = chunkSize * i;
-
-    console.log(startByte, startByte + chunkSize);
-
-      var chunk = file.slice(startByte, startByte + chunkSize, file.type);
-
-      var a = document.createElement('a');
-      a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
-      a.textContent = 'Download chunk ' + i;
-      a.title = chunk.size + ' byte';
-      // blob urls created from file parts use original file. See crbug.com/145156.
-      a.href = window.URL.createObjectURL(chunk);
-      downloadLinks.appendChild(a);
-    }
-  });
-});
-
-function get(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.responseType = 'blob';
-
-  //xhr.setRequestHeader('Range', 'bytes=5-12');
-
-  xhr.onload = function(e) {
-    if (this.status != 200) {
-      alert("Unexpected status code " + this.status + " for " + url);
-      return false;
-    }
-    callback(this.response);
-  };
-
-  xhr.send();
-}
-</script>
+<div id="piechart"></div>
 
 Here, we're using XHR2 to pull down the entire webm movie. The important bits to note are:
 
