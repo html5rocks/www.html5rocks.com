@@ -51,14 +51,15 @@ CORS is supported in the following browsers:
 <ul>
 <li>Chrome 3+</li>
 <li>Firefox 3.5+</li>
+<li>Opera 12+</li>
 <li>Safari 4+</li>
 <li>Internet Explorer 8+</li>
 </ul>
-(source: <a href="http://en.wikipedia.org/wiki/Cross-Origin_Resource_Sharing">http://en.wikipedia.org/wiki/Cross-Origin_Resource_Sharing</a>)
+(see the complete list of supported browsers at <a href="http://caniuse.com/#search=cors">http://caniuse.com/#search=cors</a>)
 </p>
 
 <p>
-Chrome, Firefox and Safari all use the <a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">XmlHttpRequest2 object</a>. Internet Explorer uses the similar XDomainRequest object, which works in much the same way as its XmlHttpRequest counterpart, but adds additional <a href="http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx">security precautions</a>. CORS support is <a href="http://my.opera.com/core/blog/2011/10/28/cors-goes-mainline">coming soon to Opera</a>; but as of this writing, it is not yet available.
+Chrome, Firefox, Opera and Safari all use the <a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">XmlHttpRequest2 object</a>. Internet Explorer uses the similar XDomainRequest object, which works in much the same way as its XmlHttpRequest counterpart, but adds additional <a href="http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx">security precautions</a>.
 </p>
 
 <p>
@@ -181,7 +182,7 @@ And thats it!  Assuming the server is properly configured to respond to CORS req
 <h3 id="toc-end-to-end-example">End-to-End Example</h3>
 
 <p>
-Here is a full working sample of a CORS request.
+Here is a full working sample of a CORS request. Run the sample and watch the network requests in the browser's debugger to see the actual request being made.
 </p>
 
 <p align="center" style="font-size: 20px;">
@@ -193,7 +194,7 @@ Here is a full working sample of a CORS request.
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
   if ("withCredentials" in xhr) {
-    // XHR for Chrome/Safari/Firefox.
+    // XHR for Chrome/Firefox/Opera/Safari.
     xhr.open(method, url, true);
   } else if (typeof XDomainRequest != "undefined") {
     // XDomainRequest for IE.
@@ -208,13 +209,13 @@ function createCORSRequest(method, url) {
 
 // Helper method to parse the title tag from the response.
 function getTitle(text) {
-  return text.match('&lt;title>(.*)?&lt;/title>')[1];
+  return text.match('&lt;title&gt;(.*)?&lt;/title&gt;')[1];
 }
 
 // Make the actual CORS request.
 function makeCorsRequest() {
-  // bibliographica.org supports CORS.
-  var url = 'http://bibliographica.org/';
+  // All HTML5 Rocks properties support CORS.
+  var url = 'http://updates.html5rocks.com';
 
   var xhr = createCORSRequest('GET', url);
   if (!xhr) {
@@ -529,6 +530,65 @@ The browser doesn't give you a lot of details on why the error occurred, it only
 
 <p>While CORS lays the groundwork for making cross-domain requests, the CORS headers are not a substitute for sound security practices. You shouldn't rely on the CORS header for securing resources on your site. Use the CORS headers to give the browser directions on cross-domain access, but use some other security mechanism, such as cookies or <a href="http://oauth.net/2/">OAuth2</a>, if you need additional security restrictions on your content.</p>
 
+<h2 id="toc-cors-from-jquery">
+CORS from JQuery
+</h2>
+
+<p>JQuery's <code><a href="http://api.jquery.com/jQuery.ajax/">$.ajax()</a></code> method can be used to make both regular XHR and CORS requests. A few notes about JQuery's implementation:</p>
+
+<ul>
+<li>JQuery's CORS implementation doesn't support IE's XDomainRequest object. But there are JQuery plugins that enable this. See <a href="http://bugs.jquery.com/ticket/8283">http://bugs.jquery.com/ticket/8283</a> for details.</li>
+<li>The <code>$.support.cors</code> boolean will be set to <code>true</code> if the browser supports CORS (This returns <code>false</code> in IE, see bullet above). This can be a quick way to check for CORS support.</li>
+</ul>
+
+<p>Here's sample code for making a CORS request with JQuery. The comments give more details on how certain properties interact with CORS.</p>
+
+<pre class="prettyprint">
+$.ajax({
+
+  // The 'type' property sets the HTTP method.
+  // A value of 'PUT' or 'DELETE' will trigger a preflight request.
+  type: 'GET',
+
+  // The URL to make the request to.
+  url: 'http://updates.html5rocks.com',
+
+  // The 'contentType' property sets the 'Content-Type' header.
+  // The JQuery default for this property is
+  // 'application/x-www-form-urlencoded; charset=UTF-8', which does not trigger
+  // a preflight. If you set this value to anything other than
+  // application/x-www-form-urlencoded, multipart/form-data, or text/plain,
+  // you will trigger a preflight request.
+  contentType: 'text/plain',
+
+  xhrFields: {
+    // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+    // This can be used to set the 'withCredentials' property.
+    // Set the value to 'true' if you'd like to pass cookies to the server.
+    // If this is enabled, your server must respond with the header
+    // 'Access-Control-Allow-Credentials: true'.
+    withCredentials: false 
+  },
+
+  headers: {
+    // Set any custom headers here.
+    // If you set any non-simple headers, your server must include these
+    // headers in the 'Access-Control-Allow-Headers' response header.
+  },
+
+  success: function() {
+    // Here's where you handle a successful response.
+  },
+
+  error: function() {
+    // Here's where you handle an error response.
+    // Note that if the error was due to a CORS issue,
+    // this function will still fire, but there won't be any additional
+    // information about the error.
+  }
+});
+</pre>
+
 <h2 id="toc-cross-domain-from-chrome-extensions">
 Cross-Domain from Chrome Extensions
 </h2>
@@ -553,13 +613,12 @@ The server doesn't need to include any additional CORS headers or do any more wo
 </p>
 
 <h2 id="toc-known-bugs">
-Known Bugs
+Known Issues
 </h2>
 <p>
-CORS support is still being actively developed in all browsers; here's a list of known bugs (as of 11/13/2011):
+CORS support is still being actively developed in all browsers; here's a list of known issues (as of 9/21/2012):
 <ol>
-<li>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - The getAlLResponseHeaders() method on the XMLHttpRequest object should return all simple response headers and any response header included in the Access-Control-Expose-Headers response header. In Chrome/Safari, only simple response headers are included, while Firefox doesn't return ANY response headers (Link to: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>, <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">WebKit bug</a>).</li>
-<li>Non-simple headers on GET/POST requests bypass preflight request - In Safari, a request with a simple HTTP method (GET or POST), but non-simple request headers, do not issue a preflight request, and the non-simple header is not included as part of the request (Link to: <a href="https://bugs.webkit.org/show_bug.cgi?id=50773">WebKit bug</a>).</li>
+<li>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - Firefox doesn't return response headers when calling getAllResponseHeaders(). (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>). A similar <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">bug in WebKit</a> has been fixed.</li>
 <li>No error information provided to onerror handler - When the onerror handler is fired, the status code is 0, and there is no statusText. This may be by design, but it can be confusing when trying to debug why CORS requests are failing.</li>
 </ol>
 </p>
@@ -588,7 +647,7 @@ CORS support is still being actively developed in all browsers; here's a list of
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
   if ("withCredentials" in xhr) {
-    // XHR for Chrome/Safari/Firefox.
+    // XHR for Chrome/Firefox/Opera/Safari.
     xhr.open(method, url, true);
   } else if (typeof XDomainRequest != "undefined") {
     // XDomainRequest for IE.
@@ -608,8 +667,8 @@ function getTitle(text) {
 
 // Make the actual CORS request.
 function makeCorsRequest() {
-  // bibliographica.org supports CORS.
-  var url = 'http://bibliographica.org/';
+  // All HTML5 Rocks properties support CORS.
+  var url = 'http://updates.html5rocks.com';
 
   var xhr = createCORSRequest('GET', url);
   if (!xhr) {
