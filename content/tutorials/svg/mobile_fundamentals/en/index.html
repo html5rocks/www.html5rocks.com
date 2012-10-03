@@ -11,153 +11,196 @@
 
 {% block content %}
 
-<h1>Splash Vector Graphics On Your Mobile Site</h1>
-<div>
+<p>
 Creating mobile content that dazzles means balancing the amount of data downloaded against maximal visual impact.
 Vector graphics are a great way to deliver stunning visual results using minimal bandwidth.
-Many people think of canvas as the way to do vector drawing on the web, but there are alternatives that have some advantages.
-A great way to achieve vector drawing is through the use of Scalable Vector Graphics (SVG) which is a key part of HTML5.
+</p>
+<p>
+Many people think of canvas as the only way to do vector drawing on the web, but there are alternatives that have some advantages.
+A great way to achieve vector drawing is through the use of <a href="http://www.w3.org/TR/SVG/">Scalable Vector Graphics (SVG)</a> which is a key part of <a href="http://dev.w3.org/html5/spec/single-page.html">HTML5</a>.
+</p>
+<p>
 We all know responsive design is a big part of handling varying screen sizes, and SVG is ideal for handling different size screens with ease.
-Popular authoring tools like Inkscape, Google Drawing, Illustrator, Corel Draw and lots of others generate SVG so there are lots of ways to generate content.
+Popular authoring tools like the Drawing application in Google Drive, Inkscape, Illustrator, Corel Draw and lots of others generate SVG so there are lots of ways to generate content.
 We'll dive into some ways to use SVG assets, plus some optimization tips to get you going.
-<br/>
-<h2>Scaling fundamentals</h2>
-Let's start with the a simple scenario - you want a full page graphic to be the background of your web page.
+</p>
+<h2 id="toc-fundamentals">Scaling fundamentals</h2>
+<p>
+Let's start with a simple scenario - you want a full page graphic to be the background of your web page.
 It'd be really useful to have your company logo, or anything like that full-screen in the background at all
 times, but of course that's super hard to do nicely with all the different screen sizes out there.
 So to illustrate, we'll start with the humble HTML5 logo.
-<br/>
+</p>
+<p>
 The HTML5 logo is shown below - and you guessed it, it originates as an SVG file.
-<div>
-<a href="images/HTML5-logo.svg" alt="HTML5 logo"><img src=images/HTML5-logo.svg width=512 height=512/></a>
-</div>
+</p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/HTML5-logo.svg" alt="HTML5 logo"><img src="/static/demos/svgmobile_fundamentals/images/HTML5-logo.svg" width="512" height="512"/></a>
+  </figure>
+<p>
 Click on the logo and take a look at it in any modern browser and you'll see that it scales beautifully to any size window.
 Try opening it up in your favorite browser, resize the window and observe that the image is crisp at any magnification.
 If we were to try that with a bitmap image, we'd either have to serve many different sizes for each screen we could encounter,
 or be forced to put up with horribly pixelated scaled images.
-<br/>
+</p>
+<p>
 So what's the big deal?
 Well if you hadn't noticed, this is the only format that scales independently of the device we're using to look at it with.
 So we only need to serve one asset to our users, without ever needing to know what their screen or window size is - neat!
-<br/>
+</p>
+<p>
 But wait, there's more - the HTML5 logo is just 1427 bytes! Yikes, that's so small that it will hardly dent any mobile
-data plan when loading it, which makes it fast to load and not just cheap!
-<br/>
+data plan when loading it, which makes it fast to load and that makes it cheap and fast for your users!
+</p>
+<p>
 Another nice thing about SVG files is that they can be GZIP compressed to further shrink them.
-In the case of the HTML5 logo, it shrinks to just 663 bytes when compressed - and all modern browsers handle it with ease!
-<br/>
-Of course it makes sense to look at some real world examples, so lers take a look at some popular mobile device screen sizes to unerstand the implications.
+In the case of the HTML5 logo, it shrinks to just 663 bytes when compressed - and most modern browsers handle it with ease!
+</p>
+<p class="notice">
+  Note, some browsers can load the GZIP files OK but fail on loading via the &lt;img&gt; tag. Luckily HTTP can use GZIP compression so setting up the web server
+  properly may be a better way to take advantage of GZIP compression.
+</p>
+<p>
+Of course it makes sense to look at some real world examples, so lets take a look at some popular mobile device screen sizes to unerstand the implications.
 Below is a table of a number of modern devices that support HTML5 and SVG, their screen resolutions and the size of a background image of the HTML5 logo using PNG and low quality JPEG files.
 The <em>Image/Vector ratio</em> shows the reduction in size from low quality JPEG compared with SVG files and compressed SVG files in brackets.
-</div>
+</p>
+<p>
 <table border=1>
   <caption style="caption-side:bottom;">HTML5 logo image size comparison</caption>
   <tr>
     <th>Device</th><th>Resolution</th><th>PNG image</th><th>JPEG image</th><th>Image/Vector ratio</th>
   </tr>
   <tr>
-    <td>iPhone 3G</td><td>320x480</td><td>9.5k</td><td>6.3k</td><td>4.4 (9.5)</td>
+    <td>iPhone 3G</td><td>320x480</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-320x480.png">9.5k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-320x480.jpg">6.3k</a></td><td>4.4 (9.5)</td>
   </tr>
   <tr>
-    <td>Nexus One</td><td>480x800</td><td>15.4k</td><td>9.8k</td><td>6.8 (14.7)</td>
+    <td>Nexus One</td><td>480x800</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-480x800.png">15.4k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-480x800.jpg">9.8k</a></td><td>6.8 (14.7)</td>
   </tr>
   <tr>
-    <td>DROID RAZR</td><td>540x960</td><td>17.3k</td><td>12k</td><td>8.4 (18.1)</td>
+    <td>DROID RAZR</td><td>540x960</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-540x960.png">17.3k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-540x960.jpg">12k</a></td><td>8.4 (18.1)</td>
   </tr>
   <tr>
-    <td>iPhone 4</td><td>640x960</td><td>20.7k</td><td>13.2k</td><td>9.25 (19.9)</td>
+    <td>iPhone 4</td><td>640x960</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-640x960.png">20.7k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-640x960.jpg">13.2k</a></td><td>9.25 (19.9)</td>
   </tr>
   <tr>
-    <td>iPhone 5</td><td>640x1136</td><td>21.6k</td><td>14k</td><td>9.8 (21.1)</td>
+    <td>iPhone 5</td><td>640x1136</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-640x1136.png">21.6k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-640x1136.jpg">14k</a></td><td>9.8 (21.1)</td>
   </tr>
   <tr>
-    <td>Galaxy Nexus</td><td>720x1280</td><td>24.4k</td><td>15.8k</td><td>11 (23.8)</td>
+    <td>Galaxy Nexus</td><td>720x1280</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-720x1280.png">24.4k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-720x1280.jpg">15.8k</a></td><td>11 (23.8)</td>
   </tr>
   <tr>
-    <td>iPad 1&amp;2</td><td>1024x768</td><td>24.8k</td><td>15.7k</td><td>11 (23.7)</td>
+    <td>iPad 1&amp;2</td><td>1024x768</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1024x768.png">24.8k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1024x768.jpg">15.7k</a></td><td>11 (23.7)</td>
   </tr>
   <tr>
-    <td>Galaxy Tab 10.1, Nexus 7</td><td>1280x800</td><td>27.1k</td><td>17.9k</td><td>12.5 (27)</td>
+    <td>Galaxy Tab 10.1, Nexus 7</td><td>1280x800</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1280x800.png">27.1k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1280x800.jpg">17.9k</a></td><td>12.5 (27)</td>
   </tr>
   <tr>
-    <td>Kindle Fire HD</td><td>1920x1200</td><td>44.1k</td><td>29.9k</td><td>20.9 (45)</td>
+    <td>Kindle Fire HD</td><td>1920x1200</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1920x1200.png">44.1k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-1920x1200.jpg">29.9k</a></td><td>20.9 (45)</td>
   </tr>
   <tr>
-    <td>iPad new</td><td>2048x1536</td><td>57.7k</td><td>39.6k</td><td>27.7 (59.7)</td>
+    <td>iPad new</td><td>2048x1536</td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-2048x1536.png">57.7k</a></td><td><a href="/static/demos/svgmobile_fundamentals/images/html5-2048x1536.jpg">39.6k</a></td><td>27.7 (59.7)</td>
   </tr>
 </table>
+</p>
 <p>
 As you can see, the size of the SVG data is significantly smaller for the example content, and what's interesting is that as the screen resolution increaases, the size advantage grows.
+</p>
+<p>
 On some of the latest devices we see somehing like a 60x advantage using compressed vector data!
 Also, note that these comparisons are being made between the JPEG and the SVG, rather than PNG.
 However, the JPEG is of lower quality than either the SVG or PNG. If we were to use PNG, the advantage would be over 80x which is astounding!
+</p>
+<p>
 But of course PNG and JPEG are not created equal. A number of optimization tips tell you to use JPEG instead of PNG, but that's not always such a great idea.
 Take a look at the images below. The image on the left is a PNG image of the top right part of the HTML5 logo enlarged 6x.
 The image on the right is the same thing but encoded with JPEG.
 </p>
-<img src=images/html5-shield-raw.jpg width=222 height=396 />
-<img src=images/html5-shield-jpg.jpg width=222 height=395 />
+<div style="text-align:center">
+  <figure style="display:inline-block">
+    <img src="/static/demos/svgmobile_fundamentals/images/html5-shield-raw.jpg" width=222 height=396 />
+    <figcaption>PNG image</figcaption>
+  </figure>
+  &nbsp;  &nbsp;
+  <figure style="display:inline-block">
+    <img src="/static/demos/svgmobile_fundamentals/images/html5-shield-jpg.jpg" width=222 height=395 />
+    <figcaption>JPEG image</figcaption>
+  </figure>
+</div>
 <p>
 It's easy to see that the file size saving in JPEG comes at a cost, with the smearing of color at the sharp edges - probably making your retina think it needs glasses:-)
 In any case, the SVG version is the same as the PNG in quality so wins on all accounts - both file size and clarity.
 </p>
-<h2>Making Vector Backgrounds</h2>
+<h2 id="toc-vectorbg">Making Vector Backgrounds</h2>
+<p>
 Lets take a look at how you could use a vector file as the background of a page.
 One easy way is to declare your background file using CSS fixed positioning:
-<pre>
+</p>
+<pre class="prettyprint">
 &lt;style&gt;
 #bg {
-	position:fixed; 
-	top:0; 
-	left:0; 
-	width:100%;
-	height:100%;
+  position:fixed; 
+  top:0; 
+  left:0; 
+  width:100%;
+  height:100%;
+  z-index: -1;
 }
 &lt;/style&gt;
-&lt;img src="HTML5-logo.svgz" id="bg" alt=""&gt;
-</pre>
-<a href=background.html>Try it yourself</a>
+&lt;img src="HTML5-logo.svgz" id="bg" alt=""&gt;</pre>
+<a href="/static/demos/svgmobile_fundamentals/background.html">Try it yourself</a>
 <p>
 You'll notice that no matter what the size of the display, the image is sized nicely with crisp clean
 edges.
 </p>
 <p>
-Then of course, we'd like to put some content over the background like in <a href=background-1.html>the example below.</a>
-<div>
-<img src="images/background-1.jpg"/>
-</div>
+Then of course, we'd like to put some content over the background like in <a href="/static/demos/svgmobile_fundamentals/background-1.html">the example below.</a>
+</p>
+  <figure>
+    <img src="/static/demos/svgmobile_fundamentals/images/background-1.jpg"/>
+  </figure>
+<p>
 But as you can see, the result is less than ideal since we can't read the text. So what do we do?
 </p>
 <h3>Adjusting the background to look nicer</h3>
+<p>
 The obvious thing we need to do is make all the color in the background image be lighter.
 This is easily achieved by use of the CSS opacity property - or using opacity in the SVG file itself.
 You could make this work by simply adding this code to your CSS content:
-<pre>
+</p>
+<pre class="prettyprint">
 #bg {
   opacity: 0.2;
-}
-</pre>
-That would give you a <a href=background-2.html>result</a> like so:
-<div>
-<img src="images/background-2.jpg"/>
-</div>
+}</pre>
+<p>
+That would give you a <a href="/static/demos/svgmobile_fundamentals/background-2.html">result</a> like so:
+</p>
+  <figure>
+    <img src="/static/demos/svgmobile_fundamentals/images/background-2.jpg"/>
+  </figure>
+<p>
 This solution whilst easy, is likely to be a performance pain point on a mobile device.
 For most existing mobile browsers, use of the opacity property is a lot slower to draw with compared with opaque objects.
+</p>
 <h3>A better solution</h3>
+<p>
 Modifying the color in the original SVG content is far superior to use of opacity.
-<a href="images/HTML5-logo-faded.svg">Here</a> is our HTML5 logo modified to look faded out by changing the colors used, and in the process avoiding the opacity property altogether. So the background image below looks identical to the result from changing the opacity, but will actually paint a lot
+<a href="/static/demos/svgmobile_fundamentals/images/HTML5-logo-faded.svg">Here</a> is our HTML5 logo modified to look faded out by changing the colors used, and in the process avoiding the opacity property altogether. So the background image below looks identical to the result from changing the opacity, but will actually paint a lot
 faster and save us CPU time and save precious battery life in the process.
-<div>
-<img src="images/HTML5-logo-faded.svg" width=400 height=400/>
-</div>
+</p>
+<figure>
+<img src="/static/demos/svgmobile_fundamentals/images/HTML5-logo-faded.svg" width=400 height=400/>
+</figure>
+<p>
 So now we have a decent grasp of some fundamentals, lets move on to some other features.
-<h2>Using Gradients Efficiently</h2>
-  <div>
+</p>
+<h2 id="toc-gradients">Using Gradients Efficiently</h2>
+  <p>
     Let's say we want to build ourselves a button for the user to tap or click on.
     We could start by creating a rectangle with nice rounded corners.
     Then we could add a nice linear gradient to give the button some nice texture. The code to do so could look something like:
-  </div>
-  <pre>
+  </p>
+  <pre class="prettyprint">
 &lt;svg xmlns="http://www.w3.org/2000/svg"&gt;
   &lt;defs&gt;
     &lt;linearGradient id="blueshiny"&gt;
@@ -171,50 +214,59 @@ So now we have a decent grasp of some fundamentals, lets move on to some other f
     &lt;rect fill="url(#blueshiny)" width="198" height="83" x="3" y="4" rx="15" /&gt;
     &lt;text x="100" y="55" fill="white" font-size="18pt" text-anchor="middle"&gt;Press me&lt;/text&gt;
   &lt;/g&gt;
-&lt;/svg&gt;
-  </pre>
-  <div>
+&lt;/svg&gt;</pre>
+  <p>
     The resultant button would end up with something like this:
-  </div>
-  <img src="images/glossy_button.svg" width="200" height="100"/>
-  <div>
+  </p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/glossy_button.svg"><img src="/static/demos/svgmobile_fundamentals/images/glossy_button.svg" width="200" height="100"/></a>
+  </figure>
+  <p>
     Notice how the gradient we've added goes from left to right. This is the default gradient direction in SVG.
     But we can do better, for a couple of different reasons.
     One reason is aesthetics, the other is performance. Let's try to change the gradient direction to make it look a bit nicer.
     Setting the 'x1', 'y1', 'x2', and 'y2' attributes on the linear gradient controls the direction of the fill color.
-    <br/>
+  </p>
+  <p>
     Setting just the 'y2' attribute lets us change the gradient to be diagonal. So this small code change:
-  </div>
-  <pre>
-      &lt;linearGradient id="blueshiny" y2="1"&gt;
-  </pre>
-  <div>
+  </p>
+  <pre class="prettyprint">
+      &lt;linearGradient id="blueshiny" y2="1"&gt;</pre>
+  <p>
     gives us a different look for our button, it ends up looking like the image below.
-  </div>
-  <img src="images/glossy_button-slanted.svg" width="200" height="100"/>
-  <div>
+  </p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/glossy_button-slanted.svg"><img src="/static/demos/svgmobile_fundamentals/images/glossy_button-slanted.svg" width="200" height="100"/></a>
+  </figure>
+  <p>
     We can also easily change the gradient to go from top to bottom with this small code change:
-  </div>
-  <pre>
-      &lt;linearGradient id="blueshiny" x2="0" y2="1"&gt;
-  </pre>
-  <div>
+  </p>
+  <pre class="prettyprint">
+      &lt;linearGradient id="blueshiny" x2="0" y2="1"&gt;</pre>
+  <p>
     and that ends up looking like the image below.
-  </div>
-  <img src="images/glossy_button-vertical.svg" width="200" height="100"/>
-  <div>
+  </p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/glossy_button-vertical.svg"><img src="/static/demos/svgmobile_fundamentals/images/glossy_button-vertical.svg" width="200" height="100"/></a>
+  </figure>
+  <p>
     So what's with all the discussion about different angles of the gradient I hear you ask?
-    <br/>
+  </p>
+  <p>
     Well it turns out that the last example - the one with the gradient running from top to bottom is the fastest to draw on most devices.
     It's a very little known secret amongst the graphic geeks that write the code inside the browser that gradients that run from top to bottom paint almost as fast as a solid color. (The reason is that painting an object is done in horizontal lines down the page - and the guts of the
     drawing code understand that the color doesn't change across each line, and so they optimize it).
-    <br/>
+  </p>
+  <p>
     So when you choose to use gradients in your page design, using vertical gradients will be faster and use less battery as a side effect.
     This speedup applies to CSS gradients as well, so it's not just an SVG thing.
-    <br/>
+  </p>
+  <p class="notice">Note, that radial gradients should be avoided unless you know they'll be hardware accelerated - in software
+    they are painfully slow.</p>
+  <p>
     If we felt really adventurous wit this new gradient knowledge, then we could perhaps add a cool gradient behind our HTML5 logo by adding the code below:
-  </div>
-  <pre>
+  </p>
+  <pre class="prettyprint">
   &lt;defs&gt;
     &lt;linearGradient id="grad1" x2="0" y2="1"&gt;
       &lt;stop stop-color="#FBE6FB" offset="0" /&gt;
@@ -225,25 +277,31 @@ So now we have a decent grasp of some fundamentals, lets move on to some other f
       &lt;stop stop-color="#FFCCCC" offset="1" /&gt;
     &lt;/linearGradient&gt;
   &lt;/defs&gt;
-  &lt;rect x="-200" y="-160" width="910" height="830" fill="url(#grad1)"/&gt;
-  </pre>
-  <div>
-    The code above adds a faded vertical linear gradient to the backgound of our HTML5 logo to give a subtle multi-color tinge that runs fast - as fast as a solid color background. Note, also that the choice of the size of the background rectangle guarantees the color fills the screens on all
-    of our mobile devices listed at the start of this article (their screen aspect ratios range from 0.625 through 1.7777). If you load the content
-    in a desktop browser and resize to extreme aspect ratios, you'll see white bars appear at the top/bottom or left/right sides.
+  &lt;rect x="-200" y="-160" width="910" height="830" fill="url(#grad1)"/&gt;</pre>
+  <p>
+    The code above adds a faded vertical linear gradient to the backgound of our HTML5 logo to give a subtle multi-color tinge that runs fast - as fast as a solid color background.
+  </p>
+  <p class="notice">Note, also that the choice of the size of the background rectangle guarantees the color fills the screens on all
+    of our mobile devices listed at the start of this article (their screen aspect ratios range from 0.625 through 1.7777).
+  </p>
+  <p>
+    If you load the content in a desktop browser and resize to extreme aspect ratios, you'll see white bars appear at the top/bottom or left/right sides.
     Anyway, after the code changes above the resultant background will look like this:
-  </div>
-  <img src="images/HTML5-logo-faded-gradient.svg" width=400 height=400/>
+  </p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/HTML5-logo-faded-gradient.svg"><img src="/static/demos/svgmobile_fundamentals/images/HTML5-logo-faded-gradient.svg" width="512" height="512"/></a>
+  </figure>
 
-<h2>Animate With Ease</h2>
-<div>
+<h2 id="toc-animate">Animate With Ease</h2>
+<p>
   By now you might be wondering what's the point of using an SVG gradient as the backdrop for your page.
   Indeed it might make sense to do that with CSS gradients, but one advantage of SVG is that the gradient itself lives in the DOM.
   This means that you can modify it with script, but more importantly you can take advantage of SVG's built in animation capability to add subtle changes to your content.
-  <br/>
+</p>
+<p>
   As an example, we'll modify our colorful HTML5 logo by changing the linear gradient definition to the code below:
-</div>
-<pre>
+</p>
+<pre class="prettyprint">
     &lt;linearGradient id="grad1" x2="0" y2="1"&gt;
       &lt;stop stop-color="#FBE6FB" offset="0"&gt;
         &lt;animate attributeName="stop-color"
@@ -275,36 +333,43 @@ So now we have a decent grasp of some fundamentals, lets move on to some other f
           values="#FFCCCC;#FBE6FB;#CCCCFF;#CCFFCC;#FFFFCC;#FFEDCC;#FFCCCC"
           begin="0s" dur="20s" repeatCount="indefinite"/&gt;
       &lt;/stop&gt;
-    &lt;/linearGradient&gt;
-</pre>
-<div>
+    &lt;/linearGradient&gt;</pre>
+<p>
   Take a look at the image below to see the result of the code changes above.
-</div>
-  <a href="images/HTML5-logo-granim.svg"><img src="images/HTML5-logo-granim.svg" width=400 height=400/></a>
-<div>
+</p>
+  <figure>
+    <a href="/static/demos/svgmobile_fundamentals/images/HTML5-logo-granim.svg"><img src="/static/demos/svgmobile_fundamentals/images/HTML5-logo-granim.svg" width="512" height="512"/></a>
+  </figure>
+<p>
   What that code is doing is changing the colors of our linear gradient through all the different color stops we've defined
   in a continuous cycle that takes 20 seconds to run. The effect of that is that the gradient looks like it's moving up
   the page in a continuous motion that never stops.
-  <br/>
+</p>
+<p>
   The beauty of this is that there's no script required! 
   That's why it runs as a referenced image from this page, but also it reduces workload on a mobile CPU by removing the need for script.
-  <br/>
+</p>
+<p>
   Also, the browser itself can take advantage of it's knowledge of the painting to ensure minimal CPU overhead is used to do the fancy animation.
-  <br/>
+</p>
+<p>
   There is one caveat, that being that some browsers don't handle this style of animation at all, but in that case you'll still get a nice
   colored background but it just won't change - this could be worked around by using script (and requestAnimationFrame) but that's a bit beyond this article.
-  <br/>
-  One more thing to note, is that the compressed SVG file for <a href="background-3.html">this example</a> is only 1008 bytes - incredibly small to supply such a rich
-  graphics effect, keeping your users and those data plans happy in the process.
-</div>
-<h2>Where to now?</h2>
-<div>
+</p>
+<p>
+  One more thing to note, is that the uncompressed SVG file for <a href="/static/demos/svgmobile_fundamentals/background-3.html">this example</a> is only 2922 bytes - incredibly small to supply such a rich graphics effect, keeping your users and those data plans happy in the process.
+</p>
+<h2 id="toc-whereto">Where to from here?</h2>
+<p>
   We've touched on a few basic fundamental uses for SVG graphics, showing how easy it is to generate tiny content that provides
   full screen vivid graphics with a minimal amount of downloaded content. Small enhancements to the content can create amazing
   graphical results easily with trivial amounts of markup. In the next article we'll explore some more details about how the animation
   built into SVG can be used for more simple and powerful effects and compare the use of canvas with SVG to choose the right
   tool for authoring your mobile graphics site.
-</div>
+</p>
+
+<h2 id="toc-otherresources">Other good resources</h2>
+
 
 {% endblock %}
 
