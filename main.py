@@ -195,7 +195,7 @@ class ContentHandler(webapp2.RequestHandler):
 
     # Show banner if we have a URL and are under 60 minutes since it was saved.
     if (live_data and
-        (datetime.datetime.now() - live_data.updated).seconds / 60 < 60):
+        (datetime.datetime.now() - live_data.updated).total_seconds() / 60 < 60):
       template_data['gdl_page_url'] = live_data.gdl_page_url
 
     # Add CORS support entire site.
