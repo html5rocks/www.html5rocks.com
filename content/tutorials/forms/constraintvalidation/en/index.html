@@ -30,14 +30,10 @@ ul .prettyprint {
 	line-height: 1.3;
 }
 </style>
-<script>
-//Add formvalidation api check to Modernizr.
-(function(a,b){b.formvalidationapi=false;b.formvalidationmessage=false;b.addTest("formvalidation",function(){var g=a.createElement("form");if(!("checkValidity" in g)){return false}var d=a.body,f=a.documentElement,c=false,h=false,e;b.formvalidationapi=true;g.onsubmit=function(i){if(!window.opera){i.preventDefault()}i.stopPropagation()};g.innerHTML='<input name="modTest" required><button></button>';g.style.position="absolute";g.style.top="-99999em";if(!d){c=true;d=a.createElement("body");d.style.background="";f.appendChild(d)}d.appendChild(g);e=g.getElementsByTagName("input")[0];e.oninvalid=function(i){h=true;i.preventDefault();i.stopPropagation()};b.formvalidationmessage=!!e.validationMessage;g.getElementsByTagName("button")[0].click();d.removeChild(g);c&&f.removeChild(d);return h})})(document,window.Modernizr);
-</script>
 {% endblock %}
 
 {% block iscompatible %}
-  return !!Modernizr.formvalidationapi
+  return !!('checkValidity' in document.createElement('form'))
 {% endblock %}
 
 {% block html5badge %}
