@@ -1,0 +1,176 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Joe Marini{% endblock %}
+
+{% block headtitle %}Using the PageVisibility API{% endblock %}
+{% block pagetitle %}Using the PageVisibility API{% endblock %}
+{% block pagebreadcrumb %}Using the PageVisibility API{% endblock %}
+{% block date %}October 17th, 2012{% endblock %}
+
+{% block iscompatible %}
+return (typeof document.hidden != "undefined" || typeof document.webkitHidden != "undefined" || 
+	typeof document.mozHidden != "undefined" || typeof document.msHidden != "undefined");
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>As Web developers, we tend to get excited by new technologies that enable us to create ever more engaging, interactive Web pages. 3D graphics with WebGL? Absolutely. Advanced audio capabilities with WebAudio? Sure thing. Real-time collaboration applications using the Web camera and microphone? Sign me up!
+
+Less exciting, though equally important, are the technologies that allow us to build applications that run more efficiently and provide a better overall user experience. This is where an API like PageVisibility comes in.
+
+The <a href="http://www.w3.org/TR/page-visibility/" target="_blank">Page Visibility API</a> performs a simple but important function – it lets your application know when a page is visible to the user. This basic piece of information enables the creation of Web pages that behave differently when they are not being viewed. Consider a few examples:</p>
+<ul>
+<li>A Web page that retrieves information from a server can slow down its update cycle when not being used, conserving battery power (important on mobile devices)</li>
+<li>A page that displays a rotating image carousel or video/audio content can pause until the user displays the page again</li>
+<li>An application can decide to display notifications to the user only when it is hidden from view</li>
+</ul>
+
+<p>
+The API specification, which as of this writing is in the Candidate Recommendation stage, provides both properties for detecting the document's visibility state as well as an event for responding to visibility changes.
+
+To get an idea of how you can use this API, take a look at <a href="http://www.samdutton.com/pageVisibility/">a demo that my colleague Sam Dutton wrote</a> a little while back that shows how to pause and play a video when the tab is shown and hidden.
+</p>
+
+<h2 id="toc-topic">Document Visibility Properties</h2>
+
+<p>The <a href="http://www.w3.org/TR/page-visibility/">current version of the PageVisibilityAPI spec</a> defines two document properties: the boolean <a href="http://www.w3.org/TR/page-visibility/#pv-hidden"><code>hidden</code></a> and the enumeration <a href="http://www.w3.org/TR/page-visibility/#pv-visibility-state"><code>visibilityState</code></a>. The visibilityState property currently has three possible values: hidden, visible, and preview.
+
+<strong>Note: </strong>these properties are currently vendor-prefixed, so you’ll need to use prefixed versions such as &quot;webkitHidden&quot; and &quot;webkitVisibilityState&quot; until the spec has reached official recommendation status and the browser vendors implement the un-prefixed versions.
+
+As you might expect, the hidden attribute returns true when the document is not visible at all. Typically, this means that the document is either minimized, on a background tab, the OS's lock screen is up, etc. The attribute is set to false if any part of the document is at least partially visible on at least one display. In addition, to accommodate accessibility tools, the hidden attribute can be set to false when a tool such as a screen magnifier completely obscures the document, but is showing a view of it.
+</p>
+
+<h3 id="toc-topic-subtopic">Document Properties Example</h3>
+
+<pre class="prettyprint">
+function isHidden() {
+  if (typeof document.hidden != "undefined")
+    return document.hidden;
+  else if (typeof document.webkitHidden != "undefined")
+    return document.webkitHidden;
+  else if (typeof document.mozHidden != "undefined")
+    return document.mozHidden;
+  else if (typeof document.msHidden != "undefined")
+    return document.msHidden;
+  return false;
+}</pre>
+
+<p>For a more granular view of the document's visibility, you can use the visibilityState property. This property returns one of four values:</p>
+<ul>
+<li><code>hidden</code>: the document is completely hidden from view</li>
+<li><code>visible</code>: the document is at least partially visible on at least one display device</li>
+<li><code>prerender</code>: the document is loaded off-screen and not visible (this value is optional; not all browsers will necessarily support it)</li>
+<li><code>unloaded</code>: if the document is to be unloaded, then this value will be returned (this value is optional; not all browsers will necessarily support it)</li>
+</ul>
+
+<h2 id="toc-topic">The VisibilityChange Event</h2>
+
+<p>
+In addition to the visibility properties, the spec defines a visibilitychange event that fires whenever the document's visibility state changes. You can register an event listener for this event directly on the document object:</p>
+
+<h3 id="toc-topic-subtopic">Event Example</h3>
+
+<pre class="prettyprint">
+if (typeof document.hidden != "undefined" || 
+   typeof document.webkitHidden != "undefined" ||
+   typeof document.mozHidden != "undefined" || 
+   typeof document.msHidden != "undefined") {
+
+   if (typeof document.hidden != "undefined")
+      document.addEventListener("visibilitychange", visChange);
+   else if (typeof document.webkitHidden != "undefined") 
+      document.addEventListener("webkitvisibilitychange", visChange);
+   else if (typeof document.mozHidden != "undefined") 
+       document.addEventListener("mozvisibilitychange", visChange);
+   else if (typeof document.msHidden != "undefined") 
+      document.addEventListener("msvisibilitychange", visChange);
+}
+
+function visChange() {
+   var txtFld = document.getElementById('visChangeText');
+
+   if (txtFld) {
+      if (isHidden())
+         txtFld.value += "Tab Hidden!\n";
+      else
+         txtFld.value += "Tab Visible!\n";
+   }
+}
+</pre>
+
+<p>You can see the effects of the above code example here in the text edit field below. Try hiding and showing the tab containing this page and watch the edit field’s contents change:</p>
+
+<script>
+window.onload = function() {
+	if (typeof document.hidden != "undefined" || 
+	   typeof document.webkitHidden != "undefined" ||
+	   typeof document.mozHidden != "undefined" || 
+	   typeof document.msHidden != "undefined") {
+
+	   if (typeof document.hidden != "undefined")
+	      document.addEventListener("visibilitychange", visChange);
+	   else if (typeof document.webkitHidden != "undefined") 
+	      document.addEventListener("webkitvisibilitychange", visChange);
+	   else if (typeof document.mozHidden != "undefined") 
+	       document.addEventListener("mozvisibilitychange", visChange);
+	   else if (typeof document.msHidden != "undefined") 
+	      document.addEventListener("msvisibilitychange", visChange);
+	}
+   else {
+      var txtFld = document.getElementById('visChangeText');
+      txtFld.value += "PageVisibilityAPI not supported!"
+   }
+
+	function isHidden() {
+	  if (typeof document.hidden != "undefined")
+	    return document.hidden;
+	  else if (typeof document.webkitHidden != "undefined")
+	    return document.webkitHidden;
+	  else if (typeof document.mozHidden != "undefined")
+	    return document.mozHidden;
+	  else if (typeof document.msHidden != "undefined")
+	    return document.msHidden;
+	  return false;
+	}	
+
+	function visChange() {
+		var txtFld = document.getElementById('visChangeText');
+
+		if (txtFld) {
+			if (isHidden())
+				txtFld.value += "Tab Hidden!\n";
+			else
+				txtFld.value += "Tab Visible!\n";
+		}
+	}
+}
+</script>
+
+<textarea id="visChangeText" style="width:300px;height:100px"></textarea>
+
+<h2 id="toc-topic">Summary</h2>
+
+<p>Building a great Web application involves far more than just using the whiz-bang, eye catching features that users can see and interact with. A truly great application makes considerate use of the user's resources and attention, and the Page Visibility API is an important piece of that puzzle. To learn more about building resource-conscious Web applications, visit the <a href="">Web Performance Working Group.</a></p>
+
+<h2 id="toc-references">External References</h2>
+
+<ul>
+  <li><a href="http://www.w3.org/TR/page-visibility/">W3C PageVisibility API Spec</a></li>
+  <li><a href="http://www.w3.org/2010/webperf/">Web Performance Working Group</a></li>
+</ul>
+
+{% endblock %}
