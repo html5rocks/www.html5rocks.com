@@ -269,7 +269,7 @@ window.addEventListener("load", function vidDemo() {
 
 <p>The <a href="http://www.html5rocks.com/en/tutorials/notifications/quick/">W3C Notifications API</a> allows you to display pop-up notification windows to the user to get their attention. When the user is already paying attention to the page, however, this can be pretty annoying. Using the PageVisibility API, you can elect to show these notifications only when the tab is hidden.</p>
 
-<p>Click the button below, then switch away from the tab. After 5 seconds, the code will check to see if the tab is hidden and display a notification. Otherwise, a standard alert will be used.</p>
+<p>Enable notifications by clicking the "Enable Notifications" button. Then click the "Notify Me!" button, and switch away from the tab. After 5 seconds, the code will check to see if the tab is hidden and display a notification. Otherwise, a standard alert will be used.</p>
 
 <script>
 window.addEventListener("load", function notifyDemo() {
@@ -374,7 +374,43 @@ window.addEventListener("load", function notifyDemo() {
 
 <h3 id="toc-topic-subtopic">Deferring Google Analytics if the page is being pre-rendered</h3>
 
-<p>TBD</p>
+<p>Some browsers, such as Google Chrome, have the ability to pre-render pages (you can read more about Chrome's pre-rendering <a href="https://developers.google.com/chrome/whitepapers/prerender">here</a>). This process involves downloading all the resources needed to render the page - including any scripts that the page contains. Many third-party sites use Google Analytics to detect when their page is being viewed, but this count can be skewed if a page is pre-rendered but never actually viewed by the user.</p>
+
+<p>
+   To prevent this problem, you can use the PageVisibility API to detect that your page is being pre-rendered and skip tracking the view if that is the case. Typically, your page will contain code that looks like this:
+</p>
+
+<pre class="prettyprint">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-XXXXX-X']);
+_gaq.push(['_trackPageview']);
+</pre>
+
+<p>In this case, the _trackPageview event is always recorded, even if the page is not shown to the user. A script that detects pre-rendering would look like:</p>
+
+<pre class="prettyprint">
+var bHavePV = ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document);
+var bInitialShow = false;
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-XXXXX-X']);
+
+if (bHavePV) {
+   document.addEventListener("visibilityChange", handleVisEvt);
+}
+else {
+   _gaq.push(['_trackPageview']); // track page view normally when PageVisibility is not present
+}
+
+function handleVisEvt() {
+   if (document.visibilityState == "prerender") {
+      _trackEvent("pagedata", "prerender"); // might be interesting to keep track of pre-rendering
+   }
+   if (document.visibilityState == "visible" &amp;&amp; !bInitialShow) {
+      bInitialShow = true; // don't trigger this code again
+      _gaq.push(['_trackPageview']);
+   }
+}
+</pre>
 
 <h2 id="toc-topic">Summary</h2>
 
