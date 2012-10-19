@@ -17,6 +17,7 @@
 }
 .browser-screenshot-list img {
 	max-width: 200px;
+	height: auto !important;
 	display: block;
 }
 .browser-screenshot-list.wide li {
@@ -124,7 +125,7 @@ ul .prettyprint {
 &lt;input type="text" id="two" /&gt;
 &lt;input type="text" id="three" disabled /&gt;
 &lt;script&gt;
-    document.getElementById('one').willValidate; //false
+    document.getElementById('one').willValidate; //undefined
     document.getElementById('two').willValidate; //true
     document.getElementById('three').willValidate; //false
 &lt;/script&gt;
@@ -203,16 +204,7 @@ ul .prettyprint {
 
 	<li>
 		<code>tooLong</code>: 
-		<code>true</code> if the node's <code>value</code> exceeds its <code>maxlength</code> attribute.  All browsers prevent this from realistically occurring by preventing users from inputting values that exceed the maxlength.
-<pre class="prettyprint lang-html">
-&lt;input id="foo" type="text" maxlength="1" value="A" /&gt;
-&lt;input id="bar" type="text" maxlength="1" value="AB" /&gt;
-&lt;script&gt;
-    document.getElementById('foo').validity.tooLong; //false
-    document.getElementById('bar').validity.tooLong; //true in Opera, false in other supported browsers.
-&lt;/script&gt;
-</pre>
-		Note: I have pending <a href="https://bugs.webkit.org/show_bug.cgi?id=99115">WebKit</a> and <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=800639">Firefox</a> tickets open for the incorrect value of <code>tooLong</code>.
+		<code>true</code> if the node's <code>value</code> exceeds its <code>maxlength</code> attribute.  All browsers prevent this from realistically occurring by preventing users from inputting values that exceed the maxlength.  Although rare it is possible to have this property be <code>true</code> in some browsers; I've written about how that's possible <a href="http://tjvantoll.com/2012/10/17/maxlength-constraint-validation-oddities/">here</a>.
 	</li>
 
 	<li>
@@ -361,7 +353,7 @@ if (document.getElementById('password1').value != document.getElementById('passw
 
 <h3>formnovalidate</h3>
 
-<p>The boolean <code>formnovalidate</code> attribute can be applied to button and input nodes to prevent submission.  For example:</p>
+<p>The boolean <code>formnovalidate</code> attribute can be applied to button and input nodes to prevent form validation.  For example:</p>
 
 <pre class="prettyprint lang-html">
 &lt;form&gt;
@@ -381,7 +373,7 @@ if (document.getElementById('password1').value != document.getElementById('passw
 
 <h3>:invalid and :valid</h3>
 
-<p>In supporting browsers the <code>:valid</code> pseudoselector will match form elements that meet their specified constraints and the <code>:invalid</code> pseudoselector will match those that do not.</p>
+<p>In supporting browsers the <code>:valid</code> pseudo-classes will match form elements that meet their specified constraints and the <code>:invalid</code> pseudo-classes will match those that do not.</p>
 
 <pre class="prettyprint lang-html">
 &lt;form&gt;
@@ -584,8 +576,7 @@ password2.addEventListener('change', checkPasswordValidity, false);
 <pre class="prettyprint lang-js">
 var forms = document.getElementsByTagName('form');
 for (var i = 0; i < forms.length; i++) {
-    //Add the novalidate attribute.
-    forms[i].setAttribute('novalidate', true);
+    forms[i].noValidate = true;
 
     forms[i].addEventListener('submit', function(event) {
         //Prevent submission if checkValidity on the form returns false.
@@ -663,7 +654,7 @@ for (var i = 0; i < forms.length; i++) {
 
 <h3 id="toc-invalid-valid">:invalid and :valid</h3>
 
-<p>As discussed earlier the <code>:valid</code> pseudoselector will match form elements that meet all specified constraints and the <code>:invalid</code> pseudoselector will match those that do not.  Unfortunately these pseudoselectors will be matched immediately, before the form is submitted and before the form is interacted with.  Consider the following example:
+<p>As discussed earlier the <code>:valid</code> pseudo-class will match form elements that meet all specified constraints and the <code>:invalid</code> pseudo-class will match those that do not.  Unfortunately these pseudo-classes will be matched immediately, before the form is submitted and before the form is interacted with.  Consider the following example:
 
 <pre class="prettyprint lang-html">
 &lt;style&gt;
@@ -712,9 +703,11 @@ for (var i = 0; i < forms.length; i++) {
 
 <a href="http://jsfiddle.net/tj_vantoll/WLHDY/">Try It</a>
 
-<p>Firefox has seen these issues and <a href="http://blog.oldworld.fr/index.php?post/2011/05/Improving-HTML5-Forms-user-experience-with-moz-ui-invalid-and-moz-ui-valid-pseudo-classes">implemented two additional pseudoselectors</a> - <code>:moz-ui-invalid</code> and <code>:moz-ui-valid</code>.  Unlike <code>:invalid</code> and <code>:valid</code>, <code>:moz-ui-invalid</code> and <code>:moz-ui-valid</code> will not match a field until the field is modified or the user tries to submit the form with invalid input.</p>
+<p>Firefox has seen these issues and <a href="http://blog.oldworld.fr/index.php?post/2011/05/Improving-HTML5-Forms-user-experience-with-moz-ui-invalid-and-moz-ui-valid-pseudo-classes">implemented two additional pseudo-classes</a> - <code>:-moz-ui-invalid</code> and <code>:-moz-ui-valid</code>.  Unlike <code>:invalid</code> and <code>:valid</code>, <code>:-moz-ui-invalid</code> and <code>:-moz-ui-valid</code> will not match a field until the field is modified or the user tries to submit the form with invalid input.</p>
 
-<p>One final note.  In Firefox and Firefox alone the <code>:valid</code> and <code>:invalid</code> pseudoselectors will match <code>&lt;form&gt;</code> nodes in addition to form elements.  So be careful when applying global CSS rules to <code>:invalid</code> and <code>:valid</code>.</p>
+<p>Based on this work the <a href="http://www.w3.org/TR/selectors4/#user-pseudos">CSS selectors level 4 specification</a> contains a <code>:user-error</code> pseudo-class that functions much like <code>:-moz-ui-invalid</code>.  It has yet to be implemented by any browsers.</p>
+
+<p>One final note.  Be aware that <code>:valid</code> and <code>:invalid</code> should match <code>&lt;form&gt;</code> nodes in addition to form elements.  Currently this has only been implemented in Firefox, but be careful when applying global rules to <code>:valid</code> and <code>:invalid</code>.</p>
 
 <h3 id="toc-unsupported-browsers">Unsupported Browsers</h3>
 
@@ -792,7 +785,7 @@ for (var i = 0; i < forms.length; i++) {
 
 <ul>
 	<li>Declaratively specify error messages through a <code>data-errormessage</code> attribute.</li>
-	<li>Provides classes <code>form-ui-valid</code> and <code>form-ui-invalid</code> which work similarly to <code>:moz-ui-valid</code> and <code>:moz-ui-invalid</code>.</li>
+	<li>Provides classes <code>form-ui-valid</code> and <code>form-ui-invalid</code> which work similarly to <code>:-moz-ui-valid</code> and <code>:-moz-ui-invalid</code>.</li>
 	<li>Provides custom events <code>firstinvalid</code>, <code>lastinvalid</code>, <code>changedvalid</code>, and <code>changedinvalid</code>.</li>
 	<li>Includes workarounds for WebKit false positives on form submission.</li>
 </ul>
@@ -823,7 +816,7 @@ for (var i = 0; i < forms.length; i++) {
 
 <p>If you're looking for some examples of how to leverage the API, <a href="http://www.alistapart.com/d/forward-thinking-form-validation/enhanced_2.html">H5F's demo page</a> has an implementation that shows the messages in a bubble on the right hand side of the inputs.  I also have an example that shows how you can <a href="http://tjvantoll.com/2012/08/05/html5-form-validation-showing-all-error-messages/">show all error messages in a list</a> at the top of forms.</p>
 
-<p>In addition to polyfilling the constraint validation API, H5F also provides classes to mimic <code>:moz-ui-valid</code> and <code>:moz-ui-invalid</code>.  By default these classes are <code>valid</code> and <code>error</code> although they can be customized by passing in a second parameter to <code>H5F.setup</code>.</p>
+<p>In addition to polyfilling the constraint validation API, H5F also provides classes to mimic <code>:-moz-ui-valid</code> and <code>:-moz-ui-invalid</code>.  By default these classes are <code>valid</code> and <code>error</code> although they can be customized by passing in a second parameter to <code>H5F.setup</code>.</p>
 
 <pre class="prettyprint lang-js">
 H5F.setup(document.getElementById('foo'), {
