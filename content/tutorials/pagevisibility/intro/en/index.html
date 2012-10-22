@@ -50,22 +50,43 @@ In this tutorial, I'll cover the basics of the API and show how to apply it to s
 As you might expect, the hidden attribute returns true when the document is not visible at all. Typically, this means that the document is either minimized, on a background tab, the OS's lock screen is up, etc. The attribute is set to false if any part of the document is at least partially visible on at least one display. In addition, to accommodate accessibility tools, the hidden attribute can be set to false when a tool such as a screen magnifier completely obscures the document, but is showing a view of it.
 </p>
 
-<h3 id="toc-topic-subtopic">Document Properties Example</h3>
+<h3 id="toc-topic-subtopic">Dealing with vendor prefixes</h3>
+
+<p>
+  To keep the focus on the code instead of all the vendor-specific prefixing, I’m going to use some helper functions to isolate the browser-specifics.
+</p>
 
 <pre class="prettyprint">
+function getHiddenProp(){
+    var prefixes = ['webkit','moz','ms','o'];
+    
+    // if 'hidden' is natively supported just return it
+    if ('hidden' in document) return 'hidden';
+    
+    // otherwise loop over all the known prefixes until we find one
+    for (var i = 0; i &lt; prefixes.length; i++){
+        if ((prefixes[i] + 'Hidden') in document) 
+            return prefixes[i] + 'Hidden';
+    }
+
+    // otherwise it's not supported
+    return null;
+}
+</pre>
+
+<h3 id="toc-topic-subtopic">Document Properties Example</h3>
+
+<p>
+  Now we can write a cross-browser function, <code>isHidden()</code>, to see if the document is visible.
+</p>
+<pre class="prettyprint">
 function isHidden() {
-  if ("hidden" in document)
-    return document.hidden;
-  else if ("webkitHidden" in document)
-    return document.webkitHidden;
-  else if ("mozHidden" in document)
-    return document.mozHidden;
-  else if ("msHidden" in document)
-    return document.msHidden;
-  else if ("oHidden" in document)
-    return document.oHidden;
-  return false;
-}</pre>
+    var prop = getHiddenProp();
+    if (!prop) return false;
+    
+    return document[prop];
+}
+</pre>
 
 <p>For a more granular view of the document's visibility, you can use the visibilityState property. This property returns one of four values:</p>
 <ul>
@@ -83,16 +104,12 @@ In addition to the visibility properties, there is a visibilitychange event that
 <h3 id="toc-topic-subtopic">Event Example</h3>
 
 <pre class="prettyprint">
-if ("hidden" in document)
-   document.addEventListener("visibilitychange", visChange);
-else if ("webkitHidden" in document) 
-   document.addEventListener("webkitvisibilitychange", visChange);
-else if ("mozHidden" in document) 
-    document.addEventListener("mozvisibilitychange", visChange);
-else if ("msHidden" in document) 
-   document.addEventListener("msvisibilitychange", visChange);
-else if ("oHidden" in document) 
-   document.addEventListener("ovisibilitychange", visChange);
+// use the property name to generate the prefixed event name
+var visProp = getHiddenProp();
+if (visProp) {
+  var evtname = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
+  document.addEventListener(evtname, visChange);
+}
 
 function visChange() {
    var txtFld = document.getElementById('visChangeText');
@@ -109,37 +126,40 @@ function visChange() {
 <p>You can see the effects of the above code example here in the text edit field below. Try hiding and showing the tab containing this page and watch the edit field’s contents change: </p>
 
 <script>
+function getHiddenProp(){
+    var prefixes = ['webkit','moz','ms','o'];
+    
+    // if 'hidden' is natively supported just return it
+    if ('hidden' in document) return 'hidden';
+    
+    // otherwise loop over all the known prefixes until we find one
+    for (var i = 0; i < prefixes.length; i++){
+        if ((prefixes[i] + 'Hidden') in document) 
+            return prefixes[i] + 'Hidden';
+    }
+
+    // otherwise it's not supported
+    return null;
+}
+
+function isHidden() {
+    var prop = getHiddenProp();
+    if (!prop) return false;
+    
+    return document[prop];
+}
+
 window.addEventListener("load", function simpleDemo() {
-	if ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document) {
-      if ("hidden" in document)
-         document.addEventListener("visibilitychange", visChange);
-      else if ("webkitHidden" in document) 
-         document.addEventListener("webkitvisibilitychange", visChange);
-      else if ("mozHidden" in document) 
-          document.addEventListener("mozvisibilitychange", visChange);
-      else if ("msHidden" in document) 
-         document.addEventListener("msvisibilitychange", visChange);
-      else if ("oHidden" in document) 
-         document.addEventListener("ovisibilitychange", visChange);
-	}
-   else {
+  // use the property name to generate the prefixed event name
+  var visProp = getHiddenProp();
+  if (visProp) {
+    var evtname = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
+    document.addEventListener(evtname, visChange);
+  }
+  else {
       var txtFld = document.getElementById('visChangeText');
       txtFld.value += "PageVisibilityAPI not supported!"
-   }
-
-   function isHidden() {
-     if ("hidden" in document)
-       return document.hidden;
-     else if ("webkitHidden" in document)
-       return document.webkitHidden;
-     else if ("mozHidden" in document)
-       return document.mozHidden;
-     else if ("msHidden" in document)
-       return document.msHidden;
-     else if ("oHidden" in document)
-       return document.oHidden;
-     return false;
-   }
+  }
 
 	function visChange() {
 		var txtFld = document.getElementById('visChangeText');
@@ -147,10 +167,10 @@ window.addEventListener("load", function simpleDemo() {
 		if (txtFld) {
 			if (isHidden()) {
 				txtFld.value += "Tab Hidden!\n";
-         }
+      }
 			else {
 				txtFld.value += "Tab Visible!\n";
-         }
+      }
 		}
 	}
 });
@@ -174,40 +194,20 @@ window.addEventListener("load", function simpleDemo() {
 <script>
 window.addEventListener("load", function vidDemo() {
    sessionStorage.initialPlay = false;
-   var evtName = "", propName = "";
    var vidElem = document.getElementById("video-demo");
 
-   if ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document) {
-      if ("hidden" in document) {
-         evtName = "visibilitychange";
-         propName = "hidden";
-      }
-      else if ("webkitHidden" in document) {
-         evtName = "webkitvisibilitychange";
-         propName = "webkitHidden";
-      }
-      else if ("mozHidden" in document) {
-         evtName = "mozvisibilitychange";
-         propName = "mozHidden";
-      }
-      else if ("msHidden" in document) {
-         evtName = "msvisibilitychange";
-         propName = "msHidden";
-      }
-      else if ("oHidden" in document) {
-         evtName = "msvisibilitychange";
-         propName = "oHidden";
-      }
-
+   var visProp = getHiddenProp();
+   if (visProp) {
       vidElem.addEventListener("play", function() {
          sessionStorage.initialPlay = true;
       });
 
+      var evtName = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
       document.addEventListener(evtName, startStopVideo);
    }
 
    function startStopVideo() {
-      if (document[propName]) {
+      if (document[visProp]) {
          vidElem.pause();
       }
       else if (vidElem.paused && sessionStorage.initialPlay == "true") {
@@ -222,40 +222,20 @@ window.addEventListener("load", function vidDemo() {
 <pre class="prettyprint">
 window.addEventListener("load", function vidDemo() {
    sessionStorage.initialPlay = false;
-   var evtName = "", propName = "";
    var vidElem = document.getElementById("video-demo");
 
-   if ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document) {
-      if ("hidden" in document) {
-         evtName = "visibilitychange";
-         propName = "hidden";
-      }
-      else if ("webkitHidden" in document) {
-         evtName = "webkitvisibilitychange";
-         propName = "webkitHidden";
-      }
-      else if ("mozHidden" in document) {
-         evtName = "mozvisibilitychange";
-         propName = "mozHidden";
-      }
-      else if ("msHidden" in document) {
-         evtName = "msvisibilitychange";
-         propName = "msHidden";
-      }
-      else if ("oHidden" in document) {
-         evtName = "msvisibilitychange";
-         propName = "oHidden";
-      }
-
+   var visProp = getHiddenProp();
+   if (visProp) {
       vidElem.addEventListener("play", function() {
          sessionStorage.initialPlay = true;
       });
 
+      var evtName = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
       document.addEventListener(evtName, startStopVideo);
    }
 
    function startStopVideo() {
-      if (document[propName]) {
+      if (document[visProp]) {
          vidElem.pause();
       }
       else if (vidElem.paused &amp;&amp; sessionStorage.initialPlay == "true") {
@@ -275,23 +255,7 @@ window.addEventListener("load", function vidDemo() {
 window.addEventListener("load", function notifyDemo() {
    var propName = "";
    var oNotify=null;
-   if ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document) {
-      if ("hidden" in document) {
-         propName = "hidden";
-      }
-      else if ("webkitHidden" in document) {
-         propName = "webkitHidden";
-      }
-      else if ("mozHidden" in document) {
-         propName = "mozHidden";
-      }
-      else if ("msHidden" in document) {
-         propName = "msHidden";
-      }
-      else if ("oHidden" in document) {
-         propName = "oHidden";
-      }
-   }
+   var visProp = getHiddenProp();
 
    document.getElementById("notify-demo").addEventListener("click", function() {
       oNotify = null;
@@ -309,7 +273,7 @@ window.addEventListener("load", function notifyDemo() {
    });
 
    function showNotification() {
-      if (document[propName] && window.webkitNotifications && oNotify) {
+      if (document[visProp] && window.webkitNotifications && oNotify) {
          oNotify.show();
       }
       else {
@@ -328,23 +292,7 @@ window.addEventListener("load", function notifyDemo() {
 window.addEventListener("load", function notifyDemo() {
    var propName = "";
    var oNotify=null;
-   if ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document) {
-      if ("hidden" in document) {
-         propName = "hidden";
-      }
-      else if ("webkitHidden" in document) {
-         propName = "webkitHidden";
-      }
-      else if ("mozHidden" in document) {
-         propName = "mozHidden";
-      }
-      else if ("msHidden" in document) {
-         propName = "msHidden";
-      }
-      else if ("oHidden" in document) {
-         propName = "oHidden";
-      }
-   }
+   var visProp = getHiddenProp();
 
    document.getElementById("notify-demo").addEventListener("click", function() {
       oNotify = null;
@@ -362,7 +310,7 @@ window.addEventListener("load", function notifyDemo() {
    });
 
    function showNotification() {
-      if (document[propName] &amp;&amp; window.webkitNotifications &amp;&amp; oNotify) {
+      if (document[visProp] &amp;&amp; window.webkitNotifications &amp;&amp; oNotify) {
          oNotify.show();
       }
       else {
@@ -389,7 +337,7 @@ _gaq.push(['_trackPageview']);
 <p>In this case, the _trackPageview event is always recorded, even if the page is not shown to the user. A script that detects pre-rendering would look like:</p>
 
 <pre class="prettyprint">
-var bHavePV = ("hidden" in document || "webkitHidden" in document || "mozHidden" in document || "msHidden" in document || "oHidden" in document);
+var bHavePV = getHiddenProp();
 var bInitialShow = false;
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-XXXXX-X']);
