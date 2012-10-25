@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>A (mostly) smooth page</title>
+    <style>
+      * {
+        font-family: 'Open Sans', Arial, sans-serif;
+        font-size: 18pt;
+        color: #797979;
+      }
+      #item2 {
+        position: fixed;
+        left: 280px;
+        top: 70px;
+      }
+      button {
+        font-size: 130%;
+      }
+    </style>
+  </head>
+  <body style="-webkit-transform:translateZ(0)">
+    <img id="foo" src="chrome-logo.png" width="250">
+    <div id="item2">
+      <div style="width: 600px">
+        Rotation via requestAnimationFrame animation
+      </div>
+      <div>
+        <button id="jank3">sleep(180ms)</button>
+      </div>
+    </div>
+    <script>
+      
+      var rAF = window.webkitRequestAnimationFrame;
+      var degrees = 0;
+      function update(timestamp) {
+        document.querySelector('#foo').style.webkitTransform = "rotate(" + degrees + "deg)";
+        console.log('updated to degrees ' + degrees);
+        degrees = degrees + 1;
+        rAF(update);
+      }
+      rAF(update);
+
+      function sleep(ms) {
+        var start = Date.now();
+        while(Date.now() < start + ms);
+      }
+
+      document.querySelector('#jank3').addEventListener('click', function() {
+        setTimeout(function() {
+          sleep(180);
+        }, 0);
+      });
+
+    </script>
+  </body>
+</html>
