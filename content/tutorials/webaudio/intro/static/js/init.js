@@ -1,5 +1,3 @@
-// Keep track of all playing sources
-var SOURCES = [];
 // Keep track of all loaded buffers.
 var BUFFERS = {};
 // Page-wide audio context.
@@ -16,15 +14,6 @@ var BUFFERS_TO_LOAD = {
   organ: 'sounds/organ-echo-chords.wav',
   techno: 'sounds/techno.wav'
 };
-
-// Stops all playing sources
-function stopSources() {
-  for (var i = 0; i < SOURCES.length; i++) {
-    var source = SOURCES[i];
-    source.noteOff(0);
-  }
-  SOURCES = [];
-}
 
 // Loads all sound samples into the buffers object.
 function loadBuffers() {
