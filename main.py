@@ -266,7 +266,6 @@ class ContentHandler(webapp2.RequestHandler):
     # If we get here, is because the language is specified correctly, 
     # so let's activate it
     self.activate_language(locale)
-
     
     # Strip off leading `/[en|de|fr|...]/`
     relpath = re.sub('^/?\w{2,3}(?:/)?', '', relpath)
@@ -306,8 +305,8 @@ class ContentHandler(webapp2.RequestHandler):
       profiles = models.get_sorted_profiles()
       for p in profiles:
         p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
-      self.render(data={'sorted_profiles': profiles},
-                  template_path='content/profiles.html', relpath=relpath)
+      return self.render(data={'sorted_profiles': profiles},
+                         template_path='content/profiles.html', relpath=relpath)
     elif ((re.search('tutorials/.+', relpath) or
            re.search('mobile/.+', relpath) or
            re.search('gaming/.+', relpath) or
@@ -385,8 +384,8 @@ class ContentHandler(webapp2.RequestHandler):
           'localizations': loc_list,
           'redirect_from_locale': redirect_from_locale
         }
-        self.render(template_path=os.path.join(dir, locale, filename),
-                    data=data, relpath=relpath)
+        return self.render(template_path=os.path.join(dir, locale, filename),
+                           data=data, relpath=relpath)
 
       # If the localized file doesn't exist, and the locale isn't English, look
       # for an english version of the file, and redirect the user there if
@@ -437,13 +436,12 @@ class ContentHandler(webapp2.RequestHandler):
         author_dict[a.key().name()] = a
       authors = author_dict.values()
 
-      self.render(
-          data={'tutorials': tutorials, 'authors': authors}, template_path=path,
-                relpath=relpath)
+      return self.render(data={'tutorials': tutorials, 'authors': authors},
+                         template_path=path, relpath=relpath)
 
     elif os.path.isfile(path[:path.rfind('.')] + '.html'):
-      self.render(data={}, template_path=path[:path.rfind('.')] + '.html',
-                  relpath=relpath)
+      return self.render(data={}, template_path=path[:path.rfind('.')] + '.html',
+                         relpath=relpath)
 
     elif os.path.isfile(path + '.html'):
       category = relpath.replace('features/', '')
@@ -469,17 +467,17 @@ class ContentHandler(webapp2.RequestHandler):
         else:
           data['local_content_path'] = os.path.join(relpath, 'en', 'index.html')
         
-      self.render(data=data, template_path=path + '.html', relpath=relpath)
+      return self.render(data=data, template_path=path + '.html', relpath=relpath)
 
-    else:
-      self.render(status=404, message='Page Not Found', template_path='404.html')
+    # If we've reached here, assume 404.
+    return self.render(status=404, message='Page Not Found', template_path='404.html')
 
   def handle_exception(self, exception, debug_mode):
     if debug_mode:
       super(ContentHandler, self).handle_exception(exception, debug_mode)
     else:
       # Display a generic 500 error page.
-      self.render(status=500, message='Server Error', template_path='500.html')
+      return self.render(status=500, message='Server Error', template_path='500.html')
 
 
 class DBHandler(ContentHandler):
