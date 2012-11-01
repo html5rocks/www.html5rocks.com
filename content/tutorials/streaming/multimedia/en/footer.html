@@ -1,2 +1,113 @@
+<script>
+(function() {
+
+var FILE = '/static/videos/mediasource_test.webm';
+var NUM_CHUNKS = 5;
+
+var downloadLinks = document.querySelector('#example-download-links');
+var splitFileButton = document.querySelector('#example-split-file-button');
+var fileImport = document.querySelector('#file-import');
+
+fileImport.addEventListener('change', function(e) {
+  var f = e.target.files[0];
+  if (!f.type.match('.*/webm')) {
+    alert('Please select a .webm file');
+    return;
+  }
+});
+
+splitFileButton.addEventListener('click', function(e) {
+  get(FILE, function(file) {
+    //var file = new Blob([blob], {type: 'video/webm'});
+    var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
+
+    console.log('num chunks:' + NUM_CHUNKS);
+    console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
+
+    var fileNameParts = FILE.split('.');
+
+    for (var i = 0; i < NUM_CHUNKS; ++i) {
+      var startByte = chunkSize * i;
+
+    console.log(startByte, startByte + chunkSize);
+
+      var chunk = file.slice(startByte, startByte + chunkSize, file.type);
+
+      var a = document.createElement('a');
+      a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
+      a.textContent = 'Download chunk ' + i;
+      a.title = chunk.size + ' byte';
+      // blob urls created from file parts use original file. See crbug.com/145156.
+      a.href = window.URL.createObjectURL(chunk);
+      downloadLinks.appendChild(a);
+    }
+  });
+});
+
+function get(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'blob';
+
+  //xhr.setRequestHeader('Range', 'bytes=5-12');
+
+  xhr.onload = function(e) {
+    if (this.status != 200) {
+      alert("Unexpected status code " + this.status + " for " + url);
+      return false;
+    }
+    callback(this.response);
+  };
+
+  xhr.send();
+}
+
+
+// Piechart code from http://blog.yojimbocorp.com/2012/01/17/creating-a-simple-pie-chart-with-html5-canvas/
+
+function PieChart(el, width, height, data, opt_padding) {
+  this.el = el;
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = width;
+  this.canvas.height = height;
+
+  var PADDING = opt_padding || 15; // px.
+  this.R = Math.min(width, height) / 2 - PADDING;
+
+  this.data = data;
+}
+
+PieChart.prototype.render = function() {
+  var lastPosition = 0;
+  var colors = ['#ff2c00', '#FF8500', '#0776A0', '#00B945', '#000'];
+
+  var center = [this.canvas.width / 2, this.canvas.height / 2];
+
+  var total = this.data.reduce(function(previousValue, currentValue, i) {
+    return previousValue + currentValue
+  });
+
+  var ctx = this.canvas.getContext('2d');
+
+  for (var i = 0; i < this.data.length; ++i) {
+    ctx.fillStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(center[0], center[1]);
+    ctx.arc(center[0], center[1], this.R, lastPosition,
+            lastPosition + (Math.PI * 2 * (this.data[i] / total)), false);
+    ctx.lineTo(center[0], center[1]);
+    ctx.fill();
+    lastPosition += Math.PI * 2 * (this.data[i] / total);
+  }
+
+  this.el.appendChild(this.canvas);
+}
+
+var data = [75, 34, 34, 32, 95];
+var pie = new PieChart(document.querySelector('#piechart'), 150, 150, data);
+pie.render();
+
+})();
+</script>
 
 {% endblock %}

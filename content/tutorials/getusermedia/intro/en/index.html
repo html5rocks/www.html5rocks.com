@@ -148,15 +148,13 @@ HTML Media Capture only allows you to record a media file or take a snapshot in 
 one of the first implementations. Check out <a href="http://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">this video</a> to see it in action.</li>
 <li>Chrome for Android (0.16)</li>
 <li>Firefox Mobile 10.0</li>
+<li>iOS6 Safari and Chrome (partial support)</li>
 </ul>
-<p>My recommendation is to stay clear from this one unless you're working with one
-of the mobile browsers above. Vendors are moving towards <code>getUserMedia()</code>.
-It's very unlikely anyone else will implement HTML Media Capture in the long term.</p>
 <h3 id="toc-round2">Round 2: device element</h3>
 
 <p>Many thought HTML Media Capture was too limiting, so a new spec
 emerged that supported any type of (future) device. Not surprisingly, the design called
-for a new element, the <a href="http://dev.w3.org/html5/html-device/"><code>&lt;device&gt;</code> element</a>,
+for a new element, the <a href="http://dev.w3.org/html5/html-device/"><code>&amp;lt;device&amp;gt;</code> element</a>,
 which became the predecessor to <code>getUserMedia()</code>.</p>
 <p>Opera was among the first browsers to create <a href="http://my.opera.com/core/blog/2011/03/14/web-meet-device">initial implementations</a>
 of video capture based on the <code>&lt;device&gt;</code> element. Soon after 
@@ -203,10 +201,11 @@ Camera access is now a call away, not an install away. It's baked directly into 
 
 <p>The <code>getUserMedia()</code> API is still very new. In Chrome &lt; 21, you need to enable
 the feature by visiting <code>about:flags</code>. If you're using Chrome 21, you can skip this section.</p>
-<p><figure>
+<figure>
 <img src="aboutflags.png">
 <figcaption>Enabling the <code>getUserMedia()</code> in Chrome's <code>about:flags</code> page.</figcaption>
-</figure></p>
+</figure>
+
 <p>Opera and Firefox do not need a flag. The feature is enabled by default.</p>
 <h3 id="toc-featuredecting">Feature detection</h3>
 
@@ -285,10 +284,11 @@ if (navigator.getUserMedia) {
 which gives users the option to grant or deny access to their camera/mic.
 The spec unfortunately is very quiet when it comes to security. For example, here
 is Chrome's permission dialog:</p>
-<p><figure>
+<figure>
 <img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
 <figcaption>Permission dialog in Chrome</figcaption>
-</figure></p>
+</figure>
+
 <h3 id="toc-fallback">Providing fallback</h3>
 
 <p>For users that don't have support for <code>getUserMedia()</code>, one option is to fallback
@@ -542,7 +542,7 @@ button.addEventListener('click', function(e) {
     return;
   }
 
-if (navigator.getUserMedia) {
+  if (navigator.getUserMedia) {
     navigator.getUserMedia('video', function(stream) {
       video.src = stream;
       localMediaStream = stream;
