@@ -83,6 +83,7 @@
 
 <figure>
   <a href="too-much-layout.html"><img src="frame-view.png" style="width: 650px;"></a>
+  <figcaption><a href="too-much-layout.html">A demo with far too much layout code</a></figcaption>
 </figure>
 
 <p>Those requestAnimationFrame (rAF) callbacks are taking &gt;200ms. That's an order of magnitude too long to tick out a frame every 16ms! Opening up one of those long rAF callbacks reveals what's going on inside: in this case, lots of layout. </p>
@@ -93,6 +94,7 @@
 
 <figure>
   <a href="too-much-layout-fixed.html"><img src="frame-view-short.png" style="width: 650px;"></a>
+  <figcaption><a href="too-much-layout-fixed.html">An updated demo with much reduced layout code</a></figcaption>
 </figure>
 
 <p>Notice the 16ms frame times. That blank space in the frames is the headroom you have to do more work (or let the browser do work it needs to do in the background). That blank space is a Good Thing.</p>
@@ -152,18 +154,18 @@ animation hitches <strong>jank</strong>.</p>
 <pre class="prettyprint">
   // tools like Modernizr (http://modernizr.com/) can help with CSS polyfills
   #foo {
-        -webkit-animation-duration: 3s;
-        -webkit-animation-timing-function: linear;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-name: rotate;
+        {% mixin animation-duration: 3s; %}
+        {% mixin animation-timing-function: linear; %}
+        {% mixin animation-animation-iteration-count: infinite; %}
+        {% mixin animation-animation-name: rotate; %}
       }
 
-  @-webkit-keyframes rotate {
+  @{% mixin keyframes: rotate %} {
     from {
-      -webkit-transform: rotate(0deg);
+      {% mixin transform: rotate(0deg); %}
     }
     to {
-      -webkit-transform: rotate(360deg);
+      {% mixin transform: rotate(360deg); %}
     }
   }
 </pre>
