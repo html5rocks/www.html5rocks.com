@@ -98,7 +98,7 @@ opacity: 1;
 <p>The track element is currently available in <a href="http://ie.microsoft.com/testdrive/" title="Internet Explorer 10 download">Internet Explorer 10</a> and <a href="http://tools.google.com/dlpage/chromesxs" title="Chrome Canary download">Chrome 18</a>+. Firefox support is <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629350" title="Firefox track element implementation bug report">not yet implemented</a>. In Chrome, track element support must be enabled from the <a href="chrome://flags" title="chrome://flags page">chrome://flags</a> page.</p>
 
 <p>Below is a simple example of a video with a track element. Play it to see subtitles in English:</p>
- 
+
 <video controls class="trackSupported">
   <source src="treeOfLife/video/developerStories-en.webm" type='video/webm; codecs="vp8, vorbis"' />
   <track src="treeOfLife/tracks/developerStories-subtitles-en.vtt" label="English subtitles" kind="subtitles" srclang="en" default />
@@ -203,7 +203,7 @@ var videoElement = document.querySelector("video");
 var textTracks = videoElement.textTracks; // one for each track element
 var textTrack = textTracks[0]; // corresponds to the first track element
 var kind = textTrack.kind // e.g. "subtitles"
-var mode = textTrack.mode // 0 (TextTrack.OFF in spec, TextTrack.DISABLED in Chrome), 1 (TextTrack.HIDDEN) or 2 (TextTrack.SHOWING)
+var mode = textTrack.mode // e.g. "disabled", hidden" or "showing"
 </pre>
 
 <p>Each <code>TextTrack</code>, in turn, has a <code>cues</code> property that returns a <code>TextTrackCueList</code>, each member of which is an individual cue. Cue data can be accessed with properties such as <code>startTime</code>, <code>endTime</code> and <code>text</code> (used to get the text content of the cue):</p>
@@ -308,7 +308,7 @@ track.removeCue(activeCue);
 
 <p>If you try this out, you'll notice that a rendered cue is removed as soon as the code is called.</p>
 
-<p>Tracks have a <code>mode</code> attribute, which can be 0 (<code>TextTrack.OFF</code> in spec, <code>TextTrack.DISABLED</code> in Chrome), 1 (<code>TextTrack.HIDDEN</code>) or 2 (<code>TextTrack.SHOWING</code>). This can be useful if you want to use track events but turn off default rendering&ndash;play the following video to see an example of this (built by <a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="Eric Bidelman HTML5 demo slide deck">Eric Bidelman</a>):</p>
+<p>Tracks have a <code>mode</code> attribute, which can be "disabled", "hidden" or "showing" (note that these values were orginally implemented as enums). This can be useful if you want to use track events but turn off default rendering&ndash;play the following video to see an example of this (built by <a href="http://html5-demos.appspot.com/static/whats-new-with-html5-media/template/index.html#3" title="Eric Bidelman HTML5 demo slide deck">Eric Bidelman</a>):</p>
 
 <div id="eric">
   <video width="400" controls>
