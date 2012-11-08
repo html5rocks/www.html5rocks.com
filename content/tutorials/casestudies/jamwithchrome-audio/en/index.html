@@ -151,17 +151,17 @@ var AudioBus = function(){
     this.input = audioContext.createGainNode();
     var output = audioContext.createGainNode();
 
-    //create effect nodes (see the end of this article for more about the Reverb and Equalizer)
+    //create effect nodes (Convolver and Equalizer are other custom effects from the library presented at the end of the article)
     var delay = new SlapbackDelayNode(),
-        reverb = new AudioNodes.Reverb(),
-        equalizer = new AudioNodes.Equalizer();
+        convolver = new tuna.Convolver(),
+        equalizer = new tuna.Equalizer();
 
     //route ‘em
-    //equalizer -> delay -> reverb
-    this.input.connect(equalizer.input);
+    //equalizer -> delay -> convolver
+    this.input.connect(equalizer);
     equalizer.connect(delay.input);
-    delay.connect(reverb.input);
-    reverb.connect(output);
+    delay.connect(convolver);
+    convolver.connect(output);
 
     this.connect = function(target){
        output.connect(target);
@@ -205,11 +205,17 @@ bus.connect(audioContext.destination);
                     document.getElementById("message").innerHTML = "Oops, your browser doesn't support this demo! Please try the latest Google Chrome.";
                     return;
                 }
-                var a = new Audio();
-                if(!!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, '')) === false){
-                    document.getElementById("message").innerHTML = "Oops, your browser doesn't support this demo! Please try the latest Google Chrome.";
-                    return;
+                var a = new Audio(), filename;
+                if(!!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, ''))){
+                   filename = "/static/audio/guitar_bright_hard_4_2.ogg";
                 }
+                else if(!!(a.canPlayType && a.canPlayType('audio/mp4; codecs="mp4a.40.2"').replace(/no/, ''))){
+				   filename = "/static/audio/guitar_bright_hard_4_2.aac";
+                }
+                else {
+			      document.getElementById("message").innerHTML = "Oops, your browser doesn't support this demo! Please try the latest Google Chrome.";
+			      return;
+			    }
             }
             
             var audioContext = new webkitAudioContext();
@@ -283,7 +289,7 @@ bus.connect(audioContext.destination);
                 
             //load the guitar sound
             var request = new XMLHttpRequest();
-            request.open("GET", "/static/audio/guitar_bright_hard_4_2.ogg", true);
+            request.open("GET", filename, true);
             request.responseType = "arraybuffer";
             request.onload = function() {
                 buffer = audioContext.createBuffer(request.response, false);
