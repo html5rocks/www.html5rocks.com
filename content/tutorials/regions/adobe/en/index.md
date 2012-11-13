@@ -21,13 +21,13 @@ The document in the screenshot below also uses CSS Exclusions to allow the text 
 
 Before getting into the details of [CSS Regions][css-regions-spec], I'd like to cover how regions can be enabled in Google Chrome. Once you have CSS Regions enabled, you can try out some of the samples referenced in this article, and create your own.
 
-<h3 id="toc-enabling">Enabling CSS Regions</h3>
+<h3 id="toc-enabling">Enabling CSS Regions in Google Chrome</h3>
 
 As of version 20 of Chrome (version 20.0.1132.57, to be exact), CSS Regions is enabled through the `chrome://flags` interface. To enable CSS Regions, follow these steps:
 
 1. Open a new tab or window in Chrome.
 2. Type `chrome://flags` in the location bar.
-3. Use *find in page* (control/command + f) to find the experimental WebKit features section.
+3. Use *find in page* (control/command + f) and search for the "experimental WebKit features" section.
 4. Click on the *Enable* link.
 5. Click on the *Relaunch Now* button at the bottom.
 
@@ -135,39 +135,52 @@ but you should write code that works across browsers that support this feature!
 
 The [CSS Object Model][cssom-spec], or CSSOM, defines JavaScript APIs for working with CSS. Below is a list of the new APIs related to CSS Regions:
 
-- `document.webkitGetFlowByName("flow_name")`: The `webkitGetFlowByName` function returns a reference to a named flow. The argument corresponds to the name specified as the value of the `flow-into` and `from-from` CSS properties. To get a reference to the named flow specified in the code snippet above, you would pass in the string "article."
-- `WebKitNamedFlow`: The `webkitGetFlowByName` function returns an instance of `WebKitNamedFlow` with the following properties and functions:
-    - `contentNodes`: A reference to the nodes that flow into the named flow.
-    - `overflow`: Whether or not the content is overflowing the specified region. In other words, whether or not more regions are required to contain all the content.
+- `document.webkitGetNamedFlows()`: A function that returns the collection of named flows available in the document.
+- `document.webkitGetNamedFlows().namedItem("article")`: A function that returns a reference to a specific named flow. The argument corresponds to the name specified as the value of the `flow-into` and `from-from` CSS properties. To get a reference to the named flow specified in the code snippet above, you would pass in the string "article."
+- `WebKitNamedFlow`: An object representation of a named floe with the following properties and functions:
+    - `firstEmptyRegionIndex`: An integer value that points to the index of the first empty region associated to the named flow. See `getRegions()` below to learn how to get the collection of regions.
+    - `name`: A string value with the name of the flow.
+    - `overset`: A boolean property that is:
+      - `false` when the content of the named flow fits in the associated regions
+      - `true` when the content does not fit and more regions are required to contain all the content.
+    - `getContent()`: A function that returns a collection with references to the nodes that flow into the named flow.
+    - `getRegions()`: A function that returns a collection with references to regions that hold the content of the named flow.
     - `getRegionsByContentNode(node)`: A function that returns a reference to the region containing the specified node. This is especially useful for finding regions containing things like named anchors.
-- `webkitRegionLayoutUpdate` event. Elements that are part of flows can register for `webkitRegionLayoutUpdate` events. Event handlers are invoked whenever the flow changes for any reason (content is added or removed, the font size changes, the shape of the region changes, etc.).
-- `Element.webkitRegionOverflow`: Elements have a `webkitRegionOverflow` property which, if they are part of a named flow, indicates whether or not content from a flow is overflowing the region. Possible values are "fit" if the content stops before the end of the region, and "overflow" if there is more content than the region can hold.
+- `webkitregionlayoutupdate` event. This event is triggered on a `WebkitNamedFlow` whenever the layout of the associated content changes for any reason (content is added or removed, the font size changes, the shape of the region changes, etc.).
+- `Element.webkitRegionOverset`: Elements become regions when they have the `flow-from` CSS property assigned. These elements have a `webkitRegionOverset` property which, if they are part of a named flow, indicates whether or not content from a flow is overflowing the region. The possible of values webkitRegionOverset are:
+  - "overflow" if there is more content than the region can hold
+  - "fit" if the content stops before the end of the region
+  - "empty" if the content has not reached the region
 
-One of the primary uses for the CSSOM is listening for `webkitRegionLayoutUpdate` events and dynamically adding or removing regions in order to accommodate varying amounts of text. For instance, if the amount of text to be formatted is unpredictable (perhaps user-generated), if the browser window is resized, or if the font size changes, it might be necessary to add or remove regions to accommodate the change in the flow. Additionally, if you want to organize your content into pages, you will need a mechanism for dynamically modifying the DOM as well as your regions.
+One of the primary uses for the CSSOM is listening for `webkitregionlayoutupdate` events and dynamically adding or removing regions in order to accommodate varying amounts of text. For instance, if the amount of text to be formatted is unpredictable (perhaps user-generated), if the browser window is resized, or if the font size changes, it might be necessary to add or remove regions to accommodate the change in the flow. Additionally, if you want to organize your content into pages, you will need a mechanism for dynamically modifying the DOM as well as your regions.
 
 The following snippet of JavaScript code demonstrates the use of the CSSOM to dynamically add regions as necessary. Note that for the sake of simplicity, it does not handle removing regions or defining the size and positions of regions; it is for demonstration purposes only.
 
-    function addRegion() {
-      var region = document.createElement("div");
-      region.classList.add("region");
-      region.addEventListener("webkitRegionLayoutUpdate", onLayoutUpdate);
-      document.body.appendChild(region);
-    }
+    var flow = document.webkitGetNamedFlows().namedItem("article")
+    flow.addEventListener("webkitregionlayoutupdate", onLayoutUpdate);
 
     function onLayoutUpdate(event) {
-      var region = event.target;
-      if (region.webkitRegionOverflow === "overflow") {
+      var flow = event.target;
+      
+      // The content does not fit
+      if (flow.overset === true) {
         addRegion();
       } else {
         regionLayoutComplete();
       }
+    }
+    
+    function addRegion() {
+      var region = document.createElement("div");
+      region.style = "flow-from: article";
+      document.body.appendChild(region);
     }
 
     function regionLayoutComplete() {
       // Finish up your layout.
     }
 
-Several more CSS Regions demos are available here.
+More demos are available on the [CSS Regions samples page](http://adobe.github.com/web-platform/samples/css-regions/).
 
 <h3 id="toc-pagetemplates">CSS Page Templates</h3>
 
