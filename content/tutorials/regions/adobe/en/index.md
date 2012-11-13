@@ -27,7 +27,7 @@ As of version 20 of Chrome (version 20.0.1132.57, to be exact), CSS Regions is e
 
 1. Open a new tab or window in Chrome.
 2. Type `chrome://flags` in the location bar.
-3. Use *find in page* (control/command + f) to find the CSS Regions section.
+3. Use *find in page* (control/command + f) to find the experimental WebKit features section.
 4. Click on the *Enable* link.
 5. Click on the *Relaunch Now* button at the bottom.
 
