@@ -44,7 +44,7 @@ If, for example, you have an application that loads all of it's resources from a
 
 ### Implementation Details
 
-Before moving further, it's important to note that the canonical header I've used in the examples is `Content-Security-Policy`, but current browsers have implemented the feature behind a prefix: Firefox uses `X-Content-Security-Policy`, and WebKit-based browsers (Safari and Chrome) use `X-WebKit-CSP`. The implementations are quite similar, however, and are converging rapidly on the standard. This article will continue to use `Content-Security-Policy`, as browsers will migrate to that header, but the prefixes are essential for the moment.
+Before moving further, it's important to note that the canonical header I've used in the examples is `Content-Security-Policy`. Chrome supports this header from version 25 onwards, but other browsers have implemented the feature behind a prefix: Firefox uses `X-Content-Security-Policy`, and WebKit-based browsers like Safari use `X-WebKit-CSP`. The implementations are quite similar, however, and are converging rapidly on the standard. This article will continue to use `Content-Security-Policy`, as browsers will migrate to that header, but the prefixes are essential for the moment.
 
 Regardless of the header you use, policy is defined on a page-by-page basis: you'll need to send the HTTP header along with every response that you'd like to ensure is protected. This provides a lot of flexibility, as you can fine-tune the policy for specific pages based on their specific needs. Perhaps one set of pages in your site has a +1 button, while others don't: you could allow the button code to be loaded only when necessary.
 
@@ -81,7 +81,7 @@ to something more like:
     <!-- amazing.html -->
     <script src='amazing.js'></script>
     <button id='amazing'>Am I amazing?</button>
-^ 
+^
     // amazing.js
     function doAmazingThings() {
       alert('YOU AM AMAZING!');
@@ -113,7 +113,7 @@ This has a more than few impacts on the way you build applications:
         setTimeout(function () {
           document.querySelector('a').style.display = 'none';
         }, 10);
-    
+
 *   Avoid inline templating at runtime: Many templating libraries use `new Function()` liberally to speed up template generation at runtime. It's a nifty application of dynamic programming, but comes at the risk of evaluating malicious text. Some frameworks support CSP out of the box, falling back to a robust parser in the absence of `eval`; [AngularJS's ng-csp directive](http://docs.angularjs.org/api/angular.module.ng.$compileProvider.directive.ngCsp) is a good example of this.
 
 You're even better off, however, if your templating language of choice offers precompilation ([Handlebars does](http://handlebarsjs.com/precompilation.html), for instance). Precompiling your templates can make the user experience even faster than the fastest runtime implementation, and it's safer too. Win, win!
@@ -149,7 +149,7 @@ The policy specified in report-only mode won't block restricted resources, but i
 
 ## Real World Usage
 
-CSP is quite usable in Chrome 16+ and Firefox 4+, and it's expected to gain at least limited support in IE 10. Safari's current implementation is lacking, but WebKit nightlies work just as well as Chrome, so there's hope for the next iteration of Safari. Massive sites like Twitter have deployed the header ([Twitter's case study](http://engineering.twitter.com/2011/03/improving-browser-security-with-csp.html) is worth a read), and the standard is very much ready for you to start playing around on your own sites.
+CSP is quite usable in Chrome 16+, Safari 6+, and Firefox 4+, and has (very) limited support in IE 10. Massive sites like Twitter have deployed the header ([Twitter's case study](http://engineering.twitter.com/2011/03/improving-browser-security-with-csp.html) is worth a read), and the standard is very much ready for you to start playing around on your own sites.
 
 The first step towards crafting a policy for your application is to evaluate the resources you're actually loading. Once you think you have a handle on how things are put together in your app, set up a policy based on those requirements. Let's walk through a few common use-cases, and determine how we'd best be able to support them within the protective confines of CSP:
 
@@ -185,7 +185,7 @@ Even though `https:` was specified in `default-src`, the script and style direct
 
 ## The Future
 
-The W3C's [Web Application Security Working Group](http://www.w3.org/2011/webappsec/) is working through the details of the Content Security Policy specification, and a 1.0 version containing the functionality outlined in this article is fairly close to [moving to Last Call](http://lists.w3.org/Archives/Public/public-webappsec/2012Jun/0011.html). The group isn't sitting around patting themselves on the back, however: CSP 1.1 is being actively discussed on the [public-webappsec@ mailing list](http://lists.w3.org/Archives/Public/public-webappsec/), and browser vendors are [hard at work](https://lists.webkit.org/pipermail/webkit-dev/2012-May/020559.html) solidifying and improving their implementations.
+Content Security Policy 1.0 is a [W3C Candidate Recommendation](http://www.w3.org/TR/CSP), and browser vendors are expected to rapidly adopt the standard. That said, the W3C's [Web Application Security Working Group](http://www.w3.org/2011/webappsec/) isn't lounging around, patting itself on the back; work has already begun on the specification's next iteration. [Content Security Policy 1.1's Editors' Draft](https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html) is under active development.
 
 CSP 1.1 has a few interesting bits on the drawing board, a few are worth highlighting here:
 
@@ -197,4 +197,4 @@ CSP 1.1 has a few interesting bits on the drawing board, a few are worth highlig
 
 * **New directives:** A variety of new directives are being discussed, including [**`script-nonce`**](https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-nonce--experimental), which would enable inline script only for explicitly specified script elements; [**`plugin-types`**](https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#plugin-types--experimental), which would limit the `MIME` types of content for which plugins could be loaded; [**`form-action`**](https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#form-action--experimental), which would allow form submission to only specific origins; and a few others that are [currently less completely specified](https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#frame-options--experimental).
 
-If you're interested in the discussion around these upcoming features, [skim the mailing list archives](http://lists.w3.org/Archives/Public/public-webappsec/), or join in yourself.
+If you're interested in the discussion around these upcoming features, [skim the public-webappsec@ mailing list archives](http://lists.w3.org/Archives/Public/public-webappsec/), or join in yourself.
