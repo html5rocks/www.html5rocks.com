@@ -5,14 +5,14 @@
 The web is an extremely powerful platform for text, an area where Adobe has a great deal of experience and expertise. When Adobe was looking for ways to help move the web forward, therefore, advancing the web's text capabilities even further seemed like an obvious place for us to start.
 The web generally assumes a single column, vertical orientation for text. Although it's possible to flow text around graphics, and even to format text into multiple columns with CSS, it's still very difficult to achieve true magazine-like layout on the web. With [CSS Regions][css-regions-spec] and [CSS Exclusions][css-exclusions-spec], Adobe is spearheading the effort to bring the power of desktop publishing to modern browsers. For instance, in the screenshot below, CSS Exclusions is being used to flow text along the contour of the mountain:
 
-<figure>
+<figure markdown="1">
 ![Example of CSS Exclusions in action](exclusions.png "Example of CSS Exclusions in action")
 <figcaption>Example of CSS Exclusions in action</figcaption>
 </figure>
 
 The document in the screenshot below also uses CSS Exclusions to allow the text to wrap around shapes in the images, as well as CSS Regions to format text into columns and around a pull quote:
 
-<figure>
+<figure markdown="1">
 ![Example of CSS Regions in action](regions.png "Example of CSS Regions in action")
 <figcaption>Example of CSS Regions in action</figcaption>
 </figure>
@@ -39,28 +39,28 @@ Once you've relaunched your browser, you're free to start experimenting with CSS
 
 CSS Regions allows a block of semantically marked-up text to automatically flow into "boxes" (currently elements). The diagram below demonstrates the separation of text (the flow) and boxes (the regions the text flows into):
 
-<figure>
+<figure markdown="1">
 ![Content flows into defined regions](regionsoverview.png "Content flows into defined regions")
 <figcaption>Content flows into defined regions</figcaption>
 </figure>
 
 Let's take a look at an actual CSS Regions use case. In addition to being a developer at Adobe, I'm also a science fiction writer. I frequently publish my work online under a Creative Commons license, and in order to allow it to work across the maximum number of devices and browsers, I frequently use an extremely simple format similar to this:
 
-<figure>
+<figure markdown="1">
 ![Unstyled Human Legacy Project Example](hlp.png "Unstyled Human Legacy Project Example")
 <figcaption>Unstyled Human Legacy Project Example</figcaption>
 </figure>
 
 Using CSS Regions, I was able to create an experience that is both more visually interesting, and much more functional since it's easier to navigate and more comfortable to read:
 
-<figure>
+<figure markdown="1">
 [![Human Legacy Project showing Regions](hlp2.png "Human Legacy Project showing Regions")](http://christiancantrell.com/adobe/hlp/callout.html)
 <figcaption>Human Legacy Project with Regions. [Try it](http://christiancantrell.com/adobe/hlp/callout.html)</figcaption>
 </figure>
 
 For demonstration purposes, I added the ability to reveal CSS Regions in this prototype. The screenshot below shows how the regions are arranged such that they give the impression of being columns that wrap around a graphic and a pull-quote in the center:
 
-<figure>
+<figure markdown="1">
 ![Human Legacy Project showing Regions](hlp3.png "Human Legacy Project showing Regions")
 <figcaption>Human Legacy Project showing Regions</figcaption>
 </figure>
@@ -119,7 +119,7 @@ The CSS required to get a block of text to flow through regions is extremely sim
 
 The result looks like this:
 
-<figure>
+<figure markdown="1">
 ![Result of above code](regionexample.png "Result of above code")
 <figcaption>Result of above code</figcaption>
 </figure>
@@ -230,7 +230,7 @@ Now that the flows have been defined and the desired overflow behavior has been 
 
 Page templates are defined using the new "at" syntax. In the code snippet above, we define three slots, each corresponding to a column. The text from the "article-flow" will flow through the columns on the left and right, and text from the "timeline-flow" will populate the column in the middle. The result might look something like this:
 
-<figure>
+<figure markdown="1">
 ![Page templates example](pagetemplates.png "Page templates example")
 <figcaption>Page templates example</figcaption>
 </figure>
@@ -247,14 +247,14 @@ In order to achieve true magazine-like layout, it's not enough to be able to flo
 
 The screenshot below is from a CSS Exclusions prototype, and shows text dynamically flowing around a path that matches the contour of a large rock formation:
 
-<figure>
+<figure markdown="1">
 ![Example of CSS Exclusions in action](exclusions.png "Example of CSS Exclusions in action")
 <figcaption>Example of CSS Exclusions in action</figcaption>
 </figure>
 
 The inverse is illustrated in the next screenshot: text flowing inside of irregularly shaped polygons:
 
-<figure>
+<figure markdown="1">
 ![Text flowing into irregularly shaped polygons](exclusions2.png "Text flowing into irregularly shaped polygons")
 <figcaption>Text flowing into irregularly shaped polygons</figcaption>
 </figure>
@@ -269,7 +269,7 @@ The first time I talked about CSS Regions and CSS Exclusions publicly was at the
 
 I was at Google I/O again this year (2012), this time as a presenter along with my coworker [Vincent Hardy](https://twitter.com/vincent_hardy) and [Alex Danilo](https://plus.google.com/113205278198625312096/posts) from Google (you can [watch the presentation here](http://www.youtube.com/watch?v=bwOhfoewMYs)). Just one year later, about 80% of the CSS Regions specification has been implemented in WebKit, and is already in the most recent version of Google Chrome (note that CSS Regions currently has to be enabled through `chrome://flags`). Preliminary support for CSS Regions has even landed in Chrome for Android:
 
-<figure>
+<figure markdown="1">
 ![Regions on Chrome for Android](hlp_mobile.png "Regions on Chrome for Android")
 <figcaption>Regions on Chrome for Android</figcaption>
 </figure>
@@ -278,7 +278,7 @@ Additionally, both CSS Regions and CSS Exclusions are implemented in the Interne
 
 Below is a detailed timeline of the progress we've made with CSS Regions and CSS Exclusions since our initial proposal to the W3C in April of 2011:
 
-<figure>
+<figure markdown="1">
 ![Region and Exclusion Progress](diagram.png "Region and Exclusion Progress")
 <figcaption>Region and Exclusion Progress</figcaption>
 </figure>
