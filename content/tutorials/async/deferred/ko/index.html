@@ -20,17 +20,11 @@
 <section>
   
   <p>
-    One of the most important aspects about building smooth and responsive HTML5 applications is the synchronization
-    between all the different parts of the application such as data fetching, processing, animations, and user
-    interface elements.
+    부드럽고 유연한 HTML5 어플리케이션을 만들 때 가장 중요한 것들 중 하나는 어플리케이션의 데이터 가져오기, 연산, 애니메이션, UI 요소같은 모두 다른 부분들 사이를 동기화하는 것이다.
   </p>
 
   <p>
-    The main difference with a desktop or a native environment is that browsers do not give access to the threading model
-    and provide a single thread for everything accessing the user interface (i.e. the DOM). This means that all the
-    application logic accessing and modifying the user interface elements is always in the same thread, hence the
-    importance of keeping all the application work units as small and efficient as possible and taking advantage of any
-    asynchronous capabilities the browser offers as much as possible. 
+    데스크탑이나 네이티브 환경과의 주요 차이점은 브라우저는 쓰레딩 모델에 접근할 수 없으며 UI(예: DOM)를 건드리는 모든 것들에 대해서 싱글쓰레드를 제공한다. 이것은 UI 요소들을 건드리고 변경하는 모든 애플리케이션 로직이 항상 같은 쓰레드에서 동작한다는 것을 의미한다. 따라서 어플리케이션은 브라우저가 제공하는 비동기 기능들을 최대한 사용하여 가능한 작고 효율적인 단위로 잘 동작하도록 유지하는 것이 중요하다.
   </p>    
   
 </section>
@@ -39,68 +33,60 @@
   <h2 id="toc-browserasync">브라우저의 비동기 API</h2>
   
   <p>
-    Luckily, Browsers provide a number of asynchronous APIs such as the commonly used XHR (XMLHttpRequest or 'AJAX') APIs, as well
-    as IndexedDB, SQLite, HTML5 Web workers, and the HTML5 GeoLocation APIs to name a few. Even some DOM related actions are
-    exposed asynchronously, such CSS3 animation via the transitionEnd events.     
+    다행히 브라우저는 일반적으로 사용되는 XHR(XMLHttpRequest 또는 'AJAX') API와 IndexedDB, SQLite, HTML5 웹워커, 그리고 약간 알려진 HTML5 GeoLocation API와 같은 몇 가지 비동기 API들을 제공한다. transitionEnd 이벤트를 사용하는 CSS3 애니메이션같은 몇몇 DOM에 관련된 동작들도 비동기적으로 되어있다.   
   </p>
   
   <p>
-    The way browsers expose asynchronous programming to the application logic is via events or callbacks.     
-    In event-based asynchronous APIs, developers register an event handler for a given object 
-    (e.g. HTML Element or other DOM objects) and then call the action. The browser will perform 
-    the action usually in a different thread, and trigger the event in the main thread when appropriate.     
+    브라우저가 비동기 프로그래밍을 어플리케이션 로직에 노출시키는 방법은 이벤트 또는 콜백을 사용하는 것이다. 이벤트 기반 비동기 API의 경우, 개발자가 특정 객체(예: HTML 엘리먼트 또는 다른 DOM 객체들)에 이벤트 핸들러를 등록하고 나서 해당 동작을 호출한다. 브라우저는 보통 다른 쓰레드로 그 동작을 수행할 것이고 적절한 때에 메인 쓰레드에서 이벤트를 발생시킬 것이다.    
   </p>
   
-  <p>For example, code using the XHR API, an event based asynchronous API, would look like this:</p>
+  <p>예를 들어 이벤트 기반 비동기 API인 XHR을 사용하는 코드는 아래와 같다.</p>
   
 <pre class="prettyprint collapsible lang-js">
-// Create the XHR object to do GET to /data resource  
+// /data 리소스를 GET으로 요청하기 위해 XHR 객체를 생성한다.
 var xhr = new XMLHttpRequest();
 xhr.open("GET","data",true);
 
-// register the event handler
+// 이벤트 핸들러를 등록한다.
 xhr.addEventListener('load',function(){
   if(xhr.status === 200){
-      alert("We got data: " + xhr.response);
+    alert("We got data: " + xhr.response);
   }
-},false) 
+},false)
 
-// perform the work
+// 작업을 수행한다.
 xhr.send();
 </pre>
 
   <p>
-    The CSS3 transitionEnd event is another example of a event based asynchronous API. 
+    CSS3 transitionEnd 이벤트는 이벤트 기반 비동기 API의 또 다른 예이다. 
   </p>
 <pre class="prettyprint lang-js">
-// get the html element with id 'flyingCar'  
+// id가 'flyingCar'인 HTML 엘리먼트를 가져온다.
 var flyingCarElem = document.getElementById("flyingCar");
 
-// register an event handler 
-// ('transitionEnd' for FireFox, 'webkitTransitionEnd' for webkit) 
+// 이벤트 핸들러를 등록한다.
+// (FireFox는 'transitionEnd'를, Webkit은 'webkitTransitionEnd'를 사용한다.)
 flyingCarElem.addEventListener("transitionEnd",function(){
-  // will be called when the transition has finished.
+  // 트랜지션이 끝나면 호출될 것이다.
   alert("The car arrived");
 });
 
-// add the CSS3 class that will trigger the animation
-// Note: some browers delegate some transitions to the GPU , but 
-//       developer does not and should not have to care about it.
-flyingCarElemen.classList.add('makeItFly') 
+// 애니매이션을 시작시킬 CSS3 클래스를 추가한다.
+// 비고: 어떤 브라우저들은 GPU에 몇몇 트랜지션들을 위임한다. 그러나 개발자들은 이를 제어하지 못하고 신경 쓸 필요가 없다.
+flyingCarElemen.classList.add('makeItFly')
 </pre>
 
   <p>
-    Other browser APIs, such as SQLite and HTML5 Geolocation, are callback based, meaning
-    that the developer passes a function as argument that will get called back by the
-    underlying implementation with the corresponding resolution.     
+    SQLite와 HTML5 Geolocation 같은 다른 브라우저 API들은 콜백 기반이다. 이것은 개발자가 해당 해상도를 가지고 내부구현에 의해 콜백될 함수를 인수로 전달한다는 것을 의미한다.     
   </p>
   
   <p>
-    For example, for HTML5 Geolocation, the code looks like this:
+    예를 들어 HTML5 Geolocation에 대한 코드는 아래와 같다.
   </p>
 
 <pre class="prettyprint lang-js">
-// call and pass the function to callback when done.
+// 완료되면 콜백으로 함수를 호출하고 전달한다.
 navigator.geolocation.getCurrentPosition(function(position){  
             alert('Lat: ' + position.coords.latitude + ' ' +  
                   'Lon: ' + position.coords.longitude);  
@@ -108,44 +94,32 @@ navigator.geolocation.getCurrentPosition(function(position){
 </pre>
 
   <p>
-    In this case, we just call a method and pass a function that will get called back with the 
-    requested result. This allows the browser to implement
-    this functionality synchronously or asynchronously and give a single API to the developer regardless
-    of the implementation details.     
+    이 경우 우리는 그냥 메소드를 호출하고 요청된 결과를 가지고 콜백될 함수를 전달한다. 이것은 브라우저가 동기나 비동기에 상관없이 이 기능을 실행하게 하고 개발자에게는 상세구현에 상관없이 하나의 API를 제공한다.    
   </p>
 </section>
 
 <section>
   <h2 id="toc-async-application">비동기적인 어플리케이션 만들기</h2>
   <p>
-    Beyond the browser’s built-in asynchronous APIs, well architected applications should
-    expose their low level APIs in an asynchronous fashion as well, especially when they do any
-    sort of I/O or computational heavy processing. For example, APIs to get data should
-    be asynchronous, and should NOT look like this:    
+    브라우저에 내장된 비동기 API들 이상으로, 잘 설계된 어플리케이션들은 저수준 API들도 비동기 방식으로 드러내야 한다. 어떤 종류의 I/O나 부하가 큰 연산을 하는 경우에 특히 그러하다. 예를 들어 데이터를 가져오는 API들은 비동기여야 하고 아래처럼 해서는 안된다.
   </p>
 
 <pre class="prettyprint lang-js">
-// WRONG: this will make the UI freeze when getting the data  
+// 잘못됐음: 데이터를 가져올때 UI를 멈추게 만들것이다. 
 var data = getData();
 alert("We got data: " + data);
 </pre>
 
   <p>
-    This API design requires the <b>getData()</b> to be blocking, which will freeze the user
-    interface until the data is fetched. If the data is local in the JavaScript context
-    then this might not be an issue, however if the data needs to be fetched from the
-    network or even locally in a SQLite or index store this could have dramatic impact on
-    the user experience.    
+    이 API 디자인은 <b>getData()</b>가 데이터를 가져올때까지 UI를 멈추게하는 블록현상(blocking)을 요구한다. 만약 데이터가 JavaScript의 컨텍스트에 로컬로 저장되있다면 문제가 안될 수도 있지만 데이터를 네트워크, SQLite(로컬이더라도), 인덱스저장소 같은 곳에서 가져올 필요가 있다면 사용자경험에 막대한 영향을 미칠 수 있다.   
   </p>  
   
   <p>
-    The right design is to proactively make all application API that could take some time
-    to process, asynchronous from the beginning as retrofitting synchronous application code
-    to be asynchronous can be a daunting task.    
+    올바른 디자인은 처리하는데 시간이 좀 걸릴 수 있는 모든 어플리케이션 API를 처음부터 비동기로 앞서서 만드는 것이다. 비동기여야 할 동기 어플리케이션 코드를 보강하는 것은 부담스러운 작업이 될 수 있기 때문이다.   
   </p>  
   
   <p>
-    For example the simplistic getData() API would become something like:
+    예를 들어 단순화된 getData() API는 아래처럼 될 것이다.
   </p>
   
 <pre class="prettyprint lang-js">
@@ -155,16 +129,11 @@ getData(function(data){
 </pre>
 
   <p>
-    The nice thing about this approach is that this forces the application UI code to be
-    asynchronous-centric from the beginning and allows the underlying APIs to decide if
-    they need to be asynchronous or not in a later stage. 
+    이러한 처리방법이 좋은 점은 어플리케이션 UI 코드가 처음부터 비동기 중심이 되도록 강제하고 기본 API가 비동기가 필요한지 아닌지 나중에 결정 할 수 있다는 것이다.
   </p>  
   
   <p>
-    Note that not all the application API need or should be asynchronous. The rule of
-    thumb is that any API that does any type of I/O or heavy processing (anything that
-    can take longer than 15ms) should be exposed asynchronously from the start even if
-    the first implementation is synchronous.     
+    참고로 모든 어플리케이션 API가 비동기를 필요로 하거나 수행하지는 않는다. 경험에 근거한 규칙으로 말하자면 어떤 종류의 I/O나 무거운 연산(15ms이상 걸리는 어떤 것도)을 하는 몇몇 API는 비록 첫번째 구현이 동기라도 처음부터 비동기적으로 노출되야 한다.  
   </p>
   
 </section>
@@ -173,21 +142,14 @@ getData(function(data){
   <h2 id="toc-handling-failures">예외처리</h2>
   
   <p>
-    One catch of asynchronous programing is that the traditional try/catch way to handle
-    failures does not really work anymore, as errors usually happen in another thread.
-    Consequently, the callee needs to have a structured way to notify the caller when
-    something goes wrong during the processing.     
+    비동기 프로그래밍의 한가지 문제는 오류들을 처리할때 쓰는 일반적인 try/catch 방법이 더 이상 작동하지 않는다는 점이다. 에러들이 보통 다른 쓰레드에서 발생하기 때문이다. 따라서 피호출자는 처리중에 어떤 것이 잘못됐을 때 호출자에게 알릴 구조적인 방법이 있어야 한다.     
   </p>
   
   <p>
-    In an event-based asynchronous API this is often accomplished by the application code
-    querying the event or object when receiving the event. For callback based
-    asynchronous APIs, the best practice is to have a second argument that takes a
-    function that would be called in case of a failure with the appropriate error
-    information as argument.     
+    이벤트 기반 비동기 API에서는 이벤트를 받았을 때 어플리케이션 코드가 이벤트나 오브젝트를 조회하는 것으로 종종 해결된다. 콜백 기반 비동기 API들을 위한 최고의 방법은 오류인 경우에 호출될 (적절한 에러정보를 인수로 가진) 함수를 두번째 인수로 지정하는 것이다.
   </p>
   
-  <p>Our getData call would look like this:</p>
+  <p>getData 호출은 아래처럼 될 것이다.</p>
 
 <pre class="prettyprint lang-js">
 // getData(successFunc,failFunc);  
@@ -204,19 +166,17 @@ getData(function(data){
   <h2 id="toc-async-with-deferred">$.Deferred의 적용</h2>
   
   <p>
-    One limitation of the above callback approach is that it can become really cumbersome
-    to write even moderately advanced synchronization logic.     
+    위 콜백 처리방법의 한가지 한계점은 약간의 고급 동기화 로직을 작성하는 것만으로도 매우 번잡하게 될 수 있다는 것이다.  
   </p>
 
   <p>
-    For example, if you need to wait for two asynchronous API to be done before doing a
-    third one, code complexity can rise quickly.     
+    예를 들어 당신이 만약 세 번째 API를 사용하기 전에 2개의 비동기 API가 실행완료 되기를 기다려야 한다면 코드의 복잡도는 비약적으로 증가할 것이다.
   </p>  
   
   <pre class="prettyprint lang-js">
-// first do the get data.   
+// 첫 번째로 데이터를 가져온다.   
 getData(function(data){
-  // then get the location
+  // 두 번째로 위치정보를 가져온다.
   getLocation(function(location){
     alert("we got data: " + data + " and location: " + location);
   },function(ex){
@@ -228,172 +188,126 @@ getData(function(data){
 </pre>
   
   <p>
-    Things can even get more complex when the application needs to make the same call
-    from multiple parts of the application, as every call will have to perform these multi
-    step calls, or the application will have to implement its own caching mechanism.     
+    어플리케이션이 자신의 여러 부분에게서 동일한 호출을 만들 필요가 있을 때 상황은 더욱 복잡해질수도 있으므로 모든 호출이 이러한 여러 단계의 요청들을 수행해야 하거나 어플리케이션이 자체 캐싱 메커니즘을 구현해야 할 것이다.     
   </p>
   
   <p>
-    Luckily, there is a relatively old pattern, called Promises (kind of similar to
-    <a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a> in Java) and a robust and modern implementation 
-    in jQuery core called <a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a> that provides a simple and powerful solution to asynchronous programing.    
+    다행히 Promises라는 비교적 오래된 패턴(Java에서 말하는 <a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/concurrent/Future.html">Future</a>와 비슷하다.)과 jQuery 코어에 비동기 프로그래밍을 하는데 간단하고 강력한 솔루션을 제공하는 <a href="http://api.jquery.com/category/deferred-object/">$.Deferred</a>라는 원기왕성하고 현대적인 구현체가 있다.  
   </p>  
   
   <p>
-    To make it simple, the Promises pattern defines that the asynchronous API returns a
-    Promise object which is kind of a “Promise that the result will be resolved with the
-    corresponding data.” To get the resolution, the caller gets the Promise object and
-    calls a <em>done(successFunc(data))</em> which will tell the Promise object to call this
-    <em>successFunc</em> when the “data” is resolved.     
+    간단하게 하기 위해 Promises 패턴은 일종의 "결과가 해당 데이터를 가지고 해결될 것이라는 약속"인 Promise 객체를 반환하는 비동기 API를 정의한다. 문제해결을 위해 호출함수는 Promise 객체를 얻고 "data"가 해결됐을 때 <em>successFunc</em>를 호출하기 위해 Promise 객체에게 말할 <em>done(successFunc(data))</em>를 호출한다.   
   </p>
   
   <p>
-    So, the getData call example above becomes like this:     
+    그래서 위의 getData 호출 예제는 아래와 같다.   
   </p>
   
 <pre class="prettyprint lang-js">
-// get the promise object for this API  
+// 이 API를 위한 Promise 객체를 얻는다.
 var dataPromise = getData();
 
-// register a function to get called when the data is resolved
+// 데이터가 해결됐을 때 호출될 함수를 등록한다.
 dataPromise.done(function(data){
   alert("We got data: " + data);
 });
 
-// register the failure function
+// 오류 함수를 등록한다.
 dataPromise.fail(function(ex){
   alert("oops, some problem occured: " + ex);
 });
 
-// Note: we can have as many dataPromise.done(...) as we want. 
+// 참고: 우리는 원하는 만큼 dataPromise.done(...)을 많이 가질 수 있다.
 dataPromise.done(function(data){
   alert("We asked it twice, we get it twice: " + data);
 });
 </pre>  
 
   <p>
-    Here, we get the <em>dataPromise</em> object first and then call the <em>.done</em> method to register
-    a function we want to get called back when the data gets resolved. We can also call
-    the <em>.fail</em> method to handle the eventual failure.  Note that we can have as many <em>.done</em>
-    or <em>.fail</em> calls as we need since the underlying Promise implementation (jQuery code) will 
-    handle the registration and callbacks.      
+    여기에서 우리는 먼저 <em>dataPromise</em> 객체를 얻고나서 데이터가 해결됐을 때 콜백으로 실행될 함수를 등록하기 위해 <em>.done</em> 메서드를 호출한다. 우리는 또한 오류를 처리하기 위해 <em>.fail</em> 메서드를 호출할 수 있다. 참고로 우리는 필요한대로 많은 <em>.done</em>과 <em>.fail</em> 호출들을 가질 수 있다. Promise의 내부구현(jQuery 코드)이 등록과 콜백들을 다루기 때문이다.    
   </p>
   
   <p>
-    With this pattern, it is relatively easy to implement more advanced synchronization
-    code, and jQuery already provides the most common one such a <a href="http://api.jquery.com/jQuery.when/">$.when</a>.     
+    이 패턴으로 향상된 동기화 코드를 구현하는 것은 비교적 쉽다. 그리고 jQuery는 이미 가장 일반적인 구현체인 <a href="http://api.jquery.com/jQuery.when/">$.when</a>을 제공한다.     
   </p>
   
   <p>
-    For example, the nested <em>getData</em>/<em>getLocation</em> callback above would become something like:
+    예를 들어 위의 중첩된 <em>getData</em>/<em>getLocation</em> 콜백은 아래처럼 될 것이다.
   </p>
   
 <pre class="prettyprint lang-js">
-// assuming both getData and getLocation return their respective Promise
+// 가령 getData와 getLocation 둘 다 그들 각자의 Promise를 반환한다면 
 var combinedPromise = $.when(getData(), getLocation())
 
-// function will be called when both getData and getLocation resolve
+// 함수는 getData와 getLocation이 둘 다 해결됐을 때 호출될 것이다.
 combinePromise.done(function(data,location){
   alert("We got data: " + dataResult + " and location: " + location);
-});  
+}); 
 </pre>
 
   <p>
-    And the beauty of it all is that jQuery.Deferred makes it very easy for developers to
-    implement the asynchronous function. For example, the getData could look something like this: 
+    그리고 그 모든 아름다움은 jQuery.Deferred가 개발자들을 위해 비동기 함수를 구현하기 매우 쉽게 만든다는 것이다. 예를 들어 getData는 아래처럼 할 수 있다.
   </p>
   
 <pre class="prettyprint lang-js">
 function getData(){
-  // 1) create the jQuery Deferred object that will be used
+  // 1) 사용될 jQuery Deferred 객체를 생성한다.
   var deferred = $.Deferred();
   
-  // ---- AJAX Call ---- //
+  // ---- AJAX 호출 ---- //
   XMLHttpRequest xhr = new XMLHttpRequest();
   xhr.open("GET","data",true);
   
-  // register the event handler
+  // 이벤트 핸들러를 등록한다.
   xhr.addEventListener('load',function(){
     if(xhr.status === 200){
-      // 3.1) RESOLVE the DEFERRED (this will trigger all the done()...)
+      // 3.1) DEFERRED를 해결한다. (모든 done()...을 동작시킬 것이다.)
       deferred.resolve(xhr.response);
     }else{
-      // 3.2) REJECT the DEFERRED (this will trigger all the fail()...)
+      // 3.2) DEFERRED를 거부한다. (모든 fail()...을 동작시킬 것이다.)
       deferred.reject("HTTP error: " + xhr.status);
     }
   },false) 
   
-  // perform the work
+  // 작업을 수행한다.
   xhr.send();
-  // Note: could and should have used jQuery.ajax. 
-  // Note: jQuery.ajax return Promise, but it is always a good idea to wrap it
-  //       with application semantic in another Deferred/Promise  
-  // ---- /AJAX Call ---- //
+  // 참고: jQuery.ajax를 사용할 수 있었고 해야할 수 있었다.
+  // 참고: jQuery.ajax는 Promise를 반환하지만 다른 Deferred/Promise를 사용하여 어플리케이션에 의미있는 구문으로 감싸는 것은 언제나 좋은 생각이다.
+  // ---- /AJAX 호출 ---- //
   
-  // 2) return the promise of this deferred
+  // 2) 이 deferred의 promise를 반환한다.
   return deferred.promise();
 }
-  
 </pre>
 
   <p>
-    So, when the getData() is called, it first creates a new jQuery.Deferred object (1) 
-    and then returns its Promise (2) so that the caller can register its done and fail 
-    functions. Then, when the XHR call returns, it either resolves the deferred (3.1) or 
-    reject it (3.2). Doing the deferred.resolve will trigger all the done(...) functions 
-    and other promise functions (e.g., then and pipe) and calling deferred.reject will 
-    call all the fail() functions. 
+    그래서 getData()가 호출됐을 때, 먼저 새로운 jQuery.Deferred 객체를 생성한다. (1) 그리고나서 그것의 Promise를 반환한다. (2) 그러면 호출함수는 done과 fail 함수들을 등록할 수 있다. XHR 호출이 반환됐을 때는 deferred를 (3.1) 해결하거나 (3.2) 거부한다. deferred.resolve를 호출하는 것은 모든 done(...) 함수들과 다른 promise 함수들(예: then과 pipe)을 동작시킬 것이고 deferred.reject를 호출하는 것은 모든 fail() 함수들을 동작시킬 것이다.
   </p>  
 </section>
 <section>
   <h2 id="toc-use-cases">사용예</h2>
 
   <p>
-    Here are some good use cases where Deferred can be very useful:
+    여기 Deferred를 유용하게 사용할 수 있는 좋은 사용예들이 있다.
   </p>
 
   <p>
-    <b>Data Access:</b> Exposing data access APIs as $.Deferred is often the right design. 
-    This is obvious for remote data, as synchronous remote calls would completely ruin the 
-    user experience, but is also true for local data as often the lower level APIs (e.g., 
-    SQLite and IndexedDB) are asynchronous themselves. The Deferred API''s $.when and .pipe 
-    are extremely powerful to synchronize and chain asynchronous sub-queries.
+    <b>데이터 접근:</b> 데이터 접근 API들을 $.Deferred로 구현하는 것은 보통 좋은 디자인이다. 이것은 원격데이터에 대해서 명백하다. 동기적인 원격 호출은 사용자 경험을 완전히 망가뜨리기 때문이다. 하지만 로컬데이터에 대해서도 마찬가지다. 종종 저수준 API들은(예: SQLite와 IndexedDB) 비동기이기 때문이다. Deferred API인 $.when과 .pipe는 비동기 서브쿼리들을 동기화하고 체인으로 연결하는데 매우 강력하다.
   </p>
   <p>
-    <b>UI Animations:</b> Orchestrating one or more animations with transitionEnd events 
-    can be quite tedious, especially when the animations are a mixed of CSS3 animation 
-    and JavaScript (as it is often the case). Wrapping the animation functions as Deferred 
-    can significantly reduce the code complexity and improve flexibility. Even a simple 
-    generic wrapper function like cssAnimation(className) that will return the Promise 
-    object that gets resolved on transitionEnd could be of a great help.
+    <b>UI 애니매이션:</b> transitionEnd 이벤트를 사용하여 하나 이상의 애니매이션을 구성하는 것은 매우 지루하다. 특히 애니매이션들이 CSS3 애니매이션과 JavaScript의 조합일때(흔히 있는 일이지만) 그렇다. Deferred로 애니매이션 함수들을 감싸는 것은 코드의 복잡도를 상당히 감소시키고 유연성을 증가시킬 수 있다. transitionEnd일 때 해결되는 Promise 객체를 반환할 cssAnimation(className)같은 간단하고 일반적인 래퍼(wrapper) 함수도 아주 크게 도움이 될 수 있다.
   </p>
 
   <p>
-    <b>UI Component Display:</b> This is a little bit more advanced, but advanced HTML 
-    Component frameworks should use the Deferred as well. Without going too much into 
-    the details (this will be the subject of another post), when an application needs to 
-    display different parts of the user interface, having the lifecycle of those 
-    components encapsulated in Deferred allows greater control of the timing. 
+    <b>UI 컴포넌트 표시:</b> 이건 조금 더 조금 진보적이지만 고급 HTML 컴포넌트 프레임워크들도 Deferred를 사용해야 한다. 자세한 내용은 여기에 쓰지 않지만(다른 글의 주제가 될 것이다.) 어플리케이션이 별도의 UI를 보여줄 필요가 있을 때, Deferred로 캡슐화된 컴포넌트들의 라이프사이클을 가지는 것은 타이밍을 더 잘 조절할 수 있게 한다.
   </p>
 
   <p>
-    <b>Any browser asynchronous API:</b> For normalization purpose, it is often a good 
-    idea to wrap the browser API calls as Deferred. This takes literally 4 to 5 lines 
-    of code each, but will greatly simplify any application code. As show in the above 
-    getData/getLocation pseudo code, this allows the applications code to have one 
-    asynchronous model across all types of API (browsers, application specifics, and 
-    compound).
+    <b>브라우저 비동기 API:</b> 일반화 목적으로 브라우저 API 호출들을 Deferred로 감싸는 것은 보통 좋은 생각이다. 이것은 정말로 각 코드마다 네다섯줄이 필요하지만 어떤 어플리케이션 코드도 아주 간단해질 것이다. 위의 getData/getLocation 의사(pseudo) 코드에서 보듯이 이것은 어플리케이션 코드가 모든 형태의 API(브라우저, 어플리케이션 세부사항과 이들의 조합)를 통틀어서 한가지 비동기 모델로 사용하게 한다.
   </p>
 
   <p>
-    <b>Caching:</b> This is kind of a side benefit, but can be very useful in some 
-    occasion. Because the Promise APIs (e.g., .done(..) and .fail(..)) can be called 
-    before or after the asynchronous call is performed, the Deferred object can be 
-    used as a caching handle for an asynchronous call. For example, a CacheManager 
-    could just keep track of Deferred for given requests, and return the Promise of 
-    the matching Deferred if it has not be invalidated. The beauty is that the caller 
-    does not have to know if the call has already been resolved or is in the process 
-    of being resolved, its callback function will get called exactly the same way. 
+    <b>캐싱:<b/> 이것은 일종의 부수효과지만 어떤 경우에는 매우 유용하게 될 수 있다. Promise API들(예: .done(..)과 .fail(..))은 비동기 호출이 수행되기 전이나 후에 호출될 수 있기 때문이다. Deferred 객체는 비동기 호출에 대해서 캐싱 핸들러로 사용될 수 있다. 예를 들어 CacheManager는 특정 요청들에 대해 Deferred를 추적할 수 있고, 무효화되지 않는다면 매치되는 Deferred의 Promise를 반환한다. 이것의 장점은 호출함수가 이미 해결된 것인지 해결도중인 것인지 알지 못해도 해당 콜백함수는 정확히 같은 방법으로 호출될 것이라는 점이다. 
   </p>
 </section>
 
@@ -401,11 +315,7 @@ function getData(){
   <h2 id="toc-conclusion">정리</h2>
   
   <p>
-    While the $.Deferred concept is simple, it can take time to get a good handle on it.
-    However, given the nature of the browser environment, mastering asynchronous
-    programing in JavaScript is a must for any serious HTML5 application developer and
-    the Promise pattern (and the jQuery implementation) are tremendous tools 
-    to make asynchronous programming reliable and powerful.    
+    $.Deferred의 개념은 간단하지만 이를 잘 다루기 위해서는 시간이 걸릴 수 있다. 하지만 브라우저 환경의 특성상, JavaScript로 비동기 프로그래밍을 마스터하는 것은 진지한 HTML5 어플리케이션 개발자의 의무이다. 그리고 Promise 패턴(과 jQuery 구현)은 비동기 프로그래밍을 신뢰성있고 강력하게 만들기 위한 대단한 도구이다. 
   </p>  
 </section>
 
