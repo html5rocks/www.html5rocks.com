@@ -169,43 +169,43 @@ return true;
 	<pre class="prettyprint">
 //	This function retuns a lesnflare THREE object to be .add()ed to the scene graph
 function addLensFlare(x,y,z, size, overrideImage){
-	var flareColor = new THREE.Color( 0xffffff );
+  var flareColor = new THREE.Color( 0xffffff );
 
-	lensFlare = new THREE.LensFlare( overrideImage, 700, 0.0, THREE.AdditiveBlending, flareColor );
+  lensFlare = new THREE.LensFlare( overrideImage, 700, 0.0, THREE.AdditiveBlending, flareColor );
 
-	//	we're going to be using multiple sub-lens-flare artifacts, each with a different size
-	lensFlare.add( textureFlare1, 4096, 0.0, THREE.AdditiveBlending );
-	lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
-	lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
-	lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
+  //	we're going to be using multiple sub-lens-flare artifacts, each with a different size
+  lensFlare.add( textureFlare1, 4096, 0.0, THREE.AdditiveBlending );
+  lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
+  lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
+  lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
 
-	//	and run each through a function below
-	lensFlare.customUpdateCallback = lensFlareUpdateCallback;
+  //	and run each through a function below
+  lensFlare.customUpdateCallback = lensFlareUpdateCallback;
 
-	lensFlare.position = new THREE.Vector3(x,y,z);
-	lensFlare.size = size ? size : 16000 ;
-	return lensFlare;
+  lensFlare.position = new THREE.Vector3(x,y,z);
+  lensFlare.size = size ? size : 16000 ;
+  return lensFlare;
 }
 
 //	this function will operate over each lensflare artifact, moving them around the screen
 function lensFlareUpdateCallback( object ) {
-    var f, fl = this.lensFlares.length;
-    var flare;
-    var vecX = -this.positionScreen.x * 2;
-    var vecY = -this.positionScreen.y * 2;
-    var size = object.size ? object.size : 16000;
+  var f, fl = this.lensFlares.length;
+  var flare;
+  var vecX = -this.positionScreen.x * 2;
+  var vecY = -this.positionScreen.y * 2;
+  var size = object.size ? object.size : 16000;
 
-    var camDistance = camera.position.length();
+  var camDistance = camera.position.length();
 
-    for( f = 0; f &lt; fl; f ++ ) {
-        flare = this.lensFlares[ f ];
+  for( f = 0; f &lt; fl; f ++ ) {
+    flare = this.lensFlares[ f ];
 
-        flare.x = this.positionScreen.x + vecX * flare.distance;
-        flare.y = this.positionScreen.y + vecY * flare.distance;
+    flare.x = this.positionScreen.x + vecX * flare.distance;
+    flare.y = this.positionScreen.y + vecY * flare.distance;
 
-        flare.scale = size / camDistance;
-        flare.rotation = 0;
-    }
+    flare.scale = size / camDistance;
+    flare.rotation = 0;
+  }
 }
 	</pre>	
 
@@ -224,8 +224,8 @@ function lensFlareUpdateCallback( object ) {
 	<pre class="prettyprint">
 mesh.material.map.needsUpdate = true;
 mesh.material.map.onUpdate = function(){
-	this.offset.y -= 0.001;
-	this.needsUpdate = true;
+  this.offset.y -= 0.001;
+  this.needsUpdate = true;
 }
 	</pre> 
 
@@ -242,16 +242,16 @@ mesh.material.map.onUpdate = function(){
 
 	<pre class="prettyprint">
 var shaderMaterial = new THREE.ShaderMaterial( {
-	uniforms: 	datastarUniforms,
-	attributes:     datastarAttributes,
-	/* ... etc */
+  uniforms: 	datastarUniforms,
+  attributes:     datastarAttributes,
+  /* ... etc */
 });
 	</pre>	
 
 	<pre class="prettyprint">
 var datastarAttributes = {
-	size: 		{ type: 'f', value: [] },
-	colorIndex: 	{ type: 'f', value: [] },
+  size: 		{ type: 'f', value: [] },
+  colorIndex: 	{ type: 'f', value: [] },
 };
 	</pre>
 
@@ -279,7 +279,7 @@ gradientCanvas.getContext('2d').drawImage( gradientImage, 0, 0, gradientImage.wi
 
 //	a function to grab the pixel color based on a normalized percentage value
 gradientCanvas.getColor = function( percentage ){
-	return this.getContext('2d').getImageData(percentage * gradientImage.width,0, 1, 1).data;
+  return this.getContext('2d').getImageData(percentage * gradientImage.width,0, 1, 1).data;
 }
 	</pre>	
 
@@ -304,38 +304,38 @@ var shaderList = ['shaders/starsurface', 'shaders/starhalo', 'shaders/starflare'
 
 //	a small util to pre-fetch all shaders and put them in a data structure (replacing the list above)
 function loadShaders( list, callback ){
-	var shaders = {};	
+  var shaders = {};	
 
-	var expectedFiles = list.length * 2;
-	var loadedFiles = 0;
+  var expectedFiles = list.length * 2;
+  var loadedFiles = 0;
 
-	function makeCallback( name, type ){
-		return function(data){
-			if( shaders[name] === undefined ){
-				shaders[name] = {};
-			}
-			
-			shaders[name][type] = data;
+  function makeCallback( name, type ){
+    return function(data){
+      if( shaders[name] === undefined ){
+        shaders[name] = {};
+      }
 
-			//	check if done
-			loadedFiles++;
-			if( loadedFiles == expectedFiles ){				
-				callback( shaders );
-			}
+      shaders[name][type] = data;
 
-		};
-	}
-	
-	for( var i=0; i&lt;list.length; i++ ){
-		var vertexShaderFile = list[i] + '.vsh';
-		var fragmentShaderFile = list[i] + '.fsh';	
+      //  check if done
+      loadedFiles++;
+      if( loadedFiles == expectedFiles ){				
+        callback( shaders );
+      }
 
-		//	find the filename, use it as the identifier	
-		var splitted = list[i].split('/');
-		var shaderName = splitted[splitted.length-1];
-		$(document).load( vertexShaderFile, makeCallback(shaderName, 'vertex') );
-		$(document).load( fragmentShaderFile,  makeCallback(shaderName, 'fragment') );
-	}
+    };
+  }
+
+  for( var i=0; i&lt;list.length; i++ ){
+    var vertexShaderFile = list[i] + '.vsh';
+    var fragmentShaderFile = list[i] + '.fsh';	
+
+    //	find the filename, use it as the identifier	
+    var splitted = list[i].split('/');
+    var shaderName = splitted[splitted.length-1];
+    $(document).load( vertexShaderFile, makeCallback(shaderName, 'vertex') );
+    $(document).load( fragmentShaderFile,  makeCallback(shaderName, 'fragment') );
+  }
 }		
 	</pre>
 
@@ -345,9 +345,9 @@ function loadShaders( list, callback ){
 
 	<pre class="prettyprint">
 var galacticShaderMaterial = new THREE.ShaderMaterial( {
-	vertexShader:   shaderList.galacticstars.vertex,
-	fragmentShader: shaderList.galacticstars.fragment,
-	/*...*/
+  vertexShader:   shaderList.galacticstars.vertex,
+  fragmentShader: shaderList.galacticstars.fragment,
+  /*...*/
 });		
 	</pre>
 
@@ -382,26 +382,26 @@ var galacticShaderMaterial = new THREE.ShaderMaterial( {
 	<pre class="prettyprint">
 /* Fixes the difference between WebGL coordinates to CSS coordinates    */
 function toCSSMatrix(threeMat4, b) {
-    var a = threeMat4, f;
-    if (b) {
-        f = [
-            a.elements[0], -a.elements[1], a.elements[2], a.elements[3],
-            a.elements[4], -a.elements[5], a.elements[6], a.elements[7],
-            a.elements[8], -a.elements[9], a.elements[10], a.elements[11],
-            a.elements[12], -a.elements[13], a.elements[14], a.elements[15]
-        ];
-    } else {
-        f = [
-            a.elements[0], a.elements[1], a.elements[2], a.elements[3],
-            a.elements[4], a.elements[5], a.elements[6], a.elements[7],
-            a.elements[8], a.elements[9], a.elements[10], a.elements[11],
-            a.elements[12], a.elements[13], a.elements[14], a.elements[15]
-        ];                 
-    }
-    for (var e in f) {
-        f[e] = epsilon(f[e]);
-    }
-    return "matrix3d(" + f.join(",") + ")";
+  var a = threeMat4, f;
+  if (b) {
+    f = [
+      a.elements[0], -a.elements[1], a.elements[2], a.elements[3],
+      a.elements[4], -a.elements[5], a.elements[6], a.elements[7],
+      a.elements[8], -a.elements[9], a.elements[10], a.elements[11],
+      a.elements[12], -a.elements[13], a.elements[14], a.elements[15]
+    ];
+  } else {
+    f = [
+      a.elements[0], a.elements[1], a.elements[2], a.elements[3],
+      a.elements[4], a.elements[5], a.elements[6], a.elements[7],
+      a.elements[8], a.elements[9], a.elements[10], a.elements[11],
+      a.elements[12], a.elements[13], a.elements[14], a.elements[15]
+    ];                 
+  }
+  for (var e in f) {
+    f[e] = epsilon(f[e]);
+  }
+  return "matrix3d(" + f.join(",") + ")";
 }		
 	</pre>	
 
@@ -439,23 +439,23 @@ function toCSSMatrix(threeMat4, b) {
 var musicA = document.getElementById('bgmusicA');
 var musicB = document.getElementById('bgmusicB');
 musicA.addEventListener('ended', function(){
-	this.currentTime = 0;
-	this.pause();
-	var playB = function(){
-		musicB.play();
-	}
-	//	make it wait 15 seconds before playing again
-	setTimeout( playB, 15000 );
+  this.currentTime = 0;
+  this.pause();
+  var playB = function(){
+    musicB.play();
+  }
+  //	make it wait 15 seconds before playing again
+  setTimeout( playB, 15000 );
 }, false);
 	
 musicB.addEventListener('ended', function(){
-	this.currentTime = 0;
-	this.pause();	
-	var playA = function(){
-		musicA.play();
-	}
-	//	otherwise the music will drive you insane
-	setTimeout( playA, 15000 );
+  this.currentTime = 0;
+  this.pause();	
+  var playA = function(){
+    musicA.play();
+  }
+  //	otherwise the music will drive you insane
+  setTimeout( playA, 15000 );
 }, false);
 
 //	okay so there's a bit of code redundancy, I admit it
