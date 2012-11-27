@@ -17,11 +17,11 @@ return true;
 	  <p>{% include "warning.html" %}</p>
 	-->
 	<p>
-	  Hello! My name is Michael Chang and I work with Data Arts Team at Google. One of the latest projects we've completed is <a href="workshop.chromeexperiments.com/stars">100,000 Stars</a>, a <a href="chromeexperiments.com" target="_blank">Chrome Experiment</a> visualizing nearby stars. The project was built with <a href="https://github.com/mrdoob/three.js/" target="_blank">THREE.js</a>, coupled with CSS 3D. In this case study I will outline the discovery process, share the techniques used in its programming, and leave with some thoughts for future improvement.
+	  Hello! My name is Michael Chang and I work with the Data Arts Team at Google. Recently, we completed <a href="workshop.chromeexperiments.com/stars">100,000 Stars</a>, a <a href="chromeexperiments.com" target="_blank">Chrome Experiment</a> visualizing nearby stars. The project was built with <a href="https://github.com/mrdoob/three.js/" target="_blank">THREE.js</a> and CSS3D. In this case study I will outline the discovery process, share some programming techniques, and finish with some thoughts for future improvement.
 	</p>
 
 	<p>
-		The topics involved here will be fairly broad, and most of it expect pre-existing knowledge of THREE.js, though it is my hope that you can still enjoy this as a technical post-mortem. Feel free to jump to an area of interest using the table of contents button on the right. First I'll show the rendering portion of the project, followed by shader management, and how to use CSS text labels in combination with WebGL.
+		The topics discussed here will be fairly broad, and require some knowledge of THREE.js, though it is my hope that you can still enjoy this as a technical post-mortem. Feel free to jump to an area of interest using the table of contents button on the right. First, I'll show the rendering portion of the project, followed by shader management, and finally how to use CSS text labels in combination with WebGL.
 	</p>
 
 	<br>
@@ -35,11 +35,11 @@ return true;
 	<h2 id="toc-introduction">Discovering Space</h2>
 
 	<p>
-		Shortly after we finished <a href="http://www.chromeexperiments.com/detail/arms-globe/" target="_blank">Small Arms Globe</a> I was experimenting with a THREE.js particle demo with depth of field.	I noticed that I could change the interpreted "scale" of the scene such that the particles could either represent macro-photography particles encased in liquid or deep space.
+		Shortly after we finished <a href="http://www.chromeexperiments.com/detail/arms-globe/" target="_blank">Small Arms Globe</a>, I was experimenting with a THREE.js particle demo with depth of field. I noticed that I could change the interpreted "scale" of the scene such that particles within it could represent either macro-photography particles in liquid or much larger bodies in deep space. <b>[[[ How? - Val ]]]</b>
 	</p>
 
 	<p>
-		I began hunting for data I could use to inject particle positions with, a path that lead me to <a href="http://astronexus.com/" target="_blank">astronexus.com</a> which has a star database called the HYG - Hipparcos, Yale Bright Star Catalog, and Gliese/Jahreiss Catalog - a compilation of the three accomapnied by pre-calculated xyz cartesian coordinates. Let's begin!
+		I began hunting for data I could use to inject particle positions with, a path that lead me to <a href="http://astronexus.com/" target="_blank">astronexus.com</a>'s HYG database, a compilation of the three data sources (Hipparcos, Yale Bright Star Catalog, and Gliese/Jahreiss Catalog) accompanied by pre-calculated xyz Cartesian coordinates. Let's begin!
 	</p>
 
 	<figure class="center">
@@ -55,19 +55,19 @@ return true;
 	</figure>	
 
 	<p>
-		It took about an hour to hack together something that placed the star data in 3D space. There are exactly 119,617 stars the data-set, so representing each star with a particle isn't a problem for a modern GPU. There are also 87 named stars so I created CSS marker overlay using the same technique I <a href="http://mflux.tumblr.com/post/28367579774/armstradeviz" target="_blank">described</a> in Small Arms Globe.
+		It took about an hour to hack together something that placed the star data in 3D space. There are exactly 119,617 stars in the data set, so representing each star with a particle is not a problem for a modern GPU. There are also 87 individually identified stars, so I created a CSS marker overlay using the same technique I <a href="http://mflux.tumblr.com/post/28367579774/armstradeviz" target="_blank">described</a> in Small Arms Globe.
 	</p>
 
 	<p>
-		During this time I had just finished the <a href="http://masseffect.bioware.com/" target="_blank">Mass Effect</a> series. In the game the player is invited to explore the galaxy and <a href="http://www.youtube.com/watch?v=1g92-pgyJrU" target="_blank">scan various planets and read about</a> their completely fictional, wikipedia-sounding history; what species had thrived on the planet, its geological history, and so forth. 
+		During this time I had just finished the <a href="http://masseffect.bioware.com/" target="_blank">Mass Effect</a> series. In the game the player is invited to explore the galaxy and <a href="http://www.youtube.com/watch?v=1g92-pgyJrU" target="_blank">scan various planets and read about</a> their completely fictional, wikipedia-sounding history: what species had thrived on the planet, its geological history, and so forth. 
 	</p>
 
 	<p>
-		Knowing the wealth of actual data that's out there about stars, one could conceivably present space facts in the same way. The ultimate goal for this project would be to bring to life this data, allow the viewer to explore the galaxy a'la Mass Effect, to learn about stars and their distribution, and hopefully inspire a sense of awe and wonder about space. Phew!
+		Knowing the wealth of actual data that's out there about stars, one could conceivably present real information about the galaxy in the same way. The ultimate goal for this project would be to bring to life this data, allow the viewer to explore the galaxy a'la Mass Effect, to learn about stars and their distribution, and hopefully inspire a sense of awe and wonder about space. Phew!
 	</p>
 
 	<p>
-		I should probably preface the rest of this case-study by saying that <i>I am by no means an astronomer, and that this is the work of amateur research</i> helped along with advice given to us by experts whom we have consulted with. This project should definitely be construed as "an artist interpretation of space".
+		I should probably preface the rest of this case-study by saying that <i>I am by no means an astronomer, and that this is the work of amateur research</i> supported by some advice from external experts. This project should definitely be construed as an artist interpretation of space.
 	</p>
 
 	<h2 id="toc-topic">Building a Galaxy</h2>
@@ -82,7 +82,7 @@ return true;
 	</figure>	
 
 	<p>
-		To generate the Milky Way, I spawned 100,000 particles and placed them in a spiral by emulating the way galactic arms are formed. I wasn't too worried about the specifics of spiral arm formation because this would be a representational model rather than a mathematical one. However I did try to get the number of spiral arms more or less correct, and spinning in the "right direction".
+		To generate the Milky Way, I spawned 100,000 particles and placed them in a spiral by emulating the way galactic arms are formed. I wasn't too worried about the specifics of spiral arm formation because this would be a representational model rather than a mathematical one. However I did try to get the number of spiral arms more or less correct, and spinning in the "right direction."
 	</p>
 
 	<p>
@@ -95,15 +95,15 @@ return true;
 	</figure>		
 
 	<p>
-		I decided early on to represent one GL Unit as one light year, a convention that unified placement for everything visualized, and unfortunately gave me serious precision issues later on.
+		I decided early on to represent one GL unit <b>[[[ explain briefly what a GL unit is? - Val ]]]</b> as one light year, a convention that unified placement for everything visualized, and unfortunately gave me serious precision issues later on.
 	</p>
 
 	<p>
-		Another convention I decided was to rotate the entire scene rather than moving the camera, something I've done in a few projects thus far. One advantage is that everything is placed onto a "turntable" so that mouse-dragging left and right rotates the object in question, but zooming in is only a matter of changing camera.position.z
+		Another convention I decided was to rotate the entire scene rather than moving the camera, something I've done in a few other projects. One advantage is that everything is placed onto a "turntable" so that mouse-dragging left and right rotates the object in question, but zooming in is only a matter of changing camera.position.z.
 	</p>
 
 	<p>
-		Field of view (or FOV) for the camera is also dynamic. As one trucks outwards, the field of view widens, taking in more and more of the galaxy. The opposite is true when diving inwards towards a star, the field of view narrows. This allows the camera to view things that are infinitesimal (in comparison to the galaxy) by squishing the FOV down to something of a god-like magnifying glass without having to deal with near-plane clipping issues.
+		Field of view (or FOV) for the camera is also dynamic. As one pulls outwards, the field of view widens, taking in more and more of the galaxy. The opposite is true when moving inwards towards a star, the field of view narrows. This allows the camera to view things that are infinitesimal (in comparison to the galaxy) by squishing the FOV down to something of a god-like magnifying glass without having to deal with near-plane clipping issues.
 	</p>
 
 	<figure class="center">
@@ -112,25 +112,25 @@ return true;
 	</figure>			
 
 	<p>
-		From here I was able to "place" the sun at some number of units away from the galactic core. I was also able to visualize the relative size of the solar system by mapping out the radius of the <a href="http://en.wikipedia.org/wiki/Kuiper_cliff#.22Kuiper_cliff.22" target="_blank">"Kuiper Cliff"</a> (I eventually chose to visualize the <a href="http://en.wikipedia.org/wiki/Oort_cloud" target="_blank">Oort Cloud</a>) instead. Within this model solar system, I could also visualize a simplified orbit of Earth, and the actual radius of the sun in comparison.
+		From here I was able to "place" the Sun at some number of units away from the galactic core. I was also able to visualize the relative size of the solar system by mapping out the radius of the <a href="http://en.wikipedia.org/wiki/Kuiper_cliff#.22Kuiper_cliff.22" target="_blank">Kuiper Cliff</a> (I eventually chose to visualize the <a href="http://en.wikipedia.org/wiki/Oort_cloud" target="_blank">Oort Cloud</a>) instead. Within this model solar system, I could also visualize a simplified orbit of Earth, and the actual radius of the Sun in comparison.
 	</p>
 
 	<figure class="center">
 		<img src="/static/images/screenshots/casestudies/100000stars/solarsystemplacement.png" title="The solar system." />
-		<figcaption>The sun orbited by planets and a sphere representing the kuiper belt.</figcaption>
+		<figcaption>The Sun orbited by planets and a sphere representing the Kuiper Belt.</figcaption>
 	</figure>			
 
 	<p>
-		The sun was extremely difficult to render. I had to cheat with as many real-time graphics techniques as I knew. The surface of the sun is a hot froth of plasma and needed to pulse and change over time. This was simulated via a bitmap texture of an infra-red image of the solar surface. The surface shader would do a color look-up based on the grayscale of this texture, and perform a look-up in a separate color ramp. When this look-up is shifted over time it creates this lava-like distortion.
+		The Sun was difficult to render. I had to cheat with as many real-time graphics techniques as I knew. The surface of the Sun is a hot froth of plasma and needed to pulse and change over time. This was simulated via a bitmap texture of an infrared image of the solar surface. The surface shader makes a color look-up based on the grayscale of this texture and performs a look-up in a separate color ramp. When this look-up is shifted over time it creates this lava-like distortion.
 	</p>
 
 	<p>
-		A similar technique was used for the corona of the Sun, except that it would be a flat sprite card that always faces the camera using <a href="https://github.com/mrdoob/three.js/blob/master/src/extras/core/Gyroscope.js" target="_blank">THREE.Gyroscope()</a>;
+		A similar technique was used for the corona of the Sun, except that it would be a flat sprite card that always faces the camera using <a href="https://github.com/mrdoob/three.js/blob/master/src/extras/core/Gyroscope.js" target="_blank">THREE.Gyroscope()</a>;.
 	</p>
 
 	<figure class="center">
 		<img src="/static/images/screenshots/casestudies/100000stars/earlysunprototype.png" title="Rendering Sol." />
-		<figcaption>Early version of the sun.</figcaption>
+		<figcaption>Early version of the Sun.</figcaption>
 	</figure>		
 
 	<p>
@@ -138,20 +138,20 @@ return true;
 	</p>
 
 	<p>
-		It was here that I was starting to experience some z-fighting issues due to GL precision. All of the variables for precision were pre-defined in THREE.js, so I couldn't realistically bump up the precision without a huge amount of work. Precision issues weren't as bad near the origin at however once I started modeling other star systems this became somewhat of an issue.
+		It was here that I was starting to experience some z-fighting issues due to GL precision. All of the variables for precision were pre-defined in THREE.js, so I couldn't realistically bump up the precision without a huge amount of work. Precision issues were not as bad near the origin. However, once I started modeling other star systems, this became an issue.
 	</p>
 
 	<figure class="center">
 		<img src="/static/images/screenshots/casestudies/100000stars/finalstarmodel.png" title="Star model." />
-		<figcaption>The code for rendering the sun was later generalized to render other stars.</figcaption>
+		<figcaption>The code for rendering the Sun was later generalized to render other stars.</figcaption>
 	</figure>							
 
 	<p>
-		There were a few hacks I employed to mitigate z-fighting. THREE's <a href="https://github.com/mrdoob/three.js/blob/master/src/materials/Material.js" target="_blank">Material.polygonoffset</a> is a property that allows polygons to be rendered at a different percieved location (as far as I understood how it worked). This was used to force the corona plane to always render on top of the Sun's surface. Below this, a sun "halo" was rendered to give sharp light rays moving away from the sphere.
+		There were a few hacks I employed to mitigate z-fighting. THREE's <a href="https://github.com/mrdoob/three.js/blob/master/src/materials/Material.js" target="_blank">Material.polygonoffset</a> is a property that allows polygons to be rendered at a different percieved location (as far as I understand). This was used to force the corona plane to always render on top of the Sun's surface. Below this, a Sun "halo" was rendered to give sharp light rays moving away from the sphere.
 	</p>		
 
 	<p>
-		A different problem, although related to precision, was that star models would begin jittering as the scene zoomed in. To fix this I had to "zero out" the scene rotation and separately rotate the star model and environment map to give the illusion that you are orbiting the star.
+		A different problem related to precision was that the star models would begin jittering as the scene zoomed in. To fix this I had to "zero out" the scene rotation and separately rotate the star model and environment map to give the illusion that you are orbiting the star.
 	</p>
 
 
@@ -163,7 +163,7 @@ return true;
 	</figure>	
 
 	<p>
-		Space visualizations are where I feel like I can get away with excessive use of lensflare. <a href="https://github.com/mrdoob/three.js/blob/master/src/extras/objects/LensFlare.js" target="_blank">THREE.LensFlare</a> serves this purposes, all I needed to do was throw in some anamorphic hexagons and a dash of JJ Abrams. The snippet below shows how to construct them in your scene.
+		Space visualizations are where I feel like I can get away with excessive use of lensflare. <a href="https://github.com/mrdoob/three.js/blob/master/src/extras/objects/LensFlare.js" target="_blank">THREE.LensFlare</a> serves this purposes, all I needed to do was throw in some anamorphic hexagons and a dash of JJ Abrams. <b>[[[ explain the jj abrams reference? - Val ]]]</b> The snippet below shows how to construct them in your scene.
 	</p>			
 
 	<pre class="prettyprint">
@@ -218,7 +218,7 @@ function lensFlareUpdateCallback( object ) {
 	</figure>		
 
 	<p>
-		For the "spatial orientation plane", a gigantic THREE.CylinderGeometry() was created and centered on the sun. To create the "wave of light" fanning outwards, I modified its texture offset over time like so:
+		For the "spatial orientation plane", a gigantic THREE.CylinderGeometry() was created and centered on the Sun. To create the "wave of light" fanning outwards, I modified its texture offset over time like so:
 	</p>
 
 	<pre class="prettyprint">
@@ -233,11 +233,11 @@ mesh.material.map.onUpdate = function(){
 
 	<h3 id="toc-topic-subtopic">Using color ramps.</h3>
 	<p>
-		Each star has a different color based on a "color-index" that astronomers have assigned them. In general red stars are cooler and blue/purple stars are hotter. A band of white and intermediate orange colors exist in this gradient.
+		Each star has a different color based on a "color-index" that astronomers have assigned them. In general, red stars are cooler and blue/purple stars are hotter. A band of white and intermediate orange colors exist in this gradient.
 	</p>
 
 	<p>
-		When rendering the stars I wanted to give each particle its own color based on this data. The way to do this was with shader "attributes", given to the shader material that the particles are applied with.
+		When rendering the stars I wanted to give each particle its own color based on this data. The way to do this was with "attributes" given to the shader material applied to the particles.
 	</p>
 
 	<pre class="prettyprint">
@@ -265,7 +265,7 @@ var datastarAttributes = {
 	</figure>			
 
 	<p>
-		The color ramp looked like this, however I needed to access its bitmap color data from javascript. The way I did this was to first load the image onto DOM, draw it into a canvas element, then access the canvas bitmap.
+		The color ramp looked like this, however I needed to access its bitmap color data from JavaScript. The way I did this was to first load the image onto DOM, draw it into a canvas element, then access the canvas bitmap.
 	</p>
 
 	<pre class="prettyprint">
@@ -284,18 +284,18 @@ gradientCanvas.getColor = function( percentage ){
 	</pre>	
 
 	<p>
-		This same method is then used for coloring individual stars in the star-model view.
+		This same method is then used for coloring individual stars in the star model view.
 	</p>
 
 	<figure class="center">
 		<img src="/static/images/screenshots/casestudies/100000stars/multicolor.png" title="My eyes!" />
-		<figcaption>The same technique is used to do color-lookup for a star's spectral class.</figcaption>
+		<figcaption>The same technique is used to do color lookup for a star's spectral class.</figcaption>
 	</figure>		
 
 	<h2 id="toc-introduction">Shader wrangling</h2>	
 
 	<p>
-		Throughout the project I discovered that I needed to write more and more shaders to accomplish all of the visual effects. I wrote a custom shader-loader for this purpose because I was tired of having shaders live in index.html.
+		Throughout the project I discovered that I needed to write more and more shaders to accomplish all of the visual effects. I wrote a custom shader loader for this purpose because I was tired of having shaders live in index.html.
 	</p>
 
 	<pre class="prettyprint">
@@ -352,14 +352,14 @@ var galacticShaderMaterial = new THREE.ShaderMaterial( {
 	</pre>
 
 	<p>
-		I probably could have used require.js although that would have needed some code re-assembling just for this purpose. This solution, while much easier, could be improved upon I think, perhaps even as a THREE.js extension. If you have suggestions or ways to do this better, please let me know!
+		I probably could have used require.js although that would have needed some code reassembling just for this purpose. This solution, while much easier, could be improved upon I think, perhaps even as a THREE.js extension. If you have suggestions or ways to do this better, please let me know!
 	</p>
 
 
 	<h2 id="toc-introduction">CSS Text Labels on top of THREE.js</h2>
 
 	<p>
-		On our last project Small Arms Globe I toyed around with making text labels appear on top of a THREE.js scene. The method I was using calculates the absolute model position of where I want the text to appear, then resolving the screen position using THREE.Projector(), and finally using CSS "top" and "left" to place the CSS elements at the desired position.
+		On our last project, Small Arms Globe, I toyed with making text labels appear on top of a THREE.js scene. The method I was using calculates the absolute model position of where I want the text to appear, then resolves the screen position using THREE.Projector(), and finally uses CSS "top" and "left" to place the CSS elements at the desired position.
 	</p>
 
 	<p>
@@ -419,7 +419,7 @@ function toCSSMatrix(threeMat4, b) {
 	</figure>		
 
 	<p>
-		When zooming in I found the scaling of typography was causing issues with positioning. Perhaps is this due to the kerning and padding of the text? Another problem was that the text became pixelated when zoomed into since the DOM renderer treats the rendered text as a textured quad, something to be aware of when using this method. In retrospect I could have just used gigantic font-sized text, and perhaps this is something for future exploration. In this project I also used the "top/left" CSS placement text labels, described earlier, for really small elements that accompany planets in the solar system.
+		When zooming in I found the scaling of typography was causing issues with positioning. Perhaps is this due to the kerning and padding of the text? Another problem was that the text became pixelated when zoomed into since the DOM renderer treats the rendered text as a textured quad, something to be aware of when using this method. In retrospect, I could have just used gigantic font-sized text, and perhaps this is something for future exploration. In this project I also used the "top/left" CSS placement text labels, described earlier, for really small elements that accompany planets in the solar system.
 	</p>
 
 	<h2 id="toc-introduction">Music playback and looping</h2>
@@ -428,11 +428,11 @@ function toCSSMatrix(threeMat4, b) {
 	</p>
 
 	<p>
-		Our producer Valdean Klump contacted Sam who had a bunch of "cutting floor" music from Mass Effect which he graciously let us use, the track titled "In a Strange Land".
+		Our producer Valdean Klump contacted Sam who had a bunch of "cutting floor" music from Mass Effect that he very graciously let us use. The track is titled "In a Strange Land".
 	</p>
 
 	<p>
-		I used the audio tag for music playback, however even in Chrome the "loop" attribute was unreliable. In the end this dual audio tag "hack" was used to check for end of playback and cycling to the other tag for playing. What was disappointing was that this *still* was not perfectly looping all the time, alas I feel like this was the best that I could do.
+		I used the audio tag for music playback, however even in Chrome the "loop" attribute was unreliable. In the end this dual audio tag hack was used to check for end of playback and cycling to the other tag for playing. What was disappointing was that this *still* was not perfectly looping all the time, alas I feel like this was the best that I could do.
 	</p>
 
 	<pre class="prettyprint">
@@ -468,7 +468,7 @@ musicA.play();
 	</p>
 
 	<p>
-		Our friend and colleague Ray Mcclure also spent some time creating some awesome generative "space noises" which had to be cut due to the web audio API being unstable, crashing Chrome every so often. It's unfortunate... but it definitely got us thinking more in the sound space for future work.
+		Our colleague Ray McClure also spent some time creating some awesome generative "space noises" which had to be cut due to the web audio API being unstable, crashing Chrome every so often. It's unfortunate... but it definitely got us thinking more in the sound space for future work.
 	</p>
 
 	<p>
