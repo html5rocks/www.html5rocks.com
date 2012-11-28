@@ -45,6 +45,10 @@ Follow either of the two links above to access the appropriate CLA and instructi
 2. Decide which code you want to submit. A submission should be a set of changes that addresses one issue in the [issue tracker](https://github.com/html5rocks/www.html5rocks.com/issues). Please don't mix more than one logical change per submittal, because it makes the history hard to follow. If you want to make a change (e.g. add a sample or feature) that doesn't have a corresponding issue in the issue tracker, please create one.
 3. **Submitting**: When you are ready to submit, send us a Pull Request!
 
+## Writing Code ##
+
+If your contribution contains code, please make sure that it follows [the style guide](http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml), otherwise we will have to ask you to make changes, and that's no fun for anyone. 
+
 ## Writing a tutorial / case study ##
 
 * Our articles and case studies are licensed under Creative Commons Attribution 3.0 License. Be sure you are OK with that.
