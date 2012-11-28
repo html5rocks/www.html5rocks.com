@@ -1,0 +1,179 @@
+<html>
+	<head>
+		<title>JAM with Chrome : HTML5 rocks</title>
+		<link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800|Source+Code+Pro" rel="stylesheet">
+		<style type="text/css">
+		
+		  body {
+		    background: url(http://1-ps.googleusercontent.com/x/s.html5rocks-hrd.appspot.com/www.html5rocks.com/static/images/xbackground.png.pagespeed.ic.y4quBltJwu.jpg) repeat;
+		    background-color: #F8F8F8!important;
+		    color: #424242;
+		    text-align: center;
+		    font-size: 24px;
+		    font-family: 'Open Sans',sans-serif;
+		  }
+
+		  a {
+		    color: #000;
+		  }
+
+			#wrapper {
+				position: relative;
+				width: 400px;
+				margin: 50px auto;
+				text-align: left;
+				font-size: 12px;
+				
+			}
+
+			#stage {
+				position: absolute;
+				width: 400px;
+				height: 300px;
+				background: rgba(0,0,0,.1);
+				z-index: 10;
+			}
+
+			#stage.active {
+				cursor: pointer;
+			}
+			
+			#box {
+				position: absolute;
+				top: 125px;
+				left: 175px;
+				width: 50px;
+				height: 50px;
+				background: red;
+			}
+			#box.hit {
+				background: green;
+			}
+
+		</style>
+	</head>
+	<body>
+  	<h3>JAM with Chrome</h3>
+		<div>
+			<a href="index.html">Example 1</a> | 
+			Example 2 | 
+			<a href="hit3.html">Example 3</a> |
+			<a href="hit4.html">Example 4</a>
+		</div>
+
+		<div id="wrapper">
+			<div id="stage"></div>
+			<div id="box"></div>
+			<div id="output"></div>
+		</div>
+		
+		<script>
+			
+
+			function Stage(id) {
+				this.el = document.getElementById(id);
+				this.position();
+				this.listeners();
+				this.hitZones = [];
+				return this;
+			}
+
+			Stage.prototype = {
+				position: function(){
+					var offset = this.offset(this.el);
+          			this.positionTop = offset.left - window.scrollX;
+          			this.positionLeft = offset.top - window.scrollY;
+        		},
+        		offset: function(el){
+          			var _x = 0, _y = 0;
+					while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+						_x += el.offsetLeft;
+						_y += el.offsetTop;
+						el = el.offsetParent;
+					}
+					return { top: _y, left: _x };
+        		},
+        		listeners: function(){
+        			var _self = this,
+        				output = document.getElementById("output");
+
+        			window.addEventListener('resize', function(){
+						_self.position();
+					}, false);
+
+        			window.addEventListener('scroll', function(){
+						_self.position();
+					}, false);
+
+					this.el.addEventListener('mousemove', function(e){
+						var x = e.clientX - _self.positionTop,
+            				y = e.clientY - _self.positionLeft;
+
+            			output.innerHTML = (x + "," + y);
+
+            			_self.hitZones.forEach(function(zone){
+            				_self.check(x, y, zone);
+            			});
+
+					}, false);
+        		},
+        		check: function(x, y, zone){
+					if(!zone.el) return;
+
+					if(zone.inside(x, y)){
+            			zone.el.classList.add('hit');
+            			this.el.classList.add('active');
+            		}else{
+            			zone.el.classList.remove('hit');
+            			this.el.classList.remove('active');
+            		}
+				},
+        		addRect: function(id){
+        			var el = document.getElementById(id),
+						rect = new Rect(el.offsetLeft, 
+        								el.offsetTop, 
+        								el.offsetWidth, 
+        								el.offsetHeight  
+        								);
+					rect.el = el;
+
+        			this.hitZones.push(rect);
+        			return rect;
+        		}
+
+			}
+
+			function Rect(x, y, width, height, el) {
+				this.x = x;
+				this.y = y;
+				this.width = width;
+				this.height = height;
+
+				this.el = el || false;
+
+				return this;
+			}
+
+			Rect.prototype = { 
+				inside: function(x, y) {
+				  return x >= this.x && y >= this.y
+				      && x <= this.x + this.width
+				      && y <= this.y + this.height;
+				},
+				check: function(x, y){
+					if(!this.el) return;
+
+					if(this.inside(x, y)){
+            			this.el.classList.add('hit');
+            		}else{
+            			this.el.classList.remove('hit');
+            		}
+				}
+			}
+
+			var stage = new Stage("stage");
+			stage.addRect("box");
+
+		</script>
+	</body>
+</html>
