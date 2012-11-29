@@ -1,16 +1,15 @@
 <html>
 	<head>
-		<title>JAM with Chrome : HTML5 rocks</title>
-    <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800|Source+Code+Pro" rel="stylesheet">
+		<title>JAM with Chrome Demo</title>
+
     <style type="text/css">
 
       body {
-        background: url(http://1-ps.googleusercontent.com/x/s.html5rocks-hrd.appspot.com/www.html5rocks.com/static/images/xbackground.png.pagespeed.ic.y4quBltJwu.jpg) repeat;
         background-color: #F8F8F8!important;
         color: #424242;
         text-align: center;
         font-size: 24px;
-        font-family: 'Open Sans',sans-serif;
+        font-family: 'Helvetica',sans-serif;
       }
 
       a {
@@ -43,7 +42,7 @@
 		</style>
 	</head>
 	<body>
-  	<h3>JAM with Chrome</h3>
+  	<h3>JAM with Chrome Demo</h3>
 		<div id="header">
 			Example 1 | 
 			<a href="hit2.html">Example 2</a> | 
@@ -61,49 +60,59 @@
 
 			function Stage(el) {
 				this.el = document.getElementById(el);
+				this.elOutput = document.getElementById("output");
+				
 				this.position();
 				this.listeners();
 
 				return this;
 			}
+			
+			Stage.prototype.position = function() {
+			  var offset = this.offset();
+			  this.positionTop = Math.floor(offset.left);
+			  this.positionLeft = Math.floor(offset.top);
+			};
+			
+			Stage.prototype.offset = function() { 
+			  var _x, _y,
+			      el = this.el;
+			  
+			  if (typeof el.getBoundingClientRect !== "undefined") {
+			    return el.getBoundingClientRect();
+			  }else{
+			    _x = 0;
+			    _y = 0;
+			    while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+			      _x += el.offsetLeft;
+			      _y += el.offsetTop;
+			      el = el.offsetParent;
+			    }
+			    return { top: _y - window.scrollY, left: _x - window.scrollX };
+			  }
+			};
+      
+      Stage.prototype.listeners = function() {
+        var _self = this,
+            output = this.elOutput;
 
-			Stage.prototype = {
-				position: function(){
-					var offset = this.offset(this.el);
-          			this.positionTop = offset.left - window.scrollX;
-          			this.positionLeft = offset.top - window.scrollY;
-        		},
-        		offset: function(el){
-          			var _x = 0, _y = 0;
-					while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-						_x += el.offsetLeft;
-						_y += el.offsetTop;
-						el = el.offsetParent;
-					}
-					return { top: _y, left: _x };
-        		},
-        		listeners: function(){
-        			var _self = this,
-        				output = document.getElementById("output");
-
-        			window.addEventListener('resize', function(){
-						_self.position();
-					}, false);
-
-					window.addEventListener('scroll', function(){
-						_self.position();
-					}, false);
-
-					this.el.addEventListener('mousemove', function(e){
-						var x = e.clientX - _self.positionTop,
-            				y = e.clientY - _self.positionLeft;
-
-            			output.innerHTML = (x + "," + y);
-
-					}, false);
-        		}
-			}
-
+        window.addEventListener('resize', function(){
+          _self.position();
+        }, false);
+  
+        window.addEventListener('scroll', function(){
+          _self.position();
+        }, false);
+  
+        this.el.addEventListener('mousemove', function(e){
+          var x = e.clientX - _self.positionTop,
+              y = e.clientY - _self.positionLeft;
+  
+          output.innerHTML = (x + "," + y);
+  
+        }, false);
+      };
+      
 			var stage = new Stage("stage");
 		</script>
 	</body>
