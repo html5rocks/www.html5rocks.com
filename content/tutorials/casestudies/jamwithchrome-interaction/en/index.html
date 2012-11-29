@@ -178,7 +178,7 @@
 <h2 id="toc-introduction">Introduction</h2>
 
 <p>
-<a href="http://www.jamwithchrome.com">JAM with Chrome</a> is a web based musical project created by Google. JAM with Chrome lets people from all over the world form a band and JAM in real time inside the browser. <a href="http://www.dinahmoe.com/">Dinamoe</a> pushed the boundaries of what was possible with <a href="http://www.html5rocks.com/en/tutorials/casestudies/jamwithchrome-audio/">Chrome’s Web Audio API</a>, our team at <a href="http://www.toolofna.com/">Tool of North America</a> crafted the interface for strumming, drumming and playing your computer as though it was a musical instrument. 
+<a href="http://www.jamwithchrome.com">JAM with Chrome</a> is a web based musical project created by Google. JAM with Chrome lets people from all over the world form a band and JAM in real time inside the browser. <a href="http://www.dinahmoe.com/">DinahMoe</a> pushed the boundaries of what was possible with <a href="http://www.html5rocks.com/en/tutorials/casestudies/jamwithchrome-audio/">Chrome’s Web Audio API</a>, our team at <a href="http://www.toolofna.com/">Tool of North America</a> crafted the interface for strumming, drumming and playing your computer as though it was a musical instrument. 
 </p>
 
 <p>
@@ -192,7 +192,7 @@ As each instrument is visually unique, Tool’s Technical Director <a href="http
 </p>
 
 <p>
-Many of the instruments had to handle different methods of interaction (such as clicks, drags and strums - all the things that you would expect to do with an instrument) while keeping the interface with Dinahmoe’s sound engine the same.  We found that we needed more than just JavaScript’s mouseup and mousedown to be able to provide a beautiful playing experience.  
+Many of the instruments had to handle different methods of interaction (such as clicks, drags and strums - all the things that you would expect to do with an instrument) while keeping the interface with DinahMoe’s sound engine the same.  We found that we needed more than just JavaScript’s mouseup and mousedown to be able to provide a beautiful playing experience.  
 </p>
 
 <p>
@@ -207,62 +207,76 @@ The Stage is our controller that we use to setup function across an instrument. 
 
 <pre class="prettyprint">
 function Stage(el) {
-    //-- Grab the element from the dom
+    // Grab the elements from the dom
     this.el = document.getElementById(el);
-    //-- Fnd the position of the stage element
+    this.elOutput = document.getElementById("output-1");
+    // Find the position of the stage element
     this.position();
-    //-- Listen for events
+    // Listen for events
     this.listeners();
 
     return this;
 }
 
-Stage.prototype = {
-    position: function(){
-        //-- Get the position and subtract any scrolling movment
-    },
-    offset: function(el){
-        //-- Get the position of the element in the window
-    },
-    listeners: function(){
-        //-- Listen for Resize's or Scrolling
-        //-- Listen for Mouse events
-    }
-}
+Stage.prototype.position = function() {
+    // Get the position
+};
+
+Stage.prototype.offset = function() {
+    // Get the offset of the element in the window
+};
+
+Stage.prototype.listeners = function() {
+    // Listen for Resize's or Scrolling
+    
+    // Listen for Mouse events
+};
 </pre>
 
 <h2 id="toc-position">Getting the element and mouse position</h2>
 
 <p>
-Our first task is to translate mouse coordinates in the browser window to be relative to our Stage element. To do this we needed to take into account where our Stage is in the page, and how far the window has been scrolled.
+Our first task is to translate mouse coordinates in the browser window to be relative to our Stage element. To do this we needed to take into account where our Stage is in the page.
 </p>
 
-
-<pre class="prettyprint">
-//-- Get the position of the element in the window
-var offset = this.offset(this.el);
-
-//-- Subtract any scrolling movment
-this.positionTop = offset.left - window.scrollX;
-this.positionLeft = offset.top - window.scrollY;
-</pre>
-
 <p>
-As we need to find where the element is relative to the whole window, not just its parent element, it’s slightly more complicated than just looking at the elements offsetTop and offsetLeft. If you are using jQuery the offset() function does a great job of handling the complexity of figuring out the absolute location across platforms. For this example we are using a simple function that will just add up offsets, moving up the chain of the element parents until it reaches the body.
+As we need to find where the element is relative to the whole window, not just its parent element, it’s slightly more complicated than just looking at the elements offsetTop and offsetLeft. The easiest option is to usegetBoundingClientRect. It gives the position relative to the window, just like mouse events and it is well <a href="http://www.quirksmode.org/dom/w3c_cssom.html">supported in newer browsers</a>.
 </p>
 
 <pre class="prettyprint">
-var _x = 0, _y = 0;
-while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
-    _x += el.offsetLeft;
-    _y += el.offsetTop;
-    el = el.offsetParent;
-}
-return { top: _y, left: _x };
+Stage.prototype.offset = function() { 
+  var _x, _y,
+      el = this.el;
+
+  // Check to see if bouding is available 
+  if (typeof el.getBoundingClientRect !== "undefined") {
+    return el.getBoundingClientRect();
+  }else{
+    _x = 0;
+    _y = 0;
+
+    // Go up the chain of parents of the element 
+    // and add their offsets to the offset of our Stage element
+
+    while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+      _x += el.offsetLeft;
+      _y += el.offsetTop;
+      el = el.offsetParent;
+    }
+    // Subtract any scrolling movment
+    return { top: _y - window.scrollY, left: _x - window.scrollX };
+  }
+};
 </pre>
 
+
 <p>
-Whenever the page is scrolled or resized it’s possible that the element’s position has changed. We can listen for these events and check for the position again. These events are fired many times on a typical scroll or resize, so in real application it’s probably best to limit how often you recheck the position. <a href="http://www.html5rocks.com/en/tutorials/speed/animations/#debouncing-scroll-events">Debouncing Scroll Events</a>
+If getBoundingClientRect does not exist, we have a simple function that will just add up offsets, moving up the chain of the element parents until it reaches the body. Then we subtract how far the window has been scrolled to get the position relative to the window. If you are using jQuery the offset() function does a great job of handling the complexity of figuring out the location across platforms, but you will still need to subtract the amount scrolled.
+</p>
+
+
+<p>
+Whenever the page is scrolled or resized it’s possible that the element’s position has changed. We can listen for these events and check for the position again. These events are fired many times on a typical scroll or resize, so in a real application it’s probably best to limit how often you recheck the position. There are many ways to do this, but HTML5 Tocks has an article for <a href="http://www.html5rocks.com/en/tutorials/speed/animations/#debouncing-scroll-events">debouncing scroll events</a> using requestAnimationFrame which will work well here.
 </p>
 
 <p>
@@ -270,17 +284,19 @@ Before we handle any hit detection, this first example will just output the rela
 </p>
 
 <pre class="prettyprint">
-var output = document.getElementById("output");
+Stage.prototype.listeners = function() {
+  var output = document.getElementById("output");
 
-this.el.addEventListener('mousemove', function(e){
-    //-- Subtract the elements position from the mouse event's x and y
-    var x = e.clientX - _self.positionTop,
-        y = e.clientY - _self.positionLeft;
-
-    //-- Print out the coordinates
-    output.innerHTML = (x + "," + y);
-
-}, false);
+  this.el.addEventListener('mousemove', function(e) {
+      // Subtract the elements position from the mouse event's x and y
+      var x = e.clientX - _self.positionTop,
+          y = e.clientY - _self.positionLeft;
+  
+      // Print out the coordinates
+      output.innerHTML = (x + "," + y);
+  
+  }, false);
+};
 </pre>
 
 <p>
@@ -301,69 +317,82 @@ var stage = new Stage("stage");
 <a href="/static/demos/jamwithchrome-interaction/where.js" target="_blank" class="button-download js">See Full Code - where.js</a>
 
 <script>
-
-    function Stage(el) {
-        //-- Grab the element from the dom
-        this.el = document.getElementById(el);
-        //-- Fnd the position of the stage element
-        this.position();
-        //-- Listen for events
-        this.listeners();
-
-        return this;
+  function Stage(el) {
+    // Grab the elements from the dom
+    this.el = document.getElementById(el);
+    this.elOutput = document.getElementById("output-1");
+  
+    // Find the position of the stage element
+    this.position();
+    // Listen for events
+    this.listeners();
+  
+    return this;
+  }
+  
+  Stage.prototype.position = function() {
+    var offset = this.offset();
+    // Round down as we sometimes get a float value
+    this.positionTop = Math.floor(offset.left);
+    this.positionLeft = Math.floor(offset.top); 
+  };
+  
+  Stage.prototype.offset = function() { 
+    var _x, _y,
+        el = this.el;
+  
+    // Check to see if bouding is available 
+    if (typeof el.getBoundingClientRect !== "undefined") {
+      return el.getBoundingClientRect();
+    }else{
+      _x = 0;
+      _y = 0;
+  
+      // Go up the chain of parents of the element 
+      // and add their offsets to the offset of our Stage element
+  
+      while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+        _x += el.offsetLeft;
+        _y += el.offsetTop;
+        el = el.offsetParent;
+      }
+      // Subtract any scrolling movment
+      return { top: _y - window.scrollY, left: _x - window.scrollX };
     }
-
-    Stage.prototype = {
-        position: function(){
-            //-- Get the position of the element in the window
-            var offset = this.offset(this.el);
-
-            //-- Subtract any scrolling movment
-              this.positionTop = offset.left - window.scrollX;
-              this.positionLeft = offset.top - window.scrollY;
-        },
-        offset: function(el){
-              var _x = 0, _y = 0;
-              //-- Go up the chain of parents of the element 
-              //	 and add their offsets to the offset of our Stage element
-            while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-                _x += el.offsetLeft;
-                _y += el.offsetTop;
-                el = el.offsetParent;
-            }
-            return { top: _y, left: _x };
-        },
-        listeners: function(){
-            var _self = this,
-                output = document.getElementById("output-1");
-            
-            //-- Listen for Resize's or Scrolling 
-            //   which could change the position of our element and adjust.
-
-            window.addEventListener('resize', function(){
-                _self.position();
-            }, false);
-
-            window.addEventListener('scroll', function(){
-                //-- In a real application you might not want 
-                //	 to listen directly to do this on every scroll event.
-                _self.position();
-            }, false);
-
-            this.el.addEventListener('mousemove', function(e){
-                //-- Subtract the elements position from the mouse event's x and y
-                var x = e.clientX - _self.positionTop,
-                    y = e.clientY - _self.positionLeft;
-
-                //-- Print out the coordinates
-                output.innerHTML = (x + "," + y);
-
-            }, false);
-        }
-    }
-
-    //-- Create a new Stage object, for a div with id of "stage"
-    var stage = new Stage("stage-1");
+  };
+  
+  Stage.prototype.listeners = function() {
+    var _self = this,
+        output = this.elOutput;
+  
+    //  Listen for Resize's or Scrolling 
+    //  which could change the position of our element and adjust.
+  
+    window.addEventListener('resize', function(){
+      _self.position();
+    }, false);
+  
+    window.addEventListener('scroll', function(){
+  
+      // In a real application you might not want to listen 
+      // directly to do this on every scroll event.
+  
+      _self.position(true);
+    }, false);
+  
+    this.el.addEventListener('mousemove', function(e){
+      // Subtract the elements position from the mouse event's x and y
+      var x = e.clientX - _self.positionTop,
+          y = e.clientY - _self.positionLeft;
+  
+      // Print out the coordinates
+      output.innerHTML = (x + "," + y);
+  
+    }, false);
+  };
+  
+  // Create a new Stage object, for a div with id of "stage"
+  var stage = new Stage("stage-1");
 </script>
 
 <h2 id="toc-simple">Simple hit detection</h2>
@@ -379,24 +408,19 @@ Starting with rectangles, we will setup some base types of shapes. Each shape ob
 </p>
 
 <pre class="prettyprint">
-function Rect(x, y, width, height, el) {
+function Rect(x, y, width, height) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-
-    this.el = el || false;
-
     return this;
 }
 
-Rect.prototype = { 
-    inside: function(x, y) {
-      return x >= this.x && y >= this.y
-          && x <= this.x + this.width
-          && y <= this.y + this.height;
-    }
-}
+Rect.prototype.inside = function(x, y) { 
+    return x >= this.x && y >= this.y
+        && x <= this.x + this.width
+        && y <= this.y + this.height;
+};
 </pre>
 
 <p>
@@ -404,7 +428,7 @@ Each new shape type we add will need a function within our Stage object to regis
 </p>
 
 <pre class="prettyprint">
-addRect: function(id) {
+Stage.prototype.addRect = function(id) {
     var el = document.getElementById(id),
             rect = new Rect(
                     el.offsetLeft,
@@ -417,7 +441,7 @@ addRect: function(id) {
 
     this.hitZones.push(rect);
     return rect;
-}
+};
 </pre>
 
 <p>
@@ -429,17 +453,17 @@ We can also add an "active" class to the stage element that will change the mous
 </p>
 
 <pre class="prettyprint">
-this.el.addEventListener('mousemove', function(e){
+this.el.addEventListener('mousemove', function(e) {
     var x = e.clientX - _self.positionTop,
         y = e.clientY - _self.positionLeft;
 
     _self.hitZones.forEach(function(zone){
-        if(zone.inside(x, y)){
-            //-- Add class to change colors
+        if (zone.inside(x, y)) {
+            // Add class to change colors
             zone.el.classList.add('hit');
-            //-- change cursor to pointer
+            // change cursor to pointer
             this.el.classList.add('active');
-        }else{
+        } else {
             zone.el.classList.remove('hit');
             this.el.classList.remove('active');
         }
@@ -462,117 +486,124 @@ this.el.addEventListener('mousemove', function(e){
 
 
 <script>
-
-    
-    function Stage(id) {
-        this.el = document.getElementById(id);
-        this.position();
-        this.listeners();
-        this.hitZones = [];
-        return this;
+  function Stage(id) {
+    this.el = document.getElementById(id);
+    this.elOutput = document.getElementById("output-2");
+  
+    this.position();
+    this.listeners();
+    this.hitZones = [];
+    return this;
+  }
+  
+  Stage.prototype.position = function() {
+    var offset = this.offset();
+    this.positionTop = Math.floor(offset.left);
+    this.positionLeft = Math.floor(offset.top);
+  };
+  
+  Stage.prototype.offset = function() { 
+    var _x, _y,
+        el = this.el;
+  
+    if (typeof el.getBoundingClientRect !== "undefined") {
+      return el.getBoundingClientRect();
+    } else {
+      _x = 0;
+      _y = 0;
+      while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+        _x += el.offsetLeft;
+        _y += el.offsetTop;
+        el = el.offsetParent;
+      }
+      return { top: _y - window.scrollY, left: _x - window.scrollX };
     }
-
-    Stage.prototype = {
-        position: function(){
-            var offset = this.offset(this.el);
-              this.positionTop = offset.left - window.scrollX;
-              this.positionLeft = offset.top - window.scrollY;
-        },
-        offset: function(el){
-              var _x = 0, _y = 0;
-            while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-                _x += el.offsetLeft;
-                _y += el.offsetTop;
-                el = el.offsetParent;
-            }
-            return { top: _y, left: _x };
-        },
-        listeners: function(){
-            var _self = this,
-                output = document.getElementById("output-2");
-
-            window.addEventListener('resize', function(){
-                _self.position();
-            }, false);
-
-            window.addEventListener('scroll', function(){
-                _self.position();
-            }, false);
-
-            this.el.addEventListener('mousemove', function(e){
-                var x = e.clientX - _self.positionTop,
-                    y = e.clientY - _self.positionLeft;
-
-                output.innerHTML = (x + "," + y);
-
-                _self.hitZones.forEach(function(zone){
-                    _self.check(x, y, zone);
-                });
-
-            }, false);
-        },
-        check: function(x, y, zone){
-            if(!zone.el) return;
-
-            if(zone.inside(x, y)){
-                zone.el.classList.add('hit');
-                this.el.classList.add('active');
-            }else{
-                zone.el.classList.remove('hit');
-                this.el.classList.remove('active');
-            }
-        },
-        addRect: function(id){
-            var el = document.getElementById(id),
-                rect = new Rect(el.offsetLeft, 
-                                el.offsetTop, 
-                                el.offsetWidth, 
-                                el.offsetHeight  
-                                );
-            rect.el = el;
-
-            this.hitZones.push(rect);
-            return rect;
-        }
-
+  };
+  
+  Stage.prototype.listeners = function() {
+    var _self = this,
+        output = this.elOutput;
+  
+    window.addEventListener('resize', function(){
+      _self.position();
+    }, false);
+  
+    window.addEventListener('scroll', function(){
+      _self.position(true);
+    }, false);
+  
+    this.el.addEventListener('mousemove', function(e){
+      var x = e.clientX - _self.positionTop,
+         y = e.clientY - _self.positionLeft;
+  
+      output.innerHTML = (x + "," + y);
+  
+      _self.hitZones.forEach(function(zone){
+        _self.check(x, y, zone);
+      });
+  
+    }, false);
+  };
+  
+  Stage.prototype.check = function(x, y, zone) {
+    if (!zone.el) return;
+  
+    if (zone.inside(x, y)){
+      zone.el.classList.add('hit');
+      this.el.classList.add('active');
+    } else {
+      zone.el.classList.remove('hit');
+      this.el.classList.remove('active');
     }
-
-    function Rect(x, y, width, height, el) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-
-        this.el = el || false;
-
-        return this;
+  };
+  
+  Stage.prototype.addRect = function(id) {
+    var el = document.getElementById(id),
+        rect = new Rect(el.offsetLeft, 
+                        el.offsetTop, 
+                        el.offsetWidth, 
+                        el.offsetHeight  
+                        );
+    rect.el = el;
+  
+    this.hitZones.push(rect);
+    return rect;
+  };
+  
+  
+  
+  function Rect(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  
+    return this;
+  }
+  
+  Rect.prototype.inside = function(x,y) {
+    return x >= this.x && y >= this.y
+        && x <= this.x + this.width
+        && y <= this.y + this.height;
+  };
+  
+  Rect.prototype.check = function(x,y) {
+    if (!this.el) return;
+  
+    if (this.inside(x, y)) {
+      this.el.classList.add('hit');
+    } else {
+      this.el.classList.remove('hit');
     }
-
-    Rect.prototype = { 
-        inside: function(x, y) {
-          return x >= this.x && y >= this.y
-              && x <= this.x + this.width
-              && y <= this.y + this.height;
-        },
-        check: function(x, y){
-            if(!this.el) return;
-
-            if(this.inside(x, y)){
-                this.el.classList.add('hit');
-            }else{
-                this.el.classList.remove('hit');
-            }
-        }
-    }
-
-    var stage = new Stage("stage-2");
-    stage.addRect("box");
-
+  };
+  
+  var stage = new Stage("stage-2");
+  stage.addRect("box");
 </script>
 
 <h2 id="toc-shapes">More shapes</h2>
 <p>
-As shapes get more complicated, the math to find if a point is inside of them becomes more complex. However, these equations are well established and documented in great detail in many places online. Some of the best javascript examples I have seen are from Kevin Lindsey’s <a href="http://www.kevlindev.com/geometry/index.htm">geometry library</a>. 
+As shapes get more complicated, the math to find if a point is inside of them becomes more complex. However, these equations are well established and documented in great detail in many places online. Some of the best JavaScript examples I have seen are from Kevin Lindsey’s <a href="http://www.kevlindev.com/geometry/index.htm">geometry library</a>. 
 </p>
 
 <p>
@@ -595,15 +626,12 @@ function Circle(x, y, radius) {
     return this;
 }
 
-Circle.prototype = { 
-    inside: function(x, y) {
-      var dx = x - this.x,
-          dy = y - this.y,
-          r = this.radius;
-      return dx*dx+dy*dy <= r*r;
-      
-    }
-}
+Circle.prototype.inside = function(x, y) { 
+    var dx = x - this.x,
+        dy = y - this.y,
+        r = this.radius;
+    return dx*dx+dy*dy <= r*r;
+};
 </pre>
 
 <p>
@@ -630,7 +658,6 @@ Instead of changing the color, adding the hit class will trigger a CSS3 animatio
 <h3 id="toc-circles-drum">Drum roll</h3>
 <div class="wrapper tall">
     <div id="stage-3" class="fullstage"></div>
-    <!-- <img src="/static/images/site_title.png" id="drum_bg"> -->
     <div id="snare"></div>
 </div>
 
@@ -638,150 +665,130 @@ Instead of changing the color, adding the hit class will trigger a CSS3 animatio
 
 
 <script>
-
-function Stage(id) {
+  function Stage(id) {
     this.el = document.getElementById(id);
+  
     this.position();
     this.listeners();
     this.hitZones = [];
     return this;
-}
-
-Stage.prototype = {
-    position: function(){
-        var offset = this.offset(this.el);
-          this.positionTop = offset.left - window.scrollX;
-          this.positionLeft = offset.top - window.scrollY;
-    },
-    offset: function(el){
-          var _x = 0, _y = 0;
-        while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-            _x += el.offsetLeft;
-            _y += el.offsetTop;
-            el = el.offsetParent;
-        }
-        return { top: _y, left: _x };
-    },
-    listeners: function(){
-        var _self = this;
-
-        window.addEventListener('resize', function(){
-            _self.position();
-        }, false);
-
-        window.addEventListener('scroll', function(){
-            _self.position();
-        }, false);
-
-        this.el.addEventListener('mousedown', function(e){
-            var x = e.clientX - _self.positionTop,
-                y = e.clientY - _self.positionLeft;
-
-            _self.hitZones.forEach(function(zone){
-                _self.check(x, y, zone);
-            });
-
-        }, false);
-        
-        this.el.addEventListener('mousemove', function(e){
-            var x = e.clientX - _self.positionTop,
-                y = e.clientY - _self.positionLeft;
-        
-            _self.hitZones.forEach(function(zone){
-                _self.checkHover(x, y, zone);
-            });
-        
-        }, false);
-
-        document.addEventListener('mouseup', function(e){
-            _self.hitZones.forEach(function(zone){
-                zone.el.classList.remove('hit');
-            });
-        }, false);
-        
-    },
-    addRect: function(id){
-        var el = document.getElementById(id),
-            rect = new Rect(el.offsetLeft, 
-                            el.offsetTop, 
-                            el.offsetWidth, 
-                            el.offsetHeight 
-                            );
-
-        rect.el = el;
-
-        this.hitZones.push(rect);
-        return rect;
-    },
-    addCircle: function(id){
-        var el = document.getElementById(id),
-            rad = el.offsetWidth / 2,
-            circ = new Circle(el.offsetLeft + rad, 
-                            el.offsetTop + rad, 
-                            rad
-                            );
-        circ.el = el;
-
-        this.hitZones.push(circ);
-        return circ;
-    },
-    check: function(x, y, zone){
-        if(!zone.el) return;
-
-        if(zone.inside(x, y)){
-            zone.el.classList.add('hit');
-        }else{
-            zone.el.classList.remove('hit');
-        }
-    },
-    checkHover: function(x, y, zone){
-        if(!zone.el) return;
-    
-        if(zone.inside(x, y)){
-            this.el.classList.add('active');
-        }else{
-            this.el.classList.remove('active');
-        }
+  }
+  
+  Stage.prototype.position = function() {
+    var offset = this.offset();
+    this.positionTop = Math.floor(offset.left);
+    this.positionLeft = Math.floor(offset.top);
+  };
+  
+  Stage.prototype.offset = function() { 
+    var _x, _y,
+        el = this.el;
+  
+    if (typeof el.getBoundingClientRect !== "undefined") {
+      return el.getBoundingClientRect();
+    } else {
+      _x = 0;
+      _y = 0;
+      while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+        _x += el.offsetLeft;
+        _y += el.offsetTop;
+        el = el.offsetParent;
+      }
+      return { top: _y - window.scrollY, left: _x - window.scrollX };
     }
-}
-
-function Rect(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-
-    return this;
-}
-
-Rect.prototype = { 
-    inside: function(x, y) {
-      return x >= this.x && y >= this.y
-          && x <= this.x + this.width
-          && y <= this.y + this.height;
+  };
+  
+  Stage.prototype.listeners = function() {
+    var _self = this,
+        output = this.elOutput;
+  
+    window.addEventListener('resize', function() {
+      _self.position();
+    }, false);
+  
+    window.addEventListener('scroll', function() {
+      _self.position(true);
+    }, false);
+  
+    this.el.addEventListener('mousedown', function(e) {
+      var x = e.clientX - _self.positionTop,
+          y = e.clientY - _self.positionLeft;
+  
+      _self.hitZones.forEach(function(zone){
+        _self.check(x, y, zone);
+      });
+  
+    }, false);
+  
+    document.addEventListener('mouseup', function(e) {
+      _self.hitZones.forEach(function(zone){
+        zone.el.classList.remove('hit');
+      });
+    }, false);
+  
+    this.el.addEventListener('mousemove', function(e) {
+      var x = e.clientX - _self.positionTop,
+          y = e.clientY - _self.positionLeft;
+  
+      _self.hitZones.forEach(function(zone){
+        _self.checkHover(x, y, zone);
+      });        
+    }, false);
+  };
+  
+  
+  Stage.prototype.addCircle = function(id) {
+    var el = document.getElementById(id),
+        rad = el.offsetWidth / 2,
+        circ = new Circle(el.offsetLeft + rad, 
+                          el.offsetTop + rad, 
+                          rad
+                        );
+    circ.el = el;
+  
+    this.hitZones.push(circ);
+    return circ;
+  };
+  
+  Stage.prototype.check = function(x, y, zone) {
+    if (!zone.el) return;
+  
+    if (zone.inside(x, y)) {
+      zone.el.classList.add('hit');
+      this.el.classList.add('active');
+    } else {
+      zone.el.classList.remove('hit');
+      this.el.classList.remove('active');
     }
-}
-
-function Circle(x, y, radius) {
+  };
+  
+  Stage.prototype.checkHover = function(x, y, zone) {
+    if (!zone.el) return;
+  
+    if (zone.inside(x, y)){
+      this.el.classList.add('active');
+    } else {
+      this.el.classList.remove('active');
+    }
+  };
+  
+  
+  function Circle(x, y, radius) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     return this;
-}
-
-Circle.prototype = { 
-    inside: function(x, y) {
-      var dx = x - this.x,
-          dy = y - this.y,
-          r = this.radius;
-      return dx*dx+dy*dy <= r*r;
-
-    }
-}
-
-var stage = new Stage("stage-3");
-stage.addCircle("snare");	
-
+  }
+  
+  Circle.prototype.inside = function(x,y) { 
+    var dx = x - this.x,
+        dy = y - this.y,
+        r = this.radius;
+    return dx*dx+dy*dy <= r*r;
+  }
+  
+  var stage = new Stage("stage-3");
+  stage.addCircle("snare");
 </script>
 
 <h2 id="toc-strings">Strings</h2>
@@ -805,33 +812,25 @@ When we want to have it vibrate, we will call our strum function to set the stri
 </p>
 
 <pre class="prettyprint">
-GuitarString.prototype = {
-    strum: function() {
-        this._strumForce = 5;
-    },
-    render: function(ctx, canvas) {
+GuitarString.prototype.strum = function() {
+    this._strumForce = 5;
+};
 
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.bezierCurveTo(
-                this.x, this.y + Math.sin(this.a) * this._strumForce,
-                this.x + this.width, this.y + Math.sin(this.a) * this._strumForce,
-                this.x + this.width, this.y);
-        ctx.stroke();
+GuitarString.prototype.render = function(ctx, canvas) {
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.bezierCurveTo(
+            this.x, this.y + Math.sin(this.a) * this._strumForce,
+            this.x + this.width, this.y + Math.sin(this.a) * this._strumForce,
+            this.x + this.width, this.y);
+    ctx.stroke();
 
-        this._strumForce *= 0.99;
-        this.a += 0.5;
-    }
-}
+    this._strumForce *= 0.99;
+    this.a += 0.5;
+};
 </pre>
-
-<p>
-A global render function runs all the time, as quickly as RequestAnimationFrame sees fit. You can read more about RequestAnimationFrame in another HTML5 rocks article I need to find. Each frame of the animation will call our guitar’s render function. In a real application you might want to set a flag when no animation is occurring to stop drawing a new canvas frame.
-
-A global render function runs all the time, a quickly as RequestAnimationFrame sees fit. You can read more about RequestAnimationFrame in Paul Irish's article <a href="http://paulirish.com/2011/requestanimationframe-for-smart-animating/">requestAnimationFrame for smart animating</a>. Each frame of the animation will call our guitar’s render function. In a real application you might want to set a flag when no animation is occurring to stop drawing a new canvas frame.
-</p>
 
 <h2 id="toc-strum">Intersections and Strumming</h2>
 
@@ -848,21 +847,29 @@ To get enough distance between the mouse’s previous and current position,  we 
 </p>
 
 <pre class="prettyprint">
-if (!this.dragging || this.limit) return;
-this.limit = true;
-
-this.hitZones.forEach(function(zone) {
-    this.checkIntercept(
-            this.prev[0], this.prev[1],
-            x, y,
-            zone);
-});
-
-this.prev = [x, y];
-
-setInterval(function() {
-    this.limit = false;
-}, 50);
+document.addEventListener('mousemove', function(e) {
+  var x, y;
+  
+  if (!this.dragging || this.limit) return;
+  
+  this.limit = true;
+  
+  this.hitZones.forEach(function(zone) {
+      this.checkIntercept(
+                this.prev[0], 
+                this.prev[1],
+                x, 
+                y,
+                zone
+              );
+  });
+  
+  this.prev = [x, y];
+  
+  setInterval(function() {
+      this.limit = false;
+  }, 50);
+};
 </pre>
 
 <p>
@@ -870,12 +877,12 @@ Next we will need to rely on some intersection code Kevin Lindsey to see if the 
 </p>
 
 <pre class="prettyprint">
-intersectLine: function(a1, a2, b1, b2) {
+Rect.prototype.intersectLine = function(a1, a2, b1, b2) {
     //-- http://www.kevlindev.com/gui/math/intersection/Intersection.js
     var result,
-            ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x),
-            ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x),
-            u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
+        ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x),
+        ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x),
+        u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
 
     if (u_b != 0) {
         var ua = ua_t / u_b;
@@ -895,20 +902,65 @@ intersectLine: function(a1, a2, b1, b2) {
     }
 
     return result;
-}
+};
 </pre>
 
 <p>
-Finally we will add all five strings to the Stage element and we are ready to JAM!
+Finally we will add a new Function to create a String Instrument. It will create the new Stage, set up a number of strings and get the context of the Canvas that thw will be drawn on.
 </p>
 
 <pre class="prettyprint">
-for (var i = 0; i < 6; i++) {
-    var srect = new Rect(10, 90 + i * 15, 380, 5);
-    var s = new GuitarString(srect);
-    stage.addString(srect, s);
-    strings.push(s);
-}
+  function StringInstrument(stageID, canvasID, stringNum){
+      this.strings = [];
+      this.canvas = document.getElementById(canvasID);
+      this.stage = new Stage(stageID);
+      this.ctx = this.canvas.getContext('2d');
+      this.stringNum = stringNum;
+  
+      this.create();
+      this.render();
+  
+      return this;
+  }
+</pre>
+
+<p>
+Next we will position the hit areas of the strings and then add them to the Stage element.
+</p>
+
+<pre class="prettyprint">
+    
+  StringInstrument.prototype.create = function() {
+    for (var i = 0; i < this.stringNum; i++) {
+      var srect = new Rect(10, 90 + i * 15, 380, 5);
+      var s = new GuitarString(srect);
+      this.stage.addString(srect, s);
+      this.strings.push(s);
+    }
+  };
+
+</pre>
+<p>
+Finally the StringInstrument's render function will loop through all our strings and call their render methods. It runs all the time, a quickly as requestAnimationFrame sees fit. You can read more about requestAnimationFrame in Paul Irish's article <a href="http://paulirish.com/2011/requestanimationframe-for-smart-animating/">requestAnimationFrame for smart animating</a>.
+</p>
+<p>
+In a real application you might want to set a flag when no animation is occurring to stop drawing a new canvas frame.
+</p>
+
+<pre class="prettyprint">
+  StringInstrument.prototype.render = function() {
+    var _self = this;
+    
+    requestAnimFrame(function(){
+      _self.render();
+    });
+    
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    for (var i = 0; i < this.stringNum; i++) {
+      this.strings[i].render(this.ctx);
+    }
+  };
 </pre>
 
 <h3 id="toc-strum-guitar">Guitar</h3>
@@ -922,271 +974,307 @@ for (var i = 0; i < 6; i++) {
 
 
 <script>
-
-// Shim by Paul Irish
-// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-window.requestAnimFrame = (function() {
-    return  window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            window.oRequestAnimationFrame ||
-            window.msRequestAnimationFrame ||
-            function(callback) {
-                window.setTimeout(callback, 1000 / 60);
-            };
-})();
-
-function Stage(id) {
+  // Shim by Paul Irish
+  // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+  window.requestAnimFrame = (function() {
+      return  window.requestAnimationFrame ||
+              window.webkitRequestAnimationFrame ||
+              window.mozRequestAnimationFrame ||
+              window.oRequestAnimationFrame ||
+              window.msRequestAnimationFrame ||
+              function(callback) {
+                  window.setTimeout(callback, 1000 / 60);
+              };
+  })();
+  
+  function Stage(id) {
     this.el = document.getElementById(id);
+  
     this.position();
     this.listeners();
     this.hitZones = [];
     return this;
-}
-
-Stage.prototype = {
-
-    position: function() {
-        var offset = this.offset(this.el);
-        this.positionTop = offset.left - window.scrollX;
-        this.positionLeft = offset.top - window.scrollY;
-    },
-
-    offset: function(el) {
-        var _x = 0, _y = 0;
-        while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
-            _x += el.offsetLeft;
-            _y += el.offsetTop;
-            el = el.offsetParent;
-        }
-        return { top: _y, left: _x };
-    },
-
-    listeners: function() {
-        var _self = this;
-        
-        this.dragging = false;
-        this.limit = false;
-        this.prev = [0, 0];
-        
-        window.addEventListener('resize', function() {
-            _self.position();
-        }, false);
-        
-        window.addEventListener('scroll', function() {
-            _self.position();
-        }, false);
-
-        this.el.addEventListener('mousedown', function(e) {
-            var x = e.clientX - _self.positionTop,
-                    y = e.clientY - _self.positionLeft;
-
-            _self.hitZones.forEach(function(zone) {
-                _self.checkPoint(x, y, zone);
-            });
-
-            _self.dragging = true;
-            _self.prev = [x, y];
-        }, false);
-
-
-        document.addEventListener('mousemove', function(e) {
-            var x, y;
-
-            if (!_self.dragging || _self.limit) return;
-            _self.limit = true;
-
-            x = e.clientX - _self.positionTop,
-                    y = e.clientY - _self.positionLeft;
-
-            _self.hitZones.forEach(function(zone) {
-                _self.checkIntercept(
-                        _self.prev[0], _self.prev[1],
-                        x, y,
-                        zone);
-            });
-
-            _self.prev = [x, y];
-
-            setInterval(function() {
-                _self.limit = false;
-            }, 50);
-
-        }, false);
-
-        document.addEventListener('mouseup', function(e) {
-            var x = e.clientX - _self.positionTop,
-                    y = e.clientY - _self.positionLeft;
-
-            _self.dragging = false;
-
-            _self.hitZones.forEach(function(zone) {
-                _self.checkIntercept(
-                        _self.prev[0], _self.prev[1],
-                        x, y,
-                        zone);
-            });
-        }, false);
-    },
-
-    addString: function(rect, string) {
-        rect.string = string;
-
-        this.hitZones.push(rect);
-        return rect;
-    },
-
-    checkPoint: function(x, y, zone) {
-        if (zone.inside(x, y)) {
-            zone.string.strum();
-        }
-    },
-
-    checkIntercept: function(x1, y1, x2, y2, zone) {
-        if (zone.intercept(x1, y1, x2, y2)) {
-            zone.string.strum();
-        }
+  }
+  
+  Stage.prototype.position = function() {
+    var offset = this.offset();
+    this.positionTop = Math.floor(offset.left);
+    this.positionLeft = Math.floor(offset.top);
+  };
+  
+  Stage.prototype.offset = function() { 
+    var _x, _y,
+        el = this.el;
+  
+    if (typeof el.getBoundingClientRect !== "undefined") {
+      return el.getBoundingClientRect();
+    } else {
+      _x = 0;
+      _y = 0;
+      while(el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+        _x += el.offsetLeft;
+        _y += el.offsetTop;
+        el = el.offsetParent;
+      }
+      return { top: _y - window.scrollY, left: _x - window.scrollX };
     }
-
-}
-
-function Rect(x, y, width, height) {
+  };
+  
+  Stage.prototype.listeners = function() {
+    var _self = this;
+  
+    _self.dragging = false;
+    _self.limit = false;
+  
+    window.addEventListener('resize', function() {
+      _self.position();
+    }, false);
+  
+    window.addEventListener('scroll', function() {
+      _self.position(true);
+    }, false);
+  
+    this.el.addEventListener('mousedown', function(e) {
+      var x = e.clientX - _self.positionTop,
+          y = e.clientY - _self.positionLeft;
+  
+      _self.hitZones.forEach(function(zone) {
+          _self.checkPoint(x, y, zone);
+      });
+  
+      _self.dragging = true;
+      _self.prev = [x, y];
+    }, false);
+  
+  
+    document.addEventListener('mousemove', function(e) {
+      var x, y;
+  
+      if (!_self.dragging || _self.limit) return;
+      _self.limit = true;
+  
+      x = e.clientX - _self.positionTop,
+      y = e.clientY - _self.positionLeft;
+  
+  
+      _self.hitZones.forEach(function(zone) {
+        _self.checkIntercept(_self.prev[0], 
+                             _self.prev[1],
+                             x, 
+                             y,
+                             zone);
+      });
+  
+      _self.prev = [x, y];
+  
+      setInterval(function() {
+        _self.limit = false;
+      }, 50);      
+    }, false);
+  
+    document.addEventListener('mouseup', function(e) {
+      var x, y;
+  
+      if (!_self.dragging) return;
+      _self.dragging = false;
+  
+      x = e.clientX - _self.positionTop,
+      y = e.clientY - _self.positionLeft;
+  
+      _self.hitZones.forEach(function(zone) {
+        _self.checkIntercept(_self.prev[0], 
+                             _self.prev[1],
+                             x, 
+                             y,
+                             zone);
+      });
+    }, false);
+  };
+  
+  Stage.prototype.check = function(x, y, zone) {
+    if (!zone.el) return;
+  
+    if (zone.inside(x, y)) {
+      zone.el.classList.add('hit');
+      this.el.classList.add('active');
+    } else {
+      zone.el.classList.remove('hit');
+      this.el.classList.remove('active');
+    }
+  };
+  
+  Stage.prototype.addRect = function(id) {
+    var el = document.getElementById(id),
+        rect = new Rect(el.offsetLeft, 
+                        el.offsetTop, 
+                        el.offsetWidth, 
+                        el.offsetHeight  
+                        );
+    rect.el = el;
+  
+    this.hitZones.push(rect);
+    return rect;
+  };
+  
+  Stage.prototype.addString = function(rect, string) {
+    rect.string = string;
+  
+    this.hitZones.push(rect);
+    return rect;
+  }; 
+  
+  Stage.prototype.checkPoint = function(x, y, zone) {
+    if (zone.inside(x, y)) {
+      zone.string.strum();
+    }
+  };  
+  
+  Stage.prototype.checkIntercept = function(x1, y1, x2, y2, zone) {
+     if (zone.intercept(x1, y1, x2, y2)) {
+      zone.string.strum();
+     }
+   }; 
+  
+  
+  function Rect(x, y, width, height) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-
+  
     return this;
-}
-
-Rect.prototype = {
-    inside: function(x, y) {
-        return x >= this.x && y >= this.y
-                && x <= this.x + this.width
-                && y <= this.y + this.height;
-    },
-    midLine: function() {
-        if (this.middle) return this.middle;
-
-        this.middle = [
-            {x: this.x, y: this.y + this.height / 2},
-            {x: this.x + this.width, y: this.y + this.height / 2}
-        ]
-        return this.middle;
-    },
-    intercept: function(x1, y1, x2, y2) {
-        var result = false,
-                segment = this.midLine(),
-                start = {x: x1, y: y1},
-                end = {x: x2, y: y2};
-
-        return this.intersectLine(segment[0], segment[1], start, end);
-        ;
-    },
-    intersectLine: function(a1, a2, b1, b2) {
-        //-- http://www.kevlindev.com/gui/math/intersection/Intersection.js
-        var result,
-                ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x),
-                ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x),
-                u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
-
-        if (u_b != 0) {
-            var ua = ua_t / u_b;
-            var ub = ub_t / u_b;
-
-            if (0 <= ua && ua <= 1 && 0 <= ub && ub <= 1) {
-                result = true;
-            } else {
-                result = false; //--"No Intersection"
-            }
-        } else {
-            if (ua_t == 0 || ub_t == 0) {
-                result = false; //-- Coincident"
-            } else {
-                result = false; //-- Parallel
-            }
-        }
-
-        return result;
+  }
+  
+  Rect.prototype.inside = function(x,y) {
+    return x >= this.x && y >= this.y
+        && x <= this.x + this.width
+        && y <= this.y + this.height;
+  };
+  
+  Rect.prototype.midLine = function() {
+    if (this.middle) return this.middle;
+  
+    this.middle = [
+        {x: this.x, y: this.y + this.height / 2},
+        {x: this.x + this.width, y: this.y + this.height / 2}
+    ]
+    return this.middle;
+  };
+  
+  Rect.prototype.intercept = function(x1, y1, x2, y2) {
+    var result = false,
+            segment = this.midLine(),
+            start = {x: x1, y: y1},
+            end = {x: x2, y: y2};
+  
+    return this.intersectLine(segment[0], segment[1], start, end);
+  };
+  
+  Rect.prototype.intersectLine = function(a1, a2, b1, b2) {
+    //-- http://www.kevlindev.com/gui/math/intersection/Intersection.js
+    var result,
+        ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x),
+        ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x),
+        u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
+  
+    if (u_b != 0) {
+      var ua = ua_t / u_b;
+      var ub = ub_t / u_b;
+  
+      if (0 <= ua && ua <= 1 && 0 <= ub && ub <= 1) {
+          result = true;
+      } else {
+          result = false; //--"No Intersection"
+      }
+    } else {
+      if (ua_t == 0 || ub_t == 0) {
+          result = false; //-- Coincident"
+      } else {
+          result = false; //-- Parallel
+      }
     }
-}
-
-function GuitarString(rect) {
-    this.x = rect.x;
-    this.y = rect.y + rect.height / 2;
-    this.width = rect.width;
-    this._strumForce = 0;
-    this.a = 0;
-}
-
-GuitarString.prototype = {
-    strum: function() {
-        this._strumForce = 5;
-    },
-    render: function(ctx, canvas) {
-
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.bezierCurveTo(
-                this.x, this.y + Math.sin(this.a) * this._strumForce,
-                this.x + this.width, this.y + Math.sin(this.a) * this._strumForce,
-                this.x + this.width, this.y);
-        ctx.stroke();
-
-        this._strumForce *= 0.99;
-        this.a += 0.5;
+  
+    return result;
+  };
+  
+  
+  function GuitarString(rect) {
+      this.x = rect.x;
+      this.y = rect.y + rect.height / 2;
+      this.width = rect.width;
+      this._strumForce = 0;
+      this.a = 0;
+  }
+  
+  GuitarString.prototype.strum = function() {
+    this._strumForce = 5;
+  };
+  
+  GuitarString.prototype.render = function(ctx, canvas) {
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.bezierCurveTo(
+            this.x, this.y + Math.sin(this.a) * this._strumForce,
+            this.x + this.width, this.y + Math.sin(this.a) * this._strumForce,
+            this.x + this.width, this.y);
+    ctx.stroke();
+  
+    this._strumForce *= 0.99;
+    this.a += 0.5;
+  };
+  
+  
+  function StringInstrument(stageID, canvasID, stringNum){
+      this.strings = [];
+      this.canvas = document.getElementById(canvasID);
+      this.stage = new Stage(stageID);
+      this.ctx = this.canvas.getContext('2d');
+      this.stringNum = stringNum;
+  
+      this.create();
+      this.render();
+  
+      return this;
+  }
+  
+  StringInstrument.prototype.create = function() {
+    for (var i = 0; i < this.stringNum; i++) {
+      var srect = new Rect(10, 90 + i * 15, 380, 5);
+      var s = new GuitarString(srect);
+      this.stage.addString(srect, s);
+      this.strings.push(s);
     }
-}
-
-function StringInstrument(stageID, canvasID, stringNum){
-    this.strings = [];
-    this.canvas = document.getElementById(canvasID);
-    this.stage = new Stage(stageID);
-    this.ctx = this.canvas.getContext('2d');
-    this.stringNum = stringNum;
-
-    this.create();
-    this.render();
-
-    return this;
-}
-
-StringInstrument.prototype = {
-    create: function() {
-        for (var i = 0; i < this.stringNum; i++) {
-            var srect = new Rect(10, 90 + i * 15, 380, 5);
-            var s = new GuitarString(srect);
-            this.stage.addString(srect, s);
-            this.strings.push(s);
-        }
-    },
-    render: function() {
-        var _self = this;
-
-        requestAnimFrame(function(){
-            _self.render();
-        });
-
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        for (var i = 0; i < this.stringNum; i++) {
-            this.strings[i].render(this.ctx);
-        }
+  };
+  
+  StringInstrument.prototype.render = function() {
+    var _self = this;
+  
+    requestAnimFrame(function(){
+      _self.render();
+    });
+  
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  
+    for (var i = 0; i < this.stringNum; i++) {
+      this.strings[i].render(this.ctx);
     }
-}
-
-
-var guitar = new StringInstrument("stage-4", "strings", 6);
-
+  };
+  
+  
+  var guitar = new StringInstrument("stage-4", "strings", 6);
 </script>
 
 <h2 id="toc-wrap-up">Wrap up</h2>
 
 <p>
 Having a common Stage element to handle all our interaction isn’t without its drawbacks. It’s computationally more complex, and cursor pointer events are limited with out adding extra code to change them.
-However, for JAM with Chrome, the benefits of being able to abstract mouse events away from the individual elements worked really well. It lets us experiment more with the interface design, switch between methods of animating elements, use SVG to replace images of basic shapes, easily disable hit areas and more.
+However, for JAM with Chrome, the benefits of being able to abstract mouse events away from the individual elements worked really well. It let us experiment more with the interface design, switch between methods of animating elements, use SVG to replace images of basic shapes, easily disable hit areas and more.
+</p>
+
+<p>
+To see the Drums and Stings in action start your own <a href="http://jamwithchrome.com">JAM</a> and select the <em>Standard Drums</em> or the <em>Classic Clean Electric Guitar</em>.
 </p>
 
 <a href="http://jamwithchrome.com">
