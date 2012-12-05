@@ -14,8 +14,8 @@ function Stage(el) {
 Stage.prototype.position = function() {
   var offset = this.offset();
   // Round down as we sometimes get a float value
-  this.positionTop = Math.floor(offset.left);
-  this.positionLeft = Math.floor(offset.top); 
+  this.positionTop = Math.floor(offset.top);
+  this.positionLeft = Math.floor(offset.left); 
 };
 
 Stage.prototype.offset = function() { 
@@ -63,8 +63,8 @@ Stage.prototype.listeners = function() {
 
   this.el.addEventListener('mousemove', function(e) {
     // Subtract the elements position from the mouse event's x and y
-    var x = e.clientX - _self.positionTop,
-        y = e.clientY - _self.positionLeft;
+    var x = e.clientX - _self.positionLeft,
+        y = e.clientY - _self.positionTop;
     
     // Print out the coordinates
     output.innerHTML = (x + "," + y);
