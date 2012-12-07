@@ -9,8 +9,8 @@ function Stage(id) {
 
 Stage.prototype.position = function() {
   var offset = this.offset();
-  this.positionTop = Math.floor(offset.left);
-  this.positionLeft = Math.floor(offset.top);
+  this.positionTop = Math.floor(offset.top);
+  this.positionLeft = Math.floor(offset.left);
 };
 
 Stage.prototype.offset = function() { 
@@ -60,8 +60,8 @@ Stage.prototype.listeners = function() {
   }, false);
 
   this.el.addEventListener('mousemove', function(e) {
-    var x = e.clientX - _self.positionTop,
-        y = e.clientY - _self.positionLeft;
+    var x = e.clientX - _self.positionLeft,
+        y = e.clientY - _self.positionTop;
 
     _self.hitZones.forEach(function(zone){
       _self.checkHover(x, y, zone);

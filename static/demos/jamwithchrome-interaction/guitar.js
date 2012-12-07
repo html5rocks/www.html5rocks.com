@@ -22,8 +22,8 @@ function Stage(id) {
 
 Stage.prototype.position = function() {
   var offset = this.offset();
-  this.positionTop = Math.floor(offset.left);
-  this.positionLeft = Math.floor(offset.top);
+  this.positionTop = Math.floor(offset.top);
+  this.positionLeft = Math.floor(offset.left);
 };
 
 Stage.prototype.offset = function() { 
@@ -59,8 +59,8 @@ Stage.prototype.listeners = function() {
   }, false);
   
   this.el.addEventListener('mousedown', function(e) {
-    var x = e.clientX - _self.positionTop,
-        y = e.clientY - _self.positionLeft;
+    var x = e.clientX - _self.positionLeft,
+        y = e.clientY - _self.positionTop;
 
     _self.hitZones.forEach(function(zone) {
         _self.checkPoint(x, y, zone);
@@ -77,8 +77,8 @@ Stage.prototype.listeners = function() {
     if (!_self.dragging || _self.limit) return;
     _self.limit = true;
 
-    x = e.clientX - _self.positionTop,
-    y = e.clientY - _self.positionLeft;
+    x = e.clientX - _self.positionLeft,
+    y = e.clientY - _self.positionTop;
 
 
     _self.hitZones.forEach(function(zone) {
@@ -102,8 +102,8 @@ Stage.prototype.listeners = function() {
     if (!_self.dragging) return;
     _self.dragging = false;
     
-    x = e.clientX - _self.positionTop,
-    y = e.clientY - _self.positionLeft;
+    x = e.clientX - _self.positionLeft,
+    y = e.clientY - _self.positionTop;
   
     _self.hitZones.forEach(function(zone) {
       _self.checkIntercept(_self.prev[0], 
