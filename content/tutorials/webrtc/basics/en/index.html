@@ -75,7 +75,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <h2 id="toc-where">Where are we now?</h2>
 
-<p>As explained below, WebRTC implements three APIs:</p>
+<p>As detailed below, WebRTC implements three APIs:</p>
 <ul>
   <li><a href="#toc-mediastream" title="Internal link to section for MediaStream (aka getUserMedia)"><code>MediaStream</code></a> (aka <code>getUserMedia</code>)</li>
   <li><code><a href="#toc-rtcpeerconnection" title="Internal link to section for RTCPeerConnection">RTCPeerConnection</a></code></li>
@@ -95,6 +95,14 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 <p>WebRTC functionality is available in Internet Explorer <a href="https://groups.google.com/forum/#!topic/discuss-webrtc/tKoh1wrI8ig" title="How to enable WebRTC functionality in Internet Explorer via Chrome Frame">via Chrome Frame</a>, and Skype (acquired by Microsoft in 2011) is reputedly <a href="http://gigaom.com/2012/06/26/skype-webrtc-web-client/" title="GigaOM blog post about Skype and WebRTC">planning to use WebRTC</a>. WebRTC has also been integrated with <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-conversational-voice-and-video-implemented-webkit-gtk" title="Ericsson article about WebKitGTK+">WebKitGTK+</a> and <a href="http://www.youtube.com/watch?v=Vm5ebKWKNE8" title="basysKom showcasing WebRTC based video chat in QML application">Qt</a> native apps.</p>
 
 <p><strong>A word of warning:</strong> be skeptical of reports that a platform 'supports WebRTC'. Often this actually just means that <code>getUserMedia</code> is supported, but not any of the other RTC components.</p>
+
+<h3>Network topologies</h3>
+
+<p>WebRTC as currently implemented only supports one-to-one communication, but could be used in more complex network scenarios: for example, with multiple peers each communicating with all the others directly, peer-to-peer, or via a centralised server.</p>
+
+<p>Many existing WebRTC apps only demonstrate communication between web browsers, but gateway servers can enable a WebRTC app running on a browser to interact with devices such as <a href="http://en.wikipedia.org/wiki/Public_switched_telephone_network" title="Wikipedia article about the Public Switched Telephone Network">telephones</a>, and <a href="http://en.wikipedia.org/wiki/Voice_over_IP" title="Wikipedia article about Voice Over IP">VOIP</a> systems.</p>
+
+<p>The future of telecommunications is beyond the scope of this article, but WebRTC is likely to be highly disruptive in this area.</p>
 
 <h2 id="toc-first">My first WebRTC</h2>
 
@@ -119,11 +127,31 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <h2 id="toc-mediastream">MediaStream (aka getUserMedia)</h2>
 
-<p>The MediaStream API represents a source of streaming media. Each MediaStream has one or more MediaStreamTracks, each of which corresponds to a synchronised media source. For example, a stream taken from camera and microphone input has synchronised video and audio tracks. (Don't confuse MediaStream tracks with the &lt;track&gt; element, which is something <a href="http://www.html5rocks.com/en/tutorials/track/basics/" title="HTML5 Rocks: Getting Started With the Track Element">entirely different</a>.)</p>
+<p>The <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html" title="W3C Editor's Draft: Media Capture and Streams">MediaStream API</a> represents synchronised streams of media. For example, a stream taken from camera and microphone input has synchronised video and audio tracks. (Don't confuse MediaStream tracks with the &lt;track&gt; element, which is something <a href="http://www.html5rocks.com/en/tutorials/track/basics/" title="HTML5 Rocks: Getting Started With the Track Element">entirely different</a>.)</p>
 
-<p>Probably the easiest way to understand MediaStream is to check it out in the wild. Open the demo at <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a> in Chrome, open the console and inspect the <code>stream</code> variable, which is in global scope.</p>
+<p>Probably the easiest way to understand MediaStream is to look at it in the wild:</p>
 
-<p>The <code>getUserMedia()</code> function can be used to get a LocalMediaStream. This has a <code>label</code> identifying the source device (something like 'FaceTime HD Camera (Built-in)') as well as <code>audioTracks</code> and <code>videoTracks</code> properties, each of which is a MediaStreamTrackList. In Chrome, the <code>webkitURL.createObjectURL()</code> method converts a LocalMediaStream to a <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: Blob URLs">Blob URL</a> which can be set as the <code>src</code> of a video element. (In Opera, the <code>src</code> of the video can be set from the stream itself.)</p>
+<ol>
+  <li>In Chrome, open the demo at <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a></li>
+  <li>Open the console</li>
+  <li>Inspect the <code>stream</code> variable, which is in global scope.</li>
+</ol>
+
+<p>Each MediaStream has an input, which might be a LocalMediaStream generated by <code>navigator.getUserMedia()</code>, and an output, which might be passed to a video element or an RTCPeerConnection.</p>
+
+<p>The <code>getUserMedia()</code> method takes three parameters:</p>
+
+<ul>
+  <li>A <a href="#toc-constraints" title="Internal link to section about Media Constraints">constraints object</a>.</li>
+  <li>A success callback which, if called, is passed a LocalMediaStream.</li>
+  <li>A failure callback which, if called, is passed an error object.</li>
+</ul>
+
+<p>Each LocalMediaStream (i.e. a MediaStream local to the browser) has a <code>label</code> (such as'Xk7EuLhsuHKbnjLWkW4yYGNJJ8ONsgwHBvLQ') and <code>audioTracks</code> and <code>videoTracks</code> properties, each of which is a MediaStreamTrackList.</p>
+
+<p>For the <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a> example, the <code>audioTracks</code> list is empty, because <code>audio</code> is not included in the <a href="#toc-constraints" title="Internal link to section about Media Constraints">constraints</a> argument to <code>getUserMedia()</code>. The <code>videoTracks</code> list has one member, i.e. one MediaStreamTrack. Each MediaStreamTrack has a kind (in this case, 'video'), and a label (something like 'FaceTime HD Camera (Built-in)'), and represents one or more channels of either audio or video.</p>
+
+<p>In Chrome, the <code>webkitURL.createObjectURL()</code> method converts a LocalMediaStream to a <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: Blob URLs">Blob URL</a> which can be set as the <code>src</code> of a video element. (In Opera, the <code>src</code> of the video can be set from the stream itself.)</p>
 
 <p>Currently no browser allows audio data from getUserMedia to be passed to an audio or video element, though <code>getUserMedia</code> can now be used <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled" title="HTML5 Rocks update from Chris Wilson: live Web Audio input enabled!">as an input node for the Web Audio API</a>. The WebRTC RTCPeerConnection API handles audio as well as video, but audio from getUserMedia is not yet supported in other contexts.</p>
 
@@ -144,7 +172,25 @@ navigator.getUserMedia({video: true}, function(localMediaStream) {
 });
 </pre>
 
-<p>The intention is eventually to enable a MediaStream for any streaming data source, not just a camera or microphone. This could be extremely useful for gathering and communicating arbitrary real-time data, for example from sensors or other inputs.</p>
+<p>On pages using HTTPS, calls to <code>getUserMedia()</code> will give an Always Allow button, meaning that permission only has to be granted once. </p>
+
+<p>Chrome apps and extensions can also incorporate <code>getUserMedia</code>. Adding <code>audioCapture</code> and/or <code>videoCapture</code> <a href="https://developer.chrome.com/extensions/manifest.html#permissions" title="Chrome app/extension permissions documentation">permissions</a> to the manifest enables permission to be requested and granted only once, on installation. Thereafter the user is not asked for permission for camera or microphone access.</p>
+
+<p>The intention is eventually to enable a MediaStream for any streaming data source, not just a camera or microphone, which would enable collection of arbitrary real-time data, for example from sensors or other inputs.</p>
+
+<p>Note that <code>getUserMedia()</code> must be used on a server, not the local file system, otherwise a <code>PERMISSION_DENIED: 1</code> error will be thrown.</p>
+
+<h3 id="toc-constraints">Resolution Constraints</h3>
+
+<p><a href="http://tools.ietf.org/html/draft-alvestrand-constraints-resolution-00#page-4" title="IETF Resolution Constraints draft specification">Constraints</a> have been implemented in Chrome 24 and above. These can be used to set values for video resolution for <code>getUserMedia()</code> and RTCPeerConnection <code>addStream()</code> calls.</p>
+
+<p>There's an example at <a href="http://simpl.info/getusermedia/constraints/index.html" title="Resolution Constraints example on simpl.info">simpl.info/getusermedia/constraints</a>.</p>
+
+<p>A couple of gotchas... <code>getUserMedia</code> constraints set in one browser tab affect constraints for all tabs opened subsequently. Setting a disallowed value for constraints gives a rather cryptic error message:</p>
+
+<pre class="prettyprint"><code>navigator.getUserMedia error:  NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</code></pre>
+
+<p>Likewise the error if you try to use <code>getUserMedia</code> from the local file system, not on a server!</p>
 
 <h2 id="toc-signalling">Signalling</h2>
 
@@ -152,15 +198,31 @@ navigator.getUserMedia({video: true}, function(localMediaStream) {
 
 <p>The <a href="http://apprtc.appspot.com" title="apprtc WebRTC example">apprtc.appspot.com</a> example uses XHR and the Channel API. Silvia Pfeiffer has demonstrated <a href="http://blog.gingertech.net/2012/06/04/video-conferencing-in-html5-webrtc-via-web-sockets/" title="Silvia Pfeiffer blog post: WebRTC via WebSocket">WebRTC signalling via WebSocket</a> and in May 2012 Doubango Telecom open-sourced the <a href="http://sipml5.org/" title="sipml5 site">sipml5 SIP client</a>, built with WebRTC and WebSocket.</p>
 
-<p>To start a session, WebRTC clients need the following:</p>
+<p>Signalling is used to exchange two types of information: <strong>network</strong> and <strong>media</strong>.</p>
 
-<ul>
-	<li>Local configuration information.</li>
-	<li>Remote configuration information.</li>
-	<li>Remote transport candidates: how to connect to the remote client (IP addresses and ports).</li>
-</ul>
+<p>The expression 'finding candidates' refers to the process of finding network interfaces and ports using the <a href="#toc-real" title="Internal link to more information about the ICE framework">ICE framework</a>:</p>
 
-<p>Configuration information is described in the form of a <strong>SessionDescription</strong>. the structure of which conforms to the <a href="http://en.wikipedia.org/wiki/Session_Description_Protocol" title="Wikipedia article about the Session Description Protocol">Session Description Protocol</a>, SDP. Serialised, an SDP object looks like this:</p>
+<ol>
+  <li>The caller creates an RTCPeerConnection object.</li>
+  <li>If success, the callback is passed an IceCandidate.</li>
+  <li>The callee sends the IceCandidate to the callee.</li>
+  <li>The callee creates a new remote IceCandidate and adds it to its remote peer description.</li>
+</ol>
+
+<p>WebRTC clients (peers) also need to ascertain and exchange local and remote audio and video media information, such as resolution and code capabilities.</p>
+
+<p>Signalling to exchange media configuration information proceeds by exchanging an <em>offer</em> and an <em>answer</em>:</p>
+
+<ol>
+  <li>Caller creates and sends offer.</li>
+  <li>Callee receives offer and adds it to its description of the remote peer.</li>
+  <li>Callee creates and sends answer.</li>
+  <li>Caller receives answer.</li>
+</ol>
+
+<p>The acquisition and exchange of network and media information can be done simultaneously, but both processes must have completed before audio and video streaming between peers can begin.</p>
+
+<p>Configuration information is described in the form of a <strong>SessionDescription</strong>, the structure of which conforms to the <a href="http://en.wikipedia.org/wiki/Session_Description_Protocol" title="Wikipedia article about the Session Description Protocol">Session Description Protocol</a>, SDP. Serialised, an SDP object looks like this:</p>
 
 <pre class="prettyprint">
 v=0
@@ -174,17 +236,6 @@ m=audio 1 RTP/SAVPF 103 104 0 8 106 105 13 126
 
 a=ssrc:2223794119 label:H4fjnMzxy3dPIgQ7HxuCTLb4wLLLeRHnFxh810
 </pre>
-
-<p>Signalling proceeds like this:</p>
-
-<ol>
-	<li>Caller sends offer.</li>
-	<li>Callee receives offer.</li>
-	<li>Callee sends answer.</li>
-	<li>Caller receives answer.</li>
-</ol>
-
-<p>The SessionDescription sent by the caller is known as an <strong>offer</strong>, and the response from the callee is an <strong>answer</strong>. (Note that WebRTC currently only supports one-to-one communication.)</p>
 
 <p>The offer SessionDescription is passed to the caller's browser via the RTCPeerConnection <code>setLocalDescription()</code> method, and via signalling to the remote peer, whose own RTCPeerConnection object invokes <code>setRemoteDescription()</code> with the offer. This architecture is called <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-00" title="IETF JSEP draft proposal">JSEP</a>, JavaScript Session Establishment Protocol. (There's an excellent animation explaining the process of signalling and streaming in <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-peer-peer-conversational-video" title="Ericsson conversational video demo">Ericsson's demo video</a> for its first WebRTC implementation.) </p>
 
@@ -682,19 +733,21 @@ function onSend() {
 
 <p>The APIs and standards of WebRTC can democratise and decentralise tools for content creation and communication&mdash;for telephony, gaming, video production, music making, news gathering and many other applications.</p>
 
-<p>Technology doesn't get much more <a href="http://www.claytonchristensen.com/disruptive_innovation.html" title="Explanation of the term 'disruptive innovation' by the man who coined it, Clayton Christensen">disruptive</a> than this.</p>
+<p>Technology doesn't get much more <a href="http://en.wikipedia.org/wiki/Disruptive_innovation" title="Wikipedia article about 'disruptive innovation'">disruptive</a> than this.</p>
 
-<p>We look forward to seeing what inventive developers make of WebRTC as it becomes widely implemented over the next few months. As blogger Phil Edholm <a href="http://www.nojitter.com/post/232901042/webrtc-is-it-a-game-changer" title="nojitter blog post: WebRTC: Is it a Game Changer?">put it</a>, 'Potentially, WebRTC and HTML5 could enable the same transformation for real-time communications that the original browser did for information.'</p>
+<p>We look forward to seeing what JavaScript developers make of WebRTC as it becomes widely implemented over the next few months. As blogger Phil Edholm <a href="http://www.nojitter.com/post/232901042/webrtc-is-it-a-game-changer" title="nojitter blog post: WebRTC: Is it a Game Changer?">put it</a>, 'Potentially, WebRTC and HTML5 could enable the same transformation for real-time communications that the original browser did for information.'</p>
 
 <h2 id="toc-more">Learn more</h2>
 
 <ul>
+  <li>WebRTC book by Alan B. Johnston and Daniel C. Burnett (available in print and for eBook formats): <a href="http://www.webrtcbook.com" title="WebRTC book information and download">webrtcbook.com</a></li>
   <li><a href="https://www.youtube.com/watch?v=E8C8ouiXHHk" title="Video of Justin Uberti WebRTC session at Google I/O, 27 June 2012">Video of Justin Uberti's WebRTC session at Google I/O, 27 June 2012</a></li>
   <li><a href="http://www.webrtc.org/" title="webrtc.org">webrtc.org</a>: the home for all things WebRTC&mdash;demos, documentation and discussion.</li>
   <li><a href="http://www.webrtc.org/running-the-demos" title="webrtc.org: running demos in Chrome">webrtc.org demo page</a>: links to demos, and instruction on how to configure Google Chrome Canary for WebRTC.</li>
   <li>Google Developers <a href="https://developers.google.com/talk/libjingle/important_concepts#connections" title="Google Developers: Google Talk for Developers">Google Talk documentation</a>, which gives more information about NAT traversal, STUN, relay servers and candidate gathering.</li>
   <li><a href="https://groups.google.com/forum/?fromgroups#!forum/discuss-webrtc" title="discuss-webrt Google Group">discuss-webrtc</a>: Google Group for WebRTC discussion.</li>
   <li><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html" title="W3C Editor's Draft document">The WebRTC W3C Editor's Draft</a>.</li>
+  <li><a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html" title="W3C Editor's Draft: Media Capture and Streams">W3C Editor's Draft: Media Capture and Streams</a> (aka getUserMedia).</li>
   <li><a href="http://tools.ietf.org/wg/rtcweb/charters" title="IETF Working Group Charter">IETF Working Group Charter</a>.</li>
   <li><a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-01" title="IETF RTCDataChannel documentation">IETF WebRTC Data Channel Protocol Draft</a>.</li>
   <li><a href="http://tools.ietf.org/html/draft-uberti-rtcweb-jsep-02" title="IETF JSEP documentation">IETF JSEP Draft</a>.</li>
@@ -705,26 +758,27 @@ function onSend() {
 
 <h3>MediaStream and getUserMedia</h3>
 <ul>
-	<li>Chrome 18.0.1008+ (enable MediaStream on about:flags)</li>
+	<li>Chrome 18.0.1008+</li>
 	<li>Opera, Opera Mobile 12</li>
-	<li>Firefox (Q4 2012)</li>
+	<li>Firefox Aurora/Nightly</li>
 </ul>
 
 <h3>RTCPeerConnection</h3>
 <ul>
-	<li>Chrome 20+ (enable on about:flags)</li>
-	<li>Targeting Chrome 22 for general availability</li>
-	<li>Firefox (Q4 2012)</li>
+	<li>Chrome 20+</li>
+	<li>Firefox Aurora/Nightly</li>
 </ul>
 
 <h3>RTCDataChannel</h3>
 <ul>
-	<li>Chrome + Firefox (Q4 2012)</li>
+	<li>Some parts already in WebKit, experimental version in Chrome 25, more stable version with Firefox interoperability in Chrome 26</li>
+  <li>Firefox Aurora/Nightly</li>
 	<li>Internet Explorer support via ChromeFrame</li>
-	<li>Mobile browser support in progress</li>
 	<li>Native APIs for RTCPeerConnection also available</li>
 </ul>
 
-<p>For more information about support for APIs such as getUserMedia, see <a href="http://caniuse.com/stream" title="caniuse.com: getUserMedia/Stream support">caniuse.com</a>.</p>
+<p>The experimental Ericsson Bowser browser supports MediaStream and RTCPeerConnection; mobile support is in planned for Chrome and Firefox.</p>
+
+<p>For more detailed information about support for APIs such as getUserMedia, see <a href="http://caniuse.com/stream" title="caniuse.com: getUserMedia/Stream support">caniuse.com</a>.</p>
 
 {% endblock %}
