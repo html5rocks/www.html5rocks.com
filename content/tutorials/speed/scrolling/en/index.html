@@ -33,9 +33,9 @@
 
 <h2 id="toc-specifics">The Specifics of Scrolling</h2>
 
-<p>Let's take a look at what kinds of things happen when you scroll. To understand that we have to take a brief look into how the browser actually draws things to the screen. Everything starts with the DOM tree, which is essentially all the elements within the page. We then apply the style information and this gives us another tree called the render tree. If an element is in the DOM tree but it has - say - its display property set to none, then it won't be in the render tree because it doesn't need to be drawn.</p>
+<p>Let's take a look at what kinds of things happen when you scroll. To understand that we have to take a brief look into how the browser actually draws things to the screen. Everything starts with the DOM tree, which is essentially all the elements within the page. We then apply the style information and this gives us another tree called the render tree. If an element is in the DOM tree but it has &mdash; say &mdash; its display property set to none, then it won't be in the render tree because it doesn't need to be drawn.</p>
 
-<p>Beyond this, however, in a browser like Chrome, things are grouped together into render layers, which again is a tree. You might like to think of these render layers as being similar to what you'd see in an art package. But since it's <a href="http://en.wikipedia.org/wiki/Turtles_all_the_way_down">turtles all the way</a> down things goes further than this, because these render layers are grouped and drawn to an even smaller set of composited layers, and it's these that we need to be thinking about.</p>
+<p>Beyond this, however, in a browser like Chrome things are grouped together into render layers, which is also a tree. You might like to think of these render layers as being similar to what you'd see in an art package. But since it's <a href="http://en.wikipedia.org/wiki/Turtles_all_the_way_down">turtles all the way</a> down things goes further than this, because these render layers are grouped again and drawn to an even smaller set of composited layers, and it's these that we need to be thinking about.</p>
 
 <p>Each of these composited layers needs to be painted and rasterized to a texture and then composited together to the image that you see on screen. How a render layer gets its own compositor layer is governed by a few rules, but as an example having a canvas element in the layer is going to get the render layer its own compositor layer. If you're interested in more details of the implementation of Chrome's rendering, including the rules for a render layer getting its own compositor layer check out this <a href="http://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome">in-depth summary article</a>.</p>
 
@@ -44,11 +44,11 @@
   <figcaption>The DOM and RenderObject trees</figcaption>
 </figure>
 
-<p>Whenever you scroll the browser will probably need to paint (or repaint) some of the pixels in our compositor layers. By grouping things into layers we need only update that specific layer's texture when something inside that layer has changed, and where we can we want to only paint and rasterize the part of a render layer's texture that's been damaged rather than the whole thing. Obviously if you have things moving as you scroll, like in a parallax site, then you're potentially damaging a large area, possibly across multiple layers, and this can result in a lot of expensive (re)paint work.</p>
+<p>Whenever you scroll the browser will probably need to paint (or repaint) some of the pixels in our compositor layers. By grouping things into layers we need only update that specific layer's texture when something inside that layer has changed, and where we can we want to only paint and rasterize the part of a render layer's texture that's been damaged rather than the whole thing. Obviously if you have things moving as you scroll, like in a parallax site, then you're potentially damaging a large area, possibly across multiple layers, and this can result in a lot of expensive paint work.</p>
 
 <p>In short, <strong>less painting is better</strong>.</p>
 
-<h2 id="toc-example">Diagnosing painting</h2>
+<h2 id="toc-example">Diagnosing your paints</h2>
 
 <p>So much for the theory, let's take a look how this works out in practice. Here's a <a href="/static/demos/scrolling/demo.html">demo page</a> that you can take a look at in Chrome's DevTools. If you open up the Timeline panel, set it to frame mode, hit the record button and then start scrolling, you should see a bunch of bars colored green. In the list below you will see a whole heap of paint records. This is Chrome painting and rasterizing the textures for the page's compositor layers. (After all the painting is done you may also see some composite layer records which would be all those updated layers being composited ready for display on screen.)</p>
 
@@ -65,9 +65,9 @@
   side navigation over from <code>position: fixed</code> to <code>position: absolute</code>. Of course
   this changes the behaviour of the site, but the point here is you can see a real performance boost by switching styles.</p>
 
-<p>In addition to the basic paint records we actually get a little more information for some of them, specifically relating to images. If you resize the page down and up while recording you'll see that some of the paint records will allow you to twizzle down for more details. If you do just that you should see some image resize records. This is exactly what it says on the tin: the browser is having to resize the image as part of its paint work.</p>
-
 <h2 id="toc-resizing">Image Resizes</h2>
+
+<p>In addition to the basic paint records we actually get a little more information for some of them, specifically relating to images. If you resize the page down and up while recording you'll see that some of the paint records will allow you to twizzle down for more details. If you do just that you should see some image resize records. This is exactly what it says on the tin: the browser is having to resize the image as part of its paint work.</p>
 
 <figure>
   <img src="/static/demos/scrolling/resize.png" alt="Chrome DevTools: Resize Records" />
@@ -76,7 +76,7 @@
 
 <p>If you're sending large images to a device and then scaling them down using CSS or image dimension attributes, you're more likely to see this happen. Of course the amount by which the browser has to rescale images, and the frequency with which it has to do this, is going to affect your page's performance as they happen on the main browser thread, and therefore block other work from taking place.</p>
 
-<p>The case for sending images that can be rendered without any resizing, therefore, is very strong. As an interesting side note to this, there are situations where this is unavoidable, particularly on mobile where the zoom is easily changed from 1 by the user when they pinch-to-zoom. In those cases there's little you can do, but it's good to know it can (and probably will) happen.</p>
+<p>The case for sending images that can be rendered without any resizing, therefore, is very strong. As an interesting side note to this, there are situations where scaling operations are unavoidable, particularly on mobile where the zoom is easily changed from 1 by the user when they pinch-to-zoom. In those cases there's little you can do, but it's good to know it can (and probably will) happen.</p>
 
 <p>So with all that said, there are other things that may impact your scrolling performance:</p>
 
@@ -90,7 +90,7 @@
 
 <h2 id="toc-expensivestyles">Expensive Styles</h2>
 
-<p>So the first thing to say is that not all styles are created equal, some effects like <code>box-shadow</code> are particularly expensive from a rendering point of view. But the second thing to say is that nothing stays the same, so one slow style today could be optimised and fast tomorrow, and it differs from browser to browser. The key here is to leverage developer tools like we did above to identify where the bottleneck is coming from and then see how you can reduce the browser's workload.</p>
+<p>So the first thing to say is that not all styles are created equal, some effects like <code>box-shadow</code> are oft-quoted as being particularly expensive from a rendering point of view. But the second thing to say is that nothing stays the same, so one slow style today could be optimised and fast tomorrow, and it differs from browser to browser. The key here is to leverage developer tools like we did above to identify where the bottleneck is coming from and then see how you can reduce the browser's workload.</p>
 
 <p>At <a href="https://developers.google.com/events/io/">Google I/O 2012</a> Nat Duca and Tom Wiltzius did a great talk on jank busting your rendering in Chrome, and there are a heap of golden tips in there, including expensive styles and how to measure their impact.</p>
 
@@ -106,7 +106,7 @@
 
 <h2 id="toc-debouncing">Debouncing Scroll Events</h2>
 
-<p>Let's say you're building a large parallax scrolling site. Your natural inclination may be to do visual updates when you get the scroll event. The major problem here is that the scroll events are not timed to the visual updates of the browser, i.e. in a <code>requestAnimationFrame</code> callback, so you run the risk of performing multiple updates inside a single render frame. If your updates are expensive, which they are more likely to be if you're building something like a parallax site (lots of damaged areas, lots of painting and compositing) then doing these more times than necessary is a bad idea. To solve this problem you need to debounce your scroll events. You do this by simply storing the last scroll value in a variable whenever you receive a scroll event, and then you perform your visual updates in a requestAnimationFrame, making use of the last known value. This means that the browser can schedule the visual updates at the correct time, and we did no more work than was absolutely necessary.</p>
+<p>Let's say you're building a large parallax scrolling site. Your natural inclination may be to do visual updates when you get the scroll event. The major problem here is that the scroll events are not timed to the visual updates of the browser, i.e. in a <code>requestAnimationFrame</code> callback, so you run the risk of performing multiple updates inside a single render frame. If your updates are expensive, which they are more likely to be if you're building something like a parallax site (lots of damaged areas, lots of painting and compositing) then doing these more times than necessary is a bad idea. To solve this problem you need to debounce your scroll events. You do this by simply storing the last scroll value in a variable whenever you receive a scroll event, and then you perform your visual updates in a requestAnimationFrame, making use of the last known value. This means that the browser can schedule the visual updates at the correct time, and we did no more work than was absolutely necessary inside each frame.</p>
 
 <p>We covered <a href="http://www.html5rocks.com/en/tutorials/speed/animations/">reflow / repaint cycles and debouncing scroll events</a> in a previous article, so that's worth checking out if you want to know more.</p>
 
@@ -114,7 +114,7 @@
 
 <p>Now you know how to interpret Chrome's DevTools timeline to assess your application's performance during a scroll. It's worth reiterating that performance characteristics change all the time, so while there are some things that are faster than others today, they do vary and change over time, and it's key to understand how to interpret the readings you see so that you can adapt your approach accordingly.</p>
 
-<p>You should always check your <strong>actual</strong> performance data in your developer tools. It's tempting to compare by eye, but it may not be immediately obvious. So don't guess it, test it.</p>
+<p>You should always check your <strong>actual</strong> performance data in your developer tools. It's tempting to compare changes by eye, but the results may not be immediately obvious. So don't guess it, test it.</p>
 
 <h2 id="toc-morereading">More reading</h2>
 
