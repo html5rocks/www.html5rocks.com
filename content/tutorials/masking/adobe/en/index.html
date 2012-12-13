@@ -1,0 +1,393 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+
+  <style>
+    html { font-size: 100%; overflow-y: scroll; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+
+  /* body{
+    color:#444;
+    font-family:Georgia, Palatino, 'Palatino Linotype', Times,
+                'Times New Roman', serif,
+                "Hiragino Sans GB", "STXihei", "微软雅黑";
+    font-size:12px;
+    line-height:1.5em;
+    background:#fefefe;
+    width: 45em;
+    margin: 10px auto;
+    padding: 1em;
+    outline: 1300px solid #FAFAFA;
+  }
+
+  a{ color: #0645ad; text-decoration:none;}
+  a:visited{ color: #0b0080; }
+  a:hover{ color: #06e; }
+  a:active{ color:#faa700; }
+  a:focus{ outline: thin dotted; }
+  a:hover, a:active{ outline: 0; }
+
+  span.backtick {
+    border:1px solid #EAEAEA;
+    border-radius:3px;
+    background:#F8F8F8;
+    padding:0 3px 0 3px;
+  }
+
+  ::-moz-selection{background:rgba(255,255,0,0.3);color:#000}
+  ::selection{background:rgba(255,255,0,0.3);color:#000}
+
+  a::-moz-selection{background:rgba(255,255,0,0.3);color:#0645ad}
+  a::selection{background:rgba(255,255,0,0.3);color:#0645ad}
+
+  p{
+  margin:1em 0;
+  }
+
+  img{
+  max-width:100%;
+  }
+
+  h1,h2,h3,h4,h5,h6{
+  font-weight:normal;
+  color:#111;
+  line-height:1em;
+  }
+  h4,h5,h6{ font-weight: bold; }
+  h1{ font-size:2.5em; }
+  h2{ font-size:2em; border-bottom:1px solid silver; padding-bottom: 5px; }
+  h3{ font-size:1.5em; }
+  h4{ font-size:1.2em; }
+  h5{ font-size:1em; }
+  h6{ font-size:0.9em; }
+
+  blockquote{
+  color:#666666;
+  margin:0;
+  padding-left: 3em;
+  border-left: 0.5em #EEE solid;
+  }
+  hr { display: block; height: 2px; border: 0; border-top: 1px solid #aaa;border-bottom: 1px solid #eee; margin: 1em 0; padding: 0; }
+
+
+  pre , code, kbd, samp { 
+    color: #000; 
+    font-family: monospace; 
+    font-size: 0.88em; 
+    border-radius:3px;
+    background-color: #F8F8F8;
+    border: 1px solid #CCC; 
+  }
+  pre { white-space: pre; white-space: pre-wrap; word-wrap: break-word; padding: 5px;}
+  pre code { border: 0px !important; }
+  code { padding: 0 3px 0 3px; }
+
+  b, strong { font-weight: bold; }
+
+  dfn { font-style: italic; }
+
+  ins { background: #ff9; color: #000; text-decoration: none; }
+
+  mark { background: #ff0; color: #000; font-style: italic; font-weight: bold; }
+
+  sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+  sup { top: -0.5em; }
+  sub { bottom: -0.25em; }
+
+  ul, ol { margin: 1em 0; padding: 0 0 0 2em; }
+  li p:last-child { margin:0 }
+  dd { margin: 0 0 0 2em; }
+
+  img { border: 0; -ms-interpolation-mode: bicubic; vertical-align: middle; }
+
+  table { border-collapse: collapse; border-spacing: 0; }
+  td { vertical-align: top; }
+
+  @media only screen and (min-width: 480px) {
+  body{font-size:14px;}
+  }
+
+  @media only screen and (min-width: 768px) {
+  body{font-size:16px;}
+
+  }
+
+  @media print {
+    * { background: transparent !important; color: black !important; filter:none !important; -ms-filter: none !important; }
+    body{font-size:12pt; max-width:100%;}
+    a, a:visited { text-decoration: underline; }
+    hr { height: 1px; border:0; border-bottom:1px solid black; }
+    a[href]:after { content: " (" attr(href) ")"; }
+    abbr[title]:after { content: " (" attr(title) ")"; }
+    .ir a:after, a[href^="javascript:"]:after, a[href^="#"]:after { content: ""; }
+    pre, blockquote { border: 1px solid #999; padding-right: 1em; page-break-inside: avoid; }
+    tr, img { page-break-inside: avoid; }
+    img { max-width: 100% !important; }
+    @page :left { margin: 15mm 20mm 15mm 10mm; }
+    @page :right { margin: 15mm 10mm 15mm 20mm; }
+    p, h2, h3 { orphans: 3; widows: 3; }
+    h2, h3 { page-break-after: avoid; }
+  } */
+</style>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-css3-graphics.png" width="165" height="64" alt="This article is powered by HTML5 CSS3 / Styling, and Graphics Effects" title="This article is powered by HTML5 CSS3 / Styling, and Graphics Effects" />
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+
+  <h1 id="css-masking">CSS Masking</h1>
+
+<p>Two commonly used operations in computer graphics are clipping and masking. Both operations hide visual portions of an element. If you have worked with <a href="http://www.w3.org/TR/SVG/masking.html">SVG</a> or <a href="http://www.w3.org/TR/2dcontext/">HTML Canvas</a> before, these operations are probably not new for you. Clipping defines the region of an element that is visible. Everything around this region does not get rendered - it gets "clipped". On masking, a mask image is composited with the element, affecting the alpha channel of this element. Portions of a masked element get fully or partially transparent. The new <a href="http://dvcs.w3.org/hg/FXTF/raw-file/tip/masking/index.html">CSS Masking</a> specification aims to bring these two operations to the HTML world.</p>
+
+<h2 id="clipping-in-css-21">Clipping in CSS 2.1</h2>
+
+<p><a href="http://www.w3.org/TR/2004/CR-CSS21-20040225/visufx.html#clipping">CSS 2.1</a> already specified the <code>clip</code> property. This property is limited to rectangular clipping with the <code>rect()</code> function taking four distance arguments for the top, right, bottom and left edges. The annoying part: The <code>clip</code> property applies to absolutely positioned elements exclusively. The property is just ignored on other elements.</p>
+
+<p>CSS:</p>
+
+<pre><code>img {
+  position: absolute;
+  clip: rect(10px, 290px, 190px, 10px);
+}
+</code></pre>
+
+<p>HTML:</p>
+
+<pre><code>&lt;img src="image.jpg" width="568"&gt;
+</code></pre>
+
+<p>
+  <figure>
+    <img src="clip1a.png" alt="original unclipped image" />
+    <img src="clip1b.png" alt="'clip' property applied to an image" />
+  </figure>
+</p>
+
+<p>See <a href="clip1.html">live demo</a> in capable browsers.</p>
+
+<p>The <code>clip</code> property is limited to specific elements in SVG as well. This is one reason why the SVG specification added the <code>clip-path</code> property that is adapted by CSS Masking now.</p>
+
+<h2 id="the-clip-path-property">The <code>clip-path</code> property</h2>
+
+<p>The <code>clip-path</code> property can be applied to all HTML elements, SVG graphic elements and SVG container elements. It either references a <code>&lt;clipPath&gt;</code> element or one of the basic shapes introduced with <a href="http://dev.w3.org/csswg/css3-exclusions">CSS Exclusions</a>.</p>
+
+<p>The <code>&lt;clipPath&gt;</code> element takes any graphical element from SVG and uses them as clipping region. Graphical elements in SVG are <code>&lt;rect&gt;</code>, <code>&lt;circle&gt;</code>, <code>&lt;ellipse&gt;</code>, <code>&lt;path&gt;</code>, <code>&lt;polygon&gt;</code>, <code>&lt;image&gt;</code> and <code>&lt;text&gt;</code>. <code>&lt;clipPath&gt;</code> allows combining multiple graphical elements as well. The union of all shapes is then used as clipping region. The following example demonstrates the use of <code>&lt;clipPath&gt;</code>:</p>
+
+<p>CSS:</p>
+
+<pre><code>img {
+  clip-path: url(#clipping);
+}
+</code></pre>
+
+<p>HTML:</p>
+
+<pre><code>&lt;svg&gt;
+  &lt;defs&gt;
+    &lt;clipPath id="clipping"&gt;
+      &lt;circle cx="284" cy="213" r="213" /&gt;
+    &lt;/clipPath&gt;
+  &lt;/defs&gt;
+&lt;/svg&gt;
+
+&lt;img src="image.jpg" width="568"&gt;
+</code></pre>
+
+<p>Basic shapes on the other hand do not require any SVG markup. They were added to <code>clip-path</code> to provide easy shorthand functions for simple clipping operations.</p>
+
+<ul>
+<li><code>rectangle(&lt;top&gt;, &lt;left&gt;, &lt;width&gt;, &lt;height&gt;, &lt;rx&gt;, &lt;ry&gt;)</code> defines a rectangle, similar to the <code>rect()</code> function of <code>clip</code>, and adds two optional radius parameters for <a href="http://www.folklore.org/StoryView.py?story=Round_Rects_Are_Everywhere.txt">rounded rects</a>.</li>
+<li><code>circle(&lt;cx&gt;, &lt;cy&gt;, &lt;r&gt;)</code> defines a simple circle with a center point and a radius.</li>
+<li><code>ellipse(&lt;cx&gt;, &lt;cy&gt;, &lt;rx&gt;, &lt;ry&gt;)</code> defines an ellipse with a center point and a horizontal and a vertical radius.</li>
+<li><code>polygon(&lt;x1&gt; &lt;y1&gt;, &lt;x2&gt; &lt;y2&gt;, ..., &lt;xn&gt; &lt;yn&gt;)</code> defines a polygon based on the passed point list.</li>
+</ul>
+
+<p>The CSS markup can look like the following example:</p>
+
+<pre><code>img {
+  clip-path: polygon(0px 208px, 146.5px 207px, 147px 141.2px, ...);
+}
+</code></pre>
+
+<p>Clipping can be very useful for the presentation of visual content. The following example applies different clipping operations to images.</p>
+
+<p>
+  <figure>
+    <img src="clip4a.png" alt="Clip image around a building's shape" />
+    <img src="clip4b.png" alt="Clip image with jagged edge" />
+    <img src="clip4c.png" alt="Clip image with a rounded rectangle" />
+    <img src="clip4d.png" alt="Clip image with an oval" />
+  </figure>
+</p>
+
+<p>See <a href="clip2.html">live demo</a> in capable browsers.</p>
+
+<p>But clipping can be useful for UI design as well. In the following example a chevron indicates a continuing list.</p>
+
+<p><img src="clip3.png" alt="Clipping for UI usability" /></p>
+
+<p>See <a href="clip-list.html">live demo</a> in capable browsers.</p>
+
+<p>Note that <code>clip-path</code> (as well as <code>clip</code>) clips out any aspect of an element including backgrounds, borders and any scrolling mechanism.</p>
+
+<h2 id="animation-of-clip-path">Animation of <code>clip-path</code></h2>
+
+<p>Both, basic shapes and the content of a <code>&lt;mask&gt;</code> element can be animated. The following example has a star shape animation:</p>
+
+<p><img src="clip-animation.png" alt="Animation of clipping" /></p>
+
+<p>See <a href="clip-animation.html">live demo</a> in capable browsers.</p>
+
+<p>Here is the source code for the animation of the basic shape:</p>
+
+<pre><code>img:hover {
+  clip-path: polygon(0px 208px, 146.5px 207px, 147px 141.2px, ...);
+  animate: star 3s;
+}
+
+@keyframes star {
+  0% {
+    clip-path: polygon(0px 208px, 146.5px 207px, 147px 141.2px, ...);
+  },
+  100% {
+    clip-path: polygon(0px 208px, 146.5px 207px, 147px 141.2px, ...);
+  }
+}
+</code></pre>
+
+<h2 id="masking">Masking</h2>
+
+<p>The second operation after clipping is masking. A mask image is used as some kind of "color mesh", to filter the visual portions of an element. In the following paragraphs I'll explain the difference between two kind of masks: the luminance mask and the alpha mask.</p>
+
+<h3 id="luminance-mask">Luminance Mask</h3>
+
+<p>For luminance masks, the mask image is transformed to a rasterized gray scale image first (if it isn't in gray scale already). The "lighter" a portion of the mask image is, the more of the masked element will be visible on the same position. For instance black indicates fully transparent, white indicates fully opaque and a gray tone indicates partial transparency of the element.</p>
+
+<p><img src="mask-luminance.png" alt="Luminance mask next to the masked object" /></p>
+
+<h3 id="alpha-mask">Alpha Mask</h3>
+
+<p>Alpha masking uses the same principle as luminance masking. The difference to luminance masking: just the alpha channel of the image matters. The less opaque a portion of the mask image is, the less visible the element will be at the same position.</p>
+
+<p><img src="mask-alpha.png" alt="Alpha mask next to the masked object" /></p>
+
+<p>To summarize: both masking types affect the transparency level of the element. The image below is the result of both masking operations above.</p>
+
+<p><img src="mask-example.png" alt="Mask applied to an graphical object" /></p>
+
+<p>The CSS Masking specification defines two shorthand properties for masking: <code>mask</code> and <code>mask-box-image</code>. </p>
+
+<h2 id="the-mask-property">The <code>mask</code> property</h2>
+
+<p>The <code>mask</code> property combines image masking with referencing a mask as follows.</p>
+
+<p>The first way is the use of the <code>mask-image</code>, <code>mask-repeat</code>, <code>mask-position</code>, <code>mask-clip</code>, <code>mask-origin</code> and <code>mask-size</code> properties that are specified similar to their counter part <code>background</code> with <code>background-image</code>. Like for <code>background-image</code>, it is possible to define multiple mask sources. Each mask source is an image defined by <a href="http://www.w3.org/TR/css3-images/">CSS3 Images</a>. All mask sources will be combined to form a single mask image. This mask image is used to mask the element and its content as described above. Possible image values are any rasterized image format like JPG or PNG, SVG graphics, or predefined image values like CSS gradients.</p>
+
+<p>The first masking example above can simply be realized with the following code:</p>
+
+<pre><code>img {
+  mask-image: url(mask.svg);
+}
+</code></pre>
+
+<p>If the mask source should be stretched to the size of the content, just use the shorthand property <code>mask</code>, as you would do it for the background with the shorthand property <code>background</code>:</p>
+
+<pre><code>img {
+  mask: url(mask.svg) top left / cover;
+}
+</code></pre>
+
+<p><img src="mask-stretch.png" alt="Mask stretched to size of object" /></p>
+
+<p>The second way references a <code>&lt;mask&gt;</code> element as defined by <a href="http://www.w3.org/TR/SVG/masking.html">SVG 1.1</a>. A <code>&lt;mask&gt;</code> element takes any graphical element as well as grouping elements from SVG and uses them to create the mask image.</p>
+
+<p>CSS:</p>
+
+<pre><code>img {
+  mask: url(#masking);
+}
+</code></pre>
+
+<p>HTML:</p>
+
+<pre><code>&lt;svg&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="gradient" x1="0" y1="00%" x2 ="0" y2="100%"&gt;
+      &lt;stop stop-color="black" offset="0"/&gt;
+      &lt;stop stop-color="white" offset="1"/&gt;
+    &lt;/linearGradient&gt;
+
+    &lt;mask id="masking" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox"&gt;
+      &lt;rect y="0.3" width="1" height=".7" fill="url(#gradient)" /&gt;
+      &lt;circle cx=".5" cy=".5" r=".35" fill="white" /&gt;
+    &lt;/mask&gt;
+  &lt;/defs&gt;
+&lt;/svg&gt;
+
+&lt;img src="image.jpg" width="568"&gt;
+</code></pre>
+
+<p>Which would look like the following image:</p>
+
+<p><img src="mask-example2.png" alt="&lt;code&gt;&lt;mask&gt;&lt;/code&gt; element applied to an graphical object" /></p>
+
+<h2 id="the-mask-box-image-property">The <code>mask-box-image</code> property</h2>
+
+<p>The <code>mask-box-image</code> property allows to divide a mask image into 9 tiles: four corners, four edges and the middle piece. These pieces may be sliced, scaled and stretched in various ways to fit the size of the mask image area. The property borrows the functionality from <code>border-image</code> and allows powerful masking at the edges and corners of the content. The following example demonstrates the behavior of the property:</p>
+
+<pre><code>img {
+  mask-box-image: url("stamp.svg") 35 repeat;
+}
+</code></pre>
+
+<p>The following image is used as mask image and divided into 9 parts:</p>
+
+<p><img src="stampTiles.png" alt="Pattern of a stamp to be used as mask" /></p>
+
+<p>These parts are now used to mask the corner and edges of the content and result in the following view:</p>
+
+<p><img src="mask-box-image-example.png" alt="Image masked with mask-box-image" /></p>
+
+<h2 id="can-i-use">Can I use... ?</h2>
+
+<p>The interesting part is the support in browsers. When it comes to feature detection it gets kind of hairy.</p>
+
+<p>All browsers support <code>clip</code> as specified. All browsers support the <code>mask</code> and the <code>clip-path</code> properties as specified in <a href="http://www.w3.org/TR/SVG/masking.html">SVG 1.1</a> on SVG elements. But just one browser lets you apply the properties on HTML elements: Firefox (sort of). Lets get into more details.</p>
+
+<p>The <code>clip-path</code> and the <code>mask</code> property with references to <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> elements work in Firefox out of the box; both properties are unprefixed. On the other hand, <code>mask-image</code>, <code>mask-box-image</code> and related properties are not supported at all. Basic shapes for clipping aren't supported either.</p>
+
+<p>WebKit based browsers, like Safari and Chrome, have support for <code>mask-image</code>, <code>mask-box-image</code> and related properties. All of them are prefixed and can just be applied to HTML elements. The nightly builds of both browsers already support the prefixed <code>-webkit-clip-path</code> property with basic shapes and referencing <code>&lt;clipPath&gt;</code> elements on HTML.</p>
+
+<p>If you want to try clipping and masking, make sure that you use the prefixed and unprefixed properties. The unprefixed properties must use reference of <code>&lt;mask&gt;</code> or <code>&lt;clipPath&gt;</code> at the moment.</p>
+
+<pre><code>&lt;style&gt;
+  #image {
+    mask: url(#mask);
+    -webkit-mask: url(mask.svg) top left / cover;
+    -o-mask: url(mask.svg) top left / cover;
+    -ms-mask: url(mask.svg) top left / cover;
+  }
+&lt;/style&gt;
+
+&lt;img id="image" src="coolImage.jpg" width="400"&gt;
+
+&lt;svg width="0" height="0"&gt;
+  &lt;mask id="mask"&gt;
+    ...
+  &lt;/mask&gt;
+&lt;/svg&gt;
+</code></pre>
+
+<p>But be careful, other browsers don't have further masking or clipping functionalities for HTML elements yet.</p>
+
+<h2 id="acknowledgment">Acknowledgment</h2>
+
+<p>Thank you very much to Arno Gourdol for providing the picture from the <a href="http://en.wikipedia.org/wiki/Humayun's_Tomb">Humayun's Tomb</a>.</p>
+
+{% endblock %}
