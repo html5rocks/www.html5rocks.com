@@ -368,6 +368,7 @@ class ContentHandler(webapp2.RequestHandler):
           'fr': 'Français',
           'es': 'Español',
           'ja': '日本語',
+          'ko': '한국의',
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
           'zh': '中文 (简体)'
