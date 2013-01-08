@@ -259,7 +259,7 @@ would do something less annoying:
           // have to be careful about accepting data via the messaging API you
           // create. Check that source, and validate those inputs!
           var frame = document.getElementById('sandboxed');
-          if (e.origin === "null" &amp;&amp; e.source === frame)
+          if (e.origin === "null" &amp;&amp; e.source === frame.contentWindow)
             alert('Result: ' + e.data);
         });
 
