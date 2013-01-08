@@ -61,6 +61,10 @@
 
       function evaluate(frame) {
         var code = document.getElementById('code').value;
+        // Note that we're sending the message to "*", rather than some specific
+        // origin. Sandboxed iframes which lack the 'allow-same-origin' header
+        // don't have an origin which you can target: you'll have to send to any
+        // origin, which might alow some esoteric attacks. Validate your output!
         frame.contentWindow.postMessage(code, '*');
       }
 
@@ -73,7 +77,17 @@
 
       // Listen for response messages from the frames.
       window.addEventListener('message', function (e) {
-        alert('Result: ' + e.data);
+        // Normally, you should verify that the origin of the message's sender
+        // was the origin and source you expected. This is easily done for the
+        // unsandboxed frame. The sandboxed frame, on the other hand is more
+        // difficult. Sandboxed iframes which lack the 'allow-same-origin'
+        // header have "null" rather than a valid origin. This means you still
+        // have to be careful about accepting data via the messaging API you
+        // create. Check that source, and validate those inputs!
+        if ((e.origin === "null" && e.source === sandboxedFrame)
+            || (e.origin === (window.location.protocol + "//" + window.location.host) && e.source === unsandboxedFrame) {
+          alert('Result: ' + e.data);
+        }
       });
     </script>
   </body>
