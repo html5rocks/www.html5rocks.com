@@ -20,7 +20,7 @@ attribute to some URL, and boom, the browser does its thing: loads the media,
 decodes it, buffers it, and handles codec issues.
 
 The devil is in the details though. The cost of such simplicity is less flexibility.
-First, e're dealing with the entire file for playback. We have little control
+First, ee're dealing with the entire file for playback. We have little control
 over what the browser does with our media after setting the `src`. For example,
 what if we want to adaptively change the quality of video based on network conditions?
 Or, splice in different sections of video from multiple sources? Aw shucks. Can't!
