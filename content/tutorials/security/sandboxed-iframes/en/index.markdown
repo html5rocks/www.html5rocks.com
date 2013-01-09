@@ -254,7 +254,13 @@ would do something less annoying:
 
     window.addEventListener('message',
         function (e) {
-          alert('Result: ' + e.data);
+          // Sandboxed iframes which lack the 'allow-same-origin'
+          // header have "null" rather than a valid origin. This means you still
+          // have to be careful about accepting data via the messaging API you
+          // create. Check that source, and validate those inputs!
+          var frame = document.getElementById('sandboxed');
+          if (e.origin === "null" &amp;&amp; e.source === frame.contentWindow)
+            alert('Result: ' + e.data);
         });
 
 Next, we'll hook up an event handler to clicks on the `button`. When the user
@@ -264,6 +270,10 @@ frame for execution:
     function evaluate() {
       var frame = document.getElementById('sandboxed');
       var code = document.getElementById('code').value;
+      // Note that we're sending the message to "*", rather than some specific
+      // origin. Sandboxed iframes which lack the 'allow-same-origin' header
+      // don't have an origin which you can target: you'll have to send to any
+      // origin, which might alow some esoteric attacks. Validate your output!
       frame.contentWindow.postMessage(code, '*');
     }
 
@@ -290,7 +300,7 @@ ensuring that each module is well-fed with only the information it requires.
 Note, however, that you need to be very careful when dealing with framed content
 that comes from the same origin as the parent. If a page on
 `https://example.com/` frames another page on the same origin with a sandbox
-that includes both the **allow-same-origin **and **allow-scripts** flags, then
+that includes both the **allow-same-origin** and **allow-scripts** flags, then
 the framed page can reach up into the parent, and remove the sandbox attribute
 entirely.
 
