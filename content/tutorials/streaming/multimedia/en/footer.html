@@ -7,6 +7,30 @@ var FILE = '/static/videos/mediasource_test.webm';
 var NUM_CHUNKS = 5;
 var chunks = [];
 
+var WEBM_MANIFEST = {
+  "type": "video/webm; codecs=\"vp8, vorbis\"",
+  "duration": 6042.000000,
+  "init": { "offset": 0, "size": 4238},
+  "media": [
+    { "offset": 4238, "size": 11830, "timecode": 0.000000 },
+    { "offset": 16068, "size": 12588, "timecode": 0.385000 },
+    { "offset": 28656, "size": 14588, "timecode": 0.779000 },
+    { "offset": 43244, "size": 13023, "timecode": 1.174000 },
+    { "offset": 56267, "size": 13127, "timecode": 1.592000 },
+    { "offset": 69394, "size": 14456, "timecode": 1.987000 },
+    { "offset": 83850, "size": 13458, "timecode": 2.381000 },
+    { "offset": 97308, "size": 14566, "timecode": 2.776000 },
+    { "offset": 111874, "size": 13201, "timecode": 3.171000 },
+    { "offset": 125075, "size": 14068, "timecode": 3.566000 },
+    { "offset": 139143, "size": 15346, "timecode": 3.984000 },
+    { "offset": 154489, "size": 13618, "timecode": 4.378000 },
+    { "offset": 168107, "size": 15094, "timecode": 4.773000 },
+    { "offset": 183201, "size": 13069, "timecode": 5.168000 },
+    { "offset": 196270, "size": 13788, "timecode": 5.563000 },
+    { "offset": 210058, "size": 9009, "timecode": 5.957000 }
+  ]
+}
+
 var downloadLinks = document.querySelector('#example-download-links');
 var splitFileButton = document.querySelector('#example-split-file-button');
 var splitVideo = document.querySelector('#example-split-video');
@@ -14,7 +38,7 @@ var fileImport = document.querySelector('#file-import');
 
 var ms = new MediaSource();
 ms.addEventListener('webkitsourceopen', function(e) {
-  var sourceBuffer = ms.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
+  var sourceBuffer = ms.addSourceBuffer(WEBM_MANIFEST.type);
 }, false);
 ms.addEventListener('webkitsourceclose', function(e) {
   console.log('sourceclose', e);
@@ -30,51 +54,16 @@ fileImport.addEventListener('change', function(e) {
   }
 });
 
-// Blob
-// splitFileButton.addEventListener('click', function(e) {
-//   get(FILE, function(file) {
-//     //var file = new Blob([file], {type: 'video/webm'});
-
-//     var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
-
-//     console.log('num chunks:' + NUM_CHUNKS);
-//     console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
-
-//     var fileNameParts = FILE.substring(FILE.lastIndexOf('/') + 1).split('.');
-
-//     var data = [];
-//     var labels = [];
-//     chunks = [];
-//     downloadLinks.innerHTML = 'Download chunks:';
-
-//     for (var i = 0; i < NUM_CHUNKS; ++i) {
-//       var startByte = chunkSize * i;
-
-//       console.log(startByte, startByte + chunkSize);
-
-//       var chunk = file.slice(startByte, startByte + chunkSize, file.type);
-
-//       chunks.push(chunk);
-//       data.push(chunk.size);
-
-//       var a = document.createElement('a');
-//       //a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
-//       a.download = 'chunk' + i + '.webm';
-//       labels.push(a.download);
-//       a.textContent = i + 1;
-//       a.title = chunk.size + ' byte';
-//       a.href = window.URL.createObjectURL(chunk);
-//       downloadLinks.appendChild(a);
-//     }
-
-//     Raphael('piechart', 400, 300).pieChart(200, 150, 100, data, labels, '#000');
-//   });
-// });
-
 // ArrayBuffer
 splitFileButton.addEventListener('click', function(e) {
   get(FILE, function(arrayBuffer) {
-    var uInt8Array = new Uint8Array(arrayBuffer)
+window.uInt8Array = new Uint8Array(arrayBuffer)
+
+
+// Append initialization chunk.
+var initChunk = uInt8Array.subarray(WEBM_MANIFEST.init.offset,
+                                    WEBM_MANIFEST.init.offset + WEBM_MANIFEST.init.size);
+ms.sourceBuffers[0].append(initChunk);
 
     var chunkSize = Math.ceil(uInt8Array.length / NUM_CHUNKS);
 
@@ -175,7 +164,12 @@ Raphael.fn.pieChart = function(cx, cy, r, values, labels, stroke) {
       // // Abort current segment append.
       // ms.sourceBuffers[0].abort();
 
-      ms.sourceBuffers[0].append(new Uint8Array(arrayBufferChunk));
+      for (var i = 0, media; media = WEBM_MANIFEST.media[i]; ++i) {
+        var chunk = uInt8Array.subarray(media.offset, media.offset + media.size);
+        ms.sourceBuffers[0].append(chunk);
+      }
+
+      //ms.sourceBuffers[0].append(new Uint8Array(arrayBufferChunk));
     });
 
     angle += angleplus;

@@ -20,7 +20,7 @@ attribute to some URL, and boom, the browser does its thing: loads the media,
 decodes it, buffers it, and handles codec issues.
 
 The devil is in the details though. The cost of such simplicity is less flexibility.
-First, ee're dealing with the entire file for playback. We have little control
+First, we're dealing with the entire file for playback. We have little control
 over what the browser does with our media after setting the `src`. For example,
 what if we want to adaptively change the quality of video based on network conditions?
 Or, splice in different sections of video from multiple sources? Aw shucks. Can't!
@@ -223,41 +223,8 @@ break up a .webm file into `NUM_CHUNKS` pieces.
 Here, we're using XHR2 to pull down the entire webm movie. The important bits to note are:
 
 
-<h3 id="toc-mediasource-chunks">Chunking a file</h3>
+https://github.com/acolwell/mse-tools
 
-Todo
-
-
-    var NUM_CHUNKS = 5;
-    var FILE = '/static/videos/mediasource_test.webm';
-
-    var video = document.querySelector('video');
-    video.src = video.webkitMediaSourceURL;
-
-    video.addEventListener('webkitsourceopen', function(e) {
-      var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
-
-      // Slice the video into NUM_CHUNKS and append each to the media element.
-      for (var i = 0; i < NUM_CHUNKS; ++i) {
-        var startByte = chunkSize * i;
-
-        // file is a video file.
-        var chunk = file.slice(startByte, startByte + chunkSize);
-
-        var reader = new FileReader();
-        reader.onload = (function(idx) {
-          return function(e) {
-            video.webkitSourceAppend(new Uint8Array(e.target.result));
-            logger.log('appending chunk:' + idx);
-            if (idx == NUM_CHUNKS - 1) {
-              video.webkitSourceEndOfStream(HTMLMediaElement.EOS_NO_ERROR);
-            }
-          };
-        })(i);
-
-        reader.readAsArrayBuffer(chunk);
-      }
-    }, false);
 
 TODO: Link to DashPlayer
 http://downloads.webmproject.org/adaptive-demo/adaptive/dash-player.html
