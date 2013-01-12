@@ -28,38 +28,31 @@
     };
 
     html5rocks.indexedDB.open = function() {
-      var request = indexedDB.open("todos");
+      var version = 1;
+      var request = indexedDB.open("todos", version);
 
-      request.onsuccess = function(e) {
-        var v = 1;
-        html5rocks.indexedDB.db = e.target.result;
-        var db = html5rocks.indexedDB.db;
-        // We can only create Object stores in a versionchange transaction;
-        if (v != db.version) {
-          var setVrequest = db.setVersion(v);
+      // We can only create Object stores in a versionchange transaction.
+      request.onupgradeneeded = function(e) {
+        var db = e.target.result;
 
-          // onsuccess is the only place we can create Object Stores
-          setVrequest.onfailure = html5rocks.indexedDB.onerror;
-          setVrequest.onsuccess = function(e) {
-            if(db.objectStoreNames.contains("todo")) {
-              db.deleteObjectStore("todo");
-            }
+        // A versionchange transaction is started automatically.
+        e.target.transaction.onerror = html5rocks.indexedDB.onerror;
 
-            var store = db.createObjectStore("todo",
-              {keyPath: "timeStamp"});
-            e.target.transaction.oncomplete = function() {
-              html5rocks.indexedDB.getAllTodoItems();
-            };
-          };
-        } else {
-          request.transaction.oncomplete = function() {
-            html5rocks.indexedDB.getAllTodoItems();
-          };
+        if(db.objectStoreNames.contains("todo")) {
+          db.deleteObjectStore("todo");
         }
+
+        var store = db.createObjectStore("todo",
+          {keyPath: "timeStamp"});
       };
 
-      request.onfailure = html5rocks.indexedDB.onerror;
-    }
+      request.onsuccess = function(e) {
+        html5rocks.indexedDB.db = e.target.result;
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = html5rocks.indexedDB.onerror;
+    };
 
     html5rocks.indexedDB.addTodo = function(todoText) {
       var db = html5rocks.indexedDB.db;
@@ -232,8 +225,8 @@ html5rocks.indexedDB = {};
   <h2 id="toc-transactions">Asynchronous and Transactional</h2>
   <p>
     In the majority of cases where you are using Indexed Database
-    you will be using the <a
-      href="http://dev.w3.org/html5/indexeddb/#asynchronous-database-api">Asynchronous API</a>. The Asynchronous API
+    you will be using the <a 
+    href="http://dev.w3.org/html5/indexeddb/#asynchronous-database-api">Asynchronous API</a>. The Asynchronous API
     is a non-blocking system and as such will not get data
     through return values, but rather will get data delivered to a defined
     callback function.
@@ -252,14 +245,15 @@ html5rocks.indexedDB = {};
 html5rocks.indexedDB.db = null;
 
 html5rocks.indexedDB.open = function() {
-  var request = indexedDB.open("todos");
+  var version = 1;
+  var request = indexedDB.open("todos", version);
 
   request.onsuccess = function(e) {
     html5rocks.indexedDB.db = e.target.result;
     // Do some more stuff in a minute
   };
 
-  request.onfailure = html5rocks.indexedDB.onerror;
+  request.onerror = html5rocks.indexedDB.onerror;
 };</pre>
   <p>We have opened a database called "todos" and assigned it to our variable
   <code>db</code> in the html5rocks.indexedDB object. We can now use this to
@@ -268,41 +262,35 @@ html5rocks.indexedDB.open = function() {
   <p>
     You can only create object stores inside a "versionchange"
     transaction. The only way to start a "versionchange" transaction
-    is through the setVersion method. This method will soon be
-    replaced by the onupgradeneeded callback. Until then, setVersion is
-    the <em>only place in your code that you can create object stores
-    and indexes</em>.
+    is through the onupgradeneeded callback.
   </p>
   <pre class="prettyprint">
 html5rocks.indexedDB.open = function() {
-  var request = indexedDB.open("todos");
+  var version = 1;
+  var request = indexedDB.open("todos", version);
 
-  request.onsuccess = function(e) {
-    var v = "1.0";
-    html5rocks.indexedDB.db = e.target.result;
-    var db = html5rocks.indexedDB.db;
-    // We can only create Object stores in a setVersion transaction;
-    if (v!= db.version) {
-      var setVrequest = db.setVersion(v);
+  // We can only create Object stores in a versionchange transaction.
+  request.onupgradeneeded = function(e) {
+    var db = e.target.result;
 
-      // onsuccess is the only place we can create Object Stores
-      setVrequest.onfailure = html5rocks.indexedDB.onerror;
-      setVrequest.onsuccess = function(e) {
-        var store = db.createObjectStore("todo",
-          {keyPath: "timeStamp"});
-        e.target.transaction.oncomplete = function() {
-          html5rocks.indexedDB.getAllTodoItems();
-        };
-      };
-    } else {
-      request.transaction.oncomplete = function() {
-        html5rocks.indexedDB.getAllTodoItems();
-      };
+    // A versionchange transaction is started automatically.
+    e.target.transaction.onerror = html5rocks.indexedDB.onerror;
+
+    if(db.objectStoreNames.contains("todo")) {
+      db.deleteObjectStore("todo");
     }
+
+    var store = db.createObjectStore("todo",
+      {keyPath: "timeStamp"});
   };
 
-  request.onfailure = html5rocks.indexedDB.onerror;
-}</pre>
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.db = e.target.result;
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onerror = html5rocks.indexedDB.onerror;
+};</pre>
 <p>
     The above code actually does quite a lot. We define an "open" method in our
     API, which when called will open the database "todos". The open request
@@ -313,16 +301,16 @@ html5rocks.indexedDB.open = function() {
     the <code>IDBRequest</code> object before the callbacks are executed.
 </p>
 <p>
-    If the open request is successful, our <code>onsuccess</code>
-    callback is executed. In this callback we check the database
-    version and if it is not the same as the number we expect, we call
-    "setVersion" to start a "versionchange" transaction.</p>
+    If the open request is successful and database's version is higher than
+    current database's version, then our <code>onupgradeneeded</code> calllback
+    is executed. In this callback, a "versionchange" transaction is started
+    automatically.</p>
 <p>
-    SetVersion <em>is the only place</em> in our code that we can alter the
-    structure of the database. In it we can create and delete Object Stores and
-    build and remove indexes. A call to <code>setVersion</code> returns an
-    <code>IDBRequest</code> object where we can attach our callbacks. When
-    successful, we start to create our Object Stores.
+    The <code>onupgradeneeded</code> callback <em>is the only place</em> in
+    our code that we can alter the structure of the database. In it we can
+    create and delete Object Stores and build and remove indexes. If we want to
+    alter the structure of the database again, it is necessary to upgrade database's
+    version.
 </p>
 <p>
     Object Stores are created with a single call to
@@ -334,11 +322,8 @@ html5rocks.indexedDB.open = function() {
     <em>must</em> be present on every object that is stored in the objectStore.
 </p>
 <p>
-    Once the object store is created we call our method
-    <a href="#toc-step4">getAllTodoItems</a>. You cannot create a new
-    transaction during a "versionchange" transaction, so we can't
-    call <a href="#toc-step4">getAllTodoItems</a> until the oncomplete
-    callback is run.
+    If a "versionchange" transaction is completed, our <code>onsuccess</code> callback
+    is executed. We call our method <a href="#toc-step4">getAllTodoItems</a>.
 </p>
 
   <h2 id="toc-step3">Step 3. Adding data to an object store</h2>
