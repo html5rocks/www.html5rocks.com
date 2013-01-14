@@ -156,10 +156,14 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <pre class="prettyprint">
 function gotStream(stream) {
-  var audioContext = 'webkitAudioContext' in window ?
-    new webkitAudioContext() : new AudioContext();
-  var mediaStreamSource = audioContext.createMediaStreamSource(stream);
-  mediaStreamSource.connect(audioContext.destination);
+  var audioContext = 'AudioContext' in window ? new AudioContext() :
+    (('webkitAudioContext' in window) ? new webkitAudioContext() : null);
+  if (audioContext) {
+    var mediaStreamSource = audioContext.createMediaStreamSource(stream);
+    mediaStreamSource.connect(audioContext.destination);
+  } else {
+    // ...
+  }
 }
 
 navigator.webkitGetUserMedia({audio:true}, gotStream);
