@@ -324,8 +324,17 @@ The first thing to note is that a valid CORS request *always* contains an Origin
 </p>
 
 <p>
-The presence of the Origin header does not necessarily mean that the request is a cross-origin request. While all cross-origin requests will contain an Origin header, some same-origin requests might have one as well. For example, Firefox doesn't include an Origin header on same-origin requests. But Chrome and Safari include an Origin header on same-origin POST/PUT/DELETE requests (same-origin GET requests will not have an Origin header). This means if you are validating the Origin header against a list of allowed origins, be sure to include the origin the request comes from as well.
+The presence of the Origin header does not necessarily mean that the request is a cross-origin request. While all cross-origin requests will contain an Origin header, some same-origin requests might have one as well. For example, Firefox doesn't include an Origin header on same-origin requests. But Chrome and Safari include an Origin header on same-origin POST/PUT/DELETE requests (same-origin GET requests will not have an Origin header). Here is an example of a same-origin request with an Origin header:
 </p>
+
+<p>HTTP Request:</p>
+<pre class="prettyprint">
+POST /cors HTTP/1.1
+Origin: http://api.bob.com
+Host: api.bob.com
+</pre>
+
+<p>The good news is that browsers don't expect CORS response headers on same-origin requests. The response to a same-origin request is sent to user, regardless of whether it has CORS headers or not. However, if your server code returns an error if the Origin doesn't match a list of allwoed domains, be sure to include the origin the request comes.</p>
 
 <p>
 Here’s a valid server response; the CORS-specific headers are bolded
