@@ -38,14 +38,14 @@
 
 <p>例えば、以下のWeb Audio Introからの抜粋コードを見てください。ここでは８分音符のハイハットパターンを２小節分組み立てています。
 
-<pre class="prettyprint"><code>for (var bar = 0; bar < 2; bar++) {
+<pre class="prettyprint">for (var bar = 0; bar < 2; bar++) {
   var time = startTime + bar * 8 * eighthNoteTime;
 
   // Play the hi-hat every eighth note.
   for (var i = 0; i < 8; ++i) {
     playSound(hihat, time + i * eighthNoteTime);
   }
-}</code></pre>
+}</pre>
 
 <p>このコードは問題なく動作します。しかしながら、1小節目と2小節目の間でテンポが変わったり、２小節が完了する前に再生が停止された場合、たちまち問題が生じます。(私はgainノードをAudioBufferSourceNodeと出力の間に接続して音を止める開発者を一人となく見てきました。)
 
@@ -117,10 +117,10 @@
 
 <p>スケジューリング処理のコードは scheduler() 関数で定義されています。
 
-<pre class="prettyprint"><code>while (nextNoteTime < audioContext.currentTime + scheduleAheadTime ) {
+<pre class="prettyprint">while (nextNoteTime < audioContext.currentTime + scheduleAheadTime ) {
   scheduleNote( current16thNote, nextNoteTime );
   nextNote();
-}</code></pre>
+}</pre>
 
 <p>この関数はオーディオクロックの時間を取得し、次に鳴らすべき音の発音時刻と比較します。ほとんどの場合、スケジュールされるメトロノームの音が存在せずに無処理で抜けますが、もし存在した場合、Web Audio APIを使ってその音をスケジューリングし、次の音へと進みます。
 
@@ -128,7 +128,7 @@
 
 <p>scheduleNote() 関数は実際に次に鳴らすべきWeb Audio の音をスケジューリングします。このサンプルでは、ビープ音を異なる周波数で鳴らすためにOscillatorノードを使っていますが、単にAudioBufferSourceノードを作成してドラムの音やその他任意の音を設定してもまったく問題ありません。
 
-<pre class="prettyprint"><code>currentNoteStartTime = time;
+<pre class="prettyprint">currentNoteStartTime = time;
 
 // create an oscillator
 var osc = audioContext.createOscillator();
@@ -141,13 +141,13 @@ else if (beatNumber % 4)          // quarter notes = medium pitch
 else                              // other 16th notes = high pitch
   osc.frequency.value = 880.0;
 osc.start( time );
-osc.stop( time + noteLength );</code></pre>
+osc.stop( time + noteLength );</pre>
 
 <p>Oscillatorノードは、ひとたびスケジューリングされ、接続されると、後は完全に放置されます。自動的にスタートし、ストップし、そしてガベージコレクションの対象になります。
 
 <p>nextNote() メソッドは次の16分音符に進みます。つまり、nextNoteTime 変数とcurrent16thNote 変数を更新します。
 
-<pre class="prettyprint"><code>function nextNote() {
+<pre class="prettyprint">function nextNote() {
   // Advance current note and time by a 16th note...
   var secondsPerBeat = 60.0 / tempo;	// picks up the CURRENT tempo value!
   nextNoteTime += 0.25 * secondsPerBeat;	// Add 1/4 of quarter-note beat length to time
@@ -156,7 +156,7 @@ osc.stop( time + noteLength );</code></pre>
   if (current16thNote == 16) {
     current16thNote = 0;
   }
-}</code></pre>
+}</pre>
 
 <p>この関数は非常に単純ですが、重要な点は、私はこのサンプルで「シーケンスタイム」(メトロノーム開始からの時間) を一切管理していない、ということです。最後に音を再生した時間さえ覚えておけば、次の音をスケジューリングすべき時間は算出可能です。そのようにすることで、テンポ変更や再生停止がとても簡単になります。
 
@@ -170,16 +170,16 @@ osc.stop( time + noteLength );</code></pre>
 
 <p>scheduler() 関数にて、スケジューリングした音を記録しています。
 
-<pre class="prettyprint"><code>notesInQueue.push( { note: beatNumber, time: time } );</code></pre>
+<pre class="prettyprint">notesInQueue.push( { note: beatNumber, time: time } );</pre>
 
 <p>draw() メソッドにて、メトロノームの現在時刻を参照しています。この関数はグラフィックスシステムが更新可能となったタイミングで (requestAnimationFrame により) 呼ばれます。
 
-<pre class="prettyprint"><code>var currentTime = audioContext.currentTime;
+<pre class="prettyprint">var currentTime = audioContext.currentTime;
 
 while (notesInQueue.length && notesInQueue[0].time < currentTime) {
   currentNote = notesInQueue[0].note;
   notesInQueue.splice(0,1);   // remove note from queue
-}</code></pre>
+}</pre>
 
 <p>実際に音が鳴るのに合わせて新しいboxを描画するため、オーディオクロックを参照してます。実は、ここでは一切 requestAnimationFrame のタイムスタンプを参照してません。オーディオクロックを使えば相対的な時間が分かるからです。
 
