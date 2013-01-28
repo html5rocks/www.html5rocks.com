@@ -23,35 +23,35 @@
 
 {% block content %}
 
-<h2 id="toc-introduction">Introduction</h2>
-<p>Webのプラットフォームを使ってオーディオ／ミュージック関連のすばらしいソフトを作成する際に、最も困難なのは「時間」の扱いです。ここで言っているのはコードを書くのにかかる時間ではなく、クロックの時間のことです。オーディオクロックを正しく扱う方法は、Web Audioについて最も知られていないことのひとつです。
+<h2 id="toc-introduction">はじめに</h2>
+<p>Webのプラットフォームを使ってオーディオ／ミュージック関連のすばらしいソフトを作成する際に、最も困難なのは「時間」の扱いです。ここで言っているのはコードを書くのにかかる時間ではなく、クロックの時間のことです。オーディオクロックを正しく扱う方法は、Web Audioについて最も知られていないことのひとつです。Web Audio でオーディオクロックを扱うには AudioContext オブジェクトの currentTime プロパティを使用します。
 
 <p>Web Audioを使った音楽系のアプリケーション (単なるシーケンサーやシンセサイザーではなく、例えば<a href="http://chromium.googlecode.com/svn/trunk/samples/audio/shiny-drum-machine.html">ドラムマシーン</a>や<a href="http://cappel-nord.de/webaudio/acid-defender/">ゲーム</a>、<a href="http://labs.dinahmoe.com/plink/">その他</a>のオーディオイベントを律動的に扱う<a href="http://chromium.googlecode.com/svn/trunk/samples/audio/granular.html">アプリケーション</a>) にとって、安定した正確なタイミングのオーディオイベントは非常に重要です。それは単に音を出力したり止めたりするタイミングだけではなく、周波数やボリュームを変更するタイミングも含みます。時には少々ランダムに発生するイベントが必要とされる場合もありますが (例えば<a href="http://www.html5rocks.com/en/tutorials/webaudio/games/">こちら</a>のマシンガンのデモ)、通常は安定した正確なタイミングの音楽の音が求められます。
 
 <p>前回、<a href="http://www.html5rocks.com/en/tutorials/webaudio/intro/">Getting Started with Web Audio</a> および <a href="http://www.html5rocks.com/en/tutorials/webaudio/games/">Developing Game Audio with the Web Audio API</a> にて、noteOn / noteOffメソッド (現在はstart / stopに変更されました) にパラメータを指定して音をスケジューリングする方法を紹介しましたが、もっと複雑なケース、例えば尺の長い楽曲やリズムの再生に関しては詳しく触れませんでした。では、本題に入る前に、クロックについて少々説明することと致しましょう。
 
-<h2 id="toc-waclock">The Best of Times - the Web Audio Clock</h2>
+<h2 id="toc-waclock">精度が高い Web Audio クロック</h2>
 
 <p>Web Audio APIは端末のハードウェアクロックへのアクセスを提供します。このクロックはAudioContextの.currentTimeプロパティにて取得可能で、AudioContextが生成されてからの秒数を浮動小数点数で表現します。このクロック (以後、「オーディオクロック」と呼びます) は非常に高精度であり、高いサンプリングレートであっても個々のサウンドサンプルを特定できるようにデザインされています。オーディオクロックは10進数15桁の倍精度を持つので、数日間動作してもサンプルを特定できるだけのビットが割り当てられています。
 
-<p>オーディオクロックはWeb Audio APIの全体を通じてスケジューリングパラメーターとオーディオイベントを処理するために使用されています。例えば <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#dfn-start">start()</a> および <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#dfn-stop">stop()</a> はもちろんのこと、AudioParamsインターフェイスの <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#methodsandparams-AudioParam">setValueAtTime() methods</a> でも使用されています。このインターフェイスは非常に正確な時間のオーディオイベントを事前に組み立てることを可能にします。事実、Web Audio で扱う時間すべてをstart/stop で設定したい誘惑に駆られますが、しかし、実際にそのようにすると問題が生じます。
+<p>オーディオクロックはWeb Audio APIの全体を通じてスケジューリングパラメーターとオーディオイベントを処理するために使用されています。例えば <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#dfn-start">start()</a> および <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#dfn-stop">stop()</a> はもちろんのこと、AudioParamsインターフェイスの <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#methodsandparams-AudioParam">set*ValueAtTime() methods</a> でも使用されています。このインターフェイスは非常に正確な時間のオーディオイベントを事前に組み立てることを可能にします。事実、Web Audio で扱う時間すべてをstart/stop で設定したい誘惑に駆られますが、しかし、実際にそのようにすると問題が生じます。
 
 <p>例えば、以下のWeb Audio Introからの抜粋コードを見てください。ここでは８分音符のハイハットパターンを２小節分組み立てています。
 
-<pre class="prettyprint">for (var bar = 0; bar < 2; bar++) {
+<pre class="prettyprint"><code>for (var bar = 0; bar < 2; bar++) {
   var time = startTime + bar * 8 * eighthNoteTime;
 
   // Play the hi-hat every eighth note.
   for (var i = 0; i < 8; ++i) {
     playSound(hihat, time + i * eighthNoteTime);
   }
-}</pre>
+}</code></pre>
 
 <p>このコードは問題なく動作します。しかしながら、1小節目と2小節目の間でテンポが変わったり、２小節が完了する前に再生が停止された場合、たちまち問題が生じます。(私はgainノードをAudioBufferSourceNodeと出力の間に接続して音を止める開発者を一人となく見てきました。)
 
 <p>端的に言えば、テンポや周波数／ボリューム等のパラメーターを柔軟に変更できるように、あまり多くのオーディオイベントをキューに詰め込みすぎないようにしなければいけません。もしくは、より正確に表現すると、後でスケジュールを全面的に変更できるように、あまり先の予定を立てすぎないようにしなければいけません。
 
-<h2 id="toc-jsclock">The Worst of Times - the JavaScript Clock</h2>
+<h2 id="toc-jsclock">精度が低い JavaScript クロック</h2>
 
 <p>JavaScriptにはとても敬愛されると同時に中傷される Date.now() や setTimeout() などのクロックがあります。特にwindow.setTimeout() と window.setInterval() はコールバック関数を時間を指定して登録することで、システム側から呼び出してもらえるため、非常に便利なメソッドです。
 
@@ -61,7 +61,7 @@
 
 <p>JavaScriptのタイミングAPIが持つ深刻な問題というのは、タイマーイベントのコールバック関数の呼び出しタイミングです。Date.now() のミリ秒の精度だけならまだ許容できますが、window.setTimeout() もしくは window.setInterval() で登録したコールバック関数の呼び出しタイミングに関しては、数１０ミリ秒かそれ以上のズレが簡単に生じ得ます。要因としては、レイアウト処理、レンダリング処理、ガベージコレクション、XMLHttpRequest、そして他のコールバックの実行等があげられます。簡単に言えば、メインスレッドで実行されるすべての処理が要因になり得るのです。では、Web Audio APIでスケジューリングする「オーディオイベント」はどうなのでしょう？ 実はそれらはすべて、別のスレッドで処理されます。ですので、もしメインスレッドが複雑なレイアウトやその他の長い処理で一時的に止まっていたとしても、オーディオは設定された時刻きっかりに実行されます。たとえデバッガーを使ってブレイクポイントで処理を止めていたとしても、オーディオスレッドはスケジューリングされた通りイベントを実行します。
 
-<h2 id="toc-usingsettimeout">Using JavaScript setTimeout() in Audio Apps</h2>
+<h2 id="toc-usingsettimeout">オーディオ・アプリケーションで JavaScript の setTimeout() を使うとどうなるか</h2>
 
 <p>メインスレッドは簡単に数ミリ秒遅延するので、JavaScriptのsetTimeoutを直接オーディオ再生イベントに使用するのは得策とは言えません。正常に動作したとしても、1ミリ秒かそこらの誤差が生じ、最悪の場合、際限なく遅延するのですから。リズムのある楽曲の場合、正確な時間間隔で発生すべきイベントが他のメインスレッドの処理により発火しないことは、何よりも致命的です。
 
@@ -71,7 +71,7 @@
 
 <p>では、どうすればいいのでしょうか。実は、タイミングを扱う最善の方法は、JavaScript のタイマー (setTimeout(), setInterval() もしくは requestAnimationFrame() - その他、追加される予定のもの) とオーディオのハードウェアスケジューリングを協調させることなのです。
 
-<h2 id="toc-rocksolid">Obtaining Rock-Solid Timing By Looking Ahead</h2>
+<h2 id="toc-rocksolid">「先読み」により安定したタイミングを得る方法</h2>
 
 <p>先ほどのメトロノームのデモに話を戻します。私はこのデモを協調スケジューリングのテクニックを使って<a href="goodmetronome.html">書き直しました</a>。(コードは<a href="http://github.com/cwilso/metronome/">Github</a>にあります。) このデモはOscillatorノードで生成されたビープ音を再生し、16分音符／8分音符／4分音符ごとにそれぞれのビートの音程を変えています。また、再生中にテンポや音の間隔を変更したり、再生中のいかなる時点でも停止することが可能です。それらは実世界でのリズムシーケンサーでは通常サポートされている機能です。また、再生中にメトロノームの音を変えるコードを追加することも簡単に出来ます。
 
@@ -117,10 +117,10 @@
 
 <p>スケジューリング処理のコードは scheduler() 関数で定義されています。
 
-<pre class="prettyprint">while (nextNoteTime < audioContext.currentTime + scheduleAheadTime ) {
+<pre class="prettyprint"><code>while (nextNoteTime < audioContext.currentTime + scheduleAheadTime ) {
   scheduleNote( current16thNote, nextNoteTime );
   nextNote();
-}</pre>
+}</code></pre>
 
 <p>この関数はオーディオクロックの時間を取得し、次に鳴らすべき音の発音時刻と比較します。ほとんどの場合、スケジュールされるメトロノームの音が存在せずに無処理で抜けますが、もし存在した場合、Web Audio APIを使ってその音をスケジューリングし、次の音へと進みます。
 
@@ -128,7 +128,7 @@
 
 <p>scheduleNote() 関数は実際に次に鳴らすべきWeb Audio の音をスケジューリングします。このサンプルでは、ビープ音を異なる周波数で鳴らすためにOscillatorノードを使っていますが、単にAudioBufferSourceノードを作成してドラムの音やその他任意の音を設定してもまったく問題ありません。
 
-<pre class="prettyprint">currentNoteStartTime = time;
+<pre class="prettyprint"><code>currentNoteStartTime = time;
 
 // create an oscillator
 var osc = audioContext.createOscillator();
@@ -141,13 +141,13 @@ else if (beatNumber % 4)          // quarter notes = medium pitch
 else                              // other 16th notes = high pitch
   osc.frequency.value = 880.0;
 osc.start( time );
-osc.stop( time + noteLength );</pre>
+osc.stop( time + noteLength );</code></pre>
 
 <p>Oscillatorノードは、ひとたびスケジューリングされ、接続されると、後は完全に放置されます。自動的にスタートし、ストップし、そしてガベージコレクションの対象になります。
 
 <p>nextNote() メソッドは次の16分音符に進みます。つまり、nextNoteTime 変数とcurrent16thNote 変数を更新します。
 
-<pre class="prettyprint">function nextNote() {
+<pre class="prettyprint"><code>function nextNote() {
   // Advance current note and time by a 16th note...
   var secondsPerBeat = 60.0 / tempo;	// picks up the CURRENT tempo value!
   nextNoteTime += 0.25 * secondsPerBeat;	// Add 1/4 of quarter-note beat length to time
@@ -156,13 +156,13 @@ osc.stop( time + noteLength );</pre>
   if (current16thNote == 16) {
     current16thNote = 0;
   }
-}</pre>
+}</code></pre>
 
 <p>この関数は非常に単純ですが、重要な点は、私はこのサンプルで「シーケンスタイム」(メトロノーム開始からの時間) を一切管理していない、ということです。最後に音を再生した時間さえ覚えておけば、次の音をスケジューリングすべき時間は算出可能です。そのようにすることで、テンポ変更や再生停止がとても簡単になります。
 
 <p>このスケジューリングのテクニックは他の多くのWebオーディオアプリケーションで使用されています。例えば <a href="http://chromium.googlecode.com/svn/trunk/samples/audio/shiny-drum-machine.html">Web Audio Drum Machine</a> や、とても楽しい <a href="http://cappel-nord.de/webaudio/acid-defender/">Acid Defender game</a> や、また、さらに複雑なオーディオの例として <a href="http://chromium.googlecode.com/svn/trunk/samples/audio/granular.html">Granular Effects demo</a> などがあります。
 
-<h2 id="toc-yats">Yet Another Timing System</h2>
+<h2 id="toc-yats">もうひとつのタイミングシステム</h2>
 
 <p>優れた音楽家なら誰でも知っていることですが、すべてのオーディオアプリケーションが必要としているのは、もう一つのカウベル、ではなくてもう一つのタイマーです。では、３つ目のタイミングシステムを使って、ビジュアル表示を正しく行う方法について述べましょう。
 
@@ -170,22 +170,22 @@ osc.stop( time + noteLength );</pre>
 
 <p>scheduler() 関数にて、スケジューリングした音を記録しています。
 
-<pre class="prettyprint">notesInQueue.push( { note: beatNumber, time: time } );</pre>
+<pre class="prettyprint"><code>notesInQueue.push( { note: beatNumber, time: time } );</code></pre>
 
 <p>draw() メソッドにて、メトロノームの現在時刻を参照しています。この関数はグラフィックスシステムが更新可能となったタイミングで (requestAnimationFrame により) 呼ばれます。
 
-<pre class="prettyprint">var currentTime = audioContext.currentTime;
+<pre class="prettyprint"><code>var currentTime = audioContext.currentTime;
 
 while (notesInQueue.length && notesInQueue[0].time < currentTime) {
   currentNote = notesInQueue[0].note;
   notesInQueue.splice(0,1);   // remove note from queue
-}</pre>
+}</code></pre>
 
 <p>実際に音が鳴るのに合わせて新しいboxを描画するため、オーディオクロックを参照してます。実は、ここでは一切 requestAnimationFrame のタイムスタンプを参照してません。オーディオクロックを使えば相対的な時間が分かるからです。
 
 <p>もちろん、最初から setTimeout() を使わずに、requestAnimationFrame のコールバック関数に音のスケジューリングを記述することも可能です。そうすればまた２つのタイマーに戻ります。それは全然かまわないのですが、重要な点は、requestAnimationFrame は setTimeout() の代用品であるということです。その場合も、実際の音をスケジューリングするにはWeb Audioの正確なタイミングが必要になります。
 
-<h2 id="toc-waclock">Conclusion</h2>
+<h2 id="toc-waclock">おわりに</h2>
 
 <p>このチュートリアルがクロックやタイマー、そしてWeb Audioのアプリケーションでどのように素晴らしいタイミングを実現するかについての解説として、お役に立てれば幸いです。これらのテクニックはシーケンサーやドラムマシーン等を実装してみれば、簡単に得られるものです。ではまた次回まで。
 
