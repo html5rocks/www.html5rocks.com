@@ -52,7 +52,7 @@ If your contribution contains code, please make sure that it follows [the style 
 ## Writing a tutorial / case study ##
 
 * Our articles and case studies are licensed under Creative Commons Attribution 3.0 License. Be sure you are OK with that.
-* If one doesn't already exist, [Create a new issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) so others can follow/comment on the progress of your work. **Wait to here from us before you start writing!**
+* If one doesn't already exist, [Create a new issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) so others can follow/comment on the progress of your work. **Wait to hear from us before you start writing!**
 
 ###Authoring process###
 
