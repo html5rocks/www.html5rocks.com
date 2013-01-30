@@ -83,9 +83,9 @@
 
 <h2 id="toc-option2">Option 2: Use DOM elements and 3D transforms</h2>
 
-<p>Instead of using absolute positions another approach we can take it is to apply 3D transforms to the elements. In this situation we see that the elements with the 3D transforms applied are given a new layer per element. In Option 1, by contrast, we had one large layer for the page that needed to be repainted when anything changed.</p>
+<p>Instead of using absolute positions another approach we can take it is to apply 3D transforms to the elements. In this situation we see that the elements with the 3D transforms applied are given a new layer per element and, in WebKit browsers, it often also causes a switch over to the hardware compositor. In Option 1, by contrast, we had one large layer for the page that needed to be repainted when anything changed and all the painting and compositing was handled by the CPU.</p>
 
-<p>That means with <em>this</em> option, things are different: we potentially have one layer for any element to which we applied the 3D transform. If all we do from this point is more transformations on the elements we won’t need to repaint the layer, and the GPU can deal with moving the elements around and compositing the page together. In case you’re wondering why 3D transforms are used instead of 2D transforms, the reason is that 2D transforms are not guaranteed to get a new layer whereas 3D layers are.</p>
+<p>That means with <em>this</em> option, things are different: we potentially have one layer for any element to which we apply a 3D transform. If all we do from this point is more transformations on the elements we won’t need to repaint the layer, and the GPU can deal with moving the elements around and compositing the final page together.</p>
 
 <p>Here’s <a href="/static/demos/parallax/demo-2/demo.html">another demo</a> showing 3D transforms in use. If you scroll you will see that the situation has improved a great deal.</p>
 
@@ -97,10 +97,11 @@
 <li>It’s been <a href="http://developer.apple.com/library/ios/#releasenotes/General/RN-iOSSDK-6_0/_index.html#//apple_ref/doc/uid/TP40012166-CH1-SW19">disabled for some WebKit ports</a> (fourth bullet from the bottom!).</li>
 </ol>
 
+<p>If you go down the 3D translation route be cautious, it’s a temporary solution to your problem! Ideally speaking we would see similar rendering characteristics from 2D transforms as we do with 3D. Browsers are progressing at a phenomenal rate, so hopefully before that's what we'll see.</p>
 
-<p>So if you go down this route be cautious, it’s a very temporary solution to your problem! In a perfect world we wouldn’t have to even consider it, and browsers are improving every day, so who knows, maybe someday this will all be unnecessary!</p>
+<p>Finally, you should aim to avoid paints wherever you can and simply move existing elements around the page. By way of example, it is a typical approach in parallax sites to use fixed height divs and change their background position to provide the effect. Unfortunately that means that the element needs to be repainted on every pass, which can cost you in terms of performance. Instead you should, if you can, create the element (wrap it inside an div with <code>overflow: hidden</code> if necessary) and simply translate it instead.</p>
 
-<h2 id="toc-option3">Option 3: Use a fixed position canvas or WebGL (aka Option Silky Smoooooth)</h2>
+<h2 id="toc-option3">Option 3: Use a fixed position canvas or WebGL</h2>
 
 <p>The final option we’re going to consider is to use a fixed position canvas at the back of the page into which we will draw our transformed images. At first glance that might not seem like the most performant solution, but there are actually a few benefits to this approach:</p>
 
@@ -110,10 +111,9 @@
 <li>The Canvas2D API is a great fit for the kind of transformations we’re looking to perform, meaning development and maintenance is more manageable.</li>
 </ul>
 
+<p>Using a canvas element gives us a new layer, but it’s just <em>one</em> layer, whereas in Option 2 we were actually given a new layer for <em>every</em> element with a 3D transform applied, so we have an increased workload compositing all those layers together. This is also the most compatible solution today in light of the differing cross-browser implementations of transforms.</p>
 
-<p>Using a canvas element gives us a new layer, but it’s just <em>one</em> layer, whereas in Option 2 we were actually given a new layer for <em>every</em> element with a 3D transform applied, so we have an increased workload compositing all those layers together.</p>
-
-<p>If you take a look at <a href="/static/demos/parallax/demo-3/demo.html">the demo</a> for this approach and test it in DevTools you’ll notice that performance is much better. For this approach we simply use the canvas <code>drawImage</code> API call, and we give it our background image and each of our colored blobs to draw in the correct location on screen.</p>
+<p>If you take a look at <a href="/static/demos/parallax/demo-3/demo.html">the demo</a> for this approach and test it in DevTools you’ll notice that performance is very good. For this approach we simply use the canvas <code>drawImage</code> API call, and we give it our background image and each of our colored blobs to draw in the correct location on screen.</p>
 
 <pre class="prettyprint"><code>
 /**
@@ -170,7 +170,7 @@ function limit(min, max, value) {
 }
 </code></pre>
 
-<p>This approach really works where you’re dealing with large images (or other elements that can be easily written into a canvas), and certainly dealing with large blocks of text would be more challenging, but depending on your site it may prove to be the most appropriate solution. If you <em>do</em> have to deal with text in the canvas you would have to use the <code>fillText</code> API method, but it’s at the cost of accessibility (you just rasterized the text into a bitmap!) and you will now have to deal with line wrapping and a whole heap of other issues. If you can avoid it, you really should.</p>
+<p>This approach really works where you’re dealing with large images (or other elements that can be easily written into a canvas), and certainly dealing with large blocks of text would be more challenging, but depending on your site it may prove to be the most appropriate solution. If you <em>do</em> have to deal with text in the canvas you would have to use the <code>fillText</code> API method, but it’s at the cost of accessibility (you just rasterized the text into a bitmap!) and you will now have to deal with line wrapping and a whole heap of other issues. If you can avoid it, you really should, and you'd likely be better served using the transforms approach above.</p>
 
 <p>Seeing as we’re taking this as far as possible, there’s no reason to presume that the parallax work should be done inside a canvas element. If the browser supports it we could use WebGL. The key here is that WebGL has the most direct route of all APIs to the graphics card and, as such, is your most likely candidate for achieving 60fps, especially if the site’s effects are complex.</p>
 
@@ -189,15 +189,17 @@ if (Modernizr.webgl) {
 
 <p>As a final thought on this approach, if you’re not a big fan of adding extra elements to the page you can always <a href="http://updates.html5rocks.com/2012/12/Canvas-driven-background-images">use a canvas as a background element</a> in both Firefox and WebKit-based browsers. That’s not ubiquitous, obviously, so as usual you should treat it with caution.</p>
 
-<h2 id="toc-">Progressive Degradation</h2>
+<h2 id="toc-">The choice is yours</h2>
 
-<p>The main reason developers default to absolutely positioned elements rather than any of the other options may simply be the ubiquity of support. This is, to some degree, illusory, since the older browsers that are being targeted are likely to provide an extremely poor rendering experience. Even in today’s modern browsers using absolutely positioned elements doesn’t result in good performance!</p>
+<p>The main reason developers default to absolutely positioned elements rather than any of the other options may simply be the ubiquity of support. This is, to some degree, illusory, since the older browsers that are being targeted are likely to provide an extremely poor rendering experience. Even in today’s modern browsers using absolutely positioned elements doesn’t necessarily result in good performance!</p>
 
-<p>It may be advantageous, then, to avoid attempting a parallax effect for the older browsers and really focus on ensuring the top tier of browsers are able to render the site using the right APIs. Certainly if you were to use <a href="https://github.com/mrdoob/three.js/">Three.js</a> you should be able to swap and change between renderers very easily depending on the support you require.</p>
+<p>Transforms, certainly the 3D kind, offer you the ability to work directly with DOM elements and achieve a solid frame rate. The key to success here is to avoid painting wherever you can and simply try and move elements around. Do bear in mind that the way that WebKit browsers create layers doesn't necessarily correlate to other browser engines, so be sure to test it before committing yourself to that solution.</p>
+
+<p>If you're aiming just for the top tier of browsers, and are able to render the site using canvases, that might the best option for you. Certainly if you were to use <a href="https://github.com/mrdoob/three.js/">Three.js</a> you should be able to swap and change between renderers very easily depending on the support you require.</p>
 
 <h2 id="toc-">Conclusion</h2>
 
-<p>We’ve assessed a few approaches to dealing with large repaint areas, from absolutely positioned elements to using a fixed position canvas. The implementation you take will, of course, depends on what you’re trying to achieve and the specific design you’re working with, but it’s always good to know you have options. In our case we managed to go from a relatively janky sub-30fps to silky-smooth 60fps!</p>
+<p>We’ve assessed a few approaches to dealing with parallax sites, from absolutely positioned elements to using a fixed position canvas. The implementation you take will, of course, depends on what you’re trying to achieve and the specific design you’re working with, but it’s always good to know you have options.</p>
 
 <p>And as always, whichever approach you try: <strong>don’t guess it, test it</strong>.</p>
 
