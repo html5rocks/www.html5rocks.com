@@ -1,0 +1,382 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea, .demodevtools {
+  margin-top: 20px;
+}
+.demodevtools {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-right: 1em;
+}
+.demodevtools:before {
+  content: 'DevTools view:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+</style>
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot ||
+                                         HTMLElement.prototype.webkitCreateShadowRoot;
+</script>
+{% endblock %}
+
+{% block iscompatible %}
+  return HTMLElement.prototype.webkitCreateShadowRoot || HTMLElement.prototype.createShadowRoot ? true : false;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+<h2 id="toc-intro">Introduction</h2>
+
+<p>This article discusses more of the amazing things you can do with ShadowDOM, more
+of its JS and declarative APIs, styling options, and more. It builds on the concepts discussed in <a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a>. For an introduction to ShadowDOM and its language, see <a href="/profiles/#dominiccooney">Dominic Cooney</a>'s most excellent article.</p>
+<h2 id="toc-shadow-multiple">Using Multiple Shadow Roots</h2>
+
+<p>If you're hosting a party, it gets stuffy if everyone is crammed into the same room.
+You want the option of distributing groups of people across multiple rooms. Elements hosting
+Shadow DOM can do this too, that is to say, they can host more than one shadow
+root at a time.</p>
+<p>Let's see what happens if we try to attach multiple shadow roots to a host:</p>
+<pre class="prettyprint">
+&lt;div id="example1">Host node&lt;/div>
+&lt;script>
+var container = document.querySelector('#example1');
+var root1 = container.webkitCreateShadowRoot();
+var root2 = container.webkitCreateShadowRoot();
+root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>';
+root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
+&lt;/script>
+</pre>
+
+<div class="demodevtools"> 
+<img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:200px;">
+</div>
+
+<div class="demoarea">
+  <div id="example1">Host node</div>
+</div>
+
+<script>
+(function() {
+var container = document.querySelector('#example1');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '<div>Root 1 FTW</div>';
+root2.innerHTML = '<div>Root 2 FTW</div>';
+})();
+</script>
+
+<p>What renders is "Root 2 FTW", despite the fact that we added root2 last.
+This is because the last shadow tree added to a host, wins. It's a LIFO stack as
+far as rendering is concerned. Examining the DevTools verifies things.</p>
+<blockquote class="commentary talkinghead">
+The most recently added tree is called the <b>younger tree</b>, while the more
+recent one is called the <b>older tree</b>. In this example, <code>root2</code>
+is the younger tree and  <code>root1</code>, the older tree.
+</blockquote>
+
+<p class="notice"><b>Rule 1</b>: Shadow trees added to a host are stacked in the order they're added,
+starting with the most recent first. The last one added is the one that renders.</p>
+
+<p>Then what's the point of using multiple shadows if only the last is invited to the party?</p>
+<h3 id="toc-shadow-insertion">Shadow Insertion points</h3>
+
+<p>"Shadow insertion points" (<code>&lt;shadow&gt;</code>) are similar to <a href="/tutorials/webcomponents/shadowdom/#toc-separation-separate">insertion points</a> (<code>&lt;content&gt;</code>)
+in that they're placeholders. However, unlike regular insertion points, which
+selectively funnel and render the <em>content</em> of a host into a shadow tree,
+shadow insertion points are hosts for other <em>shadow trees</em>. It's Shadow DOM Inception!</p>
+<p>As you can probably imagine, things get more complicated the farther you drill down
+the rabbit hole. For this reason, the spec is clear about what should happen with
+multiple <code>&lt;shadow&gt;</code>s:</p>
+<p class="notice"><b>Rule 2</b>: If multiple <code>&lt;shadow></code> insertion points exist
+in a shadow tree, only the first is recognized. The rest are ignored.</p>
+
+<p>Looking back to our original example, the first shadow <code>root1</code> got left off the
+invite list. Adding a <code>&lt;shadow&gt;</code> insertion point brings it back:</p>
+<pre class="prettyprint">
+&lt;div id="example2">Host node&lt;/div>
+&lt;script>
+var container = document.querySelector('#example2');
+var root1 = container.webkitCreateShadowRoot();
+var root2 = container.webkitCreateShadowRoot();
+root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
+<b>root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>&lt;shadow>&lt;/shadow>';</b>
+&lt;/script>
+</pre>
+
+<div class="demodevtools"> 
+<img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:200px;">
+</div>
+
+<div class="demoarea">
+  <div id="example2">Host node</div>
+</div>
+
+<script>
+(function() {
+var container = document.querySelector('#example2');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '<div>Root 1 FTW</div><content></content>';
+root2.innerHTML = '<div>Root 2 FTW</div><shadow></shadow>';
+})();
+</script>
+
+<p>There are a couple of interesting things about this example:</p>
+<ol>
+<li>"Root 2 FTW" still renders above "Root 1 FTW". This is because of where we've placed
+the <code>&lt;shadow&gt;</code> insertion piont. If we wanted the reverse, move the insertion point: <code>root2.innerHTML = '&lt;shadow&gt;&lt;/shadow&gt;&lt;div&gt;Root 2 FTW&lt;/div&gt;';</code>.</li>
+<li>Notice there's now a <code>&lt;content&gt;</code> insertion point in root1. This makes
+the text node "Host node" come along for the rendering ride.</li>
+</ol>
+<p><b id="toc-shadow-older">What was rendered at &lt;shadow&gt;?</b></p>
+<p>Sometimes it's useful to actually know the (shadow) tree that was rendered at a
+<code>&lt;shadow&gt;</code> insertion point. You can get a reference to that tree through <code>.olderShadowRoot</code>:</p>
+<pre class="prettyprint">
+<b>root2.querySelector('shadow').olderShadowRoot</b> === root1 //true
+</pre>
+
+<h2 id="toc-dom-apis">DOM APIs</h2>
+
+<p>As with existing parts of the web platform, there are DOM interfaces for creating
+<code>HTMLContentElement</code> and <code>HTMLShadowElement</code> as well as other APIs and properties
+to make scripting easier.</p>
+<h3 id="toc-creating-js">Building ShadowDOM in JS</h3>
+
+<p>Here's a near identical example from the previous section:</p>
+<pre class="prettyprint">
+&lt;div id="example3">
+  &lt;span>Host node&lt;/span>
+&lt;/div>
+&lt;script>
+var container = document.querySelector('#example3');
+var root1 = container.webkitCreateShadowRoot();
+var root2 = container.webkitCreateShadowRoot();
+
+var div = document.createElement('div');
+div.textContent = 'Root 1 FTW';
+root1.appendChild(div);
+
+<b>var content = document.createElement('content'); // HTMLContentElement
+content.select = '*';</b> // selects all of host's nodes (e.g. the &lt;span>)
+root1.appendChild(content);
+
+var div = document.createElement('div');
+div.textContent = 'Root 2 FTW';
+root2.appendChild(div);
+
+<b>var shadow = document.createElement('shadow'); // HTMLShadowElement</b>
+root2.appendChild(shadow);
+&lt;/script>
+</pre>
+
+<p>The only difference is the use of the <code>select</code> attribute on the <code>&lt;content&gt;</code> element
+to pull out the newly added <code>&lt;span&gt;</code>.</p>
+<h3 id="toc-distributed-nodes">Getting Distributed Nodes</h3>
+
+<p>Nodes which are selected out of host element and funneled into the shadow tree
+are called distributed nodes. They're allowed to cross the shadow boundary and
+"distribute" themselves into our Shadow DOM thanks to insertion points. Insertion
+points are a means by which the author of a complex Shadow DOM can create a
+declarative API for the outside world.</p>
+<blockquote class="commentary talkinghead">
+Insertion points are incredibly power. Your host element can include all the markup in the world,
+but unless I allow it into my Shadow DOM (using insertion points), it's meaningless.
+Insertion points are your way into my world!
+</blockquote>
+
+<p>We can access an insertion point's distributed nodes with <code>.getDistributedNodes()</code>:</p>
+<pre class="prettyprint">
+&lt;div id="example4">
+  &lt;h2>Eric&lt;/h2>
+  &lt;h2>Bidelman&lt;/h2>
+  &lt;div>Digital Jedi&lt;/div>
+  &lt;h4>footer text&lt;/h4>
+&lt;/div>
+
+&lt;template id="sdom">
+  &lt;style>
+    section {
+      padding: 10px;
+      background: #fff;
+    }
+    header {
+      display: -webkit-flex;
+    }
+  &lt;/style>
+  &lt;header>
+    &lt;content select="h2">&lt;/content>
+  &lt;/header>
+  &lt;section>
+    &lt;content select="div">&lt;/content>
+  &lt;/section>
+  &lt;footer>
+    &lt;content select="h4:first-of-type">&lt;/content>
+  &lt;/footer>
+&lt;/template>
+
+&lt;script>
+var container = document.querySelector('#example4');
+
+var root1 = container.webkitCreateShadowRoot();
+root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+
+[].forEach.call(root1.querySelectorAll('content'), function(el) {
+  console.log(el.outerHTML);
+  var nodes = el.getDistributedNodes();
+  [].forEach.call(nodes, function(node) {
+    console.log('  ', node);
+  });
+});
+&lt;/script>
+</pre>
+
+<div class="demodevtools"> 
+<img src="" title="" alt="" style="width:200px;">
+</div>
+
+<div class="demoarea">
+  <div id="example4">
+    <h2>Eric</h2>
+    <h2>Bidelman</h2>
+    <div>Digital Jedi</div>
+    <h4>footer text</h4>
+  </div>
+
+  <template id="sdom">
+    <style>
+      section {
+        padding: 10px;
+        background: #fff;
+      }
+      header {
+        display: -webkit-flex;
+      }
+    </style>
+    <header>
+      <content select="h2"></content>
+    </header>
+    <section>
+      <content select="div"></content>
+    </section>
+    <footer>
+      <content select="h4:first-of-type"></content>
+    </footer>
+  </template>
+</div>
+
+<div>
+ <textarea id="example4-log" readonly style="outline:none;border:none;width:300px;height:120px;resize:none;padding:10px;"></textarea>
+</div>
+
+<table>
+  <tr><th>one</th><th>two</th></tr>
+  <tr><td>asdf</td></tr>
+</table>
+
+<script>
+(function() {
+var container = document.querySelector('#example4');
+
+var root1 = container.createShadowRoot();
+//root1.applyAuthorStyles = false;
+//root1.resetStyleInheritance = true;
+root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+
+root1.applyAuthorStyles = false;
+root1.resetStyleInheritance = true;
+
+var html = [];
+[].forEach.call(root1.querySelectorAll('content'), function(el) {
+  html.push(el.outerHTML);
+  var nodes = el.getDistributedNodes();
+  [].forEach.call(nodes, function(node) {
+    html.push('  ' + node.outerHTML);
+  });
+});
+
+document.querySelector('#example4-log').value = html.join('\n');
+
+})();
+</script>
+
+<h3 id="toc-get-shadowroot">Getting the host's ShadowRoot</h3>
+
+<p><code>host.webkitShadowRoot</code></p>
+<h2 id="toc-style-encapsulation">Styling</h2>
+
+<p>Style encapsulation by default
+Scoped styles by default</p>
+<p>http://html5-demos.appspot.com/static/webcomponents/index.html#30</p>
+<h3 id="toc-style-outside">Protection from the outside</h3>
+
+<p>Don't let strangers in.</p>
+<p>http://html5-demos.appspot.com/static/webcomponents/index.html#31</p>
+<h3 id="toc-style-inheriting">Inheriting styles from the outside world</h3>
+
+<p>Don't let strangers in.</p>
+<h2 id="toc-style-disbtributed-nodes">Styling distributed nodes at insertion points</h2>
+
+<p><code>content::disributed()</code></p>
+<h2 id="toc-style-host">Styling the host element</h2>
+
+<p>@host</p>
+<h2 id="toc-style-hooks">Creating style hooks</h2>
+
+<p>blah</p>
+<h3 id="toc-custom-pseduo">Using custom pseudo elements</h3>
+
+<p>Blah</p>
+<h3 id="toc-vars">Using CSS Variables</h3>
+
+<p>Blah</p>
+<h2 id="toc-conclusion">Conclusion</h2>
+
+<p>Blah</p><script>
+// window.addEventListener('load', function(e) {
+//   if (!isCompatible()) {
+//     document.body.classList.add('disabledemos');
+//   }
+// });
+</script>
+{% endblock %}
