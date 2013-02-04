@@ -1,3 +1,14 @@
+Given the amount of personal data that flows through the great series of
+tubes that is the internet, encryption isn't something that we can or should
+lightly ignore. Modern browsers offer several mechanisms you can use to ensure
+that your users' data is secure while in transit: [secure cookies](#lock-the-cookie-jar)
+and [Strict Transport Security](#closing-the-open-window) are two of the
+most important. They allow you to seamlessly protect your users, upgrading
+their connections to HTTPS, and providing a guarantee that user data is never
+sent in the clear.
+
+Why should you care? Consider this:
+
 Delivering a web page over an unencrypted HTTP connection is more or less the
 same as handing an unsealed envelope to the first person you see on the street
 who looks like she's walking in the direction of the post office. If you're
