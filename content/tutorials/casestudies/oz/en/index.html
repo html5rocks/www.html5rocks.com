@@ -20,7 +20,7 @@ iframe.webgl_example {
 }
 
 img.full{
-  width:100%;
+  max-width:100%;
 }
 
 img.half{
@@ -38,7 +38,7 @@ img.half{
 {% endblock %}
 
 {% block share_image %}
-<meta itemprop="image" content="/static/demos/oz/assets/img1_storm04.jpg">
+<meta itemprop="image" content="/static/demos/oz/assets/camera_path.jpg">
 {% endblock %}
 
 
@@ -63,6 +63,8 @@ img.half{
 <p>To address the problem of interconnected visual effects and optimisation we made heavy use of a control panel that would capture all the relevant settings we were reviewing at that point in time. The scene could be adjusted live in browser for anything from brightness, to depth of field, gamma etc.. Anyone could try tweaking values of the significant parameters in the experience and take part in discovering what worked best.</p>
 
 <p>Before we share our secret we want to warn you that it might crash, just like if you were to poke around inside a car engine. Make sure you don’t have anything important on and go visit the main url of the site and append <a href="http://findyourwaytooz.com?debug=on" target="_blank">?debug=on</a> to the address. Wait for the site to load and once you are inside (press?) the key <strong>Ctrl-I</strong> and you will see a dropdown appear on the right hand side. If you uncheck the “Exit camera path” option you can use the keys A, W, S, D and the mouse to move freely around the space.</p>
+
+<p><img class="full" src="/static/demos/oz/assets/camera_path.jpg"/></p>
 
 <p>We won’t go through all the settings here, but we encourage you to experiment: the keys reveal different settings in different scenes. In the final storm sequence there is an additional key: <strong>Ctrl-A</strong> with which you can toggle the animation playback and fly around. In this scene if you press <strong>Esc</strong> (to exit the mouse lock functionality) and press again <strong>Ctrl-I</strong> you can access settings that are particular to the storm scene. Have a look around and capture some nice postcard views like the one below.</p>
 
@@ -214,6 +216,8 @@ To understand a bit more about Variable Pixel Densities you can read <a href="ht
 
 <p>In order to create this, we populated the 3 carnival scenes with objects that were soft, and thus supposed to be affected by wind, such as tents, flags the surface of the photo booth, and the balloon itself.</p>
 
+<figure><img class="full" src="/static/demos/oz/assets/soft-cloth.jpg"/></figure>
+
 <p>Desktop games are these days usually built around a core physics engine. So when a soft-object needs to be simulated in the 3D world, a full physics simulation gets run for it, creating a believable soft-behavior.</p>
 
 <p>In WebGL / Javascript we don’t (yet) have the luxury to run a full blown physics simulation. So in Oz we had to find a way to create the effect of wind, without actually simulating it.</p>
@@ -232,7 +236,8 @@ To understand a bit more about Variable Pixel Densities you can read <a href="ht
 
 <p>Let’s first create the scene. We’re going to have a simple, textured flat terrain. And then each bit of grass, is simply going to be represented with an upside-down 3D cone.</p>
 
-<p style="text-align:center;"><img class="half" src="/static/demos/oz/assets/wind_cone.png"/></p>
+<figure><img class="half" src="/static/demos/oz/assets/wind_cone.jpg"/>
+<figcaption>Grass-filled terrain</figcaption></figure>
 
 <p>Here is how to create this simple scene in <a href="http://mrdoob.github.com/three.js/">Three.js</a> using <a href="http://coffeescript.org/" target="_blank">CoffeeScript.</a></p>
 
@@ -453,7 +458,7 @@ render: =>
 ...
 </pre>
 
-<p>And that is it! We just created a scene with ”procedural grass” affected by wind.</p>
+<p>And that is it! We just created a scene with "procedural grass" affected by wind.</p>
 
 <iframe class="webgl_example" src="/static/demos/oz/tutorials/wind2/index.html#embed" width="500" height="400"></iframe>
 <p><a class="webgl_center" href="/static/demos/oz/tutorials/wind2/index.html" target="_blank">click here to open in a separate window</a></p>
@@ -462,7 +467,12 @@ render: =>
 
 <h3 id="toc-3dpipeline-dust-tutorial">Adding dust to the mix.</h3>
 
-<p>Now let’s spice up our scene a little bit. Let’s add a bit of flying dust, so as to make the scene more interesting.</p>
+<p>Now let's spice up our scene a little bit. Let's add a bit of flying dust, so as to make the scene more interesting.</p>
+
+<figure>
+  <img class="half" src="/static/demos/oz/assets/full-scene.png"/>
+  <figcaption>Adding dust</figcaption>
+</figure>
 
 <p>Dust is supposed to be affected by wind, after all, so it makes perfect sense to have dust flying around in our wind scene.</p>
 
@@ -529,6 +539,7 @@ initDust:->
 
 <p>Now, at each frame, we are going to move around the particles a little bit, using CoffeeScript, independently of wind. Here’s the code.</p>
 
+
 <pre class="prettyprint">
 moveDust:(delta)->
 
@@ -589,11 +600,14 @@ gl_Position = projectionMatrix * mvPosition;
 
 <p>The most adventurous of our WebGL scenes was probably the last scene, which you can see if you click your way through the balloon into the eye of the tornado to reach the end of your journey in the site, and exclusive video of the upcoming release.</o>
 
+<figure>
+  <img class="full" src="/static/demos/oz/assets/disney_diagram_0006_labelled_markers.jpg">
+  <figcaption>Balloon ride scene</figcaption>
+</figure>
+
 <p>When we created this scene we knew that we needed to have a central feature to the experience that would be impactful. The spinning tornado would act as the centerpiece and layers of other content would mold this feature in place to create a dramatic effect. To achieve this we built what would be the equivalent of a film studio set around this strange shader.</p>
 
 <p>We used a mixed approach to create the realistic composite. Some were visual tricks like light shapes to make a lens flare effect, or raindrops that animate as layers on top of the scene you are looking at. In other cases we had flat surfaces drawn to appear to move around, like the low flying clouds layers moving according to a particle system code. While the bits of debris orbiting around the tornado were layers of in a 3D scene sorted to move in front and behind the tornado.</p>
-
-<p><img class="full" src="/static/demos/oz/assets/disney_diagram_0006_labelled_markers.jpg"></p>
 
 <p>The main reason we had to build the scene in this way was to ensure we had enough GPU to handle the tornado shader in balance with the other effects that we were applying. Initially we had big GPU balancing issues but later this scene was optimised and became lighter than the main scenes.</p>
 
@@ -603,7 +617,10 @@ gl_Position = projectionMatrix * mvPosition;
 
 <p>A completely different project eventually provided us with the answer. A parallel project involving games for science to map out the brain of the mouse from the <a href="http://brainflight.org" target="_blank">Max Planck Institute (brainflight.org)</a> had generated interesting visual effects. We had managed to create movies of the inside of a mouse neuron using a custom volumetric shader.</p>
 
-<p><img class="full" src="/static/demos/oz/assets/neurite_tornado_comparison.jpg"></p>
+ <figure>
+  <img class="full" src="/static/demos/oz/assets/neurite_tornado_comparison.jpg">
+  <figcaption>Inside of a mouse neuron using a custom volumetric shader</figcaption>
+</figure>
 
 <p>We found that the inside of a brain cell looked a bit like the funnel of a tornado. And since we were using a volumetric technique we knew we could view this shader from all directions in space. We could set the render of the shader to combine with the storm scene, particularly if sandwiched under layers of clouds and above a dramatic background.</p>
 
@@ -709,7 +726,10 @@ if @fpsCount > 0
 
 
 <!--<iframe class="webgl_example" src="/static/demos/oz/tutorials/tornado/index.html#embed" width="500" height="400"></iframe>-->
-<p style="text-align:center;"><a class="webgl_center" href="/static/demos/oz/tutorials/tornado/index.html" target="_blank"><img class="half" src="/static/demos/oz/assets/tornado.png"><br>Click here to open in a separate window</a></p>
+ <figure>
+  <a class="webgl_center" href="/static/demos/oz/tutorials/tornado/index.html" target="_blank"><img class="half" src="/static/demos/oz/assets/tornado.png"></a>
+  <figcaption><a class="webgl_center" href="/static/demos/oz/tutorials/tornado/index.html" target="_blank">Click here to open in a separate window</a></figcaption>
+</figure>
 
 <p><a href="/static/demos/oz/assets/tornado_tutorial.zip" class="button-download">The source for our early tornado shader example can be downloaded here </a>. It is delivered with the glsl.heroku.com wrapper for the convenience of the live editing functionality that gives you.</p>
 
@@ -726,7 +746,7 @@ if @fpsCount > 0
 
 <h3 id="toc-mobile-subtopic">Mobile tips and tricks</h3>
 
-<ol>
+<!--<ol>
   <li>
     <p><strong>Do feature detection and add relevant CSS classes to &#60;html&#62; tag:</strong></p>
     <p>First of all, we're doing platform detection with CSS media queries. You can check the full code at <a href="http://findyourwaytooz.com/m/sass/detection.scss" target="_blank">/m/sass/detection.scss.</a></p>
@@ -822,9 +842,14 @@ header {
 <p>This is particularly useful for mobile. It happens very often that it is only QA that reveals slight discrepancies between browsers and platforms. If you start adding top-level classes to adjust things, like .Chrome .blahblah {}, .Safari .blahblah {}, you end up with many selectors that are very hard to follow and, most importantly, hard to merge if need be. Thanks to SASS '&' operator, you are able to keep your code small, clean, and easy to maintain.</p>
   </li>
   <li>
-    <p><strong>Preload</strong></p>
+    <p><strong>Preload</strong></p>-->
     <p>Preloader is something that's needed, not something that should be avoided. We know, that sometimes the latter happens. This is mainly because you need to keep maintaining the list of things you preload as your project grows. What's worse, it's not very clear on how you should calculate the loading progress if you're pulling different resources, and many of them at the same time. This is where our custom and very generic abstract class 'Task' comes handy. Its main idea is to allow endlessly nested structure where a Task can have it's own sub-Tasks, which can have their etc... Furthermore, each task computes its progress with respect to its sub-tasks' progress (but not to parent's progress). Making all the MainPreloadTask, AssetPreloadTask and TemplatePreFetchTask derive from Task, we created a structure that looks like this:</p>
-    <p style="text-align:center;"><img class="half" src="/static/demos/oz/assets/preloading.png"></p>
+  
+    <figure>
+      <img class="half" src="/static/demos/oz/assets/preloading.png">
+      <figcaption>Preloader tasks</figcaption>
+    </figure>
+
     <p>Thanks to such approach and the Task class, we can easily know the global progress (MainPreloadTask), or just progress of assets (AssetPreloadTask), or progress of loading templates (TemplatePreFetchTask). Even progress of a particular file. To see how it is done, have a look at the Task class at /m/javascripts/raw/util/Task.js and the actual task implementations at <a href="http://findyourwaytooz.com/m/javascripts/preloading/task.js" target="_blank">/m/javascripts/preloading/task</a>.</p>
     <p>As an example, this is an extract from how we set up the <a href="http://findyourwaytooz.com/m/javascripts/preloading/task/MainPreloadTask.js" target="_blank">/m/javascripts/preloading/task/MainPreloadTask.js</a> class which is our ultimate preloading wrapper:</p>
     <pre class="prettyprint">
@@ -887,16 +912,19 @@ generateKey : function(url) {
   return encodeURIComponent(url);
 }
 </pre>
-  </li>
-</ol>
+  <!--</li>
+</ol>-->
 
 <h3 id="toc-mobile-tutorial">Tutorial: HTML5 Photo Booth (iOS6/Android)</h3>
 
 <p>When developing OZ mobile, we found out we spend a lot of time actually playing with the photo booth instead of working :D That was simply because it's fun. So we made a demo for you to play with.</p>
 
-<p>The code is pretty easy to follow, so go ahead and grab it from</p>
+ <figure>
+  <a href="http://u9html5rocks.appspot.com/demos/mobile_photo_booth" target="_blank"><img class="full" src="/static/demos/oz/assets/mobile_photobooth.jpg"/></a>
+  <figcaption><a href="http://u9html5rocks.appspot.com/demos/mobile_photo_booth" target="_blank">Launch Demo</a></figcaption>
+</figure>
 
-<p>You can also see a live demo here (run it on your iPhone or Android phone):<br><a href="http://u9html5rocks.appspot.com/demos/mobile_photo_booth" target="_blank">http://u9html5rocks.appspot.com/demos/mobile_photo_booth</a></p>
+<p>You can see a live demo here (run it on your iPhone or Android phone):<br><a href="http://u9html5rocks.appspot.com/demos/mobile_photo_booth" target="_blank">http://u9html5rocks.appspot.com/demos/mobile_photo_booth</a></p>
 
 <p>To set it up, you need a free <a href="https://developers.google.com/appengine/">Google App Engine</a> application instance where you can run the backend.  The front end code is not complex but there are a couple of possible gotchas. Let's go through them now:</p>
 
