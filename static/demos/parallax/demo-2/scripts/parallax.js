@@ -26,7 +26,7 @@ window.requestAnimFrame = (function(){
   var blob8 = $('#blob-8');
   var blob9 = $('#blob-9');
 
-  var mainBG = $('section#content');
+  var mainBG = $('section#background');
 
   var ticking = false;
   var lastScrollY = 0;
@@ -50,7 +50,8 @@ window.requestAnimFrame = (function(){
 
     var relativeY = lastScrollY / h;
 
-    mainBG.style.backgroundPosition = 'center ' + pos(0, -600, relativeY, 0) + 'px';
+    prefix(mainBG.style, "Transform", "translate3d(0," +
+      pos(0, -600, relativeY, 0) + 'px, 0)');
 
     prefix(blob1.style, "Transform", "translate3d(484px," +
       pos(254, -1400, relativeY, 0) + 'px, 0)');
