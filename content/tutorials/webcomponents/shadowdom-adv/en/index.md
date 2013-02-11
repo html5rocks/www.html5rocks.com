@@ -45,7 +45,7 @@ What renders is "Root 2 FTW", despite the fact that we added root2 last.
 This is because the last shadow tree added to a host, wins. It's a LIFO stack as
 far as rendering is concerned. Examining the DevTools verifies things.
 
-<blockquote class="commentary talkinghead">
+<blockquote class="commentary talkinghead" id="youngest-tree">
 The most recently added tree is called the <b>younger tree</b>, while the more
 recent one is called the <b>older tree</b>. In this example, <code>root2</code>
 is the younger tree and  <code>root1</code>, the older tree.
@@ -116,15 +116,46 @@ Sometimes it's useful to actually know the (shadow) tree that was rendered at a
 <b>root2.querySelector('shadow').olderShadowRoot</b> === root1 //true
 </pre>
 
+`.olderShadowRoot` isn't vendor prefixed because `HTMLShadowElement`s only exist
+in the context of Shadow DOM...which is already prefixed :)
+
 <h2 id="toc-dom-apis">DOM APIs</h2>
 
-As with existing parts of the web platform, there are DOM interfaces for creating
-`HTMLContentElement` and `HTMLShadowElement` as well as other APIs and properties
-to make scripting easier.
+As with other parts of the web platform, we have DOM APIs and properties
+to make our scripting life easier.
 
-<h3 id="toc-creating-js">Building ShadowDOM in JS</h3>
+<h3 id="toc-get-shadowroot">Obtain a host's Shadow Root</h3>
 
-Here's a near identical example from the previous section:
+If an element is hosting Shadow DOM, you can access it's [youngest shadow root](#youngest-tree) with
+`.webkitShadowRoot`:
+
+<pre class="prettyprint">
+var root = host.webkitCreateShadowRoot();
+console.log(host.webkitShadowRoot === root); // true
+console.log(document.body.webkitShadowRoot); // null
+</pre>
+
+I'm not even sure why `.shadowRoot` is spec'd. It defeats the encapsulation
+principles of Shadow DOM and gives outsiders an outlet for traversing into my
+supposed-to-be-hidden DOM.
+
+If you're worried about people crossing into your shadows, redefine
+ `.shadowRoot` to be null. A bit of a hack, but it works:
+
+<pre class="prettyprint">
+Object.defineProperty(host, 'webkitShadowRoot', {
+  get: function() { return null; },
+  set: function(value) { }
+});</pre>
+
+In the end, it's important to remember that while amazingly fantastic,
+**Shadow DOM wasn't designed to be a security feature**. Don't rely on it for
+complete content isolation.
+
+<h3 id="toc-creating-js">Building Shadow DOM in JS</h3>
+
+If you prefer to building Shadow DOM in JS, `HTMLContentElement` and `HTMLShadowElement`
+have interfaces for that.
 
 <pre class="prettyprint">
 &lt;div id="example3">
@@ -152,24 +183,44 @@ root2.appendChild(shadow);
 &lt;/script>
 </pre> 
 
-The only difference is the use of the `select` attribute on the `<content>` element
-to pull out the newly added `<span>`.
+This example is nearly identical to the one in the [previous section](#toc-shadow-insertion).
+The only difference is that I'm now using `select` to pull out the new `<span>`.
 
-<h3 id="toc-distributed-nodes">Getting Distributed Nodes</h3>
+<h3 id="toc-distributed-nodes">Fetching Distributed Nodes</h3>
 
-Nodes which are selected out of host element and funneled into the shadow tree
-are called distributed nodes. They're allowed to cross the shadow boundary and
-"distribute" themselves into our Shadow DOM thanks to insertion points. Insertion
-points are a means by which the author of a complex Shadow DOM can create a
-declarative API for the outside world.
+Nodes that are selected out of host element and "distribute" into the shadow tree
+are called,...drumroll...distributed nodes! They're allowed to cross the shadow boundary
+when insertion points invite them.
 
 <blockquote class="commentary talkinghead">
-Insertion points are incredibly power. Your host element can include all the markup in the world,
-but unless I allow it into my Shadow DOM (using insertion points), it's meaningless.
-Insertion points are your way into my world!
+Insertion points are incredibly power. Think of them as a way to create a
+"declarative API" for your Shadow DOM. A host element can include all the markup in the world,
+but unless I invite it into my Shadow DOM with an insertion point, it's meaningless.
 </blockquote>
 
-You can access the nodes distributed inside an insertion point with `.getDistributedNodes()`:
+What's conceptually bizarre about insertion points is that they don't physically
+move DOM. The host's nodes stay intake. Insertion points merely re-project nodes
+from the host into the shadow tree. It's a presentation/rendering thing: <s>"Move these nodes over here"</s> "Render these nodes at this location."
+
+<p class="notice"><b>Rule 3</b>: You cannot traverse the DOM into a <code>&lt;content></code>.</p>
+
+For example:
+
+<pre class="prettyprint">
+&lt;div>&lt;h2>Host node&lt;/h2>&lt;/div>
+&lt;script>
+var shadowRoot = document.querySelector('div').webkitCreateShadowRoot();
+shadowRoot.innerHTML = '&lt;content select="h2">&lt;/content>';
+
+var h2 = document.querySelector('h2');
+console.log(shadowRoot.querySelector('content[select="h2"] h2')); // null;
+console.log(shadowRoot.querySelector('content').contains(h2)); // false
+&lt;/script>
+</pre>
+
+Voilà! The `h2` isn't a child of the shadow DOM.
+
+For accessing nodes distributed into an insertion point, we have `.getDistributedNodes()`:
 
 <pre class="prettyprint">
 &lt;div id="example4">
@@ -180,15 +231,6 @@ You can access the nodes distributed inside an insertion point with `.getDistrib
 &lt;/div>
 
 &lt;template id="sdom">
-  &lt;style>
-    section {
-      padding: 10px;
-      background: #fff;
-    }
-    header {
-      display: -webkit-flex;
-    }
-  &lt;/style>
   &lt;header>
     &lt;content select="h2">&lt;/content>
   &lt;/header>
@@ -203,54 +245,42 @@ You can access the nodes distributed inside an insertion point with `.getDistrib
 &lt;script>
 var container = document.querySelector('#example4');
 
-var root1 = container.webkitCreateShadowRoot();
-root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+var root = container.webkitCreateShadowRoot();
+root.appendChild(document.querySelector('#sdom').content.cloneNode(true));
   
-[].forEach.call(root1.querySelectorAll('content'), function(el) {
-  console.log(el.outerHTML);
+var html = [];
+[].forEach.call(root.querySelectorAll('content'), function(el) {
+  html.push(el.outerHTML + ': ');
   var nodes = el.getDistributedNodes();
   [].forEach.call(nodes, function(node) {
-    console.log('  ', node);
+    html.push(node.outerHTML);
   });
+  html.push('\n');
 });
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
-<img src="" title="" alt="" style="width:200px;">
-</div>
-<div class="demoarea">
-  <div id="example4">
-    <h2>Eric</h2>
-    <h2>Bidelman</h2>
-    <div>Digital Jedi</div>
-    <h4>footer text</h4>
-  </div>
-
-  <template id="sdom">
-    <style>
-      section {
-        padding: 10px;
-        background: #fff;
-      }
-      header {
-        display: -webkit-flex;
-      }
-    </style>
-    <header>
-      <content select="h2"></content>
-    </header>
-    <section>
-      <content select="div"></content>
-    </section>
-    <footer>
-      <content select="h4:first-of-type"></content>
-    </footer>
-  </template>
+<div id="example4" style="display:none">
+  <h2>Eric</h2>
+  <h2>Bidelman</h2>
+  <div>Digital Jedi</div>
+  <h4>footer text</h4>
 </div>
 
-<div>
- <textarea id="example4-log" readonly style="outline:none;border:none;width:100%;height:120px;resize:none;padding:10px;"></textarea>
+<template id="sdom">
+  <header>
+    <content select="h2"></content>
+  </header>
+  <section>
+    <content select="div"></content>
+  </section>
+  <footer>
+    <content select="h4:first-of-type"></content>
+  </footer>
+</template>
+
+<div id="example4-log" class="demoarea">
+ <textarea readonly></textarea>
 </div>
 
 <script>
@@ -262,9 +292,6 @@ var root1 = container.createShadowRoot();
 //root1.resetStyleInheritance = true;
 root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
 
-root1.applyAuthorStyles = false;
-root1.resetStyleInheritance = true;
-
 var html = [];
 [].forEach.call(root1.querySelectorAll('content'), function(el) {
   html.push(el.outerHTML + ': ');
@@ -275,14 +302,19 @@ var html = [];
   html.push('\n');
 });
 
-document.querySelector('#example4-log').value = html.join('');
-
+document.querySelector('#example4-log textarea').value = html.join('');
 })();
 </script>
 
-<h3 id="toc-get-shadowroot">Getting the host's ShadowRoot</h3>
+<b id="toc-shadow-visualizder">Tool: Shadow DOM Visualizer</b>
 
-`host.webkitShadowRoot`
+Conceptualizing distributed nodes is diffult. To help visualize how Shadow DOM
+takes host nodes and renders them at insertion points, I built a tool using [d3.js](http://d3js.org/):
+
+<figure>
+<a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html"><img src="visualizer.png" title="Shadow DOM Visualizer" alt="Shadow DOM Visualizer"></a>
+<figcaption><a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html">Launch Shadow DOM Visualizer</a></figcaption>
+</figure>
 
 <h2 id="toc-style-encapsulation">Styling</h2>
 
@@ -325,7 +357,8 @@ http://html5-demos.appspot.com/static/webcomponents/index.html#31
 
 <h3 id="toc-style-inheriting">Inheriting styles from the outside world</h3>
 
-Don't let strangers in.
+poke holes in the style inheritance shield
+
 
 <h2 id="toc-style-disbtributed-nodes">Styling distributed nodes at insertion points</h2>
 
