@@ -54,7 +54,7 @@ span.unchanged * {
 <h2 id="toc-introduction">Introduction</h2>
 
 <p>
-Web Components is a set of cutting edge standards that will:
+Web Components is a set of cutting edge standards that:
 </p>
 
 <ol>
@@ -69,23 +69,23 @@ changes internal implementation details.
 <p>
 Does this mean you have to decide when to use HTML/JavaScript, and
 when to use Web Components? No! HTML and JavaScript can make
-interactive visual stuff. Widgets are interactive visual stuff. So it
+interactive visual stuff. Widgets are interactive visual stuff. It
 makes sense to leverage your HTML and JavaScript skills when
 developing a widget. The Web Components standards are designed to help
 you do that.
 </p>
 
 <blockquote class="commentary talkinghead">
-It does not make sense to have to switch to a different technology to
+It doesn’t make sense to have to switch to a different technology to
 build a widget. For example, I’m definitely not a fan of making your
-widget out of a <code>&lt;canvas&gt;</code>. It is reliable – pages
-won’t break if you change what it paints – but it’s hostile to
+widget out of a <code>&lt;canvas&gt;</code>. It is reliable — pages
+won’t break if you change what it paints — but it’s hostile to
 accessibility, indexing, composition, and resolution independence.
 </blockquote>
 
 <p>
 But there is a fundamental problem that makes widgets built out of
-HTML and JavaScript hard to use: The DOM tree inside a widget is not
+HTML and JavaScript hard to use: The DOM tree inside a widget isn’t
 encapsulated from the rest of the page. This lack of encapsulation
 means your document stylesheet might accidentally apply to parts
 inside the widget; your JavaScript might accidentally modify parts
@@ -101,23 +101,39 @@ ways.
 </blockquote>
 
 <p>
-Web Components is comprised of four parts: Templates, Shadow DOM,
-Custom Elements and Packaging. <b>Shadow DOM</b> addresses the DOM
-tree encapsulation problem. The four parts of Web Components are
-designed to work together, but you can also pick and choose which
-parts of Web Components to use. This tutorial will show you how to use
-Shadow DOM. Shadow DOM is currently only available from Chrome 25,
-which is why the API has a <code>webkit</code> prefix.
+Web Components is comprised of four
+parts:
+</p>
+
+<ol>
+<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">Templates</a></li>
+<li><a href="http://www.w3.org/TR/shadow-dom/">Shadow
+DOM</a></li>
+<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html">Custom
+Elements</a></li>
+<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#external-custom-elements-and-decorators">Packaging</a></li>
+</ol>
+
+<p>
+<b>Shadow DOM</b> addresses the DOM tree encapsulation problem. The
+four parts of Web Components are designed to work together, but you
+can also pick and choose which parts of Web Components to use. This
+tutorial shows you how to use Shadow DOM.
+</p>
+
+<p>
+Shadow DOM is currently only available from Chrome 25, which is why
+the API has a <code>webkit</code> prefix.
 </p>
 
 <h2 id="toc-hello-world">Hello, Shadow World</h2>
 
 <p>
-With Shadow DOM, elements can get a new kind of node called
-a <b>shadow root</b> associated with them. An element that has a
-shadow root associated with it is called a <b>shadow host.</b> The
-content of a shadow host isn’t rendered; the content of the shadow
-root is rendered instead.
+With Shadow DOM, elements can get a new kind of node associated with
+them. This new kind of node is called a <b>shadow root.</b> An element
+that has a shadow root associated with it is called a <b>shadow
+host.</b> The content of a shadow host isn’t rendered; the content of
+the shadow root is rendered instead.
 </p>
 
 <p>
@@ -167,8 +183,8 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 
 <p>
 Not only that, if JavaScript on the page asks what the button’s
-<span class="property">textContent</span> is, it isn’t going to get “こ
-んにちは、影の世界!”, but “Hello, world!” because the DOM subtree
+<span class="property">textContent</span> is, it isn’t going to get
+“こんにちは、影の世界!”, but “Hello, world!” because the DOM subtree
 under the shadow root is encapsulated.
 </p>
 
@@ -226,7 +242,7 @@ presentation. Let's say we have this name tag:
 </div>
 
 <p>
-Here is the markup. This is what you would write today. It does not
+Here is the markup. This is what you’d write today. It doesn’t
 use Shadow DOM:
 </p>
 
@@ -321,7 +337,7 @@ a <code>&lt;template&gt;</code> element:
 <p>
 At this point ‘Bob’ is the only thing that is rendered. Because we
 moved the presentational DOM elements inside
-a <code>&lt;template&gt;</code> element, they are not rendered, but
+a <code>&lt;template&gt;</code> element, they aren’t rendered, but
 they <em>can</em> be accessed from JavaScript. We do that now to
 populate the shadow root:
 </p>
@@ -347,8 +363,8 @@ further into how the template element works here.
 
 <p>
 Now that we have set up a shadow root, the name tag is rendered
-again. If you were to right click on the name tag and inspect the
-element you will see that it is sweet, semantic markup:
+again. If you were to right-click on the name tag and inspect the
+element you see that it is sweet, semantic markup:
 </p>
 
 <pre class="prettyprint">
@@ -366,16 +382,16 @@ Step 2: Separate Content from Presentation
 </h3>
 
 <p>
-Our name tag now hides presentation details from the page, but it does
-not actually separate presentation from content, because although the
-content (the name “Bob”) is in the page, the name that is rendered is
-the one we copied into the shadow root. If we want to change the name
-on the name tag, we would need to do it in two places, and they might
+Our name tag now hides presentation details from the page, but it
+doesn’t actually separate presentation from content, because although
+the content (the name “Bob”) is in the page, the name that is rendered
+is the one we copied into the shadow root. If we want to change the
+name on the name tag, we’d need to do it in two places, and they might
 get out of sync.
 </p>
 
 <p>
-HTML elements are compositional – you can put a button inside a table,
+HTML elements are compositional — you can put a button inside a table,
 for example. Composition is what we need here: The name tag must be a
 composition of the red background, the “Hi!” text, and the content
 that is on the name tag.
@@ -390,7 +406,7 @@ at that point.
 </p>
 
 <p>
-So if we simply change the markup in the Shadow DOM to this:
+If we change the markup in the Shadow DOM to this:
 </p>
 
 <pre class="prettyprint">
@@ -410,14 +426,14 @@ So if we simply change the markup in the Shadow DOM to this:
 </pre>
 
 <p>
-Now when the name tag is rendered, the content of the shadow host is
+if when the name tag is rendered, the content of the shadow host is
 projected into the spot that the <code>&lt;content&gt;</code> element
 appears.
 </p>
 
 <p>
 Now the structure of the document is simpler because the name is only
-in one place – the document. If your page ever needs to update the
+in one place — the document. If your page ever needs to update the
 user’s name, you just write:
 </p>
 
@@ -514,8 +530,8 @@ to render something.
 <h3 id="toc-separation-profit">Step 3: Profit</h3>
 
 <p>
-By separating content and presentation, we’re able to simplify the
-code that manipulates the content – in the name tag example, that
+By separating content and presentation, we can simplify the
+code that manipulates the content — in the name tag example, that
 code only needs to deal with a simple structure containing
 one <code>&lt;div&gt;</code> instead of several.
 </p>
@@ -527,7 +543,7 @@ code!
 
 <p>
 For example, say we want to localize our name tag. It is still a name
-tag, so the semantic content in the document does not change:
+tag, so the semantic content in the document doesn’t change:
 </p>
 
 <pre class="prettyprint">
@@ -634,14 +650,14 @@ Now we've got a Japanese name tag:
 
 <p>
 This is a big improvement over the situation on the web today, because
-your name update code is able to depend on the structure of the
+your name update code can depend on the structure of the
 <em>component</em> which is simple and consistent. <strong>Your name
 update code doesn’t need to know the structure used for
 rendering.</strong> If we consider what is rendered, the name appears
 second in English (after “Hi! My name is”), but first in Japanese
 (before “と申します”). That distinction is semantically meaningless
 from the point of view of updating the name that is being displayed,
-so the name update code does not have to know about that detail.
+so the name update code doesn’t have to know about that detail.
 </p>
 
 <h2 id="toc-projection">Extra Credit: Advanced Projection</h2>
@@ -811,7 +827,7 @@ pretty. The user sees something like:
 <h2 id="toc-conclusion">You Pass Shadow DOM 101</h2>
 
 <p>
-Those are the basics of Shadow DOM – you pass Shadow DOM 101! You can
+Those are the basics of Shadow DOM — you pass Shadow DOM 101! You can
 do more with Shadow DOM, for example, you can use multiple shadow on
 one shadow host, or nested shadows for encapsulation, or architect
 your page using Model-Driven Views (MDV) and Shadow DOM. And Web
@@ -822,7 +838,7 @@ it.
 </p>
 
 <p>
-We will explain those in later posts. Now,
+We explain those in later posts. Now,
 follow <a href="https://plus.google.com/103330502635338602217/posts">Web
 Components on Google+.</a>
 </p>
