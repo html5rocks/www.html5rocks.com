@@ -1,6 +1,6 @@
 {% include "warning.html" %}
 
-This article discusses more of the amazing things you can do with ShadowDOM.
+This article discusses more of the amazing things you can do with Shadow DOM.
 It builds on the concepts discussed in [Shadow DOM 101](/tutorials/webcomponents/shadowdom/).
 If you're looking for an introduction, see [Dominic Cooney](/profiles/#dominiccooney)'s most [excellent article](/tutorials/webcomponents/shadowdom/).
 
@@ -44,7 +44,7 @@ There are two interesting observations worth noting:
 - Even though there are
 <a href="javascript:alert('There are ' + document.querySelectorAll('h3').length + ' &#60;h3&#62; on this page.')">other h3s on this page</a>, the only one that matches my h3 selector, and therefore styled
 red, is the one in the shadow root. Again, scoped styles by default.
-- The `h3` style rules defined by this page don't bleed into my content. Outside
+- The h3 style rules defined by this page don't bleed into my content. Outside
 styles don't cross the shadow boundary unless you let them.
 
 We have style encapsulation from the outside world. Thanks Shadow DOM!
@@ -66,13 +66,15 @@ There are two properties to control what gets in:
 - **.applyAuthorStyles**
     - `true` - styles defined in the author's document are applied. This of this
     as allowing styles to "bleed" across the boundary.
-    - `false - Default. Author styles are not applied to the shadow tree.
+    - `false` - Default. Author styles are not applied to the shadow tree.
+
+Below is a demo for seeing how a shadow tree is effected by changing this properties.
 
 <pre class="prettyprint">
 &lt;div>&lt;h3>Host title&lt;/h3>&lt;/div>
 &lt;script>
 var root = document.querySelector('div').webkitCreateShadowRoot();
-root.applyAuthorStyles = <span id="code-applyAuthorStyles">false</span>;
+root.applyAuthorStyles = <span id="code-applyAuthorStyles">true</span>;
 root.resetStyleInheritance = <span id="code-resetStyleInheritance">false</span>;
 root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' + 
                  '&lt;h3>Shadow DOM Title&lt;/h3>';
@@ -87,8 +89,8 @@ root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' +
 <script>
 (function() {
 var container = document.querySelector('#style-ex-inheritance');
-window.root = container.createShadowRoot();
-//root.applyAuthorStyles = true;
+var root = container.createShadowRoot();
+root.applyAuthorStyles = true;
 //root.resetStyleInheritance = false;
 root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM Title</h3>';
 
@@ -106,35 +108,63 @@ document.querySelector('#demo-resetStyleInheritance').addEventListener('click', 
 })();
 </script>
 
-`apply-author-styles` attribute set, the document CSS rules only match wholly inside or outside of the shadow DOM subtree.
+You can easily see how `.applyAuthorStyles` works. It makes the h3 in the shadow root
+take on the look of the other h3s on this page. Thus, "applying the author's styles".
+Author being the author of the page.
 
-<h2 id="toc-style-disbtributed-nodes">Styling distributed nodes at insertion points</h2>
+<p class="notice fact">Even with the <code>apply-author-styles</code> attribute set,
+CSS selectors defined in the document do not cross the shadow boundary.
+<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b></p>
+
+Understanding `.resetStyleInheritance` is a bit trickier, primarily because it
+only has an effect on CSS properties which are inheritable. When it's set,
+property values get "reset" to the `initial` value. If you're unsure of what properties inherit in CSS, check out [this handy list](http://www.impressivewebs.com/inherit-value-css/)  or turn to the DevTools
+when viewing an element:
+
+<img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="width:255px;height:243px;border:1px solid #ccc;">
+
+<b id="style-inherit-cheetsheet">Cheat sheet for applyAuthorStyles/resetStyleInheritance</b>
+
+To understand when you might use either property, here's the scenario breakdown:
+
+1. `.applyAuthorStyles=false`, `.resetStyleInheritance=**true**`
+    - "Screw the page! I have my own theme" - you'll still need a "component reset stylesheet" because distributed content gets the styles it had in the page.
+- `.applyAuthorStyles=**true**`, `.resetStyleInheritance=false`
+    - "I want to blend in with the page as much as possible." - remember selectors don't cross the shadow boundary.
+- `.applyAuthorStyles=false`, `.resetStyleInheritance=false`
+    - "I have my own appearance, but want to match basic properties like text color." - basically, you want a a widget that harmonizes with the page.
+- `.applyAuthorStyles=**true**`, `.resetStyleInheritance=true`
+    - "I'm a component designed to get my theme from styles in the page"
+
+Carry this around in your pocket!
+
+<h2 id="toc-style-disbtributed-nodes">Styling distributed nodes</h2>
+
+`.applyAuthorStyles`/`.resetStyleInheritance` are strictly for effecting the
+styling behavior of the nodes defined in the Shadow DOM. 
+
+However, distributed nodes are not in logically in our Shadow DOM. So how do we
+style them?
 
 `content::disributed()`
 
-Distributed nodes are still part of the host document. Therefore, styles defined in the host document continue to apply to those nodes, even when they're distributed "inside" the shadow dom.
-Basically, going into an insertion point doesn't change that. applyAuthorStyles/resetStyleInheritance
-are strictly for effecting the styling behavior of the nodes defined in the ShadowDOM.
+Distributed nodes are still part of the host document. Therefore, styles defined
+in the host document continue to apply to those nodes, even when they're
+distributed "inside" the Shadow DOM. Basically, going into an insertion point
+doesn't change that.
 
 
-Project nodes are swizzled into place at "render time." Naturally, they get their
+Projected nodes are swizzled into place at "render time." Naturally, they get their
 styles from the document they're in (the host's document). The only exception to that is they might
 gain additional styles from the place they have been swizzled into (the Shadow DOM).
 
 
-resetStyleInheritance just says that when you’re looking for a property to inherit, at the boundary between the page and the ShadowRoot, you don’t inherit values from the host but get the "initial value" (per the CSS spec) instead.
+`.resetStyleInheritance` just says that when you're looking for a property to
+inherit, at the boundary between the page and the `ShadowRoot`, don't inherit
+values from the host but get the "initial value" (per the CSS spec) instead.
 
 
 
-We need a cheat-sheet that fits on a business card that web authors can carry in their pocket. Something like:
-
-1. Screw the page! I have my own theme => applyAuthorStyles = false, resetStyleInheritance = true, use a "component reset stylesheet", NB/ content you project gets the styles it had in the page
-
-2. I want to blend in with the page as much as possible => applyAuthorStyles = true, resetStyleInheritance = false, NB/ selectors don’t cross the shadow boundary; if you confine your stylesheet to a subset of selectors, styling will be robust
-
-3. I have my own appearance, but I want to match basic properties like text color => applyAuthorStyles = false, resetStyleInheritance = false. A widget that harmonizes with the page.
-
-4. I am a component designed to get my theme from styles in the page => applyAuthorStyles = true, resetStyleInheritance = true
 
 
 <h2 id="toc-style-host">Styling the host element</h2>
