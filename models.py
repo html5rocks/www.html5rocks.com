@@ -151,7 +151,7 @@ class TutorialForm(forms.Form):
   second_author = author
 
   url = forms.CharField(label='URL',
-      help_text='An abs. or relative url (e.g. /tutorials/feature/something)')
+      help_text='An abs. or relative url (e.g. /tutorials/feature/something/) - do NOT forget the trailing slash!')
   social_url = forms.CharField(label='Social URL',
       help_text='A relative URL that should be used for social widgets (G+)', required=False)
 
@@ -164,7 +164,7 @@ class TutorialForm(forms.Form):
   update_date = forms.DateField(label='Updated date', required=False)#,initial=datetime.date.today)
 
   tags = forms.CharField(
-      help_text='Comma separated list (e.g. offline, performance, demo, ...)')
+      help_text='Comma separated list (e.g. offline, performance, demo, ...)<br>Include prefixes, e.g. "type:tutorial,class:multimedia"')
 
   draft = forms.BooleanField(required=False, initial=True)
 
