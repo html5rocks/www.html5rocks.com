@@ -20,16 +20,16 @@ return ("hidden" in document || "webkitHidden" in document || "mozHidden" in doc
 
 <h2 id="toc-introduction">Introduzione</h2>
 
-<p>Come sviluppatori web, abbiamo la tendenza ad eccitarci per le nuove tecnologie che ci consento di creare pagine web sempre più avvincenti e interattive. Grafica 3D con WebGL? Senz'altro. Capacità audio avanzate con WebAudio? Certamente. Applicazioni per la collaborazione in tempo reale che utilizzano webcam e microfono? Ci sono! Meno eccitanti, anche se ugualmente importante, sono le tecnologie che ci permettono di mettere su applicazioni che vengano eseguite in modo più efficiente e forniscano un'esperienza d'uso complessiva migliore. Questo è il campo in cui API come PageVisibility entrano in gioco. La <a href="http://www.w3.org/TR/page-visibility/" target="_blank">API Page Visibility</a> esegue una funzione semplice ma importante - consente alla tua applicazione di sapere quando una pagina è visibile all'utente. Questa informazioni permette la creazione di pagine web il cui comportamento è diverso quando non vengono visto. Considera alcuni esempi:</p>
+<p>Come sviluppatori web, abbiamo la tendenza ad entusiasmarci per le nuove tecnologie che ci consento di creare pagine web sempre più avvincenti e interattive. Grafica 3D con WebGL? Senz'altro. Capacità audio avanzate con WebAudio? Certamente. Applicazioni per la collaborazione in tempo reale che utilizzano webcam e microfono? Ci sono! Meno eccitanti, anche se ugualmente importanti, sono le tecnologie che ci permettono di implementare applicazioni che vengano eseguite in modo più efficiente e forniscano un'esperienza d'uso complessiva migliore. Questo è il campo in cui API come PageVisibility entrano in gioco. La <a href="http://www.w3.org/TR/page-visibility/" target="_blank">API Page Visibility</a> esegue una funzione semplice ma importante - consente alla tua applicazione di sapere quando una pagina è visibile all'utente. Questa informazione permette di creare pagine web il cui comportamento è diverso quando non sono visibili all'utente. Considera alcuni esempi:</p>
 <ul>
 <li>Una pagina web che preleva le informazioni da un server può abbassare la sua frequenza di aggiornamento quando non viene visitata attivamente</li>
 <li>Una pagina che mostra un carosello di immagini in rotazione o un contenuto video/audio può andare in pausa fin quando l'utente non visualizza di nuovo la pagina</li>
-<li>Una applicazione può decidere di mostrare le notifiche all'utente solo quando nascosta alla vista</li>
+<li>Una applicazione può decidere di mostrare notifiche all'utente solo quando nascosta</li>
 </ul>
 
 <p>All'inizio, questa API non sembrava molto utile al di là dei vantaggi per l'utente, ma considerando l'enorme aumento del web browsing su dispositivi mobili, qualunque cosa aiuti a risparmiare batteria è diventato di fondamentale importanza. Utilizzando l'API PageVisibility, il tuo sito può aiutare i dispositivi degli utenti a consumare di meno e durare di più.</p>
 
-<p>La specifica dell'API, che al momento della scrittura di questo articolo si trova in fase di Candidate Recommendation, fornisce sia le proprietà per rilevare lo stato di visibilità del documento, nonchè un evento per rispondere ai cambiamenti di visibilità. In questo tutorial andrò a coprire le basi della API e mostrerò come applicarla tramite alcuni esempi pratici (sentiti libero di <a href="#practicals">andare direttamente a questi</a> se sei un tipo impaziente).</p>
+<p>La specifica dell'API, che al momento della scrittura di questo articolo si trova in fase di Candidate Recommendation, fornisce sia le proprietà per rilevare lo stato di visibilità del documento, nonchè un evento per rispondere ai cambiamenti di visibilità. In questo tutorial andrò a coprire le basi della API e mostrerò come applicarla tramite alcuni esempi pratici (sentiti libero di <a href="#practicals">consultarli direttamente</a> se sei un tipo impaziente).</p>
 
 <h2 id="toc-topic">Proprietà di Visibilità del Documento</h2>
 
@@ -41,7 +41,7 @@ return ("hidden" in document || "webkitHidden" in document || "mozHidden" in doc
 
 <h3 id="toc-topic-subtopic">Gestire i prefissi dei vendor</h3>
 
-<p>Al fine di mantenere la concentrazione sul codice invece che su tutti i prefissi specifici dei vendor, utilizzerò una funzione ausiliaria per isolare le specifiche dei browser.</p>
+<p>Al fine di mantenere l'attenzione sul codice invece che su tutti i prefissi specifici dei vendor, utilizzerò una funzione ausiliaria per isolare le specifiche dei browser.</p>
 
 <pre class="prettyprint">
 function getHiddenProp(){
@@ -73,17 +73,17 @@ function isHidden() {
 }
 </pre>
 
-<p>Per una visione più granulare della visibilità del documento, puoi utilizzare la proprietà visibilityState. Questa proprietà restituisce uno tra questi quattro valori:</p>
+<p>Per un'analisi più granulare della visibilità del documento, puoi utilizzare la proprietà visibilityState. Questa proprietà restituisce uno tra questi quattro valori:</p>
 <ul>
 <li><code>&quot;hidden&quot;</code>: il documento è completamente nascosto alla vista</li>
 <li><code>&quot;visible&quot;</code>: il documento è anche solo parzialmente visibile su almeno uno schermo</li>
 <li><code>&quot;prerender&quot;</code>: il documento è caricato al di fuori dello schermo e non è visibile (questo valore è opzionale; <a href="https://developers.google.com/chrome/whitepapers/prerender">non tutti i browser necessariamente lo supportano</a>)</li>
-<li><code>&quot;unloaded&quot;</code>: se il documentoif the document deve essere dismesso, allora sarà restituito questo valore (questo valore è opzionale; non tutti i browser necessariamente lo supportano)</li>
+<li><code>&quot;unloaded&quot;</code>: se il documento deve essere dismesso, allora sarà restituito questo valore (questo valore è opzionale; non tutti i browser necessariamente lo supportano)</li>
 </ul>
 
 <h2 id="toc-topic">L'Evento VisibilityChange</h2>
 
-<p>In aggiunta alle proprietà di visibilitù, è presente un evento visibilitychange che viene attivato ogni volta che lo stato della visibilità di un documento cambia. Si può registrare un listener a questo evento direttamente all'interno del document:</p>
+<p>In aggiunta alle proprietà di visibilità, è presente un evento visibilitychange che viene notificato ogni volta che lo stato della visibilità di un documento cambia. Si può registrare un listener a questo evento direttamente all'interno del document:</p>
 
 <h3 id="toc-topic-subtopic">Esempio di Evento</h3>
 
@@ -107,7 +107,7 @@ function visChange() {
 }
 </pre>
 
-<p>Gli effetti del codice riportato sopra si possono osservare nel campo di testo editabile qui sotto. Porva a nascondere il tab contenente questa pagina e osserva come cambia il contenuto del campo di testo:</p>
+<p>Gli effetti del codice riportato sopra si possono osservare nel campo di testo editabile qui sotto. Prova a nascondere il tab contenente questa pagina e osserva come cambia il contenuto del campo di testo:</p>
 
 <script>
 function getHiddenProp(){
@@ -201,7 +201,7 @@ window.addEventListener("load", function vidDemo() {
 });
 </script>
 
-<p>Questo è reso possibile intercettando l'evento visibilityChange e triggerando lo stato del video:</p>
+<p>Questo è reso possibile intercettando l'evento visibilityChange e modificando conseguentemente lo stato del video:</p>
 
 <pre class="prettyprint">
 window.addEventListener("load", function vidDemo() {
@@ -231,9 +231,9 @@ window.addEventListener("load", function vidDemo() {
 
 <h3 id="toc-topic-subtopic">Visualizzazione delle notifiche solo quando un tab è nascosto</h3>
 
-<p>Le <a href="http://www.html5rocks.com/en/tutorials/notifications/quick/">API W3C per le notifiche</a> permettono di mostrare dei pop-up di notifica all'utente per ottenere la sua attenzione. Tuttavia, quando l'utente è già concentrato sulla pagina questa pratica può risultare fastidiosa. Utilizzando le PAI PageVisibility, si può decidere di mostrare le notifiche solo quando il tab è nascosto e non visualizzato.</p>
+<p>Le <a href="http://www.html5rocks.com/en/tutorials/notifications/quick/">API W3C per le notifiche</a> permettono di mostrare dei pop-up di notifica all'utente per ottenere la sua attenzione. Tuttavia, quando l'utente è già concentrato sulla pagina questa pratica può risultare fastidiosa. Utilizzando le API PageVisibility, si può decidere di mostrare le notifiche solo quando il tab è nascosto e non visualizzato.</p>
 
-<p>Prova ad abilitare le notifiche clillcando sul pulsante "Enable Notifications". Poi clicca sul pulsante "Notify Me!" e abbandona il tab. Dopo 5 secondi, il codice controllerà se il tab è nascosto e mostrerà una notifica. Altrimenti, utilizzerà un alert standard.</p>
+<p>Prova ad abilitare le notifiche cliccando sul pulsante "Enable Notifications". Poi clicca sul pulsante "Notify Me!" e abbandona il tab. Dopo 5 secondi, il codice controllerà se il tab è nascosto e mostrerà una notifica. Altrimenti, utilizzerà un alert standard.</p>
 
 <script>
 window.addEventListener("load", function notifyDemo() {
@@ -306,7 +306,7 @@ window.addEventListener("load", function notifyDemo() {
 
 <h3 id="toc-topic-subtopic">Rinviare Google Analytics se la pagina è pre-renderizzata</h3>
 
-<p>Alcuni browser, come ad esempio Google Chrome, hanno la possibilità di pre-renderizzare le pagine web (<a href="https://developers.google.com/chrome/whitepapers/prerender">qui</a> puoi trovare altre informazioni sul pre-rendering di Chrome). Questo processo comporta il download di tutte le risorse necessarie al rendering della pagina - compresi tutti gli script contenuti nella stessa. Diversi siti di terze parti utilizzano Google Analytics per rilevare quando e quanto le loro pagine vengono visitate, ma questo conteggio può disallinearsi se una pagina viene pre-renderizzata ma mai realmente visualizzata dall'utente.</p>
+<p>Alcuni browser, come ad esempio Google Chrome, hanno la possibilità di pre generare pagine web (<a href="https://developers.google.com/chrome/whitepapers/prerender">qui</a> puoi trovare altre informazioni sul pre-rendering di Chrome). Questo processo comporta il download di tutte le risorse necessarie al rendering della pagina - compresi tutti gli script contenuti nella stessa. Diversi siti di terze parti utilizzano Google Analytics per rilevare quando e quanto le loro pagine vengono visitate, ma questo conteggio può disallinearsi se una pagina viene pre-renderizzata ma mai realmente visualizzata dall'utente.</p>
 
 <p>Per prevenire questo problema, si può utilizzare l'API PageVisibility per rilevare che la pagina è stata pre-renderizzata, omettendo in tal caso il conteggio della vista. Tipicamente una pagina che utilizza Google Analytics contiene codice come questo:</p>
 
@@ -344,7 +344,7 @@ function handleVisEvt() {
 
 <h2 id="toc-topic">Riepilogo</h2>
 
-<p>Mettere in piedi una buona web application comporta molto di più che implementare incredibili e accattivanti funzionalità che l'utente può osservare e con cui può interagire. Una applicazione davvero grandiosa utilizza in modo attento le risorse e l'attenzione dell'utente; la API Page Visibility è un pezzo importante di questo puzzle. Per saperne di più sullo sviluppo di web application attenti alle risorse, dai un'occhiata agli <a href="http://www.html5rocks.com/features/performance">altri articoli sulle performance</a>.</p>
+<p>Realizzare una buona web application comporta molto di più che implementare incredibili e accattivanti funzionalità che l'utente può osservare e con cui può interagire. Una applicazione davvero grandiosa utilizza in modo attento le risorse e l'attenzione dell'utente; la API Page Visibility è un pezzo importante di questo puzzle. Per saperne di più sullo sviluppo di applicazioni web attente al consumo di risorse, dai un'occhiata agli <a href="http://www.html5rocks.com/features/performance">altri articoli sulle performance</a>.</p>
 
 <h2 id="toc-references">Riferimenti esterni</h2>
 
