@@ -437,7 +437,7 @@ are called,...drumroll...distributed nodes! They're allowed to cross the shadow 
 when insertion points invite them.
 
 <blockquote class="commentary talkinghead">
-Insertion points are incredibly power. Think of them as a way to create a
+Insertion points are incredibly powerful. Think of them as a way to create a
 "declarative API" for your Shadow DOM. A host element can include all the markup in the world,
 but unless I invite it into my Shadow DOM with an insertion point, it's meaningless.
 </blockquote>
