@@ -113,6 +113,8 @@ class ContentHandler(webapp2.RequestHandler):
       for tut in tutorials:
         article = {}
         article['title'] = tut.title
+        if hasattr(tut, 'subtitle'):
+          article['subtitle'] = tut.subtitle
         article['id'] = '-'.join(tut.title.lower().split())
         article['href'] = tut.url
         article['description'] = tut.description
@@ -218,8 +220,11 @@ class ContentHandler(webapp2.RequestHandler):
       author_name = unicode(tut['author_id'])
       if 'second_author' in tut:
         author_name += ',' + tut['second_author']
+      title = tut['title']
+      if 'subtitle' in tut and tut['subtitle']:
+        title += ': ' + tut['subtitle']
       feed.add_item(
-          title=unicode(tut['title']),
+          title=unicode(title),
           link=prefix + tut['href'],
           description=unicode(tut['description']),
           pubdate=tut['pubdate'],
@@ -355,6 +360,8 @@ class ContentHandler(webapp2.RequestHandler):
         if tut:
           if tut.title:
             tut.title = _(tut.title)
+          if hasattr(tut, 'subtitle') and tut.subtitle:
+            tut.subtitle = _(tut.subtitle)
           if tut.description:
             tut.description = _(tut.description)
 
@@ -416,6 +423,8 @@ class ContentHandler(webapp2.RequestHandler):
           if os.path.isfile(filepath):
             if r.title:
               r.title = _(r.title)
+            if hasattr(r, 'subtitle') and r.subtitle:
+              r.subtitle = _(r.subtitle)
             if r.description:
               r.description = _(r.description)
           # Point the article to the localized version, regardless.
@@ -494,6 +503,7 @@ class DBHandler(ContentHandler):
 
         resource = models.Resource(
           title=res['title'],
+          subtitle=res.get('subtitle') or None,
           description=res.get('description') or None,
           author=author_key,
           second_author=author_key2,
@@ -761,6 +771,7 @@ class DBHandler(ContentHandler):
         try:
           #TODO: This is also hacky.
           tutorial.title = self.request.get('title')
+          tutorial.subtitle = self.request.get('subtitle') or None
           tutorial.description = self.request.get('description')
           tutorial.author = author_key
           tutorial.second_author = author_key2
@@ -779,6 +790,7 @@ class DBHandler(ContentHandler):
         try:
           tutorial = models.Resource(
               title=self.request.get('title'),
+              subtitle=self.request.get('subtitle') or None,
               description=self.request.get('description'),
               author=author_key,
               second_author=author_key2,

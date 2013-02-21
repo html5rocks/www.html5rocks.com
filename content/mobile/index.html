@@ -33,7 +33,7 @@
           {% if tut.type != 'tutorial' and tut.type != 'article' %}
             <li data-pubdate="{{tut.publication_date}}">
               <span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span> <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}"></span>
-              <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}</a></span>
+              <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}</a></span>
               <span class="classes">
                 {% for tag in tut.classes %}
                   <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
@@ -55,7 +55,7 @@
         {% if forloop.counter0 < 10 %}
           {% if r.type == 'tutorial' or r.type == 'article' %}
           <li>
-            <a href="{{r.url}}">{{r.title}}</a><br>
+            <a href="{{r.url}}">{{r.title}}{% if r.subtitle %}: {{r.subtitle|safe}}{% endif %}</a><br>
             <span>{{r.description|safe|truncatewords:15}}</span>
             </a>
           </li>
