@@ -13,8 +13,6 @@ window.requestAnimFrame = (function(){
 (function(win, d) {
 
   var $ = d.querySelector.bind(d);
-  var w = window.innerWidth;
-  var h = d.height;
 
   var bg = $('#bg');
   var blob1 = $('#blob-1');
@@ -36,8 +34,6 @@ window.requestAnimFrame = (function(){
   var lastScrollY = 0;
 
   function onResize () {
-    w = win.innerWidth;
-    h = d.height;
 
     canvas.width = 960;
     canvas.height = window.innerHeight;
@@ -55,7 +51,7 @@ window.requestAnimFrame = (function(){
 
   function updateElements () {
 
-    var relativeY = lastScrollY / h;
+    var relativeY = lastScrollY / 3000;
 
     context.fillStyle = "#1e2124";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -78,7 +74,7 @@ window.requestAnimFrame = (function(){
   }
 
   function prefix(obj, prop, value) {
-    var prefs = ['webkit', 'moz', 'o', 'ms'];
+    var prefs = ['webkit', 'Moz', 'o', 'ms'];
     for (var pref in prefs) {
       obj[prefs[pref] + prop] = value;
     }
