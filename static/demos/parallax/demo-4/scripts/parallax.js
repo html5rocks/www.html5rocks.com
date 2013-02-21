@@ -1,8 +1,6 @@
 (function(win, d) {
 
   var $ = d.querySelector.bind(d);
-  var w = window.innerWidth;
-  var h = d.height;
 
   var bg = $('#bg');
   var blob1 = $('#blob-1');
@@ -50,8 +48,6 @@
   var lastScrollY = 0;
 
   function onResize () {
-    w = win.innerWidth;
-    h = d.height;
 
     if(camera === null) {
       createElements();
@@ -169,10 +165,7 @@
 
   function updateElements () {
 
-    var relativeY = lastScrollY / h;
-
-    // context.fillStyle = "#1e2124";
-    // context.fillRect(0, 0, canvas.width, canvas.height);
+    var relativeY = lastScrollY / 3000;
 
     bgObj.position.y = 1500 + pos(0, -3600, relativeY, 0);
     blob1Obj.position.y = 227 + pos(254, -4400, relativeY, 0);
