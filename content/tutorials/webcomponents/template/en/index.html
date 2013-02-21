@@ -1,0 +1,219 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+blockquote {
+  background: rgb(238, 238, 238);
+  padding: 1px 10px;
+}
+label.bad, label.good, label.sortof {
+  padding: 4px;
+  line-height: 1.7;
+  border-radius: 50%;
+  color: white;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  -webkit-transform: rotateZ(90deg);
+  -moz-transform: rotateZ(90deg);
+  -ms-transform: rotateZ(90deg);
+  -o-transform: rotateZ(90deg);
+  transform: rotateZ(90deg);
+  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+}
+label.good::after,
+label.bad::after,
+label.sortof::after {
+  position: relative;
+  left: 2px;
+  top: -5px;
+}
+label.bad {
+  background-color: red;
+}
+label.bad::after {
+  content: ':(';
+}
+label.good {
+  background-color: green;
+}
+label.good::after {
+  content: ':)';
+}
+label.sortof {
+  background-color: rgb(230, 190, 32);
+  line-height: 1.8;
+}
+label.sortof::after {
+  content: ':|';
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return 'HTMLTemplateElement' in window;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+<h2 id="toc-intro">Introduction</h2>
+
+<p>The concept of templating is not new to web development. In fact, server-side
+templating languages/engines like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
+have been around for a long time. In the last couple of years however, we've seen
+an explosion of MVC frameworks spring up. All of them are slightly different,
+yet most share a common mechanic for rendering their presentational layer (view): templates.</p>
+<p>Templates are fantastic. Go ahead. Ask around. Even the <a href="http://www.thefreedictionary.com/template">definition</a> 
+of makes you feel warm and cozy:</p>
+<blockquote>
+<p><strong>template</strong> (n) - A document or file having a preset format, used as a starting point for a particular application so that the format does not have to be recreated each time it is used.</p>
+</blockquote>
+<p>"...does not have to be recreated each time...." I don't know about you, but I love
+saving myself from extra work. Why then does the web platform lack
+native support for something developers clearly want and care about?</p>
+<p>The <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML Templates specification</a> is the answer. It defines a
+new <code>&lt;template&gt;</code> element for creating client-side templates.</p>
+<h2 id="toc-started">Declaring template content</h2>
+
+<p>An HTML <code>&lt;template&gt;</code> contains content which is <strong>inert chunks of cloneable DOM</strong>.
+Think of them as pieces of scaffolding that you can use (and reuse) throughout
+the lifetime of your app.</p>
+<p>To create a template, you declare some markup and wrap it in a <code>&lt;template&gt;</code>:</p>
+<pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
+  &lt;img src=""&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<blockquote class="commentary talkinghead">
+The observant reader may notice the empty image. That's perfectly fine
+and intentional. A broken image won't 404 or produce console errors because it
+won't be fetched. We can dynamically generate the source URL later on. See 
+<a href="#toc-pillars">the pillars</a>.
+</blockquote>
+
+<h2 id="toc-pillars">The pillars</h2>
+
+<p>Wrapping content in a <code>&lt;template&gt;</code> gives us four important properties.</p>
+<ol>
+<li>
+<p>Its <strong>content is effectively inert until activated</strong>. Essentially,
+your markup is hidden DOM and does not render.</p>
+</li>
+<li>
+<p>Any content within a template won't have side effects. <strong>Script doesn't run,
+images don't load, audio doesn't play</strong>,...until the template is used.</p>
+</li>
+<li>
+<p><strong>content is consider not to be in the document</strong>. Using
+<code>document.getElementById()</code> or <code>querySelector()</code> in the main page won't return
+child nodes of a template.</p>
+</li>
+<li>
+<p>Templates <strong>can</strong> be placed anywhere inside of <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code>, or <code>&lt;frameset&gt;</code> and can
+contain any type of content which is allowed in those elements. It can 
+also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;</code>.</p>
+</li>
+</ol>
+<h2 id="toc-using">Activating a template</h2>
+
+<p>To use a template, you first need to activate it. Do this by cloning its inner
+content:</p>
+<pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
+t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
+document.body.appendChild(t.content.cloneNode(true));
+</code></pre>
+<p><code>.content</code> is a <code>DocumentFragement</code> that provides access to the guts of a template.</p>
+<h3 id="toc-detect">Feature Detection</h3>
+
+<pre class="prettyprint"><code>function supportsTemplate() {
+  return 'content' in document.createElement('template');
+}
+
+if (supportsTemplate()) {
+  // Good to go!
+} else {
+  // Use old templating techniques or libraries.
+}
+</code></pre>
+<h3 id="toc-old">The Road to templates</h3>
+
+<p>The road to proper HTML templates has been a long one. Over the years, we've come
+up with some pretty clever tricks for creating reusable templates. Below are
+two common ones that I've come across. I'm including them in this article for
+comparison.</p>
+<h4 id="toc-offscreen"><b>Method 1</b>: Offscreen DOM</h4>
+
+<p>One approach people have been using for a long time is to create "offscreen"
+DOM and hide it from view using the <code>hidden</code> attribute or <code>display:none</code>.</p>
+<pre class="prettyprint"><code>&lt;div id="mytemplate" hidden&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>While this technique works, there are a number of downsides. The rundown of this technique:</p>
+<ul>
+<li><label class="good"></label> <em>Using DOM</em> - the browser knows DOM. It's good at it. We can easily clone it.</li>
+<li><label class="good"></label> <em>Nothing is rendered</em> - adding <code>hidden</code> prevents the block from showing</li>
+<li><label class="bad"></label> <em>Not inert</em> - even though our content is hidden,
+a network request is still made for the image.</li>
+<li><label class="bad"></label> <em>Painful styling and theming</em> - an embedding page must prefix all of its
+CSS rules with <code>#mytemplate</code> in order to scope styles down to the template. This 
+is brittle and there are no guarantees we won't encounter future naming collisions.
+For example, we're hosed if the embedding page already has an element with that id.</li>
+</ul>
+<h4 id="toc-offscreen"><b>Method 2</b>: Overloading <code>&lt;script></code></h4>
+
+<p>Another technique is overloading a <code>&lt;script&gt;</code> and manipulating its contents
+as string. John Resig was probably the first to show this back in 2008 with
+his <a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a>.
+Now there are many others, including new kid on the block,
+<a href="http://handlebarsjs.com/">handlebars.js</a>.</p>
+<p>Handlebars example:</p>
+<pre class="prettyprint"><code>&lt;script id="mytemplate" type="text/x-handlebars-template"&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+<p>The rundown of this technique:</p>
+<ul>
+<li><label class="good"></label> <em>Nothing is rendered</em> - the browser doesn't render this block because
+<code>&lt;script&gt;</code> is <code>display:none</code> by default.</li>
+<li><label class="good"></label> <em>Inert</em> - the browser doesn't parse the script content
+as JS because its type is set to something other than "text/javascript".</li>
+<li><label class="bad"></label> <em>Security issues</em> - encourages the use of <code>.innerHTML</code>.
+Run-time string parsing of user-supplied data can easily lead to XSS vulnerabilities.</li>
+</ul>
+<h2 id="toc-conclusion">Conclusion</h2>
+
+<p>Remember when JQuery made working with DOM dead simple? The result was <code>querySelector()</code>/<code>querySelectorAll()</code>
+being added to platform. Obvious wins, right? A library popularized fetching DOM
+with CSS selectors; standards adopted it. It doesn't always work that was, but I <em>love</em> when it does.</p>
+<p>In my opinion, <code>&lt;template&gt;</code> is a similar case. It standardizes client-side templating,
+removes the need for our <a href="#toc-old">crazy hacks</a>, and makes the entire web
+authoring process more sane and more maintainable.</p>
+<h2 id="toc-resources">Additional Resources</h2>
+
+<ul>
+<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C Specification</a></li>
+<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section">Introduction to Web Components</a></li>
+</ul>
+{% endblock %}
