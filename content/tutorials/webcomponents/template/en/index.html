@@ -57,6 +57,24 @@ label.sortof::after {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
+.demoarea {
+  margin-top: 1em;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
 </style>
 {% endblock %}
 
@@ -92,6 +110,20 @@ saving myself from extra work. Why then does the web platform lack
 native support for something developers clearly want and care about?</p>
 <p>The <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML Templates specification</a> is the answer. It defines a
 new <code>&lt;template&gt;</code> element for creating client-side templates.</p>
+<h3 id="toc-detect">Feature Detection</h3>
+
+<p>To feature detect <code>&lt;template&gt;</code> support, create the DOM element and check that
+the <code>.content</code> property exists:</p>
+<pre class="prettyprint"><code>function supportsTemplate() {
+  return 'content' in document.createElement('template');
+}
+
+if (supportsTemplate()) {
+  // Good to go!
+} else {
+  // Use old templating techniques or libraries.
+}
+</code></pre>
 <h2 id="toc-started">Declaring template content</h2>
 
 <p>An HTML <code>&lt;template&gt;</code> contains content which is <strong>inert chunks of cloneable DOM</strong>.
@@ -112,7 +144,7 @@ won't be fetched. We can dynamically generate the source URL later on. See
 
 <h2 id="toc-pillars">The pillars</h2>
 
-<p>Wrapping content in a <code>&lt;template&gt;</code> gives us four important properties.</p>
+<p>Wrapping content in a <code>&lt;template&gt;</code> gives us few important properties.</p>
 <ol>
 <li>
 <p>Its <strong>content is effectively inert until activated</strong>. Essentially,
@@ -135,32 +167,191 @@ also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;<
 </ol>
 <h2 id="toc-using">Activating a template</h2>
 
-<p>To use a template, you first need to activate it. Do this by cloning its inner
-content:</p>
+<p>Using a template a matter of cloning it's inner content:</p>
 <pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
 t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
 document.body.appendChild(t.content.cloneNode(true));
 </code></pre>
-<p><code>.content</code> is a <code>DocumentFragement</code> that provides access to the guts of a template.</p>
-<h3 id="toc-detect">Feature Detection</h3>
+<p><code>.content</code> is a <code>DocumentFragement</code> that provides access to the guts of a template.
+Once you stamp out a template, it's content "goes live". In this case, the image
+is requested and that is appended to the body is rendered.</p>
+<h2 id="toc-using">Demos</h2>
 
-<pre class="prettyprint"><code>function supportsTemplate() {
-  return 'content' in document.createElement('template');
-}
+<h3 id="toc-demo-insert">Example: Inert script</h3>
 
-if (supportsTemplate()) {
-  // Good to go!
-} else {
-  // Use old templating techniques or libraries.
-}
+<p>This example demonstrates the inertness of template content. The <code>&lt;script&gt;</code> only
+runs when the button is pressed, stamping out the template.</p>
+<pre class="prettyprint"><code>&lt;button onclick="useIt()"&gt;Use me&lt;/button&gt;
+&lt;div id="container"&gt;&lt;/div&gt;
+&lt;script&gt;
+  function useIt() {
+    var content = document.querySelector('template').content;
+    var span = content.querySelector('span'); // Update something in the template DOM.
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(content.cloneNode(true));
+  }
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div&gt;Template used: &lt;span&gt;0&lt;/span&gt;&lt;/div&gt;
+  &lt;script&gt;alert('Thanks!')&lt;/script&gt;
+&lt;/template&gt;
 </code></pre>
-<h3 id="toc-old">The Road to templates</h3>
+<div class="demoarea">
+<button onclick="useIt()">Use me</button>
+<div id="container"></div>
+<template id="inert-demo">
+  <div>Template used <span>0</span></div>
+  <script>alert('Thanks!')</script>
+</template>
+<script>
+  function useIt() {
+    var content = document.querySelector('#inert-demo').content;
+    var span = content.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(content.cloneNode(true));
+  }
+</script>
+</div>
 
-<p>The road to proper HTML templates has been a long one. Over the years, we've come
-up with some pretty clever tricks for creating reusable templates. Below are
+<h3 id="toc-demo-sd">Example: Creating Shadow DOM from a &lt;template&gt;</h3>
+
+<p>Most people attach Shadow DOM to a host by setting a string of markup to <code>.innerHTML</code>:</p>
+<pre class="prettyprint"><code>&lt;div id="host"&gt;&lt;/div&gt;
+&lt;script&gt;
+  var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+  shadow.innerHTML = '&lt;span&gt;Host node&lt;/span&gt;';
+&lt;/script&gt;
+</code></pre>
+<p>The problem is, the more complex your Shadow DOM, the more this approach doesn't
+scale. Enter <code>&lt;template&gt;</code>! Instead, we can append template <code>.content</code> to a shadow root:</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+&lt;style&gt;
+  @host {
+    * {
+      background: #f8f8f8;
+      padding: 10px;
+      -webkit-transition: all 400ms ease-in-out;
+      box-sizing: border-box;
+      border-radius: 5px;
+      width: 450px;
+      max-width: 100%;
+    } 
+    *:hover {
+      background: #ccc;
+    }
+  }
+  div {
+    position: relative;
+  }
+  header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  h3 {
+    margin: 0 !important;
+  }
+  textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+&lt;/style&gt;
+&lt;div&gt;
+  &lt;header&gt;
+    &lt;h3&gt;Add a Comment&lt;/h3&gt;
+  &lt;/header&gt;
+  &lt;content select="p"&gt;&lt;/content&gt;
+  &lt;textarea&gt;&lt;/textarea&gt;
+  &lt;footer&gt;
+    &lt;button&gt;Post&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;div id="host"&gt;
+  &lt;p&gt;Instructions go here&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+  shadow.appendChild(document.querySelector('template').content);
+&lt;/script&gt;
+</code></pre>
+<p><template id="demo-sd-template">
+<style>
+  @host {
+    * {
+      background: #f8f8f8;
+      padding: 10px;
+      -webkit-transition: all 400ms ease-in-out;
+      box-sizing: border-box;
+      border-radius: 5px;
+      width: 450px;
+      max-width: 100%;
+    } 
+    *:hover {
+      background: #ccc;
+    }
+  }
+  div {
+    position: relative;
+  }
+  header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  h3 {
+    margin: 0 !important;
+  }
+  textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+</style>
+<div>
+  <header>
+    <h3>Add a Comment</h3>
+  </header>
+  <content select="p"></content>
+  <textarea></textarea>
+  <footer>
+    <button>Post</button>
+  </footer>
+</div>
+</template></p>
+<div id="demo-sd-host">
+  <p>Instructions go here</p>
+</div>
+
+<script>
+  var shadow = document.querySelector('#demo-sd-host').webkitCreateShadowRoot();
+  shadow.applyAuthorStyles = true;
+  shadow.appendChild(document.querySelector('#demo-sd-template').content);
+</script>
+
+<h2 id="toc-old">The Road to standard templates</h2>
+
+<p>Don't forget where you came from! The road HTML templates has been a long one.
+Over the years, we've come up with some pretty clever tricks for creating reusable templates. Below are
 two common ones that I've come across. I'm including them in this article for
 comparison.</p>
-<h4 id="toc-offscreen"><b>Method 1</b>: Offscreen DOM</h4>
+<h3 id="toc-offscreen">Method 1: Offscreen DOM</h3>
 
 <p>One approach people have been using for a long time is to create "offscreen"
 DOM and hide it from view using the <code>hidden</code> attribute or <code>display:none</code>.</p>
@@ -180,7 +371,7 @@ CSS rules with <code>#mytemplate</code> in order to scope styles down to the tem
 is brittle and there are no guarantees we won't encounter future naming collisions.
 For example, we're hosed if the embedding page already has an element with that id.</li>
 </ul>
-<h4 id="toc-offscreen"><b>Method 2</b>: Overloading <code>&lt;script></code></h4>
+<h3 id="toc-offscreen">Method 2: Overloading <code>&lt;script></code></h3>
 
 <p>Another technique is overloading a <code>&lt;script&gt;</code> and manipulating its contents
 as string. John Resig was probably the first to show this back in 2008 with
@@ -202,6 +393,17 @@ as JS because its type is set to something other than "text/javascript".</li>
 <li><label class="bad"></label> <em>Security issues</em> - encourages the use of <code>.innerHTML</code>.
 Run-time string parsing of user-supplied data can easily lead to XSS vulnerabilities.</li>
 </ul>
+<h2 id="toc-gotcha">Gotchas</h2>
+
+<p>Here are a few gotchas I've run in to when working with templates:</p>
+<ul>
+<li>If you're using <a href="http://code.google.com/p/modpagespeed/">modpagespeed</a>, be careful
+of this <a href="http://code.google.com/p/modpagespeed/issues/detail?id=625">bug</a>. Templates
+that define inline <code>&lt;style scoped&gt;</code>, many be moved to the head with PageSpeed's CSS rewriting
+rules.</li>
+<li>There's no way to "prerender" a template. That goes for server and client. The
+only time a template renders is when it is activated.</li>
+</ul>
 <h2 id="toc-conclusion">Conclusion</h2>
 
 <p>Remember when JQuery made working with DOM dead simple? The result was <code>querySelector()</code>/<code>querySelectorAll()</code>
@@ -215,5 +417,6 @@ authoring process more sane and more maintainable.</p>
 <ul>
 <li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C Specification</a></li>
 <li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section">Introduction to Web Components</a></li>
+<li><a href="http://html5-demos.appspot.com/static/webcomponents/index.html">&lt;web&gt;components&lt;/web&gt;</a> - a fantastically comprehensive presentation by yours truly.</li>
 </ul>
 {% endblock %}
