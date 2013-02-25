@@ -19,8 +19,12 @@ native support for something developers clearly care about?
 The [W3C HTML Templates specification][spec-link] is the answer. It defines a
 new `<template>` element which describes a standard DOM-based approach
 for client-side templating. Templates allow you to declare fragments of prototype
-markup which are parsed as HTML, but go unused at page load. They can be instantiated later on
-at runtime.
+markup which are parsed as HTML, go unused at page load, but can be instantiated
+later on at runtime. To quote [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts) (spec author):
+
+> "They're a place to put a big wad of HTML that you don't want the browser to mess
+with at all...for any reason."
+
 
 <h3 id="toc-detect">Feature Detection</h3>
 
@@ -67,7 +71,7 @@ your markup is hidden DOM and does not render.
 2. Any content within a template won't have side effects. **Script doesn't run,
 images don't load, audio doesn't play**,...until the template is used.
 
-3. **content is considered not to be in the document**. Using
+3. **Content is considered not to be in the document**. Using
 `document.getElementById()` or `querySelector()` in the main page won't return
 child nodes of a template.
 
@@ -131,7 +135,7 @@ runs when the button is pressed, stamping out the template.
 
 <h3 id="toc-demo-sd">Example: Creating Shadow DOM from a &lt;template&gt;</h3>
 
-Most people attach Shadow DOM to a host by setting a string of markup to `.innerHTML`:
+Most people attach [Shadow DOM](/webcomponents/shadowdom/) to a host by setting a string of markup to `.innerHTML`:
 
     <div id="host"></div>
     <script>
@@ -353,7 +357,7 @@ Run-time string parsing of user-supplied data can easily lead to XSS vulnerabili
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
-Remember when JQuery made working with DOM dead simple? The result was `querySelector()`/`querySelectorAll()`
+Remember when jQuery made working with DOM dead simple? The result was `querySelector()`/`querySelectorAll()`
 being added to platform. Obvious win, right? A library popularized fetching DOM
 with CSS selectors and standards later adopted it. It doesn't always work that was, but I *love* when it does.
 
@@ -366,7 +370,7 @@ full featured is always a good thing in my book.
 
 - [W3C Specification][spec-link]
 - [Introduction to Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section)
-- [&lt;web>components&lt;/web>](http://html5-demos.appspot.com/static/webcomponents/index.html) - a fantastically comprehensive presentation by yours truly.
+- [&lt;web>components&lt;/web>](http://html5-demos.appspot.com/static/webcomponents/index.html) ([video](http://www.youtube.com/watch?v=eJZx9c6YL8k)) - a fantastically comprehensive presentation by yours truly.
 
 [spec-link]: https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html
 
