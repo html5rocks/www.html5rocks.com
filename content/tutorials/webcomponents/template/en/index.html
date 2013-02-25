@@ -99,21 +99,22 @@ label.sortof::after {
 templating languages/engines like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
 have been around for a long time. In the last couple of years however, we've seen
 an explosion of MVC frameworks spring up. All of them are slightly different,
-yet most share a common mechanic for rendering their presentational layer (view): templates.</p>
-<p>Templates are fantastic. Go ahead. Ask around. Even the <a href="http://www.thefreedictionary.com/template">definition</a> 
-of makes you feel warm and cozy:</p>
+yet most share a common mechanic for rendering their presentational layer (aka da view): templates.</p>
+<p>Let's face it. Templates are fantastic. Go ahead, ask around. Even its <a href="http://www.thefreedictionary.com/template">definition</a> makes you feel warm and cozy:</p>
 <blockquote>
 <p><strong>template</strong> (n) - A document or file having a preset format, used as a starting point for a particular application so that the format does not have to be recreated each time it is used.</p>
 </blockquote>
-<p>"...does not have to be recreated each time...." I don't know about you, but I love
-saving myself from extra work. Why then does the web platform lack
-native support for something developers clearly want and care about?</p>
+<p>"...does not have to be recreated each time...." Don't know about you, but I love
+avoiding extra work. Why then does the web platform lack
+native support for something developers clearly care about?</p>
 <p>The <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML Templates specification</a> is the answer. It defines a
-new <code>&lt;template&gt;</code> element for creating client-side templates.</p>
+standard for client-side templating via a new element, <code>&lt;template&gt;</code>.
+Templates allow you to declare fragments of prototype markup which are
+parsed as HTML, but go unused at page load. They can be instantiated later on
+at runtime.</p>
 <h3 id="toc-detect">Feature Detection</h3>
 
-<p>To feature detect <code>&lt;template&gt;</code> support, create the DOM element and check that
-the <code>.content</code> property exists:</p>
+<p>To feature detect <code>&lt;template&gt;</code>, create the DOM element and check that the <code>.content</code> property exists:</p>
 <pre class="prettyprint"><code>function supportsTemplate() {
   return 'content' in document.createElement('template');
 }
@@ -126,10 +127,11 @@ if (supportsTemplate()) {
 </code></pre>
 <h2 id="toc-started">Declaring template content</h2>
 
-<p>An HTML <code>&lt;template&gt;</code> contains content which is <strong>inert chunks of cloneable DOM</strong>.
-Think of them as pieces of scaffolding that you can use (and reuse) throughout
+<p>The HTML <code>&lt;template&gt;</code> element represents a template in your markup. It contains
+"template contents"; essentially <strong>inert chunks of cloneable DOM</strong>.
+Think of templates as pieces of scaffolding that you can use (and reuse) throughout
 the lifetime of your app.</p>
-<p>To create a template, you declare some markup and wrap it in a <code>&lt;template&gt;</code>:</p>
+<p>To create a templated content, declare some markup and wrap it in the <code>&lt;template&gt;</code> element:</p>
 <pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
   &lt;img src=""&gt;
   &lt;div class="comment"&gt;&lt;/div&gt;
@@ -138,7 +140,7 @@ the lifetime of your app.</p>
 <blockquote class="commentary talkinghead">
 The observant reader may notice the empty image. That's perfectly fine
 and intentional. A broken image won't 404 or produce console errors because it
-won't be fetched. We can dynamically generate the source URL later on. See 
+won't be fetched on page load. We can dynamically generate the source URL later on. See 
 <a href="#toc-pillars">the pillars</a>.
 </blockquote>
 
@@ -155,7 +157,7 @@ your markup is hidden DOM and does not render.</p>
 images don't load, audio doesn't play</strong>,...until the template is used.</p>
 </li>
 <li>
-<p><strong>content is consider not to be in the document</strong>. Using
+<p><strong>content is considered not to be in the document</strong>. Using
 <code>document.getElementById()</code> or <code>querySelector()</code> in the main page won't return
 child nodes of a template.</p>
 </li>
@@ -167,14 +169,16 @@ also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;<
 </ol>
 <h2 id="toc-using">Activating a template</h2>
 
-<p>Using a template a matter of cloning it's inner content:</p>
+<p>To use a template, you need to activate it. Otherwise it's contents will never render. 
+The simplest way to do this is by cloning it's inner content:</p>
 <pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
 t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
 document.body.appendChild(t.content.cloneNode(true));
 </code></pre>
-<p><code>.content</code> is a <code>DocumentFragement</code> that provides access to the guts of a template.
-Once you stamp out a template, it's content "goes live". In this case, the image
-is requested and that is appended to the body is rendered.</p>
+<p>The <code>.content</code> property is a read-only <code>DocumentFragment</code> that provides access to the guts
+of a template. After stamping out a template, it's contents "goes live".
+In this particular example, the content is cloned, the image request is made, and
+the final markup is rendered.</p>
 <h2 id="toc-using">Demos</h2>
 
 <h3 id="toc-demo-insert">Example: Inert script</h3>
@@ -223,8 +227,10 @@ runs when the button is pressed, stamping out the template.</p>
   shadow.innerHTML = '&lt;span&gt;Host node&lt;/span&gt;';
 &lt;/script&gt;
 </code></pre>
-<p>The problem is, the more complex your Shadow DOM, the more this approach doesn't
-scale. Enter <code>&lt;template&gt;</code>! Instead, we can append template <code>.content</code> to a shadow root:</p>
+<p>The problem with this approach is that the more complex your Shadow DOM gets,
+the more string catenation you're doing. This doesn't scale. Things get messy
+fast and babies begin to cry. <code>&lt;template&gt;</code> to the rescue!</p>
+<p>Something more sane would be to append template content to a shadow root:</p>
 <pre class="prettyprint"><code>&lt;template&gt;
 &lt;style&gt;
   @host {
@@ -345,12 +351,36 @@ scale. Enter <code>&lt;template&gt;</code>! Instead, we can append template <cod
   shadow.appendChild(document.querySelector('#demo-sd-template').content);
 </script>
 
-<h2 id="toc-old">The Road to standard templates</h2>
+<h2 id="toc-gotcha">Gotchas</h2>
 
-<p>Don't forget where you came from! The road HTML templates has been a long one.
-Over the years, we've come up with some pretty clever tricks for creating reusable templates. Below are
-two common ones that I've come across. I'm including them in this article for
-comparison.</p>
+<p>Here are a few gotchas I've come across when using <code>&lt;template&gt;</code> in the wild:</p>
+<ul>
+<li>If you're using <a href="http://code.google.com/p/modpagespeed/">modpagespeed</a>, be careful
+of this <a href="http://code.google.com/p/modpagespeed/issues/detail?id=625">bug</a>. Templates
+that define inline <code>&lt;style scoped&gt;</code>, many be moved to the head with PageSpeed's CSS rewriting
+rules.</li>
+<li>There's no way to "prerender" a template. That goes for both server and client.
+The only time a template renders is when it goes live.</li>
+<li>
+<p>Be careful with nested templates. They don't behave as you might expect. For example:</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+  &lt;ul&gt;
+    &lt;template&gt;
+      &lt;li&gt;Stuff&lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+</code></pre>
+<p>When the outer <code>&lt;template&gt;</code> gets activated, the inner template will not be.
+Nested templates still need to be manually instantiate.</p>
+</li>
+</ul>
+<h2 id="toc-old">The Road to a standard</h2>
+
+<p>Let's not forget where we came from. The road to standards-based HTML templates
+has been a long one. Over the years, we've come up with some pretty clever tricks
+for creating reusable templates. Below are two common ones that I've come across.
+I'm including them in this article for comparison.</p>
 <h3 id="toc-offscreen">Method 1: Offscreen DOM</h3>
 
 <p>One approach people have been using for a long time is to create "offscreen"
@@ -371,14 +401,13 @@ CSS rules with <code>#mytemplate</code> in order to scope styles down to the tem
 is brittle and there are no guarantees we won't encounter future naming collisions.
 For example, we're hosed if the embedding page already has an element with that id.</li>
 </ul>
-<h3 id="toc-offscreen">Method 2: Overloading <code>&lt;script></code></h3>
+<h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
-<p>Another technique is overloading a <code>&lt;script&gt;</code> and manipulating its contents
+<p>Another technique is overloading <code>&lt;script&gt;</code> and manipulating its contents
 as string. John Resig was probably the first to show this back in 2008 with
 his <a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a>.
-Now there are many others, including new kid on the block,
-<a href="http://handlebarsjs.com/">handlebars.js</a>.</p>
-<p>Handlebars example:</p>
+Now there are many others, including some new kids on the block like <a href="http://handlebarsjs.com/">handlebars.js</a>.</p>
+<p>For example:</p>
 <pre class="prettyprint"><code>&lt;script id="mytemplate" type="text/x-handlebars-template"&gt;
   &lt;img src="logo.png"&gt;
   &lt;div class="comment"&gt;&lt;/div&gt;
@@ -393,25 +422,15 @@ as JS because its type is set to something other than "text/javascript".</li>
 <li><label class="bad"></label> <em>Security issues</em> - encourages the use of <code>.innerHTML</code>.
 Run-time string parsing of user-supplied data can easily lead to XSS vulnerabilities.</li>
 </ul>
-<h2 id="toc-gotcha">Gotchas</h2>
-
-<p>Here are a few gotchas I've run in to when working with templates:</p>
-<ul>
-<li>If you're using <a href="http://code.google.com/p/modpagespeed/">modpagespeed</a>, be careful
-of this <a href="http://code.google.com/p/modpagespeed/issues/detail?id=625">bug</a>. Templates
-that define inline <code>&lt;style scoped&gt;</code>, many be moved to the head with PageSpeed's CSS rewriting
-rules.</li>
-<li>There's no way to "prerender" a template. That goes for server and client. The
-only time a template renders is when it is activated.</li>
-</ul>
 <h2 id="toc-conclusion">Conclusion</h2>
 
 <p>Remember when JQuery made working with DOM dead simple? The result was <code>querySelector()</code>/<code>querySelectorAll()</code>
-being added to platform. Obvious wins, right? A library popularized fetching DOM
-with CSS selectors; standards adopted it. It doesn't always work that was, but I <em>love</em> when it does.</p>
-<p>In my opinion, <code>&lt;template&gt;</code> is a similar case. It standardizes client-side templating,
-removes the need for our <a href="#toc-old">crazy hacks</a>, and makes the entire web
-authoring process more sane and more maintainable.</p>
+being added to platform. Obvious win, right? A library popularized fetching DOM
+with CSS selectors and standards later adopted it. It doesn't always work that was, but I <em>love</em> when it does.</p>
+<p>I think <code>&lt;template&gt;</code> is a similar case. It standardizes the way we do client-side
+templating, but more importantly, it removes the need for <a href="#toc-old">our crazy 2008 hacks</a>.
+Making the entire web authoring process more sane, more maintainable, and more
+full featured is always a good thing in my book.</p>
 <h2 id="toc-resources">Additional Resources</h2>
 
 <ul>

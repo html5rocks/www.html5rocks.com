@@ -6,24 +6,25 @@ The concept of templating is not new to web development. In fact, server-side
 templating languages/engines like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
 have been around for a long time. In the last couple of years however, we've seen
 an explosion of MVC frameworks spring up. All of them are slightly different,
-yet most share a common mechanic for rendering their presentational layer (view): templates.
+yet most share a common mechanic for rendering their presentational layer (aka da view): templates.
 
-Templates are fantastic. Go ahead. Ask around. Even the [definition](http://www.thefreedictionary.com/template) 
-of makes you feel warm and cozy:
+Let's face it. Templates are fantastic. Go ahead, ask around. Even its [definition](http://www.thefreedictionary.com/template) makes you feel warm and cozy:
 
 > **template** (n) - A document or file having a preset format, used as a starting point for a particular application so that the format does not have to be recreated each time it is used.
 
-"...does not have to be recreated each time...." I don't know about you, but I love
-saving myself from extra work. Why then does the web platform lack
-native support for something developers clearly want and care about?
+"...does not have to be recreated each time...." Don't know about you, but I love
+avoiding extra work. Why then does the web platform lack
+native support for something developers clearly care about?
 
 The [W3C HTML Templates specification][spec-link] is the answer. It defines a
-new `<template>` element for creating client-side templates.
+standard for client-side templating via a new element, `<template>`.
+Templates allow you to declare fragments of prototype markup which are
+parsed as HTML, but go unused at page load. They can be instantiated later on
+at runtime.
 
 <h3 id="toc-detect">Feature Detection</h3>
 
-To feature detect `<template>` support, create the DOM element and check that
-the `.content` property exists:
+To feature detect `<template>`, create the DOM element and check that the `.content` property exists:
 
     function supportsTemplate() {
       return 'content' in document.createElement('template');
@@ -37,11 +38,12 @@ the `.content` property exists:
 
 <h2 id="toc-started">Declaring template content</h2>
 
-An HTML `<template>` contains content which is **inert chunks of cloneable DOM**.
-Think of them as pieces of scaffolding that you can use (and reuse) throughout
+The HTML `<template>` element represents a template in your markup. It contains
+"template contents"; essentially **inert chunks of cloneable DOM**.
+Think of templates as pieces of scaffolding that you can use (and reuse) throughout
 the lifetime of your app.
 
-To create a template, you declare some markup and wrap it in a `<template>`:
+To create a templated content, declare some markup and wrap it in the `<template>` element:
 
     <template id="mytemplate">
       <img src="">
@@ -51,7 +53,7 @@ To create a template, you declare some markup and wrap it in a `<template>`:
 <blockquote class="commentary talkinghead">
 The observant reader may notice the empty image. That's perfectly fine
 and intentional. A broken image won't 404 or produce console errors because it
-won't be fetched. We can dynamically generate the source URL later on. See 
+won't be fetched on page load. We can dynamically generate the source URL later on. See 
 <a href="#toc-pillars">the pillars</a>.
 </blockquote>
 
@@ -65,7 +67,7 @@ your markup is hidden DOM and does not render.
 2. Any content within a template won't have side effects. **Script doesn't run,
 images don't load, audio doesn't play**,...until the template is used.
 
-3. **content is consider not to be in the document**. Using
+3. **content is considered not to be in the document**. Using
 `document.getElementById()` or `querySelector()` in the main page won't return
 child nodes of a template.
 
@@ -75,15 +77,17 @@ also be placed as a child of `<table>` or `<select>`.
 
 <h2 id="toc-using">Activating a template</h2>
 
-Using a template a matter of cloning it's inner content:
+To use a template, you need to activate it. Otherwise it's contents will never render. 
+The simplest way to do this is by cloning it's inner content:
 
     var t = document.querySelector('#mytemplate');
     t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
     document.body.appendChild(t.content.cloneNode(true));
 
-`.content` is a `DocumentFragement` that provides access to the guts of a template.
-Once you stamp out a template, it's content "goes live". In this case, the image
-is requested and that is appended to the body is rendered.
+The `.content` property is a read-only `DocumentFragment` that provides access to the guts
+of a template. After stamping out a template, it's contents "goes live".
+In this particular example, the content is cloned, the image request is made, and
+the final markup is rendered.
 
 <h2 id="toc-using">Demos</h2>
 
@@ -135,8 +139,11 @@ Most people attach Shadow DOM to a host by setting a string of markup to `.inner
       shadow.innerHTML = '<span>Host node</span>';
     </script>
 
-The problem is, the more complex your Shadow DOM, the more this approach doesn't
-scale. Enter `<template>`! Instead, we can append template `.content` to a shadow root:
+The problem with this approach is that the more complex your Shadow DOM gets,
+the more string catenation you're doing. This doesn't scale. Things get messy
+fast and babies begin to cry. `<template>` to the rescue!
+
+Something more sane would be to append template content to a shadow root:
 
     <template>
     <style>
@@ -259,12 +266,35 @@ scale. Enter `<template>`! Instead, we can append template `.content` to a shado
   shadow.appendChild(document.querySelector('#demo-sd-template').content);
 </script>
 
-<h2 id="toc-old">The Road to standard templates</h2>
+<h2 id="toc-gotcha">Gotchas</h2>
 
-Don't forget where you came from! The road HTML templates has been a long one.
-Over the years, we've come up with some pretty clever tricks for creating reusable templates. Below are
-two common ones that I've come across. I'm including them in this article for
-comparison.
+Here are a few gotchas I've come across when using `<template>` in the wild:
+
+- If you're using [modpagespeed](http://code.google.com/p/modpagespeed/), be careful
+of this [bug](http://code.google.com/p/modpagespeed/issues/detail?id=625). Templates
+that define inline `<style scoped>`, many be moved to the head with PageSpeed's CSS rewriting
+rules.
+- There's no way to "prerender" a template. That goes for both server and client.
+The only time a template renders is when it goes live.
+- Be careful with nested templates. They don't behave as you might expect. For example:
+
+        <template>
+          <ul>
+            <template>
+              <li>Stuff</li>
+            </template>
+          </ul>
+        </template> 
+
+    When the outer `<template>` gets activated, the inner template will not be.
+    Nested templates still need to be manually instantiate.
+
+<h2 id="toc-old">The Road to a standard</h2>
+
+Let's not forget where we came from. The road to standards-based HTML templates
+has been a long one. Over the years, we've come up with some pretty clever tricks
+for creating reusable templates. Below are two common ones that I've come across.
+I'm including them in this article for comparison.
 
 <h3 id="toc-offscreen">Method 1: Offscreen DOM</h3>
 
@@ -287,15 +317,14 @@ CSS rules with `#mytemplate` in order to scope styles down to the template. This
 is brittle and there are no guarantees we won't encounter future naming collisions.
 For example, we're hosed if the embedding page already has an element with that id.
 
-<h3 id="toc-offscreen">Method 2: Overloading <code>&lt;script></code></h3>
+<h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
-Another technique is overloading a `<script>` and manipulating its contents
+Another technique is overloading `<script>` and manipulating its contents
 as string. John Resig was probably the first to show this back in 2008 with
 his [Micro Templating utility](http://ejohn.org/blog/javascript-micro-templating/).
-Now there are many others, including new kid on the block,
-[handlebars.js](http://handlebarsjs.com/).
+Now there are many others, including some new kids on the block like [handlebars.js](http://handlebarsjs.com/).
 
-Handlebars example:
+For example:
 
     <script id="mytemplate" type="text/x-handlebars-template">
       <img src="logo.png">
@@ -311,27 +340,16 @@ as JS because its type is set to something other than "text/javascript".
 - <label class="bad"></label> *Security issues* - encourages the use of `.innerHTML`.
 Run-time string parsing of user-supplied data can easily lead to XSS vulnerabilities.
 
-<h2 id="toc-gotcha">Gotchas</h2>
-
-Here are a few gotchas I've run in to when working with templates:
-
-- If you're using [modpagespeed](http://code.google.com/p/modpagespeed/), be careful
-of this [bug](http://code.google.com/p/modpagespeed/issues/detail?id=625). Templates
-that define inline `<style scoped>`, many be moved to the head with PageSpeed's CSS rewriting
-rules.
-- There's no way to "prerender" a template. That goes for server and client. The
-only time a template renders is when it is activated.
-
 <h2 id="toc-conclusion">Conclusion</h2>
 
 Remember when JQuery made working with DOM dead simple? The result was `querySelector()`/`querySelectorAll()`
-being added to platform. Obvious wins, right? A library popularized fetching DOM
-with CSS selectors; standards adopted it. It doesn't always work that was, but I *love* when it does.
+being added to platform. Obvious win, right? A library popularized fetching DOM
+with CSS selectors and standards later adopted it. It doesn't always work that was, but I *love* when it does.
 
-In my opinion, `<template>` is a similar case. It standardizes client-side templating,
-removes the need for our [crazy hacks](#toc-old), and makes the entire web
-authoring process more sane and more maintainable.
-
+I think `<template>` is a similar case. It standardizes the way we do client-side
+templating, but more importantly, it removes the need for [our crazy 2008 hacks](#toc-old).
+Making the entire web authoring process more sane, more maintainable, and more
+full featured is always a good thing in my book.
 
 <h2 id="toc-resources">Additional Resources</h2>
 
