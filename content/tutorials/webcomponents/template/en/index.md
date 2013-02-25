@@ -117,7 +117,7 @@ runs when the button is pressed, stamping out the template.
 <div id="container"></div>
 <template id="inert-demo">
   <div>Template used <span>0</span></div>
-  <script>alert('Thanks!')</script>
+  <script>if ('HTMLTemplateElement' in window) {alert('Thanks!')}</script>
 </template>
 <script>
   function useIt() {
@@ -221,30 +221,30 @@ Something more sane would be to append template content to a shadow root:
       background: #ccc;
     }
   }
-  div {
+  #unsupportedbrowsersneedscoping {
     position: relative;
   }
-  header {
+  #unsupportedbrowsersneedscoping header {
     padding: 5px;
     border-bottom: 1px solid #aaa;
   }
-  h3 {
+  #unsupportedbrowsersneedscoping h3 {
     margin: 0 !important;
   }
-  textarea {
+  #unsupportedbrowsersneedscoping textarea {
     font-family: inherit;
     width: 100%;
     height: 100px;
     box-sizing: border-box;
     border: 1px solid #aaa;
   }
-  footer {
+  #unsupportedbrowsersneedscoping footer {
     position: absolute;
     bottom: 10px;
     right: 5px;
   }
 </style>
-<div>
+<div id="unsupportedbrowsersneedscoping">
   <header>
     <h3>Add a Comment</h3>
   </header>
@@ -261,9 +261,19 @@ Something more sane would be to append template content to a shadow root:
 </div>
 
 <script>
-  var shadow = document.querySelector('#demo-sd-host').webkitCreateShadowRoot();
-  shadow.applyAuthorStyles = true;
-  shadow.appendChild(document.querySelector('#demo-sd-template').content);
+(function() {
+  var host = document.querySelector('#demo-sd-host');
+  var compat = HTMLElement.prototype.webkitCreateShadowRoot ||
+               HTMLElement.prototype.createShadowRoot ? true : false;
+  if (compat && 'HTMLTemplateElement' in window) {
+    var shadow = host.webkitCreateShadowRoot();
+    shadow.applyAuthorStyles = true;
+    shadow.appendChild(document.querySelector('#demo-sd-template').content);
+  } else {
+    document.querySelector('#unsupportedbrowsersneedscoping').style.display = 'none';
+    host.style.display = 'none';
+  }
+})();
 </script>
 
 <h2 id="toc-gotcha">Gotchas</h2>
