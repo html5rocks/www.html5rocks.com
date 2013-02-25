@@ -76,8 +76,17 @@ images don't load, audio doesn't play**,...until the template is used.
 child nodes of a template.
 
 4. Templates **can** be placed anywhere inside of `<head>`, `<body>`, or `<frameset>` and can
-contain any type of content which is allowed in those elements. It can 
-also be placed as a child of `<table>` or `<select>`.
+contain any type of content which is allowed in those elements. Note that "anywhere" means
+that `<template>` can safely be used in places that the HTML parser disallows...all
+but "content model" children. It can  also be placed as a child of `<table>` or `<select>`:
+
+        <table>
+        <tr>
+          <template id="cells-to-repeat">
+            <td>some content</td>
+          </template>
+        </tr>
+        </table>
 
 <h2 id="toc-using">Activating a template</h2>
 
@@ -301,8 +310,9 @@ The only time a template renders is when it goes live.
           </ul>
         </template> 
 
-    When the outer `<template>` gets activated, the inner template will not be.
-    Nested templates still need to be manually instantiate.
+    Activating the outer template will not active inner templates. That is to say,
+    nested templates require that their children be manually instantiated after
+    they have been.
 
 <h2 id="toc-old">The Road to a standard</h2>
 

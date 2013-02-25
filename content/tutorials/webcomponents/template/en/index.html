@@ -170,8 +170,17 @@ child nodes of a template.</p>
 </li>
 <li>
 <p>Templates <strong>can</strong> be placed anywhere inside of <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code>, or <code>&lt;frameset&gt;</code> and can
-contain any type of content which is allowed in those elements. It can 
-also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;</code>.</p>
+contain any type of content which is allowed in those elements. Note that "anywhere" means
+that <code>&lt;template&gt;</code> can safely be used in places that the HTML parser disallows...all
+but "content model" children. It can  also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;</code>:</p>
+<pre class="prettyprint"><code>&lt;table&gt;
+&lt;tr&gt;
+  &lt;template id="cells-to-repeat"&gt;
+    &lt;td&gt;some content&lt;/td&gt;
+  &lt;/template&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+</code></pre>
 </li>
 </ol>
 <h2 id="toc-using">Activating a template</h2>
@@ -389,8 +398,9 @@ The only time a template renders is when it goes live.</li>
   &lt;/ul&gt;
 &lt;/template&gt;
 </code></pre>
-<p>When the outer <code>&lt;template&gt;</code> gets activated, the inner template will not be.
-Nested templates still need to be manually instantiate.</p>
+<p>Activating the outer template will not active inner templates. That is to say,
+nested templates require that their children be manually instantiated after
+they have been.</p>
 </li>
 </ul>
 <h2 id="toc-old">The Road to a standard</h2>
