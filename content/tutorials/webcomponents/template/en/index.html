@@ -111,9 +111,9 @@ yet most share a common mechanic for rendering their presentational layer (aka d
 avoiding extra work. Why then does the web platform lack
 native support for something developers clearly care about?</p>
 <p>The <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML Templates specification</a> is the answer. It defines a
-standard for client-side templating via a new element, <code>&lt;template&gt;</code>.
-Templates allow you to declare fragments of prototype markup which are
-parsed as HTML, but go unused at page load. They can be instantiated later on
+new <code>&lt;template&gt;</code> element which describes a standard DOM-based approach
+for client-side templating. Templates allow you to declare fragments of prototype
+markup which are parsed as HTML, but go unused at page load. They can be instantiated later on
 at runtime.</p>
 <h3 id="toc-detect">Feature Detection</h3>
 
@@ -172,14 +172,14 @@ also be placed as a child of <code>&lt;table&gt;</code> or <code>&lt;select&gt;<
 </ol>
 <h2 id="toc-using">Activating a template</h2>
 
-<p>To use a template, you need to activate it. Otherwise it's contents will never render. 
-The simplest way to do this is by cloning it's inner content:</p>
+<p>To use a template, you need to activate it. Otherwise its content will never render.
+The simplest way to do this is by cloning its <code>.content</code>:</p>
 <pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
 t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
 document.body.appendChild(t.content.cloneNode(true));
 </code></pre>
 <p>The <code>.content</code> property is a read-only <code>DocumentFragment</code> that provides access to the guts
-of a template. After stamping out a template, it's contents "goes live".
+of a template. After stamping out a template, it's content "goes live".
 In this particular example, the content is cloned, the image request is made, and
 the final markup is rendered.</p>
 <h2 id="toc-using">Demos</h2>
@@ -231,8 +231,9 @@ runs when the button is pressed, stamping out the template.</p>
 &lt;/script&gt;
 </code></pre>
 <p>The problem with this approach is that the more complex your Shadow DOM gets,
-the more string catenation you're doing. This doesn't scale. Things get messy
-fast and babies begin to cry. <code>&lt;template&gt;</code> to the rescue!</p>
+the more string concatenation you're doing. It doesn't scale, things get messy
+fast, and babies start to cry. This approach is also how XSS was born in the first
+place! <code>&lt;template&gt;</code> to the rescue.</p>
 <p>Something more sane would be to append template content to a shadow root:</p>
 <pre class="prettyprint"><code>&lt;template&gt;
 &lt;style&gt;
@@ -416,7 +417,7 @@ For example, we're hosed if the embedding page already has an element with that 
 </ul>
 <h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
-<p>Another technique is overloading <code>&lt;script&gt;</code> and manipulating its contents
+<p>Another technique is overloading <code>&lt;script&gt;</code> and manipulating its content
 as string. John Resig was probably the first to show this back in 2008 with
 his <a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a>.
 Now there are many others, including some new kids on the block like <a href="http://handlebarsjs.com/">handlebars.js</a>.</p>

@@ -17,9 +17,9 @@ avoiding extra work. Why then does the web platform lack
 native support for something developers clearly care about?
 
 The [W3C HTML Templates specification][spec-link] is the answer. It defines a
-standard for client-side templating via a new element, `<template>`.
-Templates allow you to declare fragments of prototype markup which are
-parsed as HTML, but go unused at page load. They can be instantiated later on
+new `<template>` element which describes a standard DOM-based approach
+for client-side templating. Templates allow you to declare fragments of prototype
+markup which are parsed as HTML, but go unused at page load. They can be instantiated later on
 at runtime.
 
 <h3 id="toc-detect">Feature Detection</h3>
@@ -77,15 +77,15 @@ also be placed as a child of `<table>` or `<select>`.
 
 <h2 id="toc-using">Activating a template</h2>
 
-To use a template, you need to activate it. Otherwise it's contents will never render. 
-The simplest way to do this is by cloning it's inner content:
+To use a template, you need to activate it. Otherwise its content will never render.
+The simplest way to do this is by cloning its `.content`:
 
     var t = document.querySelector('#mytemplate');
     t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
     document.body.appendChild(t.content.cloneNode(true));
 
 The `.content` property is a read-only `DocumentFragment` that provides access to the guts
-of a template. After stamping out a template, it's contents "goes live".
+of a template. After stamping out a template, it's content "goes live".
 In this particular example, the content is cloned, the image request is made, and
 the final markup is rendered.
 
@@ -140,8 +140,9 @@ Most people attach Shadow DOM to a host by setting a string of markup to `.inner
     </script>
 
 The problem with this approach is that the more complex your Shadow DOM gets,
-the more string catenation you're doing. This doesn't scale. Things get messy
-fast and babies begin to cry. `<template>` to the rescue!
+the more string concatenation you're doing. It doesn't scale, things get messy
+fast, and babies start to cry. This approach is also how XSS was born in the first
+place! `<template>` to the rescue.
 
 Something more sane would be to append template content to a shadow root:
 
@@ -329,7 +330,7 @@ For example, we're hosed if the embedding page already has an element with that 
 
 <h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
-Another technique is overloading `<script>` and manipulating its contents
+Another technique is overloading `<script>` and manipulating its content
 as string. John Resig was probably the first to show this back in 2008 with
 his [Micro Templating utility](http://ejohn.org/blog/javascript-micro-templating/).
 Now there are many others, including some new kids on the block like [handlebars.js](http://handlebarsjs.com/).
