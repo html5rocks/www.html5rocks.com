@@ -3,7 +3,7 @@
 <h2 id="toc-intro">Introduction</h2>
 
 The concept of templating is not new to web development. In fact, server-side
-templating languages/engines like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
+[templating languages/engines](http://en.wikipedia.org/wiki/Template_engine_(web)) like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
 have been around for a long time. In the last couple of years however, we've seen
 an explosion of MVC frameworks spring up. All of them are slightly different,
 yet most share a common mechanic for rendering their presentational layer (aka da view): templates.
@@ -18,8 +18,7 @@ native support for something developers clearly care about?
 
 The [W3C HTML Templates specification][spec-link] is the answer. It defines a
 new `<template>` element which describes a standard DOM-based approach
-for client-side templating. Templates allow you to declare fragments of prototype
-markup which are parsed as HTML, go unused at page load, but can be instantiated
+for client-side templating. Templates allow you to declare fragments of markup which are parsed as HTML, go unused at page load, but can be instantiated
 later on at runtime. To quote [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts) (spec author):
 
 > "They're a place to put a big wad of HTML that you don't want the browser to mess
@@ -50,7 +49,7 @@ the lifetime of your app.
 To create a templated content, declare some markup and wrap it in the `<template>` element:
 
     <template id="mytemplate">
-      <img src="">
+      <img src="" alt="great image">
       <div class="comment"></div>
     </template>
 
@@ -98,7 +97,7 @@ The simplest way to do this is by creating a deep copy of its `.content` using `
     t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
     document.body.appendChild(t.content.cloneNode(true));
 
-After stamping out a template, it's content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.
+After stamping out a template, its content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.
 
 <h2 id="toc-using">Demos</h2>
 
@@ -311,8 +310,7 @@ The only time a template renders is when it goes live.
         </template> 
 
     Activating the outer template will not active inner templates. That is to say,
-    nested templates require that their children be manually instantiated after
-    they have been.
+    nested templates require that their children also be manually activated.
 
 <h2 id="toc-old">The Road to a standard</h2>
 
@@ -334,7 +332,7 @@ DOM and hide it from view using the `hidden` attribute or `display:none`.
 While this technique works, there are a number of downsides. The rundown of this technique:
 
 - <label class="good"></label> *Using DOM* - the browser knows DOM. It's good at it. We can easily clone it.
-- <label class="good"></label> *Nothing is rendered* - adding `hidden` prevents the block from showing
+- <label class="good"></label> *Nothing is rendered* - adding `hidden` prevents the block from showing.
 - <label class="bad"></label> *Not inert* - even though our content is hidden,
 a network request is still made for the image.
 - <label class="bad"></label> *Painful styling and theming* - an embedding page must prefix all of its
@@ -345,7 +343,7 @@ For example, we're hosed if the embedding page already has an element with that 
 <h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
 Another technique is overloading `<script>` and manipulating its content
-as string. John Resig was probably the first to show this back in 2008 with
+as a string. John Resig was probably the first to show this back in 2008 with
 his [Micro Templating utility](http://ejohn.org/blog/javascript-micro-templating/).
 Now there are many others, including some new kids on the block like [handlebars.js](http://handlebarsjs.com/).
 
@@ -368,7 +366,7 @@ Run-time string parsing of user-supplied data can easily lead to XSS vulnerabili
 <h2 id="toc-conclusion">Conclusion</h2>
 
 Remember when jQuery made working with DOM dead simple? The result was `querySelector()`/`querySelectorAll()`
-being added to platform. Obvious win, right? A library popularized fetching DOM
+being added to the platform. Obvious win, right? A library popularized fetching DOM
 with CSS selectors and standards later adopted it. It doesn't always work that way, but I *love* when it does.
 
 I think `<template>` is a similar case. It standardizes the way we do client-side

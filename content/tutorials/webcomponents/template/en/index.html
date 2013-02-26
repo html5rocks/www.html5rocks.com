@@ -99,7 +99,7 @@ label.sortof::after {
 <h2 id="toc-intro">Introduction</h2>
 
 <p>The concept of templating is not new to web development. In fact, server-side
-templating languages/engines like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
+<a href="http://en.wikipedia.org/wiki/Template_engine_(web)">templating languages/engines</a> like Django (Python), ERB/Haml (Ruby), and Smarty (PHP)
 have been around for a long time. In the last couple of years however, we've seen
 an explosion of MVC frameworks spring up. All of them are slightly different,
 yet most share a common mechanic for rendering their presentational layer (aka da view): templates.</p>
@@ -112,8 +112,7 @@ avoiding extra work. Why then does the web platform lack
 native support for something developers clearly care about?</p>
 <p>The <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML Templates specification</a> is the answer. It defines a
 new <code>&lt;template&gt;</code> element which describes a standard DOM-based approach
-for client-side templating. Templates allow you to declare fragments of prototype
-markup which are parsed as HTML, go unused at page load, but can be instantiated
+for client-side templating. Templates allow you to declare fragments of markup which are parsed as HTML, go unused at page load, but can be instantiated
 later on at runtime. To quote <a href="https://plus.google.com/111386188573471152118/posts">Rafael Weinstein</a> (spec author):</p>
 <blockquote>
 <p>"They're a place to put a big wad of HTML that you don't want the browser to mess
@@ -140,7 +139,7 @@ Think of templates as pieces of scaffolding that you can use (and reuse) through
 the lifetime of your app.</p>
 <p>To create a templated content, declare some markup and wrap it in the <code>&lt;template&gt;</code> element:</p>
 <pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
-  &lt;img src=""&gt;
+  &lt;img src="" alt="great image"&gt;
   &lt;div class="comment"&gt;&lt;/div&gt;
 &lt;/template&gt;
 </code></pre>
@@ -192,7 +191,7 @@ The simplest way to do this is by creating a deep copy of its <code>.content</co
 t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
 document.body.appendChild(t.content.cloneNode(true));
 </code></pre>
-<p>After stamping out a template, it's content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.</p>
+<p>After stamping out a template, its content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.</p>
 <h2 id="toc-using">Demos</h2>
 
 <h3 id="toc-demo-insert">Example: Inert script</h3>
@@ -399,8 +398,7 @@ The only time a template renders is when it goes live.</li>
 &lt;/template&gt;
 </code></pre>
 <p>Activating the outer template will not active inner templates. That is to say,
-nested templates require that their children be manually instantiated after
-they have been.</p>
+nested templates require that their children also be manually activated.</p>
 </li>
 </ul>
 <h2 id="toc-old">The Road to a standard</h2>
@@ -421,7 +419,7 @@ DOM and hide it from view using the <code>hidden</code> attribute or <code>displ
 <p>While this technique works, there are a number of downsides. The rundown of this technique:</p>
 <ul>
 <li><label class="good"></label> <em>Using DOM</em> - the browser knows DOM. It's good at it. We can easily clone it.</li>
-<li><label class="good"></label> <em>Nothing is rendered</em> - adding <code>hidden</code> prevents the block from showing</li>
+<li><label class="good"></label> <em>Nothing is rendered</em> - adding <code>hidden</code> prevents the block from showing.</li>
 <li><label class="bad"></label> <em>Not inert</em> - even though our content is hidden,
 a network request is still made for the image.</li>
 <li><label class="bad"></label> <em>Painful styling and theming</em> - an embedding page must prefix all of its
@@ -432,7 +430,7 @@ For example, we're hosed if the embedding page already has an element with that 
 <h3 id="toc-offscreen">Method 2: Overloading script</h3>
 
 <p>Another technique is overloading <code>&lt;script&gt;</code> and manipulating its content
-as string. John Resig was probably the first to show this back in 2008 with
+as a string. John Resig was probably the first to show this back in 2008 with
 his <a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a>.
 Now there are many others, including some new kids on the block like <a href="http://handlebarsjs.com/">handlebars.js</a>.</p>
 <p>For example:</p>
@@ -453,7 +451,7 @@ Run-time string parsing of user-supplied data can easily lead to XSS vulnerabili
 <h2 id="toc-conclusion">Conclusion</h2>
 
 <p>Remember when jQuery made working with DOM dead simple? The result was <code>querySelector()</code>/<code>querySelectorAll()</code>
-being added to platform. Obvious win, right? A library popularized fetching DOM
+being added to the platform. Obvious win, right? A library popularized fetching DOM
 with CSS selectors and standards later adopted it. It doesn't always work that way, but I <em>love</em> when it does.</p>
 <p>I think <code>&lt;template&gt;</code> is a similar case. It standardizes the way we do client-side
 templating, but more importantly, it removes the need for <a href="#toc-old">our crazy 2008 hacks</a>.
