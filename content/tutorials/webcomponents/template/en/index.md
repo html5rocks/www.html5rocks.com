@@ -77,8 +77,8 @@ child nodes of a template.
 
 4. Templates **can** be placed anywhere inside of `<head>`, `<body>`, or `<frameset>` and can
 contain any type of content which is allowed in those elements. Note that "anywhere" means
-that `<template>` can safely be used in places that the HTML parser disallows...all
-but "content model" children. It can  also be placed as a child of `<table>` or `<select>`:
+that `<template>` can safely be used in places that the HTML parser disallows.
+It can  also be placed as a child of `<table>` or `<select>`:
 
         <table>
         <tr>
@@ -91,14 +91,14 @@ but "content model" children. It can  also be placed as a child of `<table>` or 
 <h2 id="toc-using">Activating a template</h2>
 
 To use a template, you need to activate it. Otherwise its content will never render.
-The simplest way to do this is by cloning its `.content`:
+The simplest way to do this is by creating a deep copy of its `.content` using `cloneNode()`:
 
     var t = document.querySelector('#mytemplate');
     t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
     document.body.appendChild(t.content.cloneNode(true));
 
-The `.content` property is a read-only `DocumentFragment` that provides access to the guts
-of a template. After stamping out a template, it's content "goes live".
+`.content` is a read-only property that references a `DocumentFragment`
+containing the guts of a template. After stamping out a template, it's content "goes live".
 In this particular example, the content is cloned, the image request is made, and
 the final markup is rendered.
 
@@ -157,7 +157,8 @@ the more string concatenation you're doing. It doesn't scale, things get messy
 fast, and babies start to cry. This approach is also how XSS was born in the first
 place! `<template>` to the rescue.
 
-Something more sane would be to append template content to a shadow root:
+Something more sane would be to work with DOM directly by appending template
+content to a shadow root:
 
     <template>
     <style>
@@ -298,7 +299,8 @@ Here are a few gotchas I've come across when using `<template>` in the wild:
 of this [bug](http://code.google.com/p/modpagespeed/issues/detail?id=625). Templates
 that define inline `<style scoped>`, many be moved to the head with PageSpeed's CSS rewriting
 rules.
-- There's no way to "prerender" a template. That goes for both server and client.
+- There's no way to "prerender" a template, meaning you cannot preload assets,
+process JS, download initial CSS, etc. That goes for both server and client.
 The only time a template renders is when it goes live.
 - Be careful with nested templates. They don't behave as you might expect. For example:
 
@@ -369,7 +371,7 @@ Run-time string parsing of user-supplied data can easily lead to XSS vulnerabili
 
 Remember when jQuery made working with DOM dead simple? The result was `querySelector()`/`querySelectorAll()`
 being added to platform. Obvious win, right? A library popularized fetching DOM
-with CSS selectors and standards later adopted it. It doesn't always work that was, but I *love* when it does.
+with CSS selectors and standards later adopted it. It doesn't always work that way, but I *love* when it does.
 
 I think `<template>` is a similar case. It standardizes the way we do client-side
 templating, but more importantly, it removes the need for [our crazy 2008 hacks](#toc-old).
