@@ -91,16 +91,14 @@ It can  also be placed as a child of `<table>` or `<select>`:
 <h2 id="toc-using">Activating a template</h2>
 
 To use a template, you need to activate it. Otherwise its content will never render.
-The simplest way to do this is by creating a deep copy of its `.content` using `cloneNode()`:
+The simplest way to do this is by creating a deep copy of its `.content` using `cloneNode()`.
+`.content` is a read-only property that references a `DocumentFragment` containing the guts of a template. 
 
     var t = document.querySelector('#mytemplate');
     t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
     document.body.appendChild(t.content.cloneNode(true));
 
-`.content` is a read-only property that references a `DocumentFragment`
-containing the guts of a template. After stamping out a template, it's content "goes live".
-In this particular example, the content is cloned, the image request is made, and
-the final markup is rendered.
+After stamping out a template, it's content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.
 
 <h2 id="toc-using">Demos</h2>
 
