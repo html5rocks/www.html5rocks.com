@@ -77,7 +77,7 @@ child nodes of a template.
 4. Templates **can** be placed anywhere inside of `<head>`, `<body>`, or `<frameset>` and can
 contain any type of content which is allowed in those elements. Note that "anywhere" means
 that `<template>` can safely be used in places that the HTML parser disallows...all
-but "content model" children. It can  also be placed as a child of `<table>` or `<select>`:
+but [content model](http://www.w3.org/TR/html5-diff/#content-model) children. It can  also be placed as a child of `<table>` or `<select>`:
 
         <table>
         <tr>
