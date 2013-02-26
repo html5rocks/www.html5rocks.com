@@ -13,8 +13,6 @@ window.requestAnimFrame = (function(){
 (function(win, d) {
 
   var $ = d.querySelector.bind(d);
-  var w = window.innerWidth;
-  var h = d.height;
 
   var blob1 = $('#blob-1');
   var blob2 = $('#blob-2');
@@ -32,8 +30,6 @@ window.requestAnimFrame = (function(){
   var lastScrollY = 0;
 
   function onResize () {
-    w = win.innerWidth;
-    h = d.height;
     updateElements(win.scrollY);
   }
 
@@ -48,7 +44,7 @@ window.requestAnimFrame = (function(){
 
   function updateElements () {
 
-    var relativeY = lastScrollY / h;
+    var relativeY = lastScrollY / 3000;
 
     prefix(mainBG.style, "Transform", "translate3d(0," +
       pos(0, -600, relativeY, 0) + 'px, 0)');
@@ -88,7 +84,7 @@ window.requestAnimFrame = (function(){
   }
 
   function prefix(obj, prop, value) {
-    var prefs = ['webkit', 'moz', 'o', 'ms'];
+    var prefs = ['webkit', 'Moz', 'o', 'ms'];
     for (var pref in prefs) {
       obj[prefs[pref] + prop] = value;
     }
