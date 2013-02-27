@@ -139,7 +139,7 @@ runs when the button is pressed, stamping out the template.
 </script>
 </div>
 
-<h3 id="toc-demo-sd">Example: Creating Shadow DOM from a &lt;template&gt;</h3>
+<h3 id="toc-demo-sd">Example: Creating Shadow DOM from a template</h3>
 
 Most people attach [Shadow DOM](/webcomponents/shadowdom/) to a host by setting a string of markup to `.innerHTML`:
 
