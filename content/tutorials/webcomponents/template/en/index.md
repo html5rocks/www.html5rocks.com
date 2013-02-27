@@ -312,7 +312,7 @@ The only time a template renders is when it goes live.
     Activating the outer template will not active inner templates. That is to say,
     nested templates require that their children also be manually activated.
 
-<h2 id="toc-old">The Road to a standard</h2>
+<h2 id="toc-old">The road to a standard</h2>
 
 Let's not forget where we came from. The road to standards-based HTML templates
 has been a long one. Over the years, we've come up with some pretty clever tricks
@@ -374,7 +374,7 @@ templating, but more importantly, it removes the need for [our crazy 2008 hacks]
 Making the entire web authoring process more sane, more maintainable, and more
 full featured is always a good thing in my book.
 
-<h2 id="toc-resources">Additional Resources</h2>
+<h2 id="toc-resources">Additional resources</h2>
 
 - [W3C Specification][spec-link]
 - [Introduction to Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section)

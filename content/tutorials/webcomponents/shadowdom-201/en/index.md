@@ -222,9 +222,8 @@ root.innerHTML = '<style>h3{ color: red; }' +
 </script>
 
 You should see "<span style="color:red">Shadow DOM Title</span>"" and
-"<span style="color:green">Host Title</span>" below it. Also note that the 
-"Host title" h3 still retains the styles defined on the document it's in;
-in this case, the page.
+"<span style="color:green">Host Title</span>" below it. Also note that
+"Host title" still retains the styles from its document; in this case, the page.
 
 <h3 id="toc-shadow-resetstyles">Resetting styles at insertion points</h3>
 
@@ -249,7 +248,7 @@ insertion point doesn't change that.
 
 
 
-<h2 id="toc-shadow-multiple">Using Multiple Shadow Roots</h2>
+<h2 id="toc-shadow-multiple">Using multiple shadow roots</h2>
 
 If you're hosting a party, it gets stuffy if everyone is crammed into the same room.
 You want the option of distributing groups of people across multiple rooms. Elements hosting
@@ -368,7 +367,7 @@ sense in the context of Shadow DOM...which is already prefixed :)
 As with other parts of the web platform, we have DOM APIs and properties
 to make our scripting life easier.
 
-<h3 id="toc-get-shadowroot">Obtain a host's Shadow Root</h3>
+<h3 id="toc-get-shadowroot">Obtain a host's shadow root</h3>
 
 If an element is hosting Shadow DOM, you can access it's [youngest shadow root](#youngest-tree) with
 `.webkitShadowRoot`:
@@ -430,7 +429,7 @@ root2.appendChild(shadow);
 This example is nearly identical to the one in the [previous section](#toc-shadow-insertion).
 The only difference is that I'm now using `select` to pull out the new `<span>`.
 
-<h3 id="toc-distributed-nodes">Fetching Distributed Nodes</h3>
+<h3 id="toc-distributed-nodes">Fetching distributed nodes</h3>
 
 Nodes that are selected out of host element and "distribute" into the shadow tree
 are called,...drumroll...distributed nodes! They're allowed to cross the shadow boundary
