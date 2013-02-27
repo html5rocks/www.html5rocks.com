@@ -94,7 +94,8 @@ The simplest way to do this is by creating a deep copy of its `.content` using `
 `.content` is a read-only property that references a `DocumentFragment` containing the guts of a template. 
 
     var t = document.querySelector('#mytemplate');
-    t.content.querySelector('img').src = 'logo.png'; // Populate the src at runtime.
+    // Populate the src at runtime.
+    t.content.querySelector('img').src = 'logo.png';
     document.body.appendChild(t.content.cloneNode(true));
 
 After stamping out a template, its content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.
@@ -111,9 +112,11 @@ runs when the button is pressed, stamping out the template.
     <script>
       function useIt() {
         var content = document.querySelector('template').content;
-        var span = content.querySelector('span'); // Update something in the template DOM.
+        // Update something in the template DOM.
+        var span = content.querySelector('span');
         span.textContent = parseInt(span.textContent) + 1;
-        document.querySelector('#container').appendChild(content.cloneNode(true));
+        document.querySelector('#container').appendChild(
+            content.cloneNode(true));
       }
     </script>
 
