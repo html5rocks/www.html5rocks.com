@@ -46,10 +46,6 @@ $(document).keydown(function(e) {
   if (e.keyCode === 27) { // ESC
     // Hide search and/or feature bar.
     $('#search_hide, #features_hide').click();
-
-    // Hide +/- feature navigation.
-    $('.outline_nav_toggle').removeClass('activated')
-                            .find('nav.outline').fadeOut('fast');
   }
 });
 
