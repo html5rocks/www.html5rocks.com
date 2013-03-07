@@ -704,24 +704,26 @@ var html = [];
 
 <script>
 (function() {
-var container = document.querySelector('#example4');
+if ('HTMLTemplateElement' in window) {
+  var container = document.querySelector('#example4');
 
-var root1 = container.createShadowRoot();
-//root1.applyAuthorStyles = false;
-//root1.resetStyleInheritance = true;
-root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+  var root1 = container.createShadowRoot();
+  //root1.applyAuthorStyles = false;
+  //root1.resetStyleInheritance = true;
+  root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
 
-var html = [];
-[].forEach.call(root1.querySelectorAll('content'), function(el) {
-  html.push(el.outerHTML + ': ');
-  var nodes = el.getDistributedNodes();
-  [].forEach.call(nodes, function(node) {
-    html.push(node.outerHTML);
+  var html = [];
+  [].forEach.call(root1.querySelectorAll('content'), function(el) {
+    html.push(el.outerHTML + ': ');
+    var nodes = el.getDistributedNodes();
+    [].forEach.call(nodes, function(node) {
+      html.push(node.outerHTML);
+    });
+    html.push('\n');
   });
-  html.push('\n');
-});
 
-document.querySelector('#example4-log textarea').value = html.join('');
+  document.querySelector('#example4-log textarea').value = html.join('');
+}
 })();
 </script>
 
@@ -742,11 +744,169 @@ own markup and play around to see how things work.
 
 <h2 id="toc-events">Event Model</h2>
 
-In the cases where events cross the shadow boundaries, the event's information
-about the target of the event is adjusted in order to maintain the encapsulation
-of the shadow root's upper boundary. That is, events are retargeted to look like
-they've come from the host element, rather than coming from internals elements
-of the Shadow DOM.
+Some events cross the shadow boundary and some do not. In the cases where events
+cross the boundary, the event target is adjusted in order to maintain the
+encapsulation that the shadow root's upper boundary provides. That is, **events
+are retargeted to look like they've come from the host element rather than internal
+elements to the Shadow DOM**.
+
+If your browser supports Shadow DOM (it does<span class="featuresupported no">n't</span>),
+you should see a play area below that helps visualize events. Elements in <span style="color:#ffcc00">yellow</span> are part of the Shadow DOM's markup. Elements in <span style="color:steelblue">blue</span> are
+part of the host element. The <span style="color:#ffcc00">yellow</span> border
+around "I'm a node in the host" signifies that it is a distributed node, passing
+through the shadow's `<content>` insertion point.
+
+The "Play Action" buttons show you different things to try. Give them a go to see
+how the `mouseout` and `focusin` events bubble up to the main page.
+
+<div id="example5" class="demoarea">
+  <div data-host>
+    <div class="blue">I'm a node in the host</div>
+  </div>
+
+  <template style="display:none;"> <!-- display:none used for older browsers -->
+    <style>
+    .scopestyleforolderbrowsers * {
+      border: 4px solid #FC0;
+    }
+    .scopestyleforolderbrowsers input {
+      padding: 5px;
+    }
+    .scopestyleforolderbrowsers div {
+      background: #FC0;
+      padding: 5px;
+      border-radius: 3px;
+      margin: 5px 0;
+    }
+    content::-webkit-distributed(*) {
+      border: 4px solid #FC0;
+    }
+    </style>
+    <section class="scopestyleforolderbrowsers">
+      <div>I'm a node in Shadow DOM</div>
+      <div>I'm a node in Shadow DOM</div>
+      <content></content>
+      <input type="text" placeholder="I'm in Shadow DOM">
+      <div>I'm a node in Shadow DOM</div>
+      <div>I'm a node in Shadow DOM</div>
+    </section>
+  </template>
+
+  <aside class="cursor"></aside>
+
+  <div class="buttons">
+    <button data-action="playAnimation" data-action-idx="1">Play Action 1</button><br>
+    <button data-action="playAnimation" data-action-idx="2">Play Action 2</button><br>
+    <button data-action="playAnimation" data-action-idx="3">Play Action 3</button><br>
+    <button data-action="clearLog">Clear log</button>
+  </div>
+
+  <output></output>
+</div>
+    
+<script>
+(function() {
+function stringify(node) {
+  return node.outerHTML.match(".*?>")[0].replace('<', '&lt;').replace('>', '&gt;');
+}
+
+var out = document.querySelector('#example5 output');
+var host = document.querySelector('#example5 [data-host]');
+var wrapper = document.querySelector('#example5');
+
+var root = host.createShadowRoot();
+root.innerHTML = document.querySelector('#example5 template').innerHTML;
+
+host.addEventListener('mouseout', function(e) {
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>', 
+    'on:', stringify(e.target) + ',', 
+    'from', stringify(e.fromElement),
+    '&rarr;', stringify(e.toElement), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+document.addEventListener('focusin', function(e) {
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+function clearLog() {
+  out.innerHTML = '';
+}
+
+function cleanUpAnimations(node) {
+  [].forEach.call(node.classList, function(c) {
+    if (c.indexOf('animation') == 0) {
+      node.classList.remove(c);
+    }
+  });
+}
+
+function playAnimation(idx) {
+  clearLog();
+  wrapper.classList.add('playing');
+  wrapper.classList.add('animation' + idx);
+}
+
+wrapper.addEventListener('webkitAnimationEnd', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+document.querySelector('#example5 .buttons').addEventListener('click', function(e) {
+  if (e.target.tagName == 'BUTTON') {
+    switch(e.target.dataset.action) {
+      case 'clearLog':
+        clearLog();
+        break;
+      case 'playAnimation':
+        cleanUpAnimations(wrapper);
+        playAnimation(parseInt(e.target.dataset.actionIdx));
+        break;
+      default:
+        break;
+    }
+  }
+});
+
+})();
+</script>
+
+**Play Action 1**
+
+- This one is interesting. You should see a `mouseout` from the host element (`<div data-host>`)
+to the <span style="color:steelblue">blue</span> node. Even though it's a distributed
+node, it's still in the host, not the ShadowDOM. Mousing further down into 
+<span style="color:#ffcc00">yellow</span> again causes a `mouseout` on the <span style="color:steelblue">blue</span> node.
+
+**Play Action 2**
+
+- There is one `mouseout` that appears on host (at the very end). Normally you'd
+see `mouseout` events trigger for all of the <span style="color:#ffcc00">yellow</span> blocks.
+However, in this case these elements are internal to the Shadow DOM and the event
+doesn't bubble through its upper boundary.
+
+**Play Action 3**
+
+- Notice that when you click the input, the `focusin` doesn't appear on the
+input but on the host node itself. It's been retargeted!
+
+<h3 id="toc-events-stopped">Events that are always stopped</h3>
+
+The following events never cross the shadow boundary:
+
+- abort
+- error
+- select
+- change
+- load
+- reset
+- resize
+- scroll
+- selectstart
 
 <h2 id="toc-conclusion">Conclusion</h2>
 

@@ -122,6 +122,188 @@ article.tutorial .notice.fact:before {
 .small-notice {
   font-size: 85%;
 }
+#example5.demoarea {
+  display: block;
+  margin-top: 30px;
+}
+#example5 [data-host]:before {
+  top: 3px;
+  left: 3px;
+  position: absolute;
+  content: '<div data-host>';
+  color: #888;
+}
+#example5 [data-host] {
+  padding: 25px;
+  border: 3px solid black;
+  display: inline-block;
+  background: #eee;
+  text-align: center;
+  position: relative;
+  float: left;
+}
+#example5 div {
+  padding: 5px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+#example5 .blue {
+  background: steelblue;
+  color: white;
+  display: inline-block;
+}
+#example5 .buttons {
+  margin-left: 10px;
+  float: left;
+}
+#example5 output {
+  background: #eee;
+  height: 150px;
+  overflow: auto;
+  padding: 10px;
+  display: block;
+  clear: both;
+}
+#example5 output span {
+  font-style: italic;
+  font-size: small;
+  display: inline-block;
+}
+#example5 button {
+  vertical-align: bottom;
+  margin-bottom: 5px;
+}
+#example5.playing {
+  /*cursor: none;*/
+}
+#example5 .cursor {
+  /* Icon by Laurent Patain - http://thenounproject.com/____Lo */
+  background-image: url(cursor.svg);
+  width: 36px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+#example5.playing .cursor {
+
+}
+
+@-webkit-keyframes animation1 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation2 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation3 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+}
+
+
+
+@keyframes animation1 {
+  from {
+    opacity: 1;
+    transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@keyframes animation2 {
+  from {
+    opacity: 1;
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@keyframes animation3 {
+  from {
+    opacity: 1;
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(240px, 128px, 0);
+  }
+}
+
+#example5.playing.animation1 .cursor {
+  -webkit-animation: animation1 5s;
+  animation: animation1 5s;
+}
+#example5.playing.animation2 .cursor {
+  -webkit-animation: animation2 5s;
+  animation: animation2 5s;
+}
+#example5.playing.animation3 .cursor {
+  -webkit-animation: animation3 5s;
+  animation: animation3 5s;
+  -webkit-transform-origin: 50% 100%;
+  -moz-transform-origin: 50% 100%;
+  -ms-transform-origin: 50% 100%;
+  -o-transform-origin: 50% 100%;
+  transform-origin: 50% 100%;
+}
 </style>
 <script>
 HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot ||
@@ -806,24 +988,26 @@ var html = [];
 
 <script>
 (function() {
-var container = document.querySelector('#example4');
+if ('HTMLTemplateElement' in window) {
+  var container = document.querySelector('#example4');
 
-var root1 = container.createShadowRoot();
-//root1.applyAuthorStyles = false;
-//root1.resetStyleInheritance = true;
-root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+  var root1 = container.createShadowRoot();
+  //root1.applyAuthorStyles = false;
+  //root1.resetStyleInheritance = true;
+  root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
 
-var html = [];
-[].forEach.call(root1.querySelectorAll('content'), function(el) {
-  html.push(el.outerHTML + ': ');
-  var nodes = el.getDistributedNodes();
-  [].forEach.call(nodes, function(node) {
-    html.push(node.outerHTML);
+  var html = [];
+  [].forEach.call(root1.querySelectorAll('content'), function(el) {
+    html.push(el.outerHTML + ': ');
+    var nodes = el.getDistributedNodes();
+    [].forEach.call(nodes, function(node) {
+      html.push(node.outerHTML);
+    });
+    html.push('\n');
   });
-  html.push('\n');
-});
 
-document.querySelector('#example4-log textarea').value = html.join('');
+  document.querySelector('#example4-log textarea').value = html.join('');
+}
 })();
 </script>
 
@@ -842,11 +1026,167 @@ own markup and play around to see how things work.</p>
 
 <h2 id="toc-events">Event Model</h2>
 
-<p>In the cases where events cross the shadow boundaries, the event's information
-about the target of the event is adjusted in order to maintain the encapsulation
-of the shadow root's upper boundary. That is, events are retargeted to look like
-they've come from the host element, rather than coming from internals elements
-of the Shadow DOM.</p>
+<p>Some events cross the shadow boundary and some do not. In the cases where events
+cross the boundary, the event target is adjusted in order to maintain the
+encapsulation that the shadow root's upper boundary provides. That is, <strong>events
+are retargeted to look like they've come from the host element rather than internal
+elements to the Shadow DOM</strong>.</p>
+<p>If your browser supports Shadow DOM (it does<span class="featuresupported no">n't</span>),
+you should see a play area below that helps visualize events. Elements in <span style="color:#ffcc00">yellow</span> are part of the Shadow DOM's markup. Elements in <span style="color:steelblue">blue</span> are
+part of the host element. The <span style="color:#ffcc00">yellow</span> border
+around "I'm a node in the host" signifies that it is a distributed node, passing
+through the shadow's <code>&lt;content&gt;</code> insertion point.</p>
+<p>The "Play Action" buttons show you different things to try. Give them a go to see
+how the <code>mouseout</code> and <code>focusin</code> events bubble up to the main page.</p>
+<div id="example5" class="demoarea">
+  <div data-host>
+    <div class="blue">I'm a node in the host</div>
+  </div>
+
+  <template style="display:none;"> <!-- display:none used for older browsers -->
+    <style>
+    .scopestyleforolderbrowsers * {
+      border: 4px solid #FC0;
+    }
+    .scopestyleforolderbrowsers input {
+      padding: 5px;
+    }
+    .scopestyleforolderbrowsers div {
+      background: #FC0;
+      padding: 5px;
+      border-radius: 3px;
+      margin: 5px 0;
+    }
+    content::-webkit-distributed(*) {
+      border: 4px solid #FC0;
+    }
+    </style>
+    <section class="scopestyleforolderbrowsers">
+      <div>I'm a node in Shadow DOM</div>
+      <div>I'm a node in Shadow DOM</div>
+      <content></content>
+      <input type="text" placeholder="I'm in Shadow DOM">
+      <div>I'm a node in Shadow DOM</div>
+      <div>I'm a node in Shadow DOM</div>
+    </section>
+  </template>
+
+  <aside class="cursor"></aside>
+
+  <div class="buttons">
+    <button data-action="playAnimation" data-action-idx="1">Play Action 1</button><br>
+    <button data-action="playAnimation" data-action-idx="2">Play Action 2</button><br>
+    <button data-action="playAnimation" data-action-idx="3">Play Action 3</button><br>
+    <button data-action="clearLog">Clear log</button>
+  </div>
+
+  <output></output>
+</div>
+
+<script>
+(function() {
+function stringify(node) {
+  return node.outerHTML.match(".*?>")[0].replace('<', '&lt;').replace('>', '&gt;');
+}
+
+var out = document.querySelector('#example5 output');
+var host = document.querySelector('#example5 [data-host]');
+var wrapper = document.querySelector('#example5');
+
+var root = host.createShadowRoot();
+root.innerHTML = document.querySelector('#example5 template').innerHTML;
+
+host.addEventListener('mouseout', function(e) {
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>', 
+    'on:', stringify(e.target) + ',', 
+    'from', stringify(e.fromElement),
+    '&rarr;', stringify(e.toElement), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+document.addEventListener('focusin', function(e) {
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+function clearLog() {
+  out.innerHTML = '';
+}
+
+function cleanUpAnimations(node) {
+  [].forEach.call(node.classList, function(c) {
+    if (c.indexOf('animation') == 0) {
+      node.classList.remove(c);
+    }
+  });
+}
+
+function playAnimation(idx) {
+  clearLog();
+  wrapper.classList.add('playing');
+  wrapper.classList.add('animation' + idx);
+}
+
+wrapper.addEventListener('webkitAnimationEnd', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+document.querySelector('#example5 .buttons').addEventListener('click', function(e) {
+  if (e.target.tagName == 'BUTTON') {
+    switch(e.target.dataset.action) {
+      case 'clearLog':
+        clearLog();
+        break;
+      case 'playAnimation':
+        cleanUpAnimations(wrapper);
+        playAnimation(parseInt(e.target.dataset.actionIdx));
+        break;
+      default:
+        break;
+    }
+  }
+});
+
+})();
+</script>
+
+<p><strong>Play Action 1</strong></p>
+<ul>
+<li>This one is interesting. You should see a <code>mouseout</code> from the host element (<code>&lt;div data-host&gt;</code>)
+to the <span style="color:steelblue">blue</span> node. Even though it's a distributed
+node, it's still in the host, not the ShadowDOM. Mousing further down into 
+<span style="color:#ffcc00">yellow</span> again causes a <code>mouseout</code> on the <span style="color:steelblue">blue</span> node.</li>
+</ul>
+<p><strong>Play Action 2</strong></p>
+<ul>
+<li>There is one <code>mouseout</code> that appears on host (at the very end). Normally you'd
+see <code>mouseout</code> events trigger for all of the <span style="color:#ffcc00">yellow</span> blocks.
+However, in this case these elements are internal to the Shadow DOM and the event
+doesn't bubble through its upper boundary.</li>
+</ul>
+<p><strong>Play Action 3</strong></p>
+<ul>
+<li>Notice that when you click the input, the <code>focusin</code> doesn't appear on the
+input but on the host node itself. It's been retargeted!</li>
+</ul>
+<h3 id="toc-events-stopped">Events that are always stopped</h3>
+
+<p>The following events never cross the shadow boundary:</p>
+<ul>
+<li>abort</li>
+<li>error</li>
+<li>select</li>
+<li>change</li>
+<li>load</li>
+<li>reset</li>
+<li>resize</li>
+<li>scroll</li>
+<li>selectstart</li>
+</ul>
 <h2 id="toc-conclusion">Conclusion</h2>
 
 <p>Todo</p>
