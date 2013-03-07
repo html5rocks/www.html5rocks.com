@@ -360,7 +360,7 @@ they've been swizzled into (the Shadow DOM).
 
 <h3 id="toc-distributed">::distributed() pseudo element</h3>
 
-If distributed nodes are children of the host element. How then do we target + style
+If distributed nodes are children of the host element, how then do we target + style
 them from *within* the Shadow DOM? The answer is the `::distributed()` pseudo element. It's the
 first-ever *functional* pseudo element which takes a CSS selector for its parameter.
 

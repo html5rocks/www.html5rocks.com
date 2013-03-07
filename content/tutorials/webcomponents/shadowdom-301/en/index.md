@@ -39,31 +39,30 @@ root2.innerHTML = '<div>Root 2 FTW</div>';
 })();
 </script>
 
-What renders is "Root 2 FTW", despite the fact that we added root2 last.
+What renders is "Root 2 FTW", despite the fact that we had already attached a shadow tree.
 This is because the last shadow tree added to a host, wins. It's a LIFO stack as
-far as rendering is concerned. Examining the DevTools verifies things.
-
-<blockquote class="commentary talkinghead" id="youngest-tree">
-The most recently added tree is called the <b>younger tree</b>, while the more
-recent one is called the <b>older tree</b>. In this example, <code>root2</code>
-is the younger tree and  <code>root1</code>, the older tree.
-</blockquote>
+far as rendering is concerned. Examining the DevTools verifies this behavior.
 
 <p class="notice fact">Shadow trees added to a host are stacked in the order they're added,
 starting with the most recent first. The last one added is the one that renders.</p>
 
-So what's the point of using multiple shadows? Only the last is invited to the party.
+<blockquote class="commentary talkinghead" id="youngest-tree">
+The most recently added tree is called the <b>younger tree</b>, while the more
+recent one is called the <b>older tree</b>. In this example, <code>root2</code>
+is the younger tree and  <code>root1</code> is the older tree.
+</blockquote>
+
+So what's the point of using multiple shadows if only the last is invited to the
+rendering party? Enter shadow insertion points.
 
 <h3 id="toc-shadow-insertion">Shadow Insertion Points</h3>
 
-"Shadow insertion points" (`<shadow>`) are similar to [insertion points](/tutorials/webcomponents/shadowdom/#toc-separation-separate) (`<content>`)
-in that they're placeholders. However, unlike regular insertion points, which
-selectively funnel and render the *content* of a host into a shadow tree,
-shadow insertion points are hosts for other *shadow trees*. It's Shadow DOM Inception!
+"Shadow insertion points" (`<shadow>`) are similar to normal [insertion points](/tutorials/webcomponents/shadowdom/#toc-separation-separate) (`<content>`) in that they're placeholders. However, instead of being placeholders for a host's *content*, they're hosts for other *shadow trees*.
+It's Shadow DOM Inception!
 
-As you can probably imagine, things get more complicated the farther you drill down
-the rabbit hole. For this reason, the spec is clear about what should happen with
-multiple `<shadow>`s:
+As you can probably imagine, things get more complicated the further you drill down
+the rabbit hole. For this reason, the spec is very clear about what happens when
+multiple `<shadow>` elements are in play:
 
 <p class="notice fact">If multiple <code>&lt;shadow></code> insertion points exist
 in a shadow tree, only the first is recognized. The rest are ignored.</p>
@@ -101,29 +100,26 @@ root2.innerHTML = '<div>Root 2 FTW</div><shadow></shadow>';
 There are a couple of interesting things about this example:
 
 1. "Root 2 FTW" still renders above "Root 1 FTW". This is because of where we've placed
-the <code>&lt;shadow></code> insertion piont. If we wanted the reverse, move the insertion point: <code>root2.innerHTML = '&lt;shadow>&lt;/shadow>&lt;div>Root 2 FTW&lt;/div>';</code>.
+the <code>&lt;shadow></code> insertion point. If you want the reverse, move the insertion point: <code>root2.innerHTML = '&lt;shadow>&lt;/shadow>&lt;div>Root 2 FTW&lt;/div>';</code>.
 - Notice there's now a `<content>` insertion point in root1. This makes
 the text node "Host node" come along for the rendering ride.
 
 <b id="toc-shadow-older">What's rendered at &lt;shadow&gt;?</b>
 
-Sometimes it's useful to actually know the (shadow) tree that was rendered at a
-`<shadow>` insertion point. You can get a reference to that tree through `.olderShadowRoot`:
+Sometimes it's useful to know the shadow tree that was rendered at a
+`<shadow>`. You can get a reference to that tree through `.olderShadowRoot`:
 
 <pre class="prettyprint">
 <b>root2.querySelector('shadow').olderShadowRoot</b> === root1 //true
 </pre>
 
-`.olderShadowRoot` isn't vendor prefixed because `HTMLShadowElement`s only makes
+`.olderShadowRoot` isn't vendor prefixed because `HTMLShadowElement` only makes
 sense in the context of Shadow DOM...which is already prefixed :)
 
-As with other parts of the web platform, we have DOM APIs and properties
-to make our scripting life easier.
+<h2 id="toc-get-shadowroot">Obtaining a host's shadow root</h2>
 
-<h2 id="toc-get-shadowroot">Obtain a host's shadow root</h2>
-
-If an element is hosting Shadow DOM, you can access it's [youngest shadow root](#youngest-tree) with
-`.webkitShadowRoot`:
+If an element is hosting Shadow DOM you can access it's [youngest shadow root](#youngest-tree)
+using `.webkitShadowRoot`:
 
 <pre class="prettyprint">
 var root = host.webkitCreateShadowRoot();
@@ -131,12 +127,14 @@ console.log(host.webkitShadowRoot === root); // true
 console.log(document.body.webkitShadowRoot); // null
 </pre>
 
-I'm not even sure why `.shadowRoot` is spec'd. It defeats the encapsulation
+<blockquote class="commentary talkinghead">
+I'm not entirely sure why <code>.shadowRoot</code> is spec'd. It defeats the encapsulation
 principles of Shadow DOM and gives outsiders an outlet for traversing into my
 supposed-to-be-hidden DOM.
+</blockquote>
 
 If you're worried about people crossing into your shadows, redefine
- `.shadowRoot` to be null. A bit of a hack, but it works:
+ `.shadowRoot` to be null:
 
 <pre class="prettyprint">
 Object.defineProperty(host, 'webkitShadowRoot', {
@@ -144,13 +142,15 @@ Object.defineProperty(host, 'webkitShadowRoot', {
   set: function(value) { }
 });</pre>
 
+A bit of a hack, but it works.
+
 In the end, it's important to remember that while amazingly fantastic,
 **Shadow DOM wasn't designed to be a security feature**. Don't rely on it for
 complete content isolation.
 
 <h2 id="toc-creating-js">Building Shadow DOM in JS</h2>
 
-If you prefer to building Shadow DOM in JS, `HTMLContentElement` and `HTMLShadowElement`
+If you prefer building DOM in JS, `HTMLContentElement` and `HTMLShadowElement`
 have interfaces for that.
 
 <pre class="prettyprint">
@@ -166,7 +166,8 @@ var div = document.createElement('div');
 div.textContent = 'Root 1 FTW';
 root1.appendChild(div);
 
-<b>var content = document.createElement('content'); // HTMLContentElement
+ // HTMLContentElement
+<b>var content = document.createElement('content');
 content.select = 'span';</b> // selects any spans the host node contains
 root1.appendChild(content);
 
@@ -174,25 +175,20 @@ var div = document.createElement('div');
 div.textContent = 'Root 2 FTW';
 root2.appendChild(div);
 
-<b>var shadow = document.createElement('shadow'); // HTMLShadowElement</b>
+// HTMLShadowElement
+<b>var shadow = document.createElement('shadow');</b>
 root2.appendChild(shadow);
 &lt;/script>
 </pre> 
 
 This example is nearly identical to the one in the [previous section](#toc-shadow-insertion).
-The only difference is that I'm now using `select` to pull out the new `<span>`.
+The only difference is that now I'm using `select` to pull out the newly added `<span>`.
 
 <h2 id="toc-distributed-nodes">Fetching distributed nodes</h2>
 
-Nodes that are selected out of host element and "distribute" into the shadow tree
-are called,...drumroll...distributed nodes! They're allowed to cross the shadow boundary
+Nodes that are selected out of the host element and "distribute" into the shadow tree
+are called...drumroll...distributed nodes! They're allowed to cross the shadow boundary
 when insertion points invite them.
-
-<blockquote class="commentary talkinghead">
-Insertion points are incredibly powerful. Think of them as a way to create a
-"declarative API" for your Shadow DOM. A host element can include all the markup in the world,
-but unless I invite it into my Shadow DOM with an insertion point, it's meaningless.
-</blockquote>
 
 What's conceptually bizarre about insertion points is that they don't physically
 move DOM. The host's nodes stay intake. Insertion points merely re-project nodes
@@ -214,7 +210,13 @@ console.log(shadowRoot.querySelector('content').contains(h2)); // false
 &lt;/script>
 </pre>
 
-Voilà! The `h2` isn't a child of the shadow DOM.
+Voilà! The `h2` isn't a child of the shadow DOM. This leads to a principle:
+
+<blockquote class="commentary talkinghead">
+Insertion points are incredibly powerful. Think of them as a way to create a
+"declarative API" for your Shadow DOM. A host element can include all the markup in the world,
+but unless I invite it into my Shadow DOM with an insertion point, it's meaningless.
+</blockquote>
 
 <h3 id="toc-getDistributedNodes">Element.getDistributedNodes()</h3>
 
@@ -310,17 +312,19 @@ if ('HTMLTemplateElement' in window) {
 <h2 id="toc-shadow-visualizder">Tool: Shadow DOM Visualizer</h2>
 
 Understanding the black magic that is Shadow DOM is difficult. I remember trying
-to wrap my head around it.
+to wrap my head around it for the first time.
 
-To help visualize how host nodes render at insertion points, I've built a tool
-using [d3.js](http://d3js.org/). Give it a try and let me know what you think!
-Both markup boxes on the left-hand side are editable. Feel free to paste in your
-own markup and play around to see how things work.
+To help visualize how Shadow DOM rendering works, I've built a tool
+using [d3.js](http://d3js.org/). Both markup boxes on the left-hand side are
+editable. Feel free to paste in your own markup and play around to see how things
+work and insertion points swizzle host nodes into the shadow tree.
 
 <figure>
 <a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html"><img src="visualizer.png" title="Shadow DOM Visualizer" alt="Shadow DOM Visualizer"></a>
 <figcaption><a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html">Launch Shadow DOM Visualizer</a></figcaption>
 </figure>
+
+Give it a try and let me know what you think!
 
 <h2 id="toc-events">Event Model</h2>
 
@@ -490,13 +494,13 @@ The following events never cross the shadow boundary:
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
-I hope you'll agree that **Shadow DOM is incredibly powerful**! For the first time ever, we have proper encapsulation without the baggage of `<iframe>`s or other techniques. 
+I hope you'll agree that **Shadow DOM is incredibly powerful**. For the first time ever, we have proper encapsulation without the extra baggage of `<iframe>`s or other older techniques. 
 
 Shadow DOM is certainly complex beast, but it's a beast worth adding to the web platform.
 Spend some time with it. Learn it. Ask questions.
 
 If you want to learn more, see Dominic's intro article [Shadow DOM 101](/tutorials/webcomponents/shadowdom/)
-and my [Shadow DOM 201: CSS &amp; Styling](/tutorials/webcomponents/shadowdom-201/)
+and my [Shadow DOM 201: CSS &amp; Styling](/tutorials/webcomponents/shadowdom-201/) article.
 
 <p class="small-notice">
 Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and 
