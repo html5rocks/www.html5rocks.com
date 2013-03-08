@@ -118,7 +118,7 @@ sense in the context of Shadow DOM...which is already prefixed :)
 
 <h2 id="toc-get-shadowroot">Obtaining a host's shadow root</h2>
 
-If an element is hosting Shadow DOM you can access it's [youngest shadow root](#youngest-tree)
+If an element is hosting Shadow DOM you can access its [youngest shadow root](#youngest-tree)
 using `.webkitShadowRoot`:
 
 <pre class="prettyprint">
@@ -142,7 +142,8 @@ Object.defineProperty(host, 'webkitShadowRoot', {
   set: function(value) { }
 });</pre>
 
-A bit of a hack, but it works.
+A bit of a hack, but it works. The powers that be are also looking at ways
+to make Shadow DOM private.
 
 In the end, it's important to remember that while amazingly fantastic,
 **Shadow DOM wasn't designed to be a security feature**. Don't rely on it for
@@ -191,7 +192,7 @@ are called...drumroll...distributed nodes! They're allowed to cross the shadow b
 when insertion points invite them.
 
 What's conceptually bizarre about insertion points is that they don't physically
-move DOM. The host's nodes stay intake. Insertion points merely re-project nodes
+move DOM. The host's nodes stay intact. Insertion points merely re-project nodes
 from the host into the shadow tree. It's a presentation/rendering thing: <s>"Move these nodes over here"</s> "Render these nodes at this location."
 
 <p class="notice fact">You cannot traverse the DOM into a <code>&lt;content></code>.</p>
@@ -210,7 +211,7 @@ console.log(shadowRoot.querySelector('content').contains(h2)); // false
 &lt;/script>
 </pre>
 
-Voilà! The `h2` isn't a child of the shadow DOM. This leads to a principle:
+Voilà! The `h2` isn't a child of the shadow DOM. This leads to another tid bit:
 
 <blockquote class="commentary talkinghead">
 Insertion points are incredibly powerful. Think of them as a way to create a
