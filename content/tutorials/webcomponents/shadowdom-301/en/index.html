@@ -438,7 +438,7 @@ the text node "Host node" come along for the rendering ride.</li>
 sense in the context of Shadow DOM...which is already prefixed :)</p>
 <h2 id="toc-get-shadowroot">Obtaining a host's shadow root</h2>
 
-<p>If an element is hosting Shadow DOM you can access it's <a href="#youngest-tree">youngest shadow root</a>
+<p>If an element is hosting Shadow DOM you can access its <a href="#youngest-tree">youngest shadow root</a>
 using <code>.webkitShadowRoot</code>:</p>
 <pre class="prettyprint">
 var root = host.webkitCreateShadowRoot();
@@ -460,7 +460,8 @@ Object.defineProperty(host, 'webkitShadowRoot', {
   set: function(value) { }
 });</pre>
 
-<p>A bit of a hack, but it works.</p>
+<p>A bit of a hack, but it works. The powers that be are also looking at ways
+to make Shadow DOM private.</p>
 <p>In the end, it's important to remember that while amazingly fantastic,
 <strong>Shadow DOM wasn't designed to be a security feature</strong>. Don't rely on it for
 complete content isolation.</p>
@@ -504,7 +505,7 @@ The only difference is that now I'm using <code>select</code> to pull out the ne
 are called...drumroll...distributed nodes! They're allowed to cross the shadow boundary
 when insertion points invite them.</p>
 <p>What's conceptually bizarre about insertion points is that they don't physically
-move DOM. The host's nodes stay intake. Insertion points merely re-project nodes
+move DOM. The host's nodes stay intact. Insertion points merely re-project nodes
 from the host into the shadow tree. It's a presentation/rendering thing: <s>"Move these nodes over here"</s> "Render these nodes at this location."</p>
 <p class="notice fact">You cannot traverse the DOM into a <code>&lt;content></code>.</p>
 
@@ -521,7 +522,7 @@ console.log(shadowRoot.querySelector('content').contains(h2)); // false
 &lt;/script>
 </pre>
 
-<p>Voilà! The <code>h2</code> isn't a child of the shadow DOM. This leads to a principle:</p>
+<p>Voilà! The <code>h2</code> isn't a child of the shadow DOM. This leads to another tid bit:</p>
 <blockquote class="commentary talkinghead">
 Insertion points are incredibly powerful. Think of them as a way to create a
 "declarative API" for your Shadow DOM. A host element can include all the markup in the world,
