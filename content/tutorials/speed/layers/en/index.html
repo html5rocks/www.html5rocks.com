@@ -1,17 +1,33 @@
+
 {% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
 
 {% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
 
 {% block head %}
 {% endblock %}
 
+{% block iscompatible %}
+{% endblock %}
+
 {% block html5badge %}
 <img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
 {% endblock %}
 
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
 {% block content %}
 
-<h2 id="toc-intro">Introduction</h2>
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+<style>
+  nav.outline { display:none ! important }
+</style>
+
+<h2 id="toc-introduction">Introduction</h2>
 
 <p>For most web developers the fundamental model of a web page is the DOM. Rendering is the often obscure process of turning this representation of a page into a picture on the screen. Modern browsers have changed the way rendering works in recent years to take advantage of graphics cards: this is often vaguely referred to as “hardware acceleration”. When talking about a normal web page (i.e. not Canvas2D or WebGL), what does that term really mean? This article explains the basic model that underpins hardware accelerated rendering of web content in Chrome.</p>
 
@@ -39,7 +55,7 @@
 
 <p>A very useful tool when studying layers in Chrome is the “show composited layer borders” flag in the settings (i.e. little cog icon) in Dev Tools, under the “rendering” heading. It very simply highlights where layers are on-screen. Let’s turn it on. These screenshots and examples are all taken from the latest Chrome Canary, Chrome 27 at the time of this writing.</p>
 
-<h4>Figure 1: A single-layer page. (<a href="basic.html">open stand-alone</a>)</h4>
+<h4>Figure 1: A single-layer page. (<a href="basic.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
     &lt;html&gt;
@@ -49,11 +65,11 @@
     &lt;/html&gt;
 </pre>
 
-<p><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></p>
+<p><img width="100%" src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></p>
 
 <p>This page has just one layer. The blue grid represents tiles, which you can think of as sub-units of a layer that Chrome uses to upload parts of a large layer at a time to the GPU. They aren’t really important here.</p>
 
-<h4>Figure 2: An element in its own layer (<a href="onelayer.html">open stand-alone</a>)</h4>
+<h4>Figure 2: An element in its own layer (<a href="onelayer.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
     &lt;html&gt;
@@ -65,7 +81,7 @@
     &lt;/html&gt;
 </pre>
 
-<p><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></p>
+<p><img width="100%" src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></p>
 
 <p>By putting a 3D CSS property on the &lt;div&gt; that rotates it, we can see what it looks like when an element gets its own layer: note the orange border, which outlines a layer in this view.</p>
 
@@ -88,7 +104,7 @@
 
 <p>We can move layers around, too, which makes them very useful for animation.</p>
 
-<h4>Figure 3: Animated Layers (<a href="animatedlayer.html">open stand-alone</a>)</h4>
+<h4>Figure 3: Animated Layers (<a href="animatedlayer.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
     &lt;html&gt;
@@ -124,13 +140,13 @@
 
 <p>See, for instance, this view of Dev Tools timeline: there are no paint operations while this layer is rotating back and forth.</p>
 
-<p><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></p>
+<p><img width="100%" src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></p>
 
 <h3 id="toc-invalidrepainting">Invalid! Repainting</h3>
 
 <p>But if the layer’s content changes, it has to be repainted.</p>
 
-<h4>Figure 4: Repainting Layers (<a href="animatedinvalidation.html">open stand-alone</a>)</h4>
+<h4>Figure 4: Repainting Layers (<a href="animatedinvalidation.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
     &lt;html&gt;
@@ -173,11 +189,11 @@
 
 <p>A good way to see what’s getting painted is with the “show paint rects” tool in Dev Tools, also under the “Rendering” heading of Dev Tools’ settings. After turning it on, notice that the animated element and the button both flash red when the button is clicked.</p>
 
-<p><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></p>
+<p><img width="100%" src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></p>
 
 <p>The paint events show up in the Dev Tools timeline, too. Sharp-eyed readers might notice there are two paint events there: one for the layer, and one for the button itself, which gets repainted when it changes to/from its depressed state.</p>
 
-<p><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></p>
+<p><img width="100%" src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></p>
 
 <p>Note that Chrome doesn’t always need to repaint the entire layer, it tries to be smart about only repainting the part of the DOM that’s been invalidated. In this case, the DOM element that we modified is the size of the entire layer. But in many other cases, there will be lots of DOM elements in a layer.</p>
 
