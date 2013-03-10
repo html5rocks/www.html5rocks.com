@@ -1,8 +1,6 @@
 (function(win, d) {
 
   var $ = d.querySelector.bind(d);
-  var w = window.innerWidth;
-  var h = d.height;
 
   var blob1 = $('#blob-1');
   var blob2 = $('#blob-2');
@@ -17,8 +15,6 @@
   var mainBG = $('section#content');
 
   function onResize () {
-    w = win.innerWidth;
-    h = d.height;
     updateElements(win.scrollY);
   }
 
@@ -28,7 +24,7 @@
 
   function updateElements (yPos) {
 
-    var relativeY = yPos / h;
+    var relativeY = yPos / 3000;
 
     mainBG.style.backgroundPosition = 'center ' + pos(0, -600, relativeY, 0) + 'px';
 

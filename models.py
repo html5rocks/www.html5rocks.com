@@ -75,6 +75,7 @@ class Resource(DictModel):
   """Container for all kinds of resource."""
 
   title = db.StringProperty(required=True)
+  subtitle = db.StringProperty(required=False)
   description = db.StringProperty()
   author = db.ReferenceProperty(Author, collection_name='author_one_set')
   second_author = db.ReferenceProperty(Author, collection_name='author_two_set')
@@ -139,6 +140,7 @@ class TutorialForm(forms.Form):
   import datetime
 
   title = forms.CharField(required=True)
+  subtitle = forms.CharField(required=False)
 
   description = forms.CharField(
       widget=forms.Textarea(attrs={'required': 'required', 'rows': 5, 'cols': 20}),
