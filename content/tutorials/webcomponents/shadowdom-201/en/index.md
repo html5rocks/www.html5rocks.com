@@ -2,7 +2,7 @@
 
 This article discusses more of the amazing things you can do with Shadow DOM.
 It builds on the concepts discussed in [Shadow DOM 101](/tutorials/webcomponents/shadowdom/).
-If you're looking for an introduction, see [Dominic Cooney](/profiles/#dominiccooney)'s most [excellent article](/tutorials/webcomponents/shadowdom/).
+If you're looking for an introduction, see that article.
 
 <h2 id="toc-intro">Introduction</h2>
 

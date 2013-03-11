@@ -325,6 +325,10 @@ work and insertion points swizzle host nodes into the shadow tree.
 <figcaption><a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html">Launch Shadow DOM Visualizer</a></figcaption>
 </figure>
 
+<p>
+<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+</p>
+
 Give it a try and let me know what you think!
 
 <h2 id="toc-events">Event Model</h2>
