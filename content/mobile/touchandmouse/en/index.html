@@ -46,23 +46,23 @@ blockquote.commentary p, blockquote.commentary ol { margin-right: 2em; }
 
 <p>All done?  Now that you have a basic grounding in touch events, the challenge with writing touch-enabled interactions is that the touch interactions can be quite a bit different from mouse (and mouse-emulating trackpad and trackball) events - and although touch interfaces typically try to emulate mice, that emulation isn’t perfect or complete; you really need to work through both interaction styles, and may have to support each interface independently.</p>
 
-<h2>Most Importantly: The User May Have Touch And a Mouse.</h2>
+<h2 id="toc-mostimp">Most Importantly: The User May Have Touch And a Mouse.</h2>
 
 <p>Many developers have built sites that statically detect whether an environment supports touch events, and then make the assumption that they only need to support touch (and not mouse) events.  This is now a faulty assumption - instead, just because touch events are present does not mean the user is primarily using that touch input device.  Devices such as the Chromebook Pixel and some Windows 8 laptops now support BOTH Mouse and Touch input methods, and more will in the near future.  On these devices, it is quite natural for users to use both the mouse and the touch screen to interact with applications, so  "supports touch" is not the same as "doesn’t need mouse support."  You can’t think of the problem as "I have to write two different interaction styles and switch between them," you need to think through how both interactions will work together as well as independently.  On my Chromebook Pixel, I frequently use the trackpad, but I also reach up and touch the screen - on the same application or page, I do whatever feels most natural at the moment.  On the other hand, some touchscreen laptop users will rarely if ever use the touchscreen at all - so the presence of touch input shouldn’t disable or hinder mouse control.</p>
 
 <p>Unfortunately, it can be hard to know if a user’s browser environment supports touch input or not; ideally, a browser on a desktop machine would always indicate support for touch events so a touchscreen display could be attached at any time (e.g. if a touchscreen attached through a <a href="http://en.wikipedia.org/wiki/KVM_switch">KVM</a> becomes available).  For all these reasons, your applications shouldn’t attempt to switch between touch and mouse - just support both!</p>
 
 <blockquote class="commentary talkinghead">
-<h2>Pointer Events</h2>
+<h2 id="toc-pointers">Pointer Events</h2>
 
 <p>In IE10 on Windows 8, Microsoft introduced a new model called Pointer Events.  Pointer Events are a unification of Mouse Events and touch input, as well as other input methods such as pen input.  There is <a href="http://www.w3.org/TR/2013/WD-pointerevents-20130219/">work to standardize the Pointer Event model at the W3C</a>, and in the short term, there are libraries out there like <a  href="https://github.com/toolkitchen/PointerEvents">PointerEvents</a> and <a href="http://blogs.msdn.com/b/eternalcoding/archive/2013/01/16/hand-js-a-polyfill-for-supporting-pointer-events-on-every-browser.aspx">Hand.js</a> that you can use to prototype how Pointer Events could work in your code to remove some of the need to independently support mouse and touch.  For really great touch and mouse interaction, you may need to customize your user experience for mouse and touch separately, but unified event handling can make this easier in many scenarios.  However, there are significant challenges with this model - namely, it requires supporting redundant input models, and it’s not broadly supported yet - and it will take some time to settle down into a solid, cross-browser standard.</p>
 
 <p>In the meantime, the best advice is to support both mouse and touch interaction models.  There are a lot of challenges with simultaneously supporting touch and mouse events, so this article explains those challenges and the strategies to overcome them.  Additionally, some of this advice is just general "implementing touch" advice, so it may be redundant if you are already used to implementing touch in a mobile context.</p>
 </blockquote>
 
-<h2>Supporting Mouse and Touch Together</h2>
+<h2 id="toc-together">Supporting Mouse and Touch Together</h2>
 
-<h3>#1 - Clicking and Tapping - the "Natural" Order of Things</h3>
+<h3 id="toc-1">#1 - Clicking and Tapping - the "Natural" Order of Things</h3>
 
 <p>The first problem is that touch interfaces typically try to emulate mouse clicks - obviously, since touch interfaces need to work on applications that have only interacted with mouse events before!  You can use this as a shortcut - because "click" events will continue to be fired, whether the user clicked with a mouse or tapped their finger on the screen.  However, there are a couple of problems with this shortcut.</p>
 
@@ -101,13 +101,13 @@ blockquote.commentary p, blockquote.commentary ol { margin-right: 2em; }
 
 <p>This isn’t always appropriate, of course - for Chrome on desktop class devices that support touch, and other browsers on mobile platforms when the page has viewports that are not scalable, <a href="http://paulkinlan.github.com/touch-patterns/touch-event-order-no-viewport">this delay does not apply.</a></p>
 
-<h3>#2: Mousemove Events Aren’t Fired by Touch</h3>
+<h3 id="toc-2">#2: Mousemove Events Aren’t Fired by Touch</h3>
 
 <p>It’s important to note at this point that the emulation of mouse events in a touch interface does not typically extend to emulating mousemove events - so if you build a beautiful mouse-driven control that uses mousemove events, it probably won’t work with a touch device unless you specifically add touchmove handlers too.</p>
 
 <p>Browsers typically automatically implement the appropriate interaction for touch interactions on the HTML controls - so, for example, HTML5 Range controls will just work when you use touch interactions.  However, if you’ve implemented your own controls, they will likely not work on click-and-drag type interactions; in fact, some commonly used libraries (like jQueryUI) do not yet natively support touch interactions in this way (although for jQueryUI, there are several monkey-patch fixes to this issue).  This was one of the first problems I ran into when upgrading my  Web Audio Playground application to work with touch - the sliders were jQueryUI-based, so they did not work with click-and-drag interactions.  I changed over to HTML5 Range controls, and they worked.  Alternately, of course, I could have simply added touchmove handlers to update the sliders, but there’s one problem with that...</p>
 
-<h3>#3: Touchmove and MouseMove Aren’t the Same Thing</h3>
+<h3 id="toc-3">#3: Touchmove and MouseMove Aren’t the Same Thing</h3>
 
 <p>A pitfall I've seen a few developers fall into is having touchmove and mousemove handlers call into the same codepaths.  The behavior of these events is very close, but subtly different - in particular, <b><i>touch events always target the element where that touch STARTED, while mouse events target the element currently under the mouse cursor.</i></b>   This is why we have mouseover and mouseout events, but there are no corresponding touchover and touchout events - only touchend. </p>
 
@@ -115,7 +115,7 @@ blockquote.commentary p, blockquote.commentary ol { margin-right: 2em; }
 
 <p>You can of course avoid this problem by avoiding removing elements that have (or have ancestors that have) touch handlers while a touch is active. Alternately, the best guidance is rather than register static touchend/touchmove handlers, wait until you get a touchstart event and then add touchmove/touchend/touchcancel handlers to the <b><i>target</i></b> of the touchstart event (and remove them on end/cancel). This way you'll continue to receive events for the touch even if the target element is moved/removed. You can play with this a little <a href="http://www.rbyers.net/eventTest.html">here</a> - touch the red box and while holding hit escape to remove it from the DOM.</p>
 
-<h3>#4: Touch and :Hover</h3>
+<h3 id="toc-4">#4: Touch and :Hover</h3>
 
 <p>The mouse pointer metaphor separated cursor position from actively selecting, and this allowed developers to use hover states to hide and show information that might be pertinent to the users.  However, most touch interfaces right now do not detect a finger "hovering" over a target - so providing semantically important information (e.g. providing "what is this control?" popup) based on hovering is a no-no, unless you also give a touch-friendly way to access this information.  You need to be careful about how you use hovering to relay information to users.</p>
 
@@ -150,7 +150,7 @@ img:hover ~ .content {
 </ol>
 </blockquote>
 
-<h3>#5: Touch vs. Mouse Precision</h3>
+<h3 id="toc-5">#5: Touch vs. Mouse Precision</h3>
 
 <p>While mice have a conceptual disassociation from reality, it turns out that they are extremely accurate, as the underlying operating system generally tracks exact pixel precision for the cursor.  Mobile developers on the other hand have learned that finger touches on a touch screen are not as accurate, mostly because of the size of the surface area of the finger when in contact with the screen (and partly because your fingers obstruct the screen).</p>
 
@@ -158,13 +158,13 @@ img:hover ~ .content {
 
 <p>Many browser vendors who are handling touch based interfaces have also introduced logic into the browser to help target the correct element when a user touches the screen and reduce the likelihood of incorrect clicks - although this usually only corrects click events, not moves (although Internet Explorer appears to modify mousedown/mousemove/mouseup events as well).</p>
 
-<h3>#6: Keep Touch Handlers Contained, or They’ll Jank Your Scroll</h3>
+<h3 id="toc-6">#6: Keep Touch Handlers Contained, or They’ll Jank Your Scroll</h3>
 
 <p>It’s also important to keep touch handlers confined only to the elements where you need them; touch elements can be very high-bandwidth, so it’s important to avoid touch handlers on scrolling elements (as your processing may interfere with browser optimizations for fast jank-free touch scrolling - modern browsers try to scroll on a GPU thread, but this is impossible if they have to check with javascript first to see if each touch event is going to be handled by the app).  You can check out <a href="http://www.rbyers.net/janky-touch-scroll.html">an example</a> of this behavior.</p>
 
 <p>One piece of guidance to follow to avoid this problem is to make sure that if you are only handling touch events in a small portion of your UI, you only attach touch handlers there (not, e.g., on the &lt;body&gt; of the page); in short, limit the scope of your touch handlers as much as possible.</p>
 
-<h3>#7: Multi-touch</h3>
+<h3 id="toc-7">#7: Multi-touch</h3>
 
 <p>The final interesting challenge is that although we’ve been referring to it as "Touch" user interface, nearly universally the support is actually for Multi-touch - that is, the APIs provide more than one touch input at a time.  As you begin to support touch in your applications, you should consider how multiple touches might affect your application.</p>
 
@@ -172,7 +172,7 @@ img:hover ~ .content {
 
 <p>The currently implemented W3C Touch APIs have no API to determine how many touch points the hardware supports, so you’ll have to use your best estimation for how many touch points your users will want - or, of course, pay attention to how many touch points you see in practice and adapt.  For example, in a piano application, if you never see more than two touch points you may want to add some "chords" UI.  The PointerEvents API  does have an API to determine the capabilities of the device.</p>
 
-<h2>Touching Up</h2>
+<h2 id="toc-conclusion">Touching Up</h2>
 
 <p>Hopefully this article has given you some guidance on common challenges in implementing touch alongside mouse interactions.  More important than any other advice, of course, is that you need to test your app on mobile, tablet, and combined mouse-and-touch desktop environments.  If you don’t have touch+mouse hardware, use Chrome’s "<a href="https://developers.google.com/chrome-developer-tools/docs/mobile-emulation#emulate-touch-events">Emulate touch events</a>" to help you test the different scenarios.</p>
 
