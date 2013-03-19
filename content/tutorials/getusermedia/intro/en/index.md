@@ -131,6 +131,14 @@ Feature detecting is a simple check for the existence of `navigator.getUserMedia
       alert('getUserMedia() is not supported in your browser');
     }
 
+You can also [use Modernizr](http://modernizr.com/) to detect `getUserMedia` to avoid the vendor prefix dance yourself:
+
+    if (Modernizr.getusermedia){
+      var gUM = Modernizr.prefixed('getUserMedia', navigator);
+      gUM({video: true}, function( //...
+      //...
+    }
+
 <h3 id="toc-acccess">Gaining access to an input device</h3>
 
 To use the webcam or microphone, we need to request permission.
