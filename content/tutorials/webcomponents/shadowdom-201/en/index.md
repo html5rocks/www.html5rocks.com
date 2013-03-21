@@ -2,7 +2,7 @@
 
 This article discusses more of the amazing things you can do with Shadow DOM.
 It builds on the concepts discussed in [Shadow DOM 101](/tutorials/webcomponents/shadowdom/).
-If you're looking for an introduction, see [Dominic Cooney](/profiles/#dominiccooney)'s most [excellent article](/tutorials/webcomponents/shadowdom/).
+If you're looking for an introduction, see that article.
 
 <h2 id="toc-intro">Introduction</h2>
 
@@ -174,7 +174,7 @@ authors of Shadow content can designate certain elements as styleable by
 outsiders. This is done through custom pseudo elements.
 
 You can designate an element as a custom pseudo element by using the `pseudo` attribute.
-It's value, or name, needs to be prefixed with "x-". Doing so creates
+Its value, or name, needs to be prefixed with "x-". Doing so creates
 an association with that element in the shadow tree and gives outsiders a
 designated lane to cross the shadow boundary.
 
@@ -224,7 +224,7 @@ to match the awesome Comic Sans theme of their own page:
       {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
     }
 
-Due to the way CSS variables inherit, everything is peachy and this
+Due to the way CSS Variables inherit, everything is peachy and this
 works beautifully! The whole picture looks like this:
 
     <style>
@@ -266,11 +266,11 @@ There are two properties to control the what bleeds in:
     - `false` - Default. [inheritable CSS properties](http://www.impressivewebs.com/inherit-value-css/) continue to inherit.
     - `true` - resets inheritable properties to `initial` at the boundary.
 - **.applyAuthorStyles**
-    - `true` - styles defined in the author's document are applied. This of this
+    - `true` - styles defined in the author's document are applied. Think of this
     as allowing styles to "bleed" across the boundary.
     - `false` - Default. Author styles are not applied to the shadow tree.
 
-Below is a demo for seeing how a shadow tree is effected by changing these two properties.
+Below is a demo for seeing how a shadow tree is affected by changing these two properties.
 
 <pre class="prettyprint">
 &lt;div>&lt;h3>Host title&lt;/h3>&lt;/div>
@@ -340,7 +340,7 @@ Carry this around in your pocket. It's gold!
   <tr><th>Scenario</th><th>applyAuthorStyles</th><th>resetStyleInheritance</th></tr>
   <tr><td>"I have my own appearance, but want to match basic properties like text color."<br>
     <em>basically, you're creating a widget</em></td><td>false</td><td>false</td></tr>
-  <tr><td>"Screw the page! I have my own theme"<br>
+  <tr><td>"Forget the page! I have my own theme"<br>
     <em>you'll still need a "component reset stylesheet" because distributed content gets the styles it had in the page.</em></td><td>false</td><td>true</td></tr>
   <tr><td>"I'm a component designed to get my theme from styles in the page"</td><td>true</td><td>true</td></tr>
   <tr><td>"I want to blend in with the page as much as possible."<br>

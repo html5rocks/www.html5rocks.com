@@ -23,35 +23,46 @@
 <!-- Uncomment if this is a bleeding edge feature
   <p>{% include "warning.html" %}</p>
 -->
-<h2 id="toc-introduction">Introduction</h2>
+<h2 id="toc-introduction">はじめに</h2>
 
 <p>For most web developers the fundamental model of a web page is the DOM. Rendering is the often obscure process of turning this representation of a page into a picture on the screen. Modern browsers have changed the way rendering works in recent years to take advantage of graphics cards: this is often vaguely referred to as “hardware acceleration”. When talking about a normal web page (i.e. not Canvas2D or WebGL), what does that term really mean? This article explains the basic model that underpins hardware accelerated rendering of web content in Chrome.</p>
+<p>ほとんどのWebデベロッパーにとって、Webページの基本的なモデルはDOMです。このページの表現をスクリーン上の画像に変換するための、通常不明瞭なプロセスをレンダリングと呼びます。モダンブラウザはここ何年かの間、グラフィックスカードを利用するために、レンダリングの方式を変更してきました。このような方式は漠然と「ハードウェア・アクセラレーション」と称されていますが、通常のWebページ (つまり、Canvas2DやWebGLを使用していないベージ) において、この用語はどのような意味を持つのでしょうか？ この記事では、Chromeにおけるハードウェア・アクセラレーションを利用したレンダリングに関して、それを支える基本的なモデルについて説明します。</p>
 
-<h3 id="toc-caveats">Big, Fatty Caveats</h3>
+<h3 id="toc-caveats">大きな警告</h3>
 
 <p>We’re talking about WebKit here, and more specifically we’re talking about the Chromium port of WebKit. This article covers implementation details of Chrome, not web platform features. The web platform and standards don’t codify this level of implementation detail, so there are no guarantees anything in this article will apply to other browsers, but knowledge of internals can nevertheless be useful for advanced debugging and performance tuning.</p>
+<p>我々はここでWebKitについて話します。より厳密に言うと、WebKitの Chromiumポートについて話します。当記事はChromeの実装の詳細を題材にしており、Web プラットフォームについて論じている訳ではありません。Web プラットフォームとWeb標準は、ここで書かれている程までには実装の詳細について明文化されていません。よって、当記事で扱う事柄は、他のブラウザでは当てはまらないかもしれません。しかしながら内部構造を知ることで、デバッグやパフォーマンスチューニングに活用することができるでしょう。</p>
 
 <p>Also, note that this entire article is discussing a core piece of Chrome’s rendering architecture that’s changing very fast. This article attempts to cover only stuff that’s unlikely to change, but no guarantees that it’ll all still apply in six months.</p>
+<p>また、ここで論じられるChromeのコアモジュールのレンダリング・アーキテクチャは、それ自身ものすごい速さで変化しています。記事を書くに当たって、なるべく変化の少ない部分を扱うように心がけましたが、それでも6ヶ月後に当記事に書かれているすべてのことが適用可能である保証はありません。</p>
 
 <p>It’s important to understand that Chrome has had two different rendering paths for a while now: the hardware-accelerated path and the older software path. As of this writing all pages go down the hardware accelerated path on Windows, ChromeOS, and Chrome for Android. On Mac and Linux only pages that need compositing for some of their content go down the accelerated path (see below for more on what would require compositing), but soon all pages will go down the accelerated path there, too.</p>
+<p>Chromeでは、現在のところ、二つの異なるレンダリング・パスがあります。ハードウェアパスと(古い)ソフトウェアパスです。執筆時点では、Windows版 Chrome, ChromeOS, そしてChrome for Androidにおいては、すべてのページはハードウェアパスで処理されます。MacとLinuxはハードウェア合成が必要なコンテンツを含んだページのみがハードウェアパスで処理されます。(ハードウェア合成が必要なコンテンツについては後述します。) しかしながら、MacとLinuxにおいても、いずれ近いうちにすべてのページがハードウェアパスで処理されるようになるでしょう。</p>
 
 <p>Lastly, we’re peeking under the hood of the rendering engine and looking at features of it that have a big impact on performance. When trying to improve the performance of your own site it can be helpful to understand the layer model, but it’s also easy to shoot yourself in the foot: layers are useful constructs, but creating lots of them can introduce overhead throughout the graphics stack. Consider yourself forewarned!</p>
+<p>最後に、我々はレンダリング・エンジンの内部をのぞいて、パフォーマンスに大きく影響する機能に関して見ていきます。ご自身のサイトのパフォーマンスを改善するに当たって、このレイヤーモデルに関して知ることは助けになる一方、自ら墓穴を掘ることにもなりかねません。レイヤーモデルは便利な構造であると同時に、たくさん作りすぎるとグラフィックス全体のオーバーヘッドとなる可能性があります。使用前に十分に考慮してください。</p>
 
-<h2 id="toc-domtoscreen">From the DOM to the Screen</h2>
+<h2 id="toc-domtoscreen">DOMからスクリーンへ</h2>
 
-<h3 id="toc-introducinglayers">Introducing Layers</h3>
+<h3 id="toc-introducinglayers">レイヤーとは</h3>
 
 <p>Once a page is loaded and parsed, it's represented in the browser as a structure many web developers are familiar with: DOM. When rendering a page, however, the browser has a series of intermediate representations that aren’t directly exposed to developers. The most important of these structures is a layer.</p>
+<p>Webページは、ひとたびロードされ、パースされると、多くのWebデベロッパーにおなじみの構造、つまりDOMに変換されます。しかしながら、ページをレンダリングするに当たって、ブラウザはデベロッパーが直接のぞくことのできないいくつかの中間形式を持ちます。これらのうち最も重要なものはレイヤーです。</p>
 
 <p>In Chrome there are actually several different types of layers: RenderLayers, which are responsible for subtrees of the DOM, and GraphicsLayers, which are responsible for subtrees of RenderLayers. The latter is most interesting to us here, because GraphicsLayers are what get uploaded to the GPU as textures. I’ll just say “layer” from here on out to mean GraphicsLayer.</p>
+<p>Chromeにおいては、実際のところ複数の異なるタイプのレイヤーが存在します。RenderレイヤーはDOMのサブツリーに関して責任を持ちます。また、GraphicsレイヤーはRenderレイヤーのサブツリーに関して責任を持ちます。後者は我々にとってより興味深いものとなります。なぜならGraphicsレイヤーはテクスチャとしてGPUにアップロードされるからです。以後、単に「レイヤー」と行った場合はこのGraphicsレイヤーを指します。</p>
 
 <p>Quick aside on GPU terminology: what’s a texture? Think of it as a bitmap image that’s moved from main memory (i.e. RAM) to video memory (i.e. VRAM, on your GPU). Once it’s on the GPU, you can map it to a mesh geometry -- in video games or CAD programs, this technique is used to give skeletal 3D models “skin.” Chrome uses textures to get chunks of web page content onto the GPU. Textures can be cheaply mapped to different positions and transformations by applying them to a really simple rectangular mesh. This is how 3D CSS works, and it’s also great for fast scrolling -- but more on both of these later.</p>
+<p>少し話は逸れますが、GPUの用語でテクスチャとは何でしょう？メインメモリ(つまりRAM)からビデオメモリ(GPUに搭載されたVRAM)に転送されるビットマップのようなものだと思ってください。ひとたびGPUに転送されると、テクスチャを3Dメッシュにマッピングできます。-- ビデオゲームやCADのプログラムでは、3Dの骨格モデルに「スキン」を与えるためにこの技術が利用されています。ChromeはWebページのコンテンツの大量のデータをGPUで扱うためにテクスチャを使用します。テクスチャは単純な矩形のメッシュに貼付けることで、容易にリポジショニングやトランスフォーメーションができます。これにより3D CSSや高速スクロールが可能になります。これらについては後述します。</p>
 
 <p>Let’s look at a couple examples to illustrate the layer concept.</p>
+<p>では、レイヤーの概念を説明するために、２つの例を見てみましょう。</p>
 
 <p>A very useful tool when studying layers in Chrome is the “show composited layer borders” flag in the settings (i.e. little cog icon) in Dev Tools, under the “rendering” heading. It very simply highlights where layers are on-screen. Let’s turn it on. These screenshots and examples are all taken from the latest Chrome Canary, Chrome 27 at the time of this writing.</p>
+<p>Chrome のレイヤーを学ぶには、まず DevTools の設定(小さな歯車のアイコン) から “rendering” 配下の “show composited layer borders” フラグを有効にしてください。これにより、レイヤーがハイライトされるので、スクリーン上のどこに位置するか分かるようになります。以下のスクリーンショットと例はすべて最新のChrome Canary (執筆時点ではChrome 27) で実行されたものです。</p>
 
 <h4>Figure 1: A single-layer page. (<a href="basic.html" target="_blank">open stand-alone</a>)</h4>
+<h4>図1: シングルレイヤーのページ (<a href="basic.html" target="_blank">別ウィンドウで表示</a>)</h4>
 
 <pre class="prettyprint">
 &lt;html&gt;
@@ -63,9 +74,10 @@
 
 <figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>Screenshot of composited layer render borders around the page's base layer</figcaption></figure>
 
-<p>This page has just one layer. The blue grid represents tiles, which you can think of as sub-units of a layer that Chrome uses to upload parts of a large layer at a time to the GPU. They aren’t really important here.</p>
+<p>このページはレイヤーを１つだけ持ちます。青い線はタイルを表します。タイルは、大きなレイヤーを扱う際に、Chromeが分割してGPUにアップロードするための単位だと思ってください。タイルはここではあまり重要ではありません。</p>
 
 <h4>Figure 2: An element in its own layer (<a href="onelayer.html" target="_blank">open stand-alone</a>)</h4>
+<h4>図2: 自身のレイヤーを持つ要素(<a href="onelayer.html" target="_blank">別ウィンドウで表示</a>)</h4>
 
 <pre class="prettyprint">
 &lt;html&gt;
@@ -81,25 +93,34 @@
 <figcaption>Screenshot of rotated layer's render borders</figcaption></figure>
 
 <p>By putting a 3D CSS property on the &lt;div&gt; that rotates it, we can see what it looks like when an element gets its own layer: note the orange border, which outlines a layer in this view.</p>
+<p>自身のレイヤーを持つ要素がどのようなものか見るために、ここでは &lt;div&gt; に3D CSSプロパティを追加してローテーションしています。オレンジ色の境界線に着目してください。これはビュー内でのレイヤーの外枠を示します。</p>
 
-<h3 id="toc-layercreation">Layer Creation Criteria</h3>
+<h3 id="toc-layercreation">レイヤー生成の指針</h3>
 
 <p>What else gets its own layer? Chrome’s heuristics here have evolved over time and continue to, but currently any of the following trigger layer creation:</p>
+<p>では、ローテーション以外に自身のレイヤーを持つケースはあるのでしょうか？Chromeは進化の過程にあるので、今後変化する可能性がありますが、現時点では以下の条件のいずれかを満たした場合にレイヤーが作成されます。</p>
 
 <ul>
 <li>3D or perspective transform CSS properties</li>
+<li>3D or perspective transform CSS properties</li>
 <li>&lt;video&gt; elements using accelerated video decoding</li>
+<li>HWデコーダを使用した&lt;video&gt; 要素</li>
 <li>&lt;canvas&gt; elements with a 3D (WebGL) context or accelerated 2D context</li>
+<li>3D (WebGL) コンテキスト、もしくはHWアクセラレーションを有効にした状態での2Dコンテキストを使用した&lt;canvas&gt; 要素</li>
 <li>Composited plugins (i.e. Flash)</li>
+<li>Compositorを利用するプラグイン(例：Flash)</li>
 <li>Elements with CSS animation for their opacity or using an animated webkit transform</li>
+<li>透過色もしくはwebkit-transformを使用したCSSアニメーション</li>
 <li>Elements with accelerated CSS filters</li>
+<li>CSS Filterを使用した要素</li>
 <li>Element has a descendant that has a compositing layer (in other words if the element has a child element that’s in its own layer)</li>
 <li>Element has a sibling with a lower z-index which has a compositing layer (in other words the it’s rendered on top of a composited layer)</li>
 </ul>
 
-<h3 id="toc-animation">Practical Implications: Animation</h3>
+<h3 id="toc-animation">実践：アニメーション</h3>
 
 <p>We can move layers around, too, which makes them very useful for animation.</p>
+<p>アニメーション</p>
 
 <h4>Figure 3: Animated Layers (<a href="animatedlayer.html" target="_blank">open stand-alone</a>)</h4>
 
@@ -134,6 +155,7 @@
 </pre>
 
 <p>As mentioned earlier, layers are really useful for moving around static web content. In the basic case, Chrome paints the contents of a layer into a software bitmap before uploading it to the GPU as a texture. If that content doesn’t change in the future, it doesn’t need to be repainted. This is a Good Thing: repainting takes time that can be spent on other stuff, like running JavaScript, and if the paint is long it causes hitches or delays in animations.</p>
+<p>先にも述べましたが、レイヤーは静的なWebコンテンツを移動させるのに大変便利です。通常の場合、Chromeはレイヤーの内容をいったんソフトウェア・ビットマップに描画してから、GPUにテクスチャとして転送します。コンテンツがもし将来的に変わらなければ、再度ビットマップを描画する必要はありません。これは良いことです。なぜなら再描画するということは、JavaScriptの実行等、他の処理の時間を奪うからです。描画時間が長引くと、結果的にアニメーションがカクカクしたり、遅れたりします。
 
 <p>See, for instance, this view of Dev Tools timeline: there are no paint operations while this layer is rotating back and forth.</p>
 
