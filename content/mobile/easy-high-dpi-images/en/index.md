@@ -42,7 +42,7 @@ Here a summary in **tl;dr** format:
 
 <!--more-->
 
-## Simple drawings and pixel art
+<h2 id="toc-simple">Simple drawings and pixel art</h2>
 
 Small images can often be avoided entirely by using CSS features or SVG.
 There is no need to use images for rounded corners, for example, since
@@ -110,7 +110,7 @@ original 512x512 PNG.
 8-bit palette`**
 
 
-## Images with a variety of colors
+<h2 id="toc-color-variety">Images with a variety of colors</h2>
 
 I wrote an HTML5Rocks article [surveying a number of different responsive
 image techniques][h5r-hidpi], and did some research around compressing
@@ -129,7 +129,7 @@ quality of the image by doubling each dimension and significantly
 increasing the compression, while at the same time, reducing the size by
 2kb.
 
-## Compression, dimensions and visual quality
+<h2 id="toc-quality">Compression, dimensions and visual quality</h2>
 
 I wanted to get a bit more insight into tradeoffs between compression
 level, image dimensions, visual quality and image size. I ran a study
@@ -163,7 +163,8 @@ of your images.
 
 <img src="/static/images/tutorials/easy-hidpi/screenshot.png" style="width: 100%;"/>
 
-The tool itself is [available for you to play with][image-zoom].
+The tool itself is [available for you to play with][image-zoom]. You can
+**zoom into the image** by selecting a sub-area to zoom into.
 
 #### Analysis
 
@@ -194,7 +195,7 @@ WebP images are much more compact.
 [lightroom-compare]: http://laurashoe.com/2011/10/21/lightroom-quick-tip-of-the-week-viewing-and-zooming-in-on-two-photos-side-by-side/
 [image-zoom]: http://borismus.github.com/image-zoom
 
-## Caveats and fin
+<h2 id="toc-caveats">Caveats and fin</h2>
 
 I deliberately avoided the topic of art direction to focus on high DPI
 images only. Generally speaking, this problem can be solved either with
@@ -216,4 +217,8 @@ that your markup is virtually unchanged. All that is required of the web
 developer is to generate 2x assets and size your images properly in the
 DOM.
 
-May your images look sharp and your cell data usage be low!
+For further reading, check out [Scott Jehl's article][compressive] on a
+similar topic.  May your images look sharp and your cell data usage be
+low!
+
+[compressive]: http://filamentgroup.com/lab/rwd_img_compression/
