@@ -53,15 +53,15 @@ aren't the same as device pixels, and that images are being scaled up.</p>
 
 <ul>
 <li>Use CSS/SVG rather than raster imagery if possible.</li>
-<li>Use 2x images by default.</li>
+<li>Use images optimized for high density displays by default.</li>
 <li>Use PNGs for simple drawings and pixel art (eg. logos).</li>
 <li>Use compressed JPEGs for images with a variety of colors (eg. photos).</li>
-<li>Always set explicit sizes on all image elements.</li>
+<li>Always set explicit sizes (using CSS or HTML) on all image elements.</li>
 </ul>
 
 <!--more-->
 
-<h2>Simple drawings and pixel art</h2>
+<h2 id="toc-simple">Simple drawings and pixel art</h2>
 
 <p>Small images can often be avoided entirely by using CSS features or SVG.
 There is no need to use images for rounded corners, for example, since
@@ -70,18 +70,18 @@ fonts are widely supported, so using "imaged" text is unadvisable.</p>
 
 <p>However, in some cases, like logos, an image may be the only way
 forward. For example, this Chrome logo has a natural size of 256x256. On
-a retina display, you can see the line aliasing at diagonals and curves,
+a Retina display, you can see the line aliasing at diagonals and curves,
 which looks chunky and bad, especially when compared to crisply rendered
 text:</p>
 
 <p><img src="/static/images/tutorials/easy-hidpi/chrome1x.png" style="width: 256px; height: 256px;"/>
 <img src="/static/images/tutorials/easy-hidpi/png1x.png" style="width: 200px; height: 200px;"/></p>
 
-<p><strong>Natural dimensions: <code>256x256px</code>, asset size: <code>31K</code>, format: <code>PNG</code></strong></p>
+<p><strong>Natural dimensions: <code>256x256px</code>, asset size: <code>31 kB</code>, format: <code>PNG</code></strong></p>
 
-<p>Convinced? Good. Now let's use a retina image. You might be tempted to
+<p>Convinced? Good. Now let's use a high density image. You might be tempted to
 save space by storing your logo as a JPEG, but this may not be a good
-idea, since saving logos and other graphics, as a lossy format tends to
+idea, since saving logos and other graphics in a lossy format tends to
 introduce artifacts. In this case, I've exaggerated the problem by using
 a very high compression, but notice the banding on the gradients, the
 speckles on white backgrounds and the messy lines:</p>
@@ -89,11 +89,11 @@ speckles on white backgrounds and the messy lines:</p>
 <p><img src="/static/images/tutorials/easy-hidpi/chrome2x.jpg" style="width: 256px; height: 256px;"/>
 <img src="/static/images/tutorials/easy-hidpi/jpg2x.png" style="width: 200px; height: 200px;"/></p>
 
-<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>13K</code>, format: <code>JPEG</code></strong></p>
+<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>13 kB</code>, format: <code>JPEG</code></strong></p>
 
 <p>The thing to do for relatively small images is to use 2x PNGs. Be aware
 that the difference in size between a 1x and 2x PNG is generally quite
-high (52K in this case). However, in the case of a logo, it is your
+high (52 kB in this case). However, in the case of a logo, it is your
 website's face and the first thing your visitors will see. By skimping
 too much on quality in exchange for size, it will also be the last thing
 your visitors will see!</p>
@@ -104,7 +104,7 @@ dimensions for 2x displays:</p>
 <p><img src="/static/images/tutorials/easy-hidpi/chrome2x.png" style="width: 256px; height: 256px;"/>
 <img src="/static/images/tutorials/easy-hidpi/png2x.png" style="width: 200px; height: 200px;"/></p>
 
-<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>83K</code>, format: <code>PNG</code></strong></p>
+<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>83 kB</code>, format: <code>PNG</code></strong></p>
 
 <p>The markup to make the above render is the following:</p>
 
@@ -117,19 +117,19 @@ for performance because the rendering engine has a good grasp on the
 size of the element and won't need to work too hard to compute it.</p>
 
 <p>One possible optimization that might work is to reduce the 24-bit PNG to
-paletted 8-bit one. This works for images with small numbers of colors,
-the Chrome logo included. To do this optimization, you can use a tool
-such as <a href="http://pngquant.org/">http://pngquant.org/</a>. You can see a bit of banding here, but this
-file is just 13K, which is a whopping 6x size savings compared to the
-original 512x512 PNG.</p>
+a paletted 8-bit one. This works for images with a small number of
+colors, the Chrome logo included. To do this optimization, you can use a
+tool such as <a href="http://pngquant.org/">http://pngquant.org/</a>. You can see a bit of banding here,
+but this file is just 13 kB, which is a whopping 6x size saving
+compared to the original 512x512 PNG.</p>
 
 <p><img src="/static/images/tutorials/easy-hidpi/chrome2x-8bit.png" style="width: 256px; height: 256px;"/>
 <img src="/static/images/tutorials/easy-hidpi/png2x-8bit.png" style="width: 200px; height: 200px;"/></p>
 
-<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>13K</code>, format: <code>PNG,
+<p><strong>Natural dimensions: <code>512x512px</code>, asset size: <code>13 kB</code>, format: <code>PNG,
 8-bit palette</code></strong></p>
 
-<h2>Images with a variety of colors</h2>
+<h2 id="toc-color-variety">Images with a variety of colors</h2>
 
 <p>I wrote an HTML5Rocks article <a href="http://www.html5rocks.com/en/mobile/high-dpi/">surveying a number of different responsive
 image techniques</a>, and did some research around compressing
@@ -138,17 +138,17 @@ one such tile from the above article:</p>
 
 <p><img src="/static/images/tutorials/easy-hidpi/tile.jpg" style="width: 100%;"/></p>
 
-<p>I've labeled the images with their compression (indicated by JPEG
-quality), their sizes (in bytes), and my subjective opinion on their
+<p>I've labeled the images with their compression level (indicated by JPEG
+quality), their size (in bytes), and my subjective opinion on their
 comparative visual fidelity (ranked by numbers). The interesting bit
 here is that the highly compressed 2x image (labeled 3) is <strong>smaller in
 size</strong> and <strong>looks better</strong> than the uncompressed 1x image (labeled 4).
 In other words, between images 4 and 3, we've managed to improve the
 quality of the image by doubling each dimension and significantly
 increasing the compression, while at the same time, reducing the size by
-2kb.</p>
+2 kB.</p>
 
-<h2>Compression, dimensions and visual quality</h2>
+<h2 id="toc-quality">Compression, dimensions and visual quality</h2>
 
 <p>I wanted to get a bit more insight into tradeoffs between compression
 level, image dimensions, visual quality and image size. I ran a study
@@ -175,7 +175,7 @@ image.</p>
 <p>I built a side-by-side image comparison app similar to <a href="http://laurashoe.com/2011/10/21/lightroom-quick-tip-of-the-week-viewing-and-zooming-in-on-two-photos-side-by-side/">Lightroom's
 compare view</a>. The intention is to show a 1x and a 2x
 images side-by-side, but also allow you to zoom into any section of the
-image to get more detail. You can also select between JPEG and WEBP
+image to get more detail. You can also select between JPEG and WebP
 formats and change compression quality to see file size and image
 quality comparisons. The idea is to tweak settings over several images,
 figure out what compression quality, scaling and format vs. image
@@ -184,7 +184,8 @@ of your images.</p>
 
 <p><img src="/static/images/tutorials/easy-hidpi/screenshot.png" style="width: 100%;"/></p>
 
-<p>The tool itself is <a href="http://borismus.github.com/image-zoom">available for you to play with</a>.</p>
+<p>The tool itself is <a href="http://borismus.github.com/image-zoom">available for you to play with</a>. You can
+<strong>zoom into the image</strong> by selecting a sub-area to zoom into.</p>
 
 <h4>Analysis</h4>
 
@@ -199,25 +200,32 @@ compressions, scales and formats.</p>
 <p>From playing with the image zoomer, a few things quickly became apparent
 to me. Firstly, I prefer <code>quality=30 dpr=2x</code> images to <code>quality=90
 dpr=1x</code> images for the increase in detail. These images are comparable
-in file size as well (in the plane case, the compressed 2x image is 76K
-whereas the uncompressed 1x is 80K).</p>
+in file size as well (in the plane case, the compressed 2x image is 76
+kB whereas the uncompressed 1x is 80 kB).</p>
 
-<p>An exception to this rule are highly compressed (<code>quality&lt;30</code>) images with
+<p>Exceptions to this rule are highly compressed (<code>quality&lt;30</code>) images with
 gradients. These tend to suffer from color banding, which is equally bad
-regardless of image scale. The bird and car samples are examples of
-this.</p>
+regardless of image scale. The bird and car samples found in the tool
+are examples of this.</p>
 
 <p>WebP images look way cleaner than JPEG, especially at low compression
 levels. This color banding seems to be much less of an issue. Lastly,
 WebP images are much more compact.</p>
 
-<h2>Caveats and fin</h2>
+<h2 id="toc-caveats">Caveats and fin</h2>
 
-<p>I deliberately avoided the topic of art direction to focus on high DPI
-images only. Generally speaking, this problem can be solved either with
-media queries and background images, via JS, or via some new features
-like <code>image-set</code>, which are covered in <a href="http://www.html5rocks.com/en/mobile/high-dpi/">High DPI Images for Variable
-Pixel Densities</a>.</p>
+<p>Making images look good on high density displays is only half of the
+image related problems caused by a huge variation in screens. In some
+cases, you might want to serve entirely different images depending on
+viewport size. For example, Obama's headshot might be appropriate for a
+phone-sized screen, but the stand in front of him and flag behind him
+and some might be a better fit for a laptop display.</p>
+
+<p>I deliberately avoided this "art direction" topic to focus on high DPI
+images only. This problem can be solved by a number of different
+approaches: using media queries and background images, via JavaScript,
+via some new features like <code>image-set</code>, or on the server. This topic is
+covered in <a href="http://www.html5rocks.com/en/mobile/high-dpi/">High DPI Images for Variable Pixel Densities</a>.</p>
 
 <p>I'll sign off with a few open issues:</p>
 
@@ -228,12 +236,14 @@ decoding highly compressed images?</li>
 when a 2x image is loaded on a 1x display?</li>
 </ul>
 
-<p>To summarize, opt for CSS and SVG instead of using images. If images are
-strictly required, use PNGs for small important images, and use JPEGs
-for large images like photos. The great thing about this approach is
-that your markup is virtually unchanged. All that is required of the web
-developer is to generate 2x assets and size your images properly in the
-DOM.</p>
+<p>To summarize, opt for CSS and SVG instead of using raster images. If
+raster images are strictly required, use PNGs for images with a limited
+palettes and many solid colors, and use JPEGs for images with many
+colors and gradients. The great thing about this approach is that your
+markup is virtually unchanged. All that is required of the web developer
+is to generate 2x assets and size your images properly in the DOM.</p>
 
-<p>May your images look sharp and your cell data usage be low!</p>
+<p>For further reading, check out <a href="http://filamentgroup.com/lab/rwd_img_compression/">Scott Jehl's article</a> on a
+similar topic.  May your images look sharp and your cell data usage be
+low!</p>
 {% endblock %}
