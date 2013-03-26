@@ -15,7 +15,7 @@ One approach for mirroring a tab was demonstrated by +[Rafael Weinstein](https:/
 Essentially, the tab that the presenter is sharing watches for changes to the page and sends diffs to the viewer using a websocket. As the user scrolls or interacts with the page, the observers pick up these changes and report them back to the viewer using Rafael's [mutation summary library](https://code.google.com/p/mutation-summary/). This keeps things performant. The entire page isn't sent for every frame.
 
 <figure><iframe width="480" height="360" src="http://www.youtube.com/embed/eRZ4pO0gVWw?hd=1#t=106s" frameborder="0" allowfullscreen></iframe>
-<figcaption><a href="https://code.google.com/p/mutation-summary/source/browse/#git%2Fexamples%2Fscreen_sharing_extension">FULL SOURCE</a></figcaption>
+<figcaption><a href="https://code.google.com/p/mutation-summary/source/browse/#git%2Fexamples%2Fpagemirror_extension">FULL SOURCE</a></figcaption>
 </figure>
 
 As Rafael points out in the video, this is merely a proof of concept. Still, I think it's a neat way to combine a newer platform feature like Mutation Observers with an older one like Websockets.
