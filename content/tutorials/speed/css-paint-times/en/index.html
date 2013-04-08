@@ -55,8 +55,7 @@ article.tutorial .notice.fact:before {
 </p>
 
 <blockquote class="commentary talkinghead" id="how-works">
-    The quick version of these articles is that the hardware accelerated path in chrome will <b>Paint</b> your page by rasterizing the page visuals into tiles. These tiles are then passed off to the GPU, where the hardware will do the final drawing of tiles to the screen, a process known as <b>Compositing</b>. Chrome will move the tiles in and out of memory based upon need and performance heuristics that can change between platforms.
-
+    The quick version of these articles is that the hardware accelerated path in Chrome will <b>Paint</b> your page by rasterizing the page visuals into tiles. These tiles are then passed off to the GPU, where the hardware will do the final drawing of tiles to the screen, a process known as <b>Compositing</b>. Chrome will move the tiles in and out of memory based upon need and performance heuristics that can change between platforms.
 </blockquote>
 
 
@@ -82,7 +81,9 @@ Having spent a great deal of time writing <a href="http://en.wikipedia.org/wiki/
 </ul>
 
 
-
+<blockquote class="commentary talkinghead" id="what-skia">
+        Chrome’s software rasterizer package is called <a href="http://www.chromium.org/developers/design-documents/graphics-and-skia" target="_blank">SKIA</a>, and it not only handles rasterization of your web page, but also all your HTML5 Canvas API needs (Boxes, lines, bitmap fills, drop shadows, blurs, all the calls Chrome needs to turn your DOM into pixels). In order to help debugging the rendering of a page, SKIA allows you save out <a href="https://sites.google.com/site/skiadocs/developer-documentation/skia-debugger" target="_blank">Skia Picture (*.SKP)</a> files which record all the commands used to paint the page.
+</blockquote>
 
 
 
@@ -181,13 +182,23 @@ With this setup, we generate a suite of  HTML pages, where each page contains a 
 <p>
 Looking at the data, this goes on for a while. There’s lots of various odd combinations, and my test suite hardly touches them all; there’s still tons of tests and combinations that could yield interesting results</p>
 
-<h2 id="toc-final">Know your pages' render-weight</h2>
-<p>
-Armed with the ability to track the render times for each element on your page, developers have the ability to start evaluating their page-render-weight, and how it affects the responsiveness of your site. </p>
+<h2 id="toc-final">Finding your page render-weight</h2>
+Armed with the ability to track the render times for each element on your page, developers have the ability to start evaluating their page-render-weight, and how it affects the responsiveness of your site; Here’s a couple tips to get started
 
-<blockquote class="commentary talkinghead" id="how-works">
-Unfortunately, without a custom timing setup like the one built, it’s currently difficult to automate the process of finding page render-weight. At the time of this article writing, one of the primary ways to find render-weights for elements on your page is to use the <a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode" target="_blank">Continuous Paint mode</a> in Chrome Dev Tools, which with a little manual intervention, allows you to get a rough estimate on what elements on your page can be slower than others. 
-</blockquote>
+<ol>
+<li>Use Chrome’s <a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode" target="_blank">Continuous Paint mode</a> in Chrome Dev Tools to get an understanding of what CSS properties are costing you. </li>
+<li>Incorporate CSS reviews into your existing code review process to catch performance issues
+Look for places in your CSS where you are using things that are known to be more expensive, like gradients and shadows. Ask yourself, do I really need these here?</li>
+<li>When in doubt, always err on the side of better performance. Your users may not remember what the padding width is on your columns, but they will remember how it feels to visit your site.</li>
+
+
+<callout>
+Unfortunately, without a custom timing setup like the one built, it’s currently difficult to automate the process of finding page render-weight, which makes it difficult to embrace continuous integration for your page builds across platforms. 
+</callout>
+
+
+<h2 id="toc-final">Final Thoughts</h2>
+
 <p>
 One of the most interesting things about this experiment is that the timings will continue to change with each <a href="https://www.google.com/intl/en/chrome/browser/beta.html" target="_blank">version of Chrome</a> (hopefully getting faster ;) browser software is an ever-changing surface area. What’s slow today, could be fast tomorrow. You could take away from this article to avoid putting <code>box-shadow 1px 2px 3px 4px</code> an an element that already has <code>border-radius:5</code>. However the more valuable takeaway should be that CSS properties directly affect your page paint times.</p>
 
