@@ -33,7 +33,7 @@
 {% block content %}
   <h2 id="toc-introduction">Introduzione</h2>
 
-  <p>Ho sempre detto che sarebbe comodo se le web application potessero leggere e scrivere file e directory. Non appena ci spostiamo dall'offline all'online, le applicazioni diventano pi&ugrave complesse e la mancanza di API per il file system costituisce un ostacolo all'avanzata del web. Salvare o interagire con dati binari non dovrebbe essere limitato dal desktop. Fortunatamente non lo &egrave pi&ugrave grazie alle <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem API</a>. Con le FileSystem API una web app pu&ograve creare, leggere, navigare e scrivere in una sezione sandboxed del file system locale.</p>
+  <p>Ho sempre detto che sarebbe comodo se le web application potessero leggere e scrivere file e directory. Non appena ci spostiamo dall'offline all'online, le applicazioni diventano pi&ugrave complesse e la mancanza di API per il file system costituisce un ostacolo all'avanzata del web. Salvare dati binari o interagire con essi non dovrebbe essere limitato dal desktop. Fortunatamente non &egrave pi&ugrave cos&igrave grazie alle <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">API FileSystem</a>. Con le FileSystem API una web app pu&ograve creare, leggere, navigare e scrivere in una sezione sandboxed del file system locale.</p>
 
   <p>Le API sono suddivise per funzionalit&agrave:</p>
   <ul>
@@ -48,9 +48,9 @@
 
   <h3 id="toc-support">Supporto del browser &amp; limitazioni sulla memorizzazione</h3>
 
- <p>Al momento della scrittura di questo articolo, Google Chrome ha l'unica implementazione funzionante delle FileSystem API. Non esiste ancora un'interfaccia browser dedicata per la gestione dei file/quota. Per salvare i dati sul sistema dell'utente, si pu&ograve richiedere alla tua applicazione di <a href="#toc-requesting-quota">richiedere quota</a>. Comunque, per test, Chrome pu&ograve essere eseguito con il flag <code>--unlimited-quota-for-files</code>. Inoltre, se stai scrivendo un app o estensione per il Chrome Web Store, invece di utilizzare la richiesta di quota, pu&ograve essere usato la permission <code>unlimitedStorage</code> nel <a href="http://code.google.com/chrome/extensions/manifest.html">file manifest</a>. Prima o poi l'utente ricever&agrave una permission dialog nella quale potr&agrave consentire, rifiutare o incrementare lo storage per l'app.</p>
+ <p>Al momento della scrittura di questo articolo, Google Chrome fornisce l'unica implementazione funzionante delle FileSystem API. Non esiste ancora un'interfaccia browser dedicata per la gestione dei file/quota. Per salvare i dati sul sistema dell'utente, si pu&ograve fare in modo che la tua applicazione <a href="#toc-requesting-quota">richieda quota</a>. Comunque, per test, Chrome pu&ograve essere eseguito con il flag <code>--unlimited-quota-for-files</code>. Inoltre, se stai scrivendo un'applicazione o un'estensione per il Chrome Web Store, invece di utilizzare la richiesta di quota, pu&ograve essere usato la permission <code>unlimitedStorage</code> nel <a href="http://code.google.com/chrome/extensions/manifest.html">file manifest</a>. Prima o poi l'utente ricever&agrave una permission dialog nella quale potr&agrave consentire, rifiutare o incrementare lo storage per l'app.</p>
 
-  <p>Potresti aver bisogno del flag <code>--allow-file-access-from-files</code> se stai effettuando il debug della tua app da <code>file://</code>. Se non usi questo flag riceverai <code>SECURITY_ERR</code> o <code>QUOTA_EXCEEDED_ERR</code> FileError.</p>
+  <p>Potresti aver bisogno del flag <code>--allow-file-access-from-files</code> se stai effettuando il debug della tua app da <code>file://</code>. Se non usi questo flag riceverai un errore FileError di tipo <code>SECURITY_ERR</code> o <code>QUOTA_EXCEEDED_ERR</code>.</p>
 
   <h2 id="toc-requesting">Richiedere un file system</h2>
 
@@ -71,7 +71,7 @@ window.requestFileSystem(<var>type</var>, <var>size</var>, <var>successCallback<
     <dt><var>successCallback</var></dt>
     <dd>Callback che viene invocata al successo della richiesta del file system. Il suo argomento &egrave un oggetto <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileSystem"><code>FileSystem</code></a>.</dd>
     <dt><var>opt_errorCallback</var></dt>
-    <dd>Callback opzionale per la gestione degli errori o quando la richiesta di ottenere il file system viene rifiutata. Il suo argomento &egrave un oggetto <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileError"><code>FileError</code></a>.</dd>
+    <dd>Callback opzionale utilizzata per la gestione degli errori o quando la richiesta di ottenere il file system viene rifiutata. Il suo argomento &egrave un oggetto <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#idl-def-FileError"><code>FileError</code></a>.</dd>
   </dl>
 
   <p>Se invochi <code>requestFileSystem()</code> per la prima volta, viene creato un nuovo storage per la tua applicazione. &Egrave importante ricordare che questo file system &egrave sandboxed, il che significa che una web app non pu&ograve accedere ai file di un'altra app. Questo inoltre significa che non puoi leggere o scrivere file in una cartella arbitraria dell'hard disk dell'utente (per esempio My Pictures, My Documents, etc.).</p>
@@ -134,7 +134,7 @@ window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedByt
 });
 </pre>
 
-  <p>Una volta che l'utente ha concesso il permesso, non &egrave pi&ugrave necessario chiamare <code>requestQuota()</code> in futuro (a meno che non desideri incrementare la quota della tua app). Le chiamate successive per una quota uguale o inferiore saranno delle noop.</p>
+  <p>Una volta che l'utente ha concesso il permesso, non &egrave pi&ugrave necessario chiamare <code>requestQuota()</code> in futuro (a meno che non desideri incrementare la quota della tua app). Le chiamate successive per una quota uguale o inferiore non saranno valutate come operazioni.</p>
 
   <p>C'&egrave anche <a href="https://groups.google.com/a/chromium.org/group/chromium-html5/browse_thread/thread/9be7a2dc04d9af67">una API</a> per ricevere informazioni riguardo l'utilizzo e l'allocazione della quota corrente: <code>window.webkitStorageInfo.queryUsageAndQuota()</code></p>
 
@@ -166,7 +166,7 @@ fileEntry.createWriter(successCallback, opt_errorCallback);
 
   <h3 id="toc-file-creatingempty">Creare un file</h3>
 
-  <p>Puoi cercare o creare un file attraverso il metodo del file system <code>getFile()</code>, un metodo dell'interfaccia <a href="#toc-direntry">DirectoryEntry</a>. Dopo aver richiesto un file system, alla callback di successo viene passato un oggetto <code>FileSystem</code> che contiene una <code>DirectoryEntry</code> (<code>fs.root</code>) che punta alla root del file system dell'app.</p>
+  <p>Puoi cercare o creare un file attraverso il metodo del file system <code>getFile()</code>, un metodo dell'interfaccia <a href="#toc-direntry">DirectoryEntry</a>. Dopo aver richiesto un file system, alla callback di successo viene passato un oggetto <code>FileSystem</code> che contiene una <code>DirectoryEntry</code> (<code>fs.root</code>) la quale punta alla root del file system dell'app.</p>
 
   <p>Il codice seguente crea un file vuoto chiamato "log.txt" nella root del file system dell'app:</p>
 
@@ -186,9 +186,9 @@ function onInitFs(fs) {
 window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 </pre>
 
-  <p>Una volta che il file system &egrave stato richiesto, all'handler di successo viene passato un oggetto <code>FileSystem</code>. All'interno della callback, possiamo chiamare <code>fs.root.getFile()</code> con il nome del file da creare. Puoi passare un path assoluto o relativo, ma deve essere valido. Per esempio, &egrave un errore tentare di creare un file il cui immediato parent non esiste. Il secondo argomento di <code>getFile()</code> &egrave un oggetto che descrive il comportamento della funzione se il file non esiste. In questo esempio, <code>create: true</code> crea il file se non esiste e solleva un errore se esso esiste (<code>exclusive: true</code>). Invece (se <code>create: false</code>), il file viene semplicemente caricato e ritornato. In entrambi i casi, il contenuto del file non viene sovrascritto poich&egrave stiamo ottenendo un riferimento al file in questione.</p>
+  <p>Una volta che il file system &egrave stato richiesto, all'handler di successo viene passato un oggetto <code>FileSystem</code>. All'interno della callback, possiamo chiamare <code>fs.root.getFile()</code> con il nome del file da creare. Puoi passare un path assoluto o relativo, ma deve essere valido. Per esempio, &egrave un errore tentare di creare un file il cui immediato parent non esiste. Il secondo argomento di <code>getFile()</code> &egrave un oggetto che descrive il comportamento della funzione se il file non esiste. In questo esempio, <code>create: true</code> crea il file se non esiste e solleva un errore se esso esiste (<code>exclusive: true</code>). Invece (se <code>create: false</code>), il file viene semplicemente caricato e restituito. In entrambi i casi, il contenuto del file non viene sovrascritto poich&egrave stiamo ottenendo un riferimento al file in questione.</p>
 
-  <h3 id="toc-file-readingbyname">Leggere un file</h3>
+  <h3 id="toc-file-readingbyname">Leggere un file tramite il nome</h3>
 
   <p>Il codice seguente ritrova il file chiamato "log.txt", il suo contenuto viene letto utilizzando le API <code>FileReader</code> e accodato ad una nuova &lt;textarea&gt; sulla pagina. Se log.txt non esiste viene sollevato un errore.</p>
 
@@ -220,7 +220,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 
   <h3 id="toc-file-writing">Scrivere su un file</h3>
 
-  <p>Il codice seguente crea un file vuoto chiamato "log.txt" (se non esiste) e lo riempie con il testo 'Lorem Ipsum'.</p>
+  <p>Il codice seguente crea un file vuoto chiamato "log.txt" (se non esiste) e  vi scrive del testo 'Lorem Ipsum'.</p>
 
   <pre class="prettyprint">
 function onInitFs(fs) {
@@ -311,7 +311,7 @@ document.querySelector('#myfile').onchange = function(e) {
 };
 </pre>
 
-  <p>Nonostante abbiamo utilizzato un input per l'import dei file, si pu&ograve facilmente far leva sul <a href="/tutorials/dnd/basics/#toc-desktop-dnd-into">Drag and Drop HTML5</a> per raggiungere lo stesso obiettivo.</p>
+  <p>Nonostante abbiamo utilizzato un input per l'import dei file, si pu&ograve facilmente far leva sul <a href="/tutorials/dnd/basics/#toc-desktop-dnd-into">Drag and Drop di HTML5</a> per raggiungere lo stesso obiettivo.</p>
 
   <p>Come notato nel commento, <code>FileWriter.write()</code> pu&ograve accettare un <code>Blob</code> o un <code>File</code>. Questo poich&egrave <code>File</code> &egrave ereditato da <code>Blob</code>. Quindi tutti gli oggetti file sono blob.</p>
 
@@ -333,7 +333,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <h2 id="toc-dir">Lavorare con le directory</h2>
 
-  <p>Le directory nella sandbox sono rappresentate attraverso l'interfaccia <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-directoryentry-interface"><code>DirectoryEntry</code></a>, che condivide molte delle propriet&agrave di <a href="#toc-fileentry">FileEntry</a> (essi sono ereditati da un'interfaccia <code>Entry</code> comune). Comunque <code>DirectoryEntry</code> ha metodi addizionali per manipolare le directory.</p>
+  <p>Le directory nella sandbox sono rappresentate attraverso l'interfaccia <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-directoryentry-interface"><code>DirectoryEntry</code></a>, che condivide molte delle propriet&agrave di <a href="#toc-fileentry">FileEntry</a> (entrambi sono ereditati da un'interfaccia <code>Entry</code> comune). Comunque <code>DirectoryEntry</code> ha metodi addizionali per manipolare le directory.</p>
 
   <p>Propriet&agrave e metodi di <code>DirectoryEntry</code>:</p>
   <pre class="prettyprint">
@@ -364,9 +364,9 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <h3 id="toc-dir-subirs">Sottodirectory</h3>
 
-  <p>Creare una sottodirectory &egrave esattamente uguale a creare ciascuna altra directory. Comunque l'API sollevano un errore se tu tenti di creare una directory il cui immediato parent non esiste. La soluzione &egrave creare ciascuna directory sequenzialmente, che &egrave leggermente pi&ugrave complicato con le API asincrone.</p>
+  <p>Creare una sottodirectory &egrave esattamente uguale a creare qualsiasi altra directory. Comunque la API solleva un errore se si cerca di creare una directory il cui immediato parent non esiste. La soluzione &egrave creare ciascuna directory sequenzialmente, che &egrave leggermente pi&ugrave complicato con le API asincrone.</p>
 
-  <p>Il codice seguente crea una nuova gerarchia (music/genres/jazz) nella root del FileSystem dell'app aggiungento ricorsivamente ciascuna sottodirectory dopo che il proprio parent sia stato creato.</p>
+  <p>Il codice seguente crea una nuova gerarchia (music/genres/jazz) nella root del FileSystem dell'app aggiungento ricorsivamente ciascuna sottodirectory dopo che il suo parent &egrave stato creato.</p>
 
   <pre class="prettyprint">
 var path = 'music/genres/jazz/';
@@ -391,7 +391,7 @@ function onInitFs(fs) {
 window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 </pre>
 
-  <p>ora che "music/genres/jazz" &egrave a posto, possiamo passare il suo path intero a <code>getDirectory()</code> e creare nuove sottodirectory o file al suo interno. Ad esempio:</p>
+  <p>Ora che "music/genres/jazz" &egrave a posto, possiamo passare il suo path intero a <code>getDirectory()</code> e creare nuove sottodirectory o file al suo interno. Ad esempio:</p>
 
   <pre class="prettyprint">
 window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
@@ -472,7 +472,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <h4 id="toc-dir-rremoving">Rimuovere ricorsivamente una directory</h4>
 
-  <p>Se hai una noiosa directory che contiene entry, <code>removeRecursively()</code> &egrave il tuo alleato. Esso elimina la directory ed il suo contenuto, ricorsivamente.</p>
+  <p>Se hai una directory noiosa che contiene entry, <code>removeRecursively()</code> &egrave il tuo alleato. Esso elimina la directory ed il suo contenuto, ricorsivamente.</p>
 
   <p>Il codice seguente rimuove ricorsivamente la directory "music" e tutti i file e le directory che essa contiene:</p>
 
@@ -496,7 +496,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <p>Sia <code>FileEntry</code> che <code>DirectoryEntry</code> hanno un <code>copyTo()</code> per duplicare le entry esistenti. Questo metodo automaticamente effettua una copia ricorsiva sulle cartelle.</p>
 
-  <p>Il codice seguente copia il file "me.png" da una directory ad un'altra</p>
+  <p>Il codice seguente copia il file "me.png" da una directory ad un'altra:</p>
 
   <pre class="prettyprint">
 function copy(cwd, src, dest) {
@@ -516,7 +516,7 @@ window.requestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
 
   <h3 id="toc-dir-move-rename">Spostare o rinominare una entry</h3>
 
-  <p>il metodo <code>moveTo()</code> presente in <code>FileEntry</code> e <code>DirectoryEntry</code> ti permette di spostare o rinominare un file o una directory. Il suo primo argomento &egrave la directory parent nella quale spostare il file e il secondo &egrave un nuovo nome opzionale per il file. Se un nuovo nome non viene fornito, viene utilizzato il nome originale del file.</p>
+  <p>il metodo <code>moveTo()</code> presente in <code>FileEntry</code> e <code>DirectoryEntry</code> ti permette di spostare o rinominare un file o una directory. Il suo primo argomento &egrave la directory parent nella quale spostare il file e il secondo &egrave un nuovo nome opzionale per il file. Se non viene fornito un nuovo nome, viene utilizzato il nome originale del file.</p>
 
   <p>Il seguente esempio rinomina "me.png" in "you.png", ma non sposta il file:</p>
 
@@ -560,7 +560,7 @@ img.src = <b>fileEntry.toURL</b>(); // filesystem:http://example.com/temporary/m
 document.body.appendChild(img);
 </pre>
 
-  <p>Alternativamente, se hai gi&agrave un URL <code>filesystem:</code>, <code>resolveLocalFileSystemURL()</code> ti ritorner&agrave il <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>:</p>
+  <p>In alternativa, se hai gi&agrave un URL <code>filesystem:</code>, <code>resolveLocalFileSystemURL()</code> ti restituir&agrave il <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/#the-fileentry-interface"><code>fileEntry</code></a>:</p>
 
 <pre class="prettyprint">
 window.resolveLocalFileSystemURL = window.resolveLocalFileSystemURL ||
@@ -572,7 +572,7 @@ var url = 'filesystem:http://example.com/temporary/myfile.png';
 });
 </pre>
 
-  <h2 id="toc-dir-fullexample">Mettendo tutto insieme</h2>
+  <h2 id="toc-dir-fullexample">Uniamo il tutto</h2>
 
   <h3 id="toc-samples-basic">Esempio base</h3>
   <p>Questa demo elenca i file/cartelle nel filesystem.</p>
@@ -602,7 +602,7 @@ var url = 'filesystem:http://example.com/temporary/myfile.png';
 
   <h2 id="toc-usecases">Casi d'uso</h2>
 
-  <p>Ci sono diverse <a href="/tutorials#offline,storage">alternative</a> disponibili in HTML5, ma il FileSystem &egrave differente poich&egrave mira a soddisfare casi d'uso di memorizzazioni lato client che non vengono gestiti bene dai database. Generalmente queste sono applicazioni che trattano grossi blob binary e/o condividono dati con applicazioni al di fuori del contesto del browser.</p>
+  <p>Ci sono diverse <a href="/tutorials#offline,storage">alternative</a> disponibili in HTML5, ma il FileSystem &egrave differente poich&egrave mira a soddisfare casi d'uso di memorizzazione lato client che non vengono gestiti bene dai database. Generalmente queste sono applicazioni che trattano grossi blob binari e/o condividono dati con applicazioni al di fuori del contesto del browser.</p>
 
   <p>L'elenco seguente illustra alcuni casi d'uso:</p>
   <ol>
@@ -617,7 +617,7 @@ var url = 'filesystem:http://example.com/temporary/myfile.png';
        <li>Scaricare uno o pi&ugrave grossi archivi e espanderli localmente in una directory.</li>
        <li>Lo stesso download deve funzionare su ogni sistema operativo.</li>
        <li>Gestire in background il prefetching della prossima risorsa di cui si avr&agrave bisogno cos&igrave che l'ingresso nel nuovo livello o l'attivazione di una nuova feature non richieda l'attesa del download.</li>
-       <li>Usare le risorse direttamente dalla cache locale leggendo direttamente i file o gestendo URI locali verso le immagini, loader video WebGL, etc.</li>
+       <li>Usare le risorse direttamente dalla cache locale tramite letture dirette dei file o gestione degli URI locali a immagini, loader video WebGL, etc.</li>
        <li>I file possono essere file binari arbitrari.</li>
        <li>Lato server un archivio &egrave generalmente pi&ugrave piccolo di una collezione di file separatamente compressi. Inoltre un archivio invoca meno seek di mille piccoli file, il resto rimane invariato.</li>
       </ul>
@@ -643,7 +643,7 @@ var url = 'filesystem:http://example.com/temporary/myfile.png';
       <li>Scaricare gli allegati e memorizzarli localmente.</li>
       <li>Caching di allegati selezionati dall'utente per il loro successivo caricamento.</li>
       <li>Necessit&agrave di potersi riferire ad allegati presenti nella cache e ad anteprime di immagini per la visualizzazione o l'upload.</li>
-      <li>Possibilit&agrave di avviare il download manager dell'user agent proprio come si stesse parlando con un server.</li>
+      <li>Possibilit&agrave di avviare il download manager dello user agent proprio come se si stesse parlando con un server.</li>
       <li>Possibilit&agrave di caricare mail con allegati attraverso una post multiparte invece di inviare un file per volta attraverso XHR.</li>
       </ul>
     </li>
