@@ -10,6 +10,9 @@ h1,h2,h3,h4 { clear: both; }
   -khtml-user-select: none;
   -webkit-user-select: none;
   user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
 }
 dd {
   padding: 5px 0;
@@ -145,6 +148,9 @@ if (Modernizr.draganddrop) {
   -khtml-user-select: none;
   -webkit-user-select: none;
   user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
 }
 .column {
   height: 150px;
@@ -393,7 +399,7 @@ function handleDrop(e) {
   <h3 id="toc-drag-properties">拖动属性</h3>
 
   <p><code>dataTransfer</code> 使用的属性在拖动过程中为用户提供了可视化反馈。这些属性还可用于控制每个放置目标响应特定数据类型的方式。</p>
-  
+
   <dl>
     <dt><code>dataTransfer.effectAllowed</code></dt>
     <dd>限制用户可在元素上执行的“拖动类型”。在拖放处理模型中用于初始化 <code>dragenter</code> 和 <code>dragover</code> 事件中的 <code>dropEffect</code>。该属性可设置为以下值：<code>none</code>、<code>copy</code>、<code>copyLink</code>、<code>copyMove</code>、<code>link</code>、<code>linkMove</code>、<code>move</code>、<code>all</code> 和 <code>uninitialized</code>。
@@ -402,7 +408,7 @@ function handleDrop(e) {
     <dd>控制用户在 <code>dragenter</code> 和 <code>dragover</code> 事件期间收到的反馈。当用户将鼠标悬停在目标元素上方时，浏览器的光标会显示即将采取的操作类型（例如复制、移动等）。结果可能呈现为以下某个值：<code>none</code>、<code>copy</code>、<code>link</code>、<code>move</code>。
     </dd>
     <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
-    <dd>除了使用浏览器默认的“重像”反馈外，您也可以选择设置拖动图标 
+    <dd>除了使用浏览器默认的“重像”反馈外，您也可以选择设置拖动图标
 <pre class="prettyprint">
 var dragIcon = document.createElement('img');
 dragIcon.src = 'logo.png';
@@ -457,9 +463,9 @@ function handleDrop(e) {
 
 <!--
   other examples:
-  <li>Rearrange list</li> 
-  <li>Creating an image gallery</li> 
-  <li>Exporting a canvas image</li> 
+  <li>Rearrange list</li>
+  <li>Creating an image gallery</li>
+  <li>Exporting a canvas image</li>
 -->
 
   <h2 id="toc-conclusion">总结</h2>
@@ -468,7 +474,7 @@ function handleDrop(e) {
 
   <h2 id="toc-references">参考</h2>
   <ul>
-    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">拖放</a>规范</li> 
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">拖放</a>规范</li>
     <li>MDC <a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">拖动操作</a></li>
     <li>html5doctor 上的“<a href="http://html5doctor.com/native-drag-and-drop/">本机拖放</a>”文章</li>
     <li>CSS 帮助资料中的“<a href="http://www.thecssninja.com/javascript/gmail-dragout">拖出文件（如 Gmail）</a>”</li>
@@ -635,9 +641,9 @@ var samples = samples || {};
     if (e.preventDefault) {
       e.preventDefault(); // Allows us to drop.
     }
-  
+
     e.dataTransfer.dropEffect = 'move';
-    
+
     return false;
   };
 
@@ -708,7 +714,7 @@ var samples = samples || {};
     if (e.preventDefault) {
       e.preventDefault(); // Allows us to drop.
     }
-  
+
     e.dataTransfer.dropEffect = 'move';
 
     return false;

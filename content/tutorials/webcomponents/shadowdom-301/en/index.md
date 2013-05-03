@@ -39,6 +39,9 @@ root2.innerHTML = '<div>Root 2 FTW</div>';
 })();
 </script>
 
+<p class="notice"><b>Tip</b>: In the DevTools, turn on "Show Shadow DOM" to be
+  able to inspect ShadowRoots.</p>
+
 What renders is "Root 2 FTW", despite the fact that we had already attached a shadow tree.
 This is because the last shadow tree added to a host, wins. It's a LIFO stack as
 far as rendering is concerned. Examining the DevTools verifies this behavior.
