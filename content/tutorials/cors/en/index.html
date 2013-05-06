@@ -20,11 +20,11 @@
 <h2 id="toc-introduction">Introduction</h2>
 
 <p>
-APIs are the thread that let you stitch together a rich web experience. But this experience has a hard time translating to the browser, where the options for cross-domain requests are limited to techniques like <a href="http://en.wikipedia.org/wiki/JSONP">JSON-P</a> (which has limited use due to security concerns) or setting up a custom proxy (which can be a pain to set up and maintain).
+APIs are the threads that let you stitch together a rich web experience. But this experience has a hard time translating to the browser, where the options for cross-domain requests are limited to techniques like <a href="http://en.wikipedia.org/wiki/JSONP">JSON-P</a> (which has limited use due to security concerns) or setting up a custom proxy (which can be a pain to set up and maintain).
 </p>
 
 <p>
-<a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a> (CORS) is a W3C spec that allows cross-domain communication from the browser.  By building on top of the XmlHttpRequest object, CORS allows developers to work with the same idioms as same-domain requests.
+<a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a> (CORS) is a W3C spec that allows cross-domain communication from the browser.  By building on top of the XMLHttpRequest object, CORS allows developers to work with the same idioms as same-domain requests.
 </p>
 
 <p>
@@ -32,7 +32,7 @@ The use-case for CORS is simple. Imagine the site alice.com has some data that t
 </p>
 
 <p>
-As you can see from this example, CORS support requires coordination between both the server and client. Luckily if you are a client-side developer, you are shielded from most of these details. The rest of this article shows how clients can make cross-origin requests, and how servers can configure themselves to support CORS.
+As you can see from this example, CORS support requires coordination between both the server and client. Luckily, if you are a client-side developer you are shielded from most of these details. The rest of this article shows how clients can make cross-origin requests, and how servers can configure themselves to support CORS.
 </p>
 
 <h2 id="toc-making-a-cors-request">Making a CORS Request</h2>
@@ -41,7 +41,7 @@ As you can see from this example, CORS support requires coordination between bot
 This section shows how to make a cross-domain request in JavaScript.
 </p>
 
-<h3 id="toc-creating-the-xmlhttprequest-object">Creating the XmlHttpRequest object</h3>
+<h3 id="toc-creating-the-xmlhttprequest-object">Creating the XMLHttpRequest object</h3>
 
 <p>
 CORS is supported in the following browsers:
@@ -59,7 +59,7 @@ CORS is supported in the following browsers:
 </p>
 
 <p>
-Chrome, Firefox, Opera and Safari all use the <a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">XmlHttpRequest2 object</a>. Internet Explorer uses the similar XDomainRequest object, which works in much the same way as its XmlHttpRequest counterpart, but adds additional <a href="http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx">security precautions</a>.
+Chrome, Firefox, Opera and Safari all use the <a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">XMLHttpRequest2 object</a>. Internet Explorer uses the similar XDomainRequest object, which works in much the same way as its XMLHttpRequest counterpart, but adds additional <a href="http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx">security precautions</a>.
 </p>
 
 <p>
@@ -100,7 +100,7 @@ if (!xhr) {
 <h3 id="toc-event-handlers">Event handlers</h3>
 
 <p>
-The original XmlHttpRequest object had only one event handler, <code>onreadystatechange</code>, which handled all responses.  Although <code>onreadystatechange</code> is still available, XmlHttpRequest2 introduces a bunch of new event handlers. Here is a complete list:
+The original XMLHttpRequest object had only one event handler, <code>onreadystatechange</code>, which handled all responses.  Although <code>onreadystatechange</code> is still available, XMLHttpRequest2 introduces a bunch of new event handlers. Here is a complete list:
 </p>
 
 <table border="1" cellpadding="4">
@@ -142,7 +142,7 @@ Browers don't do a good job of reporting what went wrong when there is an error.
 <h3 id="toc-withcredentials">withCredentials</h3>
 
 <p>
-Standard CORS requests do not send or set any cookies by default.  In order to include cookies as part of the request, you need to set the XmlHttpRequest’s <code>.withCredentials</code> property to true:
+Standard CORS requests do not send or set any cookies by default.  In order to include cookies as part of the request, you need to set the XMLHttpRequest’s <code>.withCredentials</code> property to true:
 </p>
 
 <pre class="prettyprint">
@@ -334,7 +334,7 @@ Origin: http://api.bob.com
 Host: api.bob.com
 </pre>
 
-<p>The good news is that browsers don't expect CORS response headers on same-origin requests. The response to a same-origin request is sent to user, regardless of whether it has CORS headers or not. However, if your server code returns an error if the Origin doesn't match a list of allwoed domains, be sure to include the origin the request comes.</p>
+<p>The good news is that browsers don't expect CORS response headers on same-origin requests. The response to a same-origin request is sent to user, regardless of whether it has CORS headers or not. However, if your server code returns an error if the Origin doesn't match a list of allowed domains, be sure to include the origin the request comes from.</p>
 
 <p>
 Here’s a valid server response; the CORS-specific headers are bolded
@@ -361,7 +361,7 @@ All CORS related headers are prefixed with "Access-Control-". Here’s some more
 </p>
 
 <p>
-The Access-Control-Allow-Credentials header works in conjunction with the <a href="#toc-withcredentials">withCredentials property</a> on the XmlHttpRequest2 object. Both these properties must be set to <code>true</code> in order for the CORS request to succeed. If .withCredentials is <code>true</code>, but there is no <code>Access-Control-Allow-Credentials</code> header, the request will fail (and vice versa).
+The Access-Control-Allow-Credentials header works in conjunction with the <a href="#toc-withcredentials">withCredentials property</a> on the XMLHttpRequest 2 object. Both these properties must be set to <code>true</code> in order for the CORS request to succeed. If .withCredentials is <code>true</code>, but there is no <code>Access-Control-Allow-Credentials</code> header, the request will fail (and vice versa).
 </p>
 
 <p>
@@ -369,7 +369,7 @@ Its recommended that you don’t set this header unless you are sure you want co
 </p>
 
 <p>
-<code>Access-Control-Expose-Headers</code> (optional) - The XmlHttpRequest2 object has a getResponseHeader() method that returns the value of a particular response header. During a CORS request, the getResponseHeader() method can only access simple response headers. Simple response headers are defined as follows:
+<code>Access-Control-Expose-Headers</code> (optional) - The XMLHttpRequest 2 object has a getResponseHeader() method that returns the value of a particular response header. During a CORS request, the getResponseHeader() method can only access simple response headers. Simple response headers are defined as follows:
 <ul>
 <li>Cache-Control</li>
 <li>Content-Language</li>
