@@ -169,9 +169,9 @@ is the `input[type=range]`. You can style the slider thumb <span style="color:bl
       height: 40px;
     }
 
-Similar to how WebKit/FF provides styling hooks into some internals,
-authors of Shadow content can designate certain elements as styleable by
-outsiders. This is done through custom pseudo elements.
+Similar to how browsers provide styling hooks into some internals,
+authors of Shadow DOM content can designate certain elements as styleable by
+outsiders. This is done through [custom pseudo elements](http://www.w3.org/TR/shadow-dom/#custom-pseudo-elements).
 
 You can designate an element as a custom pseudo element by using the `pseudo` attribute.
 Its value, or name, needs to be prefixed with "x-". Doing so creates
