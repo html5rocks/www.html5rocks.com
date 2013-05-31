@@ -1,9 +1,7 @@
 {% extends "tutorial.html" %}
 
-{% block headauthor %}John McCutchan <john@johnmccutchan.com>{% endblock %}
-
-{% block headtitle %}Effectively managing memory at Gmail scale{% endblock %}
-{% block pagetitle %}Effectively managing memory at Gmail scale{% endblock %}
+{% block headtitle %}Solve performance mysteries by surfacing important signals from V8{% endblock %}
+{% block pagetitle %}Solve performance mysteries by surfacing important signals from V8{% endblock %}
 
 {% block head %}
 <style>
@@ -39,6 +37,11 @@ h6{padding-top:8pt;line-height:1.15;text-align:left;color:#666666;font-style:ita
 <p class="c1"><span></span></p>
 <p class="c3"><span>In recent years, web applications have been sped up considerably. Many applications now run fast enough that I&rsquo;ve heard some developers wonder aloud &ldquo;is the web fast enough?&rdquo;. For some applications it may be, but, for the developers working on high performance applications, we know it is not fast enough. Despite the amazing advances in JavaScript virtual machine technology, a </span><span class="c6"><a class="c0" href="https://docs.google.com/a/google.com/document/d/1k8d4SsYJoCfmw6Te8Ijf3WEyotNHp6YMy1PEgn_o5Yg/edit">recent study</a></span><span>&nbsp;showed that Google applications spend between 50% and 70% of their time inside </span><span class="c6"><a class="c0" href="https://code.google.com/p/v8/">V8</a></span><span>. Your application has a finite amount of time, shaving cycles off of one system means another system can do more. Remember, </span><span>applications running at 60fps only have 16ms</span><span>&nbsp;per frame or else&mdash; jank. Read on, for a from the trenches story of the performance detectives on the V8 team tracking down an obscure performance problem in </span><span class="c6"><a class="c0" href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a></span><span>.</span></p>
 <p class="c1"><span></span></p>
+<h2 id="toc-watch-the-movie">Google I/O 2013 Session</h2>
+
+I presented this material at Google I/O 2013. Check out the video below:
+<iframe width="560" height="315" src="http://www.youtube.com/embed/VhpdsjBUS3g" frameborder="0" allowfullscreen></iframe>
+
 <h2 id="toc-why-performance-matters" class="c3"><span>Why does performance matter?</span></h2>
 <p class="c1"><span></span></p>
 <p class="c3"><span>CPU cycles are</span><span>&nbsp;a zero sum game. </span><span>Making one part of your system use fewer allows you to use more in another or run smoother overall. Running faster and doing more are often competing goals. Users demand new features while also expecting your application to run </span><span>smoother</span><span>. JavaScript virtual machines keep getting faster but that is not a substitute for ignoring performance problems that you can fix today, as the many developers, dealing with performance problems in their web applications already know. In real-time, high frame rate, applications the pressure to be jank free is paramount. </span><span class="c6"><a class="c0" href="http://www.insomniacgames.com/">Insomniac Games</a></span><span>&nbsp;produced a </span><span class="c6"><a class="c0" href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">study</a></span><span>&nbsp;which showed that a solid, sustained frame rate is important to the success of a game: &ldquo;</span><span class="c8">A solid frame-rate is still a sign of professional, well-made product.&rdquo; </span><span>Web developers take note.</span></p>
