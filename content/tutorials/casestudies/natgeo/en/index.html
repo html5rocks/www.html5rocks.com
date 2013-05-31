@@ -27,7 +27,7 @@ With the help of National Geographic, we used content from their feature titled 
 </p>
 <p>
   <figure>
-    <img src="image05.gif" alt="Editor's marks image"/>
+    <img src="/static/demos/natgeo/image05.gif" alt="Editor's marks image"/>
   </figure>
 </p>
 
@@ -39,16 +39,16 @@ In the web today, layout is often dictated by our content with containers enlarg
 In the example of ‘Forest Giant’ we have the story contained in a single element. Then, throughout the page, we have our layout scaffolding, consisting of photos and text areas. With CSS, we define the elements we want the content to flow through. When the copy reaches the end of an element, it continues to the next one in the DOM order. This allows us to get really creative with our columns, offsetting them and adapting their height based on the design, without concern of whether the text will fit or exceed the height of the element. It also allows us to have elements within our layout, like full width images, while the story continues to flow through it.
 </p>
 
-<pre class="prettyprint"><code>#storyContent{
-flow-into: story;
+<pre class="prettyprint"><code>#storyContent {
+    flow-into: story;
 }
-.story{
-	flow-from: story;
+.story {
+    flow-from: story;
 }
 </code></pre>
 
 <p>
-In the CSS above, we are creating a named flow called “story”. The content of this named flow is the element with the id of “storyContent”. This then flows through all of the elements with the class name “story”. CSS Regions are a great tool for responsive design allowing features like multi-columns and offset columns for rich layout on large screens while adjusting to single column layout on smaller screens. With regions you can also set the size of your region with responsive units like vw or vh.  This can be used to ensure columns don’t exceed the viewport height in your layout, without worrying about content getting cut off, since it will naturally flow into the next element in the region chain.
+In the CSS above, we are creating a named flow called <em>"story"</em>. The content of this named flow is the element with the id of <em>"storyContent"</em>. This then flows through all of the elements with the class name <em>"story"</em>. CSS Regions are a great tool for responsive design allowing features like multi-columns and offset columns for rich layout on large screens while adjusting to single column layout on smaller screens. With regions you can also set the size of your region with responsive units like vw or vh.  This can be used to ensure columns don’t exceed the viewport height in your layout, without worrying about content getting cut off, since it will naturally flow into the next element in the region chain.
 </p>
 
 <h2 id="toc-drop-caps">Drop Caps</h2>
@@ -57,10 +57,10 @@ In the CSS above, we are creating a named flow called “story”. The content o
 </p>
 
 <pre class="prettyprint"><code>.drop-caps {
-height: 100px;
-width: 100px;
-float: left;
-shape-outside: ellipse(50%, 50%, 50%, 50%);
+    height: 100px;
+    width: 100px;
+    float: left;
+    shape-outside: ellipse(50%, 50%, 50%, 50%);
 }
 </code></pre>
 <p>
@@ -68,7 +68,7 @@ This will create an ellipse allowing content to wrap around the circular shape. 
 </p>
 <p>
   <figure>
-    <img src="image03.jpg" alt="Drop Cap image"/>
+    <img src="/static/demos/natgeo/image03.jpg" alt="Drop Cap image"/>
   </figure>
 </p>
 <h2 id="toc-shapes">Shapes</h2>
@@ -79,13 +79,13 @@ Along with drop caps, exclusions bring the ability to wrap text within shapes us
 Shapes can also work with responsive layouts by using relative units to define your shape. This way we can make shapes that stretch based on the container or viewport, and even use media queries to completely change the shape or remove it since it is all defined in CSS. Below is an example of one of a polygon shape being used within the site with the values defining the points:
 </p>
 
-<pre class="prettyprint"><code>.shape{
-shape-inside: polygon(0 50%, 50% 0, 100% 0, 100% 100%, 0 100%);
+<pre class="prettyprint"><code>.shape {
+    shape-inside: polygon(0 50%, 50% 0, 100% 0, 100% 100%, 0 100%);
 }
 </code></pre>
 <p>
   <figure>
-    <img src="image06.jpg" alt="CSS Shapes image"/>
+    <img src="/static/demos/natgeo/image06.jpg" alt="CSS Shapes image"/>
   </figure>
 </p>
 
@@ -94,14 +94,14 @@ shape-inside: polygon(0 50%, 50% 0, 100% 0, 100% 100%, 0 100%);
 Balanced Text is a feature that looks at the whole block of text within an element when wrapping lines, rather than wrapping word by word. It avoids situations where we have one or two words on a single line by breaking lines of text to achieve evenly sized lines within an element. This level of control allows us to easily create aesthetically pleasing blocks of text, especially for short runs like pull quotes or subtitles.
 </p>
 <p>
-This is exactly where we’re using Balanced Text within the article. Because this feature is a standard that Adobe is Proposing, we’re using a polyfill created by Randy Edmunds to achieve the same results.  This feature is best seen in responsive cases. When resizing the browser, you’ll notice that the block continues to balance the text to result in lines with approximately the same width.  Using the balanced text polyfill is easy, because it’s a jQuery plugin, all we have to do is apply ‘balanceText()’ to a selector when the layout changes and we’ll get nicely balanced text, which looks like this:
+This is exactly where we’re using Balanced Text within the article. Because this feature is a standard that Adobe is Proposing, we’re using a <a href="https://github.com/adobe-webplatform/balance-text">polyfill created by Randy Edmunds</a> to achieve the same results.  This feature is best seen in responsive cases. When resizing the browser, you’ll notice that the block continues to balance the text to result in lines with approximately the same width.  Using the balanced text polyfill is easy, because it’s a jQuery plugin, all we have to do is apply ‘balanceText()’ to a selector when the layout changes and we’ll get nicely balanced text, which looks like this:
 </p>
 
 <pre class="prettyprint"><code>$(‘.balance’).balanceText();
 </code></pre>
 <p>
   <figure>
-    <img src="image04.gif" alt="Balanced text image"/>
+    <img src="/static/demos/natgeo/image04.gif" alt="Balanced text image"/>
   </figure>
 </p>
 
@@ -116,32 +116,36 @@ In ‘Forest Giant’, we use filters to fade from grayscale to color as some im
 Custom filters are written using GLSL, the same shading language as WebGL. They allow you to apply these shaders to DOM elements through CSS, enabling complex blending effects and 3D distortion. At the bottom of the site, when you click ‘Explore the President Tree’, you’ll see the page curl up to reveal another section underneath. This is just one example of how custom filters can allow rich transitions between content. The animation can be achieved using CSS transitions.  However, if you’d like to use more robust animations or interactions than transitions allow, you can pass values to your shader by setting the style with javascript as can be seen below.  This can allow you to have more granular control over easing or even allow methods of user input to manipulate the shader.
 </p>
 <pre class="prettyprint"><code>function applyCurl(value) {
-$(“#map”).css(“webkitFilter”, “custom(url(page-curl.vs) mix(url(page-curl.fs) normal source-atop), 50 50, transform perspective(1000) scale(1.0) rotateX(0deg) rotateY(0deg) rotateZ(0deg), curlPosition " + value + " 0, curlDirection 104, curlRadius 0.2, bleedThrough 1.0)");
+    $("#map").css("webkitFilter",
+    "custom(url(page-curl.vs) mix(url(page-curl.fs) normal source-atop),"
+    + " 50 50, transform perspective(1000) scale(1.0) rotateX(0deg) "
+    + " rotateY(0deg) rotateZ(0deg), curlPosition "
+    + value + " 0, curlDirection 104, curlRadius 0.2, bleedThrough 1.0)");
 }
 </code></pre>
 <p>
 Our filter is rasterizing the content as a texture on the GPU to apply the effect.  Because of this, we need to be sure to remove it when it’s finished, otherwise our content may appear blurry.
 </p>
 
-<pre class="prettyprint"><code>$(“#map”).css(“webkitFilter”, “none”);
+<pre class="prettyprint"><code>$("#map").css("webkitFilter", "none");
 </code></pre>
 
 <p>
-CSS custom filters enable interesting effects like page wrapping that looks like a page being flipped in a real book. They enable a web developer to program complex effects in a language called GLSL and apply it to web content. For more information on the details of custom filters, all those parameters, and how to use them, check out <a href="">this great tutorial</a>.
+CSS custom filters enable interesting effects like page wrapping that looks like a page being flipped in a real book. They enable a web developer to program complex effects in a language called GLSL and apply it to web content. For more information on the details of custom filters, all those parameters, and how to use them, check out <a href="http://alteredqualia.com/css-shaders/article/">this great tutorial</a>.
 </p>
 <p>
   <figure>
-    <img src="image02.gif" alt="Page flip image"/>
+    <img src="/static/demos/natgeo/image02.gif" alt="Page flip image"/>
   </figure>
 </p>
 
 <h2 id="toc-pre-render">Pre-Render Textures in WebGL</h2>
 <p>
-The jewel of this article was the first complete image of ‘The President’, believed to be the world’s second tallest tree and the largest by mass. This image was created by photo-stitching hundreds of photos of the tree to create a full picture.  We wanted to simulate this process by breaking the image into a bunch of little photos that fly into place to create the full picture.  This was achieved using WebGL, specifically with the Three.js library, which is a higher level API wrapper around WebGL.
+The jewel of this article was the first complete image of ‘The President’, believed to be the world’s second tallest tree and the largest by mass. This image was created by photo-stitching hundreds of photos of the tree to create a full picture.  We wanted to simulate this process by breaking the image into a bunch of little photos that fly into place to create the full picture.  This was achieved using WebGL, specifically with the <a href="http://threejs.org/">Three.js library</a>, which is a higher level API wrapper around WebGL.
 </p>
 <p>
   <figure>
-    <img src="image01.jpg" alt="Giant tree image"/>
+    <img src="/static/demos/natgeo/image01.jpg" alt="Giant tree image"/>
   </figure>
 </p>
 <p>
@@ -151,12 +155,12 @@ Rendering a large number of textures can quickly cause performance issues each t
 To offset the textures, we’re altering the UV’s which map the texture to the geometry.  In Three.js it looks like this: 
 </p>
 
-<pre class="prettyprint"><code>     geometry.faceVertexUvs[0][0] = [
-        new THREE.Vector2(xOffset, yOffset + 1),
-        new THREE.Vector2(xOffset, yOffset),
-        new THREE.Vector2(xOffset + 1, yOffset),
-        new THREE.Vector2(xOffset + 1, yOffset + 1)
-     ];
+<pre class="prettyprint"><code>geometry.faceVertexUvs[0][0] = [
+    new THREE.Vector2(xOffset, yOffset + 1),
+    new THREE.Vector2(xOffset, yOffset),
+    new THREE.Vector2(xOffset + 1, yOffset),
+    new THREE.Vector2(xOffset + 1, yOffset + 1)
+];
 </code></pre>
 <p>
 Here you can see we’re using a variable for the x and y offset of the texture.  The same effect could be achieved with a custom GLSL shader material that offsets the drawn coordinates on the geometry.
@@ -164,7 +168,7 @@ Here you can see we’re using a variable for the x and y offset of the texture.
 
 <h2 id="toc-experimental-features">Experimental Features</h2>
 <p>
-Because some of the features the demo uses are still experimental, the article needs to be viewed in Chrome Canary with the following runtime flags enabled:
+Because some of the features the demo uses are still experimental, the article needs to be viewed in <a href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary</a> with the following runtime flags enabled:
 </p>
 <ul>
 <li>Experimental Blink features</li>
@@ -173,14 +177,14 @@ Because some of the features the demo uses are still experimental, the article n
 </ul>
 <p class="note">*I’ve found occasionally there can be some rendering issues with 2D canvas in canary and disabling accelerated 2D canvas can often fix this.</p>
 <p>
-To learn more about enabling runtime flags, see <a href="">this tutorial</a>.
+To learn more about enabling runtime flags, see <a href="http://www.youtube.com/watch?v=QndSTFwwOs0">this tutorial</a>.
 </p>
 <p>
-Once you have Chrome Canary installed and properly configured, go check out the demo. (Note that the entire project is open source and available on GitHub.)
+Once you have Chrome Canary installed and properly configured, go <a href="http://adobe-webplatform.github.io/Demo-for-National-Geographic-Forest-Giant/browser/src/">check out the demo</a>. (Note that the entire project is open source and <a href="https://github.com/adobe-webplatform/Demo-for-National-Geographic-Forest-Giant">available on GitHub</a>.)
 </p>
 <p>
   <figure>
-    <img src="image00.jpg" alt="Chrome flags image"/>
+    <img src="/static/demos/natgeo/image00.jpg" alt="Chrome flags image"/>
   </figure>
 </p>
 <h2 id="toc-conclusion">Conclusion</h2>
@@ -188,7 +192,7 @@ Once you have Chrome Canary installed and properly configured, go check out the 
 We’ve also been exploring how these features might be used in the mobile application context, more along the lines of an e-book.  You can see this prototype in progress and how we’re utilizing the different interaction and touch paradigms to showcase these features on a tablet.
 </p>
 
-<iframe width="320" height="240" src="http://www.youtube.com/embed/mS3UUneazN8" frameborder="0" allowfullscreen></iframe>
+<iframe width="640" height="480" src="http://www.youtube.com/embed/mS3UUneazN8" frameborder="0" allowfullscreen></iframe>
 
 <p>
 With web browser layout constantly evolving, we’re seeing the desire to continue the production value and layout quality we’ve grown accustomed to in the past with legacy reading content.  With features like CSS Regions, Exclusions, balanced text, custom filters, and WebGL, content creators will no longer have to choose between reach and design quality.  ‘Forest Giant’ is a clear sign that the web of the future will allow both.
