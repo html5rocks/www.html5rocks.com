@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+        
+        <title>Racer</title>
+        
+        <script src="js/paper.js"></script>
+        <script src="js/animframe.js"></script>
+        
+        <style>
+            body, html {
+                margin: 20px;
+                padding: 0;
+                background-color: #000;
+                position: absolute;
+            }
+            
+             * {
+                 position: absolute;
+                 -moz-select: none;
+                 -webkit-select: none;
+                 select: none;
+             }
+             
+             #track_container {
+                 width: 292px;
+                 height: 380px;
+             }
+             
+             #track_car {
+                 width: 30px;
+                 height: 18px;
+             }
+
+			#track_car .image {
+                 width: 30px;
+                 height: 18px;
+                 background-image: url('img/car.png');
+                 background-size: 100%;
+				top: -10px;
+				left: -10px;
+             }
+        </style>
+        
+        <script>
+            function Main() {
+                window.Racer = this;
+                var _this = this;
+                var _track;
+                
+                (function() {
+                    initProperties();
+                    initClasses();
+                })();
+                
+                function initClasses() {
+                    _track = new Track();
+                    _car = new Car(_track.path);
+                }
+                
+                function initProperties() {
+                    //this is really simplified for the sake of this demo -- don't use this in production code
+                    var agent = navigator.userAgent.toLowerCase();
+                    if (agent.indexOf('firefox') != -1) {
+                       _this.transform = 'MozTransform';
+                    } else if (agent.indexOf('msie') != -1) {
+                        _this.transform = 'msTransform';
+                    } else {
+                        _this.transform = 'WebkitTransform';
+                    }
+                    
+                    if (agent.indexOf('android') != -1) {
+                        _this.android = true;
+                    }
+                }
+            }
+            
+            function Car(_path) {
+                var _this = this;
+                var _rotation, _elapsed, _velocity, _throttle;
+                var _car, _container;
+                
+                var ACCELERATION = 0.15;
+                var FRICTION = 0.95;
+                var MAXVELOCITY = 10;
+                
+                (function() {
+                    initCar();
+                    setPath();
+                    addListeners();
+                    requestAnimationFrame(render);
+                })();
+                
+                function initCar() {
+                    _container = document.getElementById('track_container');
+                    _car = document.getElementById('track_car');
+                    _car.style[Racer.transform+'Origin'] = '0px 0px'; //set the transform point;
+                }
+                
+                function setPath() {
+                    _position = _path.getPointAt(_path.length);
+                    _rotation = 0;
+                    _elapsed = 0;
+                    _velocity = new Point(0, 0);
+                    _velocity.length = 0;
+                    _throttle = 0;
+                    
+                    //initially render the car
+                    _velocity.length = 0.15;
+                    render();
+                    _velocity.length = 0;
+                }
+                
+                function addListeners() {
+                    window.addEventListener('mousedown', function() {
+                        _throttle = ACCELERATION; 
+                    });
+                    
+                    window.addEventListener('mouseup', function() {
+                        _throttle = 0; 
+                    });
+                }
+                
+                function render() {
+                    var trackOffset = _path.length - (_elapsed % _path.length);
+                    var trackPoint = _path.getPointAt(trackOffset);
+                    var trackAngle = _path.getTangentAt(trackOffset).angle;
+                    
+                    _velocity.length += _throttle; //apply the throttle
+                    
+                    if (!_throttle) {
+                        //slow down since the throttle is off
+                        _velocity.length *= FRICTION;
+                    }
+                    
+                    if (_velocity.length > MAXVELOCITY) {
+                        //stop the velocity at a certain point
+                        _velocity.length = MAXVELOCITY;
+                    }
+                    
+                    _velocity.angle = trackAngle;
+                    
+                    trackOffset -= _velocity.length;
+                    _elapsed += _velocity.length;
+                    
+                    //find if a lap has been completed
+                    if (trackOffset < 0) {
+                        while (trackOffset < 0) trackOffset += _path.length;
+                        trackPoint = _path.getPointAt(trackOffset);
+                        console.log('LAP COMPLETE!');
+                    }
+                    
+                    if (_velocity.length > 0.1) {
+                        //render the car if there is actually velocity
+                        renderCar(trackPoint);
+                    }
+                    
+                    requestAnimationFrame(render);
+                }
+                
+                function renderCar(point) {
+                    var velocityPoint = _position.add(_velocity.multiply(10));
+                    var difference = point.subtract(velocityPoint);
+                    var preference = 0.1;
+                    var midpoint = difference.multiply(preference);
+                        
+                    _rotation = difference.angle;
+                    _rotation = parseFloat(_rotation.toFixed(20));
+                    _rotation = _rotation.toFixed(10);
+                    _position = _position.add(midpoint);
+                    _position.x = parseFloat(_position.x.toFixed(20));
+                    _position.y = parseFloat(_position.y.toFixed(20));
+                    
+                    if (Racer.android) _car.style[Racer.transform] = getMatrix();           
+                    else _car.style[Racer.transform] = 'translate3d('+_position.x+'px, '+_position.y+'px, 0px)rotate('+_rotation+'deg)'; 
+                }
+                
+                function getMatrix(){
+                    var rad = _rotation.rotation * (Math.PI * 2 / 360);
+                    var cos = Math.cos(rad);
+                    var sin = Math.sin(rad);
+                    var a = parseFloat(cos).toFixed(8);
+                    var b = parseFloat(sin).toFixed(8);
+                    var c = parseFloat(-sin).toFixed(8);
+                    var d = a;
+                    return 'matrix('+a+', '+b+', '+c+', '+d+', '+_position.x+', '+_position.y+')';
+                }
+            }
+            
+            function Track() {
+                var _this = this;
+                var _canvas, _context;
+                var _paper;
+                
+                (function() {
+                    initCanvas();
+                    initPaper();
+                })();
+                
+                function initCanvas() {
+                    _canvas = document.getElementById('track_canvas');
+                    _context = _canvas.getContext('2d');
+                }
+                
+                function initPaper() {
+                    paper.install(window);
+                    _paper = new paper.PaperScope(); //create multiple scopes because this Track class would be used for multiple lanes
+                    _paper.setup('track_canvas');
+                    
+                    
+                    var svg = document.getElementById('track');
+                    var layer = new _paper.Layer();
+
+                    var path = layer.importSvg(svg).firstChild.firstChild;
+                    path.strokeColor = '#14a8df';
+                    path.strokeWidth = 2;
+                    _this.path = path;
+                    
+                    _paper.view.draw();
+                }
+                
+            }
+            
+            window.onload = Main;
+        </script>
+</head>
+<body>
+     <svg version="1.1" id="track" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><path fill="none" stroke="#fff" stroke-width="2" stroke-miterlimit="10" d="M19.5,95.75C19.5,43.367,55.717,1,102.139,1h29.245
+    c46.421,0,85.741,42.367,85.741,94.75v115.238c0,41.842-31.61,76.012-68.691,76.012h-0.423c-37.08,0-65.589-34.17-65.589-76.012
+    v-69.478C82.42,99.67,110.93,66,148.011,66h13.503H179.4c12.578,0,22.658,1.631,36.728,10l1.106,0.5
+    c37.221,19.721,59.266,63.206,59.266,117.25v91c0,52.383-36.66,94.25-83.082,94.25h-88.621C58.375,379,19.5,337.133,19.5,284.75
+    V95.75z"/></g></svg>
+    
+    <canvas id="track_canvas" width="292" height="380"></canvas>
+    
+    <div id="track_container">
+        <div id="track_car">
+        	<div class="image"></div>
+        </div>
+    </div>
+</svg>
+
+</body>
+</html>
