@@ -89,11 +89,13 @@ console.log('3');
 
 <p>The holy grail is having a set of scripts download immediately without blocking rendering and execute as soon as possible in the order they were added. Unfortunately HTML hates you and won’t let you do that.</p>
 
-<p>The problem was tackled by JavaScript in a few flavours. Some required you to make changes to your JavaScript, wrapping it in a callback that the library calls in the correct order (eg <a href="http://requirejs.org/">RequireJS</a>). Others would use XHR to download in parallel then <code>eval()</code> in the correct order, which didn’t work for scripts on another domain unless they had a <a href="https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS">CORS header</a> and the browser supported it. Some even used super-magic hacks, like the late LabJS.</p>
+<p>The problem was tackled by JavaScript in a few flavours. Some required you to make changes to your JavaScript, wrapping it in a callback that the library calls in the correct order (eg <a href="http://requirejs.org/">RequireJS</a>). Others would use XHR to download in parallel then <code>eval()</code> in the correct order, which didn’t work for scripts on another domain unless they had a <a href="https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS">CORS header</a> and the browser supported it. Some even used super-magic hacks, like <a href="http://labjs.com/">LabJS</a>.</p>
 
-<p>The hacks involved tricking the browser into downloading the resource in a way that would trigger an event on completion, but avoid executing it. In LabJS, the script would be added with an incorrect mime type, eg <code>&lt;script type="script/cache" src="..."&gt;</code>. Once all scripts had downloaded, they’d be added again with a correct type, hoping the browser would get them straight from the cache and execute them immediately, in order. This depended on convenient but unspecified behaviour and broke when HTML5 declared browsers shouldn’t download scripts with an unrecognised type.</p>
+<p>The hacks involved tricking the browser into downloading the resource in a way that would trigger an event on completion, but avoid executing it. In LabJS, the script would be added with an incorrect mime type, eg <code>&lt;script type="script/cache" src="..."&gt;</code>. Once all scripts had downloaded, they’d be added again with a correct type, hoping the browser would get them straight from the cache and execute them immediately, in order. This depended on convenient but unspecified behaviour and broke when HTML5 declared browsers shouldn’t download scripts with an unrecognised type. Worth noting that LabJS adapted to these changes and now uses a combination of the methods in this article.</p>
 
-<p>Both of these techniques have a performance problem of their own, you have to wait for the library’s JavaScript to download and parse before any of scripts it manages can begin downloading. Also, how are we going to load the script loader? How are we going to load the script that tells the script loader what to load? Who watches the Watchmen? Why am I naked? These are all difficult questions.</p>
+<p>However, script loaders have a performance problem of their own, you have to wait for the library’s JavaScript to download and parse before any of scripts it manages can begin downloading. Also, how are we going to load the script loader? How are we going to load the script that tells the script loader what to load? Who watches the Watchmen? Why am I naked? These are all difficult questions.</p>
+
+<p>Basically, if you have to download an extra script file before even thinking about downloading other scripts, you've lost the performance battle right there.</p>
 
 <h2 id="toc-dom-rescue">The DOM to the rescue</h2>
 
@@ -147,7 +149,9 @@ console.log('3');
 &lt;link rel="subresource" href="2.js"&gt;
 </pre>
 
-<p>This tells the browser the page needs 1.js and 2.js, and is visible to preloaders. <code>link[rel=subresource]</code> is similar to <code>link[rel=prefetch]</code>, but with <a href="http://www.chromium.org/spdy/link-headers-and-server-hint/link-rel-subresource">different semantics</a>. Unfortunately it’s currently only supported in Chrome, and you have to declare which scripts to load twice, once via link elements, and again in your script.</p>
+<p>This tells the browser the page needs 1.js and 2.js. <code>link[rel=subresource]</code> is similar to <code>link[rel=prefetch]</code>, but with <a href="http://www.chromium.org/spdy/link-headers-and-server-hint/link-rel-subresource">different semantics</a>. Unfortunately it’s currently only supported in Chrome, and you have to declare which scripts to load twice, once via link elements, and again in your script.</p>
+
+<p><strong>Correction:</strong> I originally stated these were picked up by the preload scanner, they're not, they're picked up by the regular parser. However, preload scanner <em>could</em> pick these up, it just doesn't yet, whereas scripts included by executable code can never be preloaded. Thanks to <a href="https://twitter.com/yoavweiss">Yoav Weiss</a> who corrected me in the comments.</p>
 
 <h2 id="toc-depressing">I find this article depressing.</h2>
 
