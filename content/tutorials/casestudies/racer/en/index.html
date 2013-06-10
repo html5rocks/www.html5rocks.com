@@ -41,7 +41,7 @@
 
 <h2 id="toc-track">The Track</h2>
 
-<p>A fairly obvious challenge we faced was how to make a web based mobile game that’s played across such a wide variety of devices look good consistently. Players needed to be able to construct a race with different phones and tablets. One player could have a Nexus 4 and want to race against his friend who had an iPad. We needed to come up with a way to determine a common track size for each race. The solution had to involve using different size tracks depending on the specs for each device included in the race.</p>
+<p>A fairly obvious challenge we faced was how to make a web based mobile game that works well across a wide variety of devices. Players needed to be able to construct a race with different phones and tablets. One player could have a Nexus 4 and want to race against his friend who had an iPad. We needed to come up with a way to determine a common track size for each race. The solution had to involve using different size tracks depending on the specs for each device included in the race.</p>
 
 <h3 id="toc-calculating-dimensions">Calculating Track Dimensions</h3>
 
@@ -50,7 +50,7 @@
 <p>
 <figure>
 <img src="/static/images/tutorials/casestudies/racer/devices.jpg" class="racer-full">
-<figcaption>Example Dimensions</figcaption>
+<figcaption>The red area shows the total width and height of the track for this example.</figcaption>
 </figure>
 </p>
 
@@ -78,7 +78,7 @@ this.getDimensions = function() {
 
 <h3 id="toc-drawing-track">Drawing the Track</h3>
 
-<p><a href="http://paperjs.org">Paper.js</a> was the perfect tool to create vector shapes for the tracks, so we used it’s capabilities to render the saved Illustrator SVG code on a Canvas element. To create the track, the TrackModel class appends the SVG code to the DOM and gathers information about the original dimensions, traction and positioning to be passed to the TrackPathView which will draw the track to a canvas.</p>
+<p><a href="http://paperjs.org">Paper.js</a> is an open source vector graphics scripting framework that runs on top of HTML5 Canvas. We found Paper.js was the perfect tool to create vector shapes for the tracks, so we used its capabilities to render the SVG tracks that were built in Adobe Illustrator on a Canvas element. To create the track, the TrackModel class appends the SVG code to the DOM and gathers information about the original dimensions and positioning to be passed to the TrackPathView which will draw the track to a canvas.</p>
 
 <pre class="prettyprint">
 paper.install(window);
@@ -95,7 +95,7 @@ _path.strokeWidth = 2;
 
 <p><iframe src="/static/demos/racer/track.html" frameborder="0" width="100%" height="450"></iframe></p>
 
-<p>Once the track is drawn, each device finds its x offset based on where it falls in the line-up, and positions the track accordingly.</p>
+<p>Once the track is drawn, each device finds its x offset based on it’s position in the device line-up order, and positions the track accordingly.</p>
 
 <pre class="prettyprint">
 var x = 0;
@@ -115,7 +115,7 @@ for (var i = 0; i < screens.length; i++) {
 
 <h2 id="toc-css-animations">CSS Animations</h2>
 
-<p>While Paper.js is drawing each lane of the track, it is using the majority of available processing in JavaScript. Depending on the device, this could take more or less time than the other players in the game. So we needed a little loader to loop until all devices had finished processing the track. The problem was that any JavaScript-based animation would skip frames due to Paper.js working. Enter CSS animations, which run on a separate UI thread, allowing us to smoothly animate the sheen across the "BUILDING TRACK” text.</p>
+<p>Paper.js uses a lot of CPU processing to draw the track lanes and this process will take more or less time on different devices. To handle this, we needed a loader to loop until all devices finish processing the track. The problem was that any JavaScript-based animation would skip frames due to the CPU requirements of Paper.js. Enter CSS animations, which run on a separate UI thread, allowing us to smoothly animate the sheen across the "BUILDING TRACK” text.</p>
 
 <p><iframe src="/static/demos/racer/building.html" frameborder="0" width="100%" height="280"></iframe></p>
 
@@ -191,9 +191,9 @@ for (var i = 0; i < screens.length; i++) {
 
 <h2 id="toc-rendering-cars">Rendering the Cars</h2>
 
-<p>As with any car racing game we knew it was important to give the user a feeling of acceleration and handling, in fact its probably one of the most important features when it comes to playability. Applying a different amount of traction was important for game balancing and the fun factor, so that once a player got a feel for the physics, they’d get a sense of accomplishment and become a better racer.</p>
+<p>As with any car racing game we knew it was important to give the user a feeling of acceleration and handling. Applying a different amount of traction was important for game balancing and the fun factor, so that once a player got a feel for the physics, they’d get a sense of accomplishment and become a better racer. </p>
 
-<p>Once again we called on paper.js, our swiss army knife for graphics which comes with an extensive set of math utilities. We used some of its methods to move the car along the path, while adjusting its position and rotation smoothly each frame.</p>
+<p>Once again we called on Paper.js which comes with an extensive set of math utilities. We used some of its methods to move the car along the path, while adjusting the car position and rotation smoothly each frame.</p>
 
 <p>
     <iframe src="/static/demos/racer/trackcar.html" frameborder="0" width="100%" height="450"></iframe>
@@ -276,9 +276,9 @@ var difference = currentTime - serverTime;
 <h3 id="toc-acceleration-deceleration">Acceleration/Deceleration</h3>
 </p>When Player 1 presses or releases the screen, the acceleration event is sent to the server. Once received, the server adds its current timestamp and then passes that data along to every other player.</p>
 
-<p>When it is received as an “accelerate on” or “accelerate off” event by each device, we are able to use the server offset (calculated above) to find out how long it took for that message to be received. This is useful, because Player 1 may receive the message in 20ms, but Player 2 might take 50ms to receive it. This would result in the car being in two different places because device 1 would start the acceleration sooner.</p>
+<p>When an “accelerate on” or “accelerate off” event is received by a device, we are able to use the server offset (calculated above) to find out how long it took for that message to be received. This is useful, because Player 1 may receive the message in 20ms, but Player 2 might take 50ms to receive it. This would result in the car being in two different places because device 1 would start the acceleration sooner.</p>
 
-<p>We can take the time it took to receive the event and convert that into frames. At 60fps, each frame is 16.67ms -- so we can speed up or slow down the acceleration/deceleration of the car to account for the frames it missed.</p>
+<p>We can take the time it took to receive the event and convert that into frames. At 60fps, each frame is 16.67ms -- so we can add more velocity (acceleration) or friction (deceleration) on of the car to account for the frames it missed.</p>
 
 <pre class="prettyprint">
 var frames = time / 16.67;
@@ -297,7 +297,7 @@ for (var i = 0; i < frames; i++) {
 <h3 id="toc-keeping-cars-synced">Keeping the Cars Synced</h3>
 <p>Even after accounting for latency in acceleration, the car could still come out of sync and appear on multiple screens at once; specifically when transitioning from one device to the next. In order to prevent this, update events are sent frequently to keep the cars in the same position on the track across all screens.</p>
 
-<p>The logic is simple: every 4 frames, if the car is visible on screen, that device sends it’s values to each of the other devices. If the car is not visible, it updates the values with those received and then moves the car forward based on the time it took to get the update event.</p>
+<p>The logic is simple: every 4 frames, if the car is visible on screen, that device sends it’s values to each of the other devices. If the car is not visible, the app updates the values with those received and then moves the car forward based on the time it took to get the update event.</p>
 
 <pre class="prettyprint">
 this.getValues = function() {
