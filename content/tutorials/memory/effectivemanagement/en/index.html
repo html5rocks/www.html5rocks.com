@@ -15,12 +15,12 @@
 <h2 id="toc-introduction">Introduction</h2>
 <p ><span></span>
 </p>
-<p ><span>While JavaScript employs automatic memory management, it is not a substitute for effective memory management in applications. JavaScript applications suffer from the same memory related problems that native applications do such as memory leaks and bloat, yet they must also deal with garbage collection pauses. Large-scale applications like Gmail encounter the same problems facing your application but on an even larger scale. Read on to learn how the Gmail team used Chrome DevTools to identify, isolate, and fix their memory problems.</span>
+<p ><span>While JavaScript employs garbage collection for automatic memory management, it is not a substitute for effective memory management in applications. JavaScript applications suffer from the same memory related problems that native applications do, such as memory leaks and bloat, yet they must also deal with garbage collection pauses. Large-scale applications like Gmail encounter the same problems facing your smaller applications. Read on to learn how the Gmail team used Chrome DevTools to identify, isolate, and fix their memory problems.</span>
 </p>
 
 <h2 id="toc-watch-the-movie">Google I/O 2013 Session</h2>
 
-We presented this material at Google I/O 2013. Check out the video below:
+<p>We presented this material at Google I/O 2013. Check out the video below:</p>
 <iframe width="560" height="315" src="http://www.youtube.com/embed/x9Jlu_h_Lyw" frameborder="0" allowfullscreen></iframe>
 
 <h2 id="toc-gmail-problem">Gmail, we have a problem...</h2>
@@ -38,7 +38,7 @@ We presented this material at Google I/O 2013. Check out the video below:
 <h3 id="toc-primitives">Primitive Types</h3>
 <p ><span></span>
 </p>
-<p ><span>JavaScript has </span><span>3 primitive types:</span>
+<p ><span>JavaScript has three primitive types:</span>
 </p>
 <p ><span></span>
 </p>
@@ -56,14 +56,14 @@ We presented this material at Google I/O 2013. Check out the video below:
 </p>
 <p ><span></span>
 </p>
-<p ><span>There is only one container type the Object. In JavaScript the Object is an </span><span ><a  href="http://en.wikipedia.org/wiki/Associative_array">associative array</a></span><span>. A non-empty object is an inner node with outgoing edges to other values (nodes).</span>
+<p ><span>There is only one container type: the Object. In JavaScript the Object is an </span><span ><a  href="http://en.wikipedia.org/wiki/Associative_array">associative array</a></span><span>. A non-empty object is an inner node with outgoing edges to other values (nodes).</span>
 </p>
 <p ><span></span>
 </p>
 <h4 id="toc-what-about-arrays">What About Arrays?</h4>
 <p ><span></span>
 </p>
-<p ><span>An Array in JavaScript is actually an Object that has numeric keys. This is a simplification, because, JavaScript runtimes will optimize Array-like Objects and represent them under the hood as arrays. </span>
+<p ><span>An Array in JavaScript is actually an Object that has numeric keys. This is a simplification, because JavaScript runtimes will optimize Array-like Objects and represent them under the hood as arrays. </span>
 </p>
 <p ><span></span>
 </p>
@@ -90,17 +90,21 @@ We presented this material at Google I/O 2013. Check out the video below:
 <p ><span ></span>
 </p>
 <p >
-    <img height="324" src="images/image04.png" width="689">
+    <figure>
+    <img height="324" src="images/image04.png">
+    </figure>
 </p>
 <h3 id="toc-when-garbage">When Does a Value Become Garbage?</h3>
 <p ><span></span>
 </p>
-<p ><span>An value becomes garbage when there is no path from a root to the value. In other words, starting at the roots and exhaustively searching all Object properties and variables that are alive in the stackframe a value cannot be reached, it has become garbage. Unlike a reference counting system, cycles are handled without issue.</span>
+<p ><span>A value becomes garbage when there is no path from a root to the value. In other words, starting at the roots and exhaustively searching all Object properties and variables that are alive in the <a href="http://en.wikipedia.org/wiki/Call_stack">stack frame</a>, a value cannot be reached, it has become garbage.</span>
 </p>
 <p ><span></span>
 </p>
 <p >
-    <img height="290" src="images/image03.png" width="566">
+    <figure>
+    <img height="290" src="images/image03.png">
+    </figure>
 </p>
 <h3 id="toc-what-is-a-leak">What is a Memory Leak in JavaScript?</h3>
 <p ><span></span>
@@ -122,14 +126,14 @@ displayList.removeAllChildren();
 </pre>
 <p ><span></span>
 </p>
-<p ><span>As long as &lsquo;email&rsquo; exists, the DOM element referenced by message will not be removed, even though it is now detached from the page&rsquo;s DOM tree.</span>
+<p ><span>As long as <pre class="prettyprint">email</pre> exists, the DOM element referenced by message will not be removed, even though it is now detached from the page&rsquo;s DOM tree.</span>
 </p>
 <p ><span></span>
 </p>
 <h3 id="toc-bloat">What is Bloat?</h3>
 <p ><span></span>
 </p>
-<p ><span>Your page is </span><span ><a  href="http://en.wikipedia.org/wiki/Software_bloat">bloated</a></span><span>&nbsp;when you&rsquo;re using more memory than necessary for optimal page speed. Indirectly, memory leaks also cause bloat but that is not by design. A Cache that does not have any size bound is a common source of memory bloat. Also, your page can be bloated by host data, for example, pixel data loaded from images.</span>
+<p ><span>Your page is </span><span ><a  href="http://en.wikipedia.org/wiki/Software_bloat">bloated</a></span><span>&nbsp;when you&rsquo;re using more memory than necessary for optimal page speed. Indirectly, memory leaks also cause bloat but that is not by design. An application cache that does not have any size bound is a common source of memory bloat. Also, your page can be bloated by host data, for example, pixel data loaded from images.</span>
 </p>
 <h3 id="toc-gc">What is Garbage Collection?</h3>
 <p ><span></span>
@@ -169,7 +173,9 @@ displayList.removeAllChildren();
 <p ><span></span>
 </p>
 <p >
-    <img height="381" src="images/image01.png" width="637">
+    <figure>
+    <img height="381" src="images/image01.png">
+    </figure>
 </p>
 <h3 id="toc-old-generation">Old Generation</h3>
 <p ><span></span>
@@ -219,17 +225,19 @@ displayList.removeAllChildren();
 </p>
 <p ><span></span>
 </p>
-<p ><span>Beyond tracking purposes, the field measurements also provide a keen insight into the correlation between memory footprint and application performance. &nbsp;Contrary to the popular belief that &ldquo;more memory results in better performance&rdquo;, the Gmail team found that the larger the memory footprint, the longer latencies were for common Gmail actions. Armed with this revelation, they were more motivated than ever to reign in their memory consumption.</span>
+<p ><span>Beyond tracking purposes, the field measurements also provide a keen insight into the correlation between memory footprint and application performance. &nbsp;Contrary to the popular belief that &ldquo;more memory results in better performance&rdquo;, the Gmail team found that the larger the memory footprint, the longer latencies were for common Gmail actions. Armed with this revelation, they were more motivated than ever to rein in their memory consumption.</span>
 </p>
 <p ><span></span>
 </p>
 <p >
-    <img height="186" src="images/image05.png" width="594">
+    <figure>
+    <img height="186" src="images/image05.png">
+    </figure>
 </p>
 <h4 id="toc-identify-memory">Identifying a Memory Problem with the DevTools Timeline</h4>
 <p ><span></span>
 </p>
-<p ><span>The first step in solving any performance problem is to prove that the problem exists, create a reproducible, and take a baseline measurement of the problem. Without a reproducible program, you cannot reliably measure the problem. Without a baseline measurement you don&rsquo;t know by how much you&rsquo;ve improved performance.</span>
+<p ><span>The first step in solving any performance problem is to prove that the problem exists, create a reproducible test, and take a baseline measurement of the problem. Without a reproducible program, you cannot reliably measure the problem. Without a baseline measurement you don&rsquo;t know by how much you&rsquo;ve improved performance.</span>
 </p>
 <p ><span></span>
 </p>
@@ -244,7 +252,9 @@ displayList.removeAllChildren();
         </span><span>&nbsp;shaped graph, you are allocating lots of shortly lived objects. But if the sequence of actions is not expected to result in any retained memory, and the DOM node count does not drop down back to the baseline where you began, you have good reason to suspect there is a leak. </span>
 </p>
 <p >
-    <img height="347" src="images/image02.png" width="603">
+    <figure>
+    <img height="347" src="images/image02.png">
+    </figure>
 </p>
 <p ><span></span>
 </p>
@@ -279,13 +289,15 @@ displayList.removeAllChildren();
 <p ><span></span>
 </p>
 <p >
-    <img height="339" src="images/image00.png" width="616">
+    <figure>
+    <img height="339" src="images/image00.png">
+    </figure>
 </p>
 <p ><span>The bars at the top indicate when new objects are found in the heap. &nbsp;The height of each bar corresponds to the size of the recently allocated objects, and the color of the bars indicate whether or not those objects are still live in the final heap snapshot: blue bars indicate objects that are still live at the end of the timeline, gray bars indicate objects that were allocated during the timeline, but have since been garbage collected.</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>In the example above, an action was performed 10 times. &nbsp;The sample program caches 5 objects, so the last 5 blue bars are expected. &nbsp;But the leftmost blue bar indicates a potential problem. You can then use the sliders in the timeline above to zoom in on that particular snapshot and see the objects that were recently allocated at that point. &nbsp;Clicking on a specific object in the heap will show it&rsquo;s retaining tree in the bottom portion of the heap snapshot. Examining the retaining path to the object should give you enough information to understand why the object was not collected, and you can make the necessary code changes to remove the unnecessary reference.</span>
+<p ><span>In the example above, an action was performed 10 times. &nbsp;The sample program caches five objects, so the last five blue bars are expected. &nbsp;But the leftmost blue bar indicates a potential problem. You can then use the sliders in the timeline above to zoom in on that particular snapshot and see the objects that were recently allocated at that point. &nbsp;Clicking on a specific object in the heap will show its retaining tree in the bottom portion of the heap snapshot. Examining the retaining path to the object should give you enough information to understand why the object was not collected, and you can make the necessary code changes to remove the unnecessary reference.</span>
 </p>
 <h2 id="toc-resolving-crisis">Resolving Gmail's Memory Crisis</h2>
 <p ><span></span>
@@ -295,7 +307,9 @@ displayList.removeAllChildren();
 <p ><span></span>
 </p>
 <p >
-    <img height="350" src="images/image06.png" width="667">
+    <figure>
+    <img height="350" src="images/image06.png">
+    </figure>
 </p>
 <p ><span></span>
 </p>
@@ -315,7 +329,7 @@ displayList.removeAllChildren();
 <p ><span>Ask yourself these questions:<br></span>
 </p>
 <ol class="c9" start="1">
-    <li class="c3 c6"><span>How much memory is your page using?</span>
+    <li class="c3 c6"><span>How much memory is my app using?</span>
     </li>
 </ol>
 <p ><span></span>
@@ -325,17 +339,17 @@ displayList.removeAllChildren();
 <p ><span></span>
 </p>
 <ol class="c9" start="1">
-    <li ><span>Is your page leak free?</span>
+    <li ><span>Is my page leak free?</span>
     </li>
 </ol>
 <p ><span></span>
 </p>
-<p ><span>If your page has memory leaks it can not only impact your pages performance but other tabs as well. Use the object tracker to help narrow in on any leaks.</span>
+<p ><span>If your page has memory leaks it can not only impact your page's performance but other tabs as well. Use the object tracker to help narrow in on any leaks.</span>
 </p>
 <p ><span></span>
 </p>
 <ol class="c9" start="1">
-    <li ><span>How frequently are you GCing?</span>
+    <li ><span>How frequently is my page GCing?</span>
     </li>
 </ol>
 <p ><span></span>
@@ -347,7 +361,7 @@ displayList.removeAllChildren();
 <h2 id="toc-conslusion">Conclusion</h2>
 <p ><span></span>
 </p>
-<p ><span>We started off in a crisis. Covered the core basics of memory management in JavaScript and V8 in particular. You learned how to use the tools, including the new object tracker feature available in the latest builds of Chrome. The Gmail team, armed with this knowledge, solved their memory usage problem and saw improved performance. You can do the same with your page!</span>
+<p ><span>We started off in a crisis. Covered the core basics of memory management in JavaScript and V8 in particular. You learned how to use the tools, including the new object tracker feature available in the latest builds of Chrome. The Gmail team, armed with this knowledge, solved their memory usage problem and saw improved performance. You can do the same with your web apps!</span>
 </p>
 
 {% endblock %}
