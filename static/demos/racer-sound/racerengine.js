@@ -1,6 +1,6 @@
 
-var xmlLink = "../../../../static/demos/racer-sound/config.xml";
-var mp3link = "../../../../static/audio/racer-sound/";
+var xmlLink = "/static/demos/racer-sound/config.xml";
+var mp3link = "/static/audio/racer-sound/";
 var _throttle = 0;
 var _throttleVal = 0;
 var _playing = false;
