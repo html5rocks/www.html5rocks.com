@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<h2 id="toc-introduction" ><span>Introduction</span></h2>
+<h2 id="toc-introduction" >Introduction</h2>
 <p ><span></span></p>
 <p ><span>In recent years, web applications have been sped up considerably. Many applications now run fast enough that I&rsquo;ve heard some developers wonder aloud &ldquo;is the web fast enough?&rdquo;. For some applications it may be, but, for the developers working on high performance applications, we know it is not fast enough. Despite the amazing advances in JavaScript virtual machine technology, a </span><span ><a  href="https://docs.google.com/a/google.com/document/d/1k8d4SsYJoCfmw6Te8Ijf3WEyotNHp6YMy1PEgn_o5Yg/edit">recent study</a></span><span>&nbsp;showed that Google applications spend between 50% and 70% of their time inside </span><span ><a  href="https://code.google.com/p/v8/">V8</a></span><span>. Your application has a finite amount of time, shaving cycles off of one system means another system can do more. Remember, </span><span>applications running at 60fps only have 16ms</span><span>&nbsp;per frame or else&mdash; <a href="http://jankfree.org">jank</a>. Read on, to learn about optimizing JavaScript and profile JavaScript applications, in a from the trenches story of the performance detectives on the V8 team tracking down an obscure performance problem in </span><span ><a  href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a></span><span>.</span></p>
 <p ><span></span></p>
@@ -17,32 +17,30 @@
 
 <iframe width="560" height="315" src="http://www.youtube.com/embed/VhpdsjBUS3g" frameborder="0" allowfullscreen></iframe>
 
-<h2 id="toc-why-performance-matters" ><span>Why does performance matter?</span></h2>
-<p ><span></span></p>
+<h2 id="toc-why-performance-matters" >Why does performance matter?</h2>
+
 <p ><span>CPU cycles are</span><span>&nbsp;a zero sum game. </span><span>Making one part of your system use fewer allows you to use more in another or run smoother overall. Running faster and doing more are often competing goals. Users demand new features while also expecting your application to run </span><span>smoother</span><span>. JavaScript virtual machines keep getting faster but that is not a reason for ignoring performance problems that you can fix today, as the many developers, dealing with performance problems in their web applications already know. In real-time, high frame rate, applications the pressure to be jank free is paramount. </span><span ><a  href="http://www.insomniacgames.com/">Insomniac Games</a></span><span>&nbsp;produced a </span><span ><a  href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">study</a></span><span>&nbsp;which showed that a solid, sustained frame rate is important to the success of a game: &ldquo;</span><span >A solid frame-rate is still a sign of professional, well-made product.&rdquo; </span><span>Web developers take note.</span></p>
-<h2 id="toc-solving-performance-problems" ><span>Solving Performance Problems</span></h2>
+<h2 id="toc-solving-performance-problems" >Solving Performance Problems</h2>
 <p ><span></span></p>
 <p ><span>Solving a performance problem is like solving a crime. You need to carefully examine the evidence, check suspected causes, and experiment with different solutions. All along the way you must document your measurements so that you can be sure you&rsquo;ve actually fixed the problem. There is very little difference between this method and how criminal detectives crack a case. Detectives examine evidence, interrogate suspects, and run experiments hoping to find the smoking gun.</span></p>
 <p ><span></span></p>
-<h2 id="toc-v8-csi" ><span>V8 CSI: Oz</span></h2>
+<h2 id="toc-v8-csi" >V8 CSI: Oz</h2>
 <p ><span></span></p>
 <p ><span>The amazing wizards building <a href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a> approached the V8 team with a performance problem they couldn&rsquo;t solve on their own. Occasionally Oz would freeze, causing jank. The Oz developers had done some initial investigation using the </span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">Timeline Panel</a></span><span>&nbsp;in </span><span ><a  href="https://developers.google.com/chrome-developer-tools/">Chrome DevTools</a></span><span>. Looking at memory usage they encountered the dreaded </span><span ><a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">saw tooth</a></span><span>&nbsp;graph. </span><span>Once per second the garbage collector was collecting 10MB of garbage</span><span>&nbsp;and the garbage collection pauses corresponded with the jank. Similar to the following screenshot from the Timeline in Chrome Devtools:</span></p>
-<p ><span></span></p>
+
 <p>
 <figure>
 <img height="81" src="images/image01.png">
 </figure>
 </p>
-<p ><span></span></p>
-<p ><span></span></p>
-<p ><span></span></p>
+
 <p ><span>The V8 detectives, Jakob and Yang took up the case. What took place was a long back and forth between Jakob and Yang from the V</span><span>8</span><span>&nbsp;team and the Oz team. I&rsquo;ve distilled this conversation down to the important events that helped track down this problem.</span></p>
-<p ><span></span></p>
-<h2 id="toc-evidence" ><span>Evidence</span></h2>
-<p ><span></span></p>
+
+<h2 id="toc-evidence" >Evidence</h2>
+
 <p ><span>The first step is to collect and study the initial evidence. </span></p>
 <p ><span></span></p>
-<h3 id="toc-application-type" ><span>What type of application are we looking at?</span></h3>
+<h3 id="toc-application-type" >What type of application are we looking at?</h3>
 <p ><span></span></p>
 <p ><span>The Oz demo is an interactive 3D application. &nbsp;Because of this, it is very sensitive to pauses caused by garbage collections. Remember, an interactive application running at <a href="http://www.html5rocks.com/en/tutorials/speed/rendering/">60fps has 16ms to do all JavaScript work and must leave some of that time for Chrome to process the graphics calls and draw the screen</a>.</span></p>
 <p ><span></span></p>
@@ -71,7 +69,7 @@
 <h3 id="toc-is-this-normal" ><span>Is 10MB/sec of garbage expected for this application?</span></h3>
 <p ><span></span></p>
 <p ><span>In short, no. The developer is not doing anything to expect 10MB/sec of garbage. </span></p>
-<h2 id="toc-suspects" ><span>Suspects</span></h2>
+<h2 id="toc-suspects" >Suspects</h2>
 <p ><span></span></p>
 <p ><span>The next phase of the investigation is to determine potential suspects and then whittle them down.</span></p>
 <h3 id="toc-suspect-1" ><span>Suspect #1</span></h3>
@@ -107,7 +105,7 @@ memory even for temporary results.</p>
 <p ><span></span></p>
 <p ><span>Suspect #4 is a possibility. </span></p>
 <p ><span></span></p>
-<h2 id="toc-forensics" ><span>Forensics</span></h2>
+<h2 id="toc-forensics" >Forensics</h2>
 <p ><span></span></p>
 <p ><span>At this point the detectives have two possible suspects: storing heap numbers as object properties and arithmetic computation happening inside unoptimized functions. It was time to head to the lab and determine definitively which suspect was guilty. NOTE: In this section I will be using a reproduction of the problem found in the actual Oz source code. This reproduction is orders of magnitude smaller than the original code, thus easier to reason about.</span></p>
 <h3 id="toc-experiment-1" ><span>Experiment #1</span></h3>
@@ -214,7 +212,7 @@ displays a verbose log of optimization and deoptimization data. Searching throug
 <p ><span>[disabled optimization for updateSprites, reason: ForInStatement is not fast case]</span></p>
 <p ><span></span></p>
 <p ><span>Just as the detectives hypothesized, the for-i-in loop construct was the reason.</span></p>
-<h2 id="toc-cased-closed"><span>Case Closed</span></h2>
+<h2 id="toc-cased-closed">Case Closed</h2>
 <p ><span></span></p>
 <p ><span>After discovering the reason updateSprites was not optimized, the fix was simple, simply move the computation into its own function, that is:</span></p>
 <pre class="prettyprint">
@@ -230,7 +228,7 @@ function updateSprites(dt) {
 }
 </pre>
 <p ><span>updateSprite will be optimized, resulting in far fewer HeapNumber objects, resulting in less frequent GC pauses. It should be easy for you to confirm this by performing the same experiments with new code. &nbsp;The careful reader will notice that double numbers are still being stored as properties. If profiling indicates it is worth it, changing </span><span >position</span><span>&nbsp;to be an array of doubles or a typed data array would further reduce the number of objects being created.</span></p>
-<h2 id="toc-epilogue" ><span>Epilogue</span></h2>
+<h2 id="toc-epilogue" >Epilogue</h2>
 <p ><span></span></p>
 <p ><span>The Oz developers didn&rsquo;t stop there. </span><span>Armed with the tools and techniques shared with them by the V8 detectives, they were able to find a few other functions that were stuck in deoptimization hell and factored the computation code into leaf functions which were optimized, resulting in even better performance.</span></p>
 <p ><span></span></p>
