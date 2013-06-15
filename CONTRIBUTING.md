@@ -5,7 +5,7 @@ Step-by-step guide for third-party developers to contribute to html5rocks.com. B
 HTML5Rocks runs on Google App Engine (Python). Before you check out the code, download
 the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Google_App_Engine_SDK_for_Python). The SDK is not required, but highly recommended. You'll want to run a local development server and preview your changes before submitting a tutorial, sample, or patch.
 
-**If you're interested in writing an article, please [file an issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) and wait to hear from us before writing the content! **
+**If you're interested in writing an article, please [file an issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) and wait to hear from us before writing the content!**
 
 # Getting the code #
 
