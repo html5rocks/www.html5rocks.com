@@ -91,7 +91,7 @@ class Resource(DictModel):
   @classmethod
   def get_all(self, order=None, limit=None, qfilter=None):
     limit = limit or settings.MAX_FETCH_LIMIT
-
+    print "LIMIT: %s" % limit
     key = '%s|tutorials' % (settings.MEMCACHE_KEY_PREFIX,)
 
     if order is not None:
