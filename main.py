@@ -408,7 +408,11 @@ class ContentHandler(webapp2.RequestHandler):
         results = TagsHandler().get_as_db(
             relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
       else:
-        results = models.Resource.get_all(order='-publication_date')
+        if relpath == '':
+          resource_limit = 10
+        else:
+          resource_limit = None
+        results = models.Resource.get_all(order='-publication_date', limit=resource_limit)
 
       tutorials = [] # List of final result set.
       authors = [] # List of authors related to the result set.
