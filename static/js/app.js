@@ -1,6 +1,4 @@
 // Controls whether or not the site should function with ajax loads or not.
-var AJAXIFY_SITE = false;
-
 function shiftWatermark(){
   setTimeout(function(){
     $('.watermark').css('top', '30px');
@@ -11,9 +9,6 @@ function shiftWatermark(){
 // Navigation highlighting.
 $('.main nav').on('click','ul li a', function() {
   $('.main nav .current').removeClass('current');
-  if (AJAXIFY_SITE) {
-    $(this).addClass('current');
-  }
   shiftWatermark();
 });
 
@@ -48,26 +43,6 @@ $(document).keydown(function(e) {
     $('#search_hide, #features_hide').click();
   }
 });
-
-
-// TODO: go back to event delgation. Currently breaks nav.
-if (AJAXIFY_SITE) {
-  //$('a').live('click', function() {
-  $('a').click(function() {
-
-    // Don't intercept external links
-    if ($(this).attr('target')) {
-      return true;
-    }
-
-    // Only cool browsers get cool behavior
-    if (!Modernizr.history) return true;
-
-    loadContent(this);
-
-    return false;
-  });
-}
 
 function loadContent(elem, popped){
   window.page = elem.pathname
@@ -292,10 +267,5 @@ $.ajaxPrefilter( function( options, originalOptions, jqXHR ) {
     
   }
 });
-
-
-if (AJAXIFY_SITE) {
-  window.addEventListener('popstate', state, false);
-}
 
 window.addEventListener('DOMContentLoaded', route.onload, false);
