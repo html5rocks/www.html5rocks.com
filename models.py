@@ -89,11 +89,17 @@ class Resource(DictModel):
   draft = db.BooleanProperty(default=True) # Don't publish by default.
 
   @classmethod
-  def get_all(self, order=None, limit=None, qfilter=None):
+  def get_all(self, order=None, limit=None, page=None, qfilter=None):
     limit = limit or settings.MAX_FETCH_LIMIT
-    print "LIMIT: %s" % limit
+    offset = None
+    
     key = '%s|tutorials' % (settings.MEMCACHE_KEY_PREFIX,)
-
+    
+    if page:
+      limit = settings.FETCH_PAGE_LIMIT
+      offset = (page - 1) * limit
+      key += '|page%s' % (page,)
+    
     if order is not None:
       key += '|%s' % (order,)
 
@@ -109,7 +115,9 @@ class Resource(DictModel):
       if qfilter is not None:
         query.filter(qfilter[0], qfilter[1])
       query.filter('draft =', False) # Never return drafts by default.
-      results = query.fetch(limit=limit)
+      results = query.fetch(offset = offset, limit=limit)
+      if page is None:
+        memcache.set("%s|%s" % (key, page), query.cursor())
       memcache.set(key, results)
 
     return results

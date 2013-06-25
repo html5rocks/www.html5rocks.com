@@ -404,6 +404,15 @@ class ContentHandler(webapp2.RequestHandler):
                                                                  locale))
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
+      
+      page_number = int(self.request.get('page')) or None
+      previous_page = None
+      next_page = None
+      
+      if page_number:
+        previous_page = page_number - 1
+        next_page = page_number + 1
+      
       if relpath in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
             relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
@@ -412,7 +421,11 @@ class ContentHandler(webapp2.RequestHandler):
           resource_limit = 10
         else:
           resource_limit = None
-        results = models.Resource.get_all(order='-publication_date', limit=resource_limit)
+          
+        if page_number is not None:
+          results = models.Resource.get_all(order='-publication_date', page=page_number)
+        else:
+          results = models.Resource.get_all(order='-publication_date', limit=resource_limit)
 
       tutorials = [] # List of final result set.
       authors = [] # List of authors related to the result set.
@@ -451,7 +464,7 @@ class ContentHandler(webapp2.RequestHandler):
         author_dict[a.key().name()] = a
       authors = author_dict.values()
 
-      return self.render(data={'tutorials': tutorials, 'authors': authors},
+      return self.render(data={'tutorials': tutorials, 'authors': authors, 'previous_page': previous_page, 'next_page': next_page},
                          template_path=path, relpath=relpath)
 
     elif os.path.isfile(path[:path.rfind('.')] + '.html'):
