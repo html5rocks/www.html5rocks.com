@@ -75,7 +75,6 @@ window.loadCanIUseData = function() {
 };
 
 window.loadFeaturePanels = function() {
-  //var elem = pagePanel.find('section.support')[0];
   var elem = $('.page.current').find('section.support')[0];
 
   if (!elem) {
@@ -89,3 +88,5 @@ window.loadFeaturePanels = function() {
 
   loadCanIUseData();
 };
+
+window.loadFeaturePanels();
