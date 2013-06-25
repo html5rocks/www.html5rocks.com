@@ -352,6 +352,19 @@
         setTimeout(function() { window.scrollTo(0, 1); }, 1);
       }, false);
     {% endif %}
+    
+    $(document).keydown(function(e) {
+      if (e.keyCode === 27) { // ESC
+        // Hide search and/or feature bar.
+        $('#search_hide, #features_hide').click();
+      }
+    });
+
+    // Toggle the feature nav.
+    $('.outline_nav_toggle').click(function(e) {
+      $(this).toggleClass('activated');
+      $(this).find('nav.outline').fadeToggle('fast');
+    });
 
     $('#features_show a').click(function() {
       $('#search_hide').click(); // Hide search panel if it's out.
@@ -431,7 +444,7 @@
   </script>
 
   <!-- defer is unreliable in ie <= 9, but o well -->
-  <script defer src="/static/js/app{% if prod %}.min{% endif %}.js"></script>
+  
 
   <script defer src="/static/js/search{% if prod %}.min{% endif %}.js"></script>
   {% if not is_mobile %}
