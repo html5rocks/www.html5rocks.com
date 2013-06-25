@@ -95,6 +95,11 @@
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJpSURBVDjLfVNJT1NRGL0/wY0/wonaEesOAxoTF4bEpY1GFGGBqEUhggjYaCVIcIKC1TiHiCEBiXEhVdm4EDaaKI2WofTRlqbYR8sbOhzfd5v3tEK8i5d3F+fcM3wf+3x065bZc9t6F5rNCLeYsXTJgkibBUK7FcsdVkS7bIh57Ihfs2PFa0fihgOx6w4QhrCMfmKXnYi4y7DcbEK8zYxEhwVJjxW/vDaIPXak+xxYv1MOqX8PlEEn1PtOKP4KTsLoZQLH  vQeRfjeAzPsBiE9O/Rec9e+F7HMiqiljJJteXvXX4O9TkEUon4awPlS5KThzq5xbY+SZZCf7DkGa8kH9Mo58SvjDpKwh+/biBnCq245opw2MAtvMszxah0IiaPDkPl4tASc9Nh40ow+B089ruexceBrqVC/kB5Vcdj44YZDIr5sM8Eq71larBYyqopczw6dLMuDSR11cdm52wshltaeCg6MtVLtGQD3rsqVHh6FOdqEgCgaJOuLisvVcMgEfBwtuExYvmMEoyQ1VPd5vSC9oQPH2PqRHzhfvksjB4YYyLLh3g9GE6eD83AcUhBkemPKwylCSHrvCZROYTtR7BPP1uzB3ViOg8SSwOl5v2M9HprlsOXCz6ORbgMuWvk7ye/KlF6GTOxE6YwKj2SbZ2eFq7pmOOvOCp732tJbfs8J3Ljv1pr9IMHYXP47vwM8GjYAWQx8S5Vk1pFd1JVUlB2uQuHeCe15qPQCh+xjmm6oQdG1HqFGzQAtBi/HvkOhV6YGRZ5JNLxN4sbG4kUxfZ1oMaoTGk4aLhoR6pqoobQqMPJNsellf598J2Or0Mh3FtwAAAABJRU5ErkJggg==" width="16" height="16" />
       </a>
       </h2>
+      
+      <!-- Paging -->
+      <div class="pager">
+        {% if previous_page %}<a href="?page={{previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if previous_page and next_page %} | {% endif %}{% if next_page %}<a href="?page={{next_page}}">{% trans "Next" %}</a>{% endif %}
+      </div>
 
       {% for tut in tutorials %}
       <article class="tutorial_listing" data-type="{{ tut.type }}" data-classes="{{ tut.classes|join:',' }}"
@@ -116,15 +121,6 @@
             </a>
             {% endif %}
           </span>
-          {% if tut.browser_support %}
-          <span class="browsers">
-            <span class="browser opera {% if 'opera' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
-            <span class="browser ie {% if 'ie' in tut.browser_support %}supported{% endif %}"><span class="browser_name">IE</span><span class="support">unsupported</span></span>
-            <span class="browser safari {% if 'safari' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
-            <span class="browser ff {% if 'ff' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
-            <span class="browser chrome {% if 'chrome' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
-          </span>
-          {% endif %}
 
           {% for tag in tut.tags %}
             <span class="tag">{{tag}}</span>

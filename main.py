@@ -405,7 +405,7 @@ class ContentHandler(webapp2.RequestHandler):
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
       
-      page_number = int(self.request.get('page')) or None
+      page_number = int(self.request.get('page', default_value = 0)) or None
       previous_page = None
       next_page = None
       
