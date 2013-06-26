@@ -9,7 +9,7 @@ the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Goog
 
 # Getting the code #
 
-The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [studio](http://studio.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
+The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
 
 Each sub-domain points to a separate [Google App Engine](http://code.google.com/appengine/downloads.html) (Python) application with a corresponding [repository](https://github.com/html5rocks/).
 
