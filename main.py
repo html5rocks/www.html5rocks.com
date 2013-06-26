@@ -410,8 +410,8 @@ class ContentHandler(webapp2.RequestHandler):
       template_args = dict()
       
       if page_number:
-        template_args[previous_page] = page_number - 1
-        template_args[next_page] = page_number + 1
+        template_args['previous_page'] = page_number - 1
+        template_args['next_page'] = page_number + 1
       
       if relpath in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
