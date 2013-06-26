@@ -115,9 +115,7 @@ class Resource(DictModel):
       if qfilter is not None:
         query.filter(qfilter[0], qfilter[1])
       query.filter('draft =', False) # Never return drafts by default.
-      results = query.fetch(offset = offset, limit=limit)
-      if page is None:
-        memcache.set("%s|%s" % (key, page), query.cursor())
+      results = query.fetch(offset=offset, limit=limit)
       memcache.set(key, results)
 
     return results

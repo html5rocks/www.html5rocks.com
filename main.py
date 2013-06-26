@@ -298,7 +298,7 @@ class ContentHandler(webapp2.RequestHandler):
     # Landing page or /tutorials|features|mobile|gaming|business\/?
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
-                                            'gaming', 'business'])):
+                                            'gaming', 'business', 'updates'])):
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
@@ -316,6 +316,7 @@ class ContentHandler(webapp2.RequestHandler):
            re.search('mobile/.+', relpath) or
            re.search('gaming/.+', relpath) or
            re.search('business/.+', relpath) or
+           re.search('updates/.+', relpath) or
            re.search('tutorials/casestudies/.+', relpath))
           and not is_feed):
       # If this is an old-style mobile article or case study, redirect to the
@@ -405,17 +406,18 @@ class ContentHandler(webapp2.RequestHandler):
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
       
-      page_number = int(self.request.get('page', default_value = 0)) or None
-      previous_page = None
-      next_page = None
+      page_number = int(self.request.get('page', default_value=0)) or None
+      template_args = dict()
       
       if page_number:
-        previous_page = page_number - 1
-        next_page = page_number + 1
+        template_args[previous_page] = page_number - 1
+        template_args[next_page] = page_number + 1
       
       if relpath in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
             relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+      elif relpath == 'updates':
+        results = []
       else:
         if relpath == '':
           resource_limit = 10
@@ -463,9 +465,10 @@ class ContentHandler(webapp2.RequestHandler):
       for a in authors:
         author_dict[a.key().name()] = a
       authors = author_dict.values()
-
-      return self.render(data={'tutorials': tutorials, 'authors': authors, 'previous_page': previous_page, 'next_page': next_page},
-                         template_path=path, relpath=relpath)
+      
+      data={'tutorials': tutorials, 'authors': authors, 'args': template_args}
+      
+      return self.render(data, template_path=path, relpath=relpath)
 
     elif os.path.isfile(path[:path.rfind('.')] + '.html'):
       return self.render(data={}, template_path=path[:path.rfind('.')] + '.html',
