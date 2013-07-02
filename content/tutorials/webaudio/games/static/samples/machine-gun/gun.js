@@ -19,14 +19,14 @@ MachineGun.prototype.shootRound = function(type, rounds, interval, random, rando
   for (var i = 0; i < rounds; i++) {
     var source = this.makeSource(this.buffers[type]);
     source.playbackRate.value = 1 + Math.random() * random2;
-    source.noteOn(time + i * interval + Math.random() * random);
+    source.start(time + i * interval + Math.random() * random);
   }
 }
 
 MachineGun.prototype.makeSource = function(buffer) {
   var source = context.createBufferSource();
   var compressor = context.createDynamicsCompressor();
-  var gain = context.createGainNode();
+  var gain = context.createGain();
   gain.gain.value = 0.2;
   source.buffer = buffer;
   source.connect(gain);
