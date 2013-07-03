@@ -2,7 +2,7 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
-<html{% block manifest %}{% if is_mobile and prod and False %} manifest="/cache.appcache"{% endif %}{% endblock %} lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
+<html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
 <head>
   <meta charset="utf-8">
   <!-- Copyright (c) 2012 Google Inc.
@@ -352,6 +352,19 @@
         setTimeout(function() { window.scrollTo(0, 1); }, 1);
       }, false);
     {% endif %}
+    
+    $(document).keydown(function(e) {
+      if (e.keyCode === 27) { // ESC
+        // Hide search and/or feature bar.
+        $('#search_hide, #features_hide').click();
+      }
+    });
+
+    // Toggle the feature nav.
+    $('.outline_nav_toggle').click(function(e) {
+      $(this).toggleClass('activated');
+      $(this).find('nav.outline').fadeToggle('fast');
+    });
 
     $('#features_show a').click(function() {
       $('#search_hide').click(); // Hide search panel if it's out.
@@ -379,17 +392,6 @@
       $('#features_show a').focus();
     });
 
-    // Check if new appcache is available.
-    if (window.applicationCache) {
-      window.applicationCache.addEventListener('updateready', function(e) {
-        if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-          window.applicationCache.swapCache();
-          if (confirm('{% trans "A new version of this site is available. Load it?" %}')) {
-            window.location.reload();
-          }
-        }
-      }, false);
-    }
 
     window.isCompatible = function() {
       {% block iscompatible %}
@@ -442,8 +444,6 @@
   </script>
 
   <!-- defer is unreliable in ie <= 9, but o well -->
-  <script defer src="/static/js/app{% if prod %}.min{% endif %}.js"></script>
-
   <script defer src="/static/js/search{% if prod %}.min{% endif %}.js"></script>
 </body>
 </html>

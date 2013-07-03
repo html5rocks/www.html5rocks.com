@@ -74,34 +74,7 @@ window.loadCanIUseData = function() {
   }
 };
 
-window.loadTutorials = function() {
-// Request associated tutorials and populate into this page.
-  var lang = document.documentElement.getAttribute('lang') || 'en';
-
-  var ul = $('.page.current .updates ul');
-  if (ul.hasClass('tutsloaded')) {
-    return;
-  }
-
-  var div = $('<div>').load('/' + lang + '/tutorials/ #index', function() {
-    var MAX_NUM_TUTS = 5; 
-    var matches = $([]);
-
-    $.each(caniuse.features.split(','), function(i, eachtag) {
-      var elem = div.find('.tutorial_listing span.class.offline:contains(' + eachtag + ')')
-                    .closest('.tutorial_listing');
-      matches = matches.add(elem);
-    });
-
-    matches.splice(MAX_NUM_TUTS);
-
-    ul.addClass('tutsloaded')
-    $(matches).find('h3 a').clone().wrap('<li>').parent().prependTo(ul);
-  });
-};
-
 window.loadFeaturePanels = function() {
-  //var elem = pagePanel.find('section.support')[0];
   var elem = $('.page.current').find('section.support')[0];
 
   if (!elem) {
@@ -114,5 +87,6 @@ window.loadFeaturePanels = function() {
   };
 
   loadCanIUseData();
-  //loadTutorials();
 };
+
+window.loadFeaturePanels();
