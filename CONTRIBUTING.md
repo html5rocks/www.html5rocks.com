@@ -9,15 +9,14 @@ the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Goog
 
 # Getting the code #
 
-The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [studio](http://studio.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
+The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
 
 Each sub-domain points to a separate [Google App Engine](http://code.google.com/appengine/downloads.html) (Python) application with a corresponding [repository](https://github.com/html5rocks/).
 
 * [www.html5rocks.com](http://html5rocks.appspot.com): Source at [www.html5rocks.com](https://github.com/html5rocks/www.html5rocks.com)
-* [studio.html5rocks.com](http://html5playbook.appspot.com): Source at [studio.html5rocks.com](https://github.com/html5rocks/studio.html5rocks.com)
 * [slides.html5rocks.com](http://html5slides.appspot.com): Source at [slides.html5rocks.com](https://github.com/html5rocks/slides.html5rocks.com)
-* [playground.html5rocks.com](http://html5playground.appspot.com): Source at [playground.html5rocks.com](https://github.com/html5rocks/playground.html5rocks.com)
-* [updates.html5rocks.com](http://updaterocker.appspot.com): Source at [updates.html5rocks.com](https://github.com/html5rocks/updates.html5rocks.com)
+* [playground.html5rocks.com](http://playground.html5rocks.com): Source at [playground.html5rocks.com](https://github.com/html5rocks/playground.html5rocks.com)
+* [updates.html5rocks.com](http://updates.html5rocks.com): Source at [updates.html5rocks.com](https://github.com/html5rocks/updates.html5rocks.com)
 
 To checkout the corresponding source, fork us an run the following command:
 
