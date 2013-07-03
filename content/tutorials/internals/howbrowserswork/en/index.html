@@ -107,10 +107,10 @@ We will see what happens when you type <code>google.com</code> in the address ba
 </li>
 <li><a href="#Parsing_general">Parsing and DOM tree construction</a>
 <ol>
-  <li><a href="#Parsing_general">Parsing - general</a>
+  <li><a href="#Parsing_general">Parsing&ndash;general</a>
   <ol>
       <li><a href="#Grammars">Grammars</a></li>
-      <li><a href="#Parser_Lexer_combination">Parser - Lexer combination</a></li>
+      <li><a href="#Parser_Lexer_combination">Parser&ndash;Lexer combination</a></li>
       <li><a href="#Translation">Translation</a></li>
       <li><a href="#Parsing_example">Parsing example</a></li>
       <li><a href="#Formal_definitions_for_vocabulary_and_syntax">Formal definitions for vocabulary and syntax</a></li>
@@ -133,7 +133,7 @@ We will see what happens when you type <code>google.com</code> in the address ba
   </li>
   <li><a href="#CSS_parsing">CSS parsing</a>
   <ol>
-    <li><a href="#Webkit_CSS_parser">Webkit CSS parser</a></li>
+    <li><a href="#WebKit_CSS_parser">WebKit CSS parser</a></li>
   </ol>
   </li>
   <li><a href="#The_order_of_processing_scripts_and_style_sheets">The order of processing scripts and style sheets</a>
@@ -187,7 +187,7 @@ We will see what happens when you type <code>google.com</code> in the address ba
     <li><a href="#Global_and_Incremental">Global and Incremental</a></li>
     <li><a href="#The_painting_order">The painting order</a></li>
     <li><a href="#Firefox_display_list">Firefox display list</a></li>
-    <li><a href="#Webkit_rectangle_storage">Webkit rectangle storage</a></li>
+    <li><a href="#WebKit_rectangle_storage">WebKit rectangle storage</a></li>
   </ol>
  </li>
 <li><a href="#Dynamic_changes">Dynamic changes</a></li>
@@ -221,9 +221,9 @@ We will see what happens when you type <code>google.com</code> in the address ba
 
 <h3 id="The_browsers_we_will_talk_about">The browsers we will talk about</h3>
 <p>
-There are five major browsers used today - Internet Explorer, Firefox, Safari, Chrome and Opera.
+There are five major browsers used today&ndash;Internet Explorer, Firefox, Safari, Chrome and Opera.
 
-I will give examples from the open source browsers - Firefox, Chrome and Safari (which is partly open source).
+I will give examples from the open source browsers&ndash;Firefox, Chrome and Safari (which is partly open source).
 
 According to the <a href="http://gs.statcounter.com/">StatCounter browser statistics</a>, currently (August 2011), the usage share of Firefox, Safari and Chrome together is nearly 60%.
 
@@ -248,9 +248,9 @@ That caused serious compatibility issues for web authors.
 Today most of the browsers more or less conform to the specifications.
 </p>
 <p>
-Browsers' user interface have a lot in common with each other. Among the common user interface elements are:
+Browser user interfaces have a lot in common with each other. Among the common user interface elements are:
 <ul>
-<li>Address bar for inserting the URI</li>
+<li>Address bar for inserting a URI</li>
 <li>Back and forward buttons</li>
 <li>Bookmarking options</li>
 <li>A refresh and stop buttons for refreshing and stopping the loading of current documents</li>
@@ -269,26 +269,25 @@ The browser's main components are (<a href="#1_1">1.1</a>):
 
 <ol>
 
-  <li><strong>The user interface   </strong>- this includes the address bar, back/forward button, bookmarking menu etc. Every part of the browser display except the main window where you see the requested page.</li>
-  <li><strong>The browser engine   </strong>- marshalls the actions between the UI and the rendering engine.</li>
-  <li><strong>The rendering engine </strong>- responsible for displaying the requested content. For example if the requested content is HTML, it is responsible for parsing the HTML and CSS and displaying the parsed content on the screen.</li>
-  <li><strong>Networking           </strong>- used for network calls, like HTTP requests. It has platform independent interface and underneath implementations for each platform.</li>
-  <li><strong>UI backend           </strong>- used for drawing basic widgets like combo boxes and windows. It exposes a generic interface that is not platform specific. Underneath it uses the operating system user interface methods.</li>
+  <li><strong>The user interface</strong>: this includes the address bar, back/forward button, bookmarking menu etc. Every part of the browser display except the window where you see the requested page.</li>
+  <li><strong>The browser engine</strong>: marshals actions between the UI and the rendering engine.</li>
+  <li><strong>The rendering engine </strong>: responsible for displaying requested content. For example if the requested content is HTML, the rendering engine parses HTML and CSS, and displays the parsed content on the screen.</li>
+  <li><strong>Networking</strong>: for network calls such as HTTP requests, using different implementations for different platform behind a platform-independent interface.</li>
+  <li><strong>UI backend</strong>: used for drawing basic widgets like combo boxes and windows. It exposes a generic interface that is not platform specific. Underneath it uses operating system user interface methods.</li>
   <li><strong>JavaScript interpreter</strong>. Used to parse and execute the JavaScript code.</li>
-  <li><strong>Data storage</strong>. This is a persistence layer. The browser needs to save all sorts of data on the hard disk, for examples, cookies. The new HTML specification (HTML5) defines 'web database' which is a complete (although light) database in the browser.</li>
+  <li><strong>Data storage</strong>. This is a persistence layer. The browser may need to save all sorts of data locally, such as cookies. Browsers also support storage mechanisms such as localStorage, IndexedDB, WebSQL and FileSystem.</li>
 
 </ol>
 
 
 <figure>
   <img src="layers.png" width="500" height="339" alt="" title=""/>
-  <figcaption><span>Figure </span>:  Browser main components.</figcaption>
+  <figcaption><span>Figure </span>:  Browser components</figcaption>
 </figure>
 
 
 <p>
-It is important to note that Chrome, unlike most browsers, holds multiple instances of the rendering engine - one for each tab.
-Each tab is a separate process.
+It is important to note that browsers such as Chrome have multiple instances of the rendering engine&ndash;one for each tab. Each tab runs in a separate process.
 </p>
 
 <h2 id="The_rendering_engine">The rendering engine</h2>
@@ -297,91 +296,84 @@ The responsibility of the rendering engine is well... Rendering, that is display
 </p>
 <p>
 By default the rendering engine can display HTML and XML documents and images.
-It can display other types through a plug-in (or browser extension); for example, displaying PDF using a PDF viewer plug-in. However, in this chapter we will focus on the main use case: displaying HTML and images that are formatted using CSS.</p>
+It can display other types of data via plug-ins or extension; for example, displaying PDF documents using a PDF viewer plug-in. However, in this chapter we will focus on the main use case: displaying HTML and images that are formatted using CSS.</p>
 
 <h3 id="Rendering_engines">Rendering engines</h3>
 <p>
-Our reference browsers - Firefox, Chrome and Safari are built upon two rendering engines.
-Firefox uses Gecko - a "home made" Mozilla rendering engine.
-Both Safari and Chrome use Webkit.
+Different browsers use different rendering engines: Internet Explorer uses Trident, Firefox uses Gecko, Safari uses WebKit. Chrome and Opera (from version 15) use Blink, a fork of WebKit.
 </p>
 <p>
-Webkit is an open source rendering engine which started as an engine for the Linux platform and was modified by Apple to support Mac and Windows.
+WebKit is an open source rendering engine which started as an engine for the Linux platform and was modified by Apple to support Mac and Windows.
 See <a href="http://webkit.org/">webkit.org</a> for more details.
 </p>
 
 <h3 id="The_main_flow">The main flow</h3>
 <p>
-The rendering engine will start getting the contents of the requested document from the networking layer.
-This will usually be done in 8K chunks.
+The rendering engine will start getting the contents of the requested document from the networking layer. This will usually be done in 8kB chunks.
 </p>
 <p>
-After that this is the basic flow of the rendering engine:
-
+After that, this is the basic flow of the rendering engine:
 </p>
 
 <figure>
   <img src="flow.png" width="600" height="66" alt="" title=""  />
-  <figcaption><span>Figure </span>: Rendering engine basic flow.</figcaption>
+  <figcaption><span>Figure </span>: Rendering engine basic flow</figcaption>
 </figure>
 
 
 <p>
-The rendering engine will start parsing the HTML document and turn the tags to <a href="#DOM">DOM</a> nodes in a tree called the "content tree".
-It will parse the style data, both in external CSS files and in style elements.
-The styling information together with visual instructions in the HTML will be used to create another tree - the <a href="#Render_tree_construction">render tree</a>.
+The rendering engine will start parsing the HTML document and convert elements to <a href="#DOM">DOM</a> nodes in a tree called the "content tree". The engine will parse the style data, both in external CSS files and in style elements. Styling information together with visual instructions in the HTML will be used to create another tree&ndash;the <a href="#Render_tree_construction">render tree</a>.
 </p>
 <p>
 The render tree contains rectangles with visual attributes like color and dimensions.
-The rectangles are in the right order to be displayed on the screen.
+The rectangles are in the right order to be displaid on the screen.
 </p>
 <p>
 After the construction of the render tree it goes through a "<a href="#layout">layout</a>" process.
 This means giving each node the exact coordinates where it should appear on the screen.
-The next stage is <a href="#Painting">painting</a> - the render tree will be traversed and each node will be painted using the UI backend layer.
+The next stage is <a href="#Painting">painting</a>&ndash;the render tree will be traversed and each node will be painted using the UI backend layer.
 </p>
 <p>
 It's important to understand that this is a gradual process. For better user experience, the rendering engine will try to display contents on the screen as soon as possible.
 It will not wait until all HTML is parsed before starting to build and layout the render tree.
-Parts of the content will be parsed and displayed, while the process continues with the rest of the contents that keeps coming from the network.
+Parts of the content will be parsed and displaid, while the process continues with the rest of the contents that keeps coming from the network.
 </p>
 
 <h4 id="Main_flow_examples">Main flow examples</h4>
 
   <figure>
     <img src="webkitflow.png" width="624" height="289" alt="" />
-    <figcaption><span>Figure </span>:  Webkit main flow</figcaption>
+    <figcaption><span>Figure </span>:  WebKit main flow</figcaption>
   </figure>
 
 
   <figure>
     <img src="image008.jpg" width="624" height="290" alt=""/>
-    <figcaption><span>Figure </span>:  Mozilla's Gecko rendering engine main flow(<a href="#3_6">3.6</a>)</figcaption>
+    <figcaption><span>Figure </span>:  Mozilla's Gecko rendering engine main flow (<a href="#3_6">3.6</a>)</figcaption>
   </figure>
 
 
 <p>
-From figures 3 and 4 you can see that although Webkit and Gecko use slightly different terminology, the flow is basically the same.
+From figures 3 and 4 you can see that although WebKit and Gecko use slightly different terminology, the flow is basically the same.
 <p>
 Gecko calls the tree of visually formatted elements a "Frame tree". Each element is a frame.
-Webkit uses the term "Render Tree" and it consists of "Render Objects".
-Webkit uses the term "layout" for the placing of elements, while Gecko calls it "Reflow".
-"Attachment" is Webkit's term for connecting DOM nodes and visual information to create the render tree.
+WebKit uses the term "Render Tree" and it consists of "Render Objects".
+WebKit uses the term "layout" for the placing of elements, while Gecko calls it "Reflow".
+"Attachment" is WebKit's term for connecting DOM nodes and visual information to create the render tree.
 A minor non-semantic difference is that Gecko has an extra layer between the HTML and the DOM tree. It is called the "content sink" and is a factory for making DOM elements.
 We will talk about each part of the flow:
 <p>
-<h3 id="Parsing_general">Parsing - general</h3>
+<h3 id="Parsing_general">Parsing&ndash;general</h3>
 <p>
 Since parsing is a very significant process within the rendering engine, we will go into it a little more deeply.
 Let's begin with a little introduction about parsing.
 </p>
 <p>
-Parsing a document means translating it to some structure that makes sense - something the code can understand and use.
-The result of parsing is usually a tree of nodes that represent the structure of the document. It is called a parse tree or a syntax tree.
+Parsing a document means translating it to a structure the code can use. The result of parsing is usually a tree of nodes that represent the structure of the document. This is called a parse tree or a syntax tree.
 </p>
 
 <p>
-Example - parsing the expression <samp>2 + 3 - 1</samp> could return this tree:
+Example&ndash;parsing the expression <samp>2 + 3&ndash;1</samp> could return this tree:
 
 </p>
 
@@ -394,30 +386,30 @@ Example - parsing the expression <samp>2 + 3 - 1</samp> could return this tree:
 
 <h4 id="Grammars">Grammars</h4>
 <p>
-Parsing is based on the syntax rules the document obeys - the language or format it was written in.
+Parsing is based on the syntax rules the document obeys&ndash;the language or format it was written in.
 Every format you can parse must have deterministic grammar consisting of vocabulary and syntax rules. It is called a
 <a href="#context_free_grammar">context free grammar</a>. Human languages are not such languages and therefore cannot be parsed with conventional parsing techniques.
 </p>
-<h4 id="Parser_Lexer_combination">Parser - Lexer combination</h4>
+<h4 id="Parser_Lexer_combination">Parser&ndash;Lexer combination</h4>
 <p>
-Parsing can be separated into two sub processes - lexical analysis and syntax analysis.
+Parsing can be separated into two sub processes&ndash;lexical analysis and syntax analysis.
 </p>
 <p>
 Lexical analysis is the process of breaking the input into tokens.
-Tokens are the language vocabulary - the collection of valid building blocks. In human language it will consist of all the words that appear in the dictionary for that language.
+Tokens are the language vocabulary&ndash;the collection of valid building blocks. In human language it will consist of all the words that appear in the dictionary for that language.
 </p>
 <p>
 Syntax analysis is the applying of the language syntax rules.
 </p>
 <p>
-Parsers usually divide the work between two components - the <b>lexer</b> (sometimes called tokenizer) that is responsible for breaking the input into valid tokens, and the <b>parser</b> that is responsible for constructing the parse tree by analyzing the document structure according to the language syntax rules.
+Parsers usually divide the work between two components&ndash;the <b>lexer</b> (sometimes called tokenizer) that is responsible for breaking the input into valid tokens, and the <b>parser</b> that is responsible for constructing the parse tree by analyzing the document structure according to the language syntax rules.
 
 The lexer knows how to strip irrelevant characters like white spaces and line breaks.
 </p>
 
 <figure>
   <img src="image011.png" width="101" height="300" />
-  <figcaption>  <span>Figure </span>:  from source document to parse trees</figcaption>
+  <figcaption>  <span>Figure </span>: from source document to parse trees</figcaption>
 </figure>
 
 <p>
@@ -427,9 +419,7 @@ If no rule matches, the parser will store the token internally, and keep asking 
 </p>
 <h4 id="Translation">Translation</h4>
 <p>
-Many times the parse tree is not the final product.
-Parsing is often used in translation - transforming the input document to another format.
-An example is compilation. The compiler that compiles a source code into machine code first parses it into a parse tree and then translates the tree into a machine code document.
+In many cases the parse tree is not the final product. Parsing is often used in translation&ndash;transforming the input document to another format. An example is compilation. The compiler that compiles source code into machine code first parses it into a parse tree and then translates the tree into a machine code document.
 </p>
 
 
@@ -459,12 +449,12 @@ Syntax:
 </ol>
 </p>
 <p>
-  Let's analyze the input <samp>2 + 3 - 1</samp>.
+  Let's analyze the input <samp>2 + 3&ndash;1</samp>.
   <br>
-  The first substring that matches a rule is <samp>2</samp>, according to rule #5 it is a term.
-  The second match is <samp>2  + 3</samp> this matches the third rule - a term followed by an operation followed by another term.
+  The first substring that matches a rule is <samp>2</samp>: according to rule #5 it is a term.
+  The second match is <samp>2  + 3</samp>: this matches the third rule&ndash;a term followed by an operation followed by another term.
   The next match will only be hit at the end of the input.
-  <samp>2 + 3 - 1</samp> is an expression because we already know that <samp>2+3</samp> is a term so we have a term followed by an operation followed by another term.
+  <samp>2 + 3&ndash;1</samp> is an expression because we already know that <samp>2 + 3</samp> is a term, so we have a term followed by an operation followed by another term.
   <samp>2 + + </samp>will not match any rule and therefore is an invalid input.
 </p>
 <h4 id="Formal_definitions_for_vocabulary_and_syntax">Formal definitions for vocabulary and syntax</h4>
@@ -496,24 +486,22 @@ For a formal definition see
 <a href="http://en.wikipedia.org/wiki/Context-free_grammar">Wikipedia's article on Context-free grammar</a>
 <h4 id="Types_of_parsers">Types of parsers</h4>
 <p>
-There are two basic types of parsers - top down parsers and bottom up parsers.
-An intuitive explanation is that top down parsers see the high level structure of the syntax and try to match one of them.
-Bottom up parsers start with the input and gradually transform it into the syntax rules, starting from the low level rules until high level rules are met.
+There are two types of parsers: top down parsers and bottom up parsers. An intuitive explanation is that top down parsers examine the high level structure of the syntax and try to find a rule match. Bottom up parsers start with the input and gradually transform it into the syntax rules, starting from the low level rules until high level rules are met.
 </p>
 <p>
-Let's see how the two types of parsers will parse our example:
+Let's see how the two types of parsers will parse our example.
 </p>
 <p>
-Top down parser will start from the higher level rule - it will identify <samp>2 + 3</samp> as an expression. It will then identify <samp>2 + 3  - 1</samp> as an expression (the process of identifying the expression evolves matching the other rules, but the start point is the highest level rule).
+The top down parser will start from the higher level rule&ndash;it will identify <samp>2 + 3</samp> as an expression. It will then identify <samp>2 + 3 &ndash;1</samp> as an expression (the process of identifying the expression evolves, matching the other rules, but the start point is the highest level rule).
 </p>
 <p>
-The bottom up parser will scan the input until a rule is matched it will then replace the matching input with the rule. This will go on until the end of the input.
-The partly matched expression is placed on the parsers stack.
+The bottom up parser will scan the input until a rule is matched. It will then replace the matching input with the rule. This will go on until the end of the input.
+The partly matched expression is placed on the parser's stack.
 <table id="stack">
   <tr><th>Stack</th>                <th>Input</th></tr>
-  <tr><td>&nbsp;</td>               <td><samp>2 + 3 - 1 </samp></td></tr>
-  <tr><td>term</td>                 <td><samp> + 3 - 1  </samp></td></tr>
-  <tr><td>term operation</td>       <td><samp> 3 - 1    </samp></td></tr>
+  <tr><td>&nbsp;</td>               <td><samp>2 + 3&ndash;1 </samp></td></tr>
+  <tr><td>term</td>                 <td><samp> + 3&ndash;1  </samp></td></tr>
+  <tr><td>term operation</td>       <td><samp> 3&ndash;1    </samp></td></tr>
   <tr><td>expression</td>           <td><samp>- 1       </samp></td></tr>
   <tr><td>expression operation</td> <td><samp>1         </samp></td></tr>
   <tr><td>expression</td>           <td><samp>&nbsp;    </samp></td></tr>
@@ -522,11 +510,11 @@ This type of bottom up parser is called a shift-reduce parser, because the input
 </p>
 <h4 id="Generating_parsers_automatically">Generating parsers automatically</h4>
 <p>
-There are tools that can generate a parser for you. They are called parser generators. You feed them with the grammar of your language&mdash;its vocabulary and syntax rules&mdash;and they generate a working parser.
-Creating a parser requires a deep understanding of parsing and its not easy to create an optimized parser by hand, so parser generators can be very useful.
+There are tools that can generate a parser. You feed them the grammar of your language&mdash;its vocabulary and syntax rules&mdash;and they generate a working parser.
+Creating a parser requires a deep understanding of parsing and it's not easy to create an optimized parser by hand, so parser generators can be very useful.
 </p>
 <p>
-<a id="parser_generators">Webkit</a> uses two well known parser generators - <a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> for creating a lexer and <a href="http://www.gnu.org/software/bison/">Bison</a> for creating a parser (you might run into them with the names Lex and Yacc).
+<a id="parser_generators">WebKit</a> uses two well known parser generators&ndash;<a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> for creating a lexer and <a href="http://www.gnu.org/software/bison/">Bison</a> for creating a parser (you might run into them with the names Lex and Yacc).
 Flex input is a file containing regular expression definitions of the tokens.
 Bison's input is the language syntax rules in BNF format.
 </p>
@@ -537,13 +525,12 @@ The job of the HTML parser is to parse the HTML markup into a parse tree.
 <h4 id="The_HTML_grammar_definition">The HTML grammar definition</h4>
 <p>
 The vocabulary and syntax of HTML are defined in <a href="#w3c">specifications</a> created by the W3C organization.
-The current version is HTML4 and work on HTML5 is in progress.
 </p>
 <h4 id="Not_a_context_free_grammar">Not a context free grammar</h4>
 <p>
 As we have seen in the parsing introduction, grammar syntax can be defined formally using formats like BNF.
 </p><p>
-Unfortunately all the conventional parser topics do not apply to HTML (I didn't  bring them up just for fun - they will be used in parsing CSS and JavaScript).
+Unfortunately all the conventional parser topics do not apply to HTML (I didn't  bring them up just for fun&ndash;they will be used in parsing CSS and JavaScript).
 HTML cannot easily be defined by a context free grammar that parsers need.
 </p><p>
 There is a formal format for defining HTML &mdash; DTD (Document Type Definition) &mdash; but it is not a context free grammar.
@@ -551,12 +538,12 @@ There is a formal format for defining HTML &mdash; DTD (Document Type Definition
 This appears strange at first sight; HTML is rather close to XML. There are lots of available XML parsers.
 There is an XML variation of HTML &mdash; XHTML &mdash; so what's the big difference?
 </p><p>
-The difference is that HTML approach is more "forgiving", it lets you omit certain tags which are added implicitly, sometimes omit the start or end of tags etc.
+The difference is that the HTML approach is more "forgiving": it lets you omit certain tags (which are then added implicitly), or sometimes omit start or end tags, and so on.
 On the whole it's a "soft" syntax, as opposed to XML's stiff and demanding syntax.
 </p><p>
-Apparently this seemingly small difference makes a world of a difference.
-On one hand this is the main reason why HTML is so popular - it forgives your mistakes and makes life easy for the web author.
-On the other hand, it makes it difficult to write a formal grammar. So to summarize - HTML cannot be parsed easily, not by conventional parsers since its grammar is not a context free grammar, and not by XML parsers.
+This seemingly small detail makes a world of a difference.
+On one hand this is the main reason why HTML is so popular&ndash;it forgives your mistakes and makes life easy for the web author.
+On the other hand, it makes it difficult to write a formal grammar. So to summarize&ndash;HTML cannot be parsed easily by conventional parsers, since its grammar is not context free. HTML cannot be parsed by XML parsers.
 </p>
 <h4 id="HTML_DTD">HTML DTD</h4>
 <p>
@@ -569,7 +556,7 @@ The current strict DTD is here:
 </p>
 <h4 id="DOM">DOM</h4>
 <p>
-The output tree - the "parse tree" is a tree of DOM element and attribute nodes.
+The output tree&ndash;the "parse tree" is a tree of DOM element and attribute nodes.
 DOM is short for Document Object Model.
 It is the object presentation of the HTML document and the interface of HTML elements to the outside world like JavaScript.
 <br>
@@ -577,7 +564,7 @@ The root of the tree is the "<a  href="http://www.w3.org/TR/1998/REC-DOM-Level-1
 </p>
 <p>
 The DOM has an almost one-to-one relation to the markup.
-For example, this markup:
+For example:
 <pre class="prettyprint">
 &lt;html&gt;
   &lt;body&gt;
@@ -588,8 +575,7 @@ For example, this markup:
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
-Would be translated to the following DOM tree:
-
+This markup would be translated to the following DOM tree:
 </p>
 
 <figure>
@@ -614,15 +600,15 @@ As we saw in the previous sections, HTML cannot be parsed using the regular top 
 The reasons are:
 <ol>
 <li>The forgiving nature of the language.</li>
-<li>The fact that browsers have traditional error tolerance to support  well known cases of invalid HTML.</li>
-<li>The parsing process in reentrant. Usually the source doesn't change during parsing, but in HTML, script tags containing <code>document.write</code> can add extra tokens, so the parsing process actually modifies the input.</li>
+<li>The fact that browsers have traditional error tolerance to support well known cases of invalid HTML.</li>
+<li>The parsing process is reentrant. For other languages, the source doesn't change during parsing, but in HTML, dynamic code (such as script elements containing <code>document.write()</code> calls) can add extra tokens, so the parsing process actually modifies the input.</li>
 </ol>
 <p>
 Unable to use the regular parsing techniques, browsers create custom parsers for parsing HTML.
 </p>
 <p>
 The <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html">parsing algorithm is described in detail by the HTML5 specification</a>.
-The algorithm consists of two stages - tokenization and tree construction.
+The algorithm consists of two stages&ndash;tokenization and tree construction.
 <p>
 Tokenization is the lexical analysis, parsing the input into tokens.
 Among HTML tokens are start tags, end tags, attribute names and attribute values.
@@ -646,7 +632,7 @@ The algorithm is too complex to describe fully, so let's see a simple example th
 
 </p><p>
 
-Basic example - tokenizing the following HTML:
+Basic example&ndash;tokenizing the following HTML:
 
 </p>
 
@@ -690,7 +676,7 @@ The <code>&lt;/html&gt;</code> input will be treated like the previous case.
 When the parser is created the Document object is created. During the tree construction stage the DOM tree with the Document in its root will be modified and elements will be added to it.
 Each node emitted by the tokenizer will be processed by the tree constructor.
 For each token the specification defines which DOM element is relevant to it and will be created for this token.
-Except of adding the element to the DOM tree it is also added to a stack of open elements.
+The element is added to the DOM tree, and also the stack of open elements.
 This stack is used to correct nesting mismatches and unclosed tags.
 The algorithm is also described as a state machine.  The states are called "insertion modes".
 </p>
@@ -709,13 +695,13 @@ Let's see the tree construction process for the example input:
 </pre>
 
 <p>
-The input to the tree construction stage is a sequence of tokens from the tokenization stage
-The first mode is the <b>"initial mode"</b>. Receiving the html token will cause a move to the <b>"before html"</b> mode and a reprocessing of the token in that mode.
-This will cause a creation of the HTMLHtmlElement element and it will be appended to the root Document object.
+The input to the tree construction stage is a sequence of tokens from the tokenization stage.
+The first mode is the <b>"initial mode"</b>. Receiving the "html" token will cause a move to the <b>"before html"</b> mode and a reprocessing of the token in that mode.
+This will cause creation of the HTMLHtmlElement element, which will be appended to the root Document object.
 
 </p><p>
 
-The state will be changed to <b>"before head"</b>. We receive the "body" token. An HTMLHeadElement will be created implicitly although we don't have a "head" token and it will be added to the tree.
+The state will be changed to <b>"before head"</b>. The "body" token is then received. An HTMLHeadElement will be created implicitly although we don't have a "head" token and it will be added to the tree.
 
 </p><p>
 
@@ -740,12 +726,12 @@ Receiving the end of file token will end the parsing.
 
 <h4 id="Actions_when_the_parsing_is_finished">Actions when the parsing is finished</h4>
 <p>
-At this stage the browser will mark the document as interactive and start parsing scripts that are in "deferred" mode - those who should be executed after the document is parsed.
+At this stage the browser will mark the document as interactive and start parsing scripts that are in "deferred" mode: those that should be executed after the document is parsed.
 The document state will be then set to "complete" and a "load" event will be fired.
 </p>
 
 <p>
-You can see <a href="http://www.w3.org/TR/html5/syntax.html#html-parser">the full algorithms for tokenization and tree construction in HTML5 specification</a>
+You can see <a href="http://www.w3.org/TR/html5/syntax.html#html-parser">the full algorithms for tokenization and tree construction in the HTML5 specification</a>
 </p>
 
 <h4 id="Browsers_error_tolerance">Browsers' error tolerance</h4>
@@ -777,14 +763,13 @@ So a lot of the parser code is fixing the HTML author mistakes.
 
 </p><p>
 
-The error handling is quite consistent in browsers but amazingly enough it's not part of HTML current specification.
-Like bookmarking and back/forward buttons it's just something that developed in browsers over the years. There are known invalid HTML constructs that repeat themselves in many sites and the browsers try to fix them in a conformant way with other browsers.
+Error handling is quite consistent in browsers, but amazingly enough it hasn't been part of HTML specifications.
+Like bookmarking and back/forward buttons it's just something that developed in browsers over the years. There are known invalid HTML constructs repeated on many sites, and the browsers try to fix them in a conformant way with other browsers.
 
-</p><p>
+</p>
 
-The HTML5 specification does define some of these requirements.
-Webkit summarizes this nicely in the comment at the beginning of the HTML parser class
-
+<p>
+The HTML5 specification does define some of these requirements. (WebKit summarizes this nicely in the comment at the beginning of the HTML parser class.)
 </p>
 
 <blockquote>
@@ -795,20 +780,20 @@ Webkit summarizes this nicely in the comment at the beginning of the HTML parser
 <p>We have to take care of at least the following error conditions:</p>
 
 <ol>
-  <li>The element being added is explicitly forbidden inside some outer tag. In this case we should close all tags up to the one, which forbids the element, and add it afterwards.
+  <li>The element being added is explicitly forbidden inside some outer tag. In this case we should close all tags up to the one which forbids the element, and add it afterwards.
   <li>We are not allowed to add the element directly. It could be that the person writing the document forgot some tag in between (or that the tag in between is optional). This could be the case with the following tags: HTML HEAD BODY TBODY TR TD LI (did I forget any?).
-  <li>We want to add a block element inside to an inline element. Close all inline elements up to the next higher block element.
-  <li>If this doesn't help, close elements until we are allowed to add the element or ignore the tag.
+  <li>We want to add a block element inside an inline element. Close all inline elements up to the next higher block element.
+  <li>If this doesn't help, close elements until we are allowed to add the element&ndash;or ignore the tag.
 </ol>
 
 </blockquote>
 
 <p>
-Let's see some Webkit error tolerance examples:
+Let's see some WebKit error tolerance examples:
 </p>
 <h5>&lt;/br&gt; instead of &lt;br&gt;</h5>
 <p>
-Some sites use &lt;/br&gt; instead of &lt;br&gt;. In order to be compatible with IE and Firefox, Webkit treats this like &lt;br&gt;.
+Some sites use &lt;/br&gt; instead of &lt;br&gt;. In order to be compatible with IE and Firefox, WebKit treats this like &lt;br&gt;.
 <br>
 The code:
 <pre class="prettyprint">
@@ -817,13 +802,13 @@ if (t->isCloseTag(brTag) && m_document->inCompatMode()) {
      t->beginTag = true;
 }
 </pre>
-Note - the error handling is internal - it won't be presented to the user.
+Note&ndash;the error handling is internal&ndash;it won't be presented to the user.
 </p>
 <h5>A stray table</h5>
 <p>
-A stray table is a table inside another table contents but not inside a table cell.
-<br>
-Like this example:
+A stray table is a table inside another table, but not inside a table cell.
+</p>
+<p>For example:</p>
 <pre class="prettyprint">
 &lt;table&gt;
     &lt;table&gt;
@@ -832,7 +817,7 @@ Like this example:
     &lt;tr&gt;&lt;td&gt;outer table&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 </pre>
-Webkit will change the hierarchy to two sibling tables:
+WebKit will change the hierarchy to two sibling tables:
 <pre class="prettyprint">
 &lt;table&gt;
     &lt;tr&gt;&lt;td&gt;outer table&lt;/td&gt;&lt;/tr&gt;
@@ -846,7 +831,7 @@ The code:
 if (m_inStrayTableContent && localName == tableTag)
         popBlock(tableTag);
 </pre>
-Webkit uses a stack for the current element contents - it will pop the inner table out of the outer table stack. The tables will now be siblings.
+WebKit uses a stack for the current element contents&ndash;it will pop the inner table out of the outer table stack. The tables will now be siblings.
 </p>
 <h5>Nested form elements</h5>
 <p>
@@ -883,10 +868,10 @@ return i != cMaxRedundantTagDepth;
 </p>
 <h5>Misplaced html or body end tags</h5>
 <p>
-Again - the comment speaks for itself.
+Again&ndash;the comment speaks for itself.
 
 <blockquote>
-Support for really broken html.
+Support for really broken HTML.
 We never close the body tag, since some stupid web pages close it before the actual end of the doc.
 Let's rely on the end() call to close things.
 </blockquote>
@@ -896,7 +881,7 @@ if (t->tagName == htmlTag || t->tagName == bodyTag )
         return;
 
 </pre>
-So web authors beware - unless you want to appear as an example in a Webkit error tolerance code snippet - write well formed HTML.
+So web authors beware&ndash;unless you want to appear as an example in a WebKit error tolerance code snippet&ndash;write well formed HTML.
 </p>
 <p>
 
@@ -966,16 +951,16 @@ ruleset
     '{' S* declaration [ ';' S* declaration ]* '}' S*
   ;
 </pre>
-This means a ruleset is a selector or optionally number of selectors separated by a coma and spaces (S stands for white space).
+This means a ruleset is a selector or optionally a number of selectors separated by a comma and spaces (S stands for white space).
 A ruleset contains curly braces and inside them a declaration or optionally a number of declarations separated by a semicolon.
 "declaration" and "selector" will be defined in the following BNF definitions.
 </p>
-<h4 id="Webkit_CSS_parser">Webkit CSS parser</h4>
+<h4 id="WebKit_CSS_parser">WebKit CSS parser</h4>
 <p>
-Webkit uses <a href="#parser_generators">Flex and Bison</a> parser generators to create parsers automatically from the CSS grammar files.
+WebKit uses <a href="#parser_generators">Flex and Bison</a> parser generators to create parsers automatically from the CSS grammar files.
 As you recall from the parser introduction, Bison creates a bottom up shift-reduce parser.
 Firefox uses a top down parser written manually.
-In both cases each CSS file is parsed into a StyleSheet object, each object contains CSS rules. The CSS rule objects contain selector and declaration objects and other object corresponding to CSS grammar.
+In both cases each CSS file is parsed into a StyleSheet object. Each object contains CSS rules. The CSS rule objects contain selector and declaration objects and other objects corresponding to CSS grammar.
 </p>
 
 <figure>
@@ -988,14 +973,14 @@ In both cases each CSS file is parsed into a StyleSheet object, each object cont
 <h4 id="Scripts">Scripts</h4>
 <p>
 The model of the web is synchronous. Authors expect scripts to be parsed and executed immediately when the parser reaches a &lt;script&gt; tag.
-The parsing of the document halts until the script was executed.
-If the script is external then the resource must be first fetched from the network - this is also done synchronously, the parsing halts until the resource is fetched.
-This was the model for many years and is also specified in HTML 4 and 5 specifications.
-Authors could mark the script as "defer" and thus it will not halt the document parsing and will execute after it is parsed. HTML5 adds an option to mark the script as asynchronous so it will be parsed and executed by a different thread.
+The parsing of the document halts until the script has been executed.
+If the script is external then the resource must first be fetched from the network&ndash;this is also done synchronously, and parsing halts until the resource is fetched.
+This was the model for many years and is also specified in HTML4 and 5 specifications.
+Authors can add the "defer" attribute to a script, in which case it will not halt document parsing and will execute after the document is parsed. HTML5 adds an option to mark the script as asynchronous so it will be parsed and executed by a different thread.
 </p>
 <h4 id="Speculative_parsing">Speculative parsing</h4>
 <p>
-Both Webkit and Firefox do this optimization. While executing scripts, another thread parses the rest of the document and finds out what other resources need to be loaded from the network and loads them. This way resources can be loaded on parallel connections and the overall speed is better. Note - the speculative parser doesn't modify the DOM tree and leaves that to the main parser, it only parses references to external resources like external scripts, style sheets and images.
+Both WebKit and Firefox do this optimization. While executing scripts, another thread parses the rest of the document and finds out what other resources need to be loaded from the network and loads them. In this way, resources can be loaded on parallel connections and overall speed is improved. Note: the speculative parser only parses references to external resources like external scripts, style sheets and images: it doesn't modify the DOM tree&ndash;that is left to the main parser.
 </p>
 <h4 id="Style_sheets">Style sheets</h4>
 <p>
@@ -1004,21 +989,21 @@ Conceptually it seems that since style sheets don't change the DOM tree, there i
 If the style is not loaded and parsed yet, the script will get wrong answers and apparently this caused lots of problems.
 It seems to be an edge case but is quite common.
 Firefox blocks all scripts when there is a style sheet that is still being loaded and parsed.
-Webkit blocks scripts only when they try to access certain style properties that may be effected by unloaded style sheets.
+WebKit blocks scripts only when they try to access certain style properties that may be affected by unloaded style sheets.
 </p>
 <h3 id="Render_tree_construction">Render tree construction</h3>
 <p>
 While the DOM tree is being constructed, the browser constructs another tree, the render tree.
-This tree is of visual elements in the order in which they will be displayed.
+This tree is of visual elements in the order in which they will be displaid.
 It is the visual representation of the document.
 The purpose of this tree is to enable painting the contents in their correct order.
 </p>
 <p>
-Firefox calls the elements in the render tree "frames". Webkit uses the term renderer or render object.
+Firefox calls the elements in the render tree "frames". WebKit uses the term renderer or render object.
 <br>
-A renderer knows how to  layout and paint itself and its children.
+A renderer knows how to lay out and paint itself and its children.
 <br>
-Webkits RenderObject class, the base class of the renderers, has the following definition:
+WebKit's RenderObject class, the base class of the renderers, has the following definition:
 <pre class="prettyprint">
 class RenderObject{
   virtual void layout();
@@ -1031,11 +1016,11 @@ class RenderObject{
 </pre>
 </p>
 <p>
-Each renderer represents a rectangular area usually corresponding to the node's CSS box, as described by the CSS2 spec.
-It contains geometric information like width, height and position.
+Each renderer represents a rectangular area usually corresponding to a node's CSS box, as described by the CSS2 spec.
+It includes geometric information like width, height and position.
 <br>
-The box type is affected by the "display" style attribute that is relevant for the node (see the <a href="#style_computation">style computation</a> section).
-Here is Webkit code for deciding what type of renderer should be created for a DOM node, according to the display attribute.
+The box type is affected by the "display" value of the style attribute that is relevant to the node (see the <a href="#style_computation">style computation</a> section).
+Here is WebKit code for deciding what type of renderer should be created for a DOM node, according to the display attribute:
 <pre class="prettyprint">
 RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 {
@@ -1065,26 +1050,26 @@ RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
     return o;
 }
 </pre>
-The element type is also considered, for example form controls and tables have special frames.
+The element type is also considered: for example, form controls and tables have special frames.
 <br>
-In Webkit if an element wants to create a special renderer it will override the <code>createRenderer</code> method.
-The renderers points to style objects that contains the non geometric information.
+In WebKit if an element wants to create a special renderer, it will override the <code>createRenderer()</code> method.
+The renderers point to style objects that contains non geometric information.
 </p>
 <h5 id="The_render_tree_relation_to_the_DOM_tree">The render tree relation to the DOM tree</h5>
-The renderers correspond to the DOM elements, but the relation is not one to one.
-Non visual DOM elements will not be inserted in the render tree. An example is the "head" element. Also elements whose display attribute was assigned to "none" will not appear in the tree (elements with "hidden" visibility attribute will appear in the tree).
+The renderers correspond to DOM elements, but the relation is not one to one.
+Non-visual DOM elements will not be inserted in the render tree. An example is the "head" element. Also elements whose display value was assigned to "none" will not appear in the tree (whereas elements with "hidden" visibility will appear in the tree).
 </p>
 <p>
-There are DOM elements which correspond to several visual objects. These are usually elements with complex structure that cannot be described by a single rectangle. For example, the "select" element has 3 renderers - one for the display area, one for the drop down list box and one for the button.
+There are DOM elements which correspond to several visual objects. These are usually elements with complex structure that cannot be described by a single rectangle. For example, the "select" element has three renderers: one for the display area, one for the drop down list box and one for the button.
 Also when text is broken into multiple lines because the width is not sufficient for one line, the new lines will be added as extra renderers.
 <br>
-Another example of several renderers is broken HTML.
-According to CSS spec an inline element must contain either only block element or only inline elements.
-In case of mixed content, anonymous block renderers will be created to wrap the inline elements.
+Another example of multiple renderers is broken HTML.
+According to the CSS spec an inline element must contain either only block elements or only inline elements.
+In the case of mixed content, anonymous block renderers will be created to wrap the inline elements.
 </p>
 <p>
 Some render objects correspond to a DOM node but not in the same place in the tree.
-Floats and absolutely positioned elements are out of flow, placed in a different place in the tree, and mapped to the real frame.
+Floats and absolutely positioned elements are out of flow, placed in a different part of the tree, and mapped to the real frame.
 A placeholder frame is where they should have been.
 </p>
 
@@ -1092,7 +1077,7 @@ A placeholder frame is where they should have been.
 
   <figure>
       <img src="image025.png" width="731" height="396" >
-    <figcaption><span>Figure </span>:  The render tree and the corresponding DOM tree (<a href="#3_1">3.1</a>). The "Viewport" is the initial containing block. In Webkit it will be the "RenderView" object.</figcaption>
+    <figcaption><span>Figure </span>:  The render tree and the corresponding DOM tree (<a href="#3_1">3.1</a>). The "Viewport" is the initial containing block. In WebKit it will be the "RenderView" object</figcaption>
   </figure>
 
 
@@ -1103,13 +1088,13 @@ In Firefox, the presentation is registered as a listener for DOM updates.
 The presentation delegates frame creation to the <code>FrameConstructor</code> and the constructor resolves style (see <a href="#style">style computation</a>) and creates a frame.
 </p>
 <p>
-In Webkit the process of resolving the style and creating a renderer is called "attachment".
+In WebKit the process of resolving the style and creating a renderer is called "attachment".
 Every DOM node has an "attach" method.
 Attachment is synchronous, node insertion to the DOM tree calls the new node "attach" method.
 <p>
 Processing the html and body tags results in the construction of the render tree root.
-The root render object corresponds to what the CSS spec calls the containing block - the top most block that contains all other blocks. Its dimensions are the viewport - the browser window display area dimensions.
-Firefox calls it <code>ViewPortFrame</code> and Webkit calls it <code>RenderView</code>.
+The root render object corresponds to what the CSS spec calls the containing block&ndash;the top most block that contains all other blocks. Its dimensions are the viewport&ndash;the browser window display area dimensions.
+Firefox calls it <code>ViewPortFrame</code> and WebKit calls it <code>RenderView</code>.
 This is the render object that the document points to.
 The rest of the tree is constructed as a DOM nodes insertion.
 </p>
@@ -1127,7 +1112,7 @@ This is done by calculating the style properties of each element.
 The style includes style sheets of various origins, inline style elements and visual properties in the HTML (like the "bgcolor" property).The later is translated to matching CSS style properties.
 </p>
 <p>
-The origins of style sheets are the browser's default style sheets, the style sheets provided by the page author and user style sheets - these are style sheets provided by the browser user (browsers let you define your favorite style. In Firefox, for instance, this is done by placing a style sheet in the "Firefox Profile" folder).
+The origins of style sheets are the browser's default style sheets, the style sheets provided by the page author and user style sheets&ndash;these are style sheets provided by the browser user (browsers let you define your favorite style. In Firefox, for instance, this is done by placing a style sheet in the "Firefox Profile" folder).
 </p>
 <p>
 Style computation brings up a few difficulties:
@@ -1136,7 +1121,7 @@ Style computation brings up a few difficulties:
 <li>
 <p><a id="issue2">Finding</a> the matching rules for each element can cause performance issues if it's not optimized. Traversing the entire rule list for each element to find matches is a heavy task.  Selectors can have complex structure that can cause the matching process to start on a seemingly promising path that is proven to be futile and another path has to be tried.
 </p>
-<p>For example - this compound selector:</p>
+<p>For example&ndash;this compound selector:</p>
 
 <pre class="prettyprint">
 div div div div{
@@ -1151,7 +1136,7 @@ Let's see how the browsers face these issues:
 
 <h5 id="Sharing_style_data">Sharing style data</h5>
 <p>
-Webkit nodes references style objects (RenderStyle)
+WebKit nodes references style objects (RenderStyle)
 These objects can be shared by nodes in some conditions.
 The nodes are siblings or cousins and:
 <ol>
@@ -1169,8 +1154,8 @@ The nodes are siblings or cousins and:
 
 <h5 id="Firefox_rule_tree">Firefox rule tree</h5>
 <p>
-Firefox has two extra trees for easier style computation - the rule tree and style context tree.
-Webkit also has style objects but they are not stored in a tree like the style context tree, only the DOM node points to its relevant style.
+Firefox has two extra trees for easier style computation&ndash;the rule tree and style context tree.
+WebKit also has style objects but they are not stored in a tree like the style context tree, only the DOM node points to its relevant style.
 
 </p>
 
@@ -1181,7 +1166,7 @@ Webkit also has style objects but they are not stored in a tree like the style c
 
 
 <p>
-The style contexts contain end values. The values are computed by applying all the matching rules in the correct order and performing  manipulations that transform them from logical to concrete values. For example - if the logical value is percentage of the screen it will be calculated and transformed to absolute units.
+The style contexts contain end values. The values are computed by applying all the matching rules in the correct order and performing  manipulations that transform them from logical to concrete values. For example&ndash;if the logical value is percentage of the screen it will be calculated and transformed to absolute units.
 The rule tree idea is really clever.  It enables sharing these values between nodes to avoid computing them again.  This also saves space.
 </p>
 
@@ -1198,7 +1183,7 @@ Lets say we already computed this rule tree:
   <img src="tree.png" width="400" height="261" alt="" title="" border="0" align="" />
 </figure>
 
-Suppose we need to match rules for another element in the content tree, and find out the matched rules (in the correct order) are B - E - I. We already have this path in the tree because we already computed path  A - B - E - I - L. We will now have less work to do.
+Suppose we need to match rules for another element in the content tree, and find out the matched rules (in the correct order) are B&ndash;E&ndash;I. We already have this path in the tree because we already computed path  A&ndash;B&ndash;E&ndash;I&ndash;L. We will now have less work to do.
 </p>
 <p>
 Let's see how the tree saves us work.
@@ -1213,15 +1198,15 @@ The tree helps us by caching entire structs (containing the computed end values)
 <h5 id="Computing_the_style_contexts_using_the_rule_tree">Computing the style contexts using the rule tree</h5>
 <p>
 When computing the style context for a certain element, we first compute a path in the rule tree or use an existing one.
-We then begin to apply the rules in the path to fill the structs in our new style context. We start at the bottom node of the path - the one with the highest precedence (usually the most specific selector) and traverse the tree up until our struct is full.
-If there is no specification for the struct in that rule node, then we can greatly optimize - we go up the tree until we find a node that specifies it fully and simply point to it - that's the best optimization - the entire struct is shared.
+We then begin to apply the rules in the path to fill the structs in our new style context. We start at the bottom node of the path&ndash;the one with the highest precedence (usually the most specific selector) and traverse the tree up until our struct is full.
+If there is no specification for the struct in that rule node, then we can greatly optimize&ndash;we go up the tree until we find a node that specifies it fully and simply point to it&ndash;that's the best optimization&ndash;the entire struct is shared.
 This saves computation of end values and memory.
 <br>
 If we find partial definitions we go up the tree until the struct is filled.
 </p>
 <p>
-If we didn't find any definitions for our struct, then in case the struct is an "inherited" type - we point to the struct of our parent in the <b>context tree</b>, in this case we also succeeded in sharing structs.
-If its a reset struct then default values will be used.
+If we didn't find any definitions for our struct, then in case the struct is an "inherited" type&ndash;we point to the struct of our parent in the <b>context tree</b>. In this case we also succeeded in sharing structs.
+If it's a reset struct then default values will be used.
 </p>
 <p>
 If the most specific node does add values then we need to do some extra calculations for transforming it to actual values.
@@ -1260,8 +1245,8 @@ div span {margin-bottom:4px}
 #div2 {color:green}
 </pre>
 <p>
-To simplify things let's say we need to fill out only two structs - the color struct and the margin struct.
-The color struct contains only one member - the color
+To simplify things let's say we need to fill out only two structs&ndash;the color struct and the margin struct.
+The color struct contains only one member&ndash;the color
 The margin struct contains the four sides.
 <br>
 The resulting rule tree will look like this (the nodes are marked with the node name : the # of rule they point at):
@@ -1288,14 +1273,14 @@ The context tree will look like this (node name : rule node they point to):
 <p>
 Suppose we parse the HTML and get to the second &lt;div&gt; tag. We need to create a style context for this node and fill its style structs.
 <br>
-We will match the rules and discover that the matching rules for the &lt;div&gt; are 1 ,2 and 6.
+We will match the rules and discover that the matching rules for the &lt;div&gt; are 1, 2 and 6.
 This means there is already an existing path in the tree that our element can use and we just need to add another node to it for rule 6 (node F in the rule tree).
 <br>
 We will create a style context and put it in the context tree.  The new style context will point to node F in the rule tree.
 </p>
 <p>
 We now need to fill the style structs. We will begin by filling out the margin struct.
-Since the last rule node(F) doesn't add to the margin struct, we can go up the tree until we find a cached struct computed in a previous node insertion and use it.
+Since the last rule node (F) doesn't add to the margin struct, we can go up the tree until we find a cached struct computed in a previous node insertion and use it.
 We will find it on node B, which is the uppermost node that specified margin rules.
 </p>
 <p>
@@ -1317,12 +1302,12 @@ p {font-family:Verdana;font size:10px;font-weight:bold}
 Then the paragraph element, which is a child of the div in the context tree, could have shared the same font struct as his parent. This is if no font rules where specified for the paragraph.
 </p>
 <p>
-In Webkit, who does not have a rule tree, the matched declarations are traversed 4 times. First non important high priority properties (properties that should be applied first because others depend on them - like display) are applied, than high priority important, then normal priority non important, then normal priority important rules.
+In WebKit, who does not have a rule tree, the matched declarations are traversed 4 times. First non important high priority properties (properties that should be applied first because others depend on them&ndash;like display) are applied, than high priority important, then normal priority non important, then normal priority important rules.
 This means that properties that appear multiple times will be resolved according to the correct cascade order. The last wins.
 <br>
 </p>
 <p>
-So to summarize - sharing the style objects (entirely or some of the structs inside them) solves issues <a href="#issue1">1</a> and <a href="#issue3">3</a>. Firefox rule tree also helps in applying the properties in the correct order.
+So to summarize&ndash;sharing the style objects (entirely or some of the structs inside them) solves issues <a href="#issue1">1</a> and <a href="#issue3">3</a>. Firefox rule tree also helps in applying the properties in the correct order.
 </p>
 <h5 id="Manipulating_the_rules_for_an_easy_match">Manipulating the rules for an easy match</h5>
 <p>
@@ -1355,7 +1340,7 @@ After parsing the style sheet, the rules are added to one of several hash maps, 
 There are maps by id, by class name, by tag name and a general map for anything that doesn't fit into those categories.
 If the selector is an id, the rule will be added to the id map, if it's a class it will be added to the class map etc.
 <br>
-This manipulation makes it much easier to match rules. There is no need to look in every declaration - we can extract the relevant rules for an element from the maps.
+This manipulation makes it much easier to match rules. There is no need to look in every declaration&ndash;we can extract the relevant rules for an element from the maps.
 This optimization eliminates 95+% of the rules, so that they need not even be considered during the matching process(<a href="#4_1">4.1</a>).
 </p>
 <p>
@@ -1385,15 +1370,15 @@ table div {margin:5px}
 it will still be extracted from the tag map, because the key is the rightmost selector, but it would not match our div element, who does not have a table ancestor.
 </P>
 <P>
-Both Webkit and Firefox do this manipulation.
+Both WebKit and Firefox do this manipulation.
 </p>
 <h5 id="Applying_the_rules_in_the_correct_cascade_order">Applying the rules in the correct cascade order</h5>
 <p>
 The style object has properties corresponding to every visual attribute (all css attributes but more generic).
-If the property is not defined by any of the matched rules - then some properties can be inherited by the parent element style object. Other properties have default values.
+If the property is not defined by any of the matched rules&ndash;then some properties can be inherited by the parent element style object. Other properties have default values.
 </p>
 <p>
-The problem begins when there is more than one definition - here comes the cascade order to solve the issue.
+The problem begins when there is more than one definition&ndash;here comes the cascade order to solve the issue.
 <h5 id="Style_sheet_cascade_order">Style sheet cascade order</h5>
 A declaration for a style property can appear in several style sheets, and several times inside a style sheet.
 This means the order of applying the rules is very important. This is called the "cascade" order.
@@ -1447,8 +1432,8 @@ Some examples:
 <h5 id="Sorting_the_rules">Sorting the rules</h5>
 <p>
 After the rules are matched, they are sorted according to the cascade rules.
-Webkit uses bubble sort for small lists and merge sort for big ones.
-Webkit implements sorting by overriding the "&gt;" operator for the rules:
+WebKit uses bubble sort for small lists and merge sort for big ones.
+WebKit implements sorting by overriding the "&gt;" operator for the rules:
 <pre class="prettyprint">
 static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
 {
@@ -1460,8 +1445,8 @@ static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
 </p>
 <h4 id="Gradual_process">Gradual process</h4>
 <p>
-Webkit uses a flag  that marks if all top level style sheets (including @imports) have been loaded.
-If the style is not fully loaded when attaching - place holders are used and it is marked in the document, and they will be recalculated once the style sheets were loaded.
+WebKit uses a flag  that marks if all top level style sheets (including @imports) have been loaded.
+If the style is not fully loaded when attaching&ndash;place holders are used and it is marked in the document, and they will be recalculated once the style sheets were loaded.
 </p>
 
 
@@ -1470,7 +1455,7 @@ If the style is not fully loaded when attaching - place holders are used and it 
 When the renderer is created and added to the tree, it does not have a position and size. Calculating these values is called layout or reflow.
 </p>
 <p>
-HTML uses a flow based layout model, meaning that most of the time it is possible to compute the geometry in a single pass. Elements later ``in the flow'' typically do not affect the geometry of elements that are earlier ``in the flow'', so layout can proceed left-to-right, top-to-bottom through the document. There are exceptions - for example, HTML tables may require more than one pass (<a href="#3_5">3.5</a>).
+HTML uses a flow based layout model, meaning that most of the time it is possible to compute the geometry in a single pass. Elements later ``in the flow'' typically do not affect the geometry of elements that are earlier ``in the flow'', so layout can proceed left-to-right, top-to-bottom through the document. There are exceptions&ndash;for example, HTML tables may require more than one pass (<a href="#3_5">3.5</a>).
 </p>
 <p>
 The coordinate system is relative to the root frame.  Top and left coordinates are used.
@@ -1478,21 +1463,21 @@ The coordinate system is relative to the root frame.  Top and left coordinates a
 <p>
 Layout is a recursive process.  It begins at the root renderer, which corresponds to the <code>&lt;html></code> element of the HTML document. Layout continues recursively through some or all of the frame hierarchy, computing geometric information for each renderer that requires it.
 </p>
-The position of the root renderer is 0,0 and its dimensions are the viewport - the visible part of the browser window.
+The position of the root renderer is 0,0 and its dimensions are the viewport&ndash;the visible part of the browser window.
 <p>
 All renderers have a "layout" or "reflow" method, each renderer invokes the layout method of its children that need layout.
 </p>
 <h4 id="Dirty_bit_system">Dirty bit system</h4>
 <p>
 In order not to do a full layout for every small change, browsers use a "dirty bit" system.
-A renderer that is changed or added marks itself and its children as "dirty" - needing layout.
+A renderer that is changed or added marks itself and its children as "dirty"&ndash;needing layout.
 </p>
 <p>
-There are two flags - "dirty" and "children are dirty". Children are dirty means that although the renderer itself may be ok, it has at least one child that needs a layout.
+There are two flags&ndash;"dirty" and "children are dirty". Children are dirty means that although the renderer itself may be ok, it has at least one child that needs a layout.
 </p>
 <h4 id="Global_and_incremental_layout">Global and incremental layout</h4>
 <p>
-Layout can be triggered on the entire render tree - this is "global" layout.
+Layout can be triggered on the entire render tree&ndash;this is "global" layout.
 This can happen as a result of:
 <ol>
 <li>A global style change that affects all renderers, like a font size change.</li>
@@ -1500,7 +1485,7 @@ This can happen as a result of:
 </ol>
 </p>
 <p>
-Layout can be incremental, only the dirty renderers will be layed out (this can cause some damage which will require extra layouts).
+Layout can be incremental, only the dirty renderers will be laid out (this can cause some damage which will require extra layouts).
 <br>
 Incremental layout is triggered (asynchronously) when renderers are dirty. For example when new renderers are appended to the render tree after extra content came from the network and was added to the DOM tree.
 </p>
@@ -1508,12 +1493,12 @@ Incremental layout is triggered (asynchronously) when renderers are dirty. For e
 
 <figure>
   <img src="reflow.png" width="326" height="341" />
-  <figcaption> <span>Figure </span>: Incremental layout - only dirty renderers and their children are layed out (<a href="#3_6">3.6</a>).</figcaption>
+  <figcaption> <span>Figure </span>: Incremental layout&ndash;only dirty renderers and their children are laid out (<a href="#3_6">3.6</a>)</figcaption>
 </figure>
 
 <h4 id="Asynchronous_and_Synchronous_layout">Asynchronous and Synchronous layout</h4>
 Incremental layout is done asynchronously. Firefox queues "reflow commands" for incremental layouts and a scheduler triggers batch execution of these commands.
-Webkit also has a timer that executes an incremental layout - the tree is traversed and "dirty" renderers are layout out.
+WebKit also has a timer that executes an incremental layout&ndash;the tree is traversed and "dirty" renderers are layout out.
 <br>
 Scripts asking for style information, like "offsetHeight" can trigger incremental layout synchronously.
 <br>
@@ -1523,7 +1508,7 @@ Sometimes layout is triggered as a callback after an initial layout because some
 <h4 id="Optimizations">Optimizations</h4>
 When a layout is triggered by a "resize" or a change in the renderer position(and not size), the renders sizes are taken from a cache and not recalculated..
 <br>
-In some cases - only a sub tree is modified and layout does not start from the root. This can happen in cases where the change is local and does not affect its surroundings - like text inserted into text fields (otherwise every keystroke would have triggered a layout starting from the root).
+In some cases&ndash;only a sub tree is modified and layout does not start from the root. This can happen in cases where the change is local and does not affect its surroundings&ndash;like text inserted into text fields (otherwise every keystroke would have triggered a layout starting from the root).
 </p>
 <h4 id="The_layout_process">The layout process</h4>
 <p>
@@ -1533,10 +1518,10 @@ The layout usually has the following pattern:
 <li>Parent goes over children and:
   <ol>
     <li>Place the child renderer (sets its x and y).</li>
-    <li>Calls child layout if needed(they are dirty or we are in a global layout or some other reason) - this calculates the child's height.</li>
+    <li>Calls child layout if needed(they are dirty or we are in a global layout or some other reason)&ndash;this calculates the child's height.</li>
   </ol>
 </li>
-<li>Parent uses children accumulative heights and the heights of the margins and paddings to set it's own height - this will be used by the parent renderer's parent.</li>
+<li>Parent uses children's accumulative heights and the heights of margins and padding to set its own height&ndash;this will be used by the parent renderer's parent.</li>
 <li>Sets its dirty bit to false.</li>
 </ol>
 </p>
@@ -1553,12 +1538,12 @@ For example the width of the following div:
 <pre class="prettyprint">
 &lt;div style="width:30%"/&gt;
 </pre>
-Would be calculated by Webkit as the following(class RenderBox method calcWidth):
+Would be calculated by WebKit as the following(class RenderBox method calcWidth):
 <ul>
 <li>The container width is the maximum of the containers availableWidth and 0.
 The availableWidth in this case is the contentWidth which is calculated as:
 <pre class="prettyprint">
-clientWidth() - paddingLeft() - paddingRight()
+clientWidth()&ndash;paddingLeft()&ndash;paddingRight()
 </pre>
 clientWidth and clientHeight represent the interior of an object
 excluding border and scrollbar.
@@ -1571,7 +1556,7 @@ It will be calculated as an absolute value by computing the percentage of the co
 So far this was the calculation of the "preferred width".
 Now the minimum and maximum widths will be calculated.
 <br>
-If the preferred width is higher then the maximum width - the maximum width is used.
+If the preferred width is higher then the maximum width&ndash;the maximum width is used.
 If it is lower then the minimum width (the smallest unbreakable unit) then the minimum width is used.
 </p>
 <p>
@@ -1580,18 +1565,17 @@ The values are cached, in case a layout is needed but the width does not change.
 <p>
 <h4 id="Line_Breaking">Line Breaking</h4>
 <p>
-When a renderer in the middle of layout decides it needs to break.
-It stops and propagates to its parent it needs to be broken.
-The parent will create the extra renderers and calls layout on them.
+When a renderer in the middle of a layout decides that it needs to break, the renderer stops and propagates to the layout's parent that it needs to be broken.
+The parent creates the extra renderers and calls layout on them.
 </p>
 <h3 id="Painting">Painting</h3>
 <p>
-In the painting stage, the render tree is traversed and the renderers "paint" method is called to display their content on the screen.
+In the painting stage, the render tree is traversed and the renderer's "paint()" method is called to display content on the screen.
 Painting uses the UI infrastructure component.
 <h4 id="Global_and_Incremental">Global and Incremental</h4>
-Like layout, painting can also be global - the entire tree is painted - or incremental.
+Like layout, painting can also be global&ndash;the entire tree is painted&ndash;or incremental.
 In incremental painting, some of the renderers change in a way that does not affect the entire tree.
-The changed renderer invalidates it's rectangle on the screen.
+The changed renderer invalidates its rectangle on the screen.
 This causes the OS to see it as a "dirty region" and generate a "paint" event.
 The OS does it cleverly and coalesces several regions into one.
 In Chrome it is more complicated because the renderer is in a different process then the main process. Chrome simulates the OS behavior to some extent.
@@ -1612,12 +1596,12 @@ The stacking order of a block renderer is:
 Firefox goes over the render tree and builds a display list for the painted rectangular.
 It contains the renderers relevant for the rectangular, in the right painting order (backgrounds of the renderers, then borders etc).
 
-That way the tree needs to be traversed only once for a repaint instead of several times - painting all backgrounds, then all images , then all borders etc.
+That way the tree needs to be traversed only once for a repaint instead of several times&ndash;painting all backgrounds, then all images , then all borders etc.
 
 <p>
 Firefox optimizes the process by not adding elements that will be hidden, like elements completely beneath other opaque elements.
 </p>
-<h4 id="Webkit_rectangle_storage">Webkit rectangle storage</h4>
+<h4 id="WebKit_rectangle_storage">WebKit rectangle storage</h4>
 Before repainting, webkit saves the old rectangle as a bitmap.
 It then paints only the delta between the new and old rectangles.
 
@@ -1633,12 +1617,12 @@ Major changes, like increasing font size of the "html" element, will cause inval
 
 <h3 id="The_rendering_engines_threads">The rendering engine's threads</h3>
 The rendering engine is single threaded. Almost everything, except network operations, happens in a single thread.
-In Firefox and safari this is the main thread of the browser. In chrome it's the tab process main thread.
+In Firefox and Safari this is the main thread of the browser. In Chrome it's the tab process main thread.
 <br>
-Network operations can be performed by several parallel threads. The number of parallel connections is limited (usually 2 - 6 connections. Firefox 3, for example, uses 6).
+Network operations can be performed by several parallel threads. The number of parallel connections is limited (usually 2&ndash;6 connections).
 <h4 id="Event_loop">Event loop</h4>
 The browser main thread is an event loop.
-Its an infinite loop that keeps the process alive. It waits for events (like layout and paint events) and processes them.
+It's an infinite loop that keeps the process alive. It waits for events (like layout and paint events) and processes them.
 This is Firefox code for the main event loop:
 <pre class="prettyprint">
 while (!mExiting)
@@ -1649,8 +1633,8 @@ while (!mExiting)
 <h3 id="css">CSS2 visual model</h3>
 <h4 id="The_canvas">The canvas</h4>
 <p>
-According to <a href="http://www.w3.org/TR/CSS21/intro.html#processing-model">CSS2 specification</a>,
-the term canvas describes "the space where the formatting structure is rendered." - where the browser paints the content.
+According to the <a href="http://www.w3.org/TR/CSS21/intro.html#processing-model">CSS2 specification</a>,
+the term canvas describes "the space where the formatting structure is rendered"&ndash;where the browser paints the content.
 
 The canvas is infinite for each dimension of the space but browsers choose an initial width based on the dimensions of the viewport.
 </p>
@@ -1662,7 +1646,7 @@ the canvas is transparent if contained within another, and given a browser defin
 <p>
 The <a href="http://www.w3.org/TR/CSS2/box.html">CSS box model</a> describes the rectangular boxes that are generated for elements in the document tree and laid out according to the visual formatting model.
 <br>
-Each box has a content area (e.g., text, an image, etc.) and optional surrounding padding, border, and margin areas.
+Each box has a content area (e.g. text, an image, etc.) and optional surrounding padding, border, and margin areas.
 
 
 <figure>
@@ -1674,17 +1658,17 @@ Each box has a content area (e.g., text, an image, etc.) and optional surroundin
 <p>
 Each  node generates 0..n such boxes.
 <br>
-All elements have a "display" property that determines their type of box that will be generated.
+All elements have a "display" property that determines the type of box that will be generated.
 
 Examples:
 
 <pre class="prettyprint">
-block  - generates a block box.
-inline - generates one or more inline boxes.
-none - no box is generated.
+block &ndash;generates a block box.
+inline&ndash;generates one or more inline boxes.
+none&ndash;no box is generated.
 </pre>
-The default is inline but the browser style sheet set other defaults.
-For example - the default display for "div" element is block.
+The default is inline but the browser style sheet may set other defaults.
+For example: the default display for the "div" element is block.
 <br>
 You can find a default style sheet example here: <a href="http://www.w3.org/TR/CSS2/sample.html">www.w3.org/TR/CSS2/sample.html</a>
 </p>
@@ -1693,33 +1677,33 @@ You can find a default style sheet example here: <a href="http://www.w3.org/TR/C
 <p>
 There are three schemes:
 <ol>
-<li>Normal - the object is positioned according to its place in the document  - this means its place in the render tree is like its place in the dom tree and layed out according to its box type and dimensions</li>
-<li>Float - the object is first layed out like normal flow, then moved as far left or right as possible </li>
-<li>Absolute - the object is put in the render tree differently than its place in the DOM tree</li>
+<li>Normal: the object is positioned according to its place in the document &ndash;this means its place in the render tree is like its place in the DOM tree and laid out according to its box type and dimensions</li>
+<li>Float: the object is first laid out like normal flow, then moved as far left or right as possible </li>
+<li>Absolute: the object is put in the render tree in a different place than in the DOM tree</li>
 </ol>
 </p>
 <p>
 The positioning scheme is set by the "position" property and the "float" attribute.
 <ul>
 <li>static and relative cause a normal flow</li>
-<li>absolute and fixed cause an absolute positioning</li>
+<li>absolute and fixed cause absolute positioning</li>
 </ul>
 <br>
 In static positioning no position is defined and the default positioning is used.
-In the other schemes, the author specifies the position -  top,bottom,left,right.
+In the other schemes, the author specifies the position: top, bottom, left, right.
 </p>
 <p>
-The way the box is layed out is determined by:
+The way the box is laid out is determined by:
 <ul>
 <li>Box type</li>
 <li>Box dimensions</li>
 <li>Positioning scheme</li>
-<li>External information - like images size and the size of the screen</li>
+<li>External information such as image size and the size of the screen</li>
 </ul>
 </p>
 <h4 id="Box_types">Box types</h4>
 <p>
-Block box: forms a block - have their own rectangle on the browser window.
+Block box: forms a block&ndash;has its own rectangle in the browser window.
 </p>
 
 
@@ -1754,8 +1738,8 @@ Inlines are formatted horizontally.
 
 <p>
 Inline boxes are put inside lines or "line boxes".
-The lines are at least as tall as the tallest box but can be taller, when the boxes are aligned "baseline" - meaning the bottom part of an element is aligned at a point of another box other then the bottom.
-In case the container width is not enough, the inlines will be put in several lines.
+The lines are at least as tall as the tallest box but can be taller, when the boxes are aligned "baseline"&ndash;meaning the bottom part of an element is aligned at a point of another box other then the bottom.
+In case the container width is not enough, the inlines will be put on several lines.
 This is usually what happens in a paragraph.
 
 </p>
@@ -1763,18 +1747,18 @@ This is usually what happens in a paragraph.
 
 <figure>
   <img src="image063.png" width="400" height="277" >
-  <figcaption><span>Figure </span>: Lines</figcaption>
+  <figcaption><span>Figure</span>: Lines</figcaption>
 </figure>
 
 <h3 id="Positioning">Positioning</h3>
 <h4 id="Relative">Relative</h4>
 <p>
-Relative positioning - positioned like usual and then moved by the required delta.
+Relative positioning&ndash;positioned like usual and then moved by the required delta.
 </p>
 
 <figure>
   <img src="image065.png" width="500" height="261" />
-  <figcaption><span>Figure </span>: Relative positioning</figcaption>
+  <figcaption><span>Figure</span>: Relative positioning</figcaption>
 </figure>
 
 <h4 id="Floats">Floats</h4>
@@ -1801,7 +1785,7 @@ Will look like:
 <p>
 The layout is defined exactly regardless of the normal flow. The element does not participate in the normal flow.
 The dimensions are relative to the container.
-In fixed - the container is the view port.
+In fixed&ndash;the container is the view port.
 
 <figure>
   <img src="image069.png" width="500" height="343" />
@@ -1810,15 +1794,15 @@ In fixed - the container is the view port.
 
 
 <br>
-Note - the fixed box will not move even when the document is scrolled!
+Note&ndash;the fixed box will not move even when the document is scrolled!
 </p>
 <h3 id="Layered_representation">Layered representation</h3>
 <p>
-It is specified by the z-index CSS property.
-It represents the 3rd dimension of the box, its position along the "z axis".
+This is specified by the z-index CSS property.
+It represents the third dimension of the box: its position along the "z axis".
 </p>
 <p>
-The boxes are divided to <a id="stackingcontext">stacks</a> (called stacking contexts).
+The boxes are divided into <a id="stackingcontext">stacks</a> (called stacking contexts).
 In each stack the back elements will be painted first and the forward elements on top, closer to the user.  In case of overlap the foremost element will hide the former element.
 <br>
 The stacks are ordered according to the z-index property.
@@ -1867,7 +1851,7 @@ Although the red div precedes the green one in the markup, and would have been p
       <li id="1">Browser architecture
           <ol>
               <li id="1_1">Grosskurth, Alan.  <a href="http://grosskurth.ca/papers/browser-refarch.pdf">A Reference Architecture for Web Browsers (pdf)</a>
-              <li id="1_2">Gupta, Vineet. <a href="http://www.vineetgupta.com/2010/11/how-browsers-work-part-1-architecture/">How Browsers Work - Part 1 - Architecture</a>
+              <li id="1_2">Gupta, Vineet. <a href="http://www.vineetgupta.com/2010/11/how-browsers-work-part-1-architecture/">How Browsers Work&ndash;Part 1&ndash;Architecture</a>
           </ol>
 
       <li id="2">Parsing
@@ -1887,7 +1871,7 @@ Although the red div precedes the green one in the markup, and would have been p
               <li id="3_7">Alexander Larsson,  <a href="https://developer.mozilla.org/en/The_life_of_an_HTML_HTTP_request">The life of an HTML HTTP request</a>
           </ol>
 
-      <li id="4">Webkit
+      <li id="4">WebKit
           <ol>
               <li id="4_1">David Hyatt,  <a href="http://weblogs.mozillazine.org/hyatt/archives/cat_safari.html">Implementing CSS(part 1)</a>
               <li id="4_2">David Hyatt,  <a href="http://weblogs.mozillazine.org/hyatt/WebCore/chapter2.html">An Overview of WebCore</a>
@@ -1905,7 +1889,7 @@ Although the red div precedes the green one in the markup, and would have been p
       <li>Browsers build instructions
           <ol>
               <li>Firefox. <a href="https://developer.mozilla.org/en/Build_Documentation">https://developer.mozilla.org/en/Build_Documentation</a>
-              <li>Webkit. <a href="http://webkit.org/building/build.html">http://webkit.org/building/build.html</a>
+              <li>WebKit. <a href="http://webkit.org/building/build.html">http://webkit.org/building/build.html</a>
           </ol>
 
   </ol>
@@ -1926,7 +1910,7 @@ Although the red div precedes the green one in the markup, and would have been p
 
 
 <h4>Translations</h4>
-<p>This page has been translated into Japanese, twice! <a href="http://cou929.nu/docs/how-browsers-work/">How Browsers Work - Behind the Scenes of Modern Web Browsers (ja)</a> by <a href="https://twitter.com/#!/_kosei_">@_kosei_</a> and also <a href="http://shanon-tech.blogspot.com/2011/09/web.html">ブラウザってどうやって動いてるの？（モダンWEBブラウザシーンの裏側</a> by <a href="https://twitter.com/#!/ikeike443">@ikeike443</a> and <a href="https://twitter.com/#!/kiyoto01">@kiyoto01</a>. Thanks everyone!</p>
+<p>This page has been translated into Japanese, twice! <a href="http://cou929.nu/docs/how-browsers-work/">How Browsers Work&ndash;Behind the Scenes of Modern Web Browsers (ja)</a> by <a href="https://twitter.com/#!/_kosei_">@_kosei_</a> and also <a href="http://shanon-tech.blogspot.com/2011/09/web.html">ブラウザってどうやって動いてるの？（モダンWEBブラウザシーンの裏側</a> by <a href="https://twitter.com/#!/ikeike443">@ikeike443</a> and <a href="https://twitter.com/#!/kiyoto01">@kiyoto01</a>. Thanks everyone!</p>
 
 <script>
 var toc = $('ol.toc');
