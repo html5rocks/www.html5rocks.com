@@ -15,7 +15,6 @@ JS_FILES=("${JSDIR}/app.${JS_EXT}" "${JSDIR}/profiles.${JS_EXT}"
           "${JSDIR}/prettify.${JS_EXT}" "${JSDIR}/feature.${JS_EXT}"
           "${JSDIR}/boom/asteroids.${JS_EXT}" "${JSDIR}/tutsapp.${JS_EXT}"
           "${JSDIR}/updatesapp.${JS_EXT}" "${JSDIR}/updatesapp.${JS_EXT}"
-          "${JSDIR}/3rdpartyinit.${JS_EXT}" "${JSDIR}/search.${JS_EXT}"
           "${JSDIR}/persona.${JS_EXT}"
           "${JSDIR}/slidesapp.${JS_EXT}" "${JSDIR}/parseuri.${JS_EXT}"
           "${JSDIR}/slides-polyfills.${JS_EXT}" "${JSDIR}/handlebars-1.${JS_EXT}")
