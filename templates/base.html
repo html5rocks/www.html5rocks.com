@@ -2,7 +2,7 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
-<html{% block manifest %}{% if is_mobile and prod and False %} manifest="/cache.appcache"{% endif %}{% endblock %} lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
+<html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
 <head>
   <meta charset="utf-8">
   <!-- Copyright (c) 2012 Google Inc.
@@ -76,7 +76,6 @@
         <li id="features_show"><a href="#features">{% trans "HTML5 Features" %}</a></li>
         <li id="slides_menu"><a href="/{{LANGUAGE_CODE}}/slides" class="slides">{% trans "Slides" %}</a></li>
         <li id="resources_menu"><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
-        <li id="why_menu"><a class="why" href="/{{LANGUAGE_CODE}}/why">{% trans "Why HTML5?" %}</a></li>
         <li id="profiles_menu"><a href="/{{LANGUAGE_CODE}}/profiles" class="profiles">{% trans "Who We Are" %}</a></li>
         <li id="contrib_menu"><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
         <li id="search_show">
@@ -353,6 +352,19 @@
         setTimeout(function() { window.scrollTo(0, 1); }, 1);
       }, false);
     {% endif %}
+    
+    $(document).keydown(function(e) {
+      if (e.keyCode === 27) { // ESC
+        // Hide search and/or feature bar.
+        $('#search_hide, #features_hide').click();
+      }
+    });
+
+    // Toggle the feature nav.
+    $('.outline_nav_toggle').click(function(e) {
+      $(this).toggleClass('activated');
+      $(this).find('nav.outline').fadeToggle('fast');
+    });
 
     $('#features_show a').click(function() {
       $('#search_hide').click(); // Hide search panel if it's out.
@@ -380,17 +392,6 @@
       $('#features_show a').focus();
     });
 
-    // Check if new appcache is available.
-    if (window.applicationCache) {
-      window.applicationCache.addEventListener('updateready', function(e) {
-        if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-          window.applicationCache.swapCache();
-          if (confirm('{% trans "A new version of this site is available. Load it?" %}')) {
-            window.location.reload();
-          }
-        }
-      }, false);
-    }
 
     window.isCompatible = function() {
       {% block iscompatible %}
@@ -443,11 +444,6 @@
   </script>
 
   <!-- defer is unreliable in ie <= 9, but o well -->
-  <script defer src="/static/js/app{% if prod %}.min{% endif %}.js"></script>
-
   <script defer src="/static/js/search{% if prod %}.min{% endif %}.js"></script>
-  {% if not is_mobile %}
-  <script defer src="/static/js/3rdpartyinit{% if prod %}.min{% endif %}.js"></script>
-  {% endif %}
 </body>
 </html>

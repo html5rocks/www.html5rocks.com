@@ -80,13 +80,13 @@ figure img {
   // create our permanent nodes
   this.nodes = {
     destination: this.audioContext.destination,
-    masterGain: this.audioContext.createGainNode(),
+    masterGain: this.audioContext.createGain(),
 
-    backgroundMusicGain: this.audioContext.createGainNode(),
+    backgroundMusicGain: this.audioContext.createGain(),
 
-    coreEffectsGain: this.audioContext.createGainNode(),
-    effectsGain: this.audioContext.createGainNode(),
-    pausedEffectsGain: this.audioContext.createGainNode()
+    coreEffectsGain: this.audioContext.createGain(),
+    effectsGain: this.audioContext.createGain(),
+    pausedEffectsGain: this.audioContext.createGain()
   };
 
   // and setup the graph
@@ -219,7 +219,7 @@ AudioManager.prototype.resumeEffects = function() {
     var source = sound.source;
     if ( !options.loop &amp;&amp; now - source.noteOnAt &gt; sound.buffer.duration * 1000 ) {
       // discard the previous source node
-      source.noteOff( 0 );
+      source.stop( 0 );
       source.disconnect();
     } else {
       return;
@@ -247,21 +247,21 @@ AudioManager.prototype.resumeEffects = function() {
   // Fieldrunners' current code doesn't consider sound.pausedAt.
   // This is an added section to assist the new pausing code.
   if ( sound.pausedAt ) {
-    source.noteOn( ( sound.buffer.duration * 1000 - sound.pausedAt ) / 1000 );
+    source.start( ( sound.buffer.duration * 1000 - sound.pausedAt ) / 1000 );
     source.noteOnAt = now + sound.buffer.duration * 1000 - sound.pausedAt;
 
     // if you needed to precisely stop sounds, you'd want to store this
     resumeSource = this.audioContext.createBufferSource();
     resumeSource.buffer = sound.buffer;
     resumeSource.connect( channel );
-    resumeSource.noteGrainOn(
+    resumeSource.start(
       0,
       sound.pausedAt,
       sound.buffer.duration - sound.pausedAt / 1000
     );
   } else {
     // start play immediately with a value of 0 or less
-    source.noteOn( 0 );
+    source.start( 0 );
   }
 }</pre>
 
