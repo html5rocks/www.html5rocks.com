@@ -138,7 +138,8 @@ function init(){
     canvasContext.strokeStyle = "#ffffff";
     canvasContext.lineWidth = 2;
 
-	audioContext = new webkitAudioContext();
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
 
 	// if we wanted to load audio files, etc., this is where we should do it.
 

@@ -9,15 +9,14 @@ the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Goog
 
 # Getting the code #
 
-The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [studio](http://studio.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
+The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
 
 Each sub-domain points to a separate [Google App Engine](http://code.google.com/appengine/downloads.html) (Python) application with a corresponding [repository](https://github.com/html5rocks/).
 
 * [www.html5rocks.com](http://html5rocks.appspot.com): Source at [www.html5rocks.com](https://github.com/html5rocks/www.html5rocks.com)
-* [studio.html5rocks.com](http://html5playbook.appspot.com): Source at [studio.html5rocks.com](https://github.com/html5rocks/studio.html5rocks.com)
 * [slides.html5rocks.com](http://html5slides.appspot.com): Source at [slides.html5rocks.com](https://github.com/html5rocks/slides.html5rocks.com)
-* [playground.html5rocks.com](http://html5playground.appspot.com): Source at [playground.html5rocks.com](https://github.com/html5rocks/playground.html5rocks.com)
-* [updates.html5rocks.com](http://updaterocker.appspot.com): Source at [updates.html5rocks.com](https://github.com/html5rocks/updates.html5rocks.com)
+* [playground.html5rocks.com](http://playground.html5rocks.com): Source at [playground.html5rocks.com](https://github.com/html5rocks/playground.html5rocks.com)
+* [updates.html5rocks.com](http://updates.html5rocks.com): Source at [updates.html5rocks.com](https://github.com/html5rocks/updates.html5rocks.com)
 
 To checkout the corresponding source, fork us an run the following command:
 
@@ -57,7 +56,7 @@ If your contribution contains code, please make sure that it follows [the style 
 ###Authoring process###
 
 1. If you are a new author, add yourself to `www.html5rocks.com/database/profiles.yaml`. We'll also need a `.png` photo of you for the [profiles page](http://html5rocks.com/profiles).
-2. You'll be adding your tutorial/case study under `/content/tutorials/<api_topic>. If an appropriate directory doesn't already exist, you'll need to create a new one. Our convention is `/content/tutorials/<api_topic>/<tutorial_name>/<lang>/index.html`. These directories map to the live site at `http://www.html5rocks.com/<lang>/tutorials/<api_topic>/<tutorial_name>`, so please use good judgement when naming your new directory/tutorial.  HTML files will automatically be parsed by the templating system, which is Django based. See [Django template tags and filters](http://docs.djangoproject.com/en/1.0/ref/templates/builtins/) for more information.
+2. You'll be adding your tutorial/case study under `/content/tutorials/<api_topic>`. If an appropriate directory doesn't already exist, you'll need to create a new one. Our convention is `/content/tutorials/<api_topic>/<tutorial_name>/<lang>/index.html`. These directories map to the live site at `http://www.html5rocks.com/<lang>/tutorials/<api_topic>/<tutorial_name>`, so please use good judgement when naming your new directory/tutorial.  HTML files will automatically be parsed by the templating system, which is Django based. See [Django template tags and filters](http://docs.djangoproject.com/en/1.0/ref/templates/builtins/) for more information.
 3. If you're writing a case study, add your article under `/content/tutorials/casestudies/` instead.
 4. Copy `www.html5rocks.com/content/tutorials/tutorial.html.template` to your directory and replace its holder blocks (all optional) like `{% block iscompatible %}` with your own feature detect and `{% block share_image %}{% endblock %}` with the image that will get shared in social widgets. If you need styles or code in the `<head>`, override the head block. Also remove the comments at the top, otherwise you'll get parsing errors.
 5. Finally, add your article to the [/database/tutorials.yaml](https://github.com/html5rocks/www.html5rocks.com/blob/master/database/tutorials.yaml) file. This file is used for backing up our database. Modify a previous entry to match the details of your tutorial. When possible, try to use existent tags. If you're writing a case study, be sure to tag the article with the `type:casestudy` tag. 

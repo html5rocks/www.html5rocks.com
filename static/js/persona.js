@@ -1,7 +1,13 @@
 window.updates = {
   feedsapi: function() {
     var gfeed = new google.feeds.Feed('http://updates.html5rocks.com/feeds/atom.xml');
-    gfeed.setNumEntries(100);
+    if (selfPage == 'home') {
+      gfeed.setNumEntries(5);
+    }
+    else {
+      gfeed.setNumEntries(100);
+    }
+
     gfeed.load(function(result) {
       // get template
       var templateXHR = $.ajax({

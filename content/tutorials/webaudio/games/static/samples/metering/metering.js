@@ -21,10 +21,10 @@ MeteringSample.prototype.playPause = function() {
     source.buffer = this.buffer;
     source.loop = true;
     // Run the source node through a gain node.
-    var gain = context.createGainNode();
+    var gain = context.createGain();
     gain.gain.value = this.gainValue;
     // Create mix node (gain node to combine everything).
-    var mix = context.createGainNode();
+    var mix = context.createGain();
     // Create meter.
     var meter = context.createJavaScriptNode(2048, 1, 1);
     var ctx = this;
@@ -40,9 +40,9 @@ MeteringSample.prototype.playPause = function() {
     this.source = source;
     this.gain = gain;
     // Start playback.
-    this.source.noteOn(0);
+    this.source.start(0);
   } else {
-    this.source.noteOff(0);
+    this.source.stop(0);
   }
   this.isPlaying = !this.isPlaying;
 };
@@ -54,9 +54,9 @@ MeteringSample.prototype.gainRangeChanged = function(e) {
 
 MeteringSample.prototype.processAudio = function(e) {
   var leftBuffer = e.inputBuffer.getChannelData(0);
-  var rightBuffer = e.inputBuffer.getChannelData(1);
+//  var rightBuffer = e.inputBuffer.getChannelData(1);
   this.checkClipping(leftBuffer);
-  this.checkClipping(rightBuffer);
+//  this.checkClipping(rightBuffer);
 }
 
 MeteringSample.prototype.checkClipping = function(buffer) {
@@ -79,5 +79,6 @@ MeteringSample.prototype.renderMeter = function() {
   var didRecentlyClip = (new Date() - this.lastClipTime) < 100;
   this.meterElement.className = didRecentlyClip ? 'clip' : 'noclip';
   var ctx = this;
-  webkitRequestAnimationFrame(function() { ctx.renderMeter.call(ctx) });
+  window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+  requestAnimationFrame(function() { ctx.renderMeter.call(ctx) });
 }

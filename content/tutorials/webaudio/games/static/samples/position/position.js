@@ -163,7 +163,7 @@ PositionSample.prototype.play = function() {
   // direction.
   panner.connect(context.destination);
   source.connect(panner);
-  source.noteOn(0);
+  source.start(0);
   // Position the listener at the origin.
   context.listener.setPosition(0, 0, 0);
 
@@ -174,7 +174,7 @@ PositionSample.prototype.play = function() {
 }
 
 PositionSample.prototype.stop = function() {
-  this.source.noteOff(0);
+  this.source.stop(0);
   this.isPlaying = false;
 }
 
@@ -195,7 +195,7 @@ PositionSample.prototype.changePosition = function(position) {
 };
 
 PositionSample.prototype.changeAngle = function(angle) {
-  console.log(angle);
+//  console.log(angle);
   // Compute the vector for this angle.
   this.panner.setOrientation(Math.cos(angle), -Math.sin(angle), 1);
 };

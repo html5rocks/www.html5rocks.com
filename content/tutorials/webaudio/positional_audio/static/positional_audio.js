@@ -112,14 +112,15 @@ Demo.prototype = {
     var a = {};
     this.audio = a;
 
-    a.context = new webkitAudioContext();
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    a.context = new AudioContext();
     a.convolver = a.context.createConvolver();
-    a.volume = a.context.createGainNode();
+    a.volume = a.context.createGain();
 
-    a.mixer = a.context.createGainNode();
+    a.mixer = a.context.createGain();
 
-    a.flatGain = a.context.createGainNode();
-    a.convolverGain = a.context.createGainNode();
+    a.flatGain = a.context.createGain();
+    a.convolverGain = a.context.createGain();
 
     a.destination = a.mixer;
     a.mixer.connect(a.flatGain);
@@ -180,7 +181,7 @@ Demo.prototype = {
     sound.source = ctx.createBufferSource();
     sound.source.loop = true;
     sound.panner = ctx.createPanner();
-    sound.volume = ctx.createGainNode();
+    sound.volume = ctx.createGain();
 
     sound.source.connect(sound.volume);
     sound.volume.connect(sound.panner);
@@ -189,7 +190,7 @@ Demo.prototype = {
     this.loadBuffer(soundFileName, function(buffer){
       sound.buffer = buffer;
       sound.source.buffer = sound.buffer;
-      sound.source.noteOn(ctx.currentTime + 0.020);
+      sound.source.start(ctx.currentTime + 0.020);
     });
 
     return sound;
