@@ -54,14 +54,14 @@ if (!AudioContext) {
 var ctx = new AudioContext();
 
 // Create a AudioGainNode to control the main volume.
-var mainVolume = ctx.createGainNode();
+var mainVolume = ctx.createGain();
 // Connect the main volume node to the context destination.
 mainVolume.connect(ctx.destination);
 
 // Create an object with a sound source and a volume control.
 var sound = {};
 sound.source = ctx.createBufferSource();
-sound.volume = ctx.createGainNode();
+sound.volume = ctx.createGain();
 
 // Connect the sound source to the volume control.
 sound.source.connect(sound.volume);
@@ -83,7 +83,7 @@ request.onload = function(e) {
 
   // Make the sound source use the buffer and start playing it.
   sound.source.buffer = sound.buffer;
-  sound.source.noteOn(ctx.currentTime);
+  sound.source.start(ctx.currentTime);
 };
 request.send();
 </pre>
@@ -283,21 +283,21 @@ sound.panner.coneOuterGain = outerGainFactor;
 <pre class="prettyprint">
 ...
 var ctx = new webkitAudioContext();
-var mainVolume = ctx.createGainNode();
+var mainVolume = ctx.createGain();
 
 // Create a convolver to apply environmental effects to the audio.
 var convolver = ctx.createConvolver();
 
 // Create a mixer that receives sound from the panners.
-var mixer = ctx.createGainNode();
+var mixer = ctx.createGain();
 
 sounds.forEach(function(sound){
   sound.panner.connect(mixer);
 });
 
 // Create volume controllers for the plain audio and the convolver.
-var plainGain = ctx.createGainNode();
-var convolverGain = ctx.createGainNode();
+var plainGain = ctx.createGain();
+var convolverGain = ctx.createGain();
 
 // Send audio from the mixer to plainGain and the convolver node.
 mixer.connect(plainGain);

@@ -2,7 +2,7 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
-<html{% block manifest %}{% if is_mobile and prod and False %} manifest="/cache.appcache"{% endif %}{% endblock %} lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
+<html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
 <head>
   <meta charset="utf-8">
   <!-- Copyright (c) 2012 Google Inc.
@@ -42,7 +42,7 @@
   <link rel="alternate" type="application/rss+xml" title="{% trans "HTML5 Rocks RSS" %}" href="http://feeds.feedburner.com/html5rocks">
   <link rel="publisher" href="https://plus.google.com/111395306401981598462">
 
-  <link rel="stylesheet" media="all" href="/static/css/base{% if prod %}.min{% endif %}.css">
+  <link rel="stylesheet" media="all" href="/static/css/base{% if prod %}.min{% endif %}.css?20130705">
   <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800|Source+Code+Pro" rel="stylesheet">
 
   <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
@@ -70,17 +70,17 @@
     </h1>
     <nav>
       <ul>
-        <li><a class="home" href="/{{LANGUAGE_CODE}}/" rel="home">{% trans "Home" %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/tutorials/" class="tutorials">{% trans "Posts &amp; Tutorials" %}</a></li>
+        <li id="home_menu"><a class="home" href="/{{LANGUAGE_CODE}}/" rel="home">{% trans "Home" %}</a></li>
+        <li id="tutorials_menu"><a href="/{{LANGUAGE_CODE}}/tutorials/?page=1" class="tutorials">{% trans "Tutorials" %}</a></li>
+        <li id="updates_menu"><a href="/{{LANGUAGE_CODE}}/updates/" class="updates">{% trans "Updates" %}</a></li>
         <li id="features_show"><a href="#features">{% trans "HTML5 Features" %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/slides" class="slides">{% trans "Slides" %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
-        <li><a class="why" href="/{{LANGUAGE_CODE}}/why">{% trans "Why HTML5?" %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/profiles" class="profiles">{% trans "Who We Are" %}</a></li>
-        <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
+        <li id="slides_menu"><a href="/{{LANGUAGE_CODE}}/slides" class="slides">{% trans "Slides" %}</a></li>
+        <li id="resources_menu"><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
+        <li id="profiles_menu"><a href="/{{LANGUAGE_CODE}}/profiles" class="profiles">{% trans "Who We Are" %}</a></li>
+        <li id="contrib_menu"><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
         <li id="search_show">
           <a href="#search_form">
-            {% trans "Search" %}
+            <span>{% trans "Search" %}</span>
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RjM0OTMyOUNEN0FEMTFFMEJDMEZDMjAwMjNDNjc0MDciIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RjM0OTMyOUREN0FEMTFFMEJDMEZDMjAwMjNDNjc0MDciPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpFNzMzOTM2MUQ3OTkxMUUwQkMwRkMyMDAyM0M2NzQwNyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpFNzMzOTM2MkQ3OTkxMUUwQkMwRkMyMDAyM0M2NzQwNyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pj/umaQAAACdSURBVHjanFLbDQMhDAtMwAiM0lFuBEa4DW4ERmk7ASPQDRghTSSfRKvAPSz5J45D5ODJADM/hE/+RRUuNIKKaGzCDUNSNyhbpgixCIOhZ+jrSIiTjfTl5v/qang55z40xlsYvCEEugqEcbSqplutcBrCiZNw0ugU+zm0cQWreY7OVHC7DDN39WVmCmcDyZdNMBbzGx3AiYnu4CvAALKABcbyDrXxAAAAAElFTkSuQmCC" width="14" height="14" alt="">
           </a>
         </li>
@@ -94,7 +94,7 @@
           <input type="hidden" name="ie" value="UTF-8">
           <input type="hidden" name="hl" value="{{LANGUAGE_CODE}}">-->
           <img id="search_hide" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAYAAABWk2cPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RjM0OTMyQTREN0FEMTFFMEJDMEZDMjAwMjNDNjc0MDciIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RjM0OTMyQTVEN0FEMTFFMEJDMEZDMjAwMjNDNjc0MDciPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpGMzQ5MzJBMkQ3QUQxMUUwQkMwRkMyMDAyM0M2NzQwNyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpGMzQ5MzJBM0Q3QUQxMUUwQkMwRkMyMDAyM0M2NzQwNyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Ps3igWgAAAFzSURBVHjazJfPSsNAEMZ3EygoBAoepD0VBA+Cp76AvoCvkWfK0+gLeBI8FISc2lMhsFBBCPGbMKGrZP/qNh342LKdzI/Z7OxOpPCwruvmGEgX0OWIywH6hBopZeOKJx2wJYYraCb87QvaA74NggJG2dwEwsbgH4AfnFAAKbOV+D+rAd4boQmAo+BMAxaJgGQrjn+EYiJPCNTBuZ7ptWXTrKHCM3DB/mM2Y46QTL+HcoPzM7SDSkg5gBW0gB4NPi30lnHR55ZgJQeqLBnrwNISizjzAWqzjQP8G7hxxOuhPu/LBA4F9s9kjqW1gZcRwH6JaSOtA7f+rZatCgT+PBxOaVlkllRCTzxWPB8EbSOAtKRbHkPBbeYoeBNweEZFgBVBm0igiAQ3kxyDUmtLFgbHB+jV8zUMB/6L4f8dtTFSu9ru/tie+LQv74D2G0nQD7rdE5dnzZxjnWJCJQTXHP9MGrPJWtDJmu3knxUIePJb5luAAQDWPZwf40bkcAAAAABJRU5ErkJggg==" width="29" height="29" alt="">
-          <label><span>{% trans "Search" %}:</span><input type="search" name="q" id="q" autocomplete="off" placeholder="{% trans "HTML5 Rocks" %}"/></label>
+          <label><input type="search" name="q" id="q" autocomplete="off" placeholder="{% trans "Search" %}"/></label>
         </form>
       </div>
     </div>
@@ -353,6 +353,19 @@
       }, false);
     {% endif %}
 
+    $(document).keydown(function(e) {
+      if (e.keyCode === 27) { // ESC
+        // Hide search and/or feature bar.
+        $('#search_hide, #features_hide').click();
+      }
+    });
+
+    // Toggle the feature nav.
+    $('.outline_nav_toggle').click(function(e) {
+      $(this).toggleClass('activated');
+      $(this).find('nav.outline').fadeToggle('fast');
+    });
+
     $('#features_show a').click(function() {
       $('#search_hide').click(); // Hide search panel if it's out.
 
@@ -379,17 +392,6 @@
       $('#features_show a').focus();
     });
 
-    // Check if new appcache is available.
-    if (window.applicationCache) {
-      window.applicationCache.addEventListener('updateready', function(e) {
-        if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-          window.applicationCache.swapCache();
-          if (confirm('{% trans "A new version of this site is available. Load it?" %}')) {
-            window.location.reload();
-          }
-        }
-      }, false);
-    }
 
     window.isCompatible = function() {
       {% block iscompatible %}
@@ -442,11 +444,6 @@
   </script>
 
   <!-- defer is unreliable in ie <= 9, but o well -->
-  <script defer src="/static/js/app{% if prod %}.min{% endif %}.js"></script>
-
   <script defer src="/static/js/search{% if prod %}.min{% endif %}.js"></script>
-  {% if not is_mobile %}
-  <script defer src="/static/js/3rdpartyinit{% if prod %}.min{% endif %}.js"></script>
-  {% endif %}
 </body>
 </html>
