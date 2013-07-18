@@ -15,7 +15,7 @@
 <h2 id="toc-introduction">はじめに</h2>
 <p ><span></span>
 </p>
-<p ><span>JavaScriptは自動メモリ管理であるガベージコレクションの機能を備えますが、アプリケーションが効率的なメモリ管理を全くせずに済む訳ではありません。それどころか、JavaScriptで書かれたアプリケーションは、メモリリークやメモリの肥大化等、ネイティブアプリが抱えるのと同様のメモリ関連の問題や、さらにはガベージコレクションによる処理停止の問題にも対処しなければなりません。Gmailのような大規模なアプリケーションにおいても、あなたのより小さなアプリケーションと同じ問題に直面します。以降の記事では、メモリの問題を特定／切り分け／修正するために、GmailチームがChrome DevToolsをどのように使用したかを学ぶことができます。</span>
+<p ><span>JavaScriptはガベージコレクションによる自動メモリ管理の機能を備えますが、アプリケーションが効率的なメモリ管理を全くせずに済むわけではありません。それどころか、JavaScriptで書かれたアプリケーションは、メモリリークやメモリの肥大化等、ネイティブアプリが抱えるのと同様のメモリ関連の問題や、さらにはガベージコレクションによる処理停止の問題にも対処しなければなりません。Gmailのような大規模なアプリケーションにおいても、より小規模なアプリケーションと同じ問題に直面します。以降の記事を読むことで、メモリの問題を特定／切り分け／修正するために、GmailチームがChrome DevToolsをどのように使用したのかを学ぶことができます。</span>
 </p>
 
 <h2 id="toc-watch-the-movie">Google I/O 2013 セッション</h2>
@@ -26,7 +26,7 @@
 <h2 id="toc-gmail-problem">Gmailで起きた問題</h2>
 <p ><span></span>
 </p>
-<p ><span>Gmailチームは深刻な問題に直面していました。Gmailのタブが数ギガバイトのメモリを占有し、ノートPCやデスクトップPCの限られたリソースを圧迫している、といった話が方々で聞かれるようになったのです。たいていの場合、話の結末はブラウザーごと落ちてしまうというものでした。CPUの稼働率が100%のまま下がらないだとか、アプリが無反応になるだとか、Chromeの残念なタブ(&ldquo;He&rsquo;s dead, Jim.&rdquo;)が表示されたとか、そういった話です。Gmailチームは途方に暮れ、問題を解決するどころか、どこから手をつければよいかわからない状況でした。どれくらい広範囲に問題が及んでいるのか、検討もつきませんんでしたし、手元のツールは大規模なアプリケーションに対応していませんでした。そこで、GmailチームはChromeチームと共同で、メモリ問題の一時切り分けを行うための技術を開発し、既存のツールを改良し、フィールドからメモリのデータを収集できるようにしました。では、ツールの説明に入る前に、JavaScriptのメモリ管理についておさらいをしましょう。</span>
+<p ><span>Gmailチームは深刻な問題に直面していました。Gmailのタブが数ギガバイトのメモリを占有し、ノートPCやデスクトップPCの限られたリソースを圧迫している、といった話が方々で聞かれるようになったのです。たいていの場合、話の結末はブラウザーごと落ちてしまうというものでした。CPUの稼働率が100%のまま下がらないだとか、アプリが無反応になるだとか、ChromeのいわゆるSadタブ(&ldquo;He&rsquo;s dead, Jim.&rdquo;)が表示されたとか、そういった話です。Gmailチームは途方に暮れ、問題を解決するどころか、どこから手をつければよいかわからない状況でした。どれくらい広範囲に問題が及んでいるのか、検討もつきませんんでしたし、手元のツールは大規模なアプリケーションに対応していませんでした。そこで、GmailチームはChromeチームと共同で、メモリ問題の一時切り分けを行うための技術を開発し、既存のツールを改良し、フィールドからメモリのデータを収集できるようにしました。では、ツールの説明に入る前に、JavaScriptのメモリ管理についておさらいをしましょう。</span>
 </p>
 <h2 id="toc-basics">メモリ管理の基礎</h2>
 <p ><span></span>
@@ -55,7 +55,7 @@
 </p>
 <p ><span>基本型の値は他の値を参照することはできません。オブジェクトグラフにおいて、これらの値は常にリーフノード、もしくは終端ノードになります。つまり、これらの値は外向きのエッジを持ち得ません。</span>
 </p>
-<p ><span></span> </p> <p ><span>Object型は唯一のコンテナ型です。JavaScript のオブジェクトは</span><span ><a  href="http://ja.wikipedia.org/wiki/%E9%80%A3%E6%83%B3%E9%85%8D%E5%88%97">連想配列</a></span><span>です。空でないオブジェクトは、他の値(ノード)へのエッジを持つ内部ノードです。</span> </p> <p ><span></span>
+<p ><span></span> </p> <p ><span>Object型は唯一のコンテナ型です。JavaScript のオブジェクトは</span><span ><a  href="http://ja.wikipedia.org/wiki/%E9%80%A3%E6%83%B3%E9%85%8D%E5%88%97">連想配列</a></span><span>です。空でないオブジェクトは、他の値 (ノード) へのエッジを持つ内部ノードです。</span> </p> <p ><span></span>
 </p>
 <h4 id="toc-what-about-arrays">配列は？</h4>
 <p ><span></span>
@@ -92,7 +92,7 @@
 <h3 id="toc-when-garbage">値はいつガベージになるか？</h3>
 <p ><span></span>
 </p>
-<p ><span>ルートからのパスがなくなった時点で、値はガベージコレクションの対象になります。言い換えると、ルートおよび<a href="http://en.wikipedia.org/wiki/Call_stack">スタック</a>上に存在するすべてのオブジェクトのプロパティと変数から、あらゆる経路を辿っても到達できない場合、そのオブジェクトはガベージと見なされます。</span>
+<p ><span>ルートからのパスがなくなった時点で、値はガベージコレクションの対象になります。言い換えると、ルートおよび<a href="http://ja.wikipedia.org/wiki/%E3%82%B3%E3%83%BC%E3%83%AB%E3%82%B9%E3%82%BF%E3%83%83%E3%82%AF">スタック</a>上に存在するすべてのオブジェクトのプロパティと変数から、あらゆる経路を辿っても到達できない場合、そのオブジェクトはガベージと見なされます。</span>
 </p>
 <p ><span></span>
 </p>
@@ -104,7 +104,7 @@
 <h3 id="toc-what-is-a-leak">JavaScriptのメモリリークとは？</h3>
 <p ><span></span>
 </p>
-<p ><span>一般的にJavaScript の</span><span>メモリリーク</span><span>は、すでにページのDOMツリーから参照されなくなった</span><span>DOMノード</span><span>が、あるオブジェクトから参照されている場合に発生します。モダンWebブラウザは、うっかりリークを作り込んでしまわないような作りになっていますが、それでもまだリークは容易に発生します。例えば、以下のようにDOMツリーに要素を追加したとしましょう。</span>
+<p ><span>JavaScript の</span><span>メモリリーク</span><span>の典型的な例として、すでにページのDOMツリーから参照されなくなった</span><span>DOMノード</span><span>が、あるオブジェクトから参照されているケースがあります。モダンWebブラウザは、うっかりリークを作り込んでしまわないような作りになっていますが、それでもまだリークは容易に発生し得ます。例えば、以下のようにDOMツリーに要素を追加したとしましょう。</span>
 </p>
 <p ><span></span>
 </p>
@@ -128,7 +128,7 @@ displayList.removeAllChildren();
 <h3 id="toc-bloat">メモリの肥大化とは？</h3>
 <p ><span></span>
 </p>
-<p ><span>ページのロードに見合ったメモリ量よりも多くのメモリを使用すると、</span><span ><a  href="http://ja.wikipedia.org/wiki/%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E3%81%AE%E8%82%A5%E5%A4%A7%E5%8C%96">肥大化</a></span><span>が発生します。メモリリークも結果的に肥大化を引き起こしますが、それは意図的ではありません。メモリ肥大化のよくある例として、サイズ制限の無いアプリケーションキャッシュが挙げられます。また、ページがロードしたデータ、例えば画像などにより、肥大化が発生することもあります。</span>
+<p ><span>ページに見合ったメモリ量よりも多くのメモリを使用すると、</span><span ><a  href="http://ja.wikipedia.org/wiki/%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E3%81%AE%E8%82%A5%E5%A4%A7%E5%8C%96">肥大化</a></span><span>が発生します。メモリリークも結果的に肥大化を引き起こしますが、それは意図的ではありません。メモリ肥大化のよくある例として、サイズ制限の無いアプリケーションキャッシュが挙げられます。また、ページがロードしたデータ、例えば画像などにより、肥大化が発生することもあります。</span>
 </p>
 <h3 id="toc-gc">ガベージコレクションとは？</h3>
 <p ><span></span>
@@ -147,14 +147,14 @@ displayList.removeAllChildren();
 </p>
 <p ><span>V8は２世代のガベージコレクターを使います。値の年齢とは、その値がアロケートされた時点から今まで何バイトアロケートされたか、で定義されます。実際には、ある値の年齢は、しばしば何回分のガベージコレクションを生き延びたか、によって簡易的に表現されます。そして、ある値が十分古くなれば、旧世代の領域に移されます。</span>
 </p>
-<p ><span><br>現実には、新たにアロケートされた値はそれほど長く生き続けません。Smalltalkプログラムの研究によると、アロケートされた値のうち、ガベージコレクションを生き延びるのはたかだか7%です。他の研究によると、新たにアロケートされた値のうち、70から90%は新世代のメモリ領域にとどまったままで、旧世代のメモリ領域に移されないことが判明しました。 </span>
+<p ><span><br>現実には、新たにアロケートされた値はそれほど長く生き続けません。Smalltalkプログラムの研究によると、アロケートされた値のうち、ガベージコレクションを生き延びるのはたかだか7%です。他の研究によると、新たにアロケートされた値のうち、70から90%は新世代のメモリ領域で回収され、旧世代のメモリ領域に移されないことが判明しました。 </span>
 </p>
 <h3 id="toc-young">新世代GC</h3>
 <p ><span></span>
 </p>
-<p><span>V8の新世代のヒープメモリは</span><span >from</span><span> と </span><span >to</span><span> の２つの領域に隔てられています。メモリはまず、</span><span >to</span><span> の領域からアロケートされます。アロケートはとても高速で、</span>
+<p><span>V8の新世代のヒープメモリは</span><span >from</span><span> と </span><span >to</span><span> の２つの領域に分けられます。メモリはまず、</span><span >to</span><span> の領域からアロケートされます。アロケートはとても高速で、</span>
     <span>to</span><span> 領域がいっぱいになった時点で、ガベージコレクションが起動されます。ガベージコレクタは、まず</span><span >from</span><span> 領域と </span><span >to</span><span>領域をスワップします。古い</span>
-        <span>to</span><span>領域 (つまり、今の </span><span >from</span><span> 領域) はスキャンされ、すべての有効な値は </span><span >to</span><span> 領域に移動されるか、もしくは旧世代の領域に移動されます。新世代のガベージコレクションの実行時間は、10 ミリ秒のオーダーです。</span>
+        <span>to</span><span>領域 (つまり、今の </span><span >from</span><span> 領域) はスキャンされ、すべての参照されている値は </span><span >to</span><span> 領域に移動されるか、もしくは旧世代の領域に移動されます。新世代のガベージコレクションの実行時間は、10 ミリ秒のオーダーです。</span>
 </p>
 <p ><span></span>
 </p>
@@ -177,45 +177,45 @@ displayList.removeAllChildren();
 <h3 id="toc-v8-gc-summary">V8のGCまとめ</h3>
 <p ><span></span>
 </p>
-<p ><span>ガベージコレクションによる自動メモリ管理は、開発者の生産性という点ではすばらしいですが、値をアロケートするたびにGC発生のリミットに近づきます。GCによる処理停止は、アプリケーションの印象を損ないます。以上で、JavaScriptがどのようにメモリを管理するか、学ぶことが出来たので、ご自身のアプリケーションにおいて、正しい選択ができるようになると思います。</span>
+<p ><span>ガベージコレクションによる自動メモリ管理は、開発者の生産性という点ではすばらしいですが、値をアロケートするたびにGC発生のリミットに近づきます。GCによる処理停止は、アプリケーションの印象を損ないます。以上で、JavaScriptがどのようにメモリを管理するか、学ぶことが出来たので、ご自身のアプリケーションにおいて、正しい選択ができるようになったと思います。</span>
 </p>
-<h2 id="toc-fixing-gmail">Gmailの修正内容</h2>
+<h2 id="toc-fixing-gmail">Gmailにおける施策</h2>
 <p ><span></span>
 </p>
-<p ><span>Over the past year, numerous features and bug fixes have made their way into the Chrome DevTools making them more powerful than ever. In addition, the browser itself made a key change to the performance.memory API making it possible for Gmail and any other application to collect memory statistics from the field. Armed with these awesome tools, w</span><span>hat once seemed like an impossible task soon became an exciting game of tracking down culprits.</span>
+<p ><span>Chrome DevTools は、ここ数年の間、おびただしい数の機能追加とバグ修正により、かつてないほどパワフルなツールになりました。それに加え、ブラウザ自体にも performance.memory API が追加されたので、Gmailのようなアプリケーションは、メモリ使用に関する統計的なデータをフィールドから収集できるようになりました。これらの素晴らしいツールのおかげで、以前は不可能と思われていた障害要因の切り分け調査が可能となりました。</span>
 </p>
-<h3 id="toc-tools-techniques">Tools and Techniques</h3>
-<h4 id="toc-performance-memory">Field Data and performance.memory API</h4>
+<h3 id="toc-tools-techniques">ツールとテクニック</h3>
+<h4 id="toc-performance-memory">フィールドデータと performance.memory API</h4>
 <p ><span></span>
 </p>
-<p ><span>As of Chrome 22, the </span><span ><a  href="http://docs.webplatform.org/wiki/apis/timing/properties/memory">performance.memory API</a></span><span>&nbsp;is enabled by default. &nbsp;For long-running applications like Gmail, data from real users is invaluable. This information allows us to distinguish between power users-- those who spend 8-16 hours a day on Gmail, receiving hundreds of messages a day-- from more average users who spend a few minutes a day in Gmail, receiving a dozen or so messages a week. &nbsp;</span>
+<p ><span><a  href="http://docs.webplatform.org/wiki/apis/timing/properties/memory">performance.memory API</a></span><span>は Chrome 22 でデフォルトで有効になりました。Gmail のような長時間実行されるアプリケーションにおいては、実際のユーザーからのデータはとても貴重です。収集されたデータにより、我々は、パワーユーザ (一日に8〜16時間Gmailを使用し、数百件のメールを受け取る) と、一般的なユーザ (一日に数分しかGmailを使用せず、10数件のメールしか受け取らない) を区別することができます。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>This API returns three pieces of data:</span>
+<p ><span>このAPIは３つのデータを返します。</span>
 </p>
 <p ><span></span>
 </p>
 <ol class="c9" start="1">
-    <li ><span >jsHeapSizeLimit</span><span>&nbsp;- The amount of memory (in bytes) that the JavaScript heap is limited to.</span>
+    <li ><span >jsHeapSizeLimit</span><span>&nbsp;- JavaScript のヒープメモリのサイズ限界値 (バイト)</span>
     </li>
-    <li ><span >totalJSHeapSize</span><span>&nbsp;- The amount of memory (in bytes) that the JavaScript heap has allocated including free space.</span>
+    <li ><span >totalJSHeapSize</span><span>&nbsp;- ヒープメモリのうち、すでにアロケートされたメモリのサイズ (バイト)</span>
     </li>
-    <li ><span >usedJSHeapSize</span><span>&nbsp;- The amount of memory (in bytes) currently being used.</span>
+    <li ><span >usedJSHeapSize</span><span>&nbsp;- アロケートされたメモリのうち、現在使用中のメモリのサイズ (バイト)</span>
     </li>
 </ol>
 <p ><span></span>
 </p>
-<p ><span>One thing to keep in mind is that the API returns memory values for the entire Chrome process. Although it is not the default mode, under certain circumstances, Chrome may open multiple tabs in the same renderer process. This means that the values returned by performance.memory may contain the memory footprint of other browser tabs in addition to the one containing your app.</span>
+<p ><span>一点、注意してほしいのは、この API が返すメモリサイズは、Chrome のプロセス全体のメモリである、ということです。デフォルトでは一つのタブにつき一つのレンダープロセスが作成されますが、ある条件下では、一つのレンダープロセスを複数のタブで共有する場合があります。つまり、performance.memory API が返す値は、アプリ実行中のタブ以外のタブで使用されているメモリも含む場合があるのです。</span>
 </p>
-<h4 id="toc-memory-scale">Measuring Memory At Scale</h4>
+<h4 id="toc-memory-scale">メモリの定量的な観測</h4>
 <p ><span></span>
 </p>
-<p ><span>Gmail instrumented their JavaScript to use the performance.memory API to collect memory information approximately once every 30 minutes. &nbsp;Because many Gmail users leave the app up for days at a time, the team was able to track memory growth over time as well as overall memory footprint statistics. Within a few days of instrumenting Gmail to collect memory information from a random sampling of users, the team had enough data to understand how widespread the memory problems were among average users. They set a baseline and used the stream of incoming data to track progress toward the goal of reducing memory consumption. Eventually this data would also be used to catch any memory regressions.</span>
+<p ><span>Gmail では、JavaScript のコードに変更を加え、performance.memory API を使って、約30分毎にメモリの情報を収集するようにしました。多くの Gmail のユーザーは、アプリを何日も起動したままの状態にしておくので、我々はメモリ使用量の統計的データと併せて、メモリ使用量が時間経過によりどのように変化するか、といった情報も収集することができました。そのようにして数日間、ランダムに抽出されたユーザーのメモリ情報を収集することで、Gmail チームはメモリの問題が発生している範囲を把握するのに十分なデータを入手できました。まずは現状を把握し、引き続きデータを収集することで、メモリ使用量削減のゴールに向けて、どのくらい進捗しているか追跡することが可能となったのです。最終的には、このデータはメモリ関連のリグレッションの検出にも使えるでしょう。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>Beyond tracking purposes, the field measurements also provide a keen insight into the correlation between memory footprint and application performance. &nbsp;Contrary to the popular belief that &ldquo;more memory results in better performance&rdquo;, the Gmail team found that the larger the memory footprint, the longer latencies were for common Gmail actions. Armed with this revelation, they were more motivated than ever to rein in their memory consumption.</span>
+<p ><span>メモリの追跡のみならず、フィールドデータの観測により、メモリ使用量とアプリケーションのパフォーマンスの関係についても、鋭い洞察が得られました。一般的にメモリ量が多いほど、良いパフォーマンスが得られると信じられていますが、我々は、多くのGmailの動作において、メモリー使用量が増えるほど、遅延が大きくなることを発見しました。この予想外の発見により、我々は以前にも増して、メモリ使用量の抑制に熱心に取り組むようになりました。</span>
 </p>
 <p ><span></span>
 </p>
@@ -224,22 +224,22 @@ displayList.removeAllChildren();
     <img height="186" src="images/image05.png">
     </figure>
 </p>
-<h4 id="toc-identify-memory">Identifying a Memory Problem with the DevTools Timeline</h4>
+<h4 id="toc-identify-memory">DevToolsのタイムラインを用いたメモリ問題調査</h4>
 <p ><span></span>
 </p>
-<p ><span>The first step in solving any performance problem is to prove that the problem exists, create a reproducible test, and take a baseline measurement of the problem. Without a reproducible program, you cannot reliably measure the problem. Without a baseline measurement you don&rsquo;t know by how much you&rsquo;ve improved performance.</span>
+<p ><span>すべてのパフォーマンス問題に関して言えることですが、まず最初にすべきことは、問題の存在自体を証明すべく、再現性のあるテスト手順を確立し、現状の計測結果を取得することです。再現プログラム無しでは、安定した計測データを得ることはできませんし、また、初期の計測結果無しでは、どれだけパフォーマンスが改善したか知り得ません。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>The DevTools </span><span>Timeline panel </span><span>is an ideal candidate for proving that the problem exists. It </span><span>gives a complete overview of where time is spent when loading and interacting with your web app or page. All events, from loading resources to parsing JavaScript, calculating styles, garbage collection pauses, and repainting are plotted on a timeline. For the purposes of investigating memory issues, the Timeline panel also has a Memory mode which tracks total allocated memory, number of DOM nodes, number of window objects, and the number of event listeners allocated.</span>
+<p ><span>Chrome DevTools の </span><span>タイムラインパネル</span><span> は、問題の存在を証明するための格好の手段となります。タイムラインを使うことにより、Web ページがロード／操作される際に、どこにどれだけの時間が費やされているかを詳細に把握することが出来ます。また、リソースの読み込み、JavaScriptのパース、スタイルの計算、ガベージコレクションの実行、再描画等の、すべてのイベントはタイムライン上に表示されます。そして、メモリ問題を調査するために、タイムラインパネルはメモリモードを備えており、アロケートされたメモリの合計値や、DOMノード数、ドキュメント数、イベントリスナー数を追跡することができます。</span>
 </p>
-<h4 id="toc-problem-exists">Proving a problem exists</h4>
+<h4 id="toc-problem-exists">問題が存在することの証明</h4>
 <p ><span></span>
 </p>
-<p ><span>Start by identifying a sequence of actions you suspect to be leaking memory. Start recording the timeline, and perform the sequence of actions. &nbsp;Use the trash can button at the bottom to force a full garbage collection. &nbsp;If, after a few iterations, you see a </span>
+<p ><span>まずは、一連の操作によりメモリリークが発生していないか確かめましょう。タイムラインのレコーディングを開始して、その操作を行ってください。画面下のゴミ箱のアイコンを押下することで、ガベージコレクションを発生させることができます。これを何度か繰り返すことで、</span>
     <span
-    ><a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">sawtooth</a>
-        </span><span>&nbsp;shaped graph, you are allocating lots of shortly lived objects. But if the sequence of actions is not expected to result in any retained memory, and the DOM node count does not drop down back to the baseline where you began, you have good reason to suspect there is a leak. </span>
+    ><a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">ノコギリ型</a>
+        </span><span>のグラフが見られた場合、短命なオブジェクトを大量にアロケートしていることを表します。しかし、もしその操作がメモリの保持を伴わないものであるにもかかわらず、DOMノード数が初期状態に戻らなかった場合、メモリリークの疑いがあります。 </span>
 </p>
 <p >
     <figure>
@@ -248,33 +248,33 @@ displayList.removeAllChildren();
 </p>
 <p ><span></span>
 </p>
-<p ><span>Once you&rsquo;ve confirmed that the problem exists, you can get help identifying the source of the problem from the DevTools Heap Profiler.</span>
+<p ><span>ひとたびリークの存在が確認できれば、次に Chrome DevTools のヒーププロファイラを使って、リークの原因を特定することができます。</span>
 </p>
 <p ><span></span>
 </p>
-<h4 >Finding Memory Leaks with the DevTools Heap Profiler</h4>
+<h4 >DevTools のヒーププロファイラを使ったメモリリークの発見</h4>
 <p ><span></span>
 </p>
-<p ><span>The Profiler panel provides both a CPU profiler and a Heap profiler. Heap profiling works by taking a snapshot of the object graph. Before a snapshot is taken both the young and old generations are garbage collected. In other words, you will only see values which were alive when the snapshot was taken.</span>
+<p ><span>プロファイラパネルには、CPUプロファイラとヒーププロファイラがあります。ヒーププロファイラではオブジェクトグラフのスナップショットを取得することができます。スナップショットを取得する前に、新旧両世代のガベージコレクションが実行されるので、スナップショットで見れるのは、プログラムで参照されているオブジェクトだけです。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>There is too much functionality in the the Heap profiler to cover sufficiently in this article, but </span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/heap-profiling">detailed documentation</a></span><span>&nbsp;can be found on the Google Developers site</span><span>. We&rsquo;ll focus here on the all new Object Tracker, available now via an experiment on the latest Chrome builds. &nbsp;To enable the Object Tracker:</span>
+<p ><span>ヒーププロファイラはたくさんの機能を備えるので、すべてをこの記事で取り上げることはできませんが、Google Developers のサイトに</span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/heap-profiling">詳細なドキュメント</a></span><span>がありますので参照ください。</span><span>ここでは、最新のChromeにエクスペリメント機能として入った Object Tracker を紹介するにとどめます。まずは、以下の手順で Object Tracker を有効にしてください。</span>
 </p>
 <ol class="c2" start="1">
-    <li ><span>Make sure you have the latest </span><span ><a  href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary</a></span><span>. </span>
+    <li ><span>最新の</span><span ><a  href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary</a></span><span>を使用していることを確認してください。</span>
     </li>
-    <li ><span>Navigate to about:flags, and make sure &ldquo;Enable Developer Tools experiments&rdquo; is enabled. You will need to restart Chrome to activate the experiments. &nbsp;</span>
+    <li ><span>about:flags のページを開いて、&ldquo;Enable Developer Tools experiments&rdquo; が有効になっていることを確認してください。設定変更を反映するにはChrome を再起動する必要があります。 &nbsp;</span>
     </li>
-    <li ><span>Open the Developer Tools and click on the gear icon in the lower right. &nbsp;Find the Experiments item in the menu on the left, and check the box labeled &ldquo;Enable heap objects tracking profile type&rdquo;. &nbsp;You will need to close and reopen the DevTools to make this change take effect.</span>
+    <li ><span>Developer Tools を開き、右下の歯車のアイコンをクリックしてください。画面左のメニューに Experiments というアイテムが現れるので選択し、&ldquo;Enable heap objects tracking profile type&rdquo; のチェックボックスを有効にしてください。設定変更を反映するには、DevTools をいったん閉じて開く必要があります。</span>
     </li>
-    <li ><span>Now, when you open the Profiler panel, you should see a fourth profile type option, called &ldquo;Track Allocations&rdquo;.</span>
+    <li ><span>プロファイルパネルに新しいプロファイルタイプ &ldquo;Track Allocations&rdquo; が追加されているはずです。</span>
     </li>
 </ol>
-<h4 id="toc-object-tracker">Using the Object Tracker</h4>
+<h4 id="toc-object-tracker">Object Tracker を使用する</h4>
 <p ><span></span>
 </p>
-<p ><span>The Object Tracker combines the detailed snapshot information of the Heap Profiler with the incremental updating and tracking of the Timeline panel. Start a recording, perform a sequence of actions, then stop the recording for analysis. The Object Tracker takes heap snapshots periodically throughout the recording (as frequently as every 50 ms!) and one final snapshot at the end of the recording.</span>
+<p ><span>Object Tracker はヒーププロファイラのスナップショット情報と、タイムラインパネルの時系列による追跡機能とを併せ持ちます。レコーディング開始して、一連の操作を行い、レコーディングを停止することで解析可能となります。Object Tracker はレコーディング開始後、定期的に (50 ミリ秒毎に！) ヒープのスナップショットを取得し、レコーディング停止時に最終のスナップショットを取得します。</span>
 </p>
 <p ><span></span>
 </p>
@@ -283,16 +283,16 @@ displayList.removeAllChildren();
     <img height="339" src="images/image00.png">
     </figure>
 </p>
-<p ><span>The bars at the top indicate when new objects are found in the heap. &nbsp;The height of each bar corresponds to the size of the recently allocated objects, and the color of the bars indicate whether or not those objects are still live in the final heap snapshot: blue bars indicate objects that are still live at the end of the timeline, gray bars indicate objects that were allocated during the timeline, but have since been garbage collected.</span>
+<p ><span>画面上部のバーは、新しいオブジェクトがいつヒープに出現したかを表します。バーの高さは、その時点でアロケートされたオブジェクトのサイズを表し、バーの色はそれらのオブジェクトが最終のヒープスナップショットに存在するかどうかを表します。青色のバーはオブジェクトがタイムラインの終端時点でもまだ存在し続けていることを示します。一方、灰色のバーはオブジェクトがタイムライン上のある時点でアロケートされたけれど、すでにガベージコレクタによりメモリ回収されたことを示します。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>In the example above, an action was performed 10 times. &nbsp;The sample program caches five objects, so the last five blue bars are expected. &nbsp;But the leftmost blue bar indicates a potential problem. You can then use the sliders in the timeline above to zoom in on that particular snapshot and see the objects that were recently allocated at that point. &nbsp;Clicking on a specific object in the heap will show its retaining tree in the bottom portion of the heap snapshot. Examining the retaining path to the object should give you enough information to understand why the object was not collected, and you can make the necessary code changes to remove the unnecessary reference.</span>
+<p ><span>上の例では、アクションが 10 回実行されます。サンプルプログラムは５つのオブジェクトをキャッシュするので、最後の５本の青色のバーは想定通りです。しかし、一番左の青色のバーは潜在的な問題を示しています。タイムラインのスライダを問題のバーの上に動かすことで、その時点でアロケートされたオブジェクトのスナップショットを見ることが出来ます。ヒープ内の特定のオブジェクトをクリックすると、スナップショットの下部にそのオブジェクトの参照ツリーを表示します。オブジェクトがどのようなパスで参照されているか調べることで、なぜそのオブジェクトがガベージコレクションの対象にならなかったのか判明したら、コードを変更して不要な参照を取り除いてください。</span>
 </p>
-<h2 id="toc-resolving-crisis">Resolving Gmail's Memory Crisis</h2>
+<h2 id="toc-resolving-crisis">Gmail のメモリ危機を解消</h2>
 <p ><span></span>
 </p>
-<p ><span>By using the tools and techniques discussed above, the Gmail team was able to identify a few categories of bugs: &nbsp;unbounded caches, infinitely growing arrays of callbacks waiting for something to happen that never actually happens, and event listeners unintentionally retaining their targets. By fixing these issues, the overall memory usage of Gmail was dramatically reduced. Users in the 99% percent used 80% less memory than before and the memory consumption of the median users dropped by nearly 50%.</span>
+<p ><span>上記のツールとテクニックを使い、Gmailチームは数種類のバグを特定できました。無制限なキャッシュ作成、絶対に発生しないイベントを待つコールバックの無限に伸びる配列、そして気付かずにターゲット自身の参照を保持していたイベントリスナーです。これらのバグを修正することで、Gmail の全体のメモリ使用量は劇的に改善しました。99%のユーザにおいて、メモリ使用量が以前と比べて80%減少し、中央値ではメモリ使用量は50% 近く減少しました。</span>
 </p>
 <p ><span></span>
 </p>
@@ -305,53 +305,53 @@ displayList.removeAllChildren();
 </p>
 <p ><span></span>
 </p>
-<p ><span>Because Gmail used less memory the GC pause latency was reduced, increasing the overall user experience.</span>
+<p ><span>Gmail のメモリ使用量が減ることで、GC発生による遅延は緩和され、結果的に全体的なユーザー体験の向上につながりました。</span>
 </p>
 <p ><span></span>
 </p>
-<p ><span>Also of note, with the Gmail team collecting statistics on memory usage, they were able to uncover garbage collection regressions inside Chrome. Specifically, two fragmentation bugs were discovered when Gmail&rsquo;s memory data began showing a dramatic increase in the gap between total memory allocated and live memory.</span>
+<p ><span>そして、副次的な効果として、Gmail チームの収集するメモリの統計データから、Chrome 内部のガベージコレクションのデグレを発見することができました。Gmail の収集データから、アロケートされたメモリと使用メモリとの差分の値が急上昇したことが確認され、これにより２つのフラグメンテーションバグが検出されました。</span>
 </p>
 <p ><span></span>
 </p>
 <h2 id="toc-call-to-action">チェックリスト</h2>
 <p ><span></span>
 </p>
-<p ><span>Ask yourself these questions:<br></span>
+<p ><span>以下を自問自答してください。<br></span>
 </p>
 <ol class="c9" start="1">
-    <li class="c3 c6"><span>How much memory is my app using?</span>
+    <li class="c3 c6"><span>あなたのアプリケーションはどのくらいメモリを使用しますか？</span>
     </li>
 </ol>
 <p ><span></span>
 </p>
-<p ><span>It&rsquo;s possible that you are using too much memory which contrary to popular belief has a net negative on overall application performance. It&rsquo;s hard to know exactly what the right number is, but, be sure to verify that any extra caching your page is using has a measurable performance impact.</span>
+<p ><span>あなたのアプリケーションはメモリを使いすぎている可能性があります。よく誤解されていることですが、多すぎるメモリはアプリケーションの全体のパフォーマンスに悪い影響を及ぼします。正確な数値を知ることは難しいですが、過剰なページキャッシュがパフォーマンスに影響を及ぼしていないか検証してください。</span>
 </p>
 <p ><span></span>
 </p>
 <ol class="c9" start="1">
-    <li ><span>Is my page leak free?</span>
+    <li ><span>あなたのページにリークはありませんか？</span>
     </li>
 </ol>
 <p ><span></span>
 </p>
-<p ><span>If your page has memory leaks it can not only impact your page's performance but other tabs as well. Use the object tracker to help narrow in on any leaks.</span>
+<p ><span>あなたのページでメモリリークが発生すると、あなたのページのパフォーマンスだけではなく、他のタブにも影響を及ぼす可能性があります。Object Tracker を使ってリークの原因を特定してください。</span>
 </p>
 <p ><span></span>
 </p>
 <ol class="c9" start="1">
-    <li ><span>How frequently is my page GCing?</span>
+    <li ><span>あなたのページではどれくらい頻繁にGCが発生しますか？</span>
     </li>
 </ol>
 <p ><span></span>
 </p>
-<p ><span>You can see any GC pause using </span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">Timeline panel</a></span><span>&nbsp;in </span><span ><a  href="https://developers.google.com/chrome-developer-tools/">Chrome Developer Tools</a></span><span>. If your page is GCing frequently, chances are you are allocating too frequently, churning through your young generation memory. </span>
+<p ><span>GC が発生したかどうかは </span><span ><a  href="https://developers.google.com/chrome-developer-tools/">Chrome Developer Tools</a></span><span> の </span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">タイムラインパネル</a></span><span>で確認できます。</span><span > もし頻繁にGCが発生しているのであれば、メモリをアロケートする頻度が高すぎるか、もしくは新世代GC のメモリ領域でメモリのアロケート／回収がひっきりなしに起きているかもしれません。</span>
 </p>
 <p ><span></span>
 </p>
 <h2 id="toc-conslusion">おわりに</h2>
 <p ><span></span>
 </p>
-<p ><span>We started off in a crisis. Covered the core basics of memory management in JavaScript and V8 in particular. You learned how to use the tools, including the new object tracker feature available in the latest builds of Chrome. The Gmail team, armed with this knowledge, solved their memory usage problem and saw improved performance. You can do the same with your web apps!</span>
+<p ><span>Gmail で起きたメモリ危機からはじまって、JavaScript と V8 におけるメモリ管理の基礎を説明しました。そして、最新のChromeで利用可能な Object Tracker を含むツールの使い方を学びました。Gmail チームはこれらの知識を使い、メモリ使用量の問題を解決し、パフォーマンスを改善しました。次はあなたのWeb アプリケーションで、同様の改善を実現してください！</span>
 </p>
 
 {% endblock %}
