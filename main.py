@@ -59,7 +59,6 @@ class ContentHandler(webapp2.RequestHandler):
     
   def activate_language(self, language_code):
     self.locale = language_code or settings.LANGUAGE_CODE
-    logging.info("Set Language as %s" % self.locale)
     translation.activate( self.locale )
 
   def browser(self):
@@ -154,7 +153,6 @@ class ContentHandler(webapp2.RequestHandler):
     # Strip out language code from path. Urls changed for i18n work and correct
     # disqus comment thread won't load with the changed urls.
     path_no_lang = re.sub('^\/\w{2,3}(?:/|$)?', '', self.request.path, 1)
-    logging.info("path after removing lang: %s" % path_no_lang)
 
     pagename = ''
     if path_no_lang == '':
@@ -278,7 +276,6 @@ class ContentHandler(webapp2.RequestHandler):
     # Are we looking for a feed?
     is_feed = self.request.path.endswith('.xml')
 
-    logging.info('relpath: ' + relpath)
     # Setup handling of redirected article URLs: If a user tries to access an
     # article from a non-supported language, we'll redirect them to the
     # English version (assuming it exists), with a `redirect_from_locale` GET
@@ -324,7 +321,6 @@ class ContentHandler(webapp2.RequestHandler):
       match = re.search(('(?P<type>mobile|tutorials/casestudies)'
                          '/(?P<slug>[a-z-_0-9]+).html$'), relpath)
       if match:
-        logging.info("Redirecting from old-style URL to the new hotness.")
         return self.redirect('/%s/%s/%s/' % (locale, match.group('type'),
                                              match.group('slug')))
 
@@ -345,7 +341,6 @@ class ContentHandler(webapp2.RequestHandler):
       #
       # So, to determine if an HTML page exists for the requested language
       # `split` the file's path, add in the locale, and check existence:
-      logging.info('Building request for `%s` in locale `%s`', path, locale)
       (dir, filename) = os.path.split(path)
       if os.path.isfile(os.path.join(dir, locale, filename)):
         # Lookup tutorial by its url. Return the first one that matches.
