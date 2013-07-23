@@ -296,6 +296,8 @@ class ContentHandler(webapp2.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business', 'updates'])):
+      if (relpath != '' and relpath[-1] != '/'):
+        return self.redirect(self.request.url + '/')
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
