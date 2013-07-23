@@ -40,12 +40,12 @@ def main():
     due_on = datetime.strptime(options.due_on, "%Y-%m-%d")
 
     try:
-        milestone = r.create_milestone(options.title, state="open", due_on=due_on)
+        milestone = repo.create_milestone(options.title, state="open", due_on=due_on)
     except GithubException as e:
         print "A milestone has already been created for this date, no two articles can be launched on the same day"
         sys.exit(1)
  
-    issue = r.create_issue(options.title, body=options.description, milestone=milestone)
+    issue = repo.create_issue(options.title, body=options.description, milestone=milestone)
 
     print "Created issue: %s" % issue.url
 
