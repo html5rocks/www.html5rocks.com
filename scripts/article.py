@@ -18,6 +18,18 @@ def main():
 
     (options, args) = parser.parse_args()
 
+    if options.title is None or options.title == "":
+        print "Article title required"
+        sys.exit(1)
+
+    if options.due_on is None or options.due_on == "":
+        print "Article delivery date is required"
+        sys.exit(1)
+
+    if options.owner is None or options.owner == "":
+        print "Article owner is required"
+        sys.exit(1)
+
     username = raw_input("Username: ")
     password = getpass.getpass() 
 
@@ -29,7 +41,7 @@ def main():
 
     try:
         milestone = r.create_milestone(options.due_on, state="open", due_on=due_on)
-    except GithubException e:
+    except GithubException as e:
         print "A milestone has already been created for this date, no two articles can be launched on the same day"
         sys.exit(1)
  
