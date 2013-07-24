@@ -20,6 +20,23 @@ Demo = function(setup) {
     this.startButton.style.zIndex = 10;
     this.startButton.textContent = "Start Demo";
     this.startButton.onclick = function() {
+      var frames = window.parent.frames, scripts, reload;
+      for (var i = 0, il = frames.length; i < il; i++) {
+        if (frames[i] === window || !frames[i].document) {
+          continue;
+        }
+        scripts = frames[i].document.getElementsByTagName('script');
+        reload = false;
+        for (var j = 0, jl = scripts.length; j < jl; j++) {
+          if (scripts[j].src.indexOf('positional_audio.js') !== -1) {
+            reload = true;
+            break;
+          }
+        }
+        if (reload) {
+          frames[i].document.location.reload();
+        }
+      }
       if (!self.playing) {
         if (!self.initComplete) {
           self.init();
