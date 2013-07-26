@@ -419,9 +419,9 @@ class ContentHandler(webapp2.RequestHandler):
         template_args['previous_page'] = page_number - 1
         template_args['next_page'] = page_number + 1
       
-      if relpath in ['mobile', 'gaming', 'business']:
+      if relpath[:-1] in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
-            relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+            relpath[:-1], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
       elif relpath == 'updates':
         results = []
       else:
