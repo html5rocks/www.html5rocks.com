@@ -296,6 +296,17 @@ class ContentHandler(webapp2.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business', 'updates'])):
+
+      # Check if path ends with a / and adds if necessary
+      if (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string == ''):
+          return self.redirect(relpath + '/', permanent=True)
+      # Check if path ends with a / and adds along with the query string
+      elif (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string != ''):
+          return self.redirect(relpath + '/?' + self.request.query_string,
+                               permanent=True)
+
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
