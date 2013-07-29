@@ -12,7 +12,7 @@
   <header class="clearfix pattern-bg-lighter">
     <hgroup>
       <h1>HTML5 Rocks</h1>
-      <h2>{% trans "Posts & Tutorials" %}</h2>
+      <h2>{% trans "Tutorials" %}</h2>
     </hgroup>
     <section class="filter">
       <div class="one_quarter">
@@ -64,9 +64,9 @@
 
     <span class="share">
       <ul>
-        <li class="googleplus"><div class="g-plusone" data-size="medium" data-count="true" data-href="{{disqus_url}}"></div></li>
-        <li class="facebook" data-url="{{disqus_url}}"></li>
-        <li class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-url="{{disqus_url}}" data-lang="{{LANGUAGE_CODE}}" data-related="ChromiumDev:News and announcements for developers from the Google Chrome team and makers of HTML5 Rocks.">{% trans "Tweet" %}</a></li>
+        <li class="googleplus"><div class="g-plusone" data-size="medium" data-count="true" data-href="{{disqus_url}}?utm_source=gplus&utm_medium=social"></div></li>
+        <li class="facebook" data-url="{{disqus_url}}?utm_source=facebook&utm_medium=social"></li>
+        <li class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-url="{{disqus_url}}?utm_source=twitter&utm_medium=social" data-lang="{{LANGUAGE_CODE}}" data-related="ChromiumDev:News and announcements for developers from the Google Chrome team and makers of HTML5 Rocks.">{% trans "Tweet" %}</a></li>
       </ul>
     </span>
 
@@ -95,12 +95,17 @@
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJpSURBVDjLfVNJT1NRGL0/wY0/wonaEesOAxoTF4bEpY1GFGGBqEUhggjYaCVIcIKC1TiHiCEBiXEhVdm4EDaaKI2WofTRlqbYR8sbOhzfd5v3tEK8i5d3F+fcM3wf+3x065bZc9t6F5rNCLeYsXTJgkibBUK7FcsdVkS7bIh57Ihfs2PFa0fihgOx6w4QhrCMfmKXnYi4y7DcbEK8zYxEhwVJjxW/vDaIPXak+xxYv1MOqX8PlEEn1PtOKP4KTsLoZQLH  vQeRfjeAzPsBiE9O/Rec9e+F7HMiqiljJJteXvXX4O9TkEUon4awPlS5KThzq5xbY+SZZCf7DkGa8kH9Mo58SvjDpKwh+/biBnCq245opw2MAtvMszxah0IiaPDkPl4tASc9Nh40ow+B089ruexceBrqVC/kB5Vcdj44YZDIr5sM8Eq71larBYyqopczw6dLMuDSR11cdm52wshltaeCg6MtVLtGQD3rsqVHh6FOdqEgCgaJOuLisvVcMgEfBwtuExYvmMEoyQ1VPd5vSC9oQPH2PqRHzhfvksjB4YYyLLh3g9GE6eD83AcUhBkemPKwylCSHrvCZROYTtR7BPP1uzB3ViOg8SSwOl5v2M9HprlsOXCz6ORbgMuWvk7ye/KlF6GTOxE6YwKj2SbZ2eFq7pmOOvOCp732tJbfs8J3Ljv1pr9IMHYXP47vwM8GjYAWQx8S5Vk1pFd1JVUlB2uQuHeCe15qPQCh+xjmm6oQdG1HqFGzQAtBi/HvkOhV6YGRZ5JNLxN4sbG4kUxfZ1oMaoTGk4aLhoR6pqoobQqMPJNsellf598J2Or0Mh3FtwAAAABJRU5ErkJggg==" width="16" height="16" />
       </a>
       </h2>
+      
+      <!-- Paging -->
+      <div class="pager">
+        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials">{% trans "All" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next" %}</a>{% endif %}
+      </div>
 
       {% for tut in tutorials %}
       <article class="tutorial_listing" data-type="{{ tut.type }}" data-classes="{{ tut.classes|join:',' }}"
         data-pubdate="{{tut.publication_date.year}}-{{tut.publication_date|date:"m"}}-{{tut.publication_date|date:"d"}}">
         <h3 id="{{tut.title|slugify}}" >
-          <a href="{{tut.url}}">{{tut.title|safe}}</a>
+          <a href="{{tut.url}}">{{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}</a>
         </h3>
         <div>
           <span class="date">{{tut.publication_date}}</span>
@@ -116,15 +121,6 @@
             </a>
             {% endif %}
           </span>
-          {% if tut.browser_support %}
-          <span class="browsers">
-            <span class="browser opera {% if 'opera' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
-            <span class="browser ie {% if 'ie' in tut.browser_support %}supported{% endif %}"><span class="browser_name">IE</span><span class="support">unsupported</span></span>
-            <span class="browser safari {% if 'safari' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
-            <span class="browser ff {% if 'ff' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
-            <span class="browser chrome {% if 'chrome' in tut.browser_support %}supported{% endif %}"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
-          </span>
-          {% endif %}
 
           {% for tag in tut.tags %}
             <span class="tag">{{tag}}</span>
@@ -142,8 +138,10 @@
       </article>
       {% endfor %}
 
-
-
+      <!-- Paging -->
+      <div class="pager">
+        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials">{% trans "All" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next" %}</a>{% endif %}
+      </div>
     </div>
   </section>
 </div>

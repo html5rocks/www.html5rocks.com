@@ -16,7 +16,9 @@ FilterSample.play = function() {
   source.connect(filter);
   filter.connect(context.destination);
   // Play!
-  source.noteOn(0);
+  if (!source.start)
+    source.start = source.noteOn;
+  source.start(0);
   source.loop = true;
   // Save source and filterNode for later access.
   this.source = source;
@@ -24,6 +26,9 @@ FilterSample.play = function() {
 };
 
 FilterSample.stop = function() {
+  if (!this.source.stop)
+    this.source.stop = source.noteOff;
+  this.source.stop(0);
   this.source.noteOff(0);
 };
 

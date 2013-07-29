@@ -10,6 +10,9 @@ h1,h2,h3,h4 { clear: both; }
   -khtml-user-select: none;
   -webkit-user-select: none;
   user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
 }
 dd {
   padding: 5px 0;
@@ -145,6 +148,9 @@ if (Modernizr.draganddrop) {
   -khtml-user-select: none;
   -webkit-user-select: none;
   user-select: none;
+  /* Required to make elements draggable in old WebKit */
+  -khtml-user-drag: element;
+  -webkit-user-drag: element;
 }
 .column {
   height: 150px;
@@ -393,7 +399,7 @@ function handleDrop(e) {
   <h3 id="toc-drag-properties">ドラッグのプロパティ</h3>
 
   <p><code>dataTransfer</code> には、ドラッグ プロセス中に視覚的なフィードバックをユーザーに提供するためのプロパティがあります。これらのプロパティを使用して、各ドロップ ターゲットが特定のデータ型にどのように応答するかを制御することもできます。</p>
-  
+
   <dl>
     <dt><code>dataTransfer.effectAllowed</code></dt>
     <dd>要素に対してユーザーが実行できる「ドラッグの種類」を制限します。これは、ドラッグ＆ドロップ プロセス モデルにおいて <code>dragenter</code> および <code>dragover</code> イベント中に <code>dropEffect</code> を初期化するために使用されます。このプロパティの値は、<code>none</code>、<code>copy</code>、<code>copyLink</code>、<code>copyMove</code>、<code>link</code>、<code>linkMove</code>、<code>move</code>、<code>all</code>、<code>uninitialized</code> に設定できます。
@@ -402,7 +408,7 @@ function handleDrop(e) {
     <dd><code>dragenter</code> および <code>dragover</code> イベント中にユーザーに与えるフィードバックを制御します。ユーザーがターゲット要素にカーソルを移動すると、ブラウザのカーソルは実行する操作（コピー、移動など）の種類を示す形に変わります。この効果では、<code>none</code>、<code>copy</code>、<code>link</code>、<code>move</code> のいずれかの値を処理できます。
     </dd>
     <dt><code>e.dataTransfer.setDragImage(img element, x, y)</code></dt>
-    <dd>ブラウザのデフォルトの「ゴースト画像」フィードバックを使用する代わりに、ドラッグ アイコンを設定することもできます。 
+    <dd>ブラウザのデフォルトの「ゴースト画像」フィードバックを使用する代わりに、ドラッグ アイコンを設定することもできます。
 <pre class="prettyprint">
 var dragIcon = document.createElement('img');
 dragIcon.src = 'logo.png';
@@ -457,9 +463,9 @@ function handleDrop(e) {
 
 <!--
   other examples:
-  <li>Rearrange list</li> 
-  <li>Creating an image gallery</li> 
-  <li>Exporting a canvas image</li> 
+  <li>Rearrange list</li>
+  <li>Creating an image gallery</li>
+  <li>Exporting a canvas image</li>
 -->
 
   <h2 id="toc-conclusion">まとめ</h2>
@@ -468,7 +474,7 @@ function handleDrop(e) {
 
   <h2 id="toc-references">参考資料</h2>
   <ul>
-    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">ドラッグ＆ドロップ</a>仕様</li> 
+    <li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd">ドラッグ＆ドロップ</a>仕様</li>
     <li>MDC の<a href="https://developer.mozilla.org/En/DragDrop/Drag_Operations">ドラッグ操作</a></li>
     <li>html5doctor の <a href="http://html5doctor.com/native-drag-and-drop/">Native Drag and Drop</a> の記事</li>
     <li>CSS Ninja の <a href="http://www.thecssninja.com/javascript/gmail-dragout">Drag out files like Gmail</a></li>
@@ -635,9 +641,9 @@ var samples = samples || {};
     if (e.preventDefault) {
       e.preventDefault(); // Allows us to drop.
     }
-  
+
     e.dataTransfer.dropEffect = 'move';
-    
+
     return false;
   };
 
@@ -708,7 +714,7 @@ var samples = samples || {};
     if (e.preventDefault) {
       e.preventDefault(); // Allows us to drop.
     }
-  
+
     e.dataTransfer.dropEffect = 'move';
 
     return false;

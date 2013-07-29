@@ -2,8 +2,6 @@
 
 {% block headauthor %}Eric Bidelman <e.bidelman@chromium.org>{% endblock %}
 
-{% block headtitle %}The Basics of Web Workers{% endblock %}
-{% block pagetitle %}The Basics of Web Workers{% endblock %}
 {% block pagebreadcrumb %}The Basics of Web Workers{% endblock %}
 {% block head %}
 <style>
@@ -12,16 +10,6 @@
   border: 1px solid #ccc;
 }
 </style>
-{% endblock %}
-{% block date %}July 26, 2010{% endblock %}
-{% block updated %}May 24, 2011{% endblock %}
-
-{% block browsersupport %}
-<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
-<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
-<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
-<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
-<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
 {% endblock %}
 
 {% block html5badge %}
@@ -149,7 +137,7 @@ self.addEventListener('message', function(e) {
   }
 
   function stop() {
-    // Calling worker.terminate() from this script would also stop the worker.
+    // worker.terminate() from this script would also stop the worker.
     worker.postMessage({'cmd': 'stop', 'msg': 'Bye'});
   }
 
@@ -175,7 +163,8 @@ self.addEventListener('message', function(e) {
       self.postMessage('WORKER STARTED: ' + data.msg);
       break;
     case 'stop':
-      self.postMessage('WORKER STOPPED: ' + data.msg + '. (buttons will no longer work)');
+      self.postMessage('WORKER STOPPED: ' + data.msg +
+                       '. (buttons will no longer work)');
       self.close(); // Terminates the worker.
       break;
     default:
@@ -194,6 +183,40 @@ self.addEventListener('message', function(e) {
     <button onclick="stop()">Stop worker</button>
     <output id="result"></output>
   </div>
+
+  <h2 id="toc-transferrables">Transferrable objects</h3>
+
+  <p>Most browsers implement the <a href="http://updates.html5rocks.com/2011/09/Workers-ArrayBuffer">structured cloning</a> algorithm, which allows you to pass more complex types in/out of Workers such as <code>File</code>, <code>Blob</code>, <code>ArrayBuffer</code>, and JSON objects. However, when passing these types of data using
+    <code>postMessage()</code>, a copy is still made. Therefore, if you're passing
+    a large 50MB file (for example), there's a noticeable overhead in getting
+    that file between the worker and the main thread.</p>
+
+  <p>Structured cloning is great, but a copy can take
+    hundreds of milliseconds. To combat the perf hit, you can use <a href="http://www.w3.org/html/wg/drafts/html/master/infrastructure.html#transferable-objects">Transferable Objects</a>.</p>
+
+  <p>With Transferable Objects, data is transferred from one context to another. It is zero-copy, which vastly improves the performance of sending data to a Worker. Think of it as pass-by-reference if you're from the C/C++ world. However, unlike pass-by-reference, the 'version' from the calling context is no longer available once transferred to the new context. For example, when transferring an ArrayBuffer from your main app to Worker, the original <code>ArrayBuffer</code> is cleared and no longer usable. Its contents are (quiet literally) transferred to the Worker context.</p>
+
+  <p>To use transferrable objects, use a slightly different signature of <code>postMessage()</code>:</p>
+
+  <pre class="prettyprint">
+worker.postMessage(arrayBuffer, [arrayBuffer]);
+window.postMessage(arrayBuffer, targetOrigin, [arrayBuffer]);
+</pre>
+
+   <p>The worker case, the first argument is the data and the second is the
+   list of items that should be transferred. The first argument doesn't have
+   to be an <code>ArrayBuffer</code> by the way. For example, it can be a JSON
+   object:</p>
+
+  <pre class="prettyprint">
+worker.postMessage({data: int8View, moreData: anotherBuffer},
+                   [int8View.buffer, anotherBuffer]);
+</pre>
+
+  <p>The important point being: the second argument must be an array of <code>ArrayBuffer</code>s.
+    This is your list of transferrable items.</p>
+  
+  <p>To see the speed improvement of transferrables, check out this <a href="http://html5-demos.appspot.com/static/workers/transferables/index.html">DEMO</a>. For more information on transferrables, see our <a href="http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast">HTML5Rock post</a>.</p>
 
   <h2 id="toc-enviornment">The Worker Environment</h2>
 
@@ -285,9 +308,8 @@ importScripts('script1.js', 'script2.js');
   you can "inline" your worker in the same HTML file as your main logic by creating
   a URL handle to the worker code as a string:</p>
 <pre class="prettyprint">
-window.URL = window.URL || window.webkiURL;
-
-var blob = new Blob(["onmessage = function(e) { postMessage('msg from worker'); }"]);
+var blob = new Blob([
+    "onmessage = function(e) { postMessage('msg from worker'); }"]);
 
 // Obtain a blob URL reference to our worker 'file'.
 var blobURL = window.URL.createObjectURL(blob);
@@ -312,7 +334,7 @@ worker.postMessage(); // Start the worker.
   no longer needed. You can explicitly release a Blob URLs by passing it to <a href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-revokeObjectURL"><code>window.URL.revokeObjectURL()</code></a>:</p>
 
   <pre class="prettyprint">
-window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Chrome 10+.
+window.URL.revokeObjectURL(blobURL);
 </pre>
 
   <p>In Chrome, there's a nice page to view all of the created blob URLs: <code>chrome://blob-internals/</code>.</p>
@@ -334,7 +356,8 @@ window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Ch
   &lt;div id="log"&gt;&lt;/div&gt;
 
   &lt;script id="worker1" type="javascript/worker"&gt;
-    // This script won't be parsed by JS engines because its type is javascript/worker.
+    // This script won't be parsed by JS engines
+    // because its type is javascript/worker.
     self.onmessage = function(e) {
       self.postMessage('msg from worker');
     };
@@ -342,8 +365,6 @@ window.URL.revokeObjectURL(blobURL); // window.webkitURL.createObjectURL() in Ch
   &lt;/script&gt;
 
   &lt;script&gt;
-    window.URL = window.URL || window.webkiURL;
-
     function log(msg) {
       // Use a fragment: browser will only render/reflow once.
       var fragment = document.createDocumentFragment();
@@ -422,7 +443,8 @@ self.onmessage = function(e) {
 &lt;script&gt;
   function onError(e) {
     document.getElementById('error').textContent = [
-      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message].join('');
+      'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message
+    ].join('');
   }
 
   function onMsg(e) {

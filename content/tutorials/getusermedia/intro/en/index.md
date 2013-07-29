@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 <h2 id="toc-into">Introduction</h2>
 
 Audio/Video capture has been *the* "Holy Grail" of web development for a long time.
@@ -63,7 +61,7 @@ one of the first implementations. Check out [this video](http://davidbcalhoun.co
 
 Many thought HTML Media Capture was too limiting, so a new spec
 emerged that supported any type of (future) device. Not surprisingly, the design called
-for a new element, the [`&lt;device&gt;` element](http://dev.w3.org/html5/html-device/),
+for a new element, the [`<device>` element](http://dev.w3.org/html5/html-device/),
 which became the predecessor to `getUserMedia()`.
 
 Opera was among the first browsers to create [initial implementations](http://my.opera.com/core/blog/2011/03/14/web-meet-device)
@@ -109,26 +107,13 @@ It provides the means to access the user's local camera/microphone stream.
 
 **Support:**
 
-WebRTC is implemented in Chrome 18.0.1008+ and can be enabled in `about:flags`.
-In Chrome 21, this feature will be on by default and will not require a flag.
-WebRTC is also supported by default in Opera 12 and nightly builds of Firefox (currently 17).
+In Chrome 21, this feature will be on by default. The API is also supported in
+Opera 12 and Firefox 17.
 
 <h2 id="toc-gettingstarted">Getting started</h2>
 
 With `navigator.getUserMedia()`, we can finally tap into webcam and microphone input without a plugin.
 Camera access is now a call away, not an install away. It's baked directly into the browser. Excited yet?
-
-<h3 id="toc-enabling">Enabling</h3>
-
-The `getUserMedia()` API is still very new. In Chrome < 21, you need to enable
-the feature by visiting `about:flags`. If you're using Chrome 21, you can skip this section.
-
-<figure>
-<img src="aboutflags.png">
-<figcaption>Enabling the <code>getUserMedia()</code> in Chrome's <code>about:flags</code> page.</figcaption>
-</figure>
-
-Opera and Firefox do not need a flag. The feature is enabled by default.
 
 <h3 id="toc-featuredecting">Feature detection</h3>
 
@@ -144,6 +129,14 @@ Feature detecting is a simple check for the existence of `navigator.getUserMedia
       // Good to go!
     } else {
       alert('getUserMedia() is not supported in your browser');
+    }
+
+You can also [use Modernizr](http://modernizr.com/) to detect `getUserMedia` to avoid the vendor prefix dance yourself:
+
+    if (Modernizr.getusermedia){
+      var gUM = Modernizr.prefixed('getUserMedia', navigator);
+      gUM({video: true}, function( //...
+      //...
     }
 
 <h3 id="toc-acccess">Gaining access to an input device</h3>
@@ -184,12 +177,6 @@ from a `LocalMediaStream` object representing the webcam.
 I'm also telling the `<video>` to `autoplay`, otherwise it would be frozen on
 the first frame. Adding `controls` also works as you'd expected.
 
-<p class="notice" style="text-align:center">
-<strong>Note:</strong> There's a bug in Chrome where passing just <code>{audio: true}</code> does
-not work: <a href="http://crbug.com/112367">crbug.com/112367</a>. I couldn't
-get <code>&lt;audio&gt;</code> working in Opera either.
-</p>
-
 If you want something that works cross-browser, try this:
 
     window.URL = window.URL || window.webkitURL;
@@ -217,6 +204,9 @@ is Chrome's permission dialog:
 <img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
 <figcaption>Permission dialog in Chrome</figcaption>
 </figure>
+
+If your app is running from SSL (`https://`), this permission will be persistent.
+That is, users won't have to grant/deny access every time.
 
 <h3 id="toc-fallback">Providing fallback</h3>
 
@@ -352,19 +342,14 @@ to render live video into WebGL.
 
 <h2 id="toc-webaudio-api">Using getUserMedia with the Web Audio API</h2>
 
-<p class="notice" style="text-align:center">
-This section discusses possible future improvements and extensions
-to the current API.
-</p>
+One of my dreams is to build AutoTune in the browser with nothing more than open web technology! We're actually not too far from that reality. 
 
-One of my dreams is to build AutoTune in the browser with nothing more than open web technology!
-We're actually not too far from that reality. We already have `getUserMedia()`
-for mic input. Sprinkle in the [Web Audio API](/tutorials/webaudio/intro/) for realtime
-effects, and we're set. Integrating the two is the missing piece ([crbug.com/112404](http://crbug.com/112404)),
-though there's a [preliminary proposal](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/webrtc-integration.html)
-in the works to make it happen.
+As of Chrome 24, you can enable the "Web Audio Input" flag in about:flags to
+experiment with `getUserMedia()` + the [Web Audio API](/tutorials/webaudio/intro/) for realtime
+effects. Integrating the two is still a work in progress ([crbug.com/112404](http://crbug.com/112404)),
+but the current implementation works pretty well.
 
-Piping microphone input to the Web Audio API *could* look like this someday:
+Piping microphone input to the Web Audio API looks like this:
 
     var context = new window.webkitAudioContext();
 
@@ -377,7 +362,13 @@ Piping microphone input to the Web Audio API *could* look like this someday:
       filter.connect(context.destination);
     }, onFailSoHard);
 
-If you want to see `getUserMedia()` hooked up to the Web Audio API, star [crbug.com/112404](http://crbug.com/112404).
+Demos:
+
+- [Live Input Visualizer](http://webaudiodemos.appspot.com/input/index.html)
+- [Audio Recorder](http://webaudiodemos.appspot.com/AudioRecorder/index.html)
+- [Pitch Detector](http://webaudiodemos.appspot.com/pitchdetect/index.html)
+
+For more information, see [Chris Wilson's post](http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled).
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
@@ -461,13 +452,14 @@ var ctx = canvas.getContext('2d');
 var localMediaStream = null;
 
 function sizeCanvas() {
-  // video.onloadedmetadata not firing in Chrome. See crbug.com/110938.
+  // video.onloadedmetadata not firing in Chrome so we have to hack.
+  // See crbug.com/110938.
   setTimeout(function() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     img.height = video.videoHeight;
     img.width = video.videoWidth;
-  }, 50);
+  }, 100);
 }
 
 function snapshot() {

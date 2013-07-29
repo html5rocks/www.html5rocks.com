@@ -100,7 +100,6 @@
 
 {% block content %}
 
-<p>{% include "warning.html" %}</p>
 <h2 id="toc-into">Introduction</h2>
 
 <p>Audio/Video capture has been <em>the</em> "Holy Grail" of web development for a long time.
@@ -154,7 +153,7 @@ one of the first implementations. Check out <a href="http://davidbcalhoun.com/20
 
 <p>Many thought HTML Media Capture was too limiting, so a new spec
 emerged that supported any type of (future) device. Not surprisingly, the design called
-for a new element, the <a href="http://dev.w3.org/html5/html-device/"><code>&amp;lt;device&amp;gt;</code> element</a>,
+for a new element, the <a href="http://dev.w3.org/html5/html-device/"><code>&lt;device&gt;</code> element</a>,
 which became the predecessor to <code>getUserMedia()</code>.</p>
 <p>Opera was among the first browsers to create <a href="http://my.opera.com/core/blog/2011/03/14/web-meet-device">initial implementations</a>
 of video capture based on the <code>&lt;device&gt;</code> element. Soon after 
@@ -190,23 +189,12 @@ on bringing implementations to their browsers.</p>
 <p><code>getUserMedia()</code> is related to WebRTC because it's the gateway into that set of APIs.
 It provides the means to access the user's local camera/microphone stream.</p>
 <p><strong>Support:</strong></p>
-<p>WebRTC is implemented in Chrome 18.0.1008+ and can be enabled in <code>about:flags</code>.
-In Chrome 21, this feature will be on by default and will not require a flag.
-WebRTC is also supported by default in Opera 12 and nightly builds of Firefox (currently 17).</p>
+<p>In Chrome 21, this feature will be on by default. The API is also supported in
+Opera 12 and Firefox 17.</p>
 <h2 id="toc-gettingstarted">Getting started</h2>
 
 <p>With <code>navigator.getUserMedia()</code>, we can finally tap into webcam and microphone input without a plugin.
 Camera access is now a call away, not an install away. It's baked directly into the browser. Excited yet?</p>
-<h3 id="toc-enabling">Enabling</h3>
-
-<p>The <code>getUserMedia()</code> API is still very new. In Chrome &lt; 21, you need to enable
-the feature by visiting <code>about:flags</code>. If you're using Chrome 21, you can skip this section.</p>
-<figure>
-<img src="aboutflags.png">
-<figcaption>Enabling the <code>getUserMedia()</code> in Chrome's <code>about:flags</code> page.</figcaption>
-</figure>
-
-<p>Opera and Firefox do not need a flag. The feature is enabled by default.</p>
 <h3 id="toc-featuredecting">Feature detection</h3>
 
 <p>Feature detecting is a simple check for the existence of <code>navigator.getUserMedia</code>:</p>
@@ -257,12 +245,6 @@ it a <a href="/tutorials/workers/basics/#toc-inlineworkers-bloburis">Blob URL</a
 from a <code>LocalMediaStream</code> object representing the webcam.</p>
 <p>I'm also telling the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
 the first frame. Adding <code>controls</code> also works as you'd expected.</p>
-<p class="notice" style="text-align:center">
-<strong>Note:</strong> There's a bug in Chrome where passing just <code>{audio: true}</code> does
-not work: <a href="http://crbug.com/112367">crbug.com/112367</a>. I couldn't
-get <code>&lt;audio&gt;</code> working in Opera either.
-</p>
-
 <p>If you want something that works cross-browser, try this:</p>
 <pre class="prettyprint"><code>window.URL = window.URL || window.webkitURL;
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
@@ -289,6 +271,8 @@ is Chrome's permission dialog:</p>
 <figcaption>Permission dialog in Chrome</figcaption>
 </figure>
 
+<p>If your app is running from SSL (<code>https://</code>), this permission will be persistent.
+That is, users won't have to grant/deny access every time.</p>
 <h3 id="toc-fallback">Providing fallback</h3>
 
 <p>For users that don't have support for <code>getUserMedia()</code>, one option is to fallback
@@ -418,18 +402,12 @@ It talks about how to use <code>getUserMedia()</code> and <a href="/tutorials/th
 to render live video into WebGL.</p>
 <h2 id="toc-webaudio-api">Using getUserMedia with the Web Audio API</h2>
 
-<p class="notice" style="text-align:center">
-This section discusses possible future improvements and extensions
-to the current API.
-</p>
-
-<p>One of my dreams is to build AutoTune in the browser with nothing more than open web technology!
-We're actually not too far from that reality. We already have <code>getUserMedia()</code>
-for mic input. Sprinkle in the <a href="/tutorials/webaudio/intro/">Web Audio API</a> for realtime
-effects, and we're set. Integrating the two is the missing piece (<a href="http://crbug.com/112404">crbug.com/112404</a>),
-though there's a <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/webrtc-integration.html">preliminary proposal</a>
-in the works to make it happen.</p>
-<p>Piping microphone input to the Web Audio API <em>could</em> look like this someday:</p>
+<p>One of my dreams is to build AutoTune in the browser with nothing more than open web technology! We're actually not too far from that reality. </p>
+<p>As of Chrome 24, you can enable the "Web Audio Input" flag in about:flags to
+experiment with <code>getUserMedia()</code> + the <a href="/tutorials/webaudio/intro/">Web Audio API</a> for realtime
+effects. Integrating the two is still a work in progress (<a href="http://crbug.com/112404">crbug.com/112404</a>),
+but the current implementation works pretty well.</p>
+<p>Piping microphone input to the Web Audio API looks like this:</p>
 <pre class="prettyprint"><code>var context = new window.webkitAudioContext();
 
 navigator.webkitGetUserMedia({audio: true}, function(stream) {
@@ -441,7 +419,13 @@ navigator.webkitGetUserMedia({audio: true}, function(stream) {
   filter.connect(context.destination);
 }, onFailSoHard);
 </code></pre>
-<p>If you want to see <code>getUserMedia()</code> hooked up to the Web Audio API, star <a href="http://crbug.com/112404">crbug.com/112404</a>.</p>
+<p>Demos:</p>
+<ul>
+<li><a href="http://webaudiodemos.appspot.com/input/index.html">Live Input Visualizer</a></li>
+<li><a href="http://webaudiodemos.appspot.com/AudioRecorder/index.html">Audio Recorder</a></li>
+<li><a href="http://webaudiodemos.appspot.com/pitchdetect/index.html">Pitch Detector</a></li>
+</ul>
+<p>For more information, see <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>.</p>
 <h2 id="toc-conclusion">Conclusion</h2>
 
 <p>In general, device access on the web has been a tough cookie to crack. Many
@@ -522,13 +506,14 @@ var ctx = canvas.getContext('2d');
 var localMediaStream = null;
 
 function sizeCanvas() {
-  // video.onloadedmetadata not firing in Chrome. See crbug.com/110938.
+  // video.onloadedmetadata not firing in Chrome so we have to hack.
+  // See crbug.com/110938.
   setTimeout(function() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     img.height = video.videoHeight;
     img.width = video.videoWidth;
-  }, 50);
+  }, 100);
 }
 
 function snapshot() {

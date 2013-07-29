@@ -29,8 +29,6 @@ function customPrettyPrintLanguage() {
 
 {% block content %}
 
-<p>{% include "warning.html" %}</p>
-
 <p>The web&rsquo;s security model is rooted in the <a href="http://en.wikipedia.org/wiki/Same_origin_policy"><em>same origin policy</em></a>. Code from <code>https://mybank.com</code> should only have access to <code>https://mybank.com</code>&rsquo;s data, and <code>https://evil.example.com</code> should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system. </p>
 
 <p><a href="http://en.wikipedia.org/wiki/Cross-site_scripting">Cross-site scripting (XSS)</a> attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page&rsquo;s security origin. The <a href="http://ha.ckers.org/xss.html">XSS Cheat Sheet</a> is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects <em>any</em> code at all, it&rsquo;s pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys™. We&rsquo;d obviously like to prevent that if possible. </p>
@@ -81,7 +79,7 @@ function customPrettyPrintLanguage() {
 
 <h3 id="implementation-details">Implementation Details</h3>
 
-<p>Before moving further, it&rsquo;s important to note that the canonical header I&rsquo;ve used in the examples is <code>Content-Security-Policy</code>, but current browsers have implemented the feature behind a prefix: Firefox uses <code>X-Content-Security-Policy</code>, and WebKit-based browsers (Safari and Chrome) use <code>X-WebKit-CSP</code>. The implementations are quite similar, however, and are converging rapidly on the standard. This article will continue to use <code>Content-Security-Policy</code>, as browsers will migrate to that header, but the prefixes are essential for the moment.</p>
+<p>Before moving further, it&rsquo;s important to note that the canonical header I&rsquo;ve used in the examples is <code>Content-Security-Policy</code>. Chrome supports this header from version 25 onwards, but other browsers have implemented the feature behind a prefix: Firefox uses <code>X-Content-Security-Policy</code>, and WebKit-based browsers like Safari use <code>X-WebKit-CSP</code>. The implementations are quite similar, however, and are converging rapidly on the standard. This article will continue to use <code>Content-Security-Policy</code>, as browsers will migrate to that header, but the prefixes are essential for the moment.</p>
 
 <p>Regardless of the header you use, policy is defined on a page-by-page basis: you&rsquo;ll need to send the HTTP header along with every response that you&rsquo;d like to ensure is protected. This provides a lot of flexibility, as you can fine-tune the policy for specific pages based on their specific needs. Perhaps one set of pages in your site has a +1 button, while others don&rsquo;t: you could allow the button code to be loaded only when necessary.</p>
 
@@ -198,7 +196,7 @@ If eval and its text-to-JavaScript brethren are completely essential to your app
 
 <h2 id="real-world-usage">Real World Usage</h2>
 
-<p>CSP is quite usable in Chrome 16+ and Firefox 4+, and it&rsquo;s expected to gain at least limited support in IE 10. Safari&rsquo;s current implementation is lacking, but WebKit nightlies work just as well as Chrome, so there&rsquo;s hope for the next iteration of Safari. Massive sites like Twitter have deployed the header (<a href="http://engineering.twitter.com/2011/03/improving-browser-security-with-csp.html">Twitter&rsquo;s case study</a> is worth a read), and the standard is very much ready for you to start playing around on your own sites.</p>
+<p>CSP is quite usable in Chrome 16+, Safari 6+, and Firefox 4+, and has (very) limited support in IE 10. Massive sites like Twitter have deployed the header (<a href="http://engineering.twitter.com/2011/03/improving-browser-security-with-csp.html">Twitter&rsquo;s case study</a> is worth a read), and the standard is very much ready for you to start playing around on your own sites.</p>
 
 <p>The first step towards crafting a policy for your application is to evaluate the resources you&rsquo;re actually loading. Once you think you have a handle on how things are put together in your app, set up a policy based on those requirements. Let&rsquo;s walk through a few common use-cases, and determine how we&rsquo;d best be able to support them within the protective confines of CSP:</p>
 
@@ -244,7 +242,7 @@ If eval and its text-to-JavaScript brethren are completely essential to your app
 
 <h2 id="the-future">The Future</h2>
 
-<p>The W3C&rsquo;s <a href="http://www.w3.org/2011/webappsec/">Web Application Security Working Group</a> is working through the details of the Content Security Policy specification, and a 1.0 version containing the functionality outlined in this article is fairly close to <a href="http://lists.w3.org/Archives/Public/public-webappsec/2012Jun/0011.html">moving to Last Call</a>. The group isn&rsquo;t sitting around patting themselves on the back, however: CSP 1.1 is being actively discussed on the <a href="http://lists.w3.org/Archives/Public/public-webappsec/">public-webappsec@ mailing list</a>, and browser vendors are <a href="https://lists.webkit.org/pipermail/webkit-dev/2012-May/020559.html">hard at work</a> solidifying and improving their implementations.</p>
+<p>Content Security Policy 1.0 is a <a href="http://www.w3.org/TR/CSP">W3C Candidate Recommendation</a>, and browser vendors are expected to rapidly adopt the standard. That said, the W3C&rsquo;s <a href="http://www.w3.org/2011/webappsec/">Web Application Security Working Group</a> isn&rsquo;t lounging around, patting itself on the back; work has already begun on the specification&rsquo;s next iteration. <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html">Content Security Policy 1.1&rsquo;s Editors&rsquo; Draft</a> is under active development.</p>
 
 <p>CSP 1.1 has a few interesting bits on the drawing board, a few are worth highlighting here:</p>
 
@@ -262,6 +260,6 @@ If eval and its text-to-JavaScript brethren are completely essential to your app
   </li>
 </ul>
 
-<p>If you&rsquo;re interested in the discussion around these upcoming features, <a href="http://lists.w3.org/Archives/Public/public-webappsec/">skim the mailing list archives</a>, or join in yourself.</p>
+<p>If you&rsquo;re interested in the discussion around these upcoming features, <a href="http://lists.w3.org/Archives/Public/public-webappsec/">skim the public-webappsec@ mailing list archives</a>, or join in yourself.</p>
 
 {% endblock %}

@@ -3,11 +3,11 @@
 <h2 id="toc-into">Introduction</h2>
 
 In this article, I'll cover two techniques for streaming audio/video using a
-few of the newer multimedia capabilities of the web platform. The first method is the
+few of the newer multimedia capabilities in web platform. The first method is the
 [MediaSource API][mediasource-spec], an API that allows JavaScript to dynamically construct and append media segments to an existing `<audio>` or `<video>` element.
 The second is the collaboration of binary [WebSocket](/tutorials/websockets/basics/) and
 the [Web Audio API](/tutorials/webaudio/intro/) to send, reconstruct, and schedule
-audio chunks at precise times to produce a seamless playback.
+audio chunks at precise times, producing seamless playback.
 
 <h2 id="toc-mediasource">Method 1: MediaSource API</h2>
 
@@ -15,17 +15,22 @@ An API designed with streaming in mind is the [MediaSource API][mediasource-spec
 It's an experimental feature that allows JavaScript to dynamically append media
 to an `HTMLMediaElement`.
 
-The `<audio>` or `<video>` media elements are frighteningly trivial to use.
-That's why we like them! One sets a `src` attribute that points to a media file
-and boom, the browser does its thing decoding the file in whatever codec(s) it
-was created with. But we're dealing with entire files here. We have no control
-over what the browser does after setting that `src`. For example, what if we
-want to adaptively change the quality of video based on network conditions, or
-splice in different sections of video from multiple sources? Aw shucks.
-We can't!...without multiple videos elements and some JS hackery.
+HTML `<audio>` and `<video>` are frighteningly trivial to use. Set a `src`
+attribute to some URL, and boom, the browser does its thing: loads the media,
+decodes it, buffers it, and handles codec issues.
+
+The devil is in the details though. The cost of such simplicity is less flexibility.
+First, we're dealing with the entire file for playback. We have little control
+over what the browser does with our media after setting the `src`. For example,
+what if we want to adaptively change the quality of video based on network conditions?
+Or, splice in different sections of video from multiple sources? Aw shucks. Can't!
+
+*Without multiple media elements and JS hackery, doing anything
+more complex than basic playback becomes a week-long chore when using
+`<audio>`/`<video>`.*
 
 The MediaSource API is here to solve these issues. With it, we can tell
-an audio/video element to behave differently.
+`<audio>`/`<video>` to behave differently.
 
 <h3 id="toc-mediasource-detect">Feature detection</h3>
 
@@ -44,7 +49,7 @@ with a vendor prefix:
 
 <h3 id="mediasource-init">Getting started</h3>
 
-Using the MediaSource API starts off with our old buddy, HTML5 `<video>`:
+To use MediaSource API, start off with your old buddy HTML5 `<video>`:
 
     <video controls autoplay></video>
 
@@ -55,46 +60,56 @@ Next, create a `MediaSource` object:
     window.MediaSource = window.MediaSource || window.WebKitMediaSource;
     var ms = new MediaSource();
 
-The source is going to be the brains behind our `<video>`. Instead of setting
-its the video's `src` to a file URL, we're going to create a blob [blob: URL](https://developer.mozilla.org/en-US/docs/DOM/window.URL.createObjectURL) handle
-to the `MediaSource`.  This makes the media element feel special. It knows we're going to do more with it than just feed it a URL. We're going to feed it video data! Yum.
+The source is going to be the brains behind the `<video>`. Instead of setting
+its `src` to a file, we're going to create a [blob: URL](https://developer.mozilla.org/en-US/docs/DOM/window.URL.createObjectURL) as the `MediaSource`.  This makes the media element feel special
+because it knows we're going to do more than just set a file. We're going to feed it
+chunks of video data. Yum!
 
 The rest of the setup looks like this:
 
+    function onSourceOpen(e) {
+      // this.readyState === 'open'. Add a source buffer that expects webm chunks.
+      sourceBuffer = ms.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
+
+      ....
+    }
+
+    var ms = new MediaSource();
     ms.addEventListener('webkitsourceopen', onSourceOpen.bind(ms), false);
+
+    var sourceBuffer = null;
 
     // Use MediaSource to supply video data.
     var video = document.querySelector('video');
     video.src = window.URL.createObjectURL(ms); // blob URL pointing to the MediaSource.
 
-    function onSourceOpen(e) {
-      // this.readyState === 'open'. Add source buffer that expects webm chunks.
-      var sourceBuffer = ms.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
-
-      ....
-    }
-
 <p class="notice" style="text-align:center;">
 Only the .webm container is supported at this time.
 </p>
 
-`sourceopen` fires after settings the video's `.src` to a blob URL
-pointing to the media source. When this happens, the `<video>` is ready to accept incoming data and we can create a new `SourceBuffer` in the event callback. The mimetype passed to `.addSourceBuffer()` indicates what format the `<video>` should expect to be handed (webm in this case).
+`sourceopen` fires after setting the blob URL. Once that happens, the `<video>`
+is ready to accept incoming data. To hold those bytes, you create a new `SourceBuffer`
+in the callback and inform the buffer what mimetype the `<video>` should
+expect (webm in this case).
 
-Once we have things setup, chunks of .webm can be dynamically added to the
-`<video>` by appending them to the `SourceBuffer`:
+Chunks of .webm can now be dynamically appended to the `<video>`:
 
-    // Append a chunk of a webm file.
+    // Append a portion of a webm file.
     sourceBuffer.append(webmChunk);
 
-This method takes a `Uint8Array` typed array.
+Herein lies the flexibility of the Media Source API. `.append()` takes an `Uint8Array` [typed array](/tutorials/webgl/typed_arrays/) of data. The format of that data is what we've
+specified in `.addSourceBuffer()`. And the thing we're appending is a byte range
+of video data, not an entire .webm movie. This is fundamentally different than how
+`<video>` normally works.
+
+Of course, if you wanted to, you could append an entire .webm movie in one go!
 
 <h3 id="toc-appending-chunks">Appending chunks of media</h3>
 
 The previous example appended a single chunk of webm to our `<video>`. However,
 for the purposes of streaming, we need API functionality that lets us continuously
-append new video chunks as they come in from the server. Since most people
-don't have their media split into a bunch of pieces, there are a couple of ways
+append new video chunks as they come in from the server. Most people
+don't have their media split into a bunch of pieces, so there are a couple of ways
 to do this.
 
 **<h4 id="toc-range-headers">Using range requests</h4>**
@@ -105,7 +120,7 @@ You can set custom headers on an XHR request using `setRequestHeader()`. For ins
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/path/to/video.webm', true);
-    xhr.responseType = 'blob';
+    xhr.responseType = 'arraybuffer';
     xhr.setRequestHeader('Range', 'bytes=0-500'); // Request first 500 bytes of the video.
     xhr.onload = function(e) {
       var initializationWebMChunk = new Uint8Array(e.target.result);
@@ -113,12 +128,13 @@ You can set custom headers on an XHR request using `setRequestHeader()`. For ins
     }
     xhr.send();
 
-I'm signifying the first chunk of a .webm file as the "initialization chunk".
-This first portion contains the .webm container file header information.
-If your videos are constructed correctly, there's nothing special you need to do
-here. Just make sure this first chunk is indeed the first one you append.
+The first portion of a webm file is the "initialization chunk". It contains the
+container's header information and should always be the first segment added.
+Don't worry. If your videos are constructed correctly, there's nothing special
+you need to do. Just make sure the initialization chunk is indeed the first one
+you append.
 
-Then for subsequent appends, request the appropriate byte range and go to town:
+For subsequent appends, request the appropriate byte range and go to town:
 
     sourceBuffer.append(webMChunk2);
     sourceBuffer.append(webMChunk3);
@@ -127,10 +143,10 @@ Then for subsequent appends, request the appropriate byte range and go to town:
 **<h4 id="toc-slicing-file">Slicing a file</h4>**
 
 The second way to dice a file is to do things ahead of time on the server.
-However, for demonstration purposes, we can do so client-side using the File APIs. 
+However, for demonstration purposes, we can do the same thing client-side using
+the File APIs. 
 
-As an example, here's how to use XHR to request a file and slice it into pieces
-using `File.slice()`:
+For example, here's how to use XHR to request and slice a file into pieces:
 
     var FILENAME = 'test.webm';
     var NUM_CHUNKS = 5;
@@ -202,45 +218,13 @@ break up a .webm file into `NUM_CHUNKS` pieces.
 <button id="example-split-file-button">Split file</button>
 <p id="example-download-links"></p>
 <div id="piechart"></div>
+<video id="example-split-video" autoplay></video>
 
 Here, we're using XHR2 to pull down the entire webm movie. The important bits to note are:
 
 
-<h3 id="toc-mediasource-chunks">Chunking a file</h3>
+https://github.com/acolwell/mse-tools
 
-Todo
-
-
-    var NUM_CHUNKS = 5;
-    var FILE = '/static/videos/mediasource_test.webm';
-
-    var video = document.querySelector('video');
-    video.src = video.webkitMediaSourceURL;
-
-    video.addEventListener('webkitsourceopen', function(e) {
-      var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
-
-      // Slice the video into NUM_CHUNKS and append each to the media element.
-      for (var i = 0; i < NUM_CHUNKS; ++i) {
-        var startByte = chunkSize * i;
-
-        // file is a video file.
-        var chunk = file.slice(startByte, startByte + chunkSize);
-
-        var reader = new FileReader();
-        reader.onload = (function(idx) {
-          return function(e) {
-            video.webkitSourceAppend(new Uint8Array(e.target.result));
-            logger.log('appending chunk:' + idx);
-            if (idx == NUM_CHUNKS - 1) {
-              video.webkitSourceEndOfStream(HTMLMediaElement.EOS_NO_ERROR);
-            }
-          };
-        })(i);
-
-        reader.readAsArrayBuffer(chunk);
-      }
-    }, false);
 
 TODO: Link to DashPlayer
 http://downloads.webmproject.org/adaptive-demo/adaptive/dash-player.html

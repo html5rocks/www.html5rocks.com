@@ -52,23 +52,25 @@ modules for the audio signal. This <a href="https://dvcs.w3.org/hg/audio/raw-fil
 detail at the Web Audio <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html">specification</a>.</p>
 <p>A single instance of <code>AudioContext</code> can support multiple sound inputs
 and complex audio graphs, so we will only need one of these for each
-audio application we create.</p>
+audio application we create.  Many of the interesting Web Audio API functions such as creating
+AudioNodes and decoding audio file data are methods of <code>AudioContext</code>.</p>
 <p>The following snippet creates an <code>AudioContext</code>:</p>
 <pre class="prettyprint"><code>var context;
 window.addEventListener('load', init, false);
 function init() {
   try {
-    context = new webkitAudioContext();
+    // Fix up for prefixing
+    window.AudioContext = window.AudioContext||window.webkitAudioContext;
+    context = new AudioContext();
   }
   catch(e) {
     alert('Web Audio API is not supported in this browser');
   }
 }
 </code></pre>
-<p>For WebKit-based browsers, use the <code>webkit</code> prefix, as with
+<p>For WebKit- and Blink-based browsers, you currently need to use the <code>webkit</code> prefix, i.e.
 <code>webkitAudioContext</code>.</p>
-<p>Many of the interesting Web Audio API functionality such as creating
-AudioNodes and decoding audio file data are methods of <code>AudioContext</code>.</p>
+
 <h2 id="toc-load">Loading sounds</h2>
 
 <p>The Web Audio API uses an AudioBuffer for short- to medium-length
@@ -79,7 +81,9 @@ WAV, MP3, AAC, OGG and <a href="http://en.wikipedia.org/wiki/Audio_file_format">
 audio formats <a href="https://developer.mozilla.org/En/Media_formats_supported_by_the_audio_and_video_elements#Browser_compatibility">varies</a>.</p>
 <p>The following snippet demonstrates loading a sound sample:</p>
 <pre class="prettyprint"><code>var dogBarkingBuffer = null;
-var context = new webkitAudioContext();
+// Fix up prefixing
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var context = new AudioContext();
 
 function loadDogSound(url) {
   var request = new XMLHttpRequest();
@@ -116,21 +120,26 @@ provides the decoded PCM audio data as an <code>AudioBuffer</code>.</p>
 sounds. Let's assume we've just loaded an <code>AudioBuffer</code> with the sound
 of a dog barking and that the loading has finished. Then we can play
 this buffer with the following code.</p>
-<pre class="prettyprint"><code>var context = new webkitAudioContext();
+<pre class="prettyprint"><code>// Fix up prefixing
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var context = new AudioContext();
 
 function playSound(buffer) {
   var source = context.createBufferSource(); // creates a sound source
   source.buffer = buffer;                    // tell the source which sound to play
   source.connect(context.destination);       // connect the source to the context's destination (the speakers)
-  source.noteOn(0);                          // play the source now
+  source.start(0);                           // play the source now
+                                             // note: on older systems, may have to use deprecated noteOn(time);
 }
 </code></pre>
 <p>This <code>playSound()</code> function could be called every time somebody presses a key or
 clicks something with the mouse.</p>
-<p>The <code>noteOn(time)</code> function makes it easy to schedule precise sound
+<p>The <code>start(time)</code> function makes it easy to schedule precise sound
 playback for games and other time-critical applications. However, to get
 this scheduling working properly, ensure that your sound buffers are
-pre-loaded.</p>
+pre-loaded. (On older systems, you may need to call <code>noteOn(time)</code> instead of <code>start(time)</code>.)</p>
+<p>An important point to note is that <b>on iOS, Apple currently mutes all sound output until the first time a sound is played during a user interaction event</b> - for example, calling <code>playSound()</code> inside a touch event handler.  You may struggle with Web Audio on iOS "not working" unless you circumvent this - in order to avoid problems like this, just play a sound (it can even be muted by connecting to a Gain Node with zero gain) inside an early UI event - e.g. "touch here to play".</p>
+
 <h2 id="toc-abstract">Abstracting the Web Audio API</h2>
 
 <p>Of course, it would be better to create a more general loading system
@@ -146,7 +155,9 @@ var context;
 var bufferLoader;
 
 function init() {
-  context = new webkitAudioContext();
+  // Fix up prefixing
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  context = new AudioContext();
 
   bufferLoader = new BufferLoader(
     context,
@@ -169,8 +180,8 @@ function finishedLoading(bufferList) {
 
   source1.connect(context.destination);
   source2.connect(context.destination);
-  source1.noteOn(0);
-  source2.noteOn(0);
+  source1.start(0);
+  source2.start(0);
 }
 </code></pre>
 <h2 id="toc-abstract">Dealing with time: playing sounds with rhythm</h2>
@@ -209,7 +220,7 @@ buffer at a specified time, as follows:</p>
   var source = context.createBufferSource();
   source.buffer = buffer;
   source.connect(context.destination);
-  source.noteOn(time);
+  source.start(time);
 }
 </code></pre>
 <input type="button" onclick="RhythmSample.play();" value="Play"/>
@@ -227,7 +238,7 @@ volume:</p>
 </figure></p>
 <p>This connection setup can be achieved as follows:</p>
 <pre class="prettyprint"><code>// Create a gain node.
-var gainNode = context.createGainNode();
+var gainNode = context.createGain();
 // Connect the source to the gain node.
 source.connect(gainNode);
 // Connect the gain node to the destination.
@@ -241,7 +252,7 @@ gainNode.gain.value = 0.5;
 <p>The following is a demo of a volume control implemented with an <code>&lt;input
 type="range"&gt;</code> element:</p>
 <p><input type="button" onclick="VolumeSample.toggle();" value="Play/Pause"/>
-Volume: <input type="range" min="0" max="100" value="100" onchange="VolumeSample.changeVolume(this);" /></p>
+Volume: <input type="range" min="0" max="100" value="100" oninput="VolumeSample.changeVolume(this);" /></p>
 <p><a href="js/volume-sample.js">full source code</a></p>
 <h2 id="toc-xfade">Cross-fading between two sounds</h2>
 
@@ -259,7 +270,7 @@ each source through the nodes, using something like this function:</p>
 <pre class="prettyprint"><code>function createSource(buffer) {
   var source = context.createBufferSource();
   // Create a gain node.
-  var gainNode = context.createGainNode();
+  var gainNode = context.createGain();
   source.buffer = buffer;
   // Turn on looping.
   source.loop = true;
@@ -294,7 +305,7 @@ different in level.</p>
 <p>The following demo uses an <code>&lt;input type="range"&gt;</code> control to crossfade
 between the two sound sources:</p>
 <p><input type="button" onclick="CrossfadeSample.toggle();" value="Play/Pause"/>
-Drums <input type="range" min="0" max="100" value="100" onchange="CrossfadeSample.crossfade(this);" /> Organ</p>
+Drums <input type="range" min="0" max="100" value="100" oninput="CrossfadeSample.crossfade(this);" /> Organ</p>
 <p><a href="js/crossfade-sample.js">full source code</a></p>
 <h3 id="toc-xfade-play">Playlist crossfading</h3>
 
@@ -318,7 +329,7 @@ next one, both slightly before the current track finishes playing:</p>
   gainNode.gain.linearRampToValueAtTime(0, currTime);
   gainNode.gain.linearRampToValueAtTime(1, currTime + ctx.FADE_TIME);
   // Play the playNow track.
-  source.noteOn(0);
+  source.start(0);
   // At the end of the track, fade it out.
   gainNode.gain.linearRampToValueAtTime(1, currTime + duration-ctx.FADE_TIME);
   gainNode.gain.linearRampToValueAtTime(0, currTime + duration);
@@ -383,16 +394,16 @@ filter.connect(context.destination);
 filter.type = 0; // Low-pass filter. See BiquadFilterNode docs
 filter.frequency.value = 440; // Set cutoff to 440 HZ
 // Playback the sound.
-source.noteOn(0);
+source.start(0);
 </code></pre>
 <p>The following demo uses a similar technique and lets you enable and
 disable a lowpass filter via a checkbox, as well as tweak the frequency
 and quality values with the slider:</p>
 <p><input type="button" onclick="FilterSample.toggle();" value="Play/Pause"/>
 Filter on: <input type="checkbox" checked="false"
-    onchange="FilterSample.toggleFilter(this);"/>
-Frequency: <input type="range" min="0" max="1" step="0.01" value="1" onchange="FilterSample.changeFrequency(this);" />
-Quality: <input type="range" min="0" max="1" step="0.01" value="0" onchange="FilterSample.changeQuality(this);" /></p>
+    oninput="FilterSample.toggleFilter(this);"/>
+Frequency: <input type="range" min="0" max="1" step="0.01" value="1" oninput="FilterSample.changeFrequency(this);" />
+Quality: <input type="range" min="0" max="1" step="0.01" value="0" oninput="FilterSample.changeQuality(this);" /></p>
 <p><a href="js/filter-sample.js">full source code</a></p>
 <p>In general, frequency controls need to be tweaked to work on a
 logarithmic scale since human hearing itself works on the same principle

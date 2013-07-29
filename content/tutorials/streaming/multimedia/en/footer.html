@@ -1,12 +1,50 @@
+<script src="raphael-min.js"></script>
 <script>
 (function() {
+window.MediaSource = window.MediaSource || window.WebKitMediaSource;
 
 var FILE = '/static/videos/mediasource_test.webm';
 var NUM_CHUNKS = 5;
+var chunks = [];
+
+var WEBM_MANIFEST = {
+  "type": "video/webm; codecs=\"vp8, vorbis\"",
+  "duration": 6042.000000,
+  "init": { "offset": 0, "size": 4238},
+  "media": [
+    { "offset": 4238, "size": 11830, "timecode": 0.000000 },
+    { "offset": 16068, "size": 12588, "timecode": 0.385000 },
+    { "offset": 28656, "size": 14588, "timecode": 0.779000 },
+    { "offset": 43244, "size": 13023, "timecode": 1.174000 },
+    { "offset": 56267, "size": 13127, "timecode": 1.592000 },
+    { "offset": 69394, "size": 14456, "timecode": 1.987000 },
+    { "offset": 83850, "size": 13458, "timecode": 2.381000 },
+    { "offset": 97308, "size": 14566, "timecode": 2.776000 },
+    { "offset": 111874, "size": 13201, "timecode": 3.171000 },
+    { "offset": 125075, "size": 14068, "timecode": 3.566000 },
+    { "offset": 139143, "size": 15346, "timecode": 3.984000 },
+    { "offset": 154489, "size": 13618, "timecode": 4.378000 },
+    { "offset": 168107, "size": 15094, "timecode": 4.773000 },
+    { "offset": 183201, "size": 13069, "timecode": 5.168000 },
+    { "offset": 196270, "size": 13788, "timecode": 5.563000 },
+    { "offset": 210058, "size": 9009, "timecode": 5.957000 }
+  ]
+}
 
 var downloadLinks = document.querySelector('#example-download-links');
 var splitFileButton = document.querySelector('#example-split-file-button');
+var splitVideo = document.querySelector('#example-split-video');
 var fileImport = document.querySelector('#file-import');
+
+var ms = new MediaSource();
+ms.addEventListener('webkitsourceopen', function(e) {
+  var sourceBuffer = ms.addSourceBuffer(WEBM_MANIFEST.type);
+}, false);
+ms.addEventListener('webkitsourceclose', function(e) {
+  console.log('sourceclose', e);
+}, false);
+
+splitVideo.src = window.URL.createObjectURL(ms);
 
 fileImport.addEventListener('change', function(e) {
   var f = e.target.files[0];
@@ -16,38 +54,56 @@ fileImport.addEventListener('change', function(e) {
   }
 });
 
+// ArrayBuffer
 splitFileButton.addEventListener('click', function(e) {
-  get(FILE, function(file) {
-    //var file = new Blob([blob], {type: 'video/webm'});
-    var chunkSize = Math.ceil(file.size / NUM_CHUNKS);
+  get(FILE, function(arrayBuffer) {
+window.uInt8Array = new Uint8Array(arrayBuffer)
+
+
+// Append initialization chunk.
+var initChunk = uInt8Array.subarray(WEBM_MANIFEST.init.offset,
+                                    WEBM_MANIFEST.init.offset + WEBM_MANIFEST.init.size);
+ms.sourceBuffers[0].append(initChunk);
+
+    var chunkSize = Math.ceil(uInt8Array.length / NUM_CHUNKS);
 
     console.log('num chunks:' + NUM_CHUNKS);
-    console.log('chunkSize:' + chunkSize + ', totalSize:' + file.size);
+    console.log('chunkSize:' + chunkSize + ', totalSize:' + uInt8Array.length);
 
-    var fileNameParts = FILE.split('.');
+    var fileNameParts = FILE.substring(FILE.lastIndexOf('/') + 1).split('.');
+
+    var data = [];
+    var labels = [];
+    chunks = [];
+    downloadLinks.innerHTML = 'Download chunks:';
 
     for (var i = 0; i < NUM_CHUNKS; ++i) {
       var startByte = chunkSize * i;
 
-    console.log(startByte, startByte + chunkSize);
+      console.log(startByte, startByte + chunkSize);
 
-      var chunk = file.slice(startByte, startByte + chunkSize, file.type);
+      var chunk = uInt8Array.subarray(startByte, startByte + chunkSize);
+
+      chunks.push(chunk);
+      data.push(chunk.length);
 
       var a = document.createElement('a');
-      a.download = [fileNameParts[0] + i, fileNameParts[1]].join('.');
-      a.textContent = 'Download chunk ' + i;
+      a.download = 'chunk' + i + '.webm';
+      labels.push(a.download);
+      a.textContent = i + 1;
       a.title = chunk.size + ' byte';
-      // blob urls created from file parts use original file. See crbug.com/145156.
-      a.href = window.URL.createObjectURL(chunk);
+      a.href = window.URL.createObjectURL(new Blob([chunk], {type: 'video/webm'}));
       downloadLinks.appendChild(a);
     }
+
+    Raphael('piechart', 400, 300).pieChart(200, 150, 100, data, labels, '#000');
   });
 });
 
 function get(url, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
-  xhr.responseType = 'blob';
+  xhr.responseType = 'arraybuffer';
 
   //xhr.setRequestHeader('Range', 'bytes=5-12');
 
@@ -62,50 +118,73 @@ function get(url, callback) {
   xhr.send();
 }
 
+Raphael.fn.pieChart = function(cx, cy, r, values, labels, stroke) {
+  var paper = this,
+      rad = Math.PI / 180,
+      chart = this.set();
 
-// Piechart code from http://blog.yojimbocorp.com/2012/01/17/creating-a-simple-pie-chart-with-html5-canvas/
-
-function PieChart(el, width, height, data, opt_padding) {
-  this.el = el;
-  this.canvas = document.createElement('canvas');
-  this.canvas.width = width;
-  this.canvas.height = height;
-
-  var PADDING = opt_padding || 15; // px.
-  this.R = Math.min(width, height) / 2 - PADDING;
-
-  this.data = data;
-}
-
-PieChart.prototype.render = function() {
-  var lastPosition = 0;
-  var colors = ['#ff2c00', '#FF8500', '#0776A0', '#00B945', '#000'];
-
-  var center = [this.canvas.width / 2, this.canvas.height / 2];
-
-  var total = this.data.reduce(function(previousValue, currentValue, i) {
-    return previousValue + currentValue
-  });
-
-  var ctx = this.canvas.getContext('2d');
-
-  for (var i = 0; i < this.data.length; ++i) {
-    ctx.fillStyle = colors[i];
-    ctx.beginPath();
-    ctx.moveTo(center[0], center[1]);
-    ctx.arc(center[0], center[1], this.R, lastPosition,
-            lastPosition + (Math.PI * 2 * (this.data[i] / total)), false);
-    ctx.lineTo(center[0], center[1]);
-    ctx.fill();
-    lastPosition += Math.PI * 2 * (this.data[i] / total);
+  function sector(cx, cy, r, startAngle, endAngle, params) {
+    var x1 = cx + r * Math.cos(-startAngle * rad),
+        x2 = cx + r * Math.cos(-endAngle * rad),
+        y1 = cy + r * Math.sin(-startAngle * rad),
+        y2 = cy + r * Math.sin(-endAngle * rad);
+    return paper.path(["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 0, x2, y2, "z"]).attr(params);
   }
+  var angle = 0,
+      total = 0,
+      start = 0;
 
-  this.el.appendChild(this.canvas);
-}
+  function process(j) {
+    var value = values[j],
+        angleplus = 360 * value / total,
+        popangle = angle + (angleplus / 2),
+        color = Raphael.hsb(start, .75, 1),
+        milliseconds = 500,
+        delta = 5,
+        bcolor = Raphael.hsb(start, 1, 1);
 
-var data = [75, 34, 34, 32, 95];
-var pie = new PieChart(document.querySelector('#piechart'), 150, 150, data);
-pie.render();
+    var p = sector(cx, cy, r, angle, angle + angleplus,
+                   {fill: "90-" + bcolor + "-" + color, stroke: stroke,
+                   "stroke-width": 1}).data('val', labels[j]);
+
+    var txt = paper.text(cx + (r + delta + 55) * Math.cos(-popangle * rad),
+                         cy + (r + delta + 25) * Math.sin(-popangle * rad),
+                         labels[j].split('.webm')[0]).attr({fill: bcolor, stroke: "none", opacity: 0, "font-size": 14});
+    p.mouseover(function() {
+      p.stop().animate({transform: "s1.1 1.1 " + cx + " " + cy}, milliseconds, "elastic");
+      txt.stop().animate({opacity: 1}, milliseconds, "elastic");
+    }).mouseout(function() {
+      p.stop().animate({transform: ""}, milliseconds, "elastic");
+      txt.stop().animate({opacity: 0}, milliseconds);
+    }).click(function(e) {
+      var name = this.data('val').split('.')[0];
+
+      var arrayBufferChunk = chunks[parseInt(name.substring(name.length - 1))];
+
+      // // Abort current segment append.
+      // ms.sourceBuffers[0].abort();
+
+      for (var i = 0, media; media = WEBM_MANIFEST.media[i]; ++i) {
+        var chunk = uInt8Array.subarray(media.offset, media.offset + media.size);
+        ms.sourceBuffers[0].append(chunk);
+      }
+
+      //ms.sourceBuffers[0].append(new Uint8Array(arrayBufferChunk));
+    });
+
+    angle += angleplus;
+    chart.push(p);
+    chart.push(txt);
+    start += .1;
+  };
+  for (var i = 0, ii = values.length; i < ii; i++) {
+    total += values[i];
+  }
+  for (i = 0; i < ii; i++) {
+    process(i);
+  }
+  return chart;
+};
 
 })();
 </script>

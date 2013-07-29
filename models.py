@@ -75,6 +75,7 @@ class Resource(DictModel):
   """Container for all kinds of resource."""
 
   title = db.StringProperty(required=True)
+  subtitle = db.StringProperty(required=False)
   description = db.StringProperty()
   author = db.ReferenceProperty(Author, collection_name='author_one_set')
   second_author = db.ReferenceProperty(Author, collection_name='author_two_set')
@@ -88,11 +89,17 @@ class Resource(DictModel):
   draft = db.BooleanProperty(default=True) # Don't publish by default.
 
   @classmethod
-  def get_all(self, order=None, limit=None, qfilter=None):
+  def get_all(self, order=None, limit=None, page=None, qfilter=None):
     limit = limit or settings.MAX_FETCH_LIMIT
-
+    offset = None
+    
     key = '%s|tutorials' % (settings.MEMCACHE_KEY_PREFIX,)
-
+    
+    if page:
+      limit = settings.FETCH_PAGE_LIMIT
+      offset = (page - 1) * limit
+      key += '|page%s' % (page,)
+    
     if order is not None:
       key += '|%s' % (order,)
 
@@ -108,7 +115,7 @@ class Resource(DictModel):
       if qfilter is not None:
         query.filter(qfilter[0], qfilter[1])
       query.filter('draft =', False) # Never return drafts by default.
-      results = query.fetch(limit=limit)
+      results = query.fetch(offset=offset, limit=limit)
       memcache.set(key, results)
 
     return results
@@ -139,6 +146,7 @@ class TutorialForm(forms.Form):
   import datetime
 
   title = forms.CharField(required=True)
+  subtitle = forms.CharField(required=False)
 
   description = forms.CharField(
       widget=forms.Textarea(attrs={'required': 'required', 'rows': 5, 'cols': 20}),
@@ -151,7 +159,7 @@ class TutorialForm(forms.Form):
   second_author = author
 
   url = forms.CharField(label='URL',
-      help_text='An abs. or relative url (e.g. /tutorials/feature/something)')
+      help_text='An abs. or relative url (e.g. /tutorials/feature/something/) - do NOT forget the trailing slash!')
   social_url = forms.CharField(label='Social URL',
       help_text='A relative URL that should be used for social widgets (G+)', required=False)
 
@@ -164,7 +172,7 @@ class TutorialForm(forms.Form):
   update_date = forms.DateField(label='Updated date', required=False)#,initial=datetime.date.today)
 
   tags = forms.CharField(
-      help_text='Comma separated list (e.g. offline, performance, demo, ...)')
+      help_text='Comma separated list (e.g. offline, performance, demo, ...)<br>Include prefixes, e.g. "type:tutorial,class:multimedia"')
 
   draft = forms.BooleanField(required=False, initial=True)
 

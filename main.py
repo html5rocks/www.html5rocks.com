@@ -59,7 +59,6 @@ class ContentHandler(webapp2.RequestHandler):
     
   def activate_language(self, language_code):
     self.locale = language_code or settings.LANGUAGE_CODE
-    logging.info("Set Language as %s" % self.locale)
     translation.activate( self.locale )
 
   def browser(self):
@@ -113,6 +112,8 @@ class ContentHandler(webapp2.RequestHandler):
       for tut in tutorials:
         article = {}
         article['title'] = tut.title
+        if hasattr(tut, 'subtitle'):
+          article['subtitle'] = tut.subtitle
         article['id'] = '-'.join(tut.title.lower().split())
         article['href'] = tut.url
         article['description'] = tut.description
@@ -152,7 +153,6 @@ class ContentHandler(webapp2.RequestHandler):
     # Strip out language code from path. Urls changed for i18n work and correct
     # disqus comment thread won't load with the changed urls.
     path_no_lang = re.sub('^\/\w{2,3}(?:/|$)?', '', self.request.path, 1)
-    logging.info("path after removing lang: %s" % path_no_lang)
 
     pagename = ''
     if path_no_lang == '':
@@ -218,8 +218,11 @@ class ContentHandler(webapp2.RequestHandler):
       author_name = unicode(tut['author_id'])
       if 'second_author' in tut:
         author_name += ',' + tut['second_author']
+      title = tut['title']
+      if 'subtitle' in tut and tut['subtitle']:
+        title += ': ' + tut['subtitle']
       feed.add_item(
-          title=unicode(tut['title']),
+          title=unicode(title),
           link=prefix + tut['href'],
           description=unicode(tut['description']),
           pubdate=tut['pubdate'],
@@ -273,7 +276,6 @@ class ContentHandler(webapp2.RequestHandler):
     # Are we looking for a feed?
     is_feed = self.request.path.endswith('.xml')
 
-    logging.info('relpath: ' + relpath)
     # Setup handling of redirected article URLs: If a user tries to access an
     # article from a non-supported language, we'll redirect them to the
     # English version (assuming it exists), with a `redirect_from_locale` GET
@@ -293,7 +295,7 @@ class ContentHandler(webapp2.RequestHandler):
     # Landing page or /tutorials|features|mobile|gaming|business\/?
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
-                                            'gaming', 'business'])):
+                                            'gaming', 'business', 'updates'])):
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
@@ -311,6 +313,7 @@ class ContentHandler(webapp2.RequestHandler):
            re.search('mobile/.+', relpath) or
            re.search('gaming/.+', relpath) or
            re.search('business/.+', relpath) or
+           re.search('updates/.+', relpath) or
            re.search('tutorials/casestudies/.+', relpath))
           and not is_feed):
       # If this is an old-style mobile article or case study, redirect to the
@@ -318,7 +321,6 @@ class ContentHandler(webapp2.RequestHandler):
       match = re.search(('(?P<type>mobile|tutorials/casestudies)'
                          '/(?P<slug>[a-z-_0-9]+).html$'), relpath)
       if match:
-        logging.info("Redirecting from old-style URL to the new hotness.")
         return self.redirect('/%s/%s/%s/' % (locale, match.group('type'),
                                              match.group('slug')))
 
@@ -339,7 +341,6 @@ class ContentHandler(webapp2.RequestHandler):
       #
       # So, to determine if an HTML page exists for the requested language
       # `split` the file's path, add in the locale, and check existence:
-      logging.info('Building request for `%s` in locale `%s`', path, locale)
       (dir, filename) = os.path.split(path)
       if os.path.isfile(os.path.join(dir, locale, filename)):
         # Lookup tutorial by its url. Return the first one that matches.
@@ -355,6 +356,8 @@ class ContentHandler(webapp2.RequestHandler):
         if tut:
           if tut.title:
             tut.title = _(tut.title)
+          if hasattr(tut, 'subtitle') and tut.subtitle:
+            tut.subtitle = _(tut.subtitle)
           if tut.description:
             tut.description = _(tut.description)
 
@@ -367,7 +370,9 @@ class ContentHandler(webapp2.RequestHandler):
           'en': 'English',
           'fr': 'Français',
           'es': 'Español',
+          'it': 'Italiano',
           'ja': '日本語',
+          'ko': '한국의',
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
           'zh': '中文 (简体)'
@@ -395,11 +400,29 @@ class ContentHandler(webapp2.RequestHandler):
                                                                  locale))
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
+      
+      page_number = int(self.request.get('page', default_value=0)) or None
+      template_args = dict()
+      
+      if page_number:
+        template_args['previous_page'] = page_number - 1
+        template_args['next_page'] = page_number + 1
+      
       if relpath in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
             relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+      elif relpath == 'updates':
+        results = []
       else:
-        results = models.Resource.get_all(order='-publication_date')
+        if relpath == '':
+          resource_limit = 10
+        else:
+          resource_limit = None
+          
+        if page_number is not None:
+          results = models.Resource.get_all(order='-publication_date', page=page_number)
+        else:
+          results = models.Resource.get_all(order='-publication_date', limit=resource_limit)
 
       tutorials = [] # List of final result set.
       authors = [] # List of authors related to the result set.
@@ -415,6 +438,8 @@ class ContentHandler(webapp2.RequestHandler):
           if os.path.isfile(filepath):
             if r.title:
               r.title = _(r.title)
+            if hasattr(r, 'subtitle') and r.subtitle:
+              r.subtitle = _(r.subtitle)
             if r.description:
               r.description = _(r.description)
           # Point the article to the localized version, regardless.
@@ -435,9 +460,10 @@ class ContentHandler(webapp2.RequestHandler):
       for a in authors:
         author_dict[a.key().name()] = a
       authors = author_dict.values()
-
-      return self.render(data={'tutorials': tutorials, 'authors': authors},
-                         template_path=path, relpath=relpath)
+      
+      data={'tutorials': tutorials, 'authors': authors, 'args': template_args}
+      
+      return self.render(data, template_path=path, relpath=relpath)
 
     elif os.path.isfile(path[:path.rfind('.')] + '.html'):
       return self.render(data={}, template_path=path[:path.rfind('.')] + '.html',
@@ -493,6 +519,7 @@ class DBHandler(ContentHandler):
 
         resource = models.Resource(
           title=res['title'],
+          subtitle=res.get('subtitle') or None,
           description=res.get('description') or None,
           author=author_key,
           second_author=author_key2,
@@ -760,6 +787,7 @@ class DBHandler(ContentHandler):
         try:
           #TODO: This is also hacky.
           tutorial.title = self.request.get('title')
+          tutorial.subtitle = self.request.get('subtitle') or None
           tutorial.description = self.request.get('description')
           tutorial.author = author_key
           tutorial.second_author = author_key2
@@ -778,6 +806,7 @@ class DBHandler(ContentHandler):
         try:
           tutorial = models.Resource(
               title=self.request.get('title'),
+              subtitle=self.request.get('subtitle') or None,
               description=self.request.get('description'),
               author=author_key,
               second_author=author_key2,

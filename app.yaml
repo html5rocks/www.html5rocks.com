@@ -11,7 +11,7 @@ libraries:
 - name: webapp2
   version: "latest"
 - name: django
-  version: "latest" #version: "1.3"
+  version: "1.4" #"latest"
 
 inbound_services:
 - warmup
@@ -27,10 +27,20 @@ pagespeed:
   - ImageAddDimensions
   - RemoveComments
   url_blacklist:
+  - http://*/database/*
+  - https://*/database/*
   - http://*/casestudies/technitone/assets/images/nodeDemo.gif
   - https://*/casestudies/technitone/assets/images/nodeDemo.gif
+  - http://*/static/demos/*
+  - https://*/static/demos/*
   - http://*/tutorials/canvas/imagefilters/*
   - https://*/tutorials/canvas/imagefilters/*
+  - http://*/tutorials/webcomponents/shadowdom*
+  - https://*/tutorials/webcomponents/shadowdom*
+  - http://*/tutorials/webcomponents/template/*
+  - https://*/tutorials/webcomponents/template/*
+  - http://*/tutorials/webaudio/intro/js/*
+  - https://*/tutorials/webaudio/intro/js/*
 
 default_expiration: "30d"
 
@@ -183,6 +193,8 @@ handlers:
 # Anything under /static will automatically be considered static.
 - url: /static
   static_dir: static
+  http_headers:
+    Access-Control-Allow-Origin: '*'
 
 - url: /favicon.ico
   static_files: static/favicon.ico

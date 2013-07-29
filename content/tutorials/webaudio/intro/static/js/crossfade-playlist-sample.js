@@ -9,7 +9,7 @@ CrossfadePlaylistSample.play = function() {
 
   function createSource(buffer) {
     var source = context.createBufferSource();
-    var gainNode = context.createGainNode();
+    var gainNode = context.createGain ? context.createGain() : context.createGainNode();
     source.buffer = buffer;
     // Connect source to gain.
     source.connect(gainNode);
@@ -33,7 +33,7 @@ CrossfadePlaylistSample.play = function() {
     gainNode.gain.linearRampToValueAtTime(0, currTime);
     gainNode.gain.linearRampToValueAtTime(1, currTime + ctx.FADE_TIME);
     // Play the playNow track.
-    source.noteOn(0);
+    source.start ? source.start(0) : source.noteOn(0);
     // At the end of the track, fade it out.
     gainNode.gain.linearRampToValueAtTime(1, currTime + duration-ctx.FADE_TIME);
     gainNode.gain.linearRampToValueAtTime(0, currTime + duration);
@@ -48,7 +48,7 @@ CrossfadePlaylistSample.play = function() {
 
 CrossfadePlaylistSample.stop = function() {
   clearTimeout(this.timer);
-  this.source.noteOff(0);
+  this.source.stop ? this.source.stop(0) : this.source.noteOff(0);
 };
 
 CrossfadePlaylistSample.toggle = function() {

@@ -35,6 +35,7 @@ APP_VERSION = os.environ['CURRENT_VERSION_ID'].split('.')[0]
 
 MEMCACHE_KEY_PREFIX = 'newscheme' #APP_VERSION
 MAX_FETCH_LIMIT = 1000
+FETCH_PAGE_LIMIT = 10
 
 # Users whitelisted to access certain sections the site.
 WHITELISTED_USERS = [
