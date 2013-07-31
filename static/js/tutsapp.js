@@ -149,7 +149,7 @@ function clearFilter() {
   $('#filter').parent().addClass('hidden');
   if (!!window.history) {
     var lang = document.documentElement.lang || 'en';
-    history.replaceState({}, document.title, '/' + lang + '/tutorials');
+    history.replaceState({}, document.title, '/' + lang + '/tutorials/');
   } else {
     window.location.hash = '';
   }

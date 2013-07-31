@@ -296,6 +296,17 @@ class ContentHandler(webapp2.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business', 'updates'])):
+
+      # Check if path ends with a / and adds if necessary
+      if (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string == ''):
+          return self.redirect(relpath + '/', permanent=True)
+      # Check if path ends with a / and adds along with the query string
+      elif (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string != ''):
+          return self.redirect(relpath + '/?' + self.request.query_string,
+                               permanent=True)
+
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
@@ -408,9 +419,9 @@ class ContentHandler(webapp2.RequestHandler):
         template_args['previous_page'] = page_number - 1
         template_args['next_page'] = page_number + 1
       
-      if relpath in ['mobile', 'gaming', 'business']:
+      if relpath[:-1] in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
-            relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+            relpath[:-1], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
       elif relpath == 'updates':
         results = []
       else:
