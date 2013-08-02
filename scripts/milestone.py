@@ -34,7 +34,7 @@ def main():
         
         due_on = datetime.strptime(due_on_re.group(2), "%Y-%m-%d")
 
-        milestone = repo.create_milestone(issue.title, due_on=due_on)
+        milestone = repo.create_milestone("ARTICLE: %s" % issue.title, due_on=due_on)
         print "Created milestone: %s" % milestone.url
         issue.edit(milestone=milestone)
         print "Issue updated with milestone"
