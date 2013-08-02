@@ -15,26 +15,79 @@
     a.updateRequired:before, a.updateRequired:after {
       content: '*';
     }
+  
+    section > img {
+      width: 95%;
+    }
+
+    .mobileScreenshot a.image {
+      background: url(/static/images/n4_small.png) no-repeat !important;
+      display: block;
+      height: 485px;
+      width: 250px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .mobileScreenshot img {
+      position: relative;
+      left: 12px;
+      top: 54px;
+      width: 225px;
+    }
+    .mobileScreenshot div {
+      text-align: center;
+      margin-top: 1.5em;
+      margin-bottom: 1.5em;
+      font-size: 16px;
+    }
+
+    .mobileScreenshot.hidden {
+      display: none;
+    }
+
+    #butPSShowMe {
+      width: 90px;
+    }
+
+    .psiError {
+      color: red;
+      display: none;
+    }
+
+    #inputURL {
+      vertical-align: middle;
+    }
   </style>
 {% endblock %}
 
 {% block body %}
 <div data-import-html>
   <header class="two_columns clearfix pattern-bg-lighter">
-    <hgroup>
-      <img src="/static/images/banner-mobile-new.png" style="width:100%;">
-      <!-- <div style="width:462px;height:311px;"></div> -->
+    <section class="petewww">
+      <img src="/static/images/banner-mobile-new.png">
+      <div class="mobileScreenshot hidden">
+        <a class="image">
+          <img> 
+        </a>
+        <div>
+          Learn how to improve this page with <a class="noexternal">PageSpeed Insights</a>.
+        </div>
+      </div>
       <h1>
         The <span>mobile web</span> is everywhere!
       </h1>
-    </hgroup>
+    </section>
 
     <section>
       <h3>The web, in your pocket</h3>
       <p>Nearly every mobile device that ships today includes a great modern browser, and users are browsing the web with them more and more.  In fact, mobile web usage is set to over take traditional web use in the not too distant future.</p>
       <p><a href="/{{LANGUAGE_CODE}}/mobile/mobifying/" class="updateRequired">Mobifying your site</a> doesn't always mean that you need to throw everything away and start over.  Just make sure you steer clear of the <a href="#" class="updateRequired">cardinal sins of mobile web development</a>.</p>
       <h3>How does your site look on mobile?</h3>
-      <p>Find out how your site behaves on mobile with <a href="http://developers.google.com/speed/pagespeed/insights/">PageSpeed Insights</a> and see what you can do to improve it.</p>
+      <div class="testWithPageSpeed">
+        <input id="inputURL" type="url" placeholder="http://google.com">
+        <button id="butPSShowMe" type="button">Show me</button>
+        <div class="psiError">An error occured with that URL.</div>
+      </div>
     </section>
   </header>
 
@@ -165,4 +218,70 @@
 </script>
 <script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
 <script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
+<script type="text/javascript">
+  $('#butPSShowMe').click(function(e) {
+    // Get the URL from the text box and url encode it
+    var urlToTest = $("#inputURL").val();
+    urlToTest = encodeURIComponent(urlToTest);
+
+    // Make sure we have something to test
+    if (urlToTest != "") {
+      var container = $(".mobileScreenshot");
+
+      // Reset the header to it's initial state and disable the loading button
+      $(".psiError").hide();
+      $("#butPSShowMe")
+        .attr("disabled", "disabled")
+        .text("Loading...");
+
+      var pageSpeedAPIKey = "AIzaSyB6eDUXbmPFFBIdRN-UMbDbVMFn3wYw3fI";
+      var pageSpeedAPIURL = "https://www.googleapis.com/pagespeedonline/v1/runPagespeed";
+      var pageSpeedUserURL = "https://developers.google.com/speed/pagespeed/insights/?url=";
+      
+      // build the URL we'll use to get the screenshot
+      var pageSpeedURL = pageSpeedAPIURL;
+      pageSpeedURL += "?key=" + pageSpeedAPIKey;
+      pageSpeedURL += "&strategy=mobile";
+      pageSpeedURL += "&screenshot=true";
+      pageSpeedURL += "&url=" + urlToTest;
+
+      // Make an AJAX request for the screenshot
+      $.ajax({
+        url: pageSpeedURL
+      }).done(function(data, textStatus, jqXHR) {
+        
+        var screenshot = "data:" + data.screenshot.mime_type + ";base64,";
+        screenshot += data.screenshot.data;
+        // We need to replace _ and - to get a true base64 encoded image
+        screenshot = screenshot.replace(/_/g, "/");
+        screenshot = screenshot.replace(/-/g, "+");
+        
+        // Set the image src to the screenshot and add the href to the hyperlinks
+        container.find("img").attr("src", screenshot);
+        container.find("a").attr("href", pageSpeedUserURL + urlToTest);
+
+        // Hide the primary image
+        $("section > img").hide();
+        container.removeClass("hidden");
+
+        // Make sure the image is visible, on mobile it's most likely above
+        // the current viewport, so we need to scroll up so it can be seen.
+        var currentPosition = $(document).scrollTop();
+        var topOfImage = container.offset()["top"];
+        if (currentPosition > topOfImage) {
+          $(document).scrollTop(topOfImage - 15);
+        }
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Show the error message.
+        $(".psiError").show();
+      }).always(function() {
+        // We've finished loading, reset the input box and button
+        $("#butPSShowMe")
+          .removeAttr("disabled")
+          .text("Show me");
+        $("#inputURL").val("");
+      });
+    }
+  });
+</script>
 {% endblock %}
