@@ -172,7 +172,11 @@ class ContentHandler(webapp2.RequestHandler):
       'host': '%s://%s' % (self.request.scheme, self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
-      'prod': settings.PROD
+      'prod': settings.PROD,
+      'description': _(u'A resource for developers looking to put HTML5 to use '
+                      'today, including information on specific features and '
+                      'when to use them in your apps.'),
+      'canonical_url': self.request.path_url
     }
 
     # If the tutorial contains a social URL override, use it.

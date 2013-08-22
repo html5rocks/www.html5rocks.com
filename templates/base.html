@@ -24,22 +24,41 @@
    * {% block credits %}{% endblock %}
    *
   -->
-  <meta name="description" content="{% block meta_description %}{% trans "A resource for developers looking to put HTML5 to use today, including information on specific features and when to use them in your apps." %}{% endblock %}">
+  <title>{% if self_pagename == 'home' %}{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}{% else %}{% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %} - {% trans "HTML5 Rocks" %}{% endif %}</title>
+  <meta name="description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
   <meta name="keywords" content="{% trans "html5,html 5,html5 demos,html5 examples,javascript,css3,notifications,geolocation,web workers,apppcache,file api,filereader,indexeddb,offline,audio,video,drag and drop,chrome,sse,mobile" %}">
-  <meta itemprop="name" content="{% trans "HTML5 Rocks" %}{% if tut.title %} - {{tut.title}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle}}{% endif %}">
-  <meta itemprop="description" content="{{tut.description}}">
-  {% block share_image %}
-  <meta itemprop="image" content="/static/images/html5rocks-logo-wings.png">
-  {% endblock %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="{% trans "HTML5 Rocks RSS" %}" href="http://feeds.feedburner.com/html5rocks">
 
   <!-- iOS: run in full-screen mode and display upper status bar as translucent -->
   <!--<meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">-->
 
-  <title>{% if self_pagename == 'home' %}{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}{% else %}{% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %} - {% trans "HTML5 Rocks" %}{% endif %}</title>
-  <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="{% trans "HTML5 Rocks RSS" %}" href="http://feeds.feedburner.com/html5rocks">
+  <meta itemprop="name" content="{% if tut.title %}{{tut.title|safe}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta itemprop="description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  {% block share_image %}
+  <meta itemprop="image" content="/static/images/html5rocks-logo-wings.png">
+  {% endblock %}
+
+  {% if tut %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{% if tut.title %}{{tut.title|safe}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta name="twitter:url" content="{{canonical_url}}">
+  <meta name="twitter:description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  <meta name="twitter:image" content="/static/images/html5rocs-logo-wings.png">
+  <meta name="twitter:site" content="@ChromiumDev">
+  {% if tut.author.twitter_account %}<meta name="twitter:creator" content="@{{tut.author.twitter_account}}">{% endif %}
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{% if tut.title %}{{tut.title|safe}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta property="og:url" content="{{canonical_url}}">
+  <meta property="og:description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  <meta property="og:image" content="/static/images/html5rocs-logo-wings.png">
+  <meta property="og:site_name" content="{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}">
+  {% endif %}
+
   <link rel="publisher" href="https://plus.google.com/111395306401981598462">
 
   <link rel="stylesheet" media="all" href="/static/css/base{% if prod %}.min{% endif %}.css?20130705">
