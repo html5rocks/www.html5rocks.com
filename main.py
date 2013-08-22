@@ -62,11 +62,13 @@ class ContentHandler(webapp2.RequestHandler):
     translation.activate( self.locale )
 
   def browser(self):
-    return str(self.request.headers['User-Agent'])
+    """Returns a string representing the user agent, or None."""
+    return self.request.headers.get('User-Agent')
 
   def is_awesome_mobile_device(self):
+    """Returns True if the browser is a string indicating an awesome device."""
     browser = self.browser()
-    return browser.find('Android') != -1 or browser.find('iPhone') != -1
+    return browser and (browser.find('Android') != -1 or browser.find('iPhone') != -1)
 
   def get_toc(self, path):
     # Only have TOC on tutorial pages. Don't do work for others.
