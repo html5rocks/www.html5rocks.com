@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 # Hack to get custom tags working django 1.3 + python27.
@@ -16,6 +17,18 @@ TEMPLATE_DIRS = (
 
 # i18n Configuration
 LANGUAGE_CODE = 'en'
+LANGS = {
+  'de': 'Deutsch',
+  'en': 'English',
+  'fr': 'Français',
+  'es': 'Español',
+  'it': 'Italiano',
+  'ja': '日本語',
+  'ko': '한국의',
+  'pt': 'Português (Brasil)',
+  'ru': 'Pусский',
+  'zh': '中文 (简体)'
+}
 USE_I18N = True
 LOCALE_PATHS = (
   os.path.join(ROOT_DIR, 'conf', 'locale'),
