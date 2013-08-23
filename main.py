@@ -62,11 +62,13 @@ class ContentHandler(webapp2.RequestHandler):
     translation.activate( self.locale )
 
   def browser(self):
-    return str(self.request.headers['User-Agent'])
+    """Returns a string representing the user agent, or None."""
+    return self.request.headers.get('User-Agent')
 
   def is_awesome_mobile_device(self):
+    """Returns True if the browser is a string indicating an awesome device."""
     browser = self.browser()
-    return browser.find('Android') != -1 or browser.find('iPhone') != -1
+    return browser and (browser.find('Android') != -1 or browser.find('iPhone') != -1)
 
   def get_toc(self, path):
     # Only have TOC on tutorial pages. Don't do work for others.
@@ -170,7 +172,11 @@ class ContentHandler(webapp2.RequestHandler):
       'host': '%s://%s' % (self.request.scheme, self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
-      'prod': settings.PROD
+      'prod': settings.PROD,
+      'description': _(u'A resource for developers looking to put HTML5 to use '
+                      'today, including information on specific features and '
+                      'when to use them in your apps.'),
+      'canonical_url': self.request.path_url
     }
 
     # If the tutorial contains a social URL override, use it.
