@@ -35,7 +35,11 @@ article.tutorial .notice.fact:before {
 }
 
 
+
 </style>
+<meta property="og:title" content="Image compression for web developers"/>
+<meta property="og:image" content="story_small.jpg"/>
+<meta property="og:description" content="As images continue to be the largest part of webpage content, it’s critically important for web developers to take aggressive control of their image sizes and quality in order to deliver a fastest loading, responsive site for their users.  This article will provide a bit of reason, history, and technique to understand and properly address image compression issues for your website. "/>
 {% endblock %}
 
 {% block iscompatible %}
@@ -187,6 +191,7 @@ There’s typically three decisions that go into the choice of an image format f
 </p>
 
 <blockquote class="commentary talkinghead talkinghead-cm" id="compressors">
+  <b>Colt McAnlis says:</b><br>
   Most modern, cutting edge compressors make the largest wins by chaining together multiple coding steps. A single stage can modify the data stream such that subsequent stages can compress it better than the raw data stream alone. Popular encoders, like <a href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Markov_chain_algorithm">7zip</a> chain together <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ</a> dictionary encoding, that produces a reduced set of symbols that can be consumed more efficiently by a <a href="http://en.wikipedia.org/wiki/Markov_chain">Markov Chain</a> algorithm.<br><br>
 Or, for example, you can apply a <a href="http://www.youtube.com/watch?v=7bJ-D1xXEeg">lossless compression algorithm on top of an existing, GPU formatted</a> lossy format to encode the data even further. The biggest wins come from combining algorithms in the right ways.
 </blockquote>
@@ -353,7 +358,7 @@ There’s a few ways to address this issue.<br><br>
 
 One solution involves precomputing images, offline, for each resolution you need. Most static websites can generate this easily as an offline build step, perhaps resizing the images with toolchains like <a href="http://gruntjs.com/">Grunt</a>. This technique benefits from the fact that images are properly cached on their native device resolutions, and you’re not losing loading time, or transfer cost to get the information to the client. On the negative side, however, is the madness involved with managing this exponential increase in your data set, and the additional logic to send the information to the intended users.
 </p>
-<img src="web-development-test-01.jpg" width="300px" style="float:right">
+<img src="web-development-test-01.jpg" width="300px" style="float:right;margin:10px;">
 <p>
 Another <a href="http://www.html5rocks.com/en/mobile/easy-high-dpi-images/">approach</a>, intended for the boom of <a href="http://www.html5rocks.com/en/mobile/high-dpi/">high-DPI mobile devices</a>, involves playing games with image quality, image dimensions, and client-side cost for image resizing. Effectively, you can store your image at 2x resolution (upscale process), however when you export it to a lossy format, choose a very low quality (resulting in high compression) option. The intention here is to choose a quality level such that the compressed larger image, is smaller than the compressed smaller image.
 </p>
