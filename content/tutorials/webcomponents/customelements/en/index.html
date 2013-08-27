@@ -26,6 +26,9 @@ blockquote:not(.talkinghead):after {
   right: -5px;
   bottom: -55px;
 }
+.talkinghead.singleline:before {
+  top: 5px !important;
+}
 button a {
   color: inherit !important;
 }
@@ -165,22 +168,24 @@ x-panel {
 <p>{% include "warning.html" %}</p>
 <h2 id="intro">Introduction</h2>
 
-<p>The web severely lacks expression. To see what I mean, take a peak at a "modern" web app like GMail:</p>
+<p>The web severely lacks expression. To see what I mean, take a peek at a "modern" web app like GMail:</p>
 <figure>
   <img src="gmail.png" style="max-width:75%">
   <figcaption>Modern web apps: built with <code>&lt;div></code> soup.</figcpation>
 </figure>
 
-<p>There's nothing modern about <code>&lt;div&gt;</code> soup. And yet,...this is how we build web apps. It's sad. </p>
+<p>There's nothing modern about <code>&lt;div&gt;</code> soup. And yet,&hellip;this is how we build web apps. It's sad. 
+Shouldn't we demand more from our platform?</p>
 <h3 id="meaningful">Sexy markup. Let's make it a thing.</h3>
 
-<p>HTML gives us an excellent tool for structuring a document but it's vocabulary is limited to what the <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/">HTML standard</a> defines.</p>
-<p>What if the markup for GMail wasn't atrocious? What if it was beautify:</p>
+<p>HTML gives us an excellent tool for structuring a document but its vocabulary is limited to elements
+the <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/">HTML standard</a> defines.</p>
+<p>What if the markup for GMail wasn't atrocious? What if it was beautiful:</p>
 <pre class="prettyprint"><code>&lt;hangout-module&gt;
-  &lt;hangout-chat from="Paul, Addy" profile="118075919496626375791"&gt;
+  &lt;hangout-chat from="Paul, Addy"&gt;
     &lt;hangout-discussion&gt;
       &lt;hangout-message from="Paul" profile="profile.png"
-                       datetime="2013-07-17T12:02"&gt;
+          profile="118075919496626375791" datetime="2013-07-17T12:02"&gt;
         &lt;p&gt;Feelin' this Web Components thing.&lt;/p&gt;
         &lt;p&gt;Heard of it?&lt;/p&gt;
       &lt;/hangout-message&gt;
@@ -196,12 +201,12 @@ x-panel {
 <p>How refreshing! This app totally makes sense too. It's <strong>meaningful</strong>, <strong>easy to understand</strong>,
 and best of all, it's <strong>maintainable</strong>. Future me/you will know exactly what it does
 just by examining its declarative backbone.</p>
-<blockquote class="commentary talkinghead">Help us custom elements. You're our only hope!</blockquote>
+<blockquote class="commentary talkinghead singleline">Help us custom elements. You're our only hope!</blockquote>
 
 <h2 id="gettingstarted">Getting started</h2>
 
 <p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html">Custom Elements</a>
-<strong>allow web developers to define new types of HTML elements</strong>. The spec is one of several new API primitives landing under the <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> umbrella, but it's quite possibly the most important. "Web Components" don't exist
+<strong>allow web developers to define new types of HTML elements</strong>. The spec is one of several new API primitives landing under the <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> umbrella, but it's quite possibly the most important. Web Components don't exist
 without the features unlocked by custom elements:</p>
 <ol>
 <li>Define new HTML/DOM elements</li>
@@ -213,10 +218,10 @@ without the features unlocked by custom elements:</p>
 
 <p>Custom elements are created using <code>document.register()</code>:</p>
 <pre class="prettyprint"><code>var XFoo = document.register('x-foo');
-document.body.appendChild(document.createElement('x-foo'));
+document.body.appendChild(new XFoo());
 </code></pre>
 <p>The first argument to <code>document.register()</code> is the the name of the tag you'd like to create.
-The name <strong>must contain a "-"</strong>. So for example, <code>&lt;x-tags&gt;</code>, <code>&lt;my-element&gt;</code>, and <code>&lt;my-awesome-app&gt;</code> are all valid names, while <code>&lt;tabs&gt;</code> and <code>&lt;foo_bar&gt;</code> are not. This restriction allows the parser
+The name <strong>must contain a dash (-)</strong>. So for example, <code>&lt;x-tags&gt;</code>, <code>&lt;my-element&gt;</code>, and <code>&lt;my-awesome-app&gt;</code> are all valid names, while <code>&lt;tabs&gt;</code> and <code>&lt;foo_bar&gt;</code> are not. This restriction allows the parser
 to distinguish custom elements from regular elements but also ensures forward
 compatibility when new tags are added to HTML.</p>
 <p>The second argument is an (optional) object describing the element's <code>prototype</code>.
@@ -227,18 +232,18 @@ This is the place to add custom functionality (e.g. public properties and method
   prototype: Object.create(HTMLElement.prototype)
 });
 </code></pre>
-<p>A call to <code>document.register('x-foo')</code> a.) teaches browser about the new element,
-and b.) returns a constructor that you can use to create instances of <code>&lt;x-foo&gt;</code>.
+<p>A call to <code>document.register('x-foo')</code> teaches the browser about the new element,
+and returns a constructor that you can use to create instances of <code>&lt;x-foo&gt;</code>.
 Alternatively, you can use the other <a href="#instantiating">techniques of instantiating elements</a>
 if you don't want to use the constructor.</p>
-<p class="notice tip">If you don't want the constructor returned by <code>document.register()</code>
-to live on the  global <code>window</code> object, don't save its return value or wrap it in a namespace: <code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>.</p>
+<p class="notice tip">If it's undesirable that the constructor ends up on the global <code>window</code>
+object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>) or drop it on the floor.</p>
 
 <h3 id="extending">Extending native elements</h3>
 
 <p>Say you aren't happy with Regular Joe&#8482; <code>&lt;button&gt;</code>. You'd like to
 supercharge its capabilities to be a "Mega Button". To extend the <code>&lt;button&gt;</code> element,
-create a new element, <code>&lt;mega-button&gt;</code>, that inherits the <code>prototype</code> of <code>HTMLButtonElement</code>:</p>
+create a new element that inherits the <code>prototype</code> of <code>HTMLButtonElement</code>:</p>
 <pre class="prettyprint"><code>var MegaButton = document.register('mega-button', {
   prototype: Object.create(HTMLButtonElement.prototype)
 });
@@ -247,8 +252,11 @@ create a new element, <code>&lt;mega-button&gt;</code>, that inherits the <code>
 To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
 must inherit the <code>prototype</code> of <b>element B</b>.</p>
 
-<p>Custom elements like <code>&lt;mega-button&gt;</code> are called "<strong>type extension custom elements</strong>".
+<p>Custom elements like this are called <em>type extension custom elements</em>.
 They inherit from a specialized version of <code>HTMLElement</code> as a way to say, "element X is a Y".</p>
+<p>Example:</p>
+<pre class="prettyprint"><code>&lt;button is="mega-button"&gt;
+</code></pre>
 <h3 id="upgrades">How elements are upgraded</h3>
 
 <p>Have you ever wondered why the HTML parser doesn't throw a fit on non-standard tags?
@@ -269,7 +277,7 @@ document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 <h4 id="unresolvedels">Unresolved elements</h4>
 
 <p>Because custom elements are registered by script using <code>document.register()</code>, <strong>they can be
-used <em>before</em> their definition is registered</strong> by the browser. For example,
+declared or created <em>before</em> their definition is registered</strong> by the browser. For example,
 you can declare <code>&lt;x-tabs&gt;</code> on the page but end up invoking <code>document.register('x-tabs')</code> much later.</p>
 <p>Before elements are upgraded to their definition, they're called <strong>unresolved elements</strong>.
 These are HTML elements that have a valid custom element name but haven't been registered.</p>
@@ -294,7 +302,7 @@ using JavaScript.</p>
 <p><strong>Declare</strong> them:</p>
 <pre class="prettyprint"><code>&lt;x-foo&gt;&lt;/x-foo&gt;
 </code></pre>
-<p><strong>Create DOM</strong> them in JS:</p>
+<p><strong>Create DOM</strong> in JS:</p>
 <pre class="prettyprint"><code>var xFoo = document.createElement('x-foo');
 xFoo.addEventListener('click', function(e) {
   alert('Thanks!');
@@ -311,7 +319,7 @@ document.body.appendChild(xFoo);
 <pre class="prettyprint"><code>&lt;!-- &lt;button&gt; "is a" &lt;mega-button&gt; --&gt;
 &lt;button is="mega-button"&gt;
 </code></pre>
-<p><strong>Create DOM</strong> them in JS:</p>
+<p><strong>Create DOM</strong> in JS:</p>
 <pre class="prettyprint"><code>var megaButton = document.createElement('button', 'mega-button');
 // megaButton instanceof MegaButton === true
 </code></pre>
@@ -321,7 +329,7 @@ that takes the <code>is=""</code> attribute as its second parameter.</p>
 <pre class="prettyprint"><code>var megaButton = new MegaButton();
 document.body.appendChild(megaButton);
 </code></pre>
-<p>So far, we've learned how to use <code>document.register()</code> to tell the browser about a new tag...but
+<p>So far, we've learned how to use <code>document.register()</code> to tell the browser about a new tag&hellip;but
 it doesn't do much. Let's add properties and methods.</p>
 <h2 id="publicapi">Adding JS properties and methods</h2>
 
@@ -336,8 +344,8 @@ XFooProto.foo = function() {
   alert('foo() called');
 };
 
-// 2. Define a property "bar".
-XFooProto.bar = 5;
+// 2. Define a property read-only "bar".
+Object.defineProperty(XFooProto, "bar", {value: 5});
 
 // 3. Register x-foo's definition.
 var XFoo = document.register('x-foo', {prototype: XFooProto});
@@ -348,11 +356,13 @@ var xfoo = document.createElement('x-foo');
 // 5. Add it to the page.
 document.body.appendChild(xfoo);
 </code></pre>
-<p>If you're not a fan of creating prototypes like this, here's a more condensed
-version of the same thing:</p>
+<p>Of course there are umpteen thousand ways to construct a <code>prototype</code>. If you're not
+a fan of creating prototypes like this, here's a more condensed version of the same thing:</p>
 <pre class="prettyprint"><code>var XFoo = document.register('x-foo', {
   prototype: Object.create(HTMLElement.prototype, {
-    bar: {value: 5},
+    bar: {
+      get: function() { return 5; }
+    },
     foo: {
       value: function() {
         alert('foo() called');
@@ -361,8 +371,7 @@ version of the same thing:</p>
   })
 });
 </code></pre>
-<p class="notice tip">This second format allows you to use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/get">ES5 get/set</a>.</p>
-
+<p>The first format allows for the use of ES5 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty"><code>Object.defineProperty</code></a>. The second allows the use of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/get">get/set</a>.</p>
 <h3 id="lifecycle">Lifecycle callback methods</h3>
 
 <p>Elements can define special methods for tapping into interesting times of their existence.
@@ -405,7 +414,8 @@ var XFoo = document.register('x-foo', {prototype: proto});
 <p><strong>All of the lifecycle callbacks are optional</strong>, but define them if/when it makes sense.
 For example, say your element is sufficiently complex and opens a connection to IndexedDB
 in <code>createdCallback()</code>. Before it gets removed from the DOM, do the necessary
-cleanup work in <code>leftDocumentCallback()</code>.</p>
+cleanup work in <code>leftDocumentCallback()</code>. <strong>Note:</strong> you shouldn't rely on this,
+for example, if the user closes the tab, but think of it as a possible optimization hook.</p>
 <p>Another use case lifecycle callbacks is for setting up default event listeners
 on the element:</p>
 <pre class="prettyprint"><code>proto.createdCallback = function() {
@@ -447,9 +457,9 @@ encapsulating content. Use it in conjunction with custom elements and things get
 <p>Shadow DOM gives custom elements:</p>
 <ol>
 <li>A way to hide their guts, thus shielding users from gory implementation details.</li>
-<li><a href="/tutorials/webcomponents/shadowdom-201/">Style encapsulation</a>...fo' free.</li>
+<li><a href="/tutorials/webcomponents/shadowdom-201/">Style encapsulation</a>&hellip;fo' free.</li>
 </ol>
-<p>Creating an element from Shadow DOM is like to creating one that
+<p>Creating an element from Shadow DOM is like creating one that
 renders basic markup. The difference is in <code>createdCallback()</code>:</p>
 <pre class="prettyprint"><code>var XFooProto = Object.create(HTMLElement.prototype);
 
@@ -498,7 +508,7 @@ var proto = Object.create(HTMLElement.prototype, {
     }
   }
 });
-document.register('sdtemplate-el', {prototype: proto});
+document.register('x-foo-from-template', {prototype: proto});
 &lt;/script&gt;
 </code></pre>
 <p><template id="sdtemplate">
@@ -506,12 +516,12 @@ document.register('sdtemplate-el', {prototype: proto});
   <p>I'm in Shadow DOM. My markup was stamped from a &lt;template&gt;.</p>
 </template></p>
 <div class="demoarea">
-  <sdtemplate-el></sdtemplate-el>
+  <x-foo-from-template></x-foo-from-template>
 </div>
 
 <p>These few lines of code pack a lot of punch. Let's understanding everything that is happening:</p>
 <ol>
-<li>We've registered a new element in HTML: <code>&lt;sdtemplate-el&gt;</code></li>
+<li>We've registered a new element in HTML: <code>&lt;x-foo-from-template&gt;</code></li>
 <li>The element's DOM was created from a <code>&lt;template&gt;</code></li>
 <li>The element's scary details are hidden away using Shadow DOM</li>
 <li>Shadow DOM gives the element style encapsulation (e.g. <code>p {color: orange;}</code> isn't
@@ -614,7 +624,7 @@ not to elements that inherit from <code>HTMLUnkownElement</code> (see <a href="#
 
 &lt;panel&gt;
   I'm black because :unresolved doesn't apply to "panel".
-  It's not a valid name.
+  It's not a valid custom element name.
 &lt;/panel&gt;
 
 &lt;x-panel&gt;I'm red because I match x-panel:unresolved.&lt;/x-panel&gt;
@@ -644,7 +654,7 @@ if (supportsCustomElements()) {
 
 <p><code>document.register()</code> first started landing behind a flag in Chrome 27 and Firefox ~23. However, the specification has evolved quite a bit since then. Chrome 31 is the first to have
 true support for the updated spec. </p>
-<p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experiemental Web Platform features" in `about:flags`.</p>
+<p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experimental Web Platform features" in <code>about:flags</code>.</p>
 
 <p>Until browser support is stellar, there are a couple of great polyfills:</p>
 <ul>
@@ -654,14 +664,16 @@ true support for the updated spec. </p>
 <h3 id="elementel">What happened to HTMLElementElement?</h3>
 
 <p>For those that have followed the standardization work, you know there was once <code>&lt;element&gt;</code>.
-It was the bees knees. You could use
-it to declaratively register new elements:</p>
+It was the bees knees. You could use it to declaratively register new elements:</p>
 <pre class="prettyprint"><code>&lt;element name="my-element"&gt;
   ...
 &lt;/element&gt;
 </code></pre>
 <p>Unfortunately, there were too many timing issues with the <a href="#upgrades">upgrade process</a>,
-corner cases, and Armageddon-like scenarios to work it all out. <code>&lt;element&gt;</code> had to shelved. In August 2013, Dimitri Glazkov posted to <a href="http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html">public-webapps</a> announcing its removal.</p>
+corner cases, and Armageddon-like scenarios to work it all out. <code>&lt;element&gt;</code> had to be shelved. In August 2013, Dimitri Glazkov posted to <a href="http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html">public-webapps</a> announcing its removal, at least for now.</p>
+<p>It's worth noting that Polymer implements a declarative form of element registration
+with <code>&lt;polymer-element&gt;</code>. How? It uses <code>document.register('polymer-element')</code> and
+the techniques I described in <a href="#fromtemplate">Creating elements from a template</a>.</p>
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Custom elements give us the tool to extend HTML's vocabulary, teach it new tricks,
@@ -716,7 +728,7 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
       }
     }
   });
-  document.register('sdtemplate-el', {prototype: proto});
+  document.register('x-foo-from-template', {prototype: proto});
 })();
 
 }

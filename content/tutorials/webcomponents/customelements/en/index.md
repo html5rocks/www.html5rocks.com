@@ -2,26 +2,28 @@
 
 <h2 id="intro">Introduction</h2>
 
-The web severely lacks expression. To see what I mean, take a peak at a "modern" web app like GMail:
+The web severely lacks expression. To see what I mean, take a peek at a "modern" web app like GMail:
 
 <figure>
   <img src="gmail.png" style="max-width:75%">
   <figcaption>Modern web apps: built with <code>&lt;div></code> soup.</figcpation>
 </figure>
 
-There's nothing modern about `<div>` soup. And yet,...this is how we build web apps. It's sad. 
+There's nothing modern about `<div>` soup. And yet,&hellip;this is how we build web apps. It's sad. 
+Shouldn't we demand more from our platform?
 
 <h3 id="meaningful">Sexy markup. Let's make it a thing.</h3>
 
-HTML gives us an excellent tool for structuring a document but it's vocabulary is limited to what the [HTML standard](http://www.whatwg.org/specs/web-apps/current-work/multipage/) defines.
+HTML gives us an excellent tool for structuring a document but its vocabulary is limited to elements
+the [HTML standard](http://www.whatwg.org/specs/web-apps/current-work/multipage/) defines.
 
-What if the markup for GMail wasn't atrocious? What if it was beautify:
+What if the markup for GMail wasn't atrocious? What if it was beautiful:
 
     <hangout-module>
-      <hangout-chat from="Paul, Addy" profile="118075919496626375791">
+      <hangout-chat from="Paul, Addy">
         <hangout-discussion>
           <hangout-message from="Paul" profile="profile.png"
-                           datetime="2013-07-17T12:02">
+              profile="118075919496626375791" datetime="2013-07-17T12:02">
             <p>Feelin' this Web Components thing.</p>
             <p>Heard of it?</p>
           </hangout-message>
@@ -38,12 +40,12 @@ How refreshing! This app totally makes sense too. It's **meaningful**, **easy to
 and best of all, it's **maintainable**. Future me/you will know exactly what it does
 just by examining its declarative backbone.
 
-<blockquote class="commentary talkinghead">Help us custom elements. You're our only hope!</blockquote>
+<blockquote class="commentary talkinghead singleline">Help us custom elements. You're our only hope!</blockquote>
 
 <h2 id="gettingstarted">Getting started</h2>
 
 [Custom Elements](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html)
-**allow web developers to define new types of HTML elements**. The spec is one of several new API primitives landing under the [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) umbrella, but it's quite possibly the most important. "Web Components" don't exist
+**allow web developers to define new types of HTML elements**. The spec is one of several new API primitives landing under the [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) umbrella, but it's quite possibly the most important. Web Components don't exist
 without the features unlocked by custom elements:
 
 1. Define new HTML/DOM elements
@@ -56,10 +58,10 @@ without the features unlocked by custom elements:
 Custom elements are created using `document.register()`:
 
     var XFoo = document.register('x-foo');
-    document.body.appendChild(document.createElement('x-foo'));
+    document.body.appendChild(new XFoo());
 
 The first argument to `document.register()` is the the name of the tag you'd like to create.
-The name **must contain a "-"**. So for example, `<x-tags>`, `<my-element>`, and `<my-awesome-app>` are all valid names, while `<tabs>` and `<foo_bar>` are not. This restriction allows the parser
+The name **must contain a dash (-)**. So for example, `<x-tags>`, `<my-element>`, and `<my-awesome-app>` are all valid names, while `<tabs>` and `<foo_bar>` are not. This restriction allows the parser
 to distinguish custom elements from regular elements but also ensures forward
 compatibility when new tags are added to HTML.
 
@@ -73,19 +75,19 @@ By default, custom elements inherit from `HTMLElement`. Thus, the previous examp
       prototype: Object.create(HTMLElement.prototype)
     });
 
-A call to `document.register('x-foo')` a.) teaches browser about the new element,
-and b.) returns a constructor that you can use to create instances of `<x-foo>`.
+A call to `document.register('x-foo')` teaches the browser about the new element,
+and returns a constructor that you can use to create instances of `<x-foo>`.
 Alternatively, you can use the other [techniques of instantiating elements](#instantiating)
 if you don't want to use the constructor.
 
-<p class="notice tip">If you don't want the constructor returned by <code>document.register()</code>
-to live on the  global <code>window</code> object, don't save its return value or wrap it in a namespace: <code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>.</p>
+<p class="notice tip">If it's undesirable that the constructor ends up on the global <code>window</code>
+object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>) or drop it on the floor.</p>
 
 <h3 id="extending">Extending native elements</h3>
 
 Say you aren't happy with Regular Joe&#8482; `<button>`. You'd like to
 supercharge its capabilities to be a "Mega Button". To extend the `<button>` element,
-create a new element, `<mega-button>`, that inherits the `prototype` of `HTMLButtonElement`:
+create a new element that inherits the `prototype` of `HTMLButtonElement`:
 
     var MegaButton = document.register('mega-button', {
       prototype: Object.create(HTMLButtonElement.prototype)
@@ -95,8 +97,12 @@ create a new element, `<mega-button>`, that inherits the `prototype` of `HTMLBut
 To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
 must inherit the <code>prototype</code> of <b>element B</b>.</p>
 
-Custom elements like `<mega-button>` are called "**type extension custom elements**".
+Custom elements like this are called _type extension custom elements_.
 They inherit from a specialized version of `HTMLElement` as a way to say, "element X is a Y".
+
+Example:
+
+    <button is="mega-button">
 
 <h3 id="upgrades">How elements are upgraded</h3>
 
@@ -120,7 +126,7 @@ The same is not true for custom elements. **Elements with valid custom element n
 <h4 id="unresolvedels">Unresolved elements</h4>
 
 Because custom elements are registered by script using `document.register()`, **they can be
-used _before_ their definition is registered** by the browser. For example,
+declared or created _before_ their definition is registered** by the browser. For example,
 you can declare `<x-tabs>` on the page but end up invoking `document.register('x-tabs')` much later.
 
 Before elements are upgraded to their definition, they're called **unresolved elements**.
@@ -150,7 +156,7 @@ using JavaScript.
 
     <x-foo></x-foo>
 
-**Create DOM** them in JS:
+**Create DOM** in JS:
 
     var xFoo = document.createElement('x-foo');
     xFoo.addEventListener('click', function(e) {
@@ -171,7 +177,7 @@ Instantiating type extension custom elements is strikingly close to custom tags.
     <!-- <button> "is a" <mega-button> -->
     <button is="mega-button">
 
-**Create DOM** them in JS:
+**Create DOM** in JS:
 
     var megaButton = document.createElement('button', 'mega-button');
     // megaButton instanceof MegaButton === true
@@ -184,7 +190,7 @@ Use the **`new` operator**:
     var megaButton = new MegaButton();
     document.body.appendChild(megaButton);
 
-So far, we've learned how to use `document.register()` to tell the browser about a new tag...but
+So far, we've learned how to use `document.register()` to tell the browser about a new tag&hellip;but
 it doesn't do much. Let's add properties and methods.
 
 <h2 id="publicapi">Adding JS properties and methods</h2>
@@ -202,8 +208,8 @@ Here's a full example:
       alert('foo() called');
     };
 
-    // 2. Define a property "bar".
-    XFooProto.bar = 5;
+    // 2. Define a property read-only "bar".
+    Object.defineProperty(XFooProto, "bar", {value: 5});
 
     // 3. Register x-foo's definition.
     var XFoo = document.register('x-foo', {prototype: XFooProto});
@@ -214,12 +220,14 @@ Here's a full example:
     // 5. Add it to the page.
     document.body.appendChild(xfoo);
 
-If you're not a fan of creating prototypes like this, here's a more condensed
-version of the same thing:
+Of course there are umpteen thousand ways to construct a `prototype`. If you're not
+a fan of creating prototypes like this, here's a more condensed version of the same thing:
 
     var XFoo = document.register('x-foo', {
       prototype: Object.create(HTMLElement.prototype, {
-        bar: {value: 5},
+        bar: {
+          get: function() { return 5; }
+        },
         foo: {
           value: function() {
             alert('foo() called');
@@ -228,7 +236,7 @@ version of the same thing:
       })
     });
 
-<p class="notice tip">This second format allows you to use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/get">ES5 get/set</a>.</p>
+The first format allows for the use of ES5 [`Object.defineProperty`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty). The second allows the use of [get/set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/get).
 
 <h3 id="lifecycle">Lifecycle callback methods</h3>
 
@@ -274,7 +282,8 @@ These methods are appropriately named the **lifecycle callbacks**. Each has a sp
 **All of the lifecycle callbacks are optional**, but define them if/when it makes sense.
 For example, say your element is sufficiently complex and opens a connection to IndexedDB
 in `createdCallback()`. Before it gets removed from the DOM, do the necessary
-cleanup work in `leftDocumentCallback()`.
+cleanup work in `leftDocumentCallback()`. **Note:** you shouldn't rely on this,
+for example, if the user closes the tab, but think of it as a possible optimization hook.
 
 Another use case lifecycle callbacks is for setting up default event listeners
 on the element:
@@ -322,9 +331,9 @@ encapsulating content. Use it in conjunction with custom elements and things get
 Shadow DOM gives custom elements:
 
 1. A way to hide their guts, thus shielding users from gory implementation details.
-2. [Style encapsulation](/tutorials/webcomponents/shadowdom-201/)...fo' free.
+2. [Style encapsulation](/tutorials/webcomponents/shadowdom-201/)&hellip;fo' free.
 
-Creating an element from Shadow DOM is like to creating one that
+Creating an element from Shadow DOM is like creating one that
 renders basic markup. The difference is in `createdCallback()`:
 
     var XFooProto = Object.create(HTMLElement.prototype);
@@ -379,7 +388,7 @@ allows you to declare fragments DOM which are parsed, inert at page load, and in
         }
       }
     });
-    document.register('sdtemplate-el', {prototype: proto});
+    document.register('x-foo-from-template', {prototype: proto});
     </script>
 
 <template id="sdtemplate">
@@ -388,12 +397,12 @@ allows you to declare fragments DOM which are parsed, inert at page load, and in
 </template>
 
 <div class="demoarea">
-  <sdtemplate-el></sdtemplate-el>
+  <x-foo-from-template></x-foo-from-template>
 </div>
 
 These few lines of code pack a lot of punch. Let's understanding everything that is happening:
 
-1. We've registered a new element in HTML: `<sdtemplate-el>`
+1. We've registered a new element in HTML: `<x-foo-from-template>`
 - The element's DOM was created from a `<template>`
 - The element's scary details are hidden away using Shadow DOM
 - Shadow DOM gives the element style encapsulation (e.g. `p {color: orange;}` isn't
@@ -503,7 +512,7 @@ not to elements that inherit from `HTMLUnkownElement` (see [How elements are upg
     
     <panel>
       I'm black because :unresolved doesn't apply to "panel".
-      It's not a valid name.
+      It's not a valid custom element name.
     </panel>
 
     <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
@@ -535,7 +544,7 @@ Feature detecting is a matter of checking if `document.register()` exists:
 `document.register()` first started landing behind a flag in Chrome 27 and Firefox ~23. However, the specification has evolved quite a bit since then. Chrome 31 is the first to have
 true support for the updated spec. 
 
-<p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experiemental Web Platform features" in `about:flags`.</p>
+<p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experimental Web Platform features" in <code>about:flags</code>.</p>
 
 Until browser support is stellar, there are a couple of great polyfills:
 
@@ -545,15 +554,18 @@ Until browser support is stellar, there are a couple of great polyfills:
 <h3 id="elementel">What happened to HTMLElementElement?</h3>
 
 For those that have followed the standardization work, you know there was once `<element>`.
-It was the bees knees. You could use
-it to declaratively register new elements:
+It was the bees knees. You could use it to declaratively register new elements:
 
     <element name="my-element">
       ...
     </element>
 
 Unfortunately, there were too many timing issues with the [upgrade process](#upgrades),
-corner cases, and Armageddon-like scenarios to work it all out. `<element>` had to shelved. In August 2013, Dimitri Glazkov posted to [public-webapps](http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html) announcing its removal.
+corner cases, and Armageddon-like scenarios to work it all out. `<element>` had to be shelved. In August 2013, Dimitri Glazkov posted to [public-webapps](http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html) announcing its removal, at least for now.
+
+It's worth noting that Polymer implements a declarative form of element registration
+with `<polymer-element>`. How? It uses `document.register('polymer-element')` and
+the techniques I described in [Creating elements from a template](#fromtemplate).
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -611,7 +623,7 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
       }
     }
   });
-  document.register('sdtemplate-el', {prototype: proto});
+  document.register('x-foo-from-template', {prototype: proto});
 })();
 
 }
