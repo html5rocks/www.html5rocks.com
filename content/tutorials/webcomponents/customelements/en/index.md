@@ -5,7 +5,7 @@
 The web severely lacks expression. To see what I mean, take a peek at a "modern" web app like GMail:
 
 <figure>
-  <img src="gmail.png" style="max-width:75%">
+  <a href="gmail.png"><img src="gmail.png" style="max-width:75%"></a>
   <figcaption>Modern web apps: built with <code>&lt;div></code> soup.</figcpation>
 </figure>
 
@@ -60,7 +60,7 @@ Custom elements are created using `document.register()`:
     var XFoo = document.register('x-foo');
     document.body.appendChild(new XFoo());
 
-The first argument to `document.register()` is the the name of the tag you'd like to create.
+The first argument to `document.register()` is the element's tag name.
 The name **must contain a dash (-)**. So for example, `<x-tags>`, `<my-element>`, and `<my-awesome-app>` are all valid names, while `<tabs>` and `<foo_bar>` are not. This restriction allows the parser
 to distinguish custom elements from regular elements but also ensures forward
 compatibility when new tags are added to HTML.
@@ -113,7 +113,7 @@ For example, it's perfectly happy if we declare `<randomtag>` on the page. Accor
 
 Sorry `<randomtag>`! You're non-standard and inherit from `HTMLUnknownElement`.
 
-The same is not true for custom elements. **Elements with valid custom element names inherit from `HTMLElement`.** You can verify this fact by firing up the console:
+The same is not true for custom elements. **Elements with valid custom element names inherit from `HTMLElement`.** You can verify this fact by firing up the Console: <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">J</span> (or <span class="kbd">Cmd</span>+<span class="kbd">Opt</span>+<span class="kbd">J</span> on Mac), and paste in the following lines of code; they return `true`:
 
     // "tabs" is not a valid custom element name
     document.createElement('tabs').__proto__ === HTMLUnknownElement.prototype
@@ -170,11 +170,11 @@ Use the **`new` operator**:
 
 <h3 id="usetypeextension">Instantiating type extension elements</h3>
 
-Instantiating type extension custom elements is strikingly close to custom tags.
+Instantiating type extension-style custom elements is strikingly close to custom tags.
 
 **Declare** them:
 
-    <!-- <button> "is a" <mega-button> -->
+    <!-- <button> "is a" mega button -->
     <button is="mega-button">
 
 **Create DOM** in JS:
@@ -317,7 +317,7 @@ give it some HTML to render?
   <x-foo-with-markup></x-foo-with-markup>
 </div>
 
-Instantiating this tag and inspecting in the DevTools should show:
+Instantiating this tag and inspecting in the DevTools (right-click, select Inspect Element) should show:
 
     ▾<x-foo-with-markup>
        <b>I'm an x-foo-with-markup!</b>
@@ -325,7 +325,7 @@ Instantiating this tag and inspecting in the DevTools should show:
 
 <h3 id="shadowdom">Encapsulating the internals in Shadow DOM</h3>
 
-By itself, [Shadow DOM](tutorials/webcomponents/shadowdom/) is a powerful tool for
+By itself, [Shadow DOM](/tutorials/webcomponents/shadowdom/) is a powerful tool for
 encapsulating content. Use it in conjunction with custom elements and things get magical!
 
 Shadow DOM gives custom elements:
@@ -352,9 +352,10 @@ renders basic markup. The difference is in `createdCallback()`:
   <x-foo-shadowdom></x-foo-shadowdom>
 </div>
 
-Instead of setting `.innerHTML`, I've created a Shadow Root for `<x-foo-shadowdom>`
-and filled it with the markup. With the "Show Shadow DOM" setting enabled
-in the DevTools, you'll see a `#document-fragment` that can be expanded:
+Instead of setting the element's `.innerHTML`, I've created a
+Shadow Root for `<x-foo-shadowdom>` and then filled it with markup.
+With the "Show Shadow DOM" setting enabled in the DevTools, you'll see a
+`#document-fragment` that can be expanded:
 
     ▾<x-foo-shadowdom>
        ▾#document-fragment
@@ -365,10 +366,10 @@ That's the Shadow Root!
 
 <h3 id="fromtemplate">Creating elements from a template</h3>
 
-HTML Templates are another new API primitive that fits nicely into the world of custom elements.
+[HTML Templates](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html) are another new API primitive that fits nicely into the world of custom elements.
 
 For those unfamiliar, the [`<template>` element](/tutorials/webcomponents/template/)
-allows you to declare fragments DOM which are parsed, inert at page load, and instantiated later at runtime. They're an ideal placeholder for declaring the structure of custom element.
+allows you to declare fragments of DOM which are parsed, inert at page load, and instantiated later at runtime. They're an ideal placeholder for declaring the structure of custom element.
 
 **Example:** registering an element created from a `<template>` and Shadow DOM:
 
@@ -469,9 +470,9 @@ Shadow DOM styling is a huge topic! If you want to learn more about it, I recomm
 <h3 id="fouc">FOUC prevention using :unresolved</h3>
 
 To mitigate [FOUC](http://en.wikipedia.org/wiki/Flash_of_unstyled_content), custom elements spec
-out a new CSS pseudo class, `:unresolved`. Use it to target [unresolved elements](#unresolvedels)
-right up until the `createdCallback()` is invoked (see [lifecycle methods](#lifecycle)).
-At that point, the element is no longer an unresolved element. The upgrade process is
+out a new CSS pseudo class, `:unresolved`. Use it to target [unresolved elements](#unresolvedels), 
+right up until the point where the browser invokes your `createdCallback()` (see [lifecycle methods](#lifecycle)).
+Once that happens, the element is no longer an unresolved element. The upgrade process is
 complete and the element has transformed into its definition. 
 
 <p class="notice">CSS <code>:unresolved</code> is supported natively in Chrome 29.</p>
@@ -522,6 +523,9 @@ not to elements that inherit from `HTMLUnkownElement` (see [How elements are upg
   <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
   <p><button id="register-x-panel">Register &lt;x-panel></button></p>
 </div>
+
+For more on `:unresolved`, see Polymer's [A Guide to styling elements](http://www.polymer-project.org/articles/styling-elements.html#preventing-fouc).
+
 
 <h2 id="historysupport">History and browser support</h2>
 
@@ -574,7 +578,7 @@ and jump through the wormholes of the web platform. Combine them with the other
 new platform primitives like Shadow DOM and `<template>`, and we start to realize
 the picture of Web Components. Markup can be sexy again!
 
-If you're interested in getting started with this stuff today, I recommend checking
+If you're interested in getting started with web components, I recommend checking
 out [Polymer](polymer-project.org). It's got more than enough to get you going.
 
 <script>
