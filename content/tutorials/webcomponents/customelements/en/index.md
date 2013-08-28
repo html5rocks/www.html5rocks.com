@@ -579,7 +579,7 @@ new platform primitives like Shadow DOM and `<template>`, and we start to realiz
 the picture of Web Components. Markup can be sexy again!
 
 If you're interested in getting started with web components, I recommend checking
-out [Polymer](polymer-project.org). It's got more than enough to get you going.
+out [Polymer](http://polymer-project.org). It's got more than enough to get you going.
 
 <script>
 if ('register' in document) {
