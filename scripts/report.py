@@ -37,17 +37,21 @@ def main():
         if due_on < today:
            late_articles.append(issue)
 
-        if (due_on - today).days < 7 and (due_on - today) >= 0:
+        if (due_on - today).days < 7 and (due_on - today).days >= 0:
            due_articles.append(issue) 
 
-    print "HTML5 Rocks Weekly Report"
+    print "\n\nHTML5 Rocks Weekly Report"
+    print "==========================="
 
     print "Late articles"
+    print "-------------"
 
     for article in late_articles:
        print "%s - %s is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on)
 
     print "Articles due this week"    
+    print "----------------------"
+
     for article in due_articles:
        print "%s - %s is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on)
    
