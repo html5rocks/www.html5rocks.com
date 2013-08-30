@@ -1,0 +1,465 @@
+
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/coltmcanlis.75.png);
+  background-position: 0px 0px !important;
+}
+.talkinghead-ja:before {
+  background-image: url(/static/images/profiles/75/jakearchibald.75.png);
+  background-position: 0px 0px !important;
+}
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+
+
+
+</style>
+<meta property="og:title" content="Image compression for web developers"/>
+<meta property="og:image" content="story_small.jpg"/>
+<meta property="og:description" content="As images continue to be the largest part of webpage content, it’s critically important for web developers to take aggressive control of their image sizes and quality in order to deliver a fastest loading, responsive site for their users.  This article will provide a bit of reason, history, and technique to understand and properly address image compression issues for your website. "/>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+
+{% block content %}
+
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>As images continue to be the largest part of webpage content, it’s critically important for web developers to take aggressive control of their image sizes and quality in order to deliver a fastest loading, responsive site for their users. Hitting this sweet-spot is not free; you can automate a ‘good enough’ value most of the time, but for the best savings, you need to test quality levels using your human eye. This article will provide a bit of reason, history, and technique to understand and properly address image compression issues for your website.
+</p>
+<center><img src="parrots.jpg"  title="Who likes parrots? Everyone." alt="I should take a vacation."></center>
+<p>
+
+
+<h2 id="toc-tldr">TL;DR : Image Compression Checklist</h2>
+<p>
+  <ol>
+    <li>Compress Images with the right format at the lowest acceptable quality level
+      <ol>
+        <li>Hand-tune (where possible) your compression quality for all images</li>
+        <li>Automate the rest to get the best performance</li>
+      </ol>
+    </li>
+    <li>Investigate using WebP for all your image needs</li>
+    <li>Save your images with progressive options to improve user perception of your pages’ load times</li>
+    <li>Investigate other interesting ways to get better compression, or transparency. Think outside the box!</li>
+  </ol>
+
+</p>
+
+<h2 id="toc-smallisbig">Why Small is Big</h2>
+<p>
+Simplistically, larger pages inevitably take longer to load. There’s an unending body of research that shows that users of slow sites, spend less time on the site, click through less, click fewer ads, and spend less. Small sites, like AutoAnything, cut their load time in half, and saw <a href="http://www.strangeloopnetworks.com/resources/case-studies/autoanything-cuts-page-load-time-in-half-and-revs-up-sales-by-13/">revenue grow by 13 percent</a>. And large sites, like Amazon have shown that  for every <a href="https://sites.google.com/site/glinden/Home/StanfordDataMining.2006-11-28.ppt?attredirects=0">100 milliseconds of slowdown</a>, they experienced a 1 percent drop in revenue. And let’s not forget that the 2012 presidential campaign based its entire <a href="http://www.youtube.com/watch?v=FaygFGhex_4">fundraising success on making their website load instantly</a>.
+</p>
+
+<p>
+<b>What’s worse is that users have to pay to download your website.</b><br>
+While bigger pages hurt performance for desktop users, too, the biggest victims of page bloat are mobile users. Not only does a 1MB page take forever to load, it can also deliver a nasty shock when you get your phone bill.
+</p>
+
+<p>
+Even most ‘unlimited’ data plans for mobile, <a href="http://news.cnet.com/8301-1035_3-57564716-94/unlimited-verizon-data-customers-beware-make-sure-your-next-phone-is-4g/">aren’t truly ‘unlimited free.’</a> Most of them will charge a flat rate for access up to 2GB or so, and passing that amount can cost more money. Not to mention that there’s many areas of the world without these types of ‘all you can eat’ billing plans, where cost-to-download information is a serious concern for users, as a <a href="http://www2.research.att.com/~rjana/MobEA-IV/PAPERS/MobEA_IV-Paper_7.pdf">research paper by AT-T highlighted</a>: 
+</p>
+
+<p class="notice">
+  <i>
+mobile data traffic cost problems are severely hindering the use of mobile services on handheld devices today
+<br>
+…<br>
+It was interesting that users try to understand the billing rules even when the carrier does not provide this information. Based on connection indicators, information visible on the phone bill, and previous experience on data traffic billing, people create a perceived billing model that affects their mobile browsing usage patterns. 
+</i></p>
+
+<p>The folks over at <a href="http://mobiforge.com/designing/blog/performance-money-part-1-end-users-wallet">mobiforge</a> provided even more context, putting the entire argument in terms of costs:</p>
+<p class="notice">
+<i>AT-T charge as much as <a href="http://www.wireless.att.com/learn/international/roaming/affordable-world-packages.jsp?wtSlotClick=1-006RPJ-0-1&WT.svl=calltoaction&locale=en_US#data">$19.97/MB</a> for roaming data in certain countries. Taking some of the examples from Guy's <a href="http://www.guypo.com/wp-content/uploads/2013/03/RWD-perf-2013-results.xlsx">spreadsheet</a>, and using the AT-T roaming tariff, is a peak at 1pictureaday.com really worth $178? Do you really need to visit thenextweb.com for $44 or vogue.co.uk for $65? At $17 microsoft.com is a relative bargain.
+<br><br>
+<b>
+  For roaming users these page weights are prohibitive for all but the most essential tasks.
+</b></i>
+</p>
+
+<p>
+<b>Big Images are a big problem.</b></br>
+We can see the the largest increase in sizes come from <a href="http://httparchive.org/interesting.php#bytesperpage">images</a> which can spell bad news for mobile, where a picture <i>literally</i> <a href="http://www.slideshare.net/guypod/a-picture-costs-a-thousand-words18062013">costs a thousand words</a>.<br>
+Inappropriate image formatting is a common performance culprit. Images being too large, not compressed enough, or having a quality setting way too high can all lead to these images being bloated and oversized which has a direct impact on the loading of your site. Picking the right compression method to yield the best results is easily achieved by getting to know what’s going on under the hood.
+</p>
+
+
+<h2 id="toc-types">Types of compression algorithms</h2>
+<p>
+There are generally two stages in an image compressor, a lossy phase, and lossless phase. <b>Lossy</b> compression algorithms will modify the source stream such that you lose information that cannot be restored upon decompression.Most lossy algorithms in image compression take advantage of how the human visual system works, often removing information that we really can’t see, and in the process, saving bytes. For example, limiting the colors used in an image; fewer colors means there’s less data to run around. Generally, when you save an image in a format supporting Lossy compression, you’re asked what “quality level” you’d like for the image, effectively, what you’re choosing is a scalar value which trades file-size for image-quality. Savvy web developers realize that there is a sweet-spot for images, such that the quality level is high enough, and the file size is low as possible.
+</p>
+<p>
+  
+  <figure>
+      <table width="100%" border="1">
+        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
+        <tr><td width="50%"><center>0.123, 1.2345, 21.2165, 21.999, 12.123</center></td><td width="50%"><center>0,0,20,20,10</center></td></tr>
+      </table>
+    <figcaption>
+      <i>Figure 1 - An example of lossy compression. Values are quantized to the smallest multiple of 10 they occupy. This transform cannot be reversed.</i>
+    </figcaption>
+    </figure>
+</p>
+
+<p>
+After a lossy compressor, a <b>lossless</b> variant is then applied, that is, the data, once uncompressed, is restored to it’s exact state, before compression. These are typical compression algorithms that allow the source stream to be recovered directly without any loss of precision or information. In Images, popular Lossless codecs include <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ77</a>, <a href="http://en.wikipedia.org/wiki/Run-length_encoding">RLE</a>, and <a href="http://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic encoding</a>. Lossless compression algorithms are the backbone of compression, often squeezing out the last percentages of data from your content, constantly struggling with <a href="http://en.wikipedia.org/wiki/Information_theory">information theory</a> to reduce your data sizes.
+</p>
+<p>
+   
+    <figure>
+      <table width="100%" border="1">
+        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
+        <tr><td width="50%"><center>aaaaabbbbbcccddddeeeeffffaaaaabb</center></td><td width="50%"><center>a5b4c2d4e4f4a5bb0</center></td></tr>
+      </table>
+    
+    <figcaption>
+    Figure 2 - An example of lossless compression. Runs of values are encoded as the symbol followed by the length of the run. We can properly restore the origional stream. Note that if the length of the run is &lt;= 2 characters, it makes sense to just leave the symbols alone. You see this at the end of the stream with ‘bb’.
+    </figcaption>
+   </figure>
+</p>
+
+
+<h2 id="toc-imgfmt">Image Formats</h2>
+<p>
+An image format typically chains together various lossy + lossless algorithms to grant compression savings. There’s multiple formats adopted by web browsers, each with different features and performance tradeoffs. To be clear, there’s not a “one size fits all” format for the web (currently). Different types of images should be encoded into different formats depending on what type of image it is, what the browser supports, and what needs the page has. 
+</p>
+<p>
+There’s typically three decisions that go into the choice of an image format for a web developer. 
+<ul>
+  <li>Does it need transparency?</li>
+  <li>Does it need animation?</li>
+  <li>Does it need high quality data?</li>
+</ul>
+</p>
+
+
+  <table width="128px" style="float:right;margin:15px;">
+    <tr>
+      <td>
+        <img src="len_std.jpg" width="128px" height="128px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <i>'Lena' is a common image used in the evaluation and comparision of image compression algorithms.</i>
+      </td>
+    </tr>
+  </table>
+
+<p>
+  <a href="http://en.wikipedia.org/wiki/PNG">PNG</a> is a simple format that supports transparency and lossless compression. It allows you to define an alpha channel for your image, to mask out transparent areas, as well as an option to enable a lossless <a href="http://en.wikipedia.org/wiki/DEFLATE">Deflate</a> compressor on the data. (Deflate is a combination of two lossless compressors, <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ77</a>, and <a href="http://en.wikipedia.org/wiki/Huffman_coding">Huffman</a>). Because compression is lossless, image quality remains identical to the source image, this causes issues however, in that the file sizes tend to be quite bloated, and not as small as they could be.
+</p>
+
+<p>
+  
+    <a href="http://en.wikipedia.org/wiki/Graphics_Interchange_Format">GIF</a> is another format which supports transparency, alongside animation (which is the direct reason for the whole ‘<a href="http://www.ubergizmo.com/2012/06/google-brain-simulator-takes-16000-computers-identify-cat/">cats on the internet</a>’ thing..). The GIF format contains two stages of compression, a lossy <a href="http://en.wikipedia.org/wiki/Palette_(computing)">palletization</a> step (restricting the entire image to only 256 colors) followed by a lossless <a href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch">LZW</a> compressor. The process of quantizing the colors of the image down to only 256 provides an aggressive quality reduction at the benefit of better compression sizes, which tends to produce better compression from the LZW end of things.
+</p>
+
+<blockquote class="commentary talkinghead talkinghead-cm" id="compressors">
+  <b>Colt McAnlis says:</b><br>
+  Most modern, cutting edge compressors make the largest wins by chaining together multiple coding steps. A single stage can modify the data stream such that subsequent stages can compress it better than the raw data stream alone. Popular encoders, like <a href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Markov_chain_algorithm">7zip</a> chain together <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ</a> dictionary encoding, that produces a reduced set of symbols that can be consumed more efficiently by a <a href="http://en.wikipedia.org/wiki/Markov_chain">Markov Chain</a> algorithm.<br><br>
+Or, for example, you can apply a <a href="http://www.youtube.com/watch?v=7bJ-D1xXEeg">lossless compression algorithm on top of an existing, GPU formatted</a> lossy format to encode the data even further. The biggest wins come from combining algorithms in the right ways.
+</blockquote>
+
+<p>
+
+<b>If you don’t need transparency, or animation, then <a href="https://en.wikipedia.org/wiki/JPEG">JPG</a> is the best format for you.</b> It was generally designed to handle the compression of high-quality photo data, but provides  a configurable set of <b>Lossy</b> compression options, allowing you to trade off compression quality vs. image size as your application needs it.
+
+</p>
+<p>
+  <IMG src="webp_logo_webp.jpg" style="float:left; margin:10px;">
+And there’s the newly announced format, <a href="https://developers.google.com/speed/webp/">WebP</a>, which boasts not only <b>superior compression quality/size, but also transparency and animations as well</b>. It uses both a lossy and lossless compressor combination, and much like JPG, will allow you to define your quality level vs. file size. Of course, this new image format <a href="http://arstechnica.com/information-technology/2013/04/chicken-meets-egg-with-facebook-chrome-webp-support/">isn’t considered a standard</a>, and hasn't been adopted across all browsers just yet, so web developers who’ve adopted it are currently in the early phases of working through <a href="http://news.cnet.com/8301-1023_3-57580664-93/facebook-tries-googles-webp-image-format-users-squawk/">usability issues</a>. Although a <a href=">http://www.igvita.com/2013/03/07/faster-smaller-and-more-beautiful-web-with-webp/">30% savings over JPG</a>, alongside increased <a href="http://www.igvita.com/2013/05/01/deploying-webp-via-accept-content-negotiation/">server-side adoption</a> prove that WebP is a dominant format for any sites dealing with image bloat problems.
+</p>
+<p>
+  <figure>
+  <table width="100%" border='1'>
+    <tr>
+      <td></td>
+      <td>Compression</td>
+      <td>Lossless</td>
+      <td>Lossy</td>
+      <td>Transparency</td>
+      <td>Animation</td>
+    </tr>
+    <tr>
+      <td>PNG</td>
+      <td>Good</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>Full</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>GIF</td>
+      <td>OK</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Binary</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>JPG</td>
+      <td>Good</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>WebP</td>
+      <td>Great</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Full</td>
+      <td>Yes</td>
+    </tr>
+  </table>
+<figcaption>
+  <i> Figure 3 - Feature set for specific browser supported formats</i>
+</figcaption>
+</figure>
+</p>
+
+<h2 id="toc-tradeoff">Trading Quality for Size</h2>
+
+For those image types which have a quality setting that you can adjust, it’s worth noting that the biggest wins you can get is by hand-optimizing the quality setting to get the smallest file. Google Webmaster Help has a great video that walks you through some ways to test quality against your image, and how to test perception properly.
+
+<p>
+  <center>
+  <table width="100%"><iframe width="560" height="315" src="//www.youtube.com/embed/rkDxpegFeEw" frameborder="0" allowfullscreen></iframe></table>
+</center>
+</p>
+
+<p>
+  And as <a href="https://github.com/rflynn/imgmin">imgmin</a> project points out, there’s generally a small change in user perceived quality for JPG compression between levels 75 and 100:
+</p>
+
+<p class="notice">
+  <i>For an average JPEG there is a very minor, mostly insignificant change in *apparent* quality from 100-75, but a significant filesize difference for each step down. This means that many images look good to the casual viewer
+at quality 75, but are half as large than they would be at quality 95. As quality drops below 75 there are larger apparent visual changes and reduced savings in filesize.</i>
+</p>
+
+<p>
+And further goes to show that most large websites tend to oscillate their images around this quality=75 mark for almost all of their JPG images:
+</p>
+<p>
+  <figure>
+    <center>
+  <table width="50%"  border="1">
+    <tr>
+      <td>Site</td>
+      <td>JPG Quality</td>
+    </tr>
+    <tr>
+      <td>Google Images Thumbnails</td>
+      <td>74-76</td>
+    </tr>
+    <tr>
+      <td>Facebook full-size images</td>
+      <td>85</td>
+    </tr>
+    <tr>
+      <td>Yahoo frontpage JPEGs</td>
+      <td>69-91</td>
+    </tr>
+    <tr>
+      <td>Youtube frontpage JPEGs</td>
+      <td>70-82</td>
+    </tr>
+    <tr>
+      <td>Wikipedia images</td>
+      <td>80</td>
+    </tr>
+    <tr>
+      <td>Windows live background</td>
+      <td>82</td>
+    </tr>
+    <tr>
+      <td>Twitter user JPEG images</td>
+      <td>30-100</td>
+    </tr>
+  </table>
+</center>
+  <figcaption>
+    <i>Figure 4 - Average JPG quality level used for top websites</i>
+  </figcaption>
+</figure>
+</p>
+
+<p>
+  Customizing the settings for each image on your page to balance the tradeoff between quality and size will yield the best savings at the best quality levels.
+These larger sites tend to have a plethora of images, and generally have no way of hand-optimizing each one, so custom, per-image quality-level adjustment is almost impossible. Some developers have taken a more <a href="http://www.webperformancetoday.com/2013/02/20/image-optimization/">automated approach</a> to this type of encoding; often taking the output from artists, and running their own heuristics and encodings processes on the images during a build. This type of setup fits a nice middle ground between customization and automation that will help the majority of web developers out there.
+</p>
+<p>
+A quite drastic approach that developers are using to attack image size footprint is to reduce any simplistic icons and images to <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> files, and allow them to be rasterized by the client before being displayed. This type of process trades file-size for client-speed, saving bits on the wire, but incurring more client-side overhead to reconstruct the image when it’s being rendered. As such <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> image format is quite different than the other types of files, in that it is a <b>vector</b> format; meaning that the final image is <a href="http://en.wikipedia.org/wiki/Procedural_generation">procedurally generated</a> using shape information defined in the file to a specific resolution of output image. When an SVG image is loaded, it’s converted to a <a href="http://en.wikipedia.org/wiki/Raster_graphics">raster format</a> (a 2D array of pixels, like a bitmap) before being displayed. 
+</p>
+<center>
+  <figure>
+    <img src="vector02.jpg"  title="Vector image comparision" alt="Vector image comparision." width="1000">
+    <figcaption>
+    <i> Figure 5 - An example raster image (on the left) compared to a vector image (on the right) Notice that the vector image is much simpler, and contains less per-pixel detail. This is because the format type does not yield itself to produce high quality data.</i>
+    </figcaption>
+  </figure>
+</center>
+<p>
+Think of SVG as a file format that allows you to store an image ‘description’ at a very low memory footprint, and generate a high-quality, resolution independent image on the client, regardless of the size of the source data. One of the limitations of the SVG format is that it can only represent a certain type of image quality, that is to say that vector images tend to be simplistic, only using a set of primitive types to define how to generate colors on the screen . A field of grass in a prairie for instance, would require too many complex shapes to yield compression savings. <b>Raster</b> images are best used for photos, and other information-dense images, where <b>Vector</b> images are great for things like logos or simple image patterns.
+</p>
+
+
+
+
+
+
+
+
+<h2 id="toc-sizesscreens">Images quality, sizes and multiple resolution screens.</h2>
+
+<p>
+One of the large issues that developers are facing is the size of monitor pixels against the size of images created. That is, if an author creates image content for a desktop website, there’s a good chance that the image dimensions and quality levels have been tailored to viewing on large, desktop resolution monitors. Mobile devices throw a problem in, however, as their screen sizes are much smaller, and their connections are more expensive. As such, users can be recieving a larger image than they can display, or need.
+</p>
+
+<p>
+There’s a few ways to address this issue.<br><br>
+
+One solution involves precomputing images, offline, for each resolution you need. Most static websites can generate this easily as an offline build step, perhaps resizing the images with toolchains like <a href="http://gruntjs.com/">Grunt</a>. This technique benefits from the fact that images are properly cached on their native device resolutions, and you’re not losing loading time, or transfer cost to get the information to the client. On the negative side, however, is the madness involved with managing this exponential increase in your data set, and the additional logic to send the information to the intended users.
+</p>
+<img src="web-development-test-01.jpg" width="300px" style="float:right;margin:10px;">
+<p>
+Another <a href="http://www.html5rocks.com/en/mobile/easy-high-dpi-images/">approach</a>, intended for the boom of <a href="http://www.html5rocks.com/en/mobile/high-dpi/">high-DPI mobile devices</a>, involves playing games with image quality, image dimensions, and client-side cost for image resizing. Effectively, you can store your image at 2x resolution (upscale process), however when you export it to a lossy format, choose a very low quality (resulting in high compression) option. The intention here is to choose a quality level such that the compressed larger image, is smaller than the compressed smaller image.
+</p>
+<p>
+On the client, you can specify the intended dimensions of the image (which should be less than the current size of the image, since it’s been upscaled). The web-browser will downscale the image to the intended resolution, a process which can blur noise artifacts introduced from the low quality compression value; in some cases, all together.. The end result is a smaller file, that scales to multiple screen resolutions easily, and does not introduce significant quality degradation.
+</p>
+
+
+<h2 id="toc-progressive">Image sizes, User perception and load times</h2>
+<p>
+Looking at the bottom line, the only thing that matters is that a site appears to load fast to users. Appearing faster is being faster, and <b><a href="http://en.wikipedia.org/wiki/Perceived_performance">perceived performance</a> is more important that actual speed</b>.
+</p>
+<p>
+There’s a two <a href="http://nuwen.net/png.html">dominant ways</a> to display images over the web.
+<ol>
+<li>Wait for the whole image to be downloaded, and display it once its’ done</li>
+<li>Display part of the image that you have downloaded so far.</li>
+</ol>
+</p>
+<p>
+To be clear, no browser uses the first option, simply because it makes the page appears as slow as possible. 
+</p>
+<p>
+The second option is what most of the web is built on now. I’m sure we’re all quite familiar with the style of ‘revealing’ the image from the top-down over time. This is because the images are typically stored in raster order, or rather the first bytes of the image that the browser receives starts at the top-left of the image and moves horizontally across the row. It’s worth noting that if we store our image in a different method, we could change what bits come down the wire first, which changes how the image is seen.
+</p>
+<p>
+<a href="http://www.yuiblog.com/blog/2008/12/05/imageopt-4/">This “progressive” method</a> of encoding can have a <a href="http://calendar.perfplanet.com/2012/progressive-jpegs-a-new-best-practice/">beneficial impact</a> to user perception that a page is loading ‘fast’ (note, this is debated, depending on user). This works by encoding a few extra versions of the image, at smaller resolutions which can be transferred faster to the user. This allows the user to see a display of the image that progressively gets sharper as the image downloads more. 
+</p>
+<p>
+<a href="http://www.codinghorror.com/blog/2005/12/progressive-image-rendering.html">Coddinghorror.com</a> has a great example that shows off the visual difference between these two technologies. You can see that the standard method creates a top-down reveal of the image, while the progressive one ‘refines’ the visual as more data is received.
+</p>
+<figure>
+  <table>
+    <tr><td><center>Linear</center></td><td><center>Progressive</center></td></tr>
+    <tr><td><img src="load_std.gif"></td><td><img src="load_prog.gif"></td></tr>
+  </table>
+  <figcaption>
+    <i>Figure 6 - An example of linear vs. progressive loading for images.</i>
+  </figcaption>
+</figure>
+
+<p>
+If unicorns aren’t your thing, you can also check out a more in-depth example at <a href="http://blog.patrickmeenan.com/2013/06/progressive-jpegs-ftw.html">Patrick Meenan</a>’s blog, or even try this out on your own images using <a href="http://www.patrickmeenan.com/progressive/view.php?img=https%3A%2F%2Flh4.googleusercontent.com%2F-NHsYU-OGvnQ%2FAAAAAAAAAAI%2FAAAAAAAAAAA%2FsdsMfGoAtV4%2Fphoto.jpg">Patrick’s interactive tool</a>. 
+</p>
+<p>
+Using this property in your image is extremely easy to do : <b>Simply save your GIF or PNG images with the "interlaced" option, or your JPEG images with the "progressive" option</b>.  and start making your users love the load times of your website.
+</p>
+<p>
+It’s worth noting that progressive images are not supported in all browsers just yet, and loading a progressive image on those platforms can actually cause worse performance.
+</p>
+
+
+<h2 id="toc-boxed">Images outside the box</h2>
+<p>
+The internet is full of brilliant web developers, and no article on image compression would be complete without pointing out some of the great hacks, workarounds, and generally impressive things that these developers have created to allow them to create smaller, higher quality, and impressive images.
+</p>
+<p>
+<a href="https://www.udacity.com/course/cs255">HTML5 game developers</a> typically send around more image data than your standard website, most of it being transparent frames for a flipbook animation. Sadly that forces these files to use the PNG option in order to get transparency. However a few developers have devised a few <a href="http://kaioa.com/node/104">work-arounds</a> for images to get better compression and transparency. For example, you can split your color data, and transparency data into two separate image files (two JPGs, for example), and restoring them on the client using a CANVAS element. Although this does increase the number of requests that occur on the network, the savings in image size can be significant for developers who have tons of transparent images on their site (like).
+</p>
+
+
+<blockquote class="commentary talkinghead talkinghead-ja" id="watchiout">
+<b>Jake Achibald says:</b><br>
+
+It’s worth noting that it may be quicker to just use -webkit-mask where you have support for it, rather than doing all this canvas crazyness. Luckily for you, I’ve provided a <a href="https://github.com/jakearchibald/scrolly-cliche/blob/master/www/js/applyAlpha.js">library</a> to help with this type of thing.
+
+
+</blockquote>
+
+<p>
+PNG’s Deflate option is a lossless encoder, but that shouldn’t stop you from embracing a lossy preprocessor if you want one. Image processing tools like <a href="http://pngmini.com/lossypng.html">ImageAlpha</a> and <a href="http://imageoptim.com/">ImageOptim</a>, can compress your PNG image in a lossy method as a pre-process before passing it off to the final PNG format. This creates a two-step process where your lossy, and lossless compression are done by two separate applications. The results are impressive, the reduced color space allows the lossless compressor to find, and make, more frequent matches in the file, yielding to better compression. On the back end, tools like <a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> will re-pack your PNG data using better compressors to generate a smaller PNG file.
+</p>
+
+<p>
+The <a href="http://www.sublimetext.com/">SublimeText</a> team launched a website in which they wanted to have a rich animation showing off features of the editor. Rather than using a video, or a standard GIF, they generated a <a href="http://www.sublimetext.com/~jps/animated_gifs_the_hard_way.html">custom animation and packing system to provide great image animation</a> at a much, much smaller size. The technique allows them to display a high-quality animation across multiple platforms without the need for advanced video, or a flash plugin.
+</p>
+
+
+<h2 id="toc-ending">Conclusion</h2>
+
+So make sure you follow the <b>Image Compression Checklist</b> before pushing your site live:
+<ol>
+    <li>Compress Images with the right format at the lowest acceptable quality level
+      <ol>
+        <li>Hand-tune (where possible) your compression quality for all images</li>
+        <li>Automate the rest to get the best performance</li>
+      </ol>
+    </li>
+    <li>Investigate using WebP for all your image needs</li>
+    <li>Save your images with progressive options to improve user perception of your pages’ load times</li>
+    <li>Investigate other interesting ways to get better compression, or transparency. Think outside the box!</li>
+  </ol>
+
+
+<h2 id="toc-references">Useful Tools</h2>
+<ul>
+<li><a href="http://pngmini.com/lossypng.html">ImageAlpha</a></li>
+<li><a href="http://imageoptim.com/">ImageOptim</a></li>
+<li><a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> </li>
+<li><a href="https://github.com/jakearchibald/scrolly-cliche/blob/master/www/js/applyAlpha.js">ImageAlpha w/ Canvas Helper Library</a></li>
+<li><a href="http://www.patrickmeenan.com/progressive/view.php?img=https%3A%2F%2Flh4.googleusercontent.com%2F-NHsYU-OGvnQ%2FAAAAAAAAAAI%2FAAAAAAAAAAA%2FsdsMfGoAtV4%2Fphoto.jpg">Interactive tool for testing progressive images</a></li>
+</ul>
+
+{% endblock %}
