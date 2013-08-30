@@ -6,12 +6,16 @@
 
 {% block head %}
 <style>
-.talkinghead:before {
+.talkinghead-cm:before {
   background-image: url(/static/images/profiles/75/coltmcanlis.75.png);
   background-position: 0px 0px !important;
 }
 .talkinghead-ja:before {
   background-image: url(/static/images/profiles/75/jakearchibald.75.png);
+  background-position: 0px 0px !important;
+}
+.talkinghead-ao:before {
+  background-image: url(/static/images/profiles/75/addyosmani.75.png);
   background-position: 0px 0px !important;
 }
 article.tutorial .notice.fact {
@@ -203,7 +207,7 @@ Or, for example, you can apply a <a href="http://www.youtube.com/watch?v=7bJ-D1x
 </p>
 <p>
   <IMG src="webp_logo_webp.jpg" style="float:left; margin:10px;">
-And there’s the newly announced format, <a href="https://developers.google.com/speed/webp/">WebP</a>, which boasts not only <b>superior compression quality/size, but also transparency and animations as well</b>. It uses both a lossy and lossless compressor combination, and much like JPG, will allow you to define your quality level vs. file size. Of course, this new image format <a href="http://arstechnica.com/information-technology/2013/04/chicken-meets-egg-with-facebook-chrome-webp-support/">isn’t considered a standard</a>, and hasn't been adopted across all browsers just yet, so web developers who’ve adopted it are currently in the early phases of working through <a href="http://news.cnet.com/8301-1023_3-57580664-93/facebook-tries-googles-webp-image-format-users-squawk/">usability issues</a>. Although a <a href=">http://www.igvita.com/2013/03/07/faster-smaller-and-more-beautiful-web-with-webp/">30% savings over JPG</a>, alongside increased <a href="http://www.igvita.com/2013/05/01/deploying-webp-via-accept-content-negotiation/">server-side adoption</a> prove that WebP is a dominant format for any sites dealing with image bloat problems.
+If you’re looking for more of a ‘one stop shop’ for your image format, then <a href="https://developers.google.com/speed/webp/">WebP</a>should be on your radar. The format boasts not only <b>superior compression quality/size, but also transparency and animations as well</b>. It uses both a lossy and lossless compressor combination, and much like JPG, will allow you to define your quality level vs. file size. Of course, this new image format <a href="http://arstechnica.com/information-technology/2013/04/chicken-meets-egg-with-facebook-chrome-webp-support/">hasn't been adopted across all browsers just yet</a>, so web developers who’ve adopted it are currently in the early phases of working through <a href="http://news.cnet.com/8301-1023_3-57580664-93/facebook-tries-googles-webp-image-format-users-squawk/">usability issues</a>. Although a <a href=">http://www.igvita.com/2013/03/07/faster-smaller-and-more-beautiful-web-with-webp/">30% savings over JPG</a>, alongside increased <a href="http://www.igvita.com/2013/05/01/deploying-webp-via-accept-content-negotiation/">server-side adoption</a> prove that WebP is a dominant format for any sites dealing with image bloat problems.
 </p>
 <p>
   <figure>
@@ -358,6 +362,24 @@ There’s a few ways to address this issue.<br><br>
 
 One solution involves precomputing images, offline, for each resolution you need. Most static websites can generate this easily as an offline build step, perhaps resizing the images with toolchains like <a href="http://gruntjs.com/">Grunt</a>. This technique benefits from the fact that images are properly cached on their native device resolutions, and you’re not losing loading time, or transfer cost to get the information to the client. On the negative side, however, is the madness involved with managing this exponential increase in your data set, and the additional logic to send the information to the intended users.
 </p>
+
+
+<blockquote class="commentary talkinghead talkinghead-ao" id="grunt-automation">
+  <b>Addy Osmani says:</b><br>
+  If you're interested in using Grunt to generate this content, I would recommend trying our <a href="http://addyosmani.com/blog/generate-multi-resolution-images-for-srcset-with-grunt/">grunt-responsive-images</a> for automating the generation of your precomputed images with ImageMagick as part of build.
+
+For those that are tied to Node/Express, express-processimage can be used as an alternative or you could put together a  script that calls <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a> to generate the images for you. 
+
+
+One of the yet-to-be-solved issues with this approach however, is finding a good solution to manage the increase in your data set. With respect to logic, <a href="http://www.w3.org/html/wg/drafts/srcset/w3c-srcset/">srcset</a> will hopefully solve this (WebKit as you know have it, Blink intends to implement, FF will once its in iOS).
+
+In the meantime, one could use a <a href="https://github.com/borismus/srcset-polyfill">polyfill for srcset</a> as a stop-gap.
+
+
+</blockquote>
+
+
+
 <img src="web-development-test-01.jpg" width="300px" style="float:right;margin:10px;">
 <p>
 Another <a href="http://www.html5rocks.com/en/mobile/easy-high-dpi-images/">approach</a>, intended for the boom of <a href="http://www.html5rocks.com/en/mobile/high-dpi/">high-DPI mobile devices</a>, involves playing games with image quality, image dimensions, and client-side cost for image resizing. Effectively, you can store your image at 2x resolution (upscale process), however when you export it to a lossy format, choose a very low quality (resulting in high compression) option. The intention here is to choose a quality level such that the compressed larger image, is smaller than the compressed smaller image.
@@ -379,7 +401,7 @@ There’s a two <a href="http://nuwen.net/png.html">dominant ways</a> to display
 </ol>
 </p>
 <p>
-To be clear, no browser uses the first option, simply because it makes the page appears as slow as possible. 
+No browser uses the first option, simply because it makes the page appears as slow as possible. 
 </p>
 <p>
 The second option is what most of the web is built on now. I’m sure we’re all quite familiar with the style of ‘revealing’ the image from the top-down over time. This is because the images are typically stored in raster order, or rather the first bytes of the image that the browser receives starts at the top-left of the image and moves horizontally across the row. It’s worth noting that if we store our image in a different method, we could change what bits come down the wire first, which changes how the image is seen.
@@ -404,10 +426,7 @@ The second option is what most of the web is built on now. I’m sure we’re al
 If unicorns aren’t your thing, you can also check out a more in-depth example at <a href="http://blog.patrickmeenan.com/2013/06/progressive-jpegs-ftw.html">Patrick Meenan</a>’s blog, or even try this out on your own images using <a href="http://www.patrickmeenan.com/progressive/view.php?img=https%3A%2F%2Flh4.googleusercontent.com%2F-NHsYU-OGvnQ%2FAAAAAAAAAAI%2FAAAAAAAAAAA%2FsdsMfGoAtV4%2Fphoto.jpg">Patrick’s interactive tool</a>. 
 </p>
 <p>
-Using this property in your image is extremely easy to do : <b>Simply save your GIF or PNG images with the "interlaced" option, or your JPEG images with the "progressive" option</b>.  and start making your users love the load times of your website.
-</p>
-<p>
-It’s worth noting that progressive images are not supported in all browsers just yet, and loading a progressive image on those platforms can actually cause worse performance.
+Using this property in your image is extremely easy to do : <b>Simply save your GIF or PNG images with the "interlaced" option, or your JPEG images with the "progressive" option</b>.  and start making your users love the load times of your website. Although it’s worth noting that progressive images are not supported in all browsers just yet, and loading a progressive image on those platforms can actually cause worse performance.
 </p>
 
 
@@ -415,6 +434,7 @@ It’s worth noting that progressive images are not supported in all browsers ju
 <p>
 The internet is full of brilliant web developers, and no article on image compression would be complete without pointing out some of the great hacks, workarounds, and generally impressive things that these developers have created to allow them to create smaller, higher quality, and impressive images.
 </p>
+<h3>Splitting your transparent layer for improved compression.</h3>
 <p>
 <a href="https://www.udacity.com/course/cs255">HTML5 game developers</a> typically send around more image data than your standard website, most of it being transparent frames for a flipbook animation. Sadly that forces these files to use the PNG option in order to get transparency. However a few developers have devised a few <a href="http://kaioa.com/node/104">work-arounds</a> for images to get better compression and transparency. For example, you can split your color data, and transparency data into two separate image files (two JPGs, for example), and restoring them on the client using a CANVAS element. Although this does increase the number of requests that occur on the network, the savings in image size can be significant for developers who have tons of transparent images on their site (like).
 </p>
@@ -427,19 +447,27 @@ It’s worth noting that it may be quicker to just use -webkit-mask where you ha
 
 
 </blockquote>
-
+<h3>Improve PNG compression with a lossy pre-processor.</h3>
 <p>
 PNG’s Deflate option is a lossless encoder, but that shouldn’t stop you from embracing a lossy preprocessor if you want one. Image processing tools like <a href="http://pngmini.com/lossypng.html">ImageAlpha</a> and <a href="http://imageoptim.com/">ImageOptim</a>, can compress your PNG image in a lossy method as a pre-process before passing it off to the final PNG format. This creates a two-step process where your lossy, and lossless compression are done by two separate applications. The results are impressive, the reduced color space allows the lossless compressor to find, and make, more frequent matches in the file, yielding to better compression. On the back end, tools like <a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> will re-pack your PNG data using better compressors to generate a smaller PNG file.
 </p>
 
+<h3>Not all animations are created equal.</h3>
 <p>
 The <a href="http://www.sublimetext.com/">SublimeText</a> team launched a website in which they wanted to have a rich animation showing off features of the editor. Rather than using a video, or a standard GIF, they generated a <a href="http://www.sublimetext.com/~jps/animated_gifs_the_hard_way.html">custom animation and packing system to provide great image animation</a> at a much, much smaller size. The technique allows them to display a high-quality animation across multiple platforms without the need for advanced video, or a flash plugin.
 </p>
 
+<h3>More than one way to responsive image.</h3>
+<p>
+Since user perception is the most important thing in a website, it’s worth noting that there’s other ways to create ‘perceived’ faster loading websites. Recently, the <a href="http://www.bbc.com/">BBC</a> changed how their site <a href="http://responsivenews.co.uk/post/50092458307/images">handles responsive images</a>. Their technique allows a smaller image to be downloaded to the client first (so there’s some visibility) and allow the higher-resolution image to be <a href="
+http://css-tricks.com/snippets/javascript/lazy-loading-images/">lazy-loaded</a> as needed. You can find a more <a href="http://responsivenews.co.uk/post/58244240772/imager-js">detailed description</a> of their technique, alongside an <a href="https://github.com/BBC-News/Imager.js/%20">open-source version</a> to play with on your own site.
+<p>
+
 
 <h2 id="toc-ending">Conclusion</h2>
 
-So make sure you follow the <b>Image Compression Checklist</b> before pushing your site live:
+Images are a tricky content type that can increase the quality and user perception of your site, but also can undermine your efforts for fast loading, responsive quality. Before you ship your site live, make sure you follow the <b>Image Compression Checklist</b>:
+
 <ol>
     <li>Compress Images with the right format at the lowest acceptable quality level
       <ol>
