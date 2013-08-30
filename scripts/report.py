@@ -16,6 +16,8 @@ def ParseIssues(issues):
     and those that are overdue
     """
     today = datetime.today()
+    late_articles = []
+    due_articles = []
     
     for issue in issues:
         due_on_re = re.search("(due on|due):\s*(\d{4}-\d{2}-\d{2})", issue.body, flags=re.I)
@@ -49,8 +51,8 @@ def main():
     print "Parsing Issues"
     late_articles, due_articles = ParseIssues(issues)
 
-    print "\n\nHTML5 Rocks Weekly Report for %s" % today
-    print "=========================================\n"
+    print "\n\nHTML5 Rocks Weekly Report for %s" % today.date()
+    print "========================================\n"
 
     print "Overdue articles"
     print "----------------\n"
