@@ -399,7 +399,8 @@ class ContentHandler(webapp2.RequestHandler):
           loc = os.path.basename(os.path.dirname(d))
           if loc not in [locale, 'static']:
             loc_list.append({'path': '/%s/%s' % (loc, relpath),
-                             'lang': langs[loc]})
+                             'lang': langs[loc],
+                             'loc': loc})
 
         data = {
           'tut': tut,
