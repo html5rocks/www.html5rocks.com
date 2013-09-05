@@ -327,7 +327,7 @@ And further goes to show that most large websites tend to oscillate their images
 
 <p>
   Customizing the settings for each image on your page to balance the tradeoff between quality and size will yield the best savings at the best quality levels.
-These larger sites tend to have a plethora of images, and generally have no way of hand-optimizing each one, so custom, per-image quality-level adjustment is almost impossible. Some developers have taken a more <a href="http://www.webperformancetoday.com/2013/02/20/image-optimization/">automated approach</a> to this type of encoding; often taking the output from artists, and running their own heuristics and encodings processes on the images during a build. This type of setup fits a nice middle ground between customization and automation that will help the majority of web developers out there.
+These larger sites tend to have a plethora of images, and generally have no way of hand-optimizing each one, so custom, per-image quality-level adjustment is almost impossible. Some developers have taken a more <a href="http://www.webperformancetoday.com/2013/02/20/image-optimization/">automated approach</a> to this type of encoding; often taking the output from artists, and running their own heuristics and encodings processes on the images during a build. This type of setup fits a nice middle ground between customization and automation that will help the majority of web developers out there. You can also adopt apps like <a href="http://www.jpegmini.com/">MiniJPG</a> which will auto-tune your JPG compression level to give the best possible quality.
 </p>
 <p>
 A quite drastic approach that developers are using to attack image size footprint is to reduce any simplistic icons and images to <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> files, and allow them to be rasterized by the client before being displayed. This type of process trades file-size for client-speed, saving bits on the wire, but incurring more client-side overhead to reconstruct the image when it’s being rendered. As such <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> image format is quite different than the other types of files, in that it is a <b>vector</b> format; meaning that the final image is <a href="http://en.wikipedia.org/wiki/Procedural_generation">procedurally generated</a> using shape information defined in the file to a specific resolution of output image. When an SVG image is loaded, it’s converted to a <a href="http://en.wikipedia.org/wiki/Raster_graphics">raster format</a> (a 2D array of pixels, like a bitmap) before being displayed. 
@@ -447,10 +447,15 @@ It’s worth noting that it may be quicker to just use -webkit-mask where you ha
 
 
 </blockquote>
-<h3>Improve PNG compression with a lossy pre-processor.</h3>
+<h3>Improve PNG compression through better processing.</h3>
+
 <p>
-PNG’s Deflate option is a lossless encoder, but that shouldn’t stop you from embracing a lossy preprocessor if you want one. Image processing tools like <a href="http://pngmini.com/lossypng.html">ImageAlpha</a> and <a href="http://imageoptim.com/">ImageOptim</a>, can compress your PNG image in a lossy method as a pre-process before passing it off to the final PNG format. This creates a two-step process where your lossy, and lossless compression are done by two separate applications. The results are impressive, the reduced color space allows the lossless compressor to find, and make, more frequent matches in the file, yielding to better compression. On the back end, tools like <a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> will re-pack your PNG data using better compressors to generate a smaller PNG file.
+PNG’s Deflate option is a lossless encoder, but that shouldn’t stop you from embracing a lossy preprocessor if you want one. Image processing tools like <a href="http://pngmini.com/lossypng.html">ImageAlpha</a> and <a href="http://imageoptim.com/">ImageOptim</a>, can compress your PNG image in a lossy method as a pre-process before passing it off to the final PNG format. This creates a two-step process where your lossy, and lossless compression are done by two separate applications. The results are impressive, the reduced color space allows the lossless compressor to find, and make, more frequent matches in the file, yielding to better compression. <br><br>
+
+Once you've exported your PNG, it's time to re-pack your PNG data using advanced compressors to generate a smaller PNG file. Tools like <a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> will take your already exported PNG, and run it through a better Deflate compressor to get a smaller file. Or you could combine <a href="http://advsys.net/ken/utils.htm#pngout">PNGOUT</a> with tools like <a href="http://optipng.sourceforge.net/">OptiPNG</a> or <a href="https://code.google.com/p/zopfli/">Zopfli</a> to get the same effect. Of course, each of these systems creates <i>slightly</i> different results, given the input systems, so it may be wise to adopt a system which will compress against multiple compressors and pick the smallest file; If you're feeling lazy, <a href="http://css-ig.net/scriptpng">ScriptPNG</a> will do the heavy lifting for you.
+
 </p>
+
 
 <h3>Not all animations are created equal.</h3>
 <p>
