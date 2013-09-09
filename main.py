@@ -311,15 +311,6 @@ class ContentHandler(webapp2.RequestHandler):
       # If language is not specified, redirect
       if no_lang:
         return self.redirect('/'+locale+'/'+relpath, permanent=True)
-      # Check if path ends with a / and adds if necessary
-      elif (relpath != '' and relpath[-1] != '/' and
-        self.request.query_string == ''):
-          return self.redirect(relpath + '/', permanent=True)
-      # Check if path ends with a / and adds along with the query string
-      elif (relpath != '' and relpath[-1] != '/' and
-        self.request.query_string != ''):
-          return self.redirect(relpath + '/?' + self.request.query_string,
-                               permanent=True)
 
       path = os.path.join('content', relpath, 'index.html')
     else:
