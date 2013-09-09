@@ -399,6 +399,7 @@ class ContentHandler(webapp2.RequestHandler):
 
         data = {
           'tut': tut,
+          'no_lang': no_lang, # if url doesn't include language param
           'localizations': loc_list,
           'redirect_from_locale': redirect_from_locale
         }
@@ -408,8 +409,8 @@ class ContentHandler(webapp2.RequestHandler):
       # If the localized file doesn't exist, and the locale isn't English, look
       # for an english version of the file, and redirect the user there if
       # it's found:
-      elif os.path.isfile( os.path.join(dir, 'en', filename)):
-        return self.redirect("/en/%s?redirect_from_locale=%s" % (relpath,
+      elif os.path.isfile( os.path.join(dir, settings.LANGUAGE_CODE, filename)):
+        return self.redirect("/"+settings.LANGUAGE_CODE+"/%s?redirect_from_locale=%s" % (relpath,
                                                                  locale))
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
