@@ -256,11 +256,11 @@ These methods are appropriately named the **lifecycle callbacks**. Each has a sp
       <td>an instance of the element is created</td>
     </tr>
     <tr>
-      <td>enteredDocumentCallback</td>
+      <td>enteredViewCallback</td>
       <td>an instance was inserted into the document</td>
     </tr>
     <tr>
-      <td>leftDocumentCallback</td>
+      <td>leftViewCallback</td>
       <td>an instance was removed from the document</td>
     </tr>
     <tr>
@@ -270,19 +270,19 @@ These methods are appropriately named the **lifecycle callbacks**. Each has a sp
   </tbody>
 </table>
 
-**Example:** defining `createdCallback()` and `enteredDocumentCallback()` on `<x-foo>`:
+**Example:** defining `createdCallback()` and `enteredViewCallback()` on `<x-foo>`:
 
     var proto = Object.create(HTMLElement.prototype);
 
     proto.createdCallback = function() {...};
-    proto.enteredDocumentCallback = function() {...};
+    proto.enteredViewCallback = function() {...};
 
     var XFoo = document.register('x-foo', {prototype: proto});
 
 **All of the lifecycle callbacks are optional**, but define them if/when it makes sense.
 For example, say your element is sufficiently complex and opens a connection to IndexedDB
 in `createdCallback()`. Before it gets removed from the DOM, do the necessary
-cleanup work in `leftDocumentCallback()`. **Note:** you shouldn't rely on this,
+cleanup work in `leftViewCallback()`. **Note:** you shouldn't rely on this,
 for example, if the user closes the tab, but think of it as a possible optimization hook.
 
 Another use case lifecycle callbacks is for setting up default event listeners
