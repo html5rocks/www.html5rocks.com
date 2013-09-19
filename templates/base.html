@@ -358,18 +358,81 @@
       }
     });
 
-    // Toggle the feature nav.
-    $('.outline_nav_toggle').on('touchstart touchend click', function(e) {
+    // Setup menus (feature nav etc.)
+    $('.outline_nav_toggle').each(function () {
+      var MENU_ACTIVE_CLASS = 'activated',
+          $menu = $(this),
+          $menuItems = $menu.find('nav.outline li'),
+          $nav = $menu.find('nav.outline'),
+          $closeButton = $menu.find('.outline_close_btn'),
+          lastTouchStart = null;
 
-      // Prevent synthesized click event from firing as we are
-      // handling the touch event for a more responsive ui.
-      if (e.type === "touchstart") {
-        e.preventDefault();
-        return;
-      }
+      var closeMenu = function () {
+        $menu.removeClass(MENU_ACTIVE_CLASS);
+        $nav.fadeOut('fast');
+      };
 
-      $(this).toggleClass('activated');
-      $(this).find('nav.outline').fadeToggle('fast');
+      var openMenu = function () {
+        $menu.addClass(MENU_ACTIVE_CLASS);
+        $nav.fadeIn('fast'); 
+      };
+
+      var selectItemHandler = function (e) {
+        var $link = $(e.currentTarget).find('a'),
+            href = $link.attr('href');
+
+        console.warn("Jumping to " + href);
+
+        window.location.hash = href;
+        closeMenu();
+
+        e.stopPropagation();
+      };
+
+      $menu.on('touchstart touchend click', function (e) {
+        console.warn('menu handler', e.type);
+
+        // Event on the menu itself.
+        var currentlyOpen = $menu.hasClass(MENU_ACTIVE_CLASS);
+
+        if (currentlyOpen) {
+          return;
+        }
+
+        if (e.type === 'touchstart') {
+          e.preventDefault();
+          return;
+        }
+
+        if (!currentlyOpen) {
+          // Open the menu.
+          openMenu();
+          e.stopPropagation();
+        }
+      });
+
+      $closeButton.on('touchstart touchend click', function (e) {
+        console.warn('close button handler', e.type);
+
+        if (e.type === 'touchstart') {
+          e.preventDefault();
+          return;
+        }
+
+        // Event occurring on the "Close Menu" button.
+        closeMenu();
+        e.stopPropagation();
+      });
+
+      $nav.children('ul').on('click', function (e) {
+        console.warn('nav item handler', e.type);
+
+        // Only handle the event if an li (or something within an li) 
+        // was tapped / clicked.
+        if (e.target !== this) {
+          selectItemHandler(e);
+        }
+      });
     });
 
     $('#features_show a').click(function() {
