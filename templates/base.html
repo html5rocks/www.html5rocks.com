@@ -365,7 +365,23 @@
           $menuItems = $menu.find('nav.outline li'),
           $nav = $menu.find('nav.outline'),
           $closeButton = $menu.find('.outline_close_btn'),
-          lastTouchStart = null;
+          currentTouch = null;
+
+      var checkTouchBounds = function (e) {
+        var acceptTouch = true,
+            touchPosX = e.originalEvent.changedTouches[0].pageX,
+            touchPosY = e.originalEvent.changedTouches[0].pageY,
+            threshold = 20;
+
+        if (touchPosX < (currentTouch.closeButtonLocation.x - threshold) || 
+            touchPosX > (currentTouch.closeButtonLocation.x + currentTouch.closeButtonDimensions.width + threshold) ||
+            touchPosY < (currentTouch.closeButtonLocation.y - threshold) || 
+            touchPosY > (currentTouch.closeButtonLocation.y + currentTouch.closeButtonDimensions.height + threshold)) {
+          acceptTouch = false;
+        }
+
+        return acceptTouch;
+      };
 
       var closeMenu = function () {
         $menu.removeClass(MENU_ACTIVE_CLASS);
@@ -383,11 +399,23 @@
         $('html').css('overflow', 'hidden');
       };
 
+      var resetTouch = function () {
+        currentTouch = {
+          closeButtonLocation: {
+            x: null,
+            y: null
+          },
+          closeButtonDimensions: {
+            height: null,
+            width: null
+          },
+          cancelled: false
+        };
+      };
+
       var selectItemHandler = function (e) {
         var $link = $(e.currentTarget).find('a'),
             href = $link.attr('href');
-
-        console.warn("Jumping to " + href);
 
         window.location.hash = href;
         closeMenu();
@@ -396,8 +424,6 @@
       };
 
       $menu.on('touchstart touchend click', function (e) {
-        console.warn('menu handler', e.type);
-
         // Event on the menu itself.
         var currentlyOpen = $menu.hasClass(MENU_ACTIVE_CLASS);
 
@@ -406,6 +432,7 @@
         }
 
         if (e.type === 'touchstart') {
+          resetTouch();
           e.preventDefault();
           return;
         }
@@ -418,21 +445,56 @@
       });
 
       $closeButton.on('touchstart touchend click', function (e) {
-        console.warn('close button handler', e.type);
+        // Event occurring on the "Close Menu" button.
+        var offset = $closeButton.offset();
 
         if (e.type === 'touchstart') {
+          resetTouch();
+
+          // Cache some stuff about the close button so we
+          // don't need to request it every touchmove.
+          currentTouch.closeButtonLocation.x = offset.left;
+          currentTouch.closeButtonLocation.y = offset.top;
+          currentTouch.closeButtonDimensions.height = $closeButton.height();
+          currentTouch.closeButtonDimensions.width = $closeButton.width();
+
+          $closeButton.addClass('highlight');
+
+          // Prevent browser from firing a synthesised click event.
           e.preventDefault();
           return;
         }
 
-        // Event occurring on the "Close Menu" button.
-        closeMenu();
+        if (e.type === 'touchend') {
+          // Prevent touchend from firing if the user touchmoves outside
+          // the button boundary. This stops the menu disappearing unexpectedly 
+          // while scrolling large distances from the bottom of the screen.
+          if (checkTouchBounds(e)) {
+            closeMenu();
+          }
+
+          // Clear touch data.
+          resetTouch();
+        }
+
+        // Prevent the touch propagating up to the menu touch handler.
         e.stopPropagation();
       });
 
-      $nav.children('ul').on('click', function (e) {
-        console.warn('nav item handler', e.type);
+      $closeButton.on('touchmove', function (e) {
+        // Update button highlight to indicate whether lifting a finger
+        // off the screen at the current position will perform the
+        // close action.
+        var acceptTouch = checkTouchBounds(e);
+        
+        if (acceptTouch) {
+          $closeButton.addClass('highlight');
+        } else {
+          $closeButton.removeClass('highlight');
+        }
+      });
 
+      $nav.children('ul').on('click', function (e) {
         // Only handle the event if an li (or something within an li) 
         // was tapped / clicked.
         if (e.target !== this) {
