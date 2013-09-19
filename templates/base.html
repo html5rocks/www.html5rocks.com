@@ -359,7 +359,15 @@
     });
 
     // Toggle the feature nav.
-    $('.outline_nav_toggle').click(function(e) {
+    $('.outline_nav_toggle').on('touchstart touchend click', function(e) {
+
+      // Prevent synthesized click event from firing as we are
+      // handling the touch event for a more responsive ui.
+      if (e.type === "touchstart") {
+        e.preventDefault();
+        return;
+      }
+
       $(this).toggleClass('activated');
       $(this).find('nav.outline').fadeToggle('fast');
     });
