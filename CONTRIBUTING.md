@@ -3,7 +3,7 @@ Step-by-step guide for third-party developers to contribute to html5rocks.com. B
 # Before you start #
 
 HTML5Rocks runs on Google App Engine (Python). Before you check out the code, download
-the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Google_App_Engine_SDK_for_Python). The SDK is not required, but highly recommended. You'll want to run a local development server and preview your changes before submitting a tutorial, sample, or patch. 
+the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Google_App_Engine_SDK_for_Python). The SDK is not required, but highly recommended. You'll want to run a local development server and preview your changes before submitting a tutorial, sample, or patch.
 
 **If you're interested in writing an article, please [file an issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) and wait to hear from us before writing the content!**
 
@@ -27,7 +27,6 @@ To checkout the corresponding source, fork us an run the following command:
 2. Open the project folder in a terminal, and start the server with `devappserver2.py .`
 3. Import data by navigating to [http://localhost:8080/database/load_all](http://localhost:8080/database/load_all).
 4. You'll find your local version of html5rocks.com being served on [http://localhost:8080](http://localhost:8080)
-
 
 # Contributing: submitting patches and tutorials #
 
