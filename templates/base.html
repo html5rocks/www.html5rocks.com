@@ -448,38 +448,44 @@
         // Event occurring on the "Close Menu" button.
         var offset = $closeButton.offset();
 
-        if (e.type === 'touchstart') {
-          resetTouch();
+        switch (e.type) {
+          case 'touchstart':
+            resetTouch();
 
-          // Cache some stuff about the close button so we
-          // don't need to request it every touchmove.
-          currentTouch.closeButtonLocation.x = offset.left;
-          currentTouch.closeButtonLocation.y = offset.top;
-          currentTouch.closeButtonDimensions.height = $closeButton.height();
-          currentTouch.closeButtonDimensions.width = $closeButton.width();
+            // Cache some stuff about the close button so we
+            // don't need to request it every touchmove.
+            currentTouch.closeButtonLocation.x = offset.left;
+            currentTouch.closeButtonLocation.y = offset.top;
+            currentTouch.closeButtonDimensions.height = $closeButton.height();
+            currentTouch.closeButtonDimensions.width = $closeButton.width();
 
-          $closeButton.addClass('highlight');
+            $closeButton.addClass('highlight');
 
-          // Prevent browser from firing a synthesised click event.
-          e.preventDefault();
-          return;
-        }
+            // Prevent browser from firing a synthesised click event.
+            e.preventDefault();
+          break;
 
-        if (e.type === 'touchend') {
-          // Prevent touchend from firing if the user touchmoves outside
-          // the button boundary. This stops the menu disappearing unexpectedly 
-          // while scrolling large distances from the bottom of the screen.
-          if (checkTouchBounds(e)) {
+          case 'touchend':
+            // Prevent touchend from firing if the user touchmoves outside
+            // the button boundary. This stops the menu disappearing unexpectedly 
+            // while scrolling large distances from the bottom of the screen.
+            if (checkTouchBounds(e)) {
+              closeMenu();
+              $closeButton.removeClass('highlight');
+            }
+
+            // Clear touch data.
+            resetTouch();
+          break;
+
+          case 'click':
             closeMenu();
-            $closeButton.removeClass('highlight');
-          }
-
-          // Clear touch data.
-          resetTouch();
+          break;
         }
 
         // Prevent the touch propagating up to the menu touch handler.
         e.stopPropagation();
+        
       });
 
       $closeButton.on('touchmove', function (e) {
