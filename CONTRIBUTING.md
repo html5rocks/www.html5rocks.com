@@ -22,6 +22,11 @@ To checkout the corresponding source, fork us an run the following command:
 
     git clone git://github.com/html5rocks/www.html5rocks.com.git
 
+# Development environment  quickstart
+1. Install the [App Engine SDK](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) using either the Google App Engine launcher or by manually downloading the SDK (for advanced users working with multiple versions of the SDK for different projects) and making sure it's on your path.
+2. Open the project folder in a terminal, and start the server with `devappserver2.py .`
+3. Import data by navigating to [http://localhost:8080/database/load_all](http://localhost:8080/database/load_all).
+4. You'll find your local version of html5rocks.com being served on [http://localhost:8080](http://localhost:8080)
 
 # Contributing: submitting patches and tutorials #
 
