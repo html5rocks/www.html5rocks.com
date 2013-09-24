@@ -364,7 +364,9 @@
           $menu = $(this),
           $menuItems = $menu.find('nav.outline li'),
           $nav = $menu.find('nav.outline'),
-          $closeButton = $menu.find('.outline_close_btn');
+          $closeButton = $menu.find('.outline_close_btn'),
+          isOpen = false,
+          menuHash = typeof $menu.attr('id') !== 'undefined' ? '#' + $menu.attr('id') : null;
 
       var closeMenu = function (e) {
         $menu.removeClass(MENU_ACTIVE_CLASS);
@@ -372,6 +374,12 @@
 
         // Restore normal scrolling
         $('html').css('overflow', '');
+
+        if (menuHash) {
+          window.location.hash = "";
+        }
+
+        isOpen = false;
       };
 
       var openMenu = function () {
@@ -381,7 +389,21 @@
         // Prevent nasty overscroll effect while the menu is open.
         $('html').css('overflow', 'hidden');
 
-        window.location.hash = "toc-menu";
+        if (menuHash) {
+          window.location.hash = menuHash;
+        }
+
+        isOpen = true;
+      };
+
+      var onHashChange = function (e) {
+        if (window.location.hash === menuHash) {
+          if (!isOpen) {
+            openMenu();
+          }
+        } else if (window.location.hash !== menuHash && isOpen) {
+          closeMenu();
+        }
       };
 
       var selectItemHandler = function (e) {
@@ -420,6 +442,10 @@
           selectItemHandler(e);
         }
       });
+
+      if (Modernizr.hashchange && menuHash) {
+        window.addEventListener('hashchange', onHashChange, false);
+      }
     });
 
     $('#features_show a').click(function() {
