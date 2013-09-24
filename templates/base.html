@@ -375,6 +375,9 @@
         // Restore normal scrolling
         $('html').css('overflow', '');
 
+        // If this menu uses hash fragments remove window.locations current hash
+        // fragment (as it will be set to the menus hash while the menu is open) 
+        // before marking the menu as closed.
         if (menuHash) {
           window.location.hash = "";
         }
@@ -389,6 +392,8 @@
         // Prevent nasty overscroll effect while the menu is open.
         $('html').css('overflow', 'hidden');
 
+        // If this menu requests the use of hash fragments update the windows
+        // hash fragment to point to the hash of the menu.
         if (menuHash) {
           window.location.hash = menuHash;
         }
@@ -445,6 +450,12 @@
 
       if (Modernizr.hashchange && menuHash) {
         window.addEventListener('hashchange', onHashChange, false);
+
+        // Automatically open the menu when loading a page with the menus 
+        // hash fragment already in the URL.
+        if (window.location.hash === menuHash) {
+          openMenu();
+        }
       }
     });
 
