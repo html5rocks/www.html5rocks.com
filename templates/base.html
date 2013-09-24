@@ -364,26 +364,9 @@
           $menu = $(this),
           $menuItems = $menu.find('nav.outline li'),
           $nav = $menu.find('nav.outline'),
-          $closeButton = $menu.find('.outline_close_btn'),
-          currentTouch = null;
+          $closeButton = $menu.find('.outline_close_btn');
 
-      var checkTouchBounds = function (e) {
-        var acceptTouch = true,
-            touchPosX = e.originalEvent.changedTouches[0].pageX,
-            touchPosY = e.originalEvent.changedTouches[0].pageY,
-            threshold = 20;
-
-        if (touchPosX < (currentTouch.closeButtonLocation.x - threshold) || 
-            touchPosX > (currentTouch.closeButtonLocation.x + currentTouch.closeButtonDimensions.width + threshold) ||
-            touchPosY < (currentTouch.closeButtonLocation.y - threshold) || 
-            touchPosY > (currentTouch.closeButtonLocation.y + currentTouch.closeButtonDimensions.height + threshold)) {
-          acceptTouch = false;
-        }
-
-        return acceptTouch;
-      };
-
-      var closeMenu = function () {
+      var closeMenu = function (e) {
         $menu.removeClass(MENU_ACTIVE_CLASS);
         $nav.fadeOut('fast');
 
@@ -397,20 +380,8 @@
 
         // Prevent nasty overscroll effect while the menu is open.
         $('html').css('overflow', 'hidden');
-      };
 
-      var resetTouch = function () {
-        currentTouch = {
-          closeButtonLocation: {
-            x: null,
-            y: null
-          },
-          closeButtonDimensions: {
-            height: null,
-            width: null
-          },
-          cancelled: false
-        };
+        window.location.hash = "toc-menu";
       };
 
       var selectItemHandler = function (e) {
@@ -423,82 +394,23 @@
         e.stopPropagation();
       };
 
-      $menu.on('touchstart touchend click', function (e) {
+      $menu.on('click', function (e) {
         // Event on the menu itself.
         var currentlyOpen = $menu.hasClass(MENU_ACTIVE_CLASS);
-
-        if (currentlyOpen) {
-          return;
-        }
-
-        if (e.type === 'touchstart') {
-          resetTouch();
-          e.preventDefault();
-          return;
-        }
-
+        
+        // Open the menu if it's not already open
         if (!currentlyOpen) {
-          // Open the menu.
           openMenu();
           e.stopPropagation();
         }
       });
 
-      $closeButton.on('touchstart touchend click', function (e) {
+      $closeButton.on('click', function (e) {
         // Event occurring on the "Close Menu" button.
-        var offset = $closeButton.offset();
-
-        switch (e.type) {
-          case 'touchstart':
-            resetTouch();
-
-            // Cache some stuff about the close button so we
-            // don't need to request it every touchmove.
-            currentTouch.closeButtonLocation.x = offset.left;
-            currentTouch.closeButtonLocation.y = offset.top;
-            currentTouch.closeButtonDimensions.height = $closeButton.height();
-            currentTouch.closeButtonDimensions.width = $closeButton.width();
-
-            $closeButton.addClass('highlight');
-
-            // Prevent browser from firing a synthesised click event.
-            e.preventDefault();
-          break;
-
-          case 'touchend':
-            // Prevent touchend from firing if the user touchmoves outside
-            // the button boundary. This stops the menu disappearing unexpectedly 
-            // while scrolling large distances from the bottom of the screen.
-            if (checkTouchBounds(e)) {
-              closeMenu();
-              $closeButton.removeClass('highlight');
-            }
-
-            // Clear touch data.
-            resetTouch();
-          break;
-
-          case 'click':
-            closeMenu();
-          break;
-        }
+        closeMenu();
 
         // Prevent the touch propagating up to the menu touch handler.
         e.stopPropagation();
-        
-      });
-
-      $closeButton.on('touchmove', function (e) {
-        // Update button highlight to indicate whether lifting a finger
-        // off the screen at the current position will perform the
-        // close action.
-        var acceptTouch = checkTouchBounds(e);
-        
-        if (acceptTouch) {
-          $closeButton.addClass('highlight');
-        } else {
-          $closeButton.removeClass('highlight');
-        }
       });
 
       $nav.children('ul').on('click', function (e) {
