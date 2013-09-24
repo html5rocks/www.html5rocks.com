@@ -63,11 +63,18 @@
 
     }, false);
 
+    function outgoing(url) {
+      try { 
+        _gaq.push(['_trackEvent', 'Outbound Links' , url]); 
+      } catch(err){}
+    }
     // Open external links (also that don't have a target defined) in a new tab.
     var externLinks = document.querySelectorAll('article.tutorial a[href^="http"]:not([target])');
     for(var i = 0, a; a = externLinks[i]; ++i) {
       a.target = '_blank';
+      a.addEventListener('click', new Function('outgoing(' + '"' + a.href.replace(/.*?:\/\//g, "") + '"' + ');'));
     }
+    console.log(disqus_shortname + ", " + disqus_url + ", " + disqus_developer + ", " + disqus_identifier);
   </script>
 </section>
 {% endif %}
