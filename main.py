@@ -137,7 +137,7 @@ class ContentHandler(webapp2.RequestHandler):
     return articles
 
   def render(self, data={}, template_path=None, status=None,
-             message=None, relpath=None):
+             message=None, relpath=''):
     if status is not None and status != 200:
       self.response.set_status(status, message)
 
@@ -149,18 +149,17 @@ class ContentHandler(webapp2.RequestHandler):
         return
 
     current = ''
-    if relpath is not None:
+    if relpath != '':
       current = relpath.split('/')[0].split('.')[0]
 
     # Strip out language code from path. Urls changed for i18n work and correct
     # disqus comment thread won't load with the changed urls.
-    path_no_lang = re.sub('^\/\w{2,3}(?:/|$)?', '', self.request.path, 1)
 
     pagename = ''
-    if path_no_lang == '':
+    if relpath == '':
       pagename = 'home'
     else:
-      pagename = re.sub('\/', '-', path_no_lang)
+      pagename = re.sub('\/', '-', relpath)
       pagename = re.sub('/$|-$', '', pagename)
       pagename = re.sub('^-', '', pagename)
 
@@ -180,7 +179,7 @@ class ContentHandler(webapp2.RequestHandler):
     }
 
     # If the tutorial contains a social URL override, use it.
-    template_data['disqus_url'] = template_data['host'] + '/' + path_no_lang
+    template_data['disqus_url'] = template_data['host'] + '/' + relpath
     if data.get('tut') and data['tut'].social_url:
       template_data['disqus_url'] = (template_data['host'] +
                                      data['tut'].social_url)
@@ -245,7 +244,23 @@ class ContentHandler(webapp2.RequestHandler):
     else:
       self.request.cache = False
 
-  def get(self, relpath):
+  def get(self, locale, relpath=''):
+
+    no_lang = False
+    if locale == '':
+      # If locale is empty string, relpath should be also empty
+      no_lang = True
+      locale = settings.LANGUAGE_CODE
+    elif locale not in settings.LANGS.keys():
+      # If locale does not match any of lang keys, this should be relpath
+      if relpath != '':
+        # ex) tutorials/casestudies/
+        relpath = locale+'/'+relpath
+      else:
+        # ex) mobile/
+        relpath = locale
+      no_lang = True
+      locale = settings.LANGUAGE_CODE
 
     self._set_cache_param()
 
@@ -263,22 +278,10 @@ class ContentHandler(webapp2.RequestHandler):
                          template_path='content/humans.txt',
                          relpath=relpath)
 
-    # Get the locale: if it's "None", redirect to English
-    locale = self.get_language()
-    if not locale:
-      return self.redirect("/en/%s" % relpath, permanent=True)
-
-    # If there is a locale specified but it has no leading slash, redirect
-    if not relpath.startswith("%s/" % locale):
-      return self.redirect("/%s/" % locale, permanent=True)
-
     # If we get here, is because the language is specified correctly, 
     # so let's activate it
     self.activate_language(locale)
     
-    # Strip off leading `/[en|de|fr|...]/`
-    relpath = re.sub('^/?\w{2,3}(?:/)?', '', relpath)
-
     # Are we looking for a feed?
     is_feed = self.request.path.endswith('.xml')
 
@@ -287,7 +290,7 @@ class ContentHandler(webapp2.RequestHandler):
     # English version (assuming it exists), with a `redirect_from_locale` GET
     # param.
     redirect_from_locale = self.request.get('redirect_from_locale', '')
-    if not re.match('[a-zA-Z]{2,3}$', redirect_from_locale):
+    if redirect_from_locale not in settings.LANGS.keys():
       redirect_from_locale = False
     else:
       translation.activate(redirect_from_locale)
@@ -298,20 +301,16 @@ class ContentHandler(webapp2.RequestHandler):
       }
       translation.activate(locale)
 
-    # Landing page or /tutorials|features|mobile|gaming|business\/?
-    if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
-        (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
-                                            'gaming', 'business', 'updates'])):
+    # Landing page or /mobile|tutorials|features|gaming|business|updates/
+    if (relpath in ['', 'mobile', 'tutorials', 'features', 'gaming', 'business', 'updates']):
+      # Ignore locale setting and serve content here
+      path = os.path.join('content', relpath, 'index.html')
 
-      # Check if path ends with a / and adds if necessary
-      if (relpath != '' and relpath[-1] != '/' and
-        self.request.query_string == ''):
-          return self.redirect(relpath + '/', permanent=True)
-      # Check if path ends with a / and adds along with the query string
-      elif (relpath != '' and relpath[-1] != '/' and
-        self.request.query_string != ''):
-          return self.redirect(relpath + '/?' + self.request.query_string,
-                               permanent=True)
+    # ends with '/'
+    elif (relpath[-1] == '/'):
+      # If language is not specified, redirect
+      if no_lang:
+        return self.redirect('/'+locale+'/'+relpath, permanent=True)
 
       path = os.path.join('content', relpath, 'index.html')
     else:
@@ -382,27 +381,16 @@ class ContentHandler(webapp2.RequestHandler):
         # stripping out the current locale and 'static'. Once we have a list,
         # convert it to a series of dictionaries containing the localization's
         # path and name:
-        langs = {
-          'de': 'Deutsch',
-          'en': 'English',
-          'fr': 'Français',
-          'es': 'Español',
-          'it': 'Italiano',
-          'ja': '日本語',
-          'ko': '한국의',
-          'pt': 'Português (Brasil)',
-          'ru': 'Pусский',
-          'zh': '中文 (简体)'
-        }
         loc_list = []
         for d in glob.glob(os.path.join(dir, '*', 'index.html')):
           loc = os.path.basename(os.path.dirname(d))
           if loc not in [locale, 'static']:
             loc_list.append({'path': '/%s/%s' % (loc, relpath),
-                             'lang': langs[loc]})
+                             'lang': settings.LANGS[loc]})
 
         data = {
           'tut': tut,
+          'no_lang': no_lang, # if url doesn't include language param
           'localizations': loc_list,
           'redirect_from_locale': redirect_from_locale
         }
@@ -412,8 +400,8 @@ class ContentHandler(webapp2.RequestHandler):
       # If the localized file doesn't exist, and the locale isn't English, look
       # for an english version of the file, and redirect the user there if
       # it's found:
-      elif os.path.isfile( os.path.join(dir, 'en', filename)):
-        return self.redirect("/en/%s?redirect_from_locale=%s" % (relpath,
+      elif os.path.isfile( os.path.join(dir, settings.LANGUAGE_CODE, filename)):
+        return self.redirect("/"+settings.LANGUAGE_CODE+"/%s?redirect_from_locale=%s" % (relpath,
                                                                  locale))
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
@@ -960,6 +948,7 @@ routes = [
   ('/database/(.*)/(.*)', DBHandler),
   ('/database/(.*)', DBHandler),
   ('/tags/(.*)/(.*)', TagsHandler),
+  ('/(.*?)/(.*)', ContentHandler),
   ('/(.*)', ContentHandler)
 ]
 
