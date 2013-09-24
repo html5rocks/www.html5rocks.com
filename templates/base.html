@@ -378,10 +378,13 @@
         // If this menu uses hash fragments remove window.locations current hash
         // fragment (as it will be set to the menus hash while the menu is open) 
         // before marking the menu as closed.
-        if (menuHash) {
+        if (menuHash && window.location.hash === menuHash) {
           window.location.hash = "";
         }
 
+        // This needs to be updated last as it's previous state is checked in
+        // the hashchange callback fired by the assignment to 
+        // window.location.hash above.
         isOpen = false;
       };
 
@@ -398,37 +401,36 @@
           window.location.hash = menuHash;
         }
 
+        // This needs to be updated last as it's previous state is checked in
+        // the hashchange callback fired by the assignment to 
+        // window.location.hash above.
         isOpen = true;
       };
 
       var onHashChange = function (e) {
         if (window.location.hash === menuHash) {
+          // If the new hash is the same as the hash assigned to this menu
+          // open the menu.
           if (!isOpen) {
             openMenu();
           }
         } else if (window.location.hash !== menuHash && isOpen) {
+          // If the new hash is not equal to the hash of this menu and this
+          // menu is open close the menu.
           closeMenu();
         }
       };
 
-      var selectItemHandler = function (e) {
-        var $link = $(e.currentTarget).find('a'),
-            href = $link.attr('href');
-
-        window.location.hash = href;
-        closeMenu();
-
-        e.stopPropagation();
-      };
-
+      ///////////////////////////
+      // Event handlers
+      //////////////////////////
       $menu.on('click', function (e) {
         // Event on the menu itself.
         var currentlyOpen = $menu.hasClass(MENU_ACTIVE_CLASS);
         
-        // Open the menu if it's not already open
+        // Open the menu if it's not already open.
         if (!currentlyOpen) {
           openMenu();
-          e.stopPropagation();
         }
       });
 
@@ -440,14 +442,27 @@
         e.stopPropagation();
       });
 
-      $nav.children('ul').on('click', function (e) {
+      $nav.children('ul').on('click', 'li', function (e) {
+        debugger;
+        console.log('click', e.currentTarget, e.target, this);
         // Only handle the event if an li (or something within an li) 
         // was tapped / clicked.
-        if (e.target !== this) {
-          selectItemHandler(e);
-        }
+        var $link = $(e.currentTarget).find('a'),
+            href = $link.attr('href');
+
+        // Manually navigate to the items URL.
+        window.location.hash = href;
+
+        // Automatically close the menu after an item has been selected.
+        closeMenu();
+
+        // Prevent the click bubbling up to the menu element and being 
+        // handled by the $menu click handler.
+        e.stopPropagation();
+        e.preventDefault();
       });
 
+      // Setup hashchange driven menus if the browser supports it.
       if (Modernizr.hashchange && menuHash) {
         window.addEventListener('hashchange', onHashChange, false);
 
