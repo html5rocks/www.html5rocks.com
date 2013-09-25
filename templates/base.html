@@ -366,21 +366,28 @@
           $nav = $menu.find('nav.outline'),
           $closeButton = $menu.find('.outline_close_btn'),
           isOpen = false,
-          menuHash = typeof $menu.attr('id') !== 'undefined' ? '#' + $menu.attr('id') : null;
+          menuHash = typeof $menu.attr('id') !== 'undefined' ? '#' + $menu.attr('id') : null,
+          lastScrollPos = null;
 
-      var closeMenu = function (e) {
+      var closeMenu = function (preventHashChange) {
         $menu.removeClass(MENU_ACTIVE_CLASS);
         $nav.fadeOut('fast');
 
         // Restore normal scrolling
         $('html').css('overflow', '');
 
-        // If this menu uses hash fragments remove window.locations current hash
-        // fragment (as it will be set to the menus hash while the menu is open) 
-        // before marking the menu as closed.
-        if (menuHash && window.location.hash === menuHash) {
-          window.location.hash = "";
+        if (!preventHashChange) {
+          // If this menu uses hash fragments remove window.locations current hash
+          // fragment (as it will be set to the menus hash while the menu is open) 
+          // before marking the menu as closed.
+          if (menuHash && window.location.hash === menuHash) {
+            window.location.hash = "";
+          }
         }
+
+        // Restore previous scroll position
+        $('body').scrollTop(lastScrollPos);
+        lastScrollPos = null;
 
         // This needs to be updated last as it's previous state is checked in
         // the hashchange callback fired by the assignment to 
@@ -389,6 +396,10 @@
       };
 
       var openMenu = function () {
+        // Remember the current scroll position so we can restore it if the
+        // user closes the menu without selecting a link.
+        lastScrollPos = $('body').scrollTop();
+
         $menu.addClass(MENU_ACTIVE_CLASS);
         $nav.fadeIn('fast');
 
@@ -443,18 +454,17 @@
       });
 
       $nav.children('ul').on('click', 'li', function (e) {
-        debugger;
         console.log('click', e.currentTarget, e.target, this);
         // Only handle the event if an li (or something within an li) 
         // was tapped / clicked.
         var $link = $(e.currentTarget).find('a'),
             href = $link.attr('href');
 
+        // Automatically close the menu after an item has been selected.
+        closeMenu(true);
+
         // Manually navigate to the items URL.
         window.location.hash = href;
-
-        // Automatically close the menu after an item has been selected.
-        closeMenu();
 
         // Prevent the click bubbling up to the menu element and being 
         // handled by the $menu click handler.
