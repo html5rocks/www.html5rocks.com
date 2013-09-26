@@ -58,7 +58,6 @@ def main():
     issues = []
     [issues.append(i) for i in open_issues]
     [issues.append(i) for i in closed_issues]
-    print issues
     today = datetime.today()
     completed_articles, late_articles, due_articles = ParseIssues(issues)
 
