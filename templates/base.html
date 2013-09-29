@@ -364,10 +364,130 @@
       }
     });
 
-    // Toggle the feature nav.
-    $('.outline_nav_toggle').click(function(e) {
-      $(this).toggleClass('activated');
-      $(this).find('nav.outline').fadeToggle('fast');
+    // Setup menus (feature nav etc.)
+    $('.outline_nav_toggle').each(function () {
+      var MENU_ACTIVE_CLASS = 'activated',
+          $menu = $(this),
+          $menuItems = $menu.find('nav.outline li'),
+          $nav = $menu.find('nav.outline'),
+          $closeButton = $menu.find('.outline_close_btn'),
+          isOpen = false,
+          menuHash = typeof $menu.attr('id') !== 'undefined' ? '#' + $menu.attr('id') : null,
+          lastScrollPos = null;
+
+      var closeMenu = function (preventHashChange) {
+        $menu.removeClass(MENU_ACTIVE_CLASS);
+        $nav.fadeOut('fast');
+
+        // Restore normal scrolling
+        $('html').css('overflow', '');
+
+        if (!preventHashChange) {
+          // If this menu uses hash fragments remove window.locations current hash
+          // fragment (as it will be set to the menus hash while the menu is open) 
+          // before marking the menu as closed.
+          if (menuHash && window.location.hash === menuHash) {
+            window.location.hash = "";
+          }
+        }
+
+        // Restore previous scroll position
+        $('body').scrollTop(lastScrollPos);
+        lastScrollPos = null;
+
+        // This needs to be updated last as it's previous state is checked in
+        // the hashchange callback fired by the assignment to 
+        // window.location.hash above.
+        isOpen = false;
+      };
+
+      var openMenu = function () {
+        // Remember the current scroll position so we can restore it if the
+        // user closes the menu without selecting a link.
+        lastScrollPos = $('body').scrollTop();
+
+        $menu.addClass(MENU_ACTIVE_CLASS);
+        $nav.fadeIn('fast');
+
+        // Prevent nasty overscroll effect while the menu is open.
+        $('html').css('overflow', 'hidden');
+
+        // If this menu requests the use of hash fragments update the windows
+        // hash fragment to point to the hash of the menu.
+        if (menuHash) {
+          window.location.hash = menuHash;
+        }
+
+        // This needs to be updated last as it's previous state is checked in
+        // the hashchange callback fired by the assignment to 
+        // window.location.hash above.
+        isOpen = true;
+      };
+
+      var onHashChange = function (e) {
+        if (window.location.hash === menuHash) {
+          // If the new hash is the same as the hash assigned to this menu
+          // open the menu.
+          if (!isOpen) {
+            openMenu();
+          }
+        } else if (window.location.hash !== menuHash && isOpen) {
+          // If the new hash is not equal to the hash of this menu and this
+          // menu is open close the menu.
+          closeMenu();
+        }
+      };
+
+      ///////////////////////////
+      // Event handlers
+      //////////////////////////
+      $menu.on('click', function (e) {
+        // Event on the menu itself.
+        var currentlyOpen = $menu.hasClass(MENU_ACTIVE_CLASS);
+        
+        // Open the menu if it's not already open.
+        if (!currentlyOpen) {
+          openMenu();
+        }
+      });
+
+      $closeButton.on('click', function (e) {
+        // Event occurring on the "Close Menu" button.
+        closeMenu();
+
+        // Prevent the touch propagating up to the menu touch handler.
+        e.stopPropagation();
+      });
+
+      $nav.children('ul').on('click', 'li', function (e) {
+        console.log('click', e.currentTarget, e.target, this);
+        // Only handle the event if an li (or something within an li) 
+        // was tapped / clicked.
+        var $link = $(e.currentTarget).find('a'),
+            href = $link.attr('href');
+
+        // Automatically close the menu after an item has been selected.
+        closeMenu(true);
+
+        // Manually navigate to the items URL.
+        window.location.hash = href;
+
+        // Prevent the click bubbling up to the menu element and being 
+        // handled by the $menu click handler.
+        e.stopPropagation();
+        e.preventDefault();
+      });
+
+      // Setup hashchange driven menus if the browser supports it.
+      if (Modernizr.hashchange && menuHash) {
+        window.addEventListener('hashchange', onHashChange, false);
+
+        // Automatically open the menu when loading a page with the menus 
+        // hash fragment already in the URL.
+        if (window.location.hash === menuHash) {
+          openMenu();
+        }
+      }
     });
 
     $('#features_show a').click(function() {
