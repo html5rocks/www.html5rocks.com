@@ -18,11 +18,13 @@ def ParseIssues(issues):
     today = datetime.today()
     late_articles = []
     due_articles = []
+    unassigned = []
     
     for issue in issues:
         due_on_re = re.search("(due on|due):\s*(\d{4}-\d{2}-\d{2})", issue.body, flags=re.I)
         
         if due_on_re is None:
+            unassigned.append(issue)
             continue
 
         due_on = datetime.strptime(due_on_re.group(2), "%Y-%m-%d")
@@ -32,9 +34,9 @@ def ParseIssues(issues):
            late_articles.append(issue)
 
         if (due_on - today).days < 7 and (due_on - today).days >= 0:
-           due_articles.append(issue) 
+           due_articles.append(issue)
 
-    return (late_articles, due_articles)
+    return (late_articles, due_articles, unassigned)
 
 def main():
     username = raw_input("Username: ")
@@ -43,13 +45,15 @@ def main():
     g = Github(username, password)
 
     repo = g.get_repo(repository)
+   
+    label = repo.get_label("new article")
 
-    issues = repo.get_issues(state="open")
+    issues = repo.get_issues(state="open", labels = [label])
 
     today = datetime.today()
 
     print "Parsing Issues"
-    late_articles, due_articles = ParseIssues(issues)
+    late_articles, due_articles, unassigned_articles = ParseIssues(issues)
 
     print "\n\nHTML5 Rocks Weekly Report for %s" % today.date()
     print "========================================\n"
@@ -58,14 +62,19 @@ def main():
     print "----------------\n"
 
     for article in late_articles:
-       print "%s - '%s' was due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
+        print "%s - '%s' was due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
 
     print "\nArticles due this week"    
     print "----------------------\n"
 
     for article in due_articles:
-       print "%s - '%s' is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
+        print "%s - '%s' is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
    
+    print "\nArticles without a due date"
+    print "---------------------------\n"
+
+    for article in unassigned_articles:
+        print "%s - '%s' %s" % ((article.assignee or article.user).name, article.title, article.url)
    
 if __name__ == "__main__":
      main()
