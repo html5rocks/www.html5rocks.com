@@ -76,38 +76,48 @@ def main():
 
     if len(completed_articles) == 0:
         print "There were no articles delivered this week\n"
- 
+    else:
+        print "|Author|Article|Completed date|"
+        print "|------|-------|--------------|"
+
     for article in completed_articles:
-        print "%s completd '%s' on  %s" % ((article.assignee or article.user).name, article.title, article.closed_at.date())
+        print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.closed_at.date())
     
     print "Overdue articles"
     print "----------------\n"
-
+    
     if len(late_articles) == 0:
         print "Excellent! there are no overdue articles\n"
-    
-    for article in late_articles:
-        print "%s - '%s' was due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
+    else:  
+        print "|Author|Article|Delivery date|"
+        print "|------|-------|-------------|"
 
+    for article in late_articles:
+        print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.due_on.date())
 
     print "\nArticles due this week"    
     print "----------------------\n"
-
+    
     if len(due_articles) == 0:    
         print "There are no articles due this week, either all is good, or someone messed up!\n"
+    else:
+        print "|Author|Article|Delivery date|"
+        print "|------|-------|-------------|"
 
     for article in due_articles:
-        print "%s - '%s' is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
+        print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.due_on.date())
    
     print "\nArticles without a due date"
     print "---------------------------\n"
 
     if len(unassigned_articles) == 0:
         print "All articles have been asigned, have a cocktail!\n"
-
+    else:
+        print "|Author|Article|"
+        print "|------|-------|"
+    
     for article in unassigned_articles:
-        print "%s - '%s' %s" % ((article.assignee or article.user).name, article.title, article.html_url)
-
+        print "|%s|[%s](%s)|" % ((article.assignee or article.user).name, article.title, article.html_url)
    
 if __name__ == "__main__":
      main()
