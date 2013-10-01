@@ -38,8 +38,9 @@ def main():
     repo = g.get_repo(repository)
     label = repo.get_label("new article") 
     
-    due_on = datetime.strptime(options.due_on, "%Y-%m-%d")
-
+    due_on = "due on: " + datetime.strptime(options.due_on, "%Y-%m-%d")
+    description = due_on + "\n" + description  
+  
     issue = repo.create_issue(title, body=description, labels=[label])
 
     print "Created issue: %s" % issue.url
