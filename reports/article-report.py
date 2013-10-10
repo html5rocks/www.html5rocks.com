@@ -32,23 +32,23 @@ def ParseIssues(issues, closed_issues):
             if issue.closed_at is None:
                 unassigned.append(issue)
             continue
-        else:
-            if issue.closed_at is not None:
-                continue
 
         due_on = datetime.strptime(due_on_re.group(2), "%Y-%m-%d")
         issue.due_on = due_on
 
-        if issue.closed_at is not None and (today - issue.closed_at).days < 7:
-            completed_articles.append(issue) 
-        
+        if issue.closed_at is not None:
+            if (today - issue.closed_at).days < 7:
+                completed_articles.append(issue)
+            continue
+         
         if due_on < today:
             late_articles.append(issue)
 
         if (due_on - today).days < 7 and (due_on - today).days >= 0:
             due_articles.append(issue)
 
-    return (completed_articles, late_articles, due_articles, unassigned)
+    return (sorted(completed_articles, key=lambda a: a.due_on), sorted(late_articles, key=lambda a: a.due_on), sorted(due_articles, key=lambda a: a.due_on), unassigned)
+
 
 def main():
     username = raw_input("Username: ")
@@ -71,7 +71,7 @@ def main():
     print "\n\nHTML5 Rocks Weekly Report for %s" % today.date()
     print "========================================\n"
 
-    print "Articles Delivered this week"
+    print "Articles Delivered or closed this week"
     print "----------------------------\n"
 
     if len(completed_articles) == 0:
@@ -83,7 +83,19 @@ def main():
     for article in completed_articles:
         print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.closed_at.date())
     
-    print "Overdue articles"
+    print "\nArticles due this week"    
+    print "----------------------\n"
+    
+    if len(due_articles) == 0:    
+        print "There are no articles due this week, either all is good, or something messed up!\n"
+    else:
+        print "|Author|Article|Delivery date|"
+        print "|------|-------|-------------|"
+
+    for article in due_articles:
+        print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.due_on.date())
+  
+    print "\nOverdue articles"
     print "----------------\n"
     
     if len(late_articles) == 0:
@@ -95,18 +107,7 @@ def main():
     for article in late_articles:
         print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.due_on.date())
 
-    print "\nArticles due this week"    
-    print "----------------------\n"
-    
-    if len(due_articles) == 0:    
-        print "There are no articles due this week, either all is good, or someone messed up!\n"
-    else:
-        print "|Author|Article|Delivery date|"
-        print "|------|-------|-------------|"
-
-    for article in due_articles:
-        print "|%s|[%s](%s)|%s|" % ((article.assignee or article.user).name, article.title, article.html_url, article.due_on.date())
-   
+ 
     print "\nArticles without a due date"
     print "---------------------------\n"
 
