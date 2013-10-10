@@ -16,6 +16,8 @@ def ParseIssues(issues):
     and those that are overdue
     """
     today = datetime.today()
+    quarter = int(today.date().month / 4)
+    completed_articles = []
     late_articles = []
     due_articles = []
     
@@ -27,14 +29,19 @@ def ParseIssues(issues):
 
         due_on = datetime.strptime(due_on_re.group(2), "%Y-%m-%d")
         issue.due_on = due_on
+        issue.quarter = int(issue.due_on.date().month / 4) 
 
-        if due_on < today:
-           late_articles.append(issue)
+        if issue.state == "closed":
+           completed_articles.append(issue)
+           continue
 
-        if (due_on - today).days < 7 and (due_on - today).days >= 0:
-           due_articles.append(issue) 
+        if due_on < today and issue.quarter == quarter:
+            late_articles.append(issue)
 
-    return (late_articles, due_articles)
+        if issue.quarter == quarter:
+            due_articles.append(issue) 
+
+    return (completed_articles, late_articles, due_articles)
 
 def main():
     username = raw_input("Username: ")
@@ -44,24 +51,33 @@ def main():
 
     repo = g.get_repo(repository)
 
-    issues = repo.get_issues(state="open")
-
-    today = datetime.today()
+    open_issues = repo.get_issues(state="open")
+    closed_issues = repo.get_issues(state="closed")
 
     print "Parsing Issues"
-    late_articles, due_articles = ParseIssues(issues)
+    issues = []
+    [issues.append(i) for i in open_issues]
+    [issues.append(i) for i in closed_issues]
+    today = datetime.today()
+    completed_articles, late_articles, due_articles = ParseIssues(issues)
 
-    print "\n\nHTML5 Rocks Weekly Report for %s" % today.date()
+    print "\n\nHTML5 Rocks Quarter Report for %s" % today.date()
     print "========================================\n"
 
-    print "Overdue articles"
+    print "Completed articles"
+    print "------------------\n"
+
+    for article in completed_articles:
+       print "%s - '%s' was completed on %s" % ((article.assignee or article.user).name, article.title, article.closed_at.date())
+
+    print "\nOverdue articles"
     print "----------------\n"
 
     for article in late_articles:
        print "%s - '%s' was due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())
 
-    print "\nArticles due this week"    
-    print "----------------------\n"
+    print "\nArticles due this quater"    
+    print "------------------------\n"
 
     for article in due_articles:
        print "%s - '%s' is due on %s" % ((article.assignee or article.user).name, article.title, article.due_on.date())

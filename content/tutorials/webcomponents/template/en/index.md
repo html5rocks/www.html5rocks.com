@@ -343,7 +343,7 @@ CSS rules with `#mytemplate` in order to scope styles down to the template. This
 is brittle and there are no guarantees we won't encounter future naming collisions.
 For example, we're hosed if the embedding page already has an element with that id.
 
-<h3 id="toc-offscreen">Method 2: Overloading script</h3>
+<h3 id="toc-overloadingscript">Method 2: Overloading script</h3>
 
 Another technique is overloading `<script>` and manipulating its content
 as a string. John Resig was probably the first to show this back in 2008 with
