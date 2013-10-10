@@ -13,7 +13,6 @@ Articles due this quater
 |Paul Kinlan|[Building a fullscreen experience](https://github.com/html5rocks/www.html5rocks.com/issues/484)|2013-10-23|open
 |Deanna Rubin|[October DevTools Digest](https://github.com/html5rocks/www.html5rocks.com/issues/529)|2013-10-30|open
 |Paul Lewis|[60fps with touch handlers](https://github.com/html5rocks/www.html5rocks.com/issues/504)|2013-10-30|open
-|None|[How to prioritize your page for visible content](https://github.com/html5rocks/www.html5rocks.com/issues/508)|2013-11-02|open
 |None|[User timing: understanding execution timing in your web app](https://github.com/html5rocks/www.html5rocks.com/issues/486)|2013-11-02|open
 |Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-11-04|open
 |Eric Bidelman|[HTML Imports](https://github.com/html5rocks/www.html5rocks.com/issues/493)|2013-11-08|open
@@ -26,5 +25,6 @@ Articles due this quater
 |Sam Dutton|[WebRTC Infrastructure Article](https://github.com/html5rocks/www.html5rocks.com/issues/646)|2013-12-09|open
 |Chris Wilson|[Stopping the blocking: Eliminate render blocking resources](https://github.com/html5rocks/www.html5rocks.com/issues/509)|2013-12-11|open
 |Pete LePage|[Real-world responsive images](https://github.com/html5rocks/www.html5rocks.com/issues/490)|2013-12-11|open
+|Paul Kinlan|[How to prioritize your page for visible content](https://github.com/html5rocks/www.html5rocks.com/issues/508)|2013-12-15|open
 |Chris Wilson|[Building Amazing forms with semantic input types](https://github.com/html5rocks/www.html5rocks.com/issues/482)|2013-12-18|open
 |Eiji Kitamura|[Quota Management on browsers](https://github.com/html5rocks/www.html5rocks.com/issues/514)|2013-12-20|open
