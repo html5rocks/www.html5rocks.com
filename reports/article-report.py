@@ -47,7 +47,8 @@ def ParseIssues(issues, closed_issues):
         if (due_on - today).days < 7 and (due_on - today).days >= 0:
             due_articles.append(issue)
 
-    return (completed_articles, late_articles, due_articles, unassigned)
+    return (sorted(completed_articles, key=lambda a: a.due_on), sorted(late_articles, key=lambda a: a.due_on), sorted(due_articles, key=lambda a: a.due_on), unassigned)
+
 
 def main():
     username = raw_input("Username: ")
