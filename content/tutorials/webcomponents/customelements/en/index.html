@@ -405,11 +405,11 @@ These methods are appropriately named the <strong>lifecycle callbacks</strong>. 
       <td>an instance of the element is created</td>
     </tr>
     <tr>
-      <td>enteredDocumentCallback</td>
+      <td>enteredViewCallback</td>
       <td>an instance was inserted into the document</td>
     </tr>
     <tr>
-      <td>leftDocumentCallback</td>
+      <td>leftViewCallback</td>
       <td>an instance was removed from the document</td>
     </tr>
     <tr>
@@ -419,18 +419,18 @@ These methods are appropriately named the <strong>lifecycle callbacks</strong>. 
   </tbody>
 </table>
 
-<p><strong>Example:</strong> defining <code>createdCallback()</code> and <code>enteredDocumentCallback()</code> on <code>&lt;x-foo&gt;</code>:</p>
+<p><strong>Example:</strong> defining <code>createdCallback()</code> and <code>enteredViewCallback()</code> on <code>&lt;x-foo&gt;</code>:</p>
 <pre class="prettyprint"><code>var proto = Object.create(HTMLElement.prototype);
 
 proto.createdCallback = function() {...};
-proto.enteredDocumentCallback = function() {...};
+proto.enteredViewCallback = function() {...};
 
 var XFoo = document.register('x-foo', {prototype: proto});
 </code></pre>
 <p><strong>All of the lifecycle callbacks are optional</strong>, but define them if/when it makes sense.
 For example, say your element is sufficiently complex and opens a connection to IndexedDB
 in <code>createdCallback()</code>. Before it gets removed from the DOM, do the necessary
-cleanup work in <code>leftDocumentCallback()</code>. <strong>Note:</strong> you shouldn't rely on this,
+cleanup work in <code>leftViewCallback()</code>. <strong>Note:</strong> you shouldn't rely on this,
 for example, if the user closes the tab, but think of it as a possible optimization hook.</p>
 <p>Another use case lifecycle callbacks is for setting up default event listeners
 on the element:</p>
@@ -699,7 +699,7 @@ and jump through the wormholes of the web platform. Combine them with the other
 new platform primitives like Shadow DOM and <code>&lt;template&gt;</code>, and we start to realize
 the picture of Web Components. Markup can be sexy again!</p>
 <p>If you're interested in getting started with web components, I recommend checking
-out <a href="http://www.polymer-project.org">Polymer</a>. It's got more than enough to get you going.</p>
+out <a href="http://polymer-project.org">Polymer</a>. It's got more than enough to get you going.</p>
 <script>
 if ('register' in document) {
   (function() {

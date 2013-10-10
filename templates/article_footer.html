@@ -50,6 +50,22 @@
                       '{{LANGUAGE_CODE}}';
     };
 
+    function subbed() {
+      try { 
+        _gaq.push(['_trackEvent', 'Commented']); 
+      } catch(err){}
+    }
+
+    function getSub() {
+      var tk = document.querySelector('button.btn.submit');
+      if (tk == null) {
+        window.setTimeout(getSub, 1000);
+      }
+      else {
+        tk.addEventListener('click', subbed);
+      }
+    }
+
     window.addEventListener('load', function(e) {
 
       var c = document.createElement('script'); c.type = 'text/javascript';
@@ -61,13 +77,21 @@
       var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
       sp.insertBefore(c, s); sp.insertBefore(dsq, s);
 
+      //window.setTimeout(getSub, 1000);
     }, false);
 
+    function outgoing(url) {
+      try { 
+        _gaq.push(['_trackEvent', 'Outbound Links' , url]); 
+      } catch(err){}
+    }
     // Open external links (also that don't have a target defined) in a new tab.
     var externLinks = document.querySelectorAll('article.tutorial a[href^="http"]:not([target])');
     for(var i = 0, a; a = externLinks[i]; ++i) {
       a.target = '_blank';
+      a.addEventListener('click', new Function('outgoing(' + '"' + a.href.replace(/.*?:\/\//g, "") + '"' + ');'));
     }
+    console.log(disqus_shortname + ", " + disqus_url + ", " + disqus_developer + ", " + disqus_identifier);
   </script>
 </section>
 {% endif %}
