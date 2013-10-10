@@ -55,9 +55,10 @@ def main():
     print "\n\nHTML5 Rocks Open Articles for %s" % today.date()
     print "========================================\n"
 
-    print "We are always looking for developers and writers: to help build the content for HTML5Rocks.\n"
+    print "We are always looking for developers and writers to help build the content for HTML5Rocks.\n"
 
-    print "We have a huge list of content that we would love to get produced. If you have skills or experience in any of these areas, please leave a comment that you would like to work on the article.\n"
+    print "We have a huge list of content that we would love to get produced. If you have skills or experience in any of these areas and would like to write the article, please leave a comment on the article issue."
+
 
     if len(unassigned_articles) == 0:
         print "All articles have been asigned, have a cocktail!\n"
