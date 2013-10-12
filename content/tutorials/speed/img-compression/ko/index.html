@@ -1,0 +1,495 @@
+
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead-cm:before {
+  background-image: url(/static/images/profiles/75/coltmcanlis.75.png);
+  background-position: 0px 0px !important;
+}
+.talkinghead-ja:before {
+  background-image: url(/static/images/profiles/75/jakearchibald.75.png);
+  background-position: 0px 0px !important;
+}
+.talkinghead-ao:before {
+  background-image: url(/static/images/profiles/75/addyosmani.75.png);
+  background-position: 0px 0px !important;
+}
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+
+
+
+</style>
+<meta property="og:title" content="웹 개발자를 위한 이미지 압축"/>
+<meta property="og:image" content="story_small.jpg"/>
+<meta property="og:description" content="이미지가 웹 페이지의 가장 큰 부분을 차지하게 되면서 빠르게 로딩되고 응답하는 사이트를 위해 이미지 크기와 품질을 적극적으로 컨트롤하는 것이 웹 개발자에게 매우 중요해졌습니다. 이 글은 사이트의 이미지 압축에 대한 이슈들을 이해하고 이를 잘 다루기 위한 기법들과 방식, 이유들을 제공할 것입니다."/>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+
+{% block content %}
+
+
+<h2 id="toc-introduction">개요</h2>
+
+<p>이미지가 웹 페이지의 가장 큰 부분을 차지하게 되면서 빠르게 로딩되고 응답하는 사이트를 위해 이미지 크기와 품질을 적극적으로 컨트롤하는 것이 웹 개발자에게 매우 중요해졌습니다. 이것은 공짜가 아닙니다. 대부분의 경우 '충분히 좋도록' 자동화할 수 있지만 최고의 결과를 위해서는 사람이 눈으로 품질의 수준을 확인하여야 합니다. 이 글은 사이트의 이미지 압축에 대한 이슈들을 이해하고 이를 잘 다루기 위한 기법들과 방식, 이유들을 제공할 것입니다.</p>
+<center><img src="parrots.jpg"  title="누가 앵무새를 좋아하나? 전부." alt="나는 쉬어야겠어."></center>
+<p>
+
+
+<h2 id="toc-tldr">요약 : 이미지 압축의 체크리스트</h2>
+<p>
+  <ol>
+    <li>이미지를 괜찮게 보이는 가장 낮은 품질, 올바른 포맷으로 압축하라.
+      <ol>
+        <li>모든 이미지에 대해 압축 품질을 가능한만큼 직접 튜닝하자</li>
+        <li>가장 높은 성능을 얻기 위해 나머지를 자동화하자</li>
+      </ol>
+    </li>
+    <li>요구되는 모든 이미지에 대해 WebP의 사용을 확인하라.</li>
+    <li>페이지의 로딩타임에 대한 사용자 인식을 개선하기 위해 프로그레시브 옵션으로 이미지를 저장하자</li>
+    <li>더 나은 압축이나 투명 처리를 위해 다른 흥미로운 방법들을 조사하자. 사고의 틀을 벗어나자!</li>
+  </ol>
+
+</p>
+
+<h2 id="toc-smallisbig">왜 작은 것이 좋은가</h2>
+<p>
+쉽게 말해 더 큰 페이지는 더 많은 로딩 시간이 소요됩니다. 연구된 바에 따르면 느린 사이트의 사용자는 사이트에 더 짧게 머물고 더 클릭을 덜하게 되며 광고를 덜 클릭하고 소비하는 모습을 보였습니다. AutoAnything 같은 작은 사이트는 로딩 시간을 반으로 줄여 <a href="http://www.strangeloopnetworks.com/resources/case-studies/autoanything-cuts-page-load-time-in-half-and-revs-up-sales-by-13/">13%의 매출 신장</a>을 이뤘습니다.. 그리고 아마존 같은 거대 사이트는 <a href="https://sites.google.com/site/glinden/Home/StanfordDataMining.2006-11-28.ppt?attredirects=0">100 밀리초가 느려질 때마다</a>, 1%의 매출 하락을 경험하였습니다. 그리고 <a href="http://www.youtube.com/watch?v=FaygFGhex_4">즉시 로딩되도록 만든 웹사이트들의 성공적인 자금 조달</a> 자체에 기반한 2012년 대선 공약은 잊혀지지 않습니다.
+</p>
+
+<p>
+<b>사용자가 웹사이트를 다운로드하는데 비용을 지불하는 것이 무엇이 나쁜가.</b><br>
+데스크톱 사용자들을 위해 페이지들이 커지면서 실행 성능을 떨어뜨리는 동안 팽창된 페이지들의 가장 큰 피해자는 역시 모바일 사용자입니다. 1MB 페이지는 단지 아주 오랫동안 로딩만을 하게 할 뿐만이 아니라  끔찍한 휴대폰 청구서의 충격도 줍니다.
+</p>
+
+<p>
+모바일을 위한 대부분의 '무제한' 데이터 방침조차도 <a href="http://news.cnet.com/8301-1035_3-57564716-94/unlimited-verizon-data-customers-beware-make-sure-your-next-phone-is-4g/">진짜 '무제한 공짜'는 아닙니다.</a> 그것들 대부분은 2GB 정도를 충전하는 정액제고 이를 넘어서면 더 많은 비용을 사용합니다. 아래 <a href="http://www2.research.att.com/~rjana/MobEA-IV/PAPERS/MobEA_IV-Paper_7.pdf">AT-T 연구 결과가 강조한</a> 것과 같이 "먹을 수 있는 만큼 전부"와 같은 형태의 요금제가 없는 세계의 여러 곳에서 다운로드 비용 정보가 사용자에게 심각한 영향을 미치는 것에 대해서는 말할 필요도 없을 것입니다. : 
+</p>
+
+<p class="notice">
+  <i>
+모바일 데이터 트래픽 비용 문제는 오늘날 모바일 장비 상에서의 서비스에 심각한 방해 요소입니다.
+<br>
+…<br>
+흥미로운 것은 통신사가 결제 정보를 제공하지 않을 때에도 사용자는 결제 방식을 이해하려고 노력한다는 점입니다. 연결 표시등, 청구서 상의 표시 정보 및 데이터 트래픽 결제에 대한 이전의 경험에 기반하여 사람들은 그들의 모바일 브라우징 사용 패턴에 영향을 미치는 인식 가능한 결제 모델을 구축합니다.
+</i></p>
+
+<p>The folks over at <a href="http://mobiforge.com/designing/blog/performance-money-part-1-end-users-wallet">mobiforge</a> provided even more context, putting the entire argument in terms of costs:</p>
+<p class="notice">
+<i>AT-T charge as much as <a href="http://www.wireless.att.com/learn/international/roaming/affordable-world-packages.jsp?wtSlotClick=1-006RPJ-0-1&WT.svl=calltoaction&locale=en_US#data">$19.97/MB</a> for roaming data in certain countries. Taking some of the examples from Guy's <a href="http://www.guypo.com/wp-content/uploads/2013/03/RWD-perf-2013-results.xlsx">spreadsheet</a>, and using the AT-T roaming tariff, is a peak at 1pictureaday.com really worth $178? Do you really need to visit thenextweb.com for $44 or vogue.co.uk for $65? At $17 microsoft.com is a relative bargain.
+<br><br>
+<b>
+  For roaming users these page weights are prohibitive for all but the most essential tasks.
+
+  이러한 페이지의 무게는 로밍 사용자에게 가장 중요한 작업들을 위해 금지되어야 합니다.
+</b></i>
+</p>
+
+<p>
+<b>큰 이미지가 가장 문제입니다.</b></br>
+우리는 We can see the the largest increase in sizes come from <a href="http://httparchive.org/interesting.php#bytesperpage">이미지들</a> which can spell 모바일bad news for mobile, where a picture <i>문자 그대로</i> <a href="http://www.slideshare.net/guypod/a-picture-costs-a-thousand-words18062013">몇천단어의 비용</a>.<br>
+Inappropriate image formatting is a common performance culprit. Images being too large, not compressed enough, or having a quality setting way too high can all lead to these images being bloated and oversized which has a direct impact on the loading of your site. Picking the right compression method to yield the best results is easily achieved by getting to know what’s going on under the hood.
+</p>
+
+
+<h2 id="toc-types">압축 알고리즘의 유형</h2>
+<p>대게 이미지 압축은 손실 단계와 무손실 단게의 2개의 스테이지로 이루어집니다. <b>손실</b> 압축 알고리즘은 역-압축으로도 복구할 수 없는 정보를 손실하는 것처럼 입력 스트림을 수정할 것입니다. 대다수의 이미지 손실 압축 알고리즘들은 처리 과정에서 우리가 실제로는 볼 수 없는 몇몇 정보를 제거해서 바이트수를 줄이는 장점을 취하고 있습니다. 예를 들어 이미지 색상의 제한; 적은 색상은  적은 데이터를 의미합니다. 일반적으로 여러분이 손실 압축을 지원하는 포맷으로 이미지를 저장할 때 "품질 수준"이 이미지에서 무엇인지 물어볼 수도 있습니다. 실질적으로 이미지 품질과 파일 크기를 보상교환하는 스칼라 값을 무엇으로 할 지 선택할 수 있습니다. 품질 수준이 충분이 높으면서 파일 사이즈가 가능한한 작은 것 같은 이미지를 위한 중요한 부분이 있다는 것은 깨닫는 것이 웹 개발자의 요령입니다.
+</p>
+<p>
+  
+  <figure>
+      <table width="100%" border="1">
+        <tr><td width="50%"><center>전</center></td><td width="50%"><center>후</center></td></tr>
+        <tr><td width="50%"><center>0.123, 1.2345, 21.2165, 21.999, 12.123</center></td><td width="50%"><center>0,0,20,20,10</center></td></tr>
+      </table>
+    <figcaption>
+      <i>표 1 - 손실 압축의 예. 가장 작은 10 단위의 값으로 양자화되었다. 이에 대한 역변환은 할 수 없다.</i>
+    </figcaption>
+    </figure>
+</p>
+
+<p>
+After a lossy compressor, a <b>lossless</b> variant is then applied, that is, the data, once uncompressed, is restored to it’s exact state, before compression. These are typical compression algorithms that allow the source stream to be recovered directly without any loss of precision or information. In Images, popular Lossless codecs include <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ77</a>, <a href="http://en.wikipedia.org/wiki/Run-length_encoding">RLE</a>, and <a href="http://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic encoding</a>. Lossless compression algorithms are the backbone of compression, often squeezing out the last percentages of data from your content, constantly struggling with <a href="http://en.wikipedia.org/wiki/Information_theory">information theory</a> to reduce your data sizes.
+</p>
+<p>
+   
+    <figure>
+      <table width="100%" border="1">
+        <tr><td width="50%"><center>전</center></td><td width="50%"><center>후</center></td></tr>
+        <tr><td width="50%"><center>aaaaabbbbbcccddddeeeeffffaaaaabb</center></td><td width="50%"><center>a5b4c2d4e4f4a5bb0</center></td></tr>
+      </table>
+    
+    <figcaption>
+    표 2 - 무손실 압축의 예. run length에 따른 기호로 값의 연속으로 인코딩되었다. 본래의 스트림으로 복구할 수 있다. 만약 run의 길이가 &lt;= 2개의 문자라면 심볼은 단독으로 남겨진 것임을 이해하여야 한다. 스트림의 마지막은 'bb'로 끝나는 것을 확인할 수 있다.
+    </figcaption>
+   </figure>
+</p>
+
+
+<h2 id="toc-imgfmt">이미지 포맷들</h2>
+<p>
+이미지 포맷은 전통적으로 다양한 손실 + 무손실 알고리즘의 연결로 압축효율을 높여왔습니다. 웹 브라우저에 적합한 포맷은 여러가지가 있고 각기 다른 기능과 성능의 균형을 가지고 있습니다. 명확하게 얘기하면 (현재) 웹에서 "모든 것을 위한 하나의" 포맷은 존재하지 않습니다. 이미지의 다른 형식들은 이미지가 어떠한 타입인지, 브라우저가 지원하는 것은 어떤 것인지 페이지가 필요한 것은 어떤 것인지에 따라 다른 포맷으로 인코딩되어야 합니다.
+</p>
+<p>
+전통적으로는 웹 개발자를 위한 이미지 포맷을 선택하기 위한 3가지 결정 사항이 존재합니다.
+<ul>
+  <li>투명도가 필요한가?</li>
+  <li>애니메이션이 필요한가?</li>
+  <li>고품질의 데이터가 필요한가?</li>
+</ul>
+</p>
+
+
+  <table width="128px" style="float:right;margin:15px;">
+    <tr>
+      <td>
+        <img src="len_std.jpg" width="128px" height="128px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <i>'레나(Lena)'는 이미지 압축 알고리즘 비교와 평가에 사용되는 기본 이미지입니다.</i>
+      </td>
+    </tr>
+  </table>
+
+<p>
+  <a href="http://en.wikipedia.org/wiki/PNG">PNG</a>는 투명도와 무손실 압축을 지원하는 간단한 포맷입니다. 여러분은 이미지에 알파 채널을 지정할 수 있고, 투명한 영역을 표시할 수 있으며 무손실을 가능하게 하는 <a href="http://en.wikipedia.org/wiki/DEFLATE">Deflate</a> 압축 옵션을 데이터에 사용할지를 정의할 수 있습니다. (Deflate는 <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ77</a>와 <a href="http://en.wikipedia.org/wiki/Huffman_coding">Huffman</a>), 2가지 무손실 압축의 조합으로 이루어져 있습니다.) 무손실 압축이기 때문에 이미지의 품질은 소스 이미지와 동일하지만 이때문에 이미지가 작아질 수록 파일 사이즈는 커지게 되는 문제가 있습니다.
+</p>
+
+<p>
+    <a href="http://en.wikipedia.org/wiki/Graphics_Interchange_Format">GIF</a>는 투명도와 alongside 애니메이션을 지원하는 또 다른 포맷입니다. ( ‘<a href="http://www.ubergizmo.com/2012/06/google-brain-simulator-takes-16000-computers-identify-cat/">인터넷의 고양이</a>’ 같은 것...을 위한 직접적 근거) GIF 포맷은 손실이 일어나는 <a href="http://en.wikipedia.org/wiki/Palette_(computing)">팔레트화</a> 단계 (이미지 전체를 단 256개의 색상으로 제한)를 지나 <a href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch">LZW</a> 압축기를 통하는 2가지 압축 스테이지를 포함하고 있습니다. 최종적으로 LZW로부터 높은 압축률을 뽑아내기 위한 양자화 과정은 더 높은 압축률을 위해 이미지 색상을 단 256개로 줄이는 공격적인 품질 저하를 만들어냅니다.
+</p>
+
+<blockquote class="commentary talkinghead talkinghead-cm" id="compressors">
+  <b>Colt McAnlis says:</b><br>
+  최근, 최첨단 압축기술들은 여러개의 코딩 단계를 통해 크나큰 승리를 거두었습니다. 단일 스테이지는 이어지는 스테이지가 단독의 데이터 스트림 원본보다 더 낫게 압축할 수 있도록 데이터 스트림을 수정할 수 있습니다. <a href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Markov_chain_algorithm">7zip</a> Chain과 함께 <a href="http://en.wikipedia.org/wiki/LZ77_and_LZ78">LZ</a> dictionary encoding 같은 유명한 인코더들은 <a href="http://en.wikipedia.org/wiki/Markov_chain">Markov Chain</a> 알고리즘에 의해 효율적으로 사용되는 감소된 심볼 세트를 생성합니다.<br><br> 또한 예를 들어 여러분은 데이터를 압축하기 위해 <a href="http://www.youtube.com/watch?v=7bJ-D1xXEeg">GPU 형식으로 된 기존의 최상위 무손실 압축 알고리즘</a>의 손실 포맷까지도 적용할 수도 있습니다. 가장 큰 승리는 올바른 방법의 알고리즘 결합으로부터 온 것입니다.
+</blockquote>
+
+<p>
+
+<b>만약 당신이 투명도나 애니메이션이 필요하지 않다면 <a href="https://en.wikipedia.org/wiki/JPEG">JPG</a>는 최고의 포맷입니다.</b> JPG는 고품질의 사진 데이터를 압축을 보편적으로 다루기 위해 디자인되었습니다만 어플리케이션에서 필요로하는 압축 품질 대 이미지 사이즈의 균형을 조절할 수 있도록 하는 <b>손실</b> 압축 옵션의 집합을 제공합니다.
+
+</p>
+<p>
+  <IMG src="webp_logo_webp.jpg" style="float:left; margin:10px;">
+If you’re looking for more of a ‘one stop shop’ for your image format, then <a href="https://developers.google.com/speed/webp/">WebP</a>should be on your radar. The format boasts not only <b>superior compression quality/size, but also transparency and animations as well</b>. It uses both a lossy and lossless compressor combination, and much like JPG, will allow you to define your quality level vs. file size. Of course, this new image format <a href="http://arstechnica.com/information-technology/2013/04/chicken-meets-egg-with-facebook-chrome-webp-support/">hasn't been adopted across all browsers just yet</a>, so web developers who’ve adopted it are currently in the early phases of working through <a href="http://news.cnet.com/8301-1023_3-57580664-93/facebook-tries-googles-webp-image-format-users-squawk/">usability issues</a>. Although a <a href="http://www.igvita.com/2013/03/07/faster-smaller-and-more-beautiful-web-with-webp/">30% savings over JPG</a>, alongside increased <a href="http://www.igvita.com/2013/05/01/deploying-webp-via-accept-content-negotiation/">server-side adoption</a> prove that WebP is a dominant format for any sites dealing with image bloat problems.
+</p>
+<p>
+  <figure>
+  <table width="100%" border='1'>
+    <tr>
+      <td></td>
+      <td>압축률</td>
+      <td>무손실</td>
+      <td>손실</td>
+      <td>투명도</td>
+      <td>애니메이션</td>
+    </tr>
+    <tr>
+      <td>PNG</td>
+      <td>Good</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>Full</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>GIF</td>
+      <td>OK</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Binary</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>JPG</td>
+      <td>Good</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>WebP</td>
+      <td>Great</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Full</td>
+      <td>Yes</td>
+    </tr>
+  </table>
+<figcaption>
+  <i> 표 3 - 브라우저의 지원 포맷별 기능</i>
+</figcaption>
+</figure>
+</p>
+
+<h2 id="toc-tradeoff">품질과 사이즈의 상호교환</h2>
+
+품질이 조절 가능한 이미지 형식은 직접 품질을 설정하여 최소의 파일 크기를 얻는 것이 가장 좋은 방법이다. 구글 웹마스터가 이미지에 대한 품질을 시험하는 몇가지 방법과 어떻게 적당한 인지 시험을 수행할 수 있는지에 대한 훌륭한 비디오를 보여줍니다.
+
+<p>
+  <center>
+  <table width="100%"><iframe width="560" height="315" src="//www.youtube.com/embed/rkDxpegFeEw" frameborder="0" allowfullscreen></iframe></table>
+</center>
+</p>
+
+<p>
+  또한 <a href="https://github.com/rflynn/imgmin">imgmin</a> 프로젝트는 일반적으로 75에서 100 사이의 JPG 압축 품질을 사용자가 인지하는데는 작은 차이만 존재한다는 점을 지적하고 있습니다.
+</p>
+
+<p class="notice">
+  <i>평균적인 JPEG는 100-75의 *명백한* 품질에서는 아주 작고 거의 표시나지 않은 차이점만이 존재하지만 각 단계가 내려감에 따라 명시적인 파일 크기의 차이를 보입니다. 이것은 많은 이미지가 일반적인 뷰어에서 75의 품질에서 괜찮게 보이지만 95의 품질보다 절반정도의 크기를 가진다는 것을 의미합니다. 75 이하로 품질이 떨어질수록 파일 크기의 감소와 시각적인 차이는 인지할 수 있을 만큼 커집니다.</i>
+</p>
+
+<p>
+다음에서 대부분의 커다란 웹사이트가 대부분의 그들의 JPG 이미지에 대해 품질을 75 근처에서 설정하는 것을 확인할 수 있습니다.
+</p>
+<p>
+  <figure>
+    <center>
+  <table width="50%"  border="1">
+    <tr>
+      <td>사이트</td>
+      <td>JPG 품질</td>
+    </tr>
+    <tr>
+      <td>구글 섬네일 이미지</td>
+      <td>74-76</td>
+    </tr>
+    <tr>
+      <td>페이스북 풀사이즈 이미지</td>
+      <td>85</td>
+    </tr>
+    <tr>
+      <td>야후 전면 JPEGs</td>
+      <td>69-91</td>
+    </tr>
+    <tr>
+      <td>유투브 전면 JPEGs</td>
+      <td>70-82</td>
+    </tr>
+    <tr>
+      <td>위키피디아 이미지</td>
+      <td>80</td>
+    </tr>
+    <tr>
+      <td>윈도우즈 라이브 배경화면</td>
+      <td>82</td>
+    </tr>
+    <tr>
+      <td>트위터 사용자 JPG 이미지</td>
+      <td>30-100</td>
+    </tr>
+  </table>
+</center>
+  <figcaption>
+    <i>표 4 - 최상위 웹사이트들에서 사용되는 평균적인 JPG 품질 수준</i>
+  </figcaption>
+</figure>
+</p>
+
+<p>
+  Customizing the settings for each image on your page to balance the tradeoff between quality and size will yield the best savings at the best quality levels.
+These larger sites tend to have a plethora of images, and generally have no way of hand-optimizing each one, so custom, per-image quality-level adjustment is almost impossible. Some developers have taken a more <a href="http://www.webperformancetoday.com/2013/02/20/image-optimization/">automated approach</a> to this type of encoding; often taking the output from artists, and running their own heuristics and encodings processes on the images during a build. This type of setup fits a nice middle ground between customization and automation that will help the majority of web developers out there. You can also adopt apps like <a href="http://www.jpegmini.com/">MiniJPG</a> which will auto-tune your JPG compression level to give the best possible quality.
+</p>
+<p>
+A quite drastic approach that developers are using to attack image size footprint is to reduce any simplistic icons and images to <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> files, and allow them to be rasterized by the client before being displayed. This type of process trades file-size for client-speed, saving bits on the wire, but incurring more client-side overhead to reconstruct the image when it’s being rendered. As such <a href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> image format is quite different than the other types of files, in that it is a <b>vector</b> format; meaning that the final image is <a href="http://en.wikipedia.org/wiki/Procedural_generation">procedurally generated</a> using shape information defined in the file to a specific resolution of output image. When an SVG image is loaded, it’s converted to a <a href="http://en.wikipedia.org/wiki/Raster_graphics">raster format</a> (a 2D array of pixels, like a bitmap) before being displayed. 
+</p>
+<center>
+  <figure>
+    <img src="vector02.jpg"  title="Vector image comparision" alt="Vector image comparision." width="1000">
+    <figcaption>
+    <i> Figure 5 - An example raster image (on the left) compared to a vector image (on the right) Notice that the vector image is much simpler, and contains less per-pixel detail. This is because the format type does not yield itself to produce high quality data.</i>
+    </figcaption>
+  </figure>
+</center>
+<p>
+Think of SVG as a file format that allows you to store an image ‘description’ at a very low memory footprint, and generate a high-quality, resolution independent image on the client, regardless of the size of the source data. One of the limitations of the SVG format is that it can only represent a certain type of image quality, that is to say that vector images tend to be simplistic, only using a set of primitive types to define how to generate colors on the screen . A field of grass in a prairie for instance, would require too many complex shapes to yield compression savings. <b>Raster</b> images are best used for photos, and other information-dense images, where <b>Vector</b> images are great for things like logos or simple image patterns.
+</p>
+
+
+
+
+
+
+
+
+<h2 id="toc-sizesscreens">Images quality, sizes and multiple resolution screens.</h2>
+
+<p>
+One of the large issues that developers are facing is the size of monitor pixels against the size of images created. That is, if an author creates image content for a desktop website, there’s a good chance that the image dimensions and quality levels have been tailored to viewing on large, desktop resolution monitors. Mobile devices throw a problem in, however, as their screen sizes are much smaller, and their connections are more expensive. As such, users can be recieving a larger image than they can display, or need.
+</p>
+
+<p>
+There’s a few ways to address this issue.<br><br>
+
+One solution involves precomputing images, offline, for each resolution you need. Most static websites can generate this easily as an offline build step, perhaps resizing the images with toolchains like <a href="http://gruntjs.com/">Grunt</a>. This technique benefits from the fact that images are properly cached on their native device resolutions, and you’re not losing loading time, or transfer cost to get the information to the client. On the negative side, however, is the madness involved with managing this exponential increase in your data set, and the additional logic to send the information to the intended users.
+</p>
+
+
+<blockquote class="commentary talkinghead talkinghead-ao" id="grunt-automation">
+  <b>Addy Osmani says:</b><br>
+  If you're interested in using Grunt to generate this content, I would recommend trying our <a href="http://addyosmani.com/blog/generate-multi-resolution-images-for-srcset-with-grunt/">grunt-responsive-images</a> for automating the generation of your precomputed images with ImageMagick as part of build.<br><br>
+
+For those that are tied to Node/Express, express-processimage can be used as an alternative or you could put together a  script that calls <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a> to generate the images for you. <br><br>
+
+
+One of the yet-to-be-solved issues with this approach however, is finding a good solution to manage the increase in your data set. With respect to logic, <a href="http://www.w3.org/html/wg/drafts/srcset/w3c-srcset/">srcset</a> will hopefully solve this (WebKit as you know have it, Blink intends to implement, FF will once its in iOS).
+<br><br>
+In the meantime, one could use a <a href="https://github.com/borismus/srcset-polyfill">polyfill for srcset</a> as a stop-gap.
+
+
+</blockquote>
+
+
+
+<img src="web-development-test-01.jpg" width="300px" style="float:right;margin:10px;">
+<p>
+Another <a href="http://www.html5rocks.com/en/mobile/easy-high-dpi-images/">approach</a>, intended for the boom of <a href="http://www.html5rocks.com/en/mobile/high-dpi/">high-DPI mobile devices</a>, involves playing games with image quality, image dimensions, and client-side cost for image resizing. Effectively, you can store your image at 2x resolution (upscale process), however when you export it to a lossy format, choose a very low quality (resulting in high compression) option. The intention here is to choose a quality level such that the compressed larger image, is smaller than the compressed smaller image.
+</p>
+<p>
+On the client, you can specify the intended dimensions of the image (which should be less than the current size of the image, since it’s been upscaled). The web-browser will downscale the image to the intended resolution, a process which can blur noise artifacts introduced from the low quality compression value; in some cases, all together.. The end result is a smaller file, that scales to multiple screen resolutions easily, and does not introduce significant quality degradation.
+</p>
+
+
+<h2 id="toc-progressive">Image sizes, User perception and load times</h2>
+<p>
+Looking at the bottom line, the only thing that matters is that a site appears to load fast to users. Appearing faster is being faster, and <b><a href="http://en.wikipedia.org/wiki/Perceived_performance">perceived performance</a> is more important that actual speed</b>.
+</p>
+<p>
+There’s a two <a href="http://nuwen.net/png.html">dominant ways</a> to display images over the web.
+<ol>
+<li>Wait for the whole image to be downloaded, and display it once its’ done</li>
+<li>Display part of the image that you have downloaded so far.</li>
+</ol>
+</p>
+<p>
+No browser uses the first option, simply because it makes the page appears as slow as possible. 
+</p>
+<p>
+The second option is what most of the web is built on now. I’m sure we’re all quite familiar with the style of ‘revealing’ the image from the top-down over time. This is because the images are typically stored in raster order, or rather the first bytes of the image that the browser receives starts at the top-left of the image and moves horizontally across the row. It’s worth noting that if we store our image in a different method, we could change what bits come down the wire first, which changes how the image is seen.
+</p>
+<p>
+<a href="http://www.yuiblog.com/blog/2008/12/05/imageopt-4/">This “progressive” method</a> of encoding can have a <a href="http://calendar.perfplanet.com/2012/progressive-jpegs-a-new-best-practice/">beneficial impact</a> to user perception that a page is loading ‘fast’ (note, this is debated, depending on user). This works by encoding a few extra versions of the image, at smaller resolutions which can be transferred faster to the user. This allows the user to see a display of the image that progressively gets sharper as the image downloads more. 
+</p>
+<p>
+<a href="http://www.codinghorror.com/blog/2005/12/progressive-image-rendering.html">Coddinghorror.com</a> has a great example that shows off the visual difference between these two technologies. You can see that the standard method creates a top-down reveal of the image, while the progressive one ‘refines’ the visual as more data is received.
+</p>
+<figure>
+  <table>
+    <tr><td><center>Linear</center></td><td><center>Progressive</center></td></tr>
+    <tr><td><img src="load_std.gif"></td><td><img src="load_prog.gif"></td></tr>
+  </table>
+  <figcaption>
+    <i>Figure 6 - An example of linear vs. progressive loading for images.</i>
+  </figcaption>
+</figure>
+
+<p>
+If unicorns aren’t your thing, you can also check out a more in-depth example at <a href="http://blog.patrickmeenan.com/2013/06/progressive-jpegs-ftw.html">Patrick Meenan</a>’s blog, or even try this out on your own images using <a href="http://www.patrickmeenan.com/progressive/view.php?img=https%3A%2F%2Flh4.googleusercontent.com%2F-NHsYU-OGvnQ%2FAAAAAAAAAAI%2FAAAAAAAAAAA%2FsdsMfGoAtV4%2Fphoto.jpg">Patrick’s interactive tool</a>. 
+</p>
+<p>
+Using this property in your image is extremely easy to do : <b>Simply save your GIF or PNG images with the "interlaced" option, or your JPEG images with the "progressive" option</b>.  and start making your users love the load times of your website. Although it’s worth noting that progressive images are not supported in all browsers just yet, and loading a progressive image on those platforms can actually cause worse performance.
+</p>
+
+
+<h2 id="toc-boxed">Images outside the box</h2>
+<p>
+The internet is full of brilliant web developers, and no article on image compression would be complete without pointing out some of the great hacks, workarounds, and generally impressive things that these developers have created to allow them to create smaller, higher quality, and impressive images.
+</p>
+<h3>Splitting your transparent layer for improved compression.</h3>
+<p>
+<a href="https://www.udacity.com/course/cs255">HTML5 game developers</a> typically send around more image data than your standard website, most of it being transparent frames for a flipbook animation. Sadly that forces these files to use the PNG option in order to get transparency. However a few developers have devised a few <a href="http://kaioa.com/node/104">work-arounds</a> for images to get better compression and transparency. For example, you can split your color data, and transparency data into two separate image files (two JPGs, for example), and restoring them on the client using a CANVAS element. Although this does increase the number of requests that occur on the network, the savings in image size can be significant for developers who have tons of transparent images on their site (like).
+</p>
+
+
+<blockquote class="commentary talkinghead talkinghead-ja" id="watchiout">
+<b>Jake Achibald says:</b><br>
+
+It’s worth noting that it may be quicker to just use -webkit-mask where you have support for it, rather than doing all this canvas crazyness. Luckily for you, I’ve provided a <a href="https://github.com/jakearchibald/scrolly-cliche/blob/master/www/js/applyAlpha.js">library</a> to help with this type of thing.
+
+
+</blockquote>
+<h3>Improve PNG compression through better processing.</h3>
+
+<p>
+PNG’s Deflate option is a lossless encoder, but that shouldn’t stop you from embracing a lossy preprocessor if you want one. Image processing tools like <a href="http://pngmini.com/lossypng.html">ImageAlpha</a> and <a href="http://imageoptim.com/">ImageOptim</a>, can compress your PNG image in a lossy method as a pre-process before passing it off to the final PNG format. This creates a two-step process where your lossy, and lossless compression are done by two separate applications. The results are impressive, the reduced color space allows the lossless compressor to find, and make, more frequent matches in the file, yielding to better compression. <br><br>
+
+Once you've exported your PNG, it's time to re-pack your PNG data using advanced compressors to generate a smaller PNG file. Tools like <a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> will take your already exported PNG, and run it through a better Deflate compressor to get a smaller file. Or you could combine <a href="http://advsys.net/ken/utils.htm#pngout">PNGOUT</a> with tools like <a href="http://optipng.sourceforge.net/">OptiPNG</a> or <a href="https://code.google.com/p/zopfli/">Zopfli</a> to get the same effect. Of course, each of these systems creates <i>slightly</i> different results, given the input systems, so it may be wise to adopt a system which will compress against multiple compressors and pick the smallest file; If you're feeling lazy, <a href="http://css-ig.net/scriptpng">ScriptPNG</a> will do the heavy lifting for you.
+
+</p>
+
+
+<h3>모든 애미네이션이 똑같이 생성되지는 않습니다.</h3>
+<p>
+<a href="http://www.sublimetext.com/">SublimeText</a>팀은 리치 애니메이션을 에디터의 기능team launched a website in which they wanted to have a rich animation showing off features of the editor. Rather than using a video, or a standard GIF, they generated a <a href="http://www.sublimetext.com/~jps/animated_gifs_the_hard_way.html">custom animation and packing system to provide great image animation</a> at a much, much smaller size. The technique allows them to display a high-quality animation across multiple platforms without the need for advanced video, or a flash plugin.
+</p>
+
+<h3>More than one way to responsive image.</h3>
+<p>
+Since user perception is the most important thing in a website, it’s worth noting that there’s other ways to create ‘perceived’ faster loading websites. Recently, the <a href="http://www.bbc.com/">BBC</a> changed how their site <a href="http://responsivenews.co.uk/post/50092458307/images">handles responsive images</a>. Their technique allows a smaller image to be downloaded to the client first (so there’s some visibility) and allow the higher-resolution image to be <a href="
+http://css-tricks.com/snippets/javascript/lazy-loading-images/">lazy-loaded</a> as needed. You can find a more <a href="http://responsivenews.co.uk/post/58244240772/imager-js">detailed description</a> of their technique, alongside an <a href="https://github.com/BBC-News/Imager.js">open-source version</a> to play with on your own site.
+<p>
+
+
+<h2 id="toc-ending">Conclusion</h2>
+
+Images are a tricky content type that can increase the quality and user perception of your site, but also can undermine your efforts for fast loading, responsive quality. Before you ship your site live, make sure you follow the <b>Image Compression Checklist</b>:
+
+<ol>
+    <li>Compress Images with the right format at the lowest acceptable quality level
+      <ol>
+        <li>Hand-tune (where possible) your compression quality for all images</li>
+        <li>Automate the rest to get the best performance</li>
+      </ol>
+    </li>
+    <li>Investigate using WebP for all your image needs</li>
+    <li>Save your images with progressive options to improve user perception of your pages’ load times</li>
+    <li>Investigate other interesting ways to get better compression, or transparency. Think outside the box!</li>
+  </ol>
+
+
+<h2 id="toc-references">Useful Tools</h2>
+<ul>
+<li><a href="http://pngmini.com/lossypng.html">ImageAlpha</a></li>
+<li><a href="http://imageoptim.com/">ImageOptim</a></li>
+<li><a href="http://advancemame.sourceforge.net/doc-advpng.html">advPNG</a> </li>
+<li><a href="https://github.com/jakearchibald/scrolly-cliche/blob/master/www/js/applyAlpha.js">ImageAlpha w/ Canvas Helper Library</a></li>
+<li><a href="http://www.patrickmeenan.com/progressive/view.php?img=https%3A%2F%2Flh4.googleusercontent.com%2F-NHsYU-OGvnQ%2FAAAAAAAAAAI%2FAAAAAAAAAAA%2FsdsMfGoAtV4%2Fphoto.jpg">Interactive tool for testing progressive images</a></li>
+</ul>
+
+{% endblock %}
