@@ -38,7 +38,7 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
 <h2 id="toc-polymer-generator">Polymer 생성기</h2>
 
-제가 이전에 이야기한 것과 같이 Polymer는 모던 브라우저들에서 웹 컴포넌트의 사용을 가능하게 하는 polyfill 및 sugar 라이브러리입니다. 프로젝트는 개발자들이 미래의 플랫폼을 이용하여 앱을 구축할 수 있도록 해주며 진행 중인 규격이 보다 향상되도록 W3C에 제안을 가능하게 해줍니다.
+제가 이전에 이야기한 것과 같이 Polymer는 모던 브라우저들에서 웹 컴포넌트의 사용을 가능하게 하는 polyfill 및 sugar 라이브러리입니다. 이 프로젝트는 개발자들이 미래의 플랫폼을 이용하여 앱을 구축할 수 있도록 해주며 진행 중인 규격이 보다 향상되도록 W3C에 제안을 가능하게 해줍니다.
 
 <img src="image_3.png" class="screenshot"/>
 
@@ -58,34 +58,33 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
 <h2 id="toc-build-app">Polymer 앱을 만들어보자!</h2>
 
-We're going to build a simple blog using some custom Polymer elements and our new generator.
+몇몇 사용자 Polymer 요소들과 우리의 새로운 생성기을 사용하여 간단한 블로그를 구축할 것이다.
 
 <img src="image_4.png" class="screenshot"/>
 
-To begin, go to the terminal, make a new directory and cd into it using `mkdir my-new-project && cd $_`. You can now kick-start your Polymer app by running: 
+시작을 위해 터미널에서 `mkdir my-new-project && cd $_`를 사용하여 새로운 디렉토리를 생성하고 cd를 통해 않으로 들어가봅시다. 이제 여러분은 다음 실행을 통해 여러분의 Polymer 앱에 시동을 걸 수 있습니다.
 
     $ yo polymer
 
 <img src="image_5.png" class="screenshot"/>
 
-This gets the latest version of Polymer from Bower and scaffolds out an index.html, directory structure and Grunt tasks for your workflow. Why not grab a coffee while we wait for the app to finish getting ready? 
+이것은 Bower를 통해 최신 버전의 Polymer를 가져오고 index.html와 디렉토리 구조, 여러분의 작업 흐름을 위한 Grunt 태스크를 구성합니다. 자, 그럼 준비가 완료될 때까지 커피나 한잔할까요?
 
-Okay, so next we can run `grunt server` to preview what the app looks like:
+좋습니다, 이제 우리는 이렇게 앱의 미리보기를 위해 `grunt server`를 실행할 수 있습니다. :
 
 <img src="image_6.png" class="screenshot"/>
 
-The server supports LiveReload, meaning you can fire up a text editor, edit a custom element and the browser will reload on save. This gives you a nice real-time view of your app’s current state.
+서버는 텍스트 편집기를 작동하여 사용자 요소를 편집하고 저장하면 자동으로 리로드되는 라이브 리로드(LiveReload)를 지원합니다. 이것은 여러분이 만든 앱의 현재 상태의 훌륭한 실시간 화면을 여러분에게 제공합니다.
 
-Next, let's create a new Polymer element to represent a Blog post. 
+다음으로, 블로그 포스트에서 설명하고 있는 새로운 Polymer 요소를 생성해봅시다.
 
     $ yo polymer:element post
 
 <img src="image_7.png" class="screenshot"/>
 
-Yeoman asks us a few questions such as whether we would like to include a constructor or use an HTML Import to include the post element in `index.html`. Let's say No to the first two options for now and leave the third option blank.
+Yeoman은 생성자를 포함 여부와 `index.html` 내의 기둥(Post) 요소를 포함하기 위해 HTML Import를 사용 여부와 같은 몇가지를 우리에게 질문합니다. 이제 처음 두개 옵션에 '아니오'라고 답하고 세번째 옵션은 공란으로 남겨둡시다.
 
-<p class="notice"><b>Note:</b> If we say 'yes' to the second question, the generator imports post.html and includes it in index.html. It also declares &lt;post-element&gt; so the element renders on page load.</p>
-
+<p class="notice"><b>주의:</b> 만약 우리가 두번째 질문에 '예'라고 말하면, 생성기는 post.html을 포함하고 그것을 index.html에 포함한다. 또한 &lt;post-element&gt;를 선언하여 페이지 로딩 시에 요소를 렌더링합니다.</p>
 
     $ yo polymer:element post
 
@@ -97,8 +96,7 @@ Yeoman asks us a few questions such as whether we would like to include a constr
 
        create app/elements/post.html
 
-
-This creates a new Polymer element in the `/elements` directory named post.html:
+이것은 `/elements` 디렉토리의 post.html에 새로운 Polymer 요소를 생성합니다.
 
     <polymer-element name="post-element"  attributes="">
 
@@ -135,47 +133,48 @@ This creates a new Polymer element in the `/elements` directory named post.html:
     </polymer-element>
 
 
-It contains:
+포함하고 있는 것은 다음과 같습니다.
 
-* Boilerplate code for your [custom element](http://www.polymer-project.org/platform/custom-elements.html), allowing you to use a custom DOM element type in your page (e.g <post-element>)
+* [사용자 요소](http://www.polymer-project.org/platform/custom-elements.html)를 위한 보일러플레이트 코드는 여러분의 페이지 내에 사용자 DOM 엘리먼트 형식을 사용할 수 있도록 해줍니다. (예. &lt;post-element&gt;)
 
-* A [template tag](http://www.html5rocks.com/tutorials/webcomponents/template/) for ‘native’ client-side templating and sample [scoped styles](http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/) for encapsulating the styles of your element
+* 클라이언트측 '네이티브' 템플레이팅을 위한 [템플릿 태그](http://www.html5rocks.com/tutorials/webcomponents/template/)과 요소의 스타일을 캡슐화하기 위한 [스코프 스타일](http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/)
 
-* Element [registration](http://www.polymer-project.org/polymer.html#element-declaration) boilerplate and [lifecycle events](http://www.polymer-project.org/polymer.html#lifecyclemethods). 
+* 요소의 [등록](http://www.polymer-project.org/polymer.html#element-declaration) 보일러플레이트와 [생명주기 이벤트](http://www.polymer-project.org/polymer.html#lifecyclemethods).
 
-<h3 id="toc-data">Working with a real source of data</h3>
 
-Our blog will need a place to write and read new posts. To demonstrate working with a real data service, we’re going to use the [Google Apps Spreadsheets API](https://developers.google.com/google-apps/spreadsheets/). This allows us to easily read in the content of any spreadsheet created using Google Docs. 
+<h3 id="toc-data">실제 데이터 소스로 작업하기</h3>
 
-Let’s get this set up:
+우리의 블로그는 새로운 포스트를 읽고 쓰기 위한 공간이 필요할 것입니다. 실제 데이터 서비스를 이용한 작업의 시연을 위해, 우리는 [Google Apps Spreadsheets API](https://developers.google.com/google-apps/spreadsheets/)를 이용할 것입니다. 이것은 우리가 Google Docs를 이용하여 생성된 모든 스프레드쉬트의 내용을 읽을 수 있도록 해줄 것입니다.
 
-1. In your browser (for these steps, Chrome is recommended) open up [this](https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0) Google Docs Spreadsheet. It contains sample post data under the following fields: <ul class="inline-list">
+이것을 설치해보도록 합시다. :
+
+1. 여러분의 브라우저(여기서는 크롬을 추천합니다.)를 열고 [이 Google Docs Spreadsheet](https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0)를 열어봅시다. 이것은 다음과 같은 필드들을 포함하고 있는 샘플 포스트 데이터입니다. : <ul class="inline-list">
   <li>ID</li>
-  <li>Title</li>
-  <li>Author</li>
-  <li>Content</li>
-  <li>Date</li>
-  <li>Keywords</li>
-  <li>E-mail (of the author)</li>
-  <li>Slug (for your post’s slug URL)</li>
+  <li>제목</li>
+  <li>저자</li>
+  <li>내용</li>
+  <li>날짜</li>
+  <li>키워드</li>
+  <li>(저자의) 이메일</li>
+  <li>(포스트의 슬러그 URL을 위한) 슬러그(Slug)</li>
 </ul>
 
-2. Go to the **File** menu and select **Make a copy** to create your own copy of the spreadsheet. You are free to edit the content at your leisure, adding or removing posts.
+2. **File** 메뉴로 가서 스프레드쉬트의 복사본을 생성하기 위해 **Make a copy**를 선택하세요. 여가삼아 내용을 수정하거나, 포스트를 추가나 삭제는 여러분의 자유입니다.
 
-3. Go to the **File** menu once again and select **Publish to the web**.
+3. **File** 메뉴로 한번 더 가서 **Publish to the web**을 선택하세요.
 
-4. Click **start publishing**
+4. **start publishing**을 클릭하세요.
 
-5. Under **Get a link to the published data**, from the last text box, copy the **key** portion of the URL provided. It looks like this: <a href="https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0">https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0</a>
+5. **발행된 데이터의 링크얻기(Get a link to the published data)**라는 이름으로 마지막 텍스트 상자에서 제공된 URL의 **key** 일부를 복사할 수 있습니다. 그것이 이렇게 생겼습니다. [https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0](https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0)
 
-6. Paste the **key** into the following URL where it says **your-key-goes-here**: **[https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=](https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=)**. An example using the key above might look like [https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script](https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script).
+6. 이어지는 URL의 **your-key-goes-here**(여러분의-키는-여기로-갑니다)에 **key**를 붙여넣으세요. : **[https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=](https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=)**. [https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script](https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script) 같은 것들이 위와 같이 키를 사용하는 예가 될 수 있을 것입니다.
 
+7. 여러분은 여러분의 브라우저에 URL을 붙여넣고 여러분의 블로그 콘텐츠의 JSON 버전을 보기 위해 그것을 파헤쳐볼 수도 있습니다. 만약 URL로 나중에 여러분이 반복적으로 화면에 출력하기 위한 이 데이터의 형식을 리뷰하는데는 아주 약간의 시간만이 걸립니다.
 
-7. You can paste the URL into your browser and navigate to it to view the JSON version of your blog content. Take note of the URL then spend a little time reviewing the format of this data as you will need to iterate over it in order to display it on screen later.
+여러분의 브라우저에서 JSON 출력은 약간 무섭게 보이겠지만, 절대 걱정하지 마세요! 우리는 그저 여러분의 포스트에만 관심을 가지고 있습니다.
 
-The JSON output in your browser may look a little daunting, but don’t worry!. We’re really only interested in the data for your posts. 
+Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특별한 접두어 <code>post.gsx$</code>를 붙여 출력합니다. 예를 들어 <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> 등. 우리가 우리의 JSON 출력에 존재하는 각 "행"을 순회하고자 할 때 각 포스트의 관계된 값을 돌려주는 이 필드들을 참조할 겁니다.
 
-The Google Spreadsheets API outputs each of the fields in your blog spreadsheet with a special prefix <code>post.gsx$</code>. For example: <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> and so on. When we iterate over each “row” in our JSON output, we’ll reference these fields to get back the relevant values for each post.
 
 You can now edit your newly scaffolded post element to [bind](http://www.polymer-project.org/docs/polymer/databinding.html) portions of markup to the data in your spreadsheet. To do so, we introduce an attribute `post`, which will read for the post title, author, content and other fields we created earlier. The `selected` attribute (which we will populate later) is used to only show a post if a user navigates to the correct slug for it. 
 
