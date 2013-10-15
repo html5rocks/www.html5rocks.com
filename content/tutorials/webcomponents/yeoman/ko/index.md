@@ -30,7 +30,7 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
     $ npm instal -g yo
 
-저것이 전부입니다. 여러분은 이제 Yo, Grunt 그리고 Bower를 설치했고 커맨드라인에서 그것들을 즉시 실행할 수 있습니다. 여기 `yo`의 실행 결과가 있습니다.
+이게 전부입니다. 여러분은 이제 Yo, Grunt 그리고 Bower를 설치했고 커맨드라인에서 그것들을 즉시 실행할 수 있습니다. 여기 `yo`의 실행 결과가 있습니다.
 
 <img src="image_2.png" class="screenshot"/>
 
@@ -48,7 +48,7 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
     $ npm install generator-polymer -g
 
-저것이 전부입니다. 이제 여러분의 앱은 웹 컴포넌트의 강력함을 손에 넣었습니다!
+이게 전부입니다. 이제 여러분의 앱은 웹 컴포넌트의 강력함을 손에 넣었습니다!
 
 새롭게 설치된 우리의 생성기는 여러분이 이용할 수 있는 작고 특별한 조각들을 가지고 있습니다.
 
@@ -165,15 +165,15 @@ Yeoman은 생성자를 포함 여부와 `index.html` 내의 기둥(Post) 요소�
 
 4. **start publishing**을 클릭하세요.
 
-5. **발행된 데이터의 링크얻기(Get a link to the published data)**라는 이름으로 마지막 텍스트 상자에서 제공된 URL의 **key** 일부를 복사할 수 있습니다. 그것이 이렇게 생겼습니다. [https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0](https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0)
+5. **발행된 데이터의 링크얻기(Get a link to the published data)**라는 이름으로 마지막 텍스트 상자에서 제공된 URL의 **key** 일부를 복사할 수 있습니다. 그것이 이렇게 생겼습니다. <a href="https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0">https://docs.google.com/spreadsheet/ccc?key=0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc#gid=0</a>
 
-6. 이어지는 URL의 **your-key-goes-here**(여러분의-키는-여기로-갑니다)에 **key**를 붙여넣으세요. : **[https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=](https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=)**. [https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script](https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script) 같은 것들이 위와 같이 키를 사용하는 예가 될 수 있을 것입니다.
+6. 이어지는 URL의 **your-key-goes-here**에 **key**를 붙여넣으세요. : **<a href="https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=">https://spreadsheets.google.com/feeds/list/your-key-goes-here/od6/public/values?alt=json-in-script&callback=</a>**. <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a> 같은 것들이 위와 같이 키를 사용하는 예가 될 수 있을 것입니다.
 
 7. 여러분은 여러분의 브라우저에 URL을 붙여넣고 여러분의 블로그 콘텐츠의 JSON 버전을 보기 위해 그것을 파헤쳐볼 수도 있습니다. 만약 URL로 나중에 여러분이 반복적으로 화면에 출력하기 위한 이 데이터의 형식을 리뷰하는데는 아주 약간의 시간만이 걸립니다.
 
 여러분의 브라우저에서 JSON 출력은 약간 무섭게 보이겠지만, 절대 걱정하지 마세요! 우리는 그저 여러분의 포스트에만 관심을 가지고 있습니다.
 
-Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특별한 접두어 <code>post.gsx$</code>를 붙여 출력합니다. 예를 들어 <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> 등. 우리가 우리의 JSON 출력에 존재하는 각 "행"을 순회하고자 할 때 각 포스트의 관계된 값을 돌려주는 이 필드들을 참조할 겁니다.
+Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특별한 접두어 <code>post.gsx$</code>를 붙여 출력합니다. 예를 들어 <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> 등 우리가 우리의 JSON 출력에 존재하는 각 "행"을 순회하고자 할 때 각 포스트의 관계된 값을 돌려주는 이 필드들을 참조할 겁니다.
 
 이제 여러분은많은 양의 마크업을 여러분의 스프레드쉬트의 데이터와 [바인딩](http://www.polymer-project.org/docs/polymer/databinding.html)할 수 있는새롭게 구성된 포스트 요소를 수정할 수 있게 되었습니다. 그렇게 하기 위해서, 우리는 우리가 앞서 생성했던 포스트의 타이틀, 저자, 내용과 다른 필드 등을 읽을`post` 속성에 대해 소개할 것입니다. (우리가 나중에 덧붙일) `selected` 속성은 오로지 사용자가 올바른 슬러그(slug)로 네비게이션했을 때 포스트를 보여주기 위해 사용될 것입니다.
 
@@ -187,21 +187,21 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
           <div class="col-lg-4">
 
-              <template if="[[post.gsx$slug.$t === selected]]">
+              <template if="{{post.gsx$slug.$t === selected}}">
 
                 <h2>
-                  <a href="#[[post.gsx$slug.$t]]">
-                    [[post.gsx$title.$t  ]]
+                  <a href="#{{post.gsx$slug.$t}}">
+                    {{post.gsx$title.$t  }}
                   </a>
                 </h2>
 
-                <p>By [[post.gsx$author.$t]]</p>
+                <p>By {{post.gsx$author.$t}}</p>
 
-                <p>[[post.gsx$content.$t]]</p>
+                <p>{{post.gsx$content.$t}}</p>
 
-                <p>Published on: [[post.gsx$date.$t]]</p>
+                <p>Published on: {{post.gsx$date.$t}}</p>
 
-                <small>Keywords: [[post.gsx$keywords.$t]]</small>
+                <small>Keywords: {{post.gsx$keywords.$t}}</small>
 
               </template>
 
@@ -241,7 +241,7 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
 이때 우리는 우리가 페이지에서 보여주길 원하는 블로그를 [HTML imports](http://www.polymer-project.org/platform/html-imports.html)을 사용하여 삽입할 것입니다. 특별히 세번째 프롬프트에서 우리는 우리가 포함하고자 하는 요소로써 `post.html`를 지정하였습니다.
 
-앞에서 본 바와 같이, 새로운 요소 파일이 (blog.html)로 생성되어 /elements 디렉토리에 추가되면서 post.html을 삽입하고 템플릿 태그 내에 <post-element>를 포함할 것입니다.
+앞에서 본 바와 같이, 새로운 요소 파일이 (blog.html)로 생성되어 /elements 디렉토리에 추가되면서 post.html을 삽입하고 템플릿 태그 내에 &lt;post-element&gt;를 포함할 것입니다.
 
     <link rel="import" href="post.html">
 
@@ -352,7 +352,7 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
 그리고, 그를 위한 태그를 포함시키고 마지막 부분에 <code>&callback=</code>를 추가하여 앞에 나온 스프레드쉬트를 우리의 블로그에 포스팅하기 위한 <code>url</code>를 넣어야 합니다.
 
-    <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&callback=" response="[[posts]]"></polymer-jsonp>
+    <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&callback=" response="{{posts}}"></polymer-jsonp>
 
 <p class="notice"><b>주의:</b>  만약 여러분이 꼼짝도 할 수 없다면 튜토리얼을 계속하기 위해 여러분의 URL 값으로 <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a>에 있는 제 스프레드쉬트를 편하게 사용하셔도 됩니다.</p>
 
@@ -362,34 +362,35 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
     <ul>
 
-      <template repeat="[[post in posts.feed.entry]]">
+      <template repeat="{{post in posts.feed.entry}}">
 
-        <li><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></li>
+        <li><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></li>
 
       </template>
 
     </ul>
 
-The second renders one instance of `post-element` for each entry found, passing the post content through to it accordingly. Notice that we’re passing through a `post` attribute representing the post content for a single spreadsheet row and a `selected` attribute which we will populate with a route.
+두번째로 각 entry에 마다 'post-element'의 인스턴스 하나를 포스트의 내용을 전달하여 렌더링합니다. 우리가 스프레드쉬트 한 행의 게시물 내용을 나타내는 'post' 속성과 덧붙이고자 하는 'selected' 속성을 route로 전달하고 있다는데 주목하시기 바랍니다.
 
     <!-- Post content -->
 
-    <template repeat="[[post in posts.feed.entry]]">
+    <template repeat="{{post in posts.feed.entry}}">
 
-      <post-element post="[[post]]" selected="[[route]]"></post-element>
+      <post-element post="{{post}}" selected="{{route}}"></post-element>
 
     </template>
 
-The `repeat` attribute you see being used in our template creates and maintains an instance with [[ bindings ]] for every element in the array collection of our posts, when it is provided.
+여러분이 템플릿에서 볼 수 있는 'repeat' 속성으로 게시물들의 컬렉션 배열이 제공되면 그 안의 모든 요소에 대해 {{bindings}}을 가진 인스턴스를 생성하고 관리할 수 있습니다.
+
 
 <img src="image_10.png" class="screenshot"/>
 
-Now in order for us to get the current [[route]] populated, we’re going to cheat and use a library called Flatiron director which binds to [[route]] whenever the URL hash changes. 
+이제 우리는 {{route}}를 덧붙이기 위해 URL 해쉬가 변경될 때마다 {{route}}로 바인딩하는 Flatiron director 라이브러리를 사용하고 트릭을 부릴 수 있을 것입니다.
 
-Thankfully there’s a [Polymer element](https://github.com/Polymer/more-elements/tree/master/flatiron-director) (part of the [more-elements](https://github.com/Polymer/more-elements) package) that we can grab for it. Once copied to the /elements directory, we can reference it with `<flatiron-director route="[[route]]" autoHash></flatiron-director>`, specifying `route` as the property we wish to bind to and tell it to automatically read the value of any hash changes (autoHash).
+고맙게도 이미 우리가 그렇게 할 수 있는 [Polymer element](https://github.com/Polymer/more-elements/tree/master/flatiron-director)([more-elements](https://github.com/Polymer/more-elements) 패키지의 일부)가 있습니다.
+/elements 디렉토리에 한번 복사하고 나면, 우리는 `<flatiron-director route="{{route}}" autoHash></flatiron-director>`로 그것을 참조할 수 있으며, 'route'를 우리가 바인딩하고 싶은 속성처럼 지정하고 어떠한 해시의 변경값도 자동으로 읽도록(autoHash) 정의할 수 있습니다.
 
-Putting everything together we now get:
-
+이제 우리가 가진 모든 것을 함께 버무려봅시다.
 
     <link rel="import" href="post.html">
 
@@ -409,7 +410,7 @@ Putting everything together we now get:
 
           <h1><a href="/#">My Polymer Blog</a></h1>
 
-          <flatiron-director route="[[route]]" autoHash></flatiron-director>
+          <flatiron-director route="{{route}}" autoHash></flatiron-director>
 
           <h2>Posts</h2>
 
@@ -417,9 +418,9 @@ Putting everything together we now get:
 
           <ul>
 
-            <template repeat="[[post in posts.feed.entry]]">
+            <template repeat="{{post in posts.feed.entry}}">
 
-              <li><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></li>
+              <li><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></li>
 
             </template>
 
@@ -427,15 +428,15 @@ Putting everything together we now get:
 
           <!-- Post content -->
 
-          <template repeat="[[post in posts.feed.entry]]">
+          <template repeat="{{post in posts.feed.entry}}">
 
-            <post-element post="[[post]]" selected="[[route]]"></post-element>
+            <post-element post="{{post}}" selected="{{route}}"></post-element>
 
           </template>
 
         </div>
 
-        <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&callback=" response="[[posts]]"></polymer-jsonp>
+        <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&callback=" response="{{posts}}"></polymer-jsonp>
 
       </template>
 
@@ -460,16 +461,17 @@ Putting everything together we now get:
 
 <img src="image_11.png" class="screenshot"/>
 
-Woo! We now have a simple blog that's reading data from JSON and using two Polymer elements scaffolded with Yeoman. 
+와우! 우리는 이제 Yeoman으로 구축된 2개의 Polymer 요소를 이용하여 JSON으로부터 데이터를 읽어오는 간단한 블로그를 만들었습니다.
 
-<h3 id="toc-third-party">Working with 3rd party elements</h3>
+<h3 id="toc-third-party">서드파티 요소로 작업하기</h3>
 
-The element ecosystem around Web Components has been growing lately with component gallery sites like [customelements.io](http://customelements.io/) beginning to appear. Looking through the elements created by the community, I found one for fetching [gravatar profiles](https://github.com/djalmaaraujo/gravatar-element) and we can actually grab and add it to our blog site too.
+웹 컴포넌트를 둘러싼 요소의 생태계는 [customelements.io](http://customelements.io/)같은 컴포넌트 갤러리 사이트가 나타나기 시작하며 천천히 성장하고 있습니다.
+커뮤니티에서 만들어진 요소들을 살펴보던 중 저는 [gravatar profiles](https://github.com/djalmaaraujo/gravatar-element)을 불러오기 위한 것을 발견했습니다.
+그것을 가지고 우리의 블로그에도 실제로 추가해보도록 하겠습니다.
 
 <img src="image_12.png" class="screenshot"/>
 
-Copy the gravatar element sources to your `/elements` directory, include it via HTML imports in post.html and then add <gravatar-element> to your template, passing in the email field from our spreadsheet as the source of the username. Boom!
-
+gravatar 요소의 원본을 여러분의 '/elements' 디렉토리에 복사하고, post.html에 HTML imports를 통해 포함한 뒤 여러분의 템플릿에 <gravatar-element>를 추가하고, username의 소스처럼 우리의 스프레드쉬트로부터 email을 전달합니다. 콰광!
 
     <link rel="import" href="gravatar-element/src/gravatar.html">
 
@@ -483,19 +485,19 @@ Copy the gravatar element sources to your `/elements` directory, include it via 
 
           <div class="col-lg-4">
 
-              <template if="[[post.gsx$slug.$t === selected]]">
+              <template if="{{post.gsx$slug.$t === selected}}">
 
-                <h2><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></h2>
+                <h2><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></h2>
 
-                <p>By [[post.gsx$author.$t]]</p>
+                <p>By {{post.gsx$author.$t}}</p>
 
-                <gravatar-element username="[[post.gsx$email.$t]]" size="100"></gravatar-element>
+                <gravatar-element username="{{post.gsx$email.$t}}" size="100"></gravatar-element>
 
-                <p>[[post.gsx$content.$t]]</p>
+                <p>{{post.gsx$content.$t}}</p>
 
-                <p>[[post.gsx$date.$t]]</p>
+                <p>{{post.gsx$date.$t}}</p>
 
-                <small>Keywords: [[post.gsx$keywords.$t]]</small>
+                <small>Keywords: {{post.gsx$keywords.$t}}</small>
 
               </template>
 
@@ -521,17 +523,17 @@ Copy the gravatar element sources to your `/elements` directory, include it via 
 
     </polymer-element>
 
-Let’s take a look at what this gives us:
+우리에게 어떻게 보이는지 살펴봅시다.
 
 <img src="image_13.png" class="screenshot"/>
 
-Beautiful!
+멋지군요!
 
-In a relatively short time, we've created a simple application composed of several web components without having to worry about writing boilerplate code, manually downloading dependencies or setting up a local server or build workflow. 
+비교적 짧은 시간에 우리는 보일러플레이트 코드를 작성하고 수동으로 의존성을 관리하거나 로컬서버를 설치하고 작업흐름을 구축하는 것에 대한 걱정없이 몇가지 웹 컴포넌트로 구성된 간단한 어플리케이션을 만들었습니다. 
 
-<h3 id="toc-optimization">Optimizing your application</h3>
+<h3 id="toc-optimization">어플리케이션 최적화하기</h3>
 
-The Yeoman workflow includes another open-source project called <a href="http://gruntjs.com">Grunt</a> - a task runner that can run a number of build-specific tasks (defined in a Gruntfile) to produce an optimized version of your application. Running `grunt` on its own will execute a `default` task the generator has setup for linting, testing and building:
+Yeoman의 작업흐름은 [Grunt](http://gruntjs.com)-어플리케이션의 최적화 버전을 생성하기 위한 많은 양의 (Gruntfile에 정의된) 빌드 태스크들을 실행하는 작업 실행기-로 불리는 또다른 오픈소스 프로젝트를 포함하고 있습니다. 자체 (디렉토리)에서 'grunt'를 실행하기만 하면 'default' 태스크가 린트, 테스팅, 빌드를 위한 작업들을 세팅하고 실행할 것입니다.
 
     grunt.registerTask('default', [
 
@@ -543,10 +545,9 @@ The Yeoman workflow includes another open-source project called <a href="http://
 
     ]);
 
+위의 `jshint` 태스크는 여러분의 선호하는 (코딩) 방식을 학습하기 위해 여러분의 `.jshintrc`를 확인하고 여러분의 프로젝트 안에 있는 모든 자바스크립트 파일에 대해 확인 작업을 실행할 것입니다. JSHint로 실행할 수 있는 완전한 옵션을 알고 싶으시면 [이 문서](http://www.jshint.com/docs/#options)를 확인하시기 바랍니다.
 
-The `jshint` task above will check with your `.jshintrc` file to learn your preferences, then run it against all of the JavaScript files in your project. To get the full run down of your options with JSHint, check [the docs](http://www.jshint.com/docs/#options). 
-
-The `test` task looks a little like this, and can create and serve your app for the test framework we recommend out of the box, Mocha. It will also execute your tests for you:
+`test' 태스크는 이것과 약간 비슷하게 보이지만 우리가 특별하게 추천하는 테스트 프레임워크인 모카(Mocha)를 생성하고 여러분의 앱에 적용할 것입니다. 그것은 또한 여러분이 만든 테스트를 실행할 수 있습니다.
 
     grunt.registerTask('test', [
 
@@ -564,60 +565,58 @@ The `test` task looks a little like this, and can create and serve your app for 
 
     ]);
 
-
-
-As our app in this case is fairly simplistic, we'll leave writing tests up to you as a separate exercise. There are a few other things we'll need to have our build process handle, so let's take a look at what the `grunt build` task defined in our `Gruntfile.js` will do:
+우리 앱처럼 이 경우는 꽤 단순하기 때문에 여러분에게 테스트를 위한 코드 작성을 별도의 시험 문제로 남겨두도록 하겠습니다. 빌드 프로세스를 다루기 위해 필요한 사소한 몇가지가 있으므로 `Gruntfile.js`에 정의된 `grunt build` 태스크가 무엇을 하는지 알아보도록 하겠습니다.
 
     grunt.registerTask('build', [
 
-        'clean:dist',    // Clears out your .tmp/ and dist/ folders
+        'clean:dist',    // .tmp/와 dist/ 폴더를 삭제합니다.
 
-        'compass:dist',  // Compiles your Sassiness
+        'compass:dist',  // Sass를 컴파일합니다.
 
-        'useminPrepare', // Looks for <!-- special blocks --> in your HTML
+        'useminPrepare', // HTML에서 <!-- special blocks -->을 찾아줍니다.
 
-        'imagemin',      // Optimizes your images!
+        'imagemin',      // 이미지를 최적화합니다!
 
-        'htmlmin',       // Minifies your HTML files
+        'htmlmin',       // 여러분의 HTML 파일들을 최소화합니다!
 
-        'concat',        // Task used to concatenate your JS and CSS
+        'concat',        // JS와 CSS를 합치는데 사용하는 태스크
 
-        'cssmin',        // Minifies your CSS files
+        'cssmin',        // CSS 파일들을 최소화합니다.
 
-        'uglify',        // Task used to minify your JS
+        'uglify',        // JS를 최소화합니다.
 
-        'copy',          // Copies files from .tmp/ and app/ into dist/
+        'copy',          // .tmp/와 app/의 파일들을 dist/로 복사합니다.
 
-        'usemin'         // Updates the references in your HTML with the new files
+        'usemin'         // 새로운 파일들로 HTML 내 참조를 갱신합니다.
 
     ]);
 
 
-Run `grunt build` and a production ready version of your app should be built, ready for you to ship. Let’s try it out.
+'grunt build'를 실행하고 여러분의 앱에 대한 제작 완료 버전이 만들어지며 실행해볼 준비가 완료될 것입니다. 한번 해보죠.
 
 <img src="image_14.png" class="screenshot"/>
 
-Success!
+성공입니다!
 
-If you get stuck, a pre-built version of polymer-blog is available for you to check out [https://github.com/addyosmani/polymer-blog](https://github.com/addyosmani/polymer-blog).
+만약 여러분이 더 이상 진행하기가 어렵다면, 여러분이 이미 만들어진 polymer-blog 버전을 [https://github.com/addyosmani/polymer-blog](https://github.com/addyosmani/polymer-blog)에서 확인할 수 있습니다.
 
-<p class="notice"><b>Note:</b> the most common issues users run into with Yeoman, Grunt and Bower are related to not having the sufficient administrator permissions. Please ensure you’ve followed the <a href="https://gist.github.com/isaacs/579814">recommended</a> installation steps for Node and NPM.</p>
+<p class="notice"><b>주의:</b> 사용자가 Yeoman, Grunt, Bower을 실행 시 대다수의 문제들은 확실한 관리자 권한을 얻지 못하는 것과 관련이 있습니다. 반드시 Node와 NPM에서 [권장하는](https://gist.github.com/isaacs/579814) 설치 방법을 따르시기 바랍니다.</p>
 
-<h3 id="toc-in-store">What more do we have in store?</h3>
+<h3 id="toc-in-store">우리가 지금 무엇을 더 해야할까요?</h3>
 
-Web Components are still in a state of evolution and as such so is the tooling around them. 
+웹 컴포넌트는 여전히 혁신의 상태에 있으며 그를 둘러싼 도구들도 그렇습니다.
 
-We’re currently looking at how one might go about concatenating their HTML imports for improved loading performance via projects like [Vulcanize](https://github.com/Polymer/labs/tree/master/vulcanize) (a tool by the Polymer project) and how the ecosystem for components might work with a package manager like Bower. 
+우리는 현재 로딩 성능의 개선을 위해 [Vulcanize](https://github.com/Polymer/labs/tree/master/vulcanize)(Polymer 프로젝트에 의한 도구)와 같은 프로젝트를 통해 HTML imports의 연결을 어떻게 하면 한가지 방법으로 할 수 있을지와 Bower 같은 패키지 관리자로 컴포넌트를 활용할 수 있는 생태계를 연구하고 있습니다.
 
-We’ll let you know as and when we have better answers to these questions, but there are lots of exciting times ahead.
+우리가 이러한 의문들에 대해 더 좋은 답을 찾으면 여러분에게도 알리겠지만 이보다 흥미로운 시간이 많이 있습니다.
 
-<h3 id="toc-standalone-install">Installing Polymer standalone with Bower</h3>
+<h3 id="toc-standalone-install">Bower를 이용하여 Polymer를 단독으로 설치하기</h3>
 
-If you would prefer a lighter start to Polymer, you can install it standalone directly from Bower by running:
+만약 여러분이 Polymer를 가볍게 시작하고자 한다면, 여러분은 다음과 같은 Bower 실행을 통해 그것을 단독으로 설치할 수 있습니다.
 
     bower install polymer
 
-which will add it to your bower_components directory. You can then reference it in your application index manually and rock the future.
+이는 여러분의 bower_components 디렉토리에 Polymer를 추가할 것입니다. 이제 여러분은 수동으로 어플리케이션 인덱스에서 참조하고 신나게 다룰 수 있을 것입니다.
 
 <h2 id="toc-thoughts">어떻게 생각하십니까?</h2>
 
