@@ -2,7 +2,7 @@
 
 <h2 id="toc-intro">소개</h2>
 
-안녕하세요. 웹 앱을 작성하는 누구나 자신의 생산성을 유지하는 것이 얼마나 중요한지 알고 있습니다. 여러분이 제대로된 보일러플레이트를 찾아서 개발 환경을 설치하고 작업 흐름을 시험하고 여러분의 모든 소스들의 최소화 및 압축과 같은 귀찮은 작업을 걱정할 때 도전이 시작합니다.
+안녕하세요. 웹 앱을 작성하는 누구나 자신의 생산성을 유지하는 것이 얼마나 중요한지 알고 있습니다. 여러분이 제대로된 보일러플레이트를 찾아서 개발 환경을 설치하고 작업 흐름을 시험하고 여러분의 모든 소스들의 최소화 및 압축과 같은 귀찮은 작업을 걱정할 때 그에 대한 도전이 시작됩니다.
 
 다행스럽게도 최근의 프론트엔드 도구들은 이러한 일을 대부분 자동화하는 것을 도와줘서 강력한 앱의 작성에만 집중할 수 있게 해줍니다. 이 글은 웹 앱 개발 시 [Web Components](http://html5-demos.appspot.com/static/webcomponents/index.html#1)를 위한 polyfill 및 sugar 라이브러리인 [Polymer](http://polymer-project.org)를 사용하는 앱 생성의 간소화하는 작업흐름 도구인 [Yeoman](http://yeoman.io)을 어떻게 사용하는지 보여줍니다.
 
@@ -50,9 +50,9 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
 저것이 전부입니다. 이제 여러분의 앱은 웹 컴포넌트의 강력함을 손에 넣었습니다!
 
-새롭게 설치된 우리의 생성기는 여러분이 이용할 수 있는 적은 특정 조각들을 가지고 있습니다.
+새롭게 설치된 우리의 생성기는 여러분이 이용할 수 있는 작고 특별한 조각들을 가지고 있습니다.
 
-* `polymer:element`는 새로운 개별 Polymer 요소를 구조화하는데 사용됩니다. `yo polymer:element carousel`가 그 예입니다.
+* `polymer:element`는 새로운 개별 Polymer 요소를 구조화하는데 사용됩니다.<br/>`yo polymer:element carousel`이 그 예입니다.
 
 * `polymer:app`는 여러분의 초기 index.html와 프로젝트에 대한 Grunt 태스크들과 빌드 설정을 포함한 Gruntfile.js 그리고 프로젝트에 적합한 폴더 구조와 같은 기반구조를 만드는데 사용됩니다. 또한 여러분의 프로젝트를 위한 Sass Bootstrap을 이용하는 옵션도 제공합니다.
 
@@ -175,8 +175,7 @@ Yeoman은 생성자를 포함 여부와 `index.html` 내의 기둥(Post) 요소�
 
 Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특별한 접두어 <code>post.gsx$</code>를 붙여 출력합니다. 예를 들어 <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> 등. 우리가 우리의 JSON 출력에 존재하는 각 "행"을 순회하고자 할 때 각 포스트의 관계된 값을 돌려주는 이 필드들을 참조할 겁니다.
 
-
-You can now edit your newly scaffolded post element to [bind](http://www.polymer-project.org/docs/polymer/databinding.html) portions of markup to the data in your spreadsheet. To do so, we introduce an attribute `post`, which will read for the post title, author, content and other fields we created earlier. The `selected` attribute (which we will populate later) is used to only show a post if a user navigates to the correct slug for it. 
+이제 여러분은많은 양의 마크업을 여러분의 스프레드쉬트의 데이터와 [바인딩](http://www.polymer-project.org/docs/polymer/databinding.html)할 수 있는새롭게 구성된 포스트 요소를 수정할 수 있게 되었습니다. 그렇게 하기 위해서, 우리는 우리가 앞서 생성했던 포스트의 타이틀, 저자, 내용과 다른 필드 등을 읽을`post` 속성에 대해 소개할 것입니다. (우리가 나중에 덧붙일) `selected` 속성은 오로지 사용자가 올바른 슬러그(slug)로 네비게이션했을 때 포스트를 보여주기 위해 사용될 것입니다.
 
     <polymer-element name="post-element" attributes="post selected">
 
@@ -228,8 +227,7 @@ You can now edit your newly scaffolded post element to [bind](http://www.polymer
 
     </polymer-element>
 
-
-Next, let's create a blog element which contains both a collection of posts and the layout for your blog by running `yo polymer:element blog`.
+다음으로, `yo polymer:element blog`의 실행을 통해 여러분의 블로그를 위한 포스트와 레이아웃들의 컬렉션을 모두 포함하고 있는 blog 요소를 생성해봅시다.
 
     $ yo polymer:element blog
 
@@ -241,11 +239,9 @@ Next, let's create a blog element which contains both a collection of posts and 
 
        create app/elements/blog.html
 
+이때 우리는 우리가 페이지에서 보여주길 원하는 블로그를 [HTML imports](http://www.polymer-project.org/platform/html-imports.html)을 사용하여 삽입할 것입니다. 특별히 세번째 프롬프트에서 우리는 우리가 포함하고자 하는 요소로써 `post.html`를 지정하였습니다.
 
-This time we import the blog into index.html using [HTML imports](http://www.polymer-project.org/platform/html-imports.html) as we would like it to appear in the page. For the third prompt specifically, we specify `post.html` as the element we would like to include.
-
-As before, a new element file is created (blog.html) and added to /elements, this time importing post.html and including <post-element> within the template tag:
-
+앞에서 본 바와 같이, 새로운 요소 파일이 (blog.html)로 생성되어 /elements 디렉토리에 추가되면서 post.html을 삽입하고 템플릿 태그 내에 <post-element>를 포함할 것입니다.
 
     <link rel="import" href="post.html">
 
@@ -285,8 +281,7 @@ As before, a new element file is created (blog.html) and added to /elements, thi
 
     </polymer-element>
 
-
-As we asked for the blog element to be imported using [HTML imports](http://www.polymer-project.org/platform/html-imports.html) (a way to include and reuse HTML documents in other HTML documents) to our index, we can also verify that it has been correctly added to the document `<head>`:
+우리가 index에 [HTML imports](http://www.polymer-project.org/platform/html-imports.html)(HTML 문서를 다른 HTML 문서들에서 포함하고 재사용하는 방법)를 사용하여 blog 요소를 포함할 것인지에 대해 질의한 것과 같이 우리는 또한 그것이 문서의 '<head>'에 정확하게 추가되었는지에 대해 검증할 수 있습니다.
 
     <!doctype html>
         <head>
@@ -343,25 +338,25 @@ As we asked for the blog element to be imported using [HTML imports](http://www.
 
     </html>
 
-Fantastic. 
+환상적이군요!
 
-<h3 id="toc-dependencies">Adding dependencies using Bower</h3>
+<h3 id="toc-dependencies">Bower를 이용한 의존성 추가하기</h3>
 
-Next, let’s edit our element to use the [Polymer JSONP](https://github.com/Polymer/polymer-elements/tree/master/polymer-jsonp) utility element to read in posts.json. You can either get the adapter by git cloning the repository or installing `polymer-elements` via Bower by running `bower install polymer-elements`. 
+다음으로 posts.json을 읽기 위한 [Polymer JSONP](https://github.com/Polymer/polymer-elements/tree/master/polymer-jsonp) 유틸리티 요소를 사용하기 위한 우리의 요소들을 편집해봅시다. 여러분은 git 저장소의 복제하거나 `bower install polymer-elements`을 실행하여 Bower를 통해 'polymer-elements'를 설치하여 어댑터를 가져올 수 있습니다.
 
 <img src="image_9.png" class="screenshot"/>
 
-Once you have the utility, you’ll need to include it as an import in your blog.html element with:
+일단 유티리티를 받으면, 여러분은 다음과 같이 여러분의 blog.html 요소를 추가하는 것처럼 그것을 포함하는 것이 필요할 것입니다.
 
     <link rel="import" href="../bower_components/polymer-jsonp/polymer-jsonp.html">
 
-Next, include the tag for it and supply the <code>url</code> to our blog posts spreadsheet from earlier, adding <code>&callback=</code> to the end:
+그리고, 그를 위한 태그를 포함시키고 마지막 부분에 <code>&callback=</code>를 추가하여 앞에 나온 스프레드쉬트를 우리의 블로그에 포스팅하기 위한 <code>url</code>를 넣어야 합니다.
 
     <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&callback=" response="[[posts]]"></polymer-jsonp>
 
-<p class="notice"><b>Note:</b>  if you find yourself stuck, feel free to use my spreadsheet <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a> as the value of your URL so you can continue with the tutorial.</p>
+<p class="notice"><b>주의:</b>  만약 여러분이 꼼짝도 할 수 없다면 튜토리얼을 계속하기 위해 여러분의 URL 값으로 <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a>에 있는 제 스프레드쉬트를 편하게 사용하셔도 됩니다.</p>
 
-With this in place, we can now add templates to iterate over our spreadsheet once it has been read in. The first outputs a table of contents, with a linked title for a post pointing at the slug for it.
+여기에서, 이제 우리는 일단 읽어진 우리의 스프레드쉬트를 순환하기 위한 템플릿들을 추가할 수 있습니다. 처음에 슬러그(slug)에서 가리키는 포스트의 링크를 가진 제목을 목차를 출력합니다.
 
     <!-- Table of contents -->
 
@@ -624,6 +619,6 @@ If you would prefer a lighter start to Polymer, you can install it standalone di
 
 which will add it to your bower_components directory. You can then reference it in your application index manually and rock the future.
 
-<h2 id="toc-thoughts">What do you think?</h2>
+<h2 id="toc-thoughts">어떻게 생각하십니까?</h2>
 
-Now you know how to scaffold out a Polymer app using Web Components with Yeoman. If you have feedback on the generator, please do let us know in the comments or file a bug or post to the Yeoman issue tracker. We would love to know if there is anything else you would like to see the generator do better as it's only through your use and feedback that we can improve :) 
+이제 여러분은 Yeoman으로 웹 컴포넌트를 하는 Polymer 앱을 어떻게 구축하는지 알았습니다. 만약 여러분이 생성기에 대해 할 이야기가 있으시다면 댓글이나 버그 파일, 포스팅을 Yeoman 이슈 추적기에 남겨주세요. 만약 여러분의 사용에서만 생성기를 보다 낫게 동작할 수 있게 할 수 있더라도 우리가 향상할 수 있는 그 무엇이라도 알려주신다면 무척 고맙겠습니다. :) 
