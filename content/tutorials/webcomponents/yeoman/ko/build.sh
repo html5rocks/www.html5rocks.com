@@ -4,11 +4,12 @@
 #
 # Author: Boris Smus <smus@html5rocks.com>
 # Modified: Eric Bidelman <ericbidelman@html5rocks.com>
+# Modified: Chang W. Doh <changwook.doh@gmail.com> : concat header & footer from ../en/ at building
 
 rm index.html
-cat header.html >> index.html
+cat ../en/header.html >> index.html
 /usr/local/bin/markdown_py index.md >> index.html
-cat footer.html >> index.html
+cat ../en/footer.html >> index.html
 
 sed -i -e 's/<pre>/<pre class="prettyprint">/g' index.html
 
