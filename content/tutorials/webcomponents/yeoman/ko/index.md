@@ -8,7 +8,7 @@
 
 <img src="image_0.png" class="screenshot">
 
-<p class="notice"><b>주목:</b> 만약 여러분이 웹 컴포넌트가 처음이라면, 그것들이 제공하는 웹 플랫폼의 기능들에 대한 환상적인 (문서들)[http://www.polymer-project.org/getting-started.html]을 읽어보기를 권합니다. [Custom Element](http://www.polymer-project.org/platform/custom-elements.html), [Shadow DOM](http://www.polymer-project.org/platform/shadow-dom.html), [HTML Imports](http://www.polymer-project.org/platform/html-imports.html) 등을 가능하게 하는 Polymer를 통해 그것들을 어떻게 사용하는지에 대한 가이드입니다.</p>
+<p class="notice"><b>주목:</b> 만약 여러분이 웹 컴포넌트가 처음이라면, 그것들이 제공하는 웹 플랫폼의 기능들에 대한 환상적인 (문서들)[http://www.polymer-project.org/getting-started.html]을 읽어보기를 권합니다. <a href="http://www.polymer-project.org/platform/custom-elements.html">Custom Element</a>, <a href="http://www.polymer-project.org/platform/shadow-dom.html">Shadow DOM</a>, <a href="http://www.polymer-project.org/platform/html-imports.html">HTML Imports</a> 등을 가능하게 하는 Polymer를 통해 그것들을 어떻게 사용하는지에 대한 가이드입니다.</p>
 
 <h2 id="toc-meet-tools">Yo, Grunt 그리고 Bower를 만나보자</h2>
 
@@ -34,7 +34,7 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
 <img src="image_2.png" class="screenshot"/>
 
-<p class="notice"><b>주의:</b> 만약 여러분이 백본과 같은 다른 프레임워크를 이용하여 어플리케이션을 완성하고자 할 떄 Yeoman을 어떻게 쓰는지에 대해 읽어보고 싶으시다면, [Yeoman 작업흐름을 이용한 앱 빌드](http://net.tutsplus.com/tutorials/javascript-ajax/building-apps-with-the-yeoman-workflow/)가 흥미로울 것입니다.</p>
+<p class="notice"><b>주의:</b> 만약 여러분이 백본과 같은 다른 프레임워크를 이용하여 어플리케이션을 완성하고자 할 떄 Yeoman을 어떻게 쓰는지에 대해 읽어보고 싶으시다면, <a href="http://net.tutsplus.com/tutorials/javascript-ajax/building-apps-with-the-yeoman-workflow/">Yeoman 작업흐름을 이용한 앱 빌드</a>가 흥미로울 것입니다.</p>
 
 <h2 id="toc-polymer-generator">Polymer 생성기</h2>
 
@@ -600,7 +600,7 @@ Yeoman의 작업흐름은 [Grunt](http://gruntjs.com)-어플리케이션의 최�
 
 만약 여러분이 더 이상 진행하기가 어렵다면, 여러분이 이미 만들어진 polymer-blog 버전을 [https://github.com/addyosmani/polymer-blog](https://github.com/addyosmani/polymer-blog)에서 확인할 수 있습니다.
 
-<p class="notice"><b>주의:</b> 사용자가 Yeoman, Grunt, Bower을 실행 시 대다수의 문제들은 확실한 관리자 권한을 얻지 못하는 것과 관련이 있습니다. 반드시 Node와 NPM에서 [권장하는](https://gist.github.com/isaacs/579814) 설치 방법을 따르시기 바랍니다.</p>
+<p class="notice"><b>주의:</b> 사용자가 Yeoman, Grunt, Bower을 실행 시 대다수의 문제들은 확실한 관리자 권한을 얻지 못하는 것과 관련이 있습니다. 반드시 Node와 NPM에서 <a href="https://gist.github.com/isaacs/579814">권장하는</a> 설치 방법을 따르시기 바랍니다.</p>
 
 <h3 id="toc-in-store">우리가 지금 무엇을 더 해야할까요?</h3>
 
