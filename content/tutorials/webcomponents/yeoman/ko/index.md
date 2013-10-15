@@ -2,13 +2,13 @@
 
 <h2 id="toc-intro">소개</h2>
 
-안녕하세요. 웹 앱을 작성하는 누구나 자신의 생산성을 유지하는 것이 얼마나 중요한지 알고 있습니다. 여러분이 제대로된 보일러플레이트를 찾아서 개발 환경을 설치하고 작업 흐름을 시험하고 여러분의 모든 소스들의 최소화 및 압축과 같은 귀찮은 작업을 걱정할 때 그에 대한 도전이 시작됩니다.
+Allo’ Allo’. 웹 앱을 작성하는 누구나가 자신의 생산성을 유지하는 것이 얼마나 중요한지 알고 있을겁니다. 여러분이 제대로 된 보일러플레이트를 찾아서 개발 환경을 설치하고 작업 흐름을 시험하고 여러분의 모든 소스들의 최소화 및 압축과 같은 귀찮은 작업을 걱정할 때 그에 대한 도전이 시작됩니다.
 
 다행스럽게도 최근의 프론트엔드 도구들은 이러한 일을 대부분 자동화하는 것을 도와줘서 강력한 앱의 작성에만 집중할 수 있게 해줍니다. 이 글은 웹 앱 개발 시 [Web Components](http://html5-demos.appspot.com/static/webcomponents/index.html#1)를 위한 polyfill 및 sugar 라이브러리인 [Polymer](http://polymer-project.org)를 사용하는 앱 생성의 간소화하는 작업흐름 도구인 [Yeoman](http://yeoman.io)을 어떻게 사용하는지 보여줍니다.
 
 <img src="image_0.png" class="screenshot">
 
-<p class="notice"><b>주목:</b> 만약 여러분이 웹 컴포넌트가 처음이라면, 그것들이 제공하는 웹 플랫폼의 기능들에 대한 환상적인 (문서들)[http://www.polymer-project.org/getting-started.html]을 읽어보기를 권합니다. <a href="http://www.polymer-project.org/platform/custom-elements.html">Custom Element</a>, <a href="http://www.polymer-project.org/platform/shadow-dom.html">Shadow DOM</a>, <a href="http://www.polymer-project.org/platform/html-imports.html">HTML Imports</a> 등을 가능하게 하는 Polymer를 통해 그것들을 어떻게 사용하는지에 대한 가이드입니다.</p>
+<p class="notice"><b>주목:</b> 만약 여러분이 웹 컴포넌트가 처음이라면, 그것들이 제공하는 웹 플랫폼의 기능들에 대한 환상적인 <a href="http://www.polymer-project.org/getting-started.html">문서들</a>을 읽어보기를 권합니다. <a href="http://www.polymer-project.org/platform/custom-elements.html">Custom Element</a>, <a href="http://www.polymer-project.org/platform/shadow-dom.html">Shadow DOM</a>, <a href="http://www.polymer-project.org/platform/html-imports.html">HTML Imports</a> 등을 가능하게 하는 Polymer를 통해 그것들을 어떻게 사용하는지에 대한 가이드입니다.</p>
 
 <h2 id="toc-meet-tools">Yo, Grunt 그리고 Bower를 만나보자</h2>
 
@@ -34,7 +34,7 @@ Yeoman은 여러분의 생산성 향상을 위한 3개의 도구를 가진 모�
 
 <img src="image_2.png" class="screenshot"/>
 
-<p class="notice"><b>주의:</b> 만약 여러분이 백본과 같은 다른 프레임워크를 이용하여 어플리케이션을 완성하고자 할 떄 Yeoman을 어떻게 쓰는지에 대해 읽어보고 싶으시다면, <a href="http://net.tutsplus.com/tutorials/javascript-ajax/building-apps-with-the-yeoman-workflow/">Yeoman 작업흐름을 이용한 앱 빌드</a>가 흥미로울 것입니다.</p>
+<p class="notice"><b>주의:</b> 만약 여러분이 백본과 같은 다른 프레임워크를 이용하여 어플리케이션을 완성하고자 할 때 Yeoman을 어떻게 쓰는지에 대해 읽어보고 싶으시다면, <a href="http://net.tutsplus.com/tutorials/javascript-ajax/building-apps-with-the-yeoman-workflow/">Yeoman 작업흐름을 이용한 앱 빌드</a>가 흥미로울 것입니다.</p>
 
 <h2 id="toc-polymer-generator">Polymer 생성기</h2>
 
@@ -187,21 +187,21 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
           <div class="col-lg-4">
 
-              <template if="{{post.gsx$slug.$t === selected}}">
+              <template if="[[post.gsx$slug.$t === selected]]">
 
                 <h2>
-                  <a href="#{{post.gsx$slug.$t}}">
-                    {{post.gsx$title.$t  }}
+                  <a href="#[[post.gsx$slug.$t]]">
+                    [[post.gsx$title.$t  ]]
                   </a>
                 </h2>
 
-                <p>By {{post.gsx$author.$t}}</p>
+                <p>By [[post.gsx$author.$t]]</p>
 
-                <p>{{post.gsx$content.$t}}</p>
+                <p>[[post.gsx$content.$t]]</p>
 
-                <p>Published on: {{post.gsx$date.$t}}</p>
+                <p>Published on: [[post.gsx$date.$t]]</p>
 
-                <small>Keywords: {{post.gsx$keywords.$t}}</small>
+                <small>Keywords: [[post.gsx$keywords.$t]]</small>
 
               </template>
 
@@ -352,7 +352,7 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
 그리고, 그를 위한 태그를 포함시키고 마지막 부분에 <code>&callback=</code>를 추가하여 앞에 나온 스프레드쉬트를 우리의 블로그에 포스팅하기 위한 <code>url</code>를 넣어야 합니다.
 
-    <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&callback=" response="{{posts}}"></polymer-jsonp>
+    <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&callback=" response="[[posts]]"></polymer-jsonp>
 
 <p class="notice"><b>주의:</b>  만약 여러분이 꼼짝도 할 수 없다면 튜토리얼을 계속하기 위해 여러분의 URL 값으로 <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a>에 있는 제 스프레드쉬트를 편하게 사용하셔도 됩니다.</p>
 
@@ -362,9 +362,9 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
     <ul>
 
-      <template repeat="{{post in posts.feed.entry}}">
+      <template repeat="[[post in posts.feed.entry]]">
 
-        <li><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></li>
+        <li><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></li>
 
       </template>
 
@@ -374,21 +374,21 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
     <!-- Post content -->
 
-    <template repeat="{{post in posts.feed.entry}}">
+    <template repeat="[[post in posts.feed.entry]]">
 
-      <post-element post="{{post}}" selected="{{route}}"></post-element>
+      <post-element post="[[post]]" selected="[[route]]"></post-element>
 
     </template>
 
-여러분이 템플릿에서 볼 수 있는 'repeat' 속성으로 게시물들의 컬렉션 배열이 제공되면 그 안의 모든 요소에 대해 {{bindings}}을 가진 인스턴스를 생성하고 관리할 수 있습니다.
+여러분이 템플릿에서 볼 수 있는 'repeat' 속성으로 게시물들의 컬렉션 배열이 제공되면 그 안의 모든 요소에 대해 [[bindings]]을 가진 인스턴스를 생성하고 관리할 수 있습니다.
 
 
 <img src="image_10.png" class="screenshot"/>
 
-이제 우리는 {{route}}를 덧붙이기 위해 URL 해쉬가 변경될 때마다 {{route}}로 바인딩하는 Flatiron director 라이브러리를 사용하고 트릭을 부릴 수 있을 것입니다.
+이제 우리는 [[route]]를 덧붙이기 위해 URL 해쉬가 변경될 때마다 [[route]]로 바인딩하는 Flatiron director 라이브러리를 사용하고 트릭을 부릴 수 있을 것입니다.
 
 고맙게도 이미 우리가 그렇게 할 수 있는 [Polymer element](https://github.com/Polymer/more-elements/tree/master/flatiron-director)([more-elements](https://github.com/Polymer/more-elements) 패키지의 일부)가 있습니다.
-/elements 디렉토리에 한번 복사하고 나면, 우리는 `<flatiron-director route="{{route}}" autoHash></flatiron-director>`로 그것을 참조할 수 있으며, 'route'를 우리가 바인딩하고 싶은 속성처럼 지정하고 어떠한 해시의 변경값도 자동으로 읽도록(autoHash) 정의할 수 있습니다.
+/elements 디렉토리에 한번 복사하고 나면, 우리는 `<flatiron-director route="[[route]]" autoHash></flatiron-director>`로 그것을 참조할 수 있으며, 'route'를 우리가 바인딩하고 싶은 속성처럼 지정하고 어떠한 해시의 변경값도 자동으로 읽도록(autoHash) 정의할 수 있습니다.
 
 이제 우리가 가진 모든 것을 함께 버무려봅시다.
 
@@ -410,7 +410,7 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
           <h1><a href="/#">My Polymer Blog</a></h1>
 
-          <flatiron-director route="{{route}}" autoHash></flatiron-director>
+          <flatiron-director route="[[route]]" autoHash></flatiron-director>
 
           <h2>Posts</h2>
 
@@ -418,9 +418,9 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
           <ul>
 
-            <template repeat="{{post in posts.feed.entry}}">
+            <template repeat="[[post in posts.feed.entry]]">
 
-              <li><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></li>
+              <li><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></li>
 
             </template>
 
@@ -428,15 +428,15 @@ Google Spreadsheets API는 여러분의 블로그에 있는 각 필드들을 특
 
           <!-- Post content -->
 
-          <template repeat="{{post in posts.feed.entry}}">
+          <template repeat="[[post in posts.feed.entry]]">
 
-            <post-element post="{{post}}" selected="{{route}}"></post-element>
+            <post-element post="[[post]]" selected="[[route]]"></post-element>
 
           </template>
 
         </div>
 
-        <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&callback=" response="{{posts}}"></polymer-jsonp>
+        <polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&callback=" response="[[posts]]"></polymer-jsonp>
 
       </template>
 
@@ -485,19 +485,19 @@ gravatar 요소의 원본을 여러분의 '/elements' 디렉토리에 복사하�
 
           <div class="col-lg-4">
 
-              <template if="{{post.gsx$slug.$t === selected}}">
+              <template if="[[post.gsx$slug.$t === selected]]">
 
-                <h2><a href="#{{post.gsx$slug.$t}}">{{post.gsx$title.$t}}</a></h2>
+                <h2><a href="#[[post.gsx$slug.$t]]">[[post.gsx$title.$t]]</a></h2>
 
-                <p>By {{post.gsx$author.$t}}</p>
+                <p>By [[post.gsx$author.$t]]</p>
 
-                <gravatar-element username="{{post.gsx$email.$t}}" size="100"></gravatar-element>
+                <gravatar-element username="[[post.gsx$email.$t]]" size="100"></gravatar-element>
 
-                <p>{{post.gsx$content.$t}}</p>
+                <p>[[post.gsx$content.$t]]</p>
 
-                <p>{{post.gsx$date.$t}}</p>
+                <p>[[post.gsx$date.$t]]</p>
 
-                <small>Keywords: {{post.gsx$keywords.$t}}</small>
+                <small>Keywords: [[post.gsx$keywords.$t]]</small>
 
               </template>
 
@@ -620,4 +620,4 @@ Yeoman의 작업흐름은 [Grunt](http://gruntjs.com)-어플리케이션의 최�
 
 <h2 id="toc-thoughts">어떻게 생각하십니까?</h2>
 
-이제 여러분은 Yeoman으로 웹 컴포넌트를 하는 Polymer 앱을 어떻게 구축하는지 알았습니다. 만약 여러분이 생성기에 대해 할 이야기가 있으시다면 댓글이나 버그 파일, 포스팅을 Yeoman 이슈 추적기에 남겨주세요. 만약 여러분의 사용에서만 생성기를 보다 낫게 동작할 수 있게 할 수 있더라도 우리가 향상할 수 있는 그 무엇이라도 알려주신다면 무척 고맙겠습니다. :) 
+이제 여러분은 Yeoman으로 어떻게 웹 컴포넌트를 사용하는 Polymer 앱을 구축하는지 알았습니다. 만약 여러분이 생성기에 대해 할 이야기가 있으시다면 댓글이나 버그 파일, 포스팅을 Yeoman 이슈 추적기에 남겨주세요. 만약 여러분의 사용에서만 생성기를 보다 낫게 동작할 수 있게 할 수 있더라도 우리가 향상할 수 있는 그 무엇이라도 알려주신다면 무척 고맙겠습니다. :) 
