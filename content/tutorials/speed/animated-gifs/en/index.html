@@ -1,0 +1,109 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/paullewis.75.png);
+  background-position: -14px -9px !important;
+}
+
+article.tutorial section {
+  overflow: visible;
+}
+
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block content %}
+
+<p>Avoiding paints is critical to achieving a silky smooth frame rate, especially on mobile. Sometimes, however, paints crop up in the most unusual of places. This article looks at why animated GIFs can cause unnecessary paints to occur, and the remarkably simple fix you can apply.</p>
+
+<blockquote class="commentary talkinghead" id="unnecessary-paints">Last time we looked at ways to <a href="http://www.html5rocks.com/en/tutorials/speed/unnecessary-paints/">avoid hover effects during scrolls</a>. If you've not seen that, check it out now!</blockquote>
+
+<h2 id="toc-layers">Layers of loveliness</h2>
+
+<p>As you probably know, modern browsers may paint groups of DOM elements into separate "images", called layers. Sometimes there's one layer for the entire page, sometimes there are hundreds or &mdash; in rare cases &mdash; thousands!</p>
+
+<p>When DOM elements are grouped together into a layer and one of the elements changes visually, we end up having to paint not just the changed element, but <em>all the other elements in the layer that overlap the changed element as well</em>. Painting one thing on top of another results in the overwritten pixels being effectively "lost" forever; if you want the original pixels back you need to repaint them.</p>
+
+<p>Sometimes, therefore, we want to isolate one element from the others so that when it gets painted we won't need to repaint the other elements that <em>haven't</em> changed. For example, when you combine a fixed page header with scrollable content, you have to repaint the header each time the content scrolls, as well as the newly visible content. By placing the header in a separate layer, the browser can optimize scrolling. When you scroll, the browser can move the layers around &mdash; probably with the help of the GPU &mdash; and avoid repainting either layer.</p>
+
+<p>Each additional layer increases memory consumption and adds performance overhead, so the goal is to group the page into as few layers as possible while maintaining good performance.</p>
+
+<blockquote class="commentary talkinghead" id="layer-intro">If you want a more detailed breakdown of how layers are created and used definitely check out <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">Tom Wiltzius's intro to the subject</a>.</blockquote>
+
+<h2 id="toc-animated-gifs">What does this all have to do with animated GIFs?</h2>
+
+<p>Well let's have a look at this picture:</p>
+
+<figure>
+  <img src="layers.jpg" />
+  <figcaption>Figure 1: A web app broken down into four layers.</figcaption>
+</figure>
+
+<p>This is a potential layer setup for a simple app. There are four layers here: three of them (layers 2 to 4) are interface elements; the back layer is a loader, which happens to be an animated GIF. In the normal flow you show the loader (layer 1) while your app loads, then as everything finishes you would show the other layers. But here's the key: <em>you need to hide the animated GIF.</em></p>
+
+<h2 id="toc-but-why">But why do I need to hide it?!</h2>
+
+<p>Good question. In a perfect world the browser would simply check the GIF’s visibility for you and avoid painting automatically. Unfortunately, checking whether the animated GIF is obscured or visible on the screen is typically <em>more</em> expensive than simply painting it, so it gets painted.</p>
+
+<p>In the best case the GIF is in its own layer and the browser only has to paint and upload it to the GPU. But in the worst case all your elements might be grouped into a single layer and the browser has to repaint <em>every single element</em>. And, when it’s done, it still needs to upload everything to the GPU. All of this is work occurs for every GIF frame, despite the fact that the user can’t even see the GIF!</p>
+
+<p>On desktops you can probably get away with this kind of painting behavior because the CPUs and GPUs are more powerful, and there's plenty of bandwidth for transferring data between the two. On mobile, however, painting is extremely expensive so you must take great care.</p>
+
+<h2 id="toc-which-browsers">Which browsers does this affect?</h2>
+
+<p>As is often the way, behaviors differ between browsers. Today Chrome, Safari and Opera all repaint, even if the GIF is obscured. Firefox, on the other hand, figures out that the GIF is obscured and doesn’t need to be repainted. Internet Explorer remains something of a black box, and even in IE11 &mdash; since the F12 tools are still being developed &mdash; there is no indication as to whether or not any repainting is taking place.</p>
+
+<h2 id="toc-devtools">How can I tell if I have this problem?</h2>
+
+<p>The easiest way is to use "Show paint rectangles" in Chrome DevTools. Load DevTools and press the cog in the lower right corner (<img src="cog.png" />) and choose <strong>Show paint rectangles</strong> under the <strong>Rendering</strong> section.</p>
+
+<figure>
+  <img src="showpaintrects.png" />
+  <figcaption>Figure 2: Enabling Show paint rectangles inside Chrome DevTools.</figcaption>
+</figure>
+
+<p>Now all you need to do is look for a red rectangle like this:</p>
+
+<figure>
+  <img src="paintedgif.png" />
+  <figcaption>Figure 3: DevTools’ Show Paint Rectangles hints at animated GIF problems with a red rectangle.</figcaption>
+</figure>
+
+<p>The little red box on the screen shows that Chrome is repainting something. You know that there’s a loader GIF hidden behind the other elements, so when you see a red box like this you need to hide the visible elements and check if you have left the animated GIF spinning away. If you have then you need to pop some CSS or JavaScript in place to apply <code>display: none</code> or <code>visibility: hidden</code> to it or its parent element. Of course if it's just a background image then you should make sure to remove it.</p>
+
+<p>If you want to see an example of this behavior in a live site, check out <a href="http://allegro.pl/listing/listing.php?string=phone">Allegro</a>, where each product’s image has a loader GIF that is obscured rather than explicitly hidden.</p>
+
+<h2 id="toc-conclusion">Conclusion</h2>
+
+<p>Achieving 60fps means doing <em>only</em> what's needed to render the page and no more. Removing excess paints is a critical step in achieving this goal. Animated GIFs that are left running can trigger unnecessary paints, something which you can find and debug easily with DevTools' Show paint rectangles tool.</p>
+
+<p>Now, you didn't leave that animated kitten loader GIF running forever, did you?</p>
+
+{% endblock %}
