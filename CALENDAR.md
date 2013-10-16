@@ -1,8 +1,8 @@
 HTML5 Rocks Quarter Report for 2013-10-16
 =========================================
 
-Articles due this quater
-------------------------
+Articles due this quarter
+-------------------------
 
 |Author|Article|Delivery date|Tech Writer|State|
 |------|-------|-------------|-----------|-----|
