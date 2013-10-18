@@ -153,11 +153,11 @@ class Resource(DictModel):
 
         publication_time = time.strptime(publication_date, "%Y-%m-%d %H:%M:%S")
 
-
         update = Resource(title=u['title'])
         update.author = Author.get_by_key_name(u['author_id'])
-        update.url = 'http://updates.html5rocks.com/%s' % (u['path'])
+        update.url = 'http://updates.html5rocks.com%s' % (u['path'])
         update.publication_date = date.fromtimestamp(mktime(publication_time))
+        update.description = u['description']
 
         if updated_date != "None":
           updated_time = time.strptime(updated_date, "%Y-%m-%d %H:%M:%S")
