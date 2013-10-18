@@ -48,23 +48,18 @@
       };
       this.language = funky_language_code_mapping['{{LANGUAGE_CODE}}'] ||
                       '{{LANGUAGE_CODE}}';
+
+      this.callbacks.onReady = [ function () {
+                                    try { 
+                                      _gaq.push(['_trackEvent', 'View comments']); 
+                                    } catch(err){}
+                                 } ];
+      this.callbacks.onNewComment = [ function (comment) {
+                                        try { 
+                                          _gaq.push(['_trackEvent', 'Commented']); 
+                                        } catch(err){} 
+                                      } ];
     };
-
-    function subbed() {
-      try { 
-        _gaq.push(['_trackEvent', 'Commented']); 
-      } catch(err){}
-    }
-
-    function getSub() {
-      var tk = document.querySelector('button.btn.submit');
-      if (tk == null) {
-        window.setTimeout(getSub, 1000);
-      }
-      else {
-        tk.addEventListener('click', subbed);
-      }
-    }
 
     window.addEventListener('load', function(e) {
 
@@ -77,7 +72,6 @@
       var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
       sp.insertBefore(c, s); sp.insertBefore(dsq, s);
 
-      //window.setTimeout(getSub, 1000);
     }, false);
 
     function outgoing(url) {
