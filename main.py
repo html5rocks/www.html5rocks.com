@@ -330,8 +330,10 @@ class ContentHandler(webapp2.RequestHandler):
       profiles = models.get_sorted_profiles()
       for p in profiles:
         p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
-      return self.render(data={'sorted_profiles': profiles},
-                         template_path='content/profiles.html', relpath=relpath)
+      return self.render(data={
+            'css_file':css_file,
+            'sorted_profiles': profiles
+          }, template_path='content/profiles.html', relpath=relpath)
     elif ((re.search('tutorials/.+', relpath) or
            re.search('mobile/.+', relpath) or
            re.search('gaming/.+', relpath) or
