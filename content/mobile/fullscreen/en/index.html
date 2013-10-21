@@ -57,10 +57,10 @@ It irks me somewhat that this common perception stands.  Yes, web pages aren’t
 
 <h3 id="toc-faking">Auto-hiding the address bar</h3>
 
-<pre class="prettypring">window.scrollTo(0,1);</pre>
+<pre class="prettyprint">window.scrollTo(0,1);</pre>
 
 <blockquote class="commentary talkinghead talkinghead-pk">
-I am telling you this as a friend.  It exists, it is a thing, but it is a hack. Please don’t use it.
+I am telling you this as a friend.  It exists, it is a thing, but it is a hack. Please don't use it.
 </blockquote>
 
 <p>This is a pretty simple method, the page loads and the browser bar is told to get out of the way.  The problem is that it is not standardised and not well supported, you also have to work around a bunch of niggles.  One such niggle is that browsers often maintain the position the user on the page when they navigate back to it, your window.scrollTo overrides this annoys the user which means you have to cater for it storing last position in localStorage, which then means that you have to manage what happens if the user is on the page using multiple windows...
@@ -68,9 +68,9 @@ I am telling you this as a friend.  It exists, it is a thing, but it is a hack. 
 
 <h3 id="toc-request">Requesting Full Screen</h3>
 
-<p> Not all platforms are equal, http://caniuse.com/#feat=fullscreen.  We don’t have a full screen API on iOS, but we do on Chrome and Firefox.</p>
+<p><a href="http://caniuse.com/#feat=fullscreen">Not all platforms are equal</a>. We don't have a full screen API on iOS, but we do on Chrome and Firefox.</p>
 <p>Most applications you build will use a combination of the JS API and the CSS selectors provided by the Full Screen specification.</p>
-<p>The main JS API’s that you need to care about when building an app or a site that uses full screen API are:</p>
+<p>The main JS API's that you need to care about when building an app or a site that uses full screen API are:</p>
 
 <ul>
   <li><pre>[element].requestFullscreen()</pre> (currently prefixed for both Blink and Gecko) it will take the element and make it full screen.</li>
@@ -156,8 +156,8 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 }</pre>
 
 <h2 id="toc-useful">Interaction Guidelines</h2>
-<h3 id="toc-dontrely">Don’t rely on navigation controls</h3>
-<p>iOS and Firefox OS don’t every device has a hardware back button, you must ensure that users can navigate to their previous state.  There is also no refresh gesture that is directly accessible.</p>
+<h3 id="toc-dontrely">Don't rely on navigation controls</h3>
+<p>iOS and Firefox OS don't have a hardware back button, you must ensure that users can navigate to their previous state.  There is also no refresh gesture that is directly accessible.</p>
 
 <p>You can detect if you are running in a full screen mode or an installed mode easily on all the major platforms.</p>
 
@@ -169,7 +169,7 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 <h4>Chrome for Android</h4>
 <p>When launching as an installed app, Chrome is not running in true full screen experience so `document.fullscreenElement` will return null and the CSS selectors will not work.  Chrome also does not have the a comparable API to iOS (navigator.standalone).</p>
 
-<p>When the user requests Full Screen via your site, the standard full screen API’s are available. </p>
+<p>When the user requests Full Screen via your site, the standard full screen API's are available.</p>
 
 <pre class="prettyprint">selector:-webkit-full-screen {
   display: block;
@@ -189,7 +189,7 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 
 <h3 id="toc-keepuserin">Keep the user in the full screen experience</h3>
 
-<p>The full screen API can be a little finicky sometimes, browsers don’t want to lock users in a full screen page so they will break out of full screen as soon as they possibly can.  This means you can't build a full screen website that spans multiple pages because:</p>
+<p>The full screen API can be a little finicky sometimes, browsers don't want to lock users in a full screen page so they will break out of full screen as soon as they possibly can.  This means you can't build a full screen website that spans multiple pages because:</p>
 
 <ul>
   <li>Changing the URL programmatically by using window.location = "http://example.com" breaks out of full screen</li>
@@ -207,7 +207,7 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 <p>By using the #syntax to update the url (window.location = "#somestate"), and listening to the window.onhashchange event you can use the browser's own history stack to manage changes in the application state, allow the user to use their hardware back buttons, or offer a simple programmatic back button experience by using the history API - window.history.go(-1)</p>
 
 <h3 id="toc-letuserchoose">Let the user choose when to go full screen</h3>
-<p>There is nothing more annoying to the user on the web than doing what they don’t expect.  When a user is navigating the your site don’t try and trick them into fullscreen.</p>
+<p>There is nothing more annoying to the user on the web than doing what they don't expect.  When a user is navigating the your site don't try and trick them into fullscreen.</p>
 
 <p>Don't intercept the first touch event and issue a requestFullScreen.</p>
 <ol>
@@ -221,7 +221,7 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 <p>If you plan on offering a full screen experience via the installed app mechanisms, then just because you have the ability to detect if a user's app is not running as an installed app does not mean the user wants to install your app all the time. </p> 
 
 <h3 id="toc-documentfullscreen">Making the document full screen</h3>
-<p>It is natural to think that you take the body element full screen, but if you are on a WebKit or Blink based rendering engine you will see it has an odd effect of shrinking the body width to the smallest possible size that will contain all the content (Mozilla Gecko is fine).  This, more than likely is not what you want.</p>
+<p>It is natural to think that you take the body element full screen, but if you are on a WebKit or Blink based rendering engine you will see it has an odd effect of shrinking the body width to the smallest possible size that will contain all the content (Mozilla Gecko is fine). This is more than likely is not what you want.  Instead use:</p>
 
 <pre class="prettyprint">document.documentElement.requestFullScreen();</pre>
 
@@ -272,6 +272,6 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 <h2 id="conslusions">Conclusions</h2>
 <p>Whilst we don't have a full standardised and implemented API, using some of the guidance presented in this article you can easily build experiences that take advantage of the users entire screen irrespective of the client.</p>
 
-<p>If you know of any good patterns for full-screen, leave a comment and we can let the world know.  If you know of anti-patterns in full-screen let us know so we can update the article to save the frustrations of millions of users on the web. </p>
+<blockquote class="commentary talkinghead talkinghead-pk">If you know of any good patterns for full-screen, leave a comment and we can let the world know.  If you know of anti-patterns in full-screen let us know so we can update the article to save the frustrations of millions of users on the web. </blockquote>
 
 {% endblock %}
