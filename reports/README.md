@@ -9,6 +9,6 @@ To add the correct element in vi the .netrc file in your home dir and add the fo
 
     machine html5rocks.com
       login your_user_name
-      password your_password
+      password your_personal_access_token
 
-If you don't want to use your password vist [https://github.com/settings/applications](https://github.com/settings/applications) and create a Personal Access Token - you can then revoke it at anytime.
+Do not use your password visit [https://github.com/settings/applications](https://github.com/settings/applications) and create a Personal Access Token - you can then revoke it at anytime.
