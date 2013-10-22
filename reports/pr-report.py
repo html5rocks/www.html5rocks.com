@@ -1,6 +1,7 @@
 import getpass
 import sys
 import re
+import netrc
 
 from datetime import datetime, timedelta
 from optparse import OptionParser
@@ -11,8 +12,9 @@ from github.GithubException import GithubException
 repository = "html5rocks/www.html5rocks.com"
 
 def main():
-    username = raw_input("Username: ")
-    password = getpass.getpass() 
+
+    h5r_netrc = netrc.netrc()
+    (username, account, password) = h5r_netrc.authenticators("html5rocks.com")
 
     g = Github(username, password)
 
