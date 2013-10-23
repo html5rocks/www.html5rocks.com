@@ -488,7 +488,8 @@ class ContentHandler(webapp2.RequestHandler):
       # Remove duplicate authors from the list.
       author_dict = {}
       for a in authors:
-        author_dict[a.key().name()] = a
+        if a is not None:
+          author_dict[a.key().name()] = a
       authors = author_dict.values()
 
       data = {
