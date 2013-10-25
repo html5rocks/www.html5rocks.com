@@ -18,6 +18,10 @@
   background-size: 60px 60px;
   background-position:0px 0px!important;
 }
+
+pre.inline {
+  display: inline;  
+}
 </style>
 
 
@@ -53,12 +57,12 @@ It irks me somewhat that this common perception stands.  Yes, web pages aren't f
 
 <p>There are several ways that a user or developer can get an web app fullscreen.</p>
 <ul>
-  <li>Fake it.</li>
-  <li>Request the browser to go fullscreen via a user gesture.</li>
+  <li>Fake it: auto-hide the address bar</li>
+  <li>Request the browser to go fullscreen in response to a user gesture.</li>
   <li>Install the app to the home screen</li>
 </ul>
 
-<h3 id="toc-faking">Auto-hiding the address bar</h3>
+<h3 id="toc-faking">Fake it: auto-hide the address bar</h3>
 <p>You can "fake fullscreen" by auto-hiding the address bar as follows:</p>
 <pre class="prettyprint">window.scrollTo(0,1);</pre>
 
@@ -66,7 +70,7 @@ It irks me somewhat that this common perception stands.  Yes, web pages aren't f
 I am telling you this as a friend.  It exists, it is a thing, but it is a hack. Please don't use it.
 </blockquote>
 
-<p>This is a pretty simple method, the page loads and the browser bar is told to get out of the way.  Unfortunately it is not standardised and not well supported. You also have to work around a bunch of quirks.For example browsers often restore the position on the page when the user navigates back to it.  Using window.scrollTo overrides this annoys the user. To work around this you have to store the last position in localStorage, and deal with the edge cases (for example, if the user has the page open in multiple windows).s</p>
+<p>This is a pretty simple method, the page loads and the browser bar is told to get out of the way.  Unfortunately it is not standardised and not well supported. You also have to work around a bunch of quirks. For example browsers often restore the position on the page when the user navigates back to it.  Using <pre class="inline">window.scrollTo</pre> overrides this, which annoys the user. To work around this you have to store the last position in localStorage, and deal with the edge cases (for example, if the user has the page open in multiple windows).</p>
 
 <h3 id="toc-request">Request the browser to go fullscreen in response to a user gesture</h3>
 
@@ -75,9 +79,9 @@ I am telling you this as a friend.  It exists, it is a thing, but it is a hack. 
 <p>The main JS API's that you need to care about when building a fullscreen experience are:</p>
 
 <ul>
-  <li><pre>[element].requestFullscreen()</pre> (currently prefixed for both Chrome and Firefox) displays the element in fullscreen mode.</li>
-  <li><pre>document.cancelFullscreen()</pre> (currently prefixed for both Chrome and Firefox) cancels fullscreen mode.</li>
-  <li><pre>document.fullscreenElement</pre> (currently prefixed for both Chrome and Firefox) returns true if any of the elements are in fullscreen mode.
+  <li><pre class="inline"><i>element</i>.requestFullscreen()</pre> (currently prefixed for both Chrome and Firefox) displays the element in fullscreen mode.</li>
+  <li><pre class="inline">document.cancelFullscreen()</pre> (currently prefixed for both Chrome and Firefox) cancels fullscreen mode.</li>
+  <li><pre class="inline">document.fullscreenElement</pre> (currently prefixed for both Chrome and Firefox) returns true if any of the elements are in fullscreen mode.
   </li>
 </ul>
 
@@ -118,7 +122,7 @@ Damn you vendor prefixes!
   }
 }</pre>
 
-<p>We web developers hate complexity.  A nice high-level abstract API you can use is <a href="http://sindresorhus.com/screenfull.js"/>Sindre Sorhus'</a> "<a href="https://github.com/sindresorhus/screenfull.js">Screenfull.js</a>  module which unifies the two slightly different JS API's and vendor prefixes into one consistent API.</p>
+<p>We web developers hate complexity.  A nice high-level abstract API you can use is <a href="http://sindresorhus.com/screenfull.js"/>Sindre Sorhus'</a> <a href="https://github.com/sindresorhus/screenfull.js">Screenfull.js</a>  module which unifies the two slightly different JS API's and vendor prefixes into one consistent API.</p>
 
 <h3 id="toc-launch">Launching a page fullscreen</h3>
 
@@ -182,7 +186,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 </figure>
 
 <h3 id="toc-videofullscreen">Making a video element fullscreen</h3>
-<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the `requestFullScreen` method on the video element.</p>
+<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullScreen</pre> method on the video element.</p>
 <pre class="prettyprint">&lt;video id=videoElement>&lt;/video>
 &lt;button id="goFS">Go Fullscreen&lt;/button> 
 &lt;script>
@@ -245,7 +249,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 }</pre>
 
 <h4>Chrome for Android</h4>
-<p>When launching as an installed app, Chrome is not running in true fullscreen experience so `document.fullscreenElement` returns null and the CSS selectors don't work.  Chrome also does not an API comparable to iOS's navigator.standalone property.</p>
+<p>When launching as an installed app, Chrome is not running in true fullscreen experience so <pre class="inline">document.fullscreenElement</pre> returns null and the CSS selectors don't work.  Chrome also does not an API comparable to iOS's navigator.standalone property.</p>
 
 <p>When the user requests fullscreen via a gesture on your site, the standard fullscreen API's are available including the CSS pseudo selector that lets you adapt your UI to react to the fullscreen state like the following</p>
 
@@ -287,7 +291,7 @@ selector {
 <ul>
   <li>Changing the URL programmatically by using window.location = "http://example.com" breaks out of fullscreen</li>
   <li>A user clicking on an external link inside your page will exit fullscreen</li>
-  <li>Changing the URL via the `navigator.pushState` API will also break out of the fullscreen experience.</li>
+  <li>Changing the URL via the <pre class="inline">navigator.pushState</pre> API will also break out of the fullscreen experience.</li>
 </ul>
 
 <p>You have two options if you want to keep the user in a fullscreen experience:</p>
