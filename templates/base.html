@@ -411,12 +411,15 @@
       document.getElementById('compatible').className = '';
     }
 
-    // Kill feedburner and marketing tracking arguments cuz they're ugly.
-    if (/^\?utm_/.test(document.location.search) &&
-        window.history.replaceState) {
-      window.history.replaceState(
-          {}, '', document.location.href.replace(/\?utm_.*/, ''));
-    }
+    // Kill feedburner and marketing tracking arguments, but let them register
+    // before we do it.
+    setTimeout(function() {
+      if (/^\?utm_/.test(document.location.search) &&
+          window.history.replaceState) {
+        window.history.replaceState(
+            {}, '', document.location.href.replace(/\?utm_.*/, ''));
+      }
+    }, 2000);
 
     //if ($(window).width() < 1200 && $(window).width() > 1000 && $('.toc').length) {
     if ($('.toc').length && $(window).width() > 1000) {
