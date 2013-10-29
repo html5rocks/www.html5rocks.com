@@ -21,8 +21,6 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 {% block content %}
 
-<h2>WebRTC infrastructure: STUN, TURN and signaling</h2>
-
 <p>WebRTC enables peer to peer communication.</p>
 
 <p>BUT...</p>
@@ -402,13 +400,15 @@ io.sockets.on('connection', function (socket){
 
 <h3 id="signaling-security">Signaling security</h3>
 
+<blockquote class="commentary">Security is the </blockquote>
+
 <p>Encryption is <a href="http://www.ietf.org/proceedings/82/slides/rtcweb-13.pdf">mandatory</a> for all WebRTC components.</p>
 
 <p>However, signaling mechanisms aren't defined by WebRTC standards, so it's up to you make signaling secure. If an attacker manages to hijack signaling, they can stop sessions, redirect connections and record, alter or inject content.</p>
 
 <p>The most important factor in securing signaling is to use secure protocols, HTTPS and WSS (i.e TLS), which ensure that messages cannot be intercepted unencrypted. Also be careful not to broadcast signaling messages in a way that they can be accessed by other callers using the same signaling server.</p>
 
-<p><strong>In a nutshell: to secure a WebRTC app it is absolutely imperative that signaling uses <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>.</strong></p>
+<p class="notice fact">To secure a WebRTC app it is <strong>absolutely imperative</strong> that signaling uses <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>.</p>
 
 <h2 id="after-signaling-using-ice-to-cope-with-nats-and-firewalls">After signaling: using ICE to cope with NATs and firewalls</h2>
 
@@ -498,8 +498,6 @@ io.sockets.on('connection', function (socket){
 
 <p>For testing, Google runs a public STUN server, stun.l.google.com:19302, as used by <a href="http://apprtc.appspot.com">apprtc.appspot.com</a>. For a production STUN/TURN service, we recommend using the rfc5766-turn-server; source code for STUN and TURN servers is available from <a href="https://code.google.com/p/rfc5766-turn-server/">code.google.com/p/rfc5766-turn-server</a>, which also provides links to several sources of information about server installation. A <a href="https://groups.google.com/forum/#!msg/discuss-webrtc/X-OeIUC0efs/XW5Wf7Tt1vMJ">VM image for Amazon Web Services</a> is also available.</p>
 
-<h3 id="deploying-stun-and-turn-servers">Deploying STUN and TURN servers</h3>
-
 <p>An alternative TURN server is restund, available as <a href="http://www.creytiv.com/restund.html">source code</a> and also for AWS. Below are instructions how to set up restund on Google Compute Engine.</p>
 <ol>
   <li>Open firewall as necessary, for tcp=443, udp/tcp=3478</li>
@@ -525,6 +523,8 @@ io.sockets.on('connection', function (socket){
   <li>Test using stund client from remote machine: <code>./client <em>IP:port</em></code></li>
 </ol>
 <h2 id="beyond-one-to-one-multi-party-webrtc">Beyond one-to-one: multi-party WebRTC</h2>
+
+<p>You may also want to take a look at Justin Uberti's proposed IETF standard for a <a href="http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00" title="IETF draft: A REST API For Access To TURN Services">REST API for access to TURN Services</a>.</p>
 
 <p>It's easy to imagine use cases for media streaming that go beyond a simple one-to-one call: for example, video conferencing between a group of colleagues, or a public event with one speaker and hundreds (or millions) of viewers.</p>
 
@@ -572,11 +572,11 @@ io.sockets.on('connection', function (socket){
 
 <p>The sipML5 developers have also built the <a href="https://code.google.com/p/webrtc2sip/">webrtc2sip</a> gateway. Tethr and Tropo have demonstrated <a href="http://tethr.tumblr.com/post/25513708436/tethr-and-tropo-in-the-google-i-o-sandbox">a framework for disaster communications</a> 'in a briefcase', using an <a href="http://en.wikipedia.org/wiki/OpenBTS">OpenBTS cell</a> to enable communications between feature phones and computers via WebRTC. Telephone communication without a carrier!</p>
 
-<h2 id="and-finally">...and finally</h2>
+<!-- <h2 id="and-finally">...and finally</h2>
 
 <p>The infrastructure requirements for WebRTC applications are inherently more complex than for simpler web apps.</p>
 
-<p>Signaling and peer discovery services are not part of the WebRTC specs, and on the surface that approach might seem to make WebRTC applications more ponderous to develop, but it gives you considerable power to tailor an application to meet your needs. Likewise, the ICE framework gives you well-established techniques to get around real-world problems.</p>
+<p>Signaling and peer discovery services are not part of the WebRTC specs, and that might seem to make WebRTC applications more difficult to develop, but this approach gives you considerable power to tailor an application to meet your needs. Likewise, the ICE framework provides well-established techniques to get around real-world problems.</p> -->
 
 <h2 id="find-out-more">Find out more</h2>
 
