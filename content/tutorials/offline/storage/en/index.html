@@ -58,9 +58,9 @@ varies
 
 <h3 id="quotas">Quotas</h3>
 
-<p>You can imagine the chaos if any website was allowed to populate unsuspecting hard drives with gigabytes of data! Thus, browsers impose limits on storage capacity. When your app attempts to exceed that limit, the browser will typically show a dialog to let the user confirm the increase. You might expect the browser to enforce a single limit for all storage an origin can use, but the major browsers are actually enforcing limits separately for each storage mechanism. This may change in the future, but for now, you should think of the browser as maintaining a 2-D matrix, with "origin" in one dimension and "storage" in the other. For example, "http://abc.example.com" is allowed to store up to 5MB of Web Storage, 25MB of Web SQL Database Storage, and forbidden to use Indexed Database. Another welcome enhancement in this area would be user interfaces to let users view and control how much space they have allocated for each origin.</p>
+<p>You can imagine the chaos if any website was allowed to populate unsuspecting hard drives with gigabytes of data! Thus, browsers impose limits on storage capacity. When your app attempts to exceed that limit, the browser will typically show a dialog to let the user confirm the increase. You might expect the browser to enforce a single limit for all storage an origin can use, but most enforce limits separately for each storage mechanism. This will change as the <a href="http://www.w3.org/TR/quota-api/">Quota API</a> is adopted, but for now, you should think of the browser as maintaining a 2-D matrix, with "origin" in one dimension and "storage" in the other. For example, "http://abc.example.com" may be allowed to store up to 5MB of Web Storage, 25MB of Web SQL Database Storage, and forbidden to use Indexed Database due to the user denying access. The Quota API brings this into a central location and lets you query how much space is available and in use.</p>
 
-<p>There are also environments where the user can see upfront how much storage will be used, e.g. in the case of the Chrome Web Store, when a user installs an app, they will be prompted upfront to accept its permissions, which include storage limits. One possible value is "unlimited_storage".</p>
+<p>There are also environments where the user can see upfront how much storage will be used, e.g. in the case of the Chrome Web Store, when a user installs an app, they will be prompted upfront to accept its permissions, which include storage limits. One possible value in the manifest is "unlimited_storage".</p>
 
 <h3 id="transactions">Transactions</h3>
 
@@ -68,9 +68,11 @@ varies
 
 <h3 id="synchronous">Synchronous and Asynchronous Modes</h3>
 
-<p>Most of the storage formats all support synchronous and asynchronous modes.  Synchronous mode is blocking, meaning that the storage operation will be executed to completion before the next line of Javascript is executed. Asynchronous mode will cause the next line of Javascript to be executed immediately, with a new thread implicitly created to perform the storage operation. The application will be notified when the operation is finished by way of a callback function being called, a function which must be specified when the call is made.</p>
+<p>Most of the storage formats all support synchronous and asynchronous modes.  Synchronous mode is blocking, meaning that the storage operation will be executed to completion before the next line of JavaScript is executed. Asynchronous mode will cause the next lines of JavaScript to be executed before the storage operation completes. The storage operation will be performed in the background and the application will be notified when the operation is finished by way of a callback function being called, a function which must be specified when the call is made.</p>
 
-<p>Synchronous mode is okay for low-impact situations, e.g. maintaining a set of preferences; it's a much simpler programming model, and such operations only take a few milliseconds. But in many production situations, data crunching will block the main thread, which includes the user interface. The display won't update during that time, and the user won't know if their mouse and keyboard actions have been received. So with larger data and complex operations, you should really choose asynchronous mode to keep your app running smoothly. Or alternatively, you can run synchronous operations in a spearate thread using Web Workers. Indeed, aside from Web Storage, you're forced to do it this way; all the other APIs only make their synchronous versions available from inside a Web Worker.</p>
+<p>Synchronous mode should be avoided at all costs, it may seem like a simpler API, but it blocks rendering on the page while the operation completes, and in some cases freezes the whole browser. You've probably noticed when sites and even apps do this, you click on a button and everything freezes, you wonder whether it's crashed, then it springs back to life.</p>
+
+<p>Some APIs don't have an async mode, such as <code>localStorage</code>, you should carefully performance monitor your use of these APIs, and be prepared to switch to one of the async APIs if it becomes an issue.</p>
 
 <h2 id="features">Overview and Comparison of APIs</h1>
 
@@ -117,7 +119,7 @@ varies
   <tr>
     <td>
       <ol>
-        <li>Supported on major mobile browsers (Android Browser, Mobile Safari, Opera Mobile) as well as several desktop browsers (Chrome, Firefox, Opera).</li>
+        <li>Supported on major mobile browsers (Android Browser, Mobile Safari, Opera Mobile) as well as several desktop browsers (Chrome, Safari, Opera).</li>
         <li>Good performance generally, being an asynchronous API. Database interaction won't lock up the user interface. (Synchronous API is also available for WebWorkers.)</li>
         <li>Good search performance, since data can be indexed according to search keys.</li>
         <li>Robust, since it supports a <a href="http://en.wikipedia.org/wiki/Database_transaction">transactional database model</a>.</li>
@@ -128,7 +130,7 @@ varies
       <ol>
         <li>Deprecated. Will not be supported on IE or Firefox, and will probably be phased out from the other browsers at some stage.</li>
         <li>Steep learning curve, requiring knowledge of relational databases and SQL.</li>
-        <li>Suffers from <a href="http://en.wikipedia.org/wiki/Object-relational_impedance_mismatch">object-relational impedence mismatch</a>.</a>
+        <li>Suffers from <a href="http://en.wikipedia.org/wiki/Object-relational_impedance_mismatch">object-relational impedance mismatch</a>.</a>
         <li>Diminishes agility, as database schema must be defined upfront, with all records in a table matching the same structure.</a>
       </ol>
     </td>
@@ -152,7 +154,7 @@ varies
       <ol>
         <li>Good performance generally, being an asynchronous API. Database interaction won't lock up the user interface. (Synchronous API is also available for WebWorkers.)</li>
         <li>Good search performance, since data can be indexed according to search keys.</li>
-        <li>Supports agile development, with no need to flexible data structures.</li>
+        <li>Supports versioning.</li>
         <li>Robust, since it supports a <a href="http://en.wikipedia.org/wiki/Database_transaction">transactional database model</a>.</li>
         <li>Fairly easy learning curve, due to a simple data model.</li>
         <li>Decent browser support: Chrome, Firefox, mobile FF, IE10.</li>
@@ -160,8 +162,7 @@ varies
     </td>
     <td>
       <ol>
-        <li>Somewhat complex API.</li>
-        <li>Need to ensure data consistency and integrity, since data is effectively unstructured. (This is the standard flipside weakness to the typical strengths of NOSQL structures.)</li>
+        <li>Very complex API resulting in large amounts of nested callbacks.</li>
       </ol>
     </td>
   </tr>
@@ -169,7 +170,7 @@ varies
 
 <h3 id="file-access">FileSystem</h3>
 
-<p>The previous formats are all suitable for text and structured data, but when it comes to large files and binary content, we need something else. Fortunately, we now have a <a href="http://dev.w3.org/2009/dap/file-system/pub/FileSystem/">FileSystem API standard</a>. It gives each domain a full hierarchical filesystem, and in Chrome at least, these are real files sitting on the user's hard drive. For reading and writing of individual files, the API builds on the existing <a href="http://www.w3.org/TR/FileAPI/">File API</a>.</p>
+<p>The previous formats are all suitable for text and structured data, but when it comes to large files and binary content, we need something else. Fortunately, we now have a <a href="http://dev.w3.org/2009/dap/file-system/file-dir-sys.html">FileSystem API standard</a>. It gives each domain a full hierarchical filesystem, and in Chrome at least, these are real files sitting on the user's hard drive. For reading and writing of individual files, the API builds on the existing <a href="http://www.w3.org/TR/FileAPI/">File API</a>.</p>
 
 <table>
   <tr>
@@ -185,7 +186,7 @@ varies
     </td>
     <td>
       <ol>
-        <li>Very early standard. Only available in Chrome.</li>
+        <li>Very early standard. Only available in Chrome and Opera.</li>
         <li>No transaction support.</li>
         <li>No built-in search/indexing support.</li>
       </ol>
@@ -195,11 +196,11 @@ varies
 
 <h2 id="code">Show Me the Code</h2>
 
-<p>This section compares how the various APIs tackle the same problem. The example is a "geo-mood" checkin system, where you can track your mood across time and place. The interface lets you switch between database types. Of course, this is slightly contrived as in real world situations, one database type will always make more sense than the rest, and FileSystem API is not suited to this kind of application at all! But for demonstration purposes, it's helpful indeed if we can see the different means we can use to achieve the same end. Note too that some of the code snippets have been refactored for readability.</p>
+<p>This section compares how the various APIs tackle the same problem. The example is a "geo-mood" check-in system, where you can track your mood across time and place. The interface lets you switch between database types. Of course, this is slightly contrived as in real world situations, one database type will always make more sense than the rest, and FileSystem API is not suited to this kind of application at all! But for demonstration purposes, it's helpful indeed if we can see the different means we can use to achieve the same end. Note too that some of the code snippets have been refactored for readability.</p>
 
 <p><a href="./demo.html">Try the Geo-Mood demo now.</a></p>
 
-<p>To make the demo interesting, we'll isolate the data storage aspects using <a href="http://en.wikipedia.org/wiki/Polymorphism_in_object-oriented_programming">standard object-oriented design techniques</a>, more specifically <a href="TODO">the Strategy pattern</a>. The UI logic will only know there is a "store"; it won't need to know how the store is implemented, because each store has exactly the same methods on it. So the UI code can just call <tt>store.setup()</tt>, <tt>store.count()</tt>, and so on. In reality, there are four implementations of the store, one for each storage type. When the app starts up, it inspects the URL and instantiates the right store.</p>
+<p>To make the demo interesting, we'll isolate the data storage aspects using <a href="http://en.wikipedia.org/wiki/Polymorphism_in_object-oriented_programming">standard object-oriented design techniques</a>. The UI logic will only know there is a "store"; it won't need to know how the store is implemented, because each store has exactly the same methods on it. So the UI code can just call <tt>store.setup()</tt>, <tt>store.count()</tt>, and so on. In reality, there are four implementations of the store, one for each storage type. When the app starts up, it inspects the URL and instantiates the right store.</p>
 
 <p>To keep the API consistent, the methods are asynchronous, i.e. they pass results back to the caller. This is even true for the Web Storage implementation, where the underlying implementation is local.</p>
 
@@ -227,58 +228,44 @@ this.db.transaction(function(tx) {
 });
 </pre>
 
-<p><strong>Indexed Database</strong> setup takes some work, because it enforces a database version system; if we attempt to open a new database, the result will be a database whose version is null, which is our cue to set it up. And in setting it up, we obviously want to set the version so it doesn't return null next time! Thus, we must call <code>setVersion()</code> and we set up the database once the version has been set.</p>
+<p><strong>Indexed Database</strong> setup takes some work, because it enforces a database version system. When we make a connection to our database we specify which version we're expecting, if the current database uses a previous version, or hasn't been created yet, the <code>onupgradeneeded</code> event is fired, and <code>onsuccess</code> is called once the upgrade is complete. If no upgrade is needed <code>onsuccess</code> is called straight away.</p>
 
 <p>Another thing we do here is creating a mood index, so we will later be able to quickly search for all checkins matching a particular mood.</p>
 
 <pre class="prettyprint">
-setup: function(handler) {
+var db;
+var version = 1;
 
+window.indexedStore = {};
+
+window.indexedStore.setup = function(handler) {
   // attempt to open the database
-  var openRequest = indexedDB.open("geomood", "Geo-Mood Checkins");
+  var request = indexedDB.open("geomood", version);
 
-  // assign the database for access outside
-  // the callback and then either upgrade
-  // the database if needed or carry on
-  openRequest.onsuccess = function(ev) {
+  // upgrade/create the database if needed
+  request.onupgradeneeded = function(event) {
+    var db = request.result;
+    if (event.oldVersion &lt; 1) {
+      // Version 1 is the first version of the database.
+      var checkinsStore = db.createObjectStore("checkins", { keyPath: "time" });
+      checkinsStore.createIndex("moodIndex", "mood", { unique: false });
+    }
+    if (event.oldVersion &lt; 2) {
+      // In future versions we'd upgrade our database here.
+      // This will never run here, because we're version 1.
+    }
+    db = request.result;
+  };
 
-    db = ev.target.result;
+  request.onsuccess = function(ev) {
+    // assign the database for access outside
+    db = request.result;
+    handler();
     db.onerror = function(ev) {
-      console.log("db error", arguments, ev.target.webkitErrorMessage);
-    };
-
-    if(db.version === version) {
-      handler();
-    } else {
-      indexedStore.reset(handler);
-    }
-  };
-},
-
-reset: function(handler) {
-
-  // update the db version
-  var versionRequest = db.setVersion(version);
-
-  versionRequest.onsuccess = function(ev) {
-
-    // remove the store if it exists
-    if (db.objectStoreNames.contains("checkins")) {
-      db.deleteObjectStore("checkins");
-    }
-
-    // create a store, and an index
-    var checkinsStore = db.createObjectStore("checkins", { keyPath: "time" });
-    checkinsStore.createIndex("moodIndex", "mood", { unique: false });
-
-    // now call the handler outside of
-    // the 'versionchange' callstack
-    var transaction = ev.target.result;
-    transaction.oncomplete = function() {
-      handler();
+      console.log("db error", arguments);
     };
   };
-}
+};
 </pre>
 
 <p>Finally, <strong>FileSystem</strong> setup. We'll store each checkin in its own file, JSON-encoded, and all of them inside a "checkins/" directory. Again, this is not the most appropriate use of FileSystem API, but good for demonstration purposes.</p>
@@ -318,9 +305,9 @@ setup: function(handler) {
 }
 </pre>
 
-<h3 id="save">Saving a Checkin</h3>
+<h3 id="save">Saving a Check-in</h3>
 
-<p>With localStorage, we simply pull the checkins array out, add a new one to the end, and save it again. We also have to do the JSON dance to store it in string form.</p>
+<p>With localStorage, we simply pull the check-in array out, add a new one to the end, and save it again. We also have to do the JSON dance to store it in string form.</p>
 
 <pre class="prettyprint">
 var checkins = JSON.parse(localStorage["checkins"]);
@@ -343,10 +330,11 @@ store.db.transaction(function(tx) {
 </pre>
 
 <p>Once the store is set up, saving in IndexedDB is almost as simple as Web Storage, with the advantage of working asynchronously, in a transaction:</p>
+
 <pre class="prettyprint">
-var store = db.transaction(["checkins"], 'readwrite').objectStore("checkins");
-var request = store.put(checkin);
-request.onsuccess = handler;
+var transaction = db.transaction("checkins", 'readwrite');
+transaction.objectStore("checkins").put(checkin);
+transaction.oncomplete = handler;
 </pre>
 
 <p>With FileStore, once we create a file and get a handle on it, we can use <a href="http://www.w3.org/TR/file-writer-api/">the FileWriter API</a> to populate it:</p>
@@ -399,7 +387,7 @@ store.db.transaction(function(tx) {
 <p>Naturally enough, the IndexedDB solution uses an index, the index on "mood we created earlier, called "moodIndex". We use a cursor to iterate through each checkin matching the query. Note that this cursor pattern can also be used against an entire store; so, with indexes, it's like we get a window into the store where we can only see matching objects (similar to a "view" in traditional databases).</p>
 
 <pre class="prettyprint">
-var store = db.transaction(["checkins"], 'readonly').objectStore("checkins");
+var store = db.transaction("checkins", 'readonly').objectStore("checkins");
 var request = moodQuery ?
   store.index("moodIndex").openCursor(new IDBKeyRange.only(moodQuery)) :
   store.openCursor();
@@ -462,7 +450,7 @@ var count = 0;
 var request = db.transaction(["checkins"], 'readonly').objectStore("checkins").openCursor();
 request.onsuccess = function(ev) {
   var cursor = request.result;
-  cursor ? ++count && cursor["continue"]() : handler(count);
+  cursor ? ++count &amp;&amp; cursor["continue"]() : handler(count);
 };
 </pre>
 </p>
@@ -478,7 +466,6 @@ checkinsDir.createReader().readEntries(function(files) {
 <h2 id="summary">Summary</h3>
 
 <p>This has been a high-level overview of modern client-side storage techniques.
-You should also check out the <a href="../whats-offline">overview on offline apps</a> and, for more detailed introductions to specific APIs, see the tutorials on
-<a href="../../#offline">offline</a> and <a href="../../#storage">storage</a> topics.</p>
+You should also check out the <a href="../whats-offline">overview on offline apps</a></p>
 
 {% endblock %}
