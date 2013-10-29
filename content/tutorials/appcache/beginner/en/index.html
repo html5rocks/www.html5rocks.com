@@ -11,15 +11,13 @@
 {% block content %}
   <h2 id="toc-introduction">Introduction</h2>
   <p>It's becoming increasingly important for web-based applications to be accessible offline.
-  Yes, all browsers have caching mechanisms, but they're unreliable and don't always
-  work as you might expect. HTML5 addresses some of the annoyances of being offline with
+  Yes, all browsers can cache pages and resources for long periods if told to do so, but the browser can kick individual items out of the cache at any point to make room for other things. HTML5 addresses some of the annoyances of being offline with
   the <a href="http://www.whatwg.org/specs/web-apps/current-work/#applicationcache">ApplicationCache</a> interface.</p>
   <p>Using the cache interface gives your application three advantages:</p>
   <ol>
     <li>Offline browsing - users can navigate your full site when they're offline</li>
-    <li>Speed - cached resources are local, and therefore load faster.</li>
-    <li>Reduced server load - the browser will only download resources from the server
-    that have changed.</li>
+    <li>Speed - resources come straight from disk, no trip to the network.</li>
+    <li>Resilience - if your site goes down for "maintenance" (as in, someone accidentally breaks everything), your users will get the offline experience</li>
   </ol>
   <p>The Application Cache (or AppCache) allows a developer to specify which files the browser should cache
   and make available to offline users. Your app will load and work correctly, even if the user presses
@@ -42,8 +40,12 @@
   that you want cached. The browser does not cache a page if it does not contain
   the <code>manifest</code> attribute (unless it is explicitly listed
   in the manifest file itself. This means that any page the user navigates to that
-  include a <code>manifest</code> will be implicitly added to the application cache.
-  Thus, there's no need to list every page in your manifest.</p>
+  includes a <code>manifest</code> will be implicitly added to the application cache.
+  Thus, there's no need to list every page in your manifest. If a page points to a manifest, there's no way to prevent this page being cached.</p>
+
+  <p><strong>Note:</strong> "/page-url/", "/page-url/?something", "/page-url/?something-else" are considered separate pages. If they link to the manifest, they will all be implicitly cached separately. Because of this and <a href="http://alistapart.com/article/application-cache-is-a-douchebag">other gotchas</a>, AppCache best used on apps with one URL.</p>
+
+  <p>You can see the urls that are controlled by the application cache by visiting chrome://appcache-internals/ in Chrome. From here you can clear caches and view the entries. There are <a href="http://flailingmonkey.com/application-cache-not-a-douchebag">similar developer tools</a> in Firefox.</p>
 
   <p>The <code>manifest</code> attribute can point to an absolute URL or relative path,
   but an absolute URL must be under the same origin as the web application.
@@ -68,15 +70,18 @@
   upload: mystaticdir/(.*\.appcache)
 </pre>
 
+  <p>This requirement was dropped from the specification some time ago, and no longer required by the latest versions of Chrome, Safari and Firefox, but you'll need the mime-type to work in older browsers and IE11.</p>
+
   <h3 id="toc-manifest-file-structure">Structure of a manifest file</h3>
 
-  <p>A simple manifest may look something like this:</p>
+  <p>The manifest is a separate file you link to via the manifest attribute on the html element. A simple manifest looks something like this:</p>
 <pre class="prettyprint">
 CACHE MANIFEST
 index.html
 stylesheet.css
 images/logo.png
 scripts/main.js
+http://cdn.example.com/scripts/main.js
 </pre>
 
   <p>This example will cache four files on the page that specifies this manifest file.</p>
@@ -84,11 +89,13 @@ scripts/main.js
   <p>There are a couple of things to note:</p>
   <ul>
     <li>The <code>CACHE MANIFEST</code> string is the first line and is required.</li>
+    <li>Files can be from another domain</li>
     <li>Some browsers place restrictions on the amount of storage quota available
     to your app. In Chrome for example, AppCache uses a <a href="https://developers.google.com/chrome/whitepapers/storage#table">shared pool</a> of TEMPORARY
     storage that other offline APIs can share. If you are writing an app for the
     <a href="http://code.google.com/chrome/apps/docs/developers_guide.html">Chrome Web Store</a>, using the <code>unlimitedStorage</code> removes that restriction.</li>
-    <li>If the manifest file or a resource specified in it fails to download,
+    <li>If the manifest itself returns a 404 or 410, the cache is deleted.</li>
+    <li>If the manifest or a resource specified in it fails to download,
     the entire cache update process fails. The browser will keep using the old
     application cache in the event of failure.</li>
   </ul>
@@ -108,9 +115,7 @@ scripts/main.js
 
 # Resources that require the user to be online.
 NETWORK:
-login.php
-/myapi
-http://api.twitter.com
+*
 
 # static.html will be served if main.py is inaccessible
 # offline.jpg will be served in place of all images in images/large/
@@ -118,16 +123,16 @@ http://api.twitter.com
 FALLBACK:
 /main.py /static.html
 images/large/ images/offline.jpg
-*.html /offline.html
 </pre>
 
   <p>Lines starting with a '#' are comment lines, but can also serve another purpose.
   An application's cache is only updated when its manifest file changes.
-  So for example, if you edit an image resource or change a javascript function, those changes will not
-  be re-cached. <strong>You must modify the manifest file itself to inform the browser to refresh cached files</strong>.
-  Creating a comment line with a generated version number, hash of your files, or timestamp is one way to ensure
-  users have the latest version of your software. You can also programmatically update the cache once a new version
-  is ready as discussed in the <a href="#toc-updating-cache">Updating the cache</a> section.</p>
+  So for example, if you edit an image resource or change a JavaScript function, those changes will not
+  be re-cached. <strong>You must modify the manifest file itself to inform the browser to refresh cached files</strong>.</p>
+
+  <p>Avoid using a continually-updating timestamp or random string to force updates every time. The manifest is checked twice during an update, once at the start and once after all cached files have been updated. If the manifest has changed during the update, it's possible the browser fetched some files from one version, and other files from another version, so it doesn't apply the cache and retries later.</p>
+
+  <p>Although the cache updates, the browser won't use those files until the page is refreshed, because updates happen after the page is loaded from the current version of the cache.</p>
 
   <p>A manifest can have three distinct sections: <code>CACHE</code>, <code>NETWORK</code>, and <code>FALLBACK</code>.</p>
 
@@ -136,12 +141,10 @@ images/large/ images/offline.jpg
     <dd>This is the default section for entries. Files listed under this header (or immediately after the <code>CACHE MANIFEST</code>)
     will be explicitly cached after they're downloaded for the first time.</dd>
     <dt><code>NETWORK:</code></dt>
-    <dd>Files listed under this section are white-listed resources that require a connection to the server.
-    All requests to these resources bypass the cache, even if the user is offline. Wildcards may be used.</dd>
+    <dd>Files listed in this section may come from the network if they aren't in the cache, otherwise the network isn't used, even if the user is online. You can white-list specific URLs here, or simply "*", which allows all URLs. Most sites need "*".</dd>
     <dt><code>FALLBACK:</code></dt>
     <dd>An optional section specifying fallback pages if a resource is inaccessible. The first URI is the resource,
-    the second is the fallback. Both URIs must be relative and from the same origin as the manifest file.
-    Wildcards may be used.</dd>
+    the second is the fallback used if the network request fails or errors. Both URIs must from the same origin as the manifest file. You can capture specific URLs but also URL prefixes. "images/large/" will capture failures from URLs such as "images/large/whatever/img.jpg".</dd>
   </dl>
 
   <p><strong>Note</strong>: These sections can be listed in any order and each section can appear more than one in a single manifest.</p>
@@ -186,7 +189,6 @@ images/logo3.png
     <li>The user clears their browser's data storage for your site.</li>
     <li>The manifest file is modified. Note: updating a file listed in the manifest doesn't mean
     the browser will re-cache that resource. The manifest file itself must be altered.</li>
-    <li>The app cache is programatically updated.</li>
   </ol>
 
   <h3 id="toc-status">Cache status</h3>
@@ -222,7 +224,7 @@ switch (appCache.status) {
 };
 </pre>
 
-  <p>To programmatically update the cache, first call <code>applicationCache.update()</code>.
+  <p>To programmatically check for updates to the manifest, first call <code>applicationCache.update()</code>.
   This will attempt to update the user's cache (which requires the manifest file to have changed).
   Finally, when the <code>applicationCache.status</code> is in its <code>UPDATEREADY</code> state,
   calling <code>applicationCache.swapCache()</code> will swap the old cache for the new one.</p>
@@ -240,12 +242,9 @@ if (appCache.status == window.applicationCache.UPDATEREADY) {
 </pre>
 
   <p><strong>Note</strong>: Using <code>update()</code> and <code>swapCache()</code>
-  like this does not serve the updated resources to users. This flow simply tells the
-  browser to check for a new manifest, download the updated content it specifies, and
-  repopulate the app cache. Thus, it takes two page reloads to server new content to users, one to pull down
-  a new app cache, and another to refresh the page content.</p>
+  like this will mean the new cache will be used for subsequent downloads, but the user will already have downloaded the page and likely all resources by this point, those files won't be automatically reloaded. You'll need to refresh the page to get the latest version of the page and resources, which doesn't require calling <code>swapCache()</code></p>
 
-  <p>The good news: you can avoid this double reload headache. To update users to
+  <p>The good news: you can automate this. To update users to
   the newest version of your site, set a listener to monitor the
   <code>updateready</code> event on page load:</p>
 
@@ -256,8 +255,6 @@ window.addEventListener('load', function(e) {
   window.applicationCache.addEventListener('updateready', function(e) {
     if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
       // Browser downloaded a new app cache.
-      // Swap it in and reload the page to get the new hotness.
-      window.applicationCache.swapCache();
       if (confirm('A new version of this site is available. Load it?')) {
         window.location.reload();
       }
@@ -317,6 +314,7 @@ appCache.addEventListener('updateready', handleCacheEvent, false);
   <h2 id="toc-references">References</h2>
   <ul>
     <li><a href="http://www.whatwg.org/specs/web-apps/current-work/#applicationcache">ApplicationCache</a> API specification</li>
+    <li><a href="http://alistapart.com/article/application-cache-is-a-douchebag">Application Cache is a douchebag</a> - covering the gotchas and issues with AppCache.</li>
   </ul>
 
 {% endblock %}

@@ -96,19 +96,15 @@ Take a breath. This stuff moves fast!
 
 The `<device>` element eventually went the way of the Dodo.
 
-The pace to find a suitable capture API accelerated in recent months
-thanks to a larger effort called [WebRTC][webrtc-spec] (Web Real Time Communications).
-The spec is overseen by the [W3C WebRTC Working Group](http://www.w3.org/2011/04/webrtc/).
-Google, Opera, Mozilla, and [a few others](http://webrtc.org) are currently working
-on bringing implementations to their browsers.
+The pace to find a suitable capture API accelerated thanks to the larger [WebRTC][webrtc-spec] (Web Real Time Communications) effort. That spec is overseen by the [W3C WebRTC Working Group](http://www.w3.org/2011/04/webrtc/). Google, Opera, Mozilla, and [a few others](http://webrtc.org) have
+implementations.
 
 `getUserMedia()` is related to WebRTC because it's the gateway into that set of APIs.
 It provides the means to access the user's local camera/microphone stream.
 
 **Support:**
 
-In Chrome 21, this feature will be on by default. The API is also supported in
-Opera 12 and Firefox 17.
+`getUserMedia()` has been supported since Chrome 21, Opera 18, and Firefox 17.
 
 <h2 id="toc-gettingstarted">Getting started</h2>
 
@@ -120,7 +116,6 @@ Camera access is now a call away, not an install away. It's baked directly into 
 Feature detecting is a simple check for the existence of `navigator.getUserMedia`:
 
     function hasGetUserMedia() {
-      // Note: Opera is unprefixed.
       return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
                 navigator.mozGetUserMedia || navigator.msGetUserMedia);
     }
@@ -142,15 +137,14 @@ You can also [use Modernizr](http://modernizr.com/) to detect `getUserMedia` to 
 <h3 id="toc-acccess">Gaining access to an input device</h3>
 
 To use the webcam or microphone, we need to request permission.
-The first parameter to `getUserMedia()` is an object specifying the type of
-media you want to access. For example, if you want to access the webcam, the
-first parameter should be `{video: true}`. To use both the microphone and camera,
+The first parameter to `getUserMedia()` is an object specifying the details and
+requirements for each type of media you want to access. For example, if you want to access the webcam, the first parameter should be `{video: true}`. To use both the microphone and camera,
 pass `{video: true, audio: true}`:
 
     <video autoplay></video>
 
     <script>
-      var onFailSoHard = function(e) {
+      var errorCallback = function(e) {
         console.log('Reeeejected!', e);
       };
 
@@ -164,7 +158,7 @@ pass `{video: true, audio: true}`:
         video.onloadedmetadata = function(e) {
           // Ready to go. Do some stuff.
         };
-      }, onFailSoHard);
+      }, errorCallback);
     </script>
 
 OK. So what's going on here? Media capture is a perfect example of new HTML5 APIs
@@ -179,19 +173,98 @@ the first frame. Adding `controls` also works as you'd expected.
 
 If you want something that works cross-browser, try this:
 
-    window.URL = window.URL || window.webkitURL;
-    navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
-                              navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    navigator.getUserMedia  = navigator.getUserMedia ||
+                              navigator.webkitGetUserMedia ||
+                              navigator.mozGetUserMedia ||
+                              navigator.msGetUserMedia;
 
     var video = document.querySelector('video');
 
     if (navigator.getUserMedia) {
       navigator.getUserMedia({audio: true, video: true}, function(stream) {
         video.src = window.URL.createObjectURL(stream);
-      }, onFailSoHard);
+      }, errorCallback);
     } else {
       video.src = 'somevideo.webm'; // fallback.
     }
+
+<h3 id="toc-constraints">Setting media constraints (resolution, height, width)</h3>
+
+The first parameter to `getUserMedia()` can also be used to specify more requirements
+(or constraints) on the returned media stream. For example, instead of just indicating you want basic access to video (e.g. `{vide: true}`), you can additionally require the stream
+to be HD:
+
+    var hdConstraints = {
+      video: {
+        mandatory: {
+          minWidth: 1280,
+          minHeight: 720
+        }
+      }
+    };
+
+    navigator.getUserMedia(hdConstraints, successCallback, errorCallback);
+
+    ...
+
+    var vgaConstraints = {
+      video: {
+        mandatory: {
+          maxWidth: 640,
+          maxHeight: 360
+        }
+      }
+    };
+
+    navigator.getUserMedia(vgaConstraints, successCallback, errorCallback);
+
+For more configurations, see the [constraints API](http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints)
+
+<h3 id="toc-source">Selecting a media source</h3>
+
+In Chrome 30 or later, `getUserMedia()` also supports selecting the the video/audio source
+using the `MediaStreamTrack.getSources()` API.
+
+In this example, the last microphone and camera that's found is selected as the
+media stream source:
+
+    MediaStreamTrack.getSources(function(sourceInfos) {
+      var audioSource = null;
+      var videoSource = null;
+
+      for (var i = 0; i != sourceInfos.length; ++i) {
+        var sourceInfo = sourceInfos[i];
+        if (sourceInfo.kind === 'audio') {
+          console.log(sourceInfo.id, sourceInfo.label || 'microphone');
+
+          audioSource = sourceInfo.id;
+        } else if (sourceInfo.kind === 'video') {
+          console.log(sourceInfo.id, sourceInfo.label || 'camera');
+
+          videoSource = sourceInfo.id;
+        } else {
+          console.log('Some other kind of source: ', sourceInfo);
+        }
+      }
+
+      sourceSelected(audioSource, videoSource);
+    });
+
+    function sourceSelected(audioSource, videoSource) {
+      var constraints = {
+        audio: {
+          optional: [{sourceId: audioSource}]
+        },
+        video: {
+          optional: [{sourceId: videoSource}]
+        }
+      };
+
+      navigator.getUserMedia(constraints, successCallback, errorCallback);
+    }
+
+Check out Sam Dutton's [great demo](https://simpl.info/getusermedia/sources/) of how
+to let users select the media source.
 
 <h3 id="toc-security">Security</h3>
 
@@ -247,26 +320,29 @@ with realtime video:
     <img src="">
     <canvas style="display:none;"></canvas>
 
-    var video = document.querySelector('video');
-    var canvas = document.querySelector('canvas');
-    var ctx = canvas.getContext('2d');
-    var localMediaStream = null;
+    <script>
+      var video = document.querySelector('video');
+      var canvas = document.querySelector('canvas');
+      var ctx = canvas.getContext('2d');
+      var localMediaStream = null;
 
-    function snapshot() {
-      if (localMediaStream) {
-        ctx.drawImage(video, 0, 0);
-        // "image/webp" works in Chrome 18. In other browsers, this will fall back to image/png.
-        document.querySelector('img').src = canvas.toDataURL('image/webp');
+      function snapshot() {
+        if (localMediaStream) {
+          ctx.drawImage(video, 0, 0);
+          // "image/webp" works in Chrome.
+          // Other browsers will fall back to image/png.
+          document.querySelector('img').src = canvas.toDataURL('image/webp');
+        }
       }
-    }
 
-    video.addEventListener('click', snapshot, false);
+      video.addEventListener('click', snapshot, false);
 
-    // Not showing vendor prefixes or code that works cross-browser.
-    navigator.getUserMedia({video: true}, function(stream) {
-      video.src = window.URL.createObjectURL(stream);
-      localMediaStream = stream;
-    }, onFailSoHard);
+      // Not showing vendor prefixes or code that works cross-browser.
+      navigator.getUserMedia({video: true}, function(stream) {
+        video.src = window.URL.createObjectURL(stream);
+        localMediaStream = stream;
+      }, errorCallback);
+    </script>
 
 
 <div style="text-align:center;">
@@ -279,10 +355,6 @@ with realtime video:
 <h2 id="toc-effects">Applying Effects</h2>
 
 <h3 id="toc-effects-css">CSS Filters</h3>
-
-<p class="notice" style="text-align:center">
-CSS filters are currently supported in WebKit nightlies and Chrome 18+.
-</p>
 
 Using [CSS Filters][cssfilters-spec], we can apply some gnarly effects to the `<video>`
 as it is captured:
@@ -310,8 +382,9 @@ as it is captured:
 
     <script>
     var idx = 0;
-    var filters = ['grayscale', 'sepia', 'blur', 'brightness', 'contrast', 'hue-rotate',
-                   'hue-rotate2', 'hue-rotate3', 'saturate', 'invert', ''];
+    var filters = ['grayscale', 'sepia', 'blur', 'brightness',
+                   'contrast', 'hue-rotate', 'hue-rotate2',
+                   'hue-rotate3', 'saturate', 'invert', ''];
 
     function changeFilter(e) {
       var el = e.target;
@@ -322,7 +395,8 @@ as it is captured:
       }
     }
 
-    document.querySelector('video').addEventListener('click', changeFilter, false);
+    document.querySelector('video').addEventListener(
+        'click', changeFilter, false);
     </script>
 
 <div style="text-align:center;">
@@ -342,25 +416,23 @@ to render live video into WebGL.
 
 <h2 id="toc-webaudio-api">Using getUserMedia with the Web Audio API</h2>
 
-One of my dreams is to build AutoTune in the browser with nothing more than open web technology! We're actually not too far from that reality. 
+One of my dreams is to build AutoTune in the browser with nothing more than open web technology! 
 
-As of Chrome 24, you can enable the "Web Audio Input" flag in about:flags to
-experiment with `getUserMedia()` + the [Web Audio API](/tutorials/webaudio/intro/) for realtime
-effects. Integrating the two is still a work in progress ([crbug.com/112404](http://crbug.com/112404)),
-but the current implementation works pretty well.
+Chrome supports live microphone input from `getUserMedia()` to the [Web Audio API](/tutorials/webaudio/intro/) for real-time effects. Piping microphone input to the Web Audio API looks like this:
 
-Piping microphone input to the Web Audio API looks like this:
+    window.AudioContext = window.AudioContext ||
+                          window.webkitAudioContext;
 
-    var context = new window.webkitAudioContext();
+    var context = new AudioContext();
 
-    navigator.webkitGetUserMedia({audio: true}, function(stream) {
+    navigator.getUserMedia({audio: true}, function(stream) {
       var microphone = context.createMediaStreamSource(stream);
       var filter = context.createBiquadFilter();
 
       // microphone -> filter -> destination.
       microphone.connect(filter);
       filter.connect(context.destination);
-    }, onFailSoHard);
+    }, errorCallback);
 
 Demos:
 
@@ -405,7 +477,7 @@ we'll continue to see more in the very near future!
 - [Play Xylophone with your hands](http://www.soundstep.com/blog/experiments/jsdetection/)
 
 <script>
-function onFailSoHard(e) {
+function errorCallback(e) {
   if (e.code == 1) {
     alert('User denied access to their camera');
   } else {
@@ -425,15 +497,15 @@ button.addEventListener('click', function(e) {
       video.src = stream;
       video.controls = true;
       localMediaStream = stream;
-    }, onFailSoHard);
+    }, errorCallback);
   } else if (navigator.webkitGetUserMedia) {
     navigator.webkitGetUserMedia({video: true}, function(stream) {
-      video.src = window.webkitURL.createObjectURL(stream);
+      video.src = window.URL.createObjectURL(stream);
       video.controls = true;
       localMediaStream = stream;
-    }, onFailSoHard);
+    }, errorCallback);
   } else {
-    onFailSoHard({target: video});
+    errorCallback({target: video});
   }
 }, false);
 
@@ -479,16 +551,16 @@ button.addEventListener('click', function(e) {
       localMediaStream = stream;
       sizeCanvas();
       button.textContent = 'Take Shot';
-    }, onFailSoHard);
+    }, errorCallback);
   } else if (navigator.webkitGetUserMedia) {
     navigator.webkitGetUserMedia({video: true}, function(stream) {
-      video.src = window.webkitURL.createObjectURL(stream);
+      video.src = window.URL.createObjectURL(stream);
       localMediaStream = stream;
       sizeCanvas();
       button.textContent = 'Take Shot';
-    }, onFailSoHard);
+    }, errorCallback);
   } else {
-    onFailSoHard({target: video});
+    errorCallback({target: video});
   }
 }, false);
 
@@ -532,14 +604,14 @@ button.addEventListener('click', function(e) {
     navigator.getUserMedia('video, audio', function(stream) {
       video.src = stream;
       localMediaStream = stream;
-    }, onFailSoHard);
+    }, errorCallback);
   } else if (navigator.webkitGetUserMedia) {
     navigator.webkitGetUserMedia({video: true}, function(stream) {
-      video.src = window.webkitURL.createObjectURL(stream);
+      video.src = window.URL.createObjectURL(stream);
       localMediaStream = stream;
-    }, onFailSoHard);
+    }, errorCallback);
   } else {
-    onFailSoHard({target: video});
+    errorCallback({target: video});
   }
 }, false);
 

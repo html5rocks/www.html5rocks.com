@@ -32,10 +32,10 @@ window.onload = function() {
       ctx.fillText(ch, x*fontSize, -(8/32)*fontSize+(y+1)*fontSize);
     }
   }
-  
+
   var tex = new THREE.Texture(c);
   tex.needsUpdate = true;
-  
+
   var mat = new THREE.MeshBasicMaterial({map: tex});
   mat.transparent = true;
 
@@ -86,7 +86,7 @@ window.onload = function() {
     ContentProtection : { type: "f", value: 0.0 },
     Censorship : { type: "f", value: 0.0 }
   };
-  
+
   var shaderMaterial = new THREE.ShaderMaterial({
     uniforms : uniforms,
     vertexShader : document.querySelector('#vertex').textContent,
@@ -158,7 +158,7 @@ window.onload = function() {
 
   var letterCountTitle = document.createElement('p');
   letterCountTitle.innerHTML = 'Look around by dragging, zoom with the mouse wheel<br><br>Letter count: ';
-  var s = letterCountTitle.style;  
+  var s = letterCountTitle.style;
   s.position = 'fixed';
   s.left = s.top = '10px';
   document.body.appendChild(letterCountTitle);
@@ -182,5 +182,5 @@ window.onload = function() {
     renderer.render(scene, camera);
     requestAnimationFrame(animate, renderer.domElement);
   };
-  animate(+new Date);
+  animate(Date.now());
 };

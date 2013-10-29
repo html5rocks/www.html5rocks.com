@@ -2,6 +2,7 @@ import getpass
 import sys
 import re
 import math
+import netrc
 
 from datetime import datetime, timedelta
 from optparse import OptionParser
@@ -44,10 +45,10 @@ def ParseIssues(issues):
     return (completed_articles, late_articles, sorted(due_articles, key=lambda a: a.due_on))
 
 def main():
-    username = raw_input("Username: ")
-    password = getpass.getpass() 
+    h5r_netrc = netrc.netrc()
+    (username, account, password) = h5r_netrc.authenticators("html5rocks.com")
 
-    g = Github(username, password)
+    g = Github(password)
 
     repo = g.get_repo(repository)
 

@@ -5,6 +5,7 @@
 <html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
 <head>
   <meta charset="utf-8">
+  <meta property="twitter:account_id" content="1593210261" />
   <!-- Copyright (c) 2012 Google Inc.
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,11 +33,7 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="{% trans "HTML5 Rocks RSS" %}" href="http://feeds.feedburner.com/html5rocks">
 
-  <!-- iOS: run in full-screen mode and display upper status bar as translucent -->
-  <!--<meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">-->
-
-  <meta itemprop="name" content="{% if tut.title %}{{tut.title|safe}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta itemprop="name" content="{% trans "HTML5 Rocks" %}">
   <meta itemprop="description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
   {% block share_image %}
   <meta itemprop="image" content="{{host}}/static/images/html5rocks-logo-wings.png">
@@ -64,7 +61,7 @@
   <link rel="publisher" href="https://plus.google.com/111395306401981598462">
 
   <link rel="stylesheet" media="all" href="/static/css/{{css_file}}{% if prod %}.min{% endif %}.css">
-  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800|Source+Code+Pro" rel="stylesheet">
+  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800" rel="stylesheet">
 
   <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
   <link rel="apple-touch-icon-precomposed" href="/static/images/identity/HTML5_Badge_64.png">
@@ -76,10 +73,6 @@
   {% block head %}{% endblock %}
 </head>
 <body data-href="{{self_pagename}}" onload="{% block onload %}{% endblock %}" class="pattern-bg">
-
-  {% if gdl_page_url %}
-    <a href="{{gdl_page_url}}" id="livebanner" alt="Watch HTML5Rocks LIVE" title="Watch HTML5Rocks LIVE">On Air <span class="record"></span></a>
-  {% endif %}
 
   <header class="main">
     <h1 id="title">
@@ -107,12 +100,15 @@
       }, false);
     {% endif %}
 
-    // Kill feedburner and marketing tracking arguments cuz they're ugly.
-    if (/^\?utm_/.test(document.location.search) &&
-        window.history.replaceState) {
-      window.history.replaceState(
-          {}, '', document.location.href.replace(/\?utm_.*/, ''));
-    }
+    // Kill feedburner and marketing tracking arguments, but let them register
+    // before we do it.
+    setTimeout(function() {
+      if (/^\?utm_/.test(document.location.search) &&
+          window.history.replaceState) {
+        window.history.replaceState(
+            {}, '', document.location.href.replace(/\?utm_.*/, ''));
+      }
+    }, 2000);
   })();
   </script>
   <script>

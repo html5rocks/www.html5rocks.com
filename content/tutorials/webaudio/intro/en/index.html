@@ -43,13 +43,13 @@ audio production applications. What follows is a gentle introduction to
 using this powerful API.</p>
 <h2 id="toc-context">Getting started with the AudioContext</h2>
 
-<p>An <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioContext-section">AudioContext</a> is for managing and playing all sounds. To produce
+<p>An <a href="http://www.w3.org/TR/webaudio/#AudioContext-section">AudioContext</a> is for managing and playing all sounds. To produce
 a sound using the Web Audio API, create one or more sound sources
 and connect them to the sound destination provided by the <code>AudioContext</code>
 instance. This connection doesn't need to be direct, and can go through
-any number of intermediate <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioNode-section">AudioNodes</a> which act as processing
-modules for the audio signal. This <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#ModularRouting-section">routing</a> is described in greater
-detail at the Web Audio <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html">specification</a>.</p>
+any number of intermediate <a href="http://www.w3.org/TR/webaudio/#AudioNode-section">AudioNodes</a> which act as processing
+modules for the audio signal. This <a href="http://www.w3.org/TR/webaudio/#ModularRouting-section">routing</a> is described in greater
+detail at the Web Audio <a href="http://www.w3.org/TR/webaudio">specification</a>.</p>
 <p>A single instance of <code>AudioContext</code> can support multiple sound inputs
 and complex audio graphs, so we will only need one of these for each
 audio application we create.  Many of the interesting Web Audio API functions such as creating
@@ -230,7 +230,7 @@ buffer at a specified time, as follows:</p>
 
 <p>One of the most basic operations you might want to do to a sound is
 change its volume. Using the Web Audio API, we can route our source to
-its destination through an <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioGainNode-section">AudioGainNode</a> in order to manipulate the
+its destination through an <a href="http://www.w3.org/TR/webaudio/#GainNode">GainNode</a> in order to manipulate the
 volume:</p>
 <p><figure>
 <img src="diagrams/gain.png"/>
@@ -265,7 +265,7 @@ want to be able to pan from one sound source to another.</p>
 <img src="diagrams/crossfade.png"/>
 <figcaption>Audio graph with two sources connected through gain nodes</figcaption>
 </figure></p>
-<p>To set this up, we simply create two <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioGainNode-section">AudioGainNodes</a>, and connect
+<p>To set this up, we simply create two <a href="http://www.w3.org/TR/webaudio/#GainNode">GainNodes</a>, and connect
 each source through the nodes, using something like this function:</p>
 <pre class="prettyprint"><code>function createSource(buffer) {
   var source = context.createBufferSource();
@@ -314,8 +314,8 @@ When a song changes, we want to fade the current track out, and fade the
 new one in, to avoid a jarring transition. To do this, schedule a
 crossfade into the future. While we could use <code>setTimeout</code> to do this
 scheduling, this is <a href="http://stackoverflow.com/questions/2779154/understanding-javascript-timer-thread-issues">not precise</a>. With the Web Audio API, we
-can use the <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioParam-section">AudioParam</a> interface to schedule future values for
-parameters such as the gain value of an <code>AudioGainNode</code>.</p>
+can use the <a href="http://www.w3.org/TR/webaudio/#AudioParam-section">AudioParam</a> interface to schedule future values for
+parameters such as the gain value of an <code>GainNode</code>.</p>
 <p>Thus, given a playlist, we can transition between tracks by scheduling a
 gain decrease on the currently playing track, and a gain increase on the
 next one, both slightly before the current track finishes playing:</p>
@@ -360,7 +360,7 @@ tracks using the above approach:</p>
 <p>The Web Audio API lets you pipe sound from one audio node into another,
 creating a potentially complex chain of processors to add complex
 effects to your soundforms.</p>
-<p>One way to do this is to place <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#BiquadFilterNode-section">BiquadFilterNode</a>s between your sound
+<p>One way to do this is to place <a href="http://www.w3.org/TR/webaudio/#BiquadFilterNode-section">BiquadFilterNode</a>s between your sound
 source and destination. This type of audio node can do a variety of
 low-order filters which can be used to build graphic equalizers and even
 more complex effects, mostly to do with selecting which parts of the
@@ -380,7 +380,7 @@ frequency spectrum of a sound to emphasize and which to subdue.</p>
 <a href="http://en.wikipedia.org/wiki/Gain">gain</a>, the frequency at which to apply the filter, and a quality factor.
 The low-pass filter keeps the lower frequency range, but discards high
 frequencies. The break-off point is determined by the frequency value,
-and the <a href="http://en.wikipedia.org/wiki/Audio_filter#Self_oscillation">Q factor</a> is unitless, and determines the shape of the
+and the <a href="http://en.wikipedia.org/wiki/Q_factor">Q factor</a> is unitless, and determines the shape of the
 graph. The gain only affects certain filters, such as the low-shelf and
 peaking filters, and not this low-pass filter.</p>
 <p>Let's setup a simple low-pass filter to extract only the bases from a

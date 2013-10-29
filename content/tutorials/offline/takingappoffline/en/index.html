@@ -34,10 +34,10 @@
     There are two main components to Offline support in HTML.
   </p>
   <ul>
-    <li>The Application Cache, used for caching application files such as
-       html, images, javascript and css;</li>
-    <li>and Databases used for data access and key based lookups such as 
-      localStorage and sessionStorage</li>
+    <li><a href="/en/tutorials/appcache/beginner/">The Application Cache</a>, used for caching application files such as
+       html, images, javascript and css</li>
+    <li><a href="/tutorials/webdatabase/todo/">Databases</a> used for data access and key based lookups such as 
+      <a href="/en/features/storage">localStorage and sessionStorage</a></li>
   </ul>
   <p>
     This sample demonstrates how to take your applications offline using the 
@@ -50,9 +50,9 @@
     Javascript and HTML so it will give you a really clear indication
     of how simple it can be to take your applications offline.
   </p>
-  <h2 id="toc-step0">What is the Application Cache</h2>
+  <h2 id="toc-step0">What is the Application Cache?</h2>
   <p>
-    The Application Cache (or App Cache for short) is designed to let you 
+    The Application Cache (or AppCache for short) is designed to let you 
     declaratively specify your web application's required resources in a 
     manifest file. The resources listed in the manifest will be proactively 
     downloaded and stored by the browser.
@@ -89,31 +89,53 @@ base.css</pre>
     manifest file and start the process of acquiring the resources needed to 
     ensure your application is available in offline mode.
   </p>
-  <h2 id="toc-step3">Step 3. Pulling the plug (Testing)</h2>
-  If you have correctly listed all the application files, then your application
-  will be available offline.  
   <p>
-  For an example see our sample application: 
-  <a href="./todo/sample.html">Offline To-do list</a>. In this application,
-  we are using all the same code as our previous To-do sample,
-   but now it is available offline.
+    <code>index.html</code> was listed in the manifest for completeness only,
+    any page linking to a manifest as above will automatically be cached, and
+    there's no way to override this.
+  </p>
+  <h2 id="toc-step3">Step 3. Pulling the plug (Testing)</h2>
+  <p>
+    If you have correctly listed all the application files, then your application
+    will be available offline.
+  </p>
+  <p>
+    In fact, you don't need to go offline to test. AppCache automatically
+    prevents cached pages using the network, even if the user is online. However, this
+    behaviour usually gets in the way, breaking API calls and such. to disable it, add the following to the end of your manifest:
+  </p>
+  <pre class="prettyprint">NETWORK:
+*</pre>
+  <p>
+    You can also list specific URLs to whitelist, "*" simply means all URLs.
+    Unfortunately this doesn't act like a wildcard, "/hello/*" does not match
+    all URLs beginning "/hello/", it matches the exact URL "/hello/*".
+  </p>
+  <p>
+    For an example see our sample application: 
+    <a href="./todo/sample.html">Offline To-do list</a>. In this application,
+    we are using all the same code as our previous To-do sample,
+    but now it is available offline.
   </p>
   <h2 id="toc-further">Taking it further</h2>
   <p>This is a pretty simple example, in reality applications are a
     little more in-depth.  So now is a good time to cover some more features
-    of the App Cache.</p>
+    of the AppCache.</p>
     
   <h3 id="toc-mixin">Mixing Offline and Online</h3>
   <p>
-    Quite often you will not want to package all your files inside one offline
+    Quite often you won't want to package all your files inside one offline
     manifest, for instance, you might have an online help system that your users
     will reference.
   </p>
   <p>
-    To ensure that your users don't get a "404 Page Not Found" error when
-    visiting your help pages, you can specify a "FALLBACK" page in your manifest.
-    This page will be presented to your users in place of the browser default 
-    404 page. 
+    To ensure that your users don't get a network error when
+    visiting your help pages offline, you can specify a "FALLBACK" page in your manifest.
+    This page will be presented to your users in place of the browser error page if
+    the help page fails to download.
+  </p>
+  <p>
+    Fallback pages are triggered on network errors, but also other errors such as 404, 500, or redirects to captive portal "Wifi login" pages.
   </p>
   <pre class="prettyprint">CACHE MANIFEST
 # A list of the files that are need for this application
@@ -130,57 +152,6 @@ FALLBACK:
     <a href="./todo/help.html">Online help</a>. HINT: You 
     should see a Whoopsie page.
   </p>
-  <h3 id="toc-dynamic">Accessing dynamic content</h3>
-  <p>
-    By default the application cache will not allow users to access resources
-    that have not been defined in the manifest.  This means that access to 
-    dynamic data, such as a backend DB or a remote web API such as Twitter will
-    fail.
-  </p>
-  <p>
-    The designers of the spec anticipated this scenario and created a "NETWORK"
-    section in the manifest definition that allows you to specify a whitelist
-    of addresses that will always be allowed through the cache.
-  </p>
-  <pre class="prettyprint">CACHE MANIFEST
-# A list of the files that are need for this application
-# Rev 26
-index.html  
-script.js 
-base.css
-
-NETWORK:
-/getweather</pre>
-  <p>
-    In this example, any requests to our "/getweather" API will be allowed 
-    through.
-  </p>
-  <p>
-    If we had another API called "/getstocks", but it wasn't defined in the 
-    "NETWORK" section, all requests to that API would fail.
-  </p>
-  <p>
-    But lets say you have lots of API's or remote resources that are too 
-    numerous to enumerate in the manifest file, what can you do?  The designers
-    thought of this too and allow you to white list resources.
-  </p>
-<pre class="prettyprint">CACHE MANIFEST
-# A list of the files that are need for this application
-# Rev 26
-index.html  
-script.js 
-base.css
-
-NETWORK:
-bin/*</pre>
-  <p>
-    You can now call any resource in the bin directory.
-  </p>
-  <p>
-    When your application goes offline, requests to anything in the 
-    "NETWORK" section will fail and will need to be handled by your code.  
-    The FALLBACK mechanism will not kick in.
-  </p>
   <h3 id="toc-updates">Detecting Updates</h3>
   <p>There is a very strong chance that you will need to update your application,
     be it bug fixes or great new functionality. Once an application is offline
@@ -194,40 +165,20 @@ bin/*</pre>
     users with a notification to inform them that they can update the application
     to a latest version.
   </p>
-<pre class="prettyprint">// Called onload of the body element
-init = function() {
-  var status = document.getElementById("#status");
-  var updateButton = document.getElementById("#update");
-  updateButton.addEventListener("click", updateApplication);
-  
-  window.applicationCache.addEventListener('updateready', function() { 
-    status.innerText = "There is an update ready";
-    }, false);
-};
+<pre class="prettyprint">// Called at the end of the body
+var status = document.getElementById("status");
+var updateButton = document.getElementById("update");
 
-updateApplication = function(){
-  // Ensure the browser uses the latest version of the code
-  window.applicationCache.swapCache();
+window.applicationCache.addEventListener('updateready', function() { 
+  status.innerText = "There is an update ready - click to update";
+});
+
+updateButton.addEventListener("click", function(event) {
   // Reload the application
   window.location.reload();
-};</pre>
-  <p>
-    It must be noted, some browsers will load the new application the next time
-    your user uses your application.  Some browsers will require you to perform
-    a swapCache(), therefore it makes sense to programatically update the user
-    to the new version.
-  </p>
-  <h3 id="toc-access">Accessing Web API's</h3>
-  <p>
-    Lets say you are building a Google Buzz client, you have made it 
-    offline enabled and you want to use JSONP to access Buzz directly.  You will
-    quickly find that it won't work. App Cache doesn't let you white-list
-    requests to cross domain resources.
-  </p>
-  <p>
-    So what can you do? You will need to build a simple proxy on your domain 
-    that you can use to white-list requests to external resources
-  </p>
+  event.preventDefault();
+});
+</pre>
   <h2 id="toc-wrap">Wrapping it up</h2>
   <p>
     We have seen that it is pretty simple to take your existing applications
@@ -240,5 +191,5 @@ updateApplication = function(){
     NETWORK whitelisting, FALLBACK support and capturing events.
   </p>
   <p>But the best thing of all is, your application will still work online with
-    browsers that don't support App Cache.</p>
+    browsers that don't support AppCache.</p>
 {% endblock %}

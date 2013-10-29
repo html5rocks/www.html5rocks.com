@@ -33,15 +33,15 @@
     <tr>
       <td>Advantages</td>
       <td>A real, relational database implementation on the client (SQLite).</td>
-      <td>* Allows fast indexing and searching of objects, so in a web application scenario, you can manage your data and read/write it fast.
-        <br/>* A NoSQL database that let you work with your JavaScript objects and indexing them based on your application needs.
-        <br/>* Works in asynchronous mode with moderately granular locking per transaction. This allows you to work inside the event-driven module of JavaScript.</td>
+      <td><ul><li> Allows fast indexing and searching of objects, so in a web application scenario, you can manage your data and read/write it fast.</li>
+        <li>A NoSQL database that let you work with your JavaScript objects and indexing them based on your application needs.</li>
+        <li>Works in asynchronous mode with moderately granular locking per transaction. This allows you to work inside the event-driven module of JavaScript.</li></ul></td>
     </tr>
     <tr>
       <td>Disadvantages</td>
-      <td>* The spec is deprecated.
-        <br/>* Overhead of SQL language you need to master and transform your JavaScript objects into relational schema
-        <br/>* Not object driven </td>
+      <td><ul><li> The spec is deprecated</li>
+        <li> Overhead of SQL language you need to master and transform your JavaScript objects into relational schema</li>
+        <li> Not object driven </li></ul></td>
       <td>Harder to understand if you are coming from the world of relational databases.</td>
     </tr>
     <tr>
@@ -71,7 +71,7 @@
 </table>
 
 </p>
-<p>Since November 18, 2010, the W3C announced that Web SQL database is a deprecated specification. This is a recommendation for web developers to no longer use the technology as effectively, the spec will receive no new updates and browser vendors aren't encouraged to support this technology. The new alternative is IndexedDB which is already available on Chrome 12+ and Firefox 5+, and, soon, in IE 10 as well.
+<p>Since November 18, 2010, the W3C announced that Web SQL database is a deprecated specification. This is a recommendation for web developers to no longer use the technology as effectively, the spec will receive no new updates and browser vendors aren't encouraged to support this technology. The new alternative is IndexedDB which is already available on Chrome 12+, Firefox 5+ and in IE 10+ as well.
 </p>
 <p>
   In this tutorial, we will take a simple example of a todo list and move our WebSQL code to indexedDB one.
@@ -79,14 +79,15 @@
 
 <h2 id="toc-init">Initializing the database</h2>
 
-<p>In the majority of cases where you are using web database you will be using the asynchronous API. The asynchronous API is a non-blocking system and, as such, does not get data through return values, but rather will gets data delivered to a defined callback function. We are going to use the asynchronous APIs in both webSQL and IndexedDB.
-  Let's see how we creating the database in each case.
+<p>In the majority of cases where you are using web database you will be using the asynchronous API. The asynchronous API is a non-blocking system and, as such, does not get data through return values, but rather will gets data delivered to a defined callback function. We are going to use the asynchronous APIs in both webSQL and IndexedDB.</p>
+<p>
+  Let's see how we are creating the database in each case.
 </p>
 <h3 id="toc-websql-creating">WebSQL - Creating the database</h3>
-<p>You can only create a table by executing a CREATE TABLE SQL statement inside a transaction. We have defined a function that create a table in the body onload event. If the table doesn't already exist, a table is created. In our case, let's have 2MB of memory allocated to our todo list.
+<p>You can only create a table by executing a <code>CREATE TABLE</code> SQL statement inside a transaction. We have defined a function that create a table in the body onload event. If the table doesn't already exist, a table is created. In our case, let's have 2MB of storage allocated to our todo list.
 </p>
 <pre class="prettyprint">
-var db = openDatabase('todos1', '1.0', 'todo list example db', 2 * 1024 * 1024);
+var db = openDatabase('todos1', '1', 'todo list example db', 2 * 1024 * 1024);
 </pre>
 
 <h3 id="toc-idb-creating">IndexedDB - Creating the database</h3>
@@ -120,37 +121,21 @@ if (database) {
 }
 </pre>
 
-<p>In indexedDB, we create an object store inside a 'SetVersion' transaction. SetVersion is the only place in our code that we can alter the structure of the database. In it, we can create and delete object stores and build and remove indexes. Object stores contain your JavaScript objects and you can reach your data by key or by setting indexes. A call to setVersion returns an IDBRequest object where we can attach our callbacks. When successful, we start to create our object stores.
+<p>In IndexedDB, we create an object store inside a 'SetVersion' transaction. SetVersion is the only place in our code that we can alter the structure of the database. In it, we can create and delete object stores and build and remove indexes. Object stores contain your JavaScript objects and you can reach your data by key or by setting indexes. A call to setVersion returns an IDBRequest object where we can attach our callbacks. When successful, we start to create our object stores.
 </p>
 <pre class="prettyprint">
 indexedDB.open = function() {
-  var request = indexedDB.open("todos");
+  var v = "2.0 beta"; // yes! you can put strings in the version not just numbers
+  var request = indexedDB.open("todos", v);
+  
+  request.onupgradeneeded = function(e) {
+    var db = request.result;
+    var store = db.createObjectStore("todo", {keyPath: "timeStamp"});  
+  };
 
-  request.onsuccess = function(e) {
-    var v = "2.0 beta"; // yes! you can put strings in the version not just numbers
+  request.onsuccess = function(e) {    
     todoDB.indexedDB.db = e.target.result;
-    var db = todoDB.indexedDB.db;
-    // We can only create Object stores in a setVersion transaction;
-    if (v!= db.version) {
-      var setVrequest = db.setVersion(v);
-
-      // onsuccess is the only place we can create Object Stores
-      setVrequest.onfailure = todoDB.indexedDB.onerror;
-      setVrequest.onsuccess = function(e) {
-        if (db.objectStoreNames.contains("todo")) {
-          db.deleteObjectStore("todo");
-        }
-
-        var store = db.createObjectStore("todo", {keyPath: "timeStamp"});
-
-        var transaction = e.target.result;
-        transaction.oncomplete = function() {
-          todoDB.indexedDB.getAllTodoItems();
-        }
-      };
-    } else {
-      todoDB.indexedDB.getAllTodoItems();
-    }
+    todoDB.indexedDB.getAllTodoItems();
   };
 
   request.onfailure = todoDB.indexedDB.onerror;
@@ -211,7 +196,7 @@ Now that the application has access to the object store, we can issue a simple p
 <pre class="prettyprint">
 indexedDB.addTodo = function() {
   var db = todoDB.indexedDB.db;
-  var trans = db.transaction(['todo'], 'readwrite');
+  var trans = db.transaction('todo', 'readwrite');
   var store = trans.objectStore('todo');
 
   var data = {
@@ -221,7 +206,7 @@ indexedDB.addTodo = function() {
 
   var request = store.put(data);
 
-  request.onsuccess = function(e) {
+  request.oncomplete = function(e) {
     todoDB.indexedDB.getAllTodoItems();
   };
 
@@ -286,25 +271,24 @@ function showAll() {
   var request = window.indexedDB.open("todos");
   request.onsuccess = function(event) {
     // Enumerate the entire object store.
-    var db = todoDB.indexedDB.db;
-    var trans = db.transaction(["todo"], 'readonly');
-    var request = trans.objectStore("todo").openCursor();
     var ul = document.createElement("ul");
+    var db = todoDB.indexedDB.db;
+    var trans = db.transaction("todo", 'readonly');
+    var request = trans.objectStore("todo").openCursor();
 
     request.onsuccess = function(event) {
-      // This hack is to allow our code to run with Firefox (older versions than 6)
-      var cursor = request.result || event.result;
+      var cursor = request.result;
 
       // If cursor is null then we've completed the enumeration - so update the DOM
-      if (!cursor) {
-        document.getElementById("ourList").appendChild(ul);
-        return;
+      if (cursor) {
+        var li = document.createElement("div");
+        li.textContent = "key: " + cursor.key + " => Todo text: " + cursor.value.text;
+        ul.appendChild(li);
+        cursor.continue();
       }
-
-      var li = document.createElement("div");
-      li.textContent = "key: " + cursor.key + " => Todo text: " + cursor.value.text;
-      ul.appendChild(li);
-      cursor.continue();
+      else {
+        document.getElementById("ourList").appendChild(ul);
+      }
     }
   }
 }
@@ -338,7 +322,7 @@ function deleteTodo(id, text) {
 indexedDB.deleteTodo = function(id, text) {
   if (confirm("Are you sure you want to Delete " + text + "?")) {
     var db = todoDB.indexedDB.db;
-    var trans = db.transaction(["todo"], 'readwrite');
+    var trans = db.transaction("todo", 'readwrite');
     var store = trans.objectStore("todo");
 
     var request = store.delete(id);
