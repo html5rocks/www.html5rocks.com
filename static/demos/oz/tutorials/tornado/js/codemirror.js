@@ -235,7 +235,7 @@ var CodeMirror = (function() {
       replaceRange: operation(replaceRange),
       getRange: function(from, to) {return getRange(clipPos(from), clipPos(to));},
 
-      coordsFromIndex: function(off) {        
+      coordsFromIndex: function(off) {
         var lineNo = 0, ch;
         doc.iter(0, doc.size, function(line) {
           var sz = line.text.length + 1;
@@ -303,7 +303,7 @@ var CodeMirror = (function() {
 
       if (!focused) onFocus();
 
-      var now = +new Date;
+      var now = Date.now();
       if (lastDoubleClick > now - 400) {
         e_preventDefault(e);
         return selectLine(start.line);
@@ -367,7 +367,7 @@ var CodeMirror = (function() {
         if (n.parentNode == gutterText) return e_preventDefault(e);
       var start = posFromMouse(e);
       if (!start) return;
-      lastDoubleClick = +new Date;
+      lastDoubleClick = Date.now();
       e_preventDefault(e);
       selectWordAt(start);
     }
@@ -1582,7 +1582,7 @@ var CodeMirror = (function() {
       });
     }
     function highlightWorker() {
-      var end = +new Date + options.workTime;
+      var end = Date.now() + options.workTime;
       var foundWork = work.length;
       while (work.length) {
         if (!getLine(showingFrom).stateAfter) var task = showingFrom;
@@ -1596,7 +1596,7 @@ var CodeMirror = (function() {
             i = start, bail = false;
         doc.iter(i, doc.size, function(line) {
           var hadState = line.stateAfter;
-          if (+new Date > end) {
+          if (Date.now() > end) {
             work.push(i);
             startWorker(options.workDelay);
             if (realChange) changes.push({from: task, to: i + 1});
@@ -2423,7 +2423,7 @@ var CodeMirror = (function() {
   History.prototype = {
     addChange: function(start, added, old) {
       this.undone.length = 0;
-      var time = +new Date, last = this.done[this.done.length - 1];
+      var time = Date.now(), last = this.done[this.done.length - 1];
       if (time - this.time > 400 || !last ||
           last.start > start + added || last.start + last.added < start - last.added + last.old.length)
         this.done.push({start: start, added: added, old: old});
