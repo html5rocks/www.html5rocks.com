@@ -1,90 +1,75 @@
-{% extends "base.html" %}
+{% extends "home-base.html" %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %}
 
-{% block head %}
-  <script>
-  $(document).ready(function() {
-    var top = $('html, body').offset().top;
-    var waterMark = document.querySelector('.watermark');
-
-    $(window).scroll(function(event) {
-      // Get the position of the vertical scroll.
-      var y = $(this).scrollTop();
-
-      if (y > top) {
-        waterMark.classList.add('fadeIn');
-
-        if (!$('body').hasClass('scrolled')) {
-          //hideScrollToTechnologyArrow();
-          $('body').addClass('scrolled');
-        }
-      } else {
-        waterMark.classList.remove('fadeIn');
-
-        $('body').removeClass('scrolled');
-      }
-    });
-  });
-  </script>
-{% endblock %}
-
 {% block body %}
 
-<header id="start">
-  <section id="updates" class="feed pattern-bg">
-    <img src="/static/images/site_title.png" id="updates_title">
-    <h2>{% trans "Latest Articles" %}
-      <a href="http://feeds.feedburner.com/html5rocks" style="vertical-align:text-top;" target="_blank">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJpSURBVDjLfVNJT1NRGL0/wY0/wonaEesOAxoTF4bEpY1GFGGBqEUhggjYaCVIcIKC1TiHiCEBiXEhVdm4EDaaKI2WofTRlqbYR8sbOhzfd5v3tEK8i5d3F+fcM3wf+3x065bZc9t6F5rNCLeYsXTJgkibBUK7FcsdVkS7bIh57Ihfs2PFa0fihgOx6w4QhrCMfmKXnYi4y7DcbEK8zYxEhwVJjxW/vDaIPXak+xxYv1MOqX8PlEEn1PtOKP4KTsLoZQLHvQeRfjeAzPsBiE9O/Rec9e+F7HMiqiljJJteXvXX4O9TkEUon4awPlS5KThzq5xbY+SZZCf7DkGa8kH9Mo58SvjDpKwh+/biBnCq245opw2MAtvMszxah0IiaPDkPl4tASc9Nh40ow+B089ruexceBrqVC/kB5Vcdj44YZDIr5sM8Eq71larBYyqopczw6dLMuDSR11cdm52wshltaeCg6MtVLtGQD3rsqVHh6FOdqEgCgaJOuLisvVcMgEfBwtuExYvmMEoyQ1VPd5vSC9oQPH2PqRHzhfvksjB4YYyLLh3g9GE6eD83AcUhBkemPKwylCSHrvCZROYTtR7BPP1uzB3ViOg8SSwOl5v2M9HprlsOXCz6ORbgMuWvk7ye/KlF6GTOxE6YwKj2SbZ2eFq7pmOOvOCp732tJbfs8J3Ljv1pr9IMHYXP47vwM8GjYAWQx8S5Vk1pFd1JVUlB2uQuHeCe15qPQCh+xjmm6oQdG1HqFGzQAtBi/HvkOhV6YGRZ5JNLxN4sbG4kUxfZ1oMaoTGk4aLhoR6pqoobQqMPJNsellf598J2Or0Mh3FtwAAAABJRU5ErkJggg==" width="16" height="16" alt="{% trans "RSS" %}" />
-      </a>
-    </h2>
-    <ul id="updates_list">
+<section class="masthead">
+  <a href="http://www.html5rocks.com/en/tutorials/speed/animated-gifs/?utm_source=html5rocks&utm_medium=banner&utm_campaign=animated-gifs">
+    <div class="container">
+      <div id="image"></div>
+      <h2>Are animated GIFs slowing down your app?</h2>
+      <h3>We'll show you how to find and fix it.</h3>
+    </div>
+  </a>
+</section>
+
+<section class="search">
+  <div class="container">
+    <form action="/{{LANGUAGE_CODE}}/search" role="search">
+      <legend>Search</legend>
+      <label for="search">{% trans "Search" %}:</label>
+      <input type="search" name="q" id="q" autocomplete="off" placeholder="{% trans "Search" %}" />
+      <input type="submit" id="search-button" value="{% trans "Search" %}">
+    </form>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="latest-articles">
+  <div class="container">
+    <h2>{% trans "Latest Articles" %}</h2>
+    <a class="rss-feed" alt="{% trans "RSS" %}" href="http://feeds.feedburner.com/html5rocks">RSS Feed</a>
+    <ul>
       {% for tut in tutorials %}
-        {% if forloop.counter0 < 5 %}
-          <li data-pubdate="{{tut.publication_date}}">
-            <span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span> <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}" width="20" height="20"></span>
-            <span class="title"><a href="{{tut.url}}">{{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}</a></span>
-            <span class="classes">
-              {% for tag in tut.classes %}
-                <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
-              {% endfor %}
-            </span>
+        {% if forloop.counter0 < 9 %}
+          <li>
+            <a href="{{tut.url}}">
+              <span class="left">
+                <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}" width="60" height="60"></span>
+              </span>
+
+              <span class="right">
+                <span class="title">
+                  {{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}
+                </span>
+                <!--span class="date">{{tut.publication_date.month}}/{{tut.publication_date.day}}</span -->
+                <span class="description">{{tut.description}}</span>
+              </span>
+
+              <span class="clear"></span>
+            </a>
           </li>
         {% endif %}
+
       {% empty %}
         Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
       {% endfor %}
     </ul>
-    <p><a href="/{{LANGUAGE_CODE}}/tutorials/?page=1">{% trans "See more &rarr;" %}</a></p>
-     </section>
-</header>
+    <div class="clear"></div>
+  </div>
+</section>
 
-<article id="banner">
-  <a href="http://developer.chrome.com/devsummit" target="_blank"></a>
-</article>
-
-<article id="intro" class="clearfix sectioned">
-  <header class="two_columns clearfix pattern-bg">
-    <hgroup>
-      <h1>{% trans "Welcome to HTML5ROCKS" %}</h1>
-      <h2>{% trans "What kind of HTML dev do you think you are?" %}</h2>
-    </hgroup>
-    <p>
-      {% blocktrans %}
-      HTML5 is the ubiquitous platform for the web. Whether you're a mobile web
-      developer, an enterprise with specific business needs, or a serious game
-      dev looking to explore the web as a new platform, HTML5 has something for
-      you! Choose your path:
-      {% endblocktrans %}
-    </p>
-  </header>
-
-  <div class="clearfix thirds">
-    <section class="one_third link_target pattern-bg">
-      <a href="/{{LANGUAGE_CODE}}/mobile/">
+<section class="landing-pages">
+  <div class="panel mobile">
+    <a href="/{{LANGUAGE_CODE}}/mobile/">
+      <div class="left">
+        <div class="icon"></div>
+      </div>
+      <div class="right">
         <h2>{% trans "Mobile" %}</h2>
         <p>
           {% blocktrans %}
@@ -93,67 +78,29 @@
           types.
           {% endblocktrans %}
         </p>
-      </a>
-    </section>
-
-    <section class="one_third link_target pattern-bg">
-      <a href="/{{LANGUAGE_CODE}}/features/performance">
+      </div>
+    </a>
+    <div class="clear"></div>
+  </div>
+  <div class="panel performance">
+    <a href="/{{LANGUAGE_CODE}}/features/performance">
+      <div class="left">
+        <div class="icon"></div>
+      </div>
+      <div class="right">
         <h2>{% trans "Performance" %}</h2>
         <p>
           {% blocktrans %}
           Performance is a critical to your user experience. Learn how to accelerate your sites network, rendering and JavaScript performance.
           {% endblocktrans %}
         </p>
-      </a>
-    </section>
+      </div>
+    </a>
+    <div class="clear"></div>
+  </div>
+  <div class="clear"></div>
+</section>
 
-    <section class="one_third link_target pattern-bg">
-      <a href="/{{LANGUAGE_CODE}}/gaming/">
-        <h2>{% trans "Gaming" %}</h2>
-        <p>
-          {% blocktrans %}
-          High performance 2D/3D graphics, offline asset storage, rich audio
-          APIs, and socket-based networking let you create compelling modern
-          games and reach users like never before.
-          {% endblocktrans %}
-        </p>
-      </a>
-    </section>
+<div class="padder"></div>
 
- </div>
-</article>
-
-<article id="technology" class="clearfix sectioned">
-  <section id="classes" class="pattern-bg">
-    <header class="two_columns">
-      <hgroup>
-        <h1>{% trans "HTML5 Features" %}</h1>
-      </hgroup>
-      <p>
-        {% blocktrans %}
-        HTML5 is making the web platform more powerful in a number of different
-        areas. Try learning by major HTML5 feature groups.
-        {% endblocktrans %}
-      </p>
-    </header>
-    <ul>
-      <li class="offline"><a href="/{{LANGUAGE_CODE}}/features/offline"><h3>{% trans "Offline" %}</h3></a></li>
-      <li class="storage"><a href="/{{LANGUAGE_CODE}}/features/storage"><h3>{% trans "Storage" %}</h3></a></li>
-      <li class="connectivity"><a href="/{{LANGUAGE_CODE}}/features/connectivity"><h3>{% trans "Connectivity" %}</h3></a></li>
-      <li class="file_access"><a href="/{{LANGUAGE_CODE}}/features/file_access"><h3>{% trans "File Access" %}</h3></a></li>
-      <li class="semantics"><a href="/{{LANGUAGE_CODE}}/features/semantics"><h3>{% trans "Semantics" %}</h3></a></li>
-      <li class="multimedia"><a href="/{{LANGUAGE_CODE}}/features/multimedia"><h3>{% trans "Audio/Video" %}</h3></a></li>
-      <li class="graphics"><a href="/{{LANGUAGE_CODE}}/features/graphics"><h3>{% trans "3D/Graphics" %}</h3></a></li>
-      <li class="presentation"><a href="/{{LANGUAGE_CODE}}/features/presentation"><h3>{% trans "Presentation" %}</h3></a></li>
-      <li class="performance"><a href="/{{LANGUAGE_CODE}}/features/performance"><h3>{% trans "Performance" %}</h3></a></li>
-      <li class="nuts_and_bolts"><a href="/{{LANGUAGE_CODE}}/features/nuts_and_bolts"><h3>{% trans "Nuts &amp; Bolts" %}</h3></a></li>
-    </ul>
-  </section>
-</article>
-
-<script>
-var selfPage = '{{self_pagename}}'; // Need to pass in current page id to persona.js via template.
-</script>
-<script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
-<script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
 {% endblock %}

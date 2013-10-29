@@ -2,7 +2,7 @@
 
 <h2 id="toc-intro">Introduction</h2>
 
-Allo’ Allo’. Anyone writing a web app knows how important it is to keep oneself productive. It's a challenge when you have to worry about tedious tasks like finding the right boilerplate, setting up a development and testing workflow and minifying and compressing all your sources. 
+Allo’ Allo’. Anyone writing a web app knows how important it is to keep oneself productive. It's a challenge when you have to worry about tedious tasks like finding the right boilerplate, setting up a development and testing workflow and minifying and compressing all your sources.
 
 Fortunately modern front-end tooling can help automate much of this, leaving you to focus on writing a kick-ass app. This article will show you how to use [Yeoman](http://yeoman.io), a workflow of tools for web apps to streamline creating apps using [Polymer](http://polymer-project.org), a library of polyfills and sugar for developing apps using [Web Components](http://html5-demos.appspot.com/static/webcomponents/index.html#1).
 
@@ -14,7 +14,7 @@ Fortunately modern front-end tooling can help automate much of this, leaving you
 
 Yeoman is a man in a hat with three tools for improving your productivity:
 
-* [yo](http://yeoman.io) is a scaffolding tool that offers an ecosystem of framework-specific scaffolds, called generators that can be used to perform some of the tedious tasks I mentioned earlier. 
+* [yo](http://yeoman.io) is a scaffolding tool that offers an ecosystem of framework-specific scaffolds, called generators that can be used to perform some of the tedious tasks I mentioned earlier.
 
 * [grunt](http://gruntjs.com) is used to build, preview and test your project, thanks to help from tasks curated by the Yeoman team and [grunt-contrib](https://github.com/gruntjs/grunt-contrib).
 
@@ -28,7 +28,7 @@ You can install generators from [Node Packaged Modules](http://npmjs.org) (npm) 
 
 With a recent version of [Node.js](http://nodejs.org) installed, head to your nearest terminal and run:
 
-    $ npm instal -g yo
+    $ npm install -g yo
 
 That's it! You now have Yo, Grunt and Bower and can run them directly from the command-line. Here’s the output of running `yo`:
 
@@ -62,13 +62,13 @@ We're going to build a simple blog using some custom Polymer elements and our ne
 
 <img src="image_4.png" class="screenshot"/>
 
-To begin, go to the terminal, make a new directory and cd into it using `mkdir my-new-project && cd $_`. You can now kick-start your Polymer app by running: 
+To begin, go to the terminal, make a new directory and cd into it using `mkdir my-new-project && cd $_`. You can now kick-start your Polymer app by running:
 
     $ yo polymer
 
 <img src="image_5.png" class="screenshot"/>
 
-This gets the latest version of Polymer from Bower and scaffolds out an index.html, directory structure and Grunt tasks for your workflow. Why not grab a coffee while we wait for the app to finish getting ready? 
+This gets the latest version of Polymer from Bower and scaffolds out an index.html, directory structure and Grunt tasks for your workflow. Why not grab a coffee while we wait for the app to finish getting ready?
 
 Okay, so next we can run `grunt server` to preview what the app looks like:
 
@@ -76,7 +76,7 @@ Okay, so next we can run `grunt server` to preview what the app looks like:
 
 The server supports LiveReload, meaning you can fire up a text editor, edit a custom element and the browser will reload on save. This gives you a nice real-time view of your app’s current state.
 
-Next, let's create a new Polymer element to represent a Blog post. 
+Next, let's create a new Polymer element to represent a Blog post.
 
     $ yo polymer:element post
 
@@ -93,7 +93,7 @@ Yeoman asks us a few questions such as whether we would like to include a constr
 
     [?] Import to your index.html using HTML imports? No
 
-    [?] Import other elements into this one? (e.g 'another_element.html' or leave blank) 
+    [?] Import other elements into this one? (e.g 'another_element.html' or leave blank)
 
        create app/elements/post.html
 
@@ -141,11 +141,11 @@ It contains:
 
 * A [template tag](http://www.html5rocks.com/tutorials/webcomponents/template/) for ‘native’ client-side templating and sample [scoped styles](http://www.html5rocks.com/en/tutorials/webcomponents/shadowdom-201/) for encapsulating the styles of your element
 
-* Element [registration](http://www.polymer-project.org/polymer.html#element-declaration) boilerplate and [lifecycle events](http://www.polymer-project.org/polymer.html#lifecyclemethods). 
+* Element [registration](http://www.polymer-project.org/polymer.html#element-declaration) boilerplate and [lifecycle events](http://www.polymer-project.org/polymer.html#lifecyclemethods).
 
 <h3 id="toc-data">Working with a real source of data</h3>
 
-Our blog will need a place to write and read new posts. To demonstrate working with a real data service, we’re going to use the [Google Apps Spreadsheets API](https://developers.google.com/google-apps/spreadsheets/). This allows us to easily read in the content of any spreadsheet created using Google Docs. 
+Our blog will need a place to write and read new posts. To demonstrate working with a real data service, we’re going to use the [Google Apps Spreadsheets API](https://developers.google.com/google-apps/spreadsheets/). This allows us to easily read in the content of any spreadsheet created using Google Docs.
 
 Let’s get this set up:
 
@@ -173,11 +173,11 @@ Let’s get this set up:
 
 7. You can paste the URL into your browser and navigate to it to view the JSON version of your blog content. Take note of the URL then spend a little time reviewing the format of this data as you will need to iterate over it in order to display it on screen later.
 
-The JSON output in your browser may look a little daunting, but don’t worry!. We’re really only interested in the data for your posts. 
+The JSON output in your browser may look a little daunting, but don’t worry!. We’re really only interested in the data for your posts.
 
 The Google Spreadsheets API outputs each of the fields in your blog spreadsheet with a special prefix <code>post.gsx$</code>. For example: <code>post.gsx$title.$t</code>, <code>post.gsx$author.$t</code>, <code>post.gsx$content.$t</code> and so on. When we iterate over each “row” in our JSON output, we’ll reference these fields to get back the relevant values for each post.
 
-You can now edit your newly scaffolded post element to [bind](http://www.polymer-project.org/docs/polymer/databinding.html) portions of markup to the data in your spreadsheet. To do so, we introduce an attribute `post`, which will read for the post title, author, content and other fields we created earlier. The `selected` attribute (which we will populate later) is used to only show a post if a user navigates to the correct slug for it. 
+You can now edit your newly scaffolded post element to [bind](http://www.polymer-project.org/docs/polymer/databinding.html) portions of markup to the data in your spreadsheet. To do so, we introduce an attribute `post`, which will read for the post title, author, content and other fields we created earlier. The `selected` attribute (which we will populate later) is used to only show a post if a user navigates to the correct slug for it.
 
     <polymer-element name="post-element" attributes="post selected">
 
@@ -344,11 +344,11 @@ As we asked for the blog element to be imported using [HTML imports](http://www.
 
     </html>
 
-Fantastic. 
+Fantastic.
 
 <h3 id="toc-dependencies">Adding dependencies using Bower</h3>
 
-Next, let’s edit our element to use the [Polymer JSONP](https://github.com/Polymer/polymer-elements/tree/master/polymer-jsonp) utility element to read in posts.json. You can either get the adapter by git cloning the repository or installing `polymer-elements` via Bower by running `bower install polymer-elements`. 
+Next, let’s edit our element to use the [Polymer JSONP](https://github.com/Polymer/polymer-elements/tree/master/polymer-jsonp) utility element to read in posts.json. You can either get the adapter by git cloning the repository or installing `polymer-elements` via Bower by running `bower install polymer-elements`.
 
 <img src="image_9.png" class="screenshot"/>
 
@@ -390,7 +390,7 @@ The `repeat` attribute you see being used in our template creates and maintains 
 
 <img src="image_10.png" class="screenshot"/>
 
-Now in order for us to get the current [[route]] populated, we’re going to cheat and use a library called Flatiron director which binds to [[route]] whenever the URL hash changes. 
+Now in order for us to get the current [[route]] populated, we’re going to cheat and use a library called Flatiron director which binds to [[route]] whenever the URL hash changes.
 
 Thankfully there’s a [Polymer element](https://github.com/Polymer/more-elements/tree/master/flatiron-director) (part of the [more-elements](https://github.com/Polymer/more-elements) package) that we can grab for it. Once copied to the /elements directory, we can reference it with `<flatiron-director route="[[route]]" autoHash></flatiron-director>`, specifying `route` as the property we wish to bind to and tell it to automatically read the value of any hash changes (autoHash).
 
@@ -466,7 +466,7 @@ Putting everything together we now get:
 
 <img src="image_11.png" class="screenshot"/>
 
-Woo! We now have a simple blog that's reading data from JSON and using two Polymer elements scaffolded with Yeoman. 
+Woo! We now have a simple blog that's reading data from JSON and using two Polymer elements scaffolded with Yeoman.
 
 <h3 id="toc-third-party">Working with 3rd party elements</h3>
 
@@ -533,7 +533,7 @@ Let’s take a look at what this gives us:
 
 Beautiful!
 
-In a relatively short time, we've created a simple application composed of several web components without having to worry about writing boilerplate code, manually downloading dependencies or setting up a local server or build workflow. 
+In a relatively short time, we've created a simple application composed of several web components without having to worry about writing boilerplate code, manually downloading dependencies or setting up a local server or build workflow.
 
 <h3 id="toc-optimization">Optimizing your application</h3>
 
@@ -550,7 +550,7 @@ The Yeoman workflow includes another open-source project called <a href="http://
     ]);
 
 
-The `jshint` task above will check with your `.jshintrc` file to learn your preferences, then run it against all of the JavaScript files in your project. To get the full run down of your options with JSHint, check [the docs](http://www.jshint.com/docs/#options). 
+The `jshint` task above will check with your `.jshintrc` file to learn your preferences, then run it against all of the JavaScript files in your project. To get the full run down of your options with JSHint, check [the docs](http://www.jshint.com/docs/#options).
 
 The `test` task looks a little like this, and can create and serve your app for the test framework we recommend out of the box, Mocha. It will also execute your tests for you:
 
@@ -611,9 +611,9 @@ If you get stuck, a pre-built version of polymer-blog is available for you to ch
 
 <h3 id="toc-in-store">What more do we have in store?</h3>
 
-Web Components are still in a state of evolution and as such so is the tooling around them. 
+Web Components are still in a state of evolution and as such so is the tooling around them.
 
-We’re currently looking at how one might go about concatenating their HTML imports for improved loading performance via projects like [Vulcanize](https://github.com/Polymer/labs/tree/master/vulcanize) (a tool by the Polymer project) and how the ecosystem for components might work with a package manager like Bower. 
+We’re currently looking at how one might go about concatenating their HTML imports for improved loading performance via projects like [Vulcanize](https://github.com/Polymer/labs/tree/master/vulcanize) (a tool by the Polymer project) and how the ecosystem for components might work with a package manager like Bower.
 
 We’ll let you know as and when we have better answers to these questions, but there are lots of exciting times ahead.
 
@@ -627,5 +627,5 @@ which will add it to your bower_components directory. You can then reference it 
 
 <h2 id="toc-thoughts">What do you think?</h2>
 
-Now you know how to scaffold out a Polymer app using Web Components with Yeoman. If you have feedback on the generator, please do let us know in the comments or file a bug or post to the Yeoman issue tracker. We would love to know if there is anything else you would like to see the generator do better as it's only through your use and feedback that we can improve :) 
+Now you know how to scaffold out a Polymer app using Web Components with Yeoman. If you have feedback on the generator, please do let us know in the comments or file a bug or post to the Yeoman issue tracker. We would love to know if there is anything else you would like to see the generator do better as it's only through your use and feedback that we can improve :)
 
