@@ -24,6 +24,11 @@
   article section img {
     border: 1px solid #ccc;
   }
+
+  .talkinghead:before {
+    background-image: url(/static/images/profiles/75/addyosmani.75.png);
+    background-position: -14px -9px !important;
+  }
 </style>
 {% endblock %}
 
@@ -32,51 +37,54 @@
 {% block content %}
 <h2 id="toc-intro">Introduction</h2>
 
+<blockquote class="commentary talkinghead" id="pagespeed-extension"><strong>Update</strong>: Feel free to use the DevTools Audits Panel, but for hunting down serious performance issues, you'll find the records from the <a href="https://developers.google.com/speed/pagespeed/insights_extensions">Pagespeed Insights DevTools extension</a> more useful.</blockquote>
+
 <p>
   A fast web app is a successful web app.  Your job as a developer is not done until you have optimized both the real and perceived performance of your app.  Not only is it simply the right thing to do to ensure your users have an excellent experience, but there are very practical and important business reasons to optimize.  Amazon measured a 1% drop in sales for every 100ms of site latency, and Google measured a 20% drop in traffic for every 0.5 second delay (<a href="http://www.scribd.com/doc/4970486/Make-Data-Useful-by-Greg-Linden-Amazoncom">citation</a>).  Those are real numbers with real implications for your business and web app.
 </p>
 
 <p>
-  Web speed is so important, Google even has an entire effort devoted to <a href="http://code.google.com/speed/">making the web faster</a>.  If you need yet another reason to optimize your app performance, <a href="http://googlewebmastercentral.blogspot.com/2010/04/using-site-speed-in-web-search-ranking.html">Google has announced they are adding page speed to their ranking algorithm</a>.
+  Web speed is so important, Google even has an entire effort devoted to <a href="http://code.google.com/speed/">making the web faster</a>.  If you need yet another reason to optimize your app performance, <a href="http://googlewebmastercentral.blogspot.com/2010/04/using-site-speed-in-web-search-ranking.html">Google announced page speed was added to their ranking algorithm</a>.
 </p>
 
 <p>
   There are many published best practices for optimizing the performance of your web app, including two great books (<a href="http://oreilly.com/catalog/9780596529307/">High Performance Web Sites</a> and <a href="http://oreilly.com/catalog/9780596522308/">Even Faster Web Sites</a>).  Techniques on the server (implement the correct cache control headers) and on the client (provide image width and height attributes) are combined into an end to end strategy for optimizing performance.  With so many tips and tricks, it's sometimes difficult to gauge how they all map to real life and your real web app.
 </p>
 
-Luckily, the Chrome Developer Tools (included in every instance of Chrome), provides an excellent tool which inspects your web app and offers customized recommendations to enhance performance and reduce latency.  This article will cover the Audit Panel, which is similar in scope to the very popular <a href="http://developer.yahoo.com/yslow/">YSlow</a> tool, and how you can use it to speed up your website, decrease latency, and increase user satisfaction.
+<p>
+Luckily, the <a href="http://devtools.chrome.com">Chrome DevTools</a> (included in every instance of Chrome), provides an excellent tool which inspects your web app and offers customized recommendations to enhance performance and reduce latency.  This article will cover the Audits Panel, which is similar in scope to the very popular <a href="http://developer.yahoo.com/yslow/">YSlow</a> tool, and how you can use it to speed up your website, decrease latency, and increase user satisfaction.
 </p>
 
 <p>
-Note, the Audit Panel tool is currently only available in Chrome, but we expect that other WebKit browsers will eventually integrate it.
+Note, the Audits Panel tool is currently only available in Chrome, but we expect that other WebKit browsers will eventually integrate it.
 </p>
 
 <h2 id="toc-getting-started">Getting Started</h2>
 
 <p>
-  To illustrate how the Audit Panel can recommend web app performance improvements, we'll turn the tool towards our very own <a href="http://www.html5rocks.com/">www.html5rocks.com</a>.  We'll use the Audit Panel to help make our site even faster.
+  To illustrate how the Audits Panel can recommend web app performance improvements, we'll turn the tool towards our very own <a href="http://www.html5rocks.com/">www.html5rocks.com</a>.  We'll use the Audits Panel to help make our site even faster.
 </p>
 
 <p>
-Starting Developer Tools is as easy as using the wrench icon (upper right of the Chrome window) and selecting Tool, Developer Tools.
+Starting DevTools is as easy as using the Chrome icon (upper right of the Chrome window) and selecting Tools > Developer Tools.
 </p>
 
 <figure class="center">
   <img src="/static/images/screenshots/auditpanel/index.001.png" width="593" height="490">
-  <figcaption>The Developer Tools are accessible in the Wrench menu.</figcaption>
+  <figcaption>The DevTools are accessible in the Chrome menu.</figcaption>
 </figure>
 
 <p>
-  For more information on how to get started with Developer Tools, please read <a href="http://www.html5rocks.com/tutorials/developertools/part1/">Introduction to Chrome Developer Tools, Part One</a>.
+  For more information on how to get started with DevTools, please read <a href="http://devtools.chrome.com">the official documentation</a>.
 </p>
 
 <p>
-The Audit Panel is located in the main tools button panel.  You'll notice that, once selected, the Audit Panel has not yet run through its analysis of your web app.  Running all of the heuristics can be slow, especially for a large web app such as GMail, so the tool is disabled by default.
+The Audits Panel is located in the main tools button panel.  You'll notice that, once selected, the Audits Panel has not yet run through its analysis of your web app.  Running all of the heuristics can be slow, especially for a large web app such as GMail, so the tool is disabled by default.
 </p>
 
 <figure class="center">
-  <img src="/static/images/screenshots/auditpanel/index.002.png" width="458" height="373">
-  <figcaption>Audit Panel</figcaption>
+  <img src="/static/images/screenshots/auditpanel/index.002.png">
+  <figcaption>Audits Panel</figcaption>
 </figure>
 
 <p>
@@ -84,12 +92,12 @@ The Audit Panel is located in the main tools button panel.  You'll notice that, 
 </p>
 
 <figure class="center">
-  <img src="/static/images/screenshots/auditpanel/index.003.png" width="492" height="251">
-  <figcaption>Recommendations of performance improvements from the Audit Panel.</figcaption>
+  <img src="/static/images/screenshots/auditpanel/index.003.png">
+  <figcaption>Recommendations of performance improvements from the Audits Panel.</figcaption>
 </figure>
 
 <p>
-  You'll notice that the Audit Panel classifies the suggestions by severity, with the most severe marked with a red dot, and the medium severity suggestions marked with a yellow dot.  This color coding helps you prioritize the suggestions, focusing on the most important (and biggest gains) first.
+  You'll notice that the Audits Panel classifies the suggestions by severity, with the most severe marked with a red dot, and the medium severity suggestions marked with a yellow dot.  This color coding helps you prioritize the suggestions, focusing on the most important (and biggest gains) first.
 </p>
 
 <p>
@@ -103,11 +111,11 @@ The number in parenthesis, following the suggestion, is how many instances the A
 </p>
 
 <p>
-  The Audit Panel groups its suggestions into two categories, Network Utilization and Web Page Performance.
+  The Audits Panel groups its suggestions into two categories, Network Utilization and Web Page Performance.
 </p>
 
 <p>
-According to the Audit Panel, to improve Network Utilization we should:
+According to the Audits Panel, to improve Network Utilization we should:
 </p>
 
 <ul>
@@ -138,8 +146,8 @@ According to the Audit Panel, to improve Network Utilization we should:
 </p>
 
 <figure class="center">
-  <img src="/static/images/screenshots/auditpanel/index.004.png" width="501" height="376">
-  <figcaption>The Audit Panel gives you recommendations for performance improvements.</figcaption>
+  <img src="/static/images/screenshots/auditpanel/index.004.png">
+  <figcaption>The Audits Panel gives you recommendations for performance improvements.</figcaption>
 </figure>
 
 <ul>
@@ -161,7 +169,7 @@ According to the Audit Panel, to improve Network Utilization we should:
 <h2 id="toc-fixing-non-cacheable-resources">Fixing Non-Cacheable Resources</h2>
 
 <p>
-  Let's look at one recommendation in depth, and learn how to connect the Audit recommendation to other tools inside Developer Tools.  Specifically, let's look at how to fix "the following resources are explicitly non-cacheable."
+  Let's look at one recommendation in depth, and learn how to connect the Audit recommendation to other tools inside DevTools.  Specifically, let's look at how to fix "the following resources are explicitly non-cacheable."
 </p>
 
 <p>
@@ -169,12 +177,12 @@ Because caching is accomplished via the HTTP protocol, we need to look at the HT
 </p>
 
 <figure class="center">
-  <img src="/static/images/screenshots/auditpanel/index.005.png" width="456" height="418">
+  <img src="/static/images/screenshots/auditpanel/index.005.png">
   <figcaption>Navigating the recommendations.</figcaption>
 </figure>
 
 <p>
-  You are then taken to the Resources Panel with the contents of the resources in view.  Click the Headers tab, next to Content, to view the headers used in the request and the response.
+  You are then taken to the Network, Resources or Sources panel (depending on the type of resource clicked) with further information. In this case we will be taken to the Network panel.
 </p>
 
 <figure class="center">
@@ -183,11 +191,11 @@ Because caching is accomplished via the HTTP protocol, we need to look at the HT
 </figure>
 
 <p>
-  We are trying to confirm that the server has told the client "do not cache the homepage of html5rocks.com".  To do this, we need to look at the Response Headers, as these are the headers and instructions sent by the server.
+  We are trying to confirm that the server has told the client "do not cache the homepage of html5rocks.com".  To do this, we click on the resource to look at the Response Headers, as these are the headers and instructions sent by the server.
 </p>
 
 <figure class="center">
-  <img src="/static/images/screenshots/auditpanel/index.007.png" width="478" height="384">
+  <img src="/static/images/screenshots/auditpanel/index.007.png">
   <figcaption>Example: The <code>Cache-Control</code> header.</figcaption>
 </figure>
 
@@ -200,7 +208,7 @@ Because caching is accomplished via the HTTP protocol, we need to look at the HT
 </p>
 
 <p>
-This is exactly why the Audit Panel recommends enabling caching, because otherwise the server and client are sending potentially redundant information.
+This is exactly why the Audits Panel recommends enabling caching, because otherwise the server and client are sending potentially redundant information.
 </p>
 
 <p>
@@ -210,11 +218,11 @@ Now that we have confirmed the root cause of the Audit suggestion, how do we fix
 <h2 id="suggestions">Suggestions Are Just That, Suggestions</h2>
 
 <p>
-  Remember that the Audit Panel is recommending improvements based on generic heuristics.  It is applying best practices, learned over many years, to your specific web app.  Most of the time, these recommendations are spot on and should be taken to heart.
+  Remember that the Audits Panel is recommending improvements based on generic heuristics.  It is applying best practices, learned over many years, to your specific web app.  Most of the time, these recommendations are spot on and should be taken to heart.
 </p>
 
 <p>
-However, there are a few cases where the recommendation may be correct but may not actually lead to any improvement.  For example, if your page only has a single large image, the Audit Panel would recommend adding width and height attributes to the &lt;img&gt; tag (so that the rendering engine knows the image dimensions without having to download and inspect the image).  While this is generally great advice, it won't help much if the image is the only element on the page.
+However, there are a few cases where the recommendation may be correct but may not actually lead to any improvement.  For example, if your page only has a single large image, the Audits Panel would recommend adding width and height attributes to the &lt;img&gt; tag (so that the rendering engine knows the image dimensions without having to download and inspect the image).  While this is generally great advice, it won't help much if the image is the only element on the page.
 </p>
 
 <p>
@@ -224,6 +232,6 @@ Remember to apply these suggestions after you understand them.  And don't forget
 <h2 id="toc-summary">Summary</h2>
 
 <p>
-  The Audit Panel is an excellent and easy to use tool that will quickly show you how to optimize the performance of your web app.  Speed is a crucial web app attribute, as many companies have found direct correlations between performance and revenue or activity.  Optimizing your app's performance is not just the right thing to do for your users, but it is the right thing to do for your business's bottom line.
+  The Audits Panel is an excellent and easy to use tool that will quickly show you how to optimize the performance of your web app.  Speed is a crucial web app attribute, as many companies have found direct correlations between performance and revenue or activity.  Optimizing your app's performance is not just the right thing to do for your users, but it is the right thing to do for your business's bottom line.
 </p>
 {% endblock %}
