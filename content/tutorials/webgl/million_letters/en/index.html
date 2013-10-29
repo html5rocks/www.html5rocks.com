@@ -16,7 +16,7 @@
 </figure>
 
 <h2 id="toc-intro">Introduction</h2>
-<p>My goal in this article is to draw a million animated letters on the screen at a smooth frame rate. This task should be quite possible with modern GPUs. Each letter consists of two textured triangles, so we're only talking about two million triangles per frame. 
+<p>My goal in this article is to draw a million animated letters on the screen at a smooth frame rate. This task should be quite possible with modern GPUs. Each letter consists of two textured triangles, so we're only talking about two million triangles per frame.
 
 <p>If you're coming from a traditional JavaScript animation background, this all sounds like madness. Two million triangles updated every frame is definitely not something you would like to do with JavaScript today. But thankfully we have <a href="http://www.khronos.org/webgl/wiki/Getting_Started">WebGL</a>, which lets us tap into the awesome power of modern GPUs. And two million animated triangles is quite doable with a modern GPU and some shader magic.
 
@@ -53,7 +53,7 @@ renderer.render(scene, camera);
 <p>Alright, now that you've got the basic idea, let's get back to writing the demo and start animating those million letters!
 
 <h2 id="toc-setup">Setting up the geometry and textures</h2>
-<p>As the first step, I'm going to create a texture with the letter bitmaps on it. I'm using the 2D canvas for this. The resulting texture has all the letters I want to draw. The next step is to create a buffer with the texture coordinates to the letter sprite sheet. While this is an easy and straightforward method to set up the letters, it’s a bit wasteful as it uses two floats per vertex for the texture coordinates. A shorter way &mdash; left as an exercise to the reader &mdash; would be to pack the letter index and corner index into one number and convert that back to texture coordinates in the vertex shader. 
+<p>As the first step, I'm going to create a texture with the letter bitmaps on it. I'm using the 2D canvas for this. The resulting texture has all the letters I want to draw. The next step is to create a buffer with the texture coordinates to the letter sprite sheet. While this is an easy and straightforward method to set up the letters, it’s a bit wasteful as it uses two floats per vertex for the texture coordinates. A shorter way &mdash; left as an exercise to the reader &mdash; would be to pack the letter index and corner index into one number and convert that back to texture coordinates in the vertex shader.
 
 <p>Here's how I build the letter texture using Canvas 2D:
 <pre class="prettyprint">
@@ -181,7 +181,7 @@ uniform float uEffectAmount;
 varying float vZ;
 varying vec2 vUv;
 
-// rotateAngleAxisMatrix returns the mat3 rotation matrix 
+// rotateAngleAxisMatrix returns the mat3 rotation matrix
 // for given angle and axis.
 mat3 rotateAngleAxisMatrix(float angle, vec3 axis) {
   float c = cos(angle);
@@ -214,7 +214,7 @@ void main() {
 
   // Rotate the letter around its midpoint by an angle and axis dependent on
   // the letter's index and the current time.
-  vec3 rpos = rotateAngleAxis(idx+uTime, 
+  vec3 rpos = rotateAngleAxis(idx+uTime,
     vec3(mod(idx,16.0), -8.0+mod(idx,15.0), 1.0), position - mid) + mid;
 
   // uEffectAmount controls the amount of animation applied to the letter.
@@ -260,7 +260,7 @@ var uniforms = {
   uEffectAmount: { type: "f", value: 0.0 }
 };
 
-// Next, set up the THREE.ShaderMaterial.  
+// Next, set up the THREE.ShaderMaterial.
 var shaderMaterial = new THREE.ShaderMaterial({
   uniforms: uniforms,
 
@@ -300,7 +300,7 @@ var animate = function(t) {
   renderer.render(scene, camera);
   requestAnimationFrame(animate, renderer.domElement);
 };
-animate(+new Date);
+animate(Date.now());
 </pre>
 
 <p>And there you have it, shader-based animation. It looks pretty complex, but the only thing it really does is move the letters around in a way that depends on the current time and each letter's index. If performance wasn't a concern, you could have this logic running in JavaScript. However, at tens of thousands of animated objects, JavaScript stops being a viable solution.
@@ -310,7 +310,7 @@ animate(+new Date);
 
 <p>For more controllable animation, you could use render-to-texture functionality to animate between two sets of positions provided by JavaScript. First, render the current positions to a texture, then animate towards positions defined in a separate texture provided by JavaScript. The nice thing about this is that you can update a small fraction of the JavaScript-provided positions per frame and still continue animating all the letters every frame with the vertex shader tweening the positions.
 
-<p>Another concern is that 256 characters is far too few to do non-ASCII texts. If push the texture map size to 4096x4096 while decreasing the font size to 8px, you can fit the entire UCS-2 character set into the texture map. However, 8px font size is not very readable. To do larger font sizes, you can use multiple textures for your font. See this <a href="http://code.google.com/p/webglsamples/source/browse/#hg%2Fsprites">sprite atlas demo</a> for an example. Another thing that would help is to create only the letters used in your text. 
+<p>Another concern is that 256 characters is far too few to do non-ASCII texts. If push the texture map size to 4096x4096 while decreasing the font size to 8px, you can fit the entire UCS-2 character set into the texture map. However, 8px font size is not very readable. To do larger font sizes, you can use multiple textures for your font. See this <a href="http://code.google.com/p/webglsamples/source/browse/#hg%2Fsprites">sprite atlas demo</a> for an example. Another thing that would help is to create only the letters used in your text.
 
 <h2 id="toc-summary">Summary</h2>
 <p>In this article, I walked you through implementing a vertex shader -based animation demo using Three.js. The demo animates a million letters in real-time on a 2010 MacBook Air. The implementation bundled an entire book into a single geometry object for efficient drawing. The individual letters were animated by figuring out out which vertices belong to which letter and animating the vertices based on the index of the letter in the book text.

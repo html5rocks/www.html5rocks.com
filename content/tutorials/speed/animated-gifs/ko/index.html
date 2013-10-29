@@ -1,0 +1,109 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/paullewis.75.png);
+  background-position: -14px -9px !important;
+}
+
+article.tutorial section {
+  overflow: visible;
+}
+
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block content %}
+
+<p>페인트를 피하는 것은 비단결처럼 부드러운 프레임 속도를 달성하는 데 중요하며 특히 모바일에서는 더 그렇습니다. 그러나 때때로 대다수의 불특정한 곳에서 페인팅은 갑자기 일어닙니다. 이 글은 애니메이션 GIF가 왜 불필요한 페인팅을 발생하게되는지 그리고 적용 가능한 매우 손쉬운 수정 방법을 살펴봅니다.</p>
+
+<blockquote class="commentary talkinghead" id="unnecessary-paints">지난 번에 우리는 <a href="http://www.html5rocks.com/en/tutorials/speed/unnecessary-paints/">스크롤 시 호버(hover)의 회피</a>에 대해 살펴보았습니다. 아직 읽어보지 못하셨다면, 지금 바로 확인해보시기 바랍니다!</blockquote>
+
+<h2 id="toc-layers">사랑스러운 레이어들</h2>
+
+<p>아시다시피 모던 브라우저들은 DOM 엘리먼트들의 그룹을 레이어로 불리는 분리된 "이미지들"로 페인트합니다. 때로는 전체 페이지가 하나의 레이어일 때도 있고 때로는 수백개에서 &mdash; 드물게도 &mdash; 수천개까지 구성되기도 합니다!</p>
+
+<p>DOM 엘리먼트들이 하나의 레이어로 그룹화되고 그 엘리먼트 중의 하나가 시각적으로 변경되면 변경된 엘리먼트뿐만이 아니라 <em>변경된 엘리먼트와 겹치는 레이어 안의 다른 엘리먼트들까지도</em> 페인트를 완료합니다. 겹쳐쓰여진 픽셀들에서 다른 결과의 최상위에 어떤 하나를 그리는 것은 효과적이고 영원한 "소실"을 가능하게 합니다. (이러한 효과적인 소실로 인해 만약 원본 픽셀값을 알고 싶다면 그것들을 새로 그리는 것이 필요합니다.)</p>
+
+<p>그러므로 우리는 때로 페인팅이 일어날 떄 변경되지 <em>않는</em> 다른 엘리먼트들은 다시 그리지 않아도 되도록 하기 위해 하나의 엘리먼트를 다른 것으로 부터 고립시키는 것을 원하게 됩니다. 예를 들어 스크롤이 가능한 컨텐츠와 고정된 페이지 헤더를 결합하면 스크롤할 때마다 헤더와 새로 보이는 내용들을 추가로 다시 그려야만 합니다. 분리된 레이어 안에 헤더를 위치시킴으로 인해 브라우저는 스크롤을 최적화할 수 있게됩니다. 스크롤이 일어나면 브라우저는 &mdash; 아마도 GPU의 도움을 받고 &mdash; 각 레이어를 다시 그리는 것을 회피하여 레이어들을 이동할 수 있습니다.</p>
+
+<p>각 추가 레이어는 메모리 사용량을 증가시키고 성능 오버헤드를 더합니다. 따라서 좋은 성능을 유지하며 가능한 적은 레이어들로 페이지를 그룹화하는 것이 목표가 됩니다.</p>
+
+<blockquote class="commentary talkinghead" id="layer-intro">어떻게 레이어들이 생성되고 사용되는지 분석한 더 상세한 내용을 알고 싶으시다면 <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">이 주제에 대한 Tom Wiltzius의 소개</a>를 꼭 확인해보시기 바랍니다.</blockquote>
+
+<h2 id="toc-animated-gifs">Animated GIFs를 하기 위해 무엇을 해야할까요?</h2>
+
+<p>자 이 그림을 보시기 바랍니다.</p>
+
+<figure>
+  <img src="layers.jpg" />
+  <figcaption>Figure 1: 4개의 레이어로 나누어진 웹앱</figcaption>
+</figure>
+
+<p>이것은 간단한 앱의 잠재적인 레이어 구성입니다. 여기 4개의 레이어들이 있습니다. 그 중 3가지(레이어 2부터 4까지)는 인터페이스 요소입니다. 뒤의 레이어는 animated GIFs를 생성하기 위한 로더입니다. 일반적인 흐름에서 로더(레이어1)는 앱이 로딩되는 동안 보여지며 모든 것이 종료되어 다른 레이어를 보여주게 됩니다. 그러나 여기에 중요한 점이 하나 있습니다. <em>여러분이 animated GIFs를 숨기는 것이 필요합니다</em>.</p>
+
+<h2 id="toc-but-why">그러나 왜 숨겨야 할까요?!</h2>
+
+<p>좋은 질문입니다. 완벽한 세계에서 브라우저는 단순히 GIF의 표시여부만 확인할 것이며 자동으로 페인팅을 회피할 겁니다. 그러나 불행하게도 animated GIF가 화면에서 필요하거나 표시되는지 여부의 확인 과정은 일반적으로 단순한 그리기보다 <em>더</em> 비싸므로 그냥 그리게 됩니다.</p>
+
+<p>GIF가 자기 스스로 레이어에 존재하는 가장 좋은 경우에는 브라우저는 단지 GIF를 GPU에 올려서 그리기만 하면 됩니다. 그러나 모든 엘리먼트들이 각각 하나의 레이어로 그룹되어 있는 최악의 경우에는 브라우저는 <em>모든 엘리먼트별로</em> 다시 그려야합니다. 그리고 모든 것이 완료된 후 모든 것을 GPU로 올려야하는 과정이 여전히 남아 있습니다. 이 모든 것은 사용자가 GIF를 볼 수 없는 경우에도 GIF의 각 프레임마다 일어납니다!</p>
+
+<p>데스크탑은 CPU와 GPU가 훨씬 강력하고 그들간에 데이터를 송수신하기 위한 충분한 대역폭이 있기 때문에 아마 이러한 종류의 페인팅에 대해 느끼지 못할겁니다. 그러나 모바일에서는 페인팅은 엄청나게 비싸기 때문에 대단히 조심해야 합니다.</p>
+
+<h2 id="toc-which-browsers">어떤 브라우저들이 이러한 영향을 받나요?</h2>
+
+<p>어떤 경우에 동작들은 브라우저 간에 다릅니다. 현재 크롬, 사파리 그리고 오페라는 GIF가 안보일 때도 전부 다시 그립니다. 다른 한편으로 파이어폭스는 GIF가 보이지 않으면 처리하지 않기 때문에 다시 그릴 필요가 없습니다. 인터넷 익스플로러는 알 수 없는 뭔가로 남아 있으며 IE11조차도 &mdash; F12 도구들이 여전히 개발되고 있지만 &mdash; 다시 페인팅이 일어나는지 아닌지에 대한 정보를 얻을 있는 곳이 없습니다.</p>
+
+<h2 id="toc-devtools">이 문제가 발생하면 어떻게 알 수 있을까요?</h2>
+
+<p>가장 쉬운 방법은 크롬 개발자도구에서 "Show paint rectangles"를 사용하는 것입니다. 개발자도구를 로딩하고 오른쪽 아래에 있는 cog (<img src="cog.png" />)를 누르고 <strong>Rendering</strong> 영역에 있는 <strong>Show paint rectangles</strong>를 선택하면 됩니다.</p>
+
+<figure>
+  <img src="showpaintrects.png" />
+  <figcaption>Figure 2: 크롬 개발자 도구에서 Show paint rectangles를 활성화.</figcaption>
+</figure>
+
+<p>이제 여러분 모두는 아래와 같이 빨간 사각형을 볼 수 있을 겁니다.</p>
+
+<figure>
+  <img src="paintedgif.png" />
+  <figcaption>Figure 3: 개발자도구의 Show Paint Rectangles가 빨간 사각형을 통해 animated GIF의 문제들에 대한 힌트를 줍니다.</figcaption>
+</figure>
+
+<p>스크린의 작은 빨간색 상자는 크롬이 무엇인가를 다시 그리고 있다는 것을 알려줍니다. loader GIF가 다른 엘리먼트에 의해 감춰졌음을 알고 있는데도 빨간색 상자를 보았다면 가시적인 엘리먼트의 숨김과 animated GIF를 돌아가는 상태로 남겨두었는지에 대한 확인이 필요할 것입니다. 그렇다면 <code>display: none</code>나 <code>visibility: hidden</code>를 적용한 곳이나 그 상위 엘리먼트에서 어떤 CSS나 자바스크립트를 POP하는 과정이 필요합니다. 물론 그게 단지 배경 이미지라면 여러분은 그것을 확실하게 제거해야 합니다.</p>
+
+<p>만약 이에 대한 예제를 사이트에서 확인하고 싶으시다면 각 결과물의 이미지가 명시적인 숨김 처리 대신에 무명(Obsucre) GIF 로더를 가지고 있는 <a href="http://allegro.pl/listing/listing.php?string=phone">Allegro</a>를 확인해보시기 바랍니다.</p>
+
+<h2 id="toc-conclusion">결론</h2>
+
+<p>60fps 달성은 <em>단지</em> 페이지를 렌더링하는 것 그 이상의 것을 의미합니다. 지나친 페인팅의 제거는 이 목표를 달성하는데 가장 중요한 단계입니다. Animated GIF가 발생할 수 있는 불필요한 그리기 같은 것들은 개발자 도구의 Show paint rectangle 도구를 사용하여 쉽게 찾고 디버깅할 수 있습니다.</p>
+
+<p>이제, 여러분은 애니메이션되는 kitten loader GIF(빙글빙글 돌아가는 로딩 GIF)가 영원히 돌아가게 두지 않아도 됩니다, 그렇지 않나요???</p>
+
+{% endblock %}

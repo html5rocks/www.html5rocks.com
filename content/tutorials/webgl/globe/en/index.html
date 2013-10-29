@@ -26,7 +26,7 @@
 
 <h2 id="toc-">Setting up the WebGL Globe</h2>
 
-<p>The first step in making the globe widget was to download the WebGL Globe and get it up and running. The WebGL Globe is online at <a href="http://code.google.com/p/webgl-globe/">Google Code</a>, and it's simple to download and run. Download and extract <a href="http://code.google.com/p/webgl-globe/downloads/detail?name=webgl-globe.zip">the zip</a>, cd into it and run a webserver <code>python -m SimpleHTTPServer</code>. Now if you navigate to http://localhost:8000/globe/globe.html you should see the WebGL Globe.
+<p>The first step in making the globe widget was to download the WebGL Globe and get it up and running. The WebGL Globe is online at <a href="http://code.google.com/p/webgl-globe/">Google Code</a>, and it's simple to download and run. Download and extract <a href="http://code.google.com/p/webgl-globe/downloads/detail?name=webgl-globe.zip">the zip</a>, cd into it and run a basic webserver: <code>python -m SimpleHTTPServer</code>. (Do note, this doesn't have UTF-8 on by default; <a href="https://github.com/mathiasbynens/dotfiles/blob/73201f63481e6a9daf24652714af408c3e8f3fc7/.functions#L97-L104">you can use this</a>.) Now if you navigate to http://localhost:8000/globe/globe.html you should see the WebGL Globe.
 
 <figure>
   <iframe data-src="globe/globe.html" width="958" height="400"></iframe>
@@ -59,7 +59,7 @@ if(!Detector.webgl){
 
 <p>For the landmass geometry, I turned to the open source GlobeTweeter demo and loaded the 3D model in that to Three.js. With the model loaded and rendering, it was time to start polishing the look for the globe. First problem was that the globe landmass model wasn't spherical enough to be flush with the WebGL Globe, so I ended up writing a quick mesh splitting algorithm that made the landmass model more spherical.
 
-<p>With a spherical landmass model, I was able to place it just slightly offset from the globe surface, creating floating continents outlined with a black 2px line below them for a shadow of sorts. I also experimented with neon-colored outlines to make for a sort of Tron-like look. 
+<p>With a spherical landmass model, I was able to place it just slightly offset from the globe surface, creating floating continents outlined with a black 2px line below them for a shadow of sorts. I also experimented with neon-colored outlines to make for a sort of Tron-like look.
 
 <figure>
   <iframe data-src="neon_globe.html" width="958" height="400"></iframe>
@@ -80,9 +80,9 @@ if(!Detector.webgl){
   <figcaption>White globe with black continents.</figcaption>
 </figure>
 
-<p>The shaders in the black and white globes are using a sort of bogus diffuse backlit lighting. The lightness of the globe depends on the distance of the surface normal to the screen plane. So pixels at the middle of the globe that are pointing at the screen are dark and pixels at the edges of the globe are light. Combined with a light background you get a look where the globe is reflecting the diffuse bright background, creating a classy showroom look. The black globe is also using the WebGL Globe texture as a gloss map, so that the continental shelves (shallow water areas) look shiny compared to the other parts of the globe. 
+<p>The shaders in the black and white globes are using a sort of bogus diffuse backlit lighting. The lightness of the globe depends on the distance of the surface normal to the screen plane. So pixels at the middle of the globe that are pointing at the screen are dark and pixels at the edges of the globe are light. Combined with a light background you get a look where the globe is reflecting the diffuse bright background, creating a classy showroom look. The black globe is also using the WebGL Globe texture as a gloss map, so that the continental shelves (shallow water areas) look shiny compared to the other parts of the globe.
 
-<p>Here's what the ocean shader for the black globe looks like. Very basic vertex shader and a hacky "oh that looks kinda neat *tweak tweak*" fragment shader. 
+<p>Here's what the ocean shader for the black globe looks like. Very basic vertex shader and a hacky "oh that looks kinda neat *tweak tweak*" fragment shader.
 
 <pre class="prettyprint">
     'ocean' : {
@@ -166,13 +166,13 @@ for (var i=0; i&lt;locations.length; i++) {
 
 <h2 id="toc-futurework">Future work</h2>
 
-<p>One thing that could use a bit of extra work are making the marker animations nicer. Now when they go over the horizon, the effect is a bit tacky. Additionally, having a cool animation for the marker opening would be nice. 
+<p>One thing that could use a bit of extra work are making the marker animations nicer. Now when they go over the horizon, the effect is a bit tacky. Additionally, having a cool animation for the marker opening would be nice.
 
 <p>Performance-wise the two things lacking are optimizing the mesh splitting algorithm and making the markers faster. Apart from that, things are dandy.  Hurrah!
 
 <h2 id="toc-summary">Summary</h2>
 
-<p>In this article I described how we built the 3D globe for the Google World Wonders project. I hope you enjoyed the examples and will try out building your own custom globe widget. 
+<p>In this article I described how we built the 3D globe for the Google World Wonders project. I hope you enjoyed the examples and will try out building your own custom globe widget.
 
   <h2 id="toc-references">References</h2>
   <ul>

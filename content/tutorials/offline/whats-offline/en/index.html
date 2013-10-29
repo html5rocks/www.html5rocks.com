@@ -30,9 +30,9 @@ varies
 
 <p>At one level, we can talk about completely offline web apps, those unusual creatures that run inside a browser, but never see the light of the internet. Typically, they will run on a file:/// URI, pointing to a hard drive, USB key, or DVD (if you remember those). For example, those USB keys you sometimes get at conferences, which you stick in your computer to receive a multimedia presentation of something-or-other, running in your browser. A more complex example is the concept of Single Page Applications, like <a href="http://tiddlywiki.com">TiddlyWiki</a>, a kind of personal notepad that runs entirely offline, exploiting custom browser features to save changes to the hard drive.</p>
 
-<p>However, it gets more nuanced than "always-offline". Another class of applications are "online-offline" apps (sometimes just called "offline apps", somewhat ambiguously). These apps are ultimately intended to sync with the cloud, but can survive periods of downtime. The downtime might be an interim loss of connection, like passing through a tunnel, or an extended period of offline activity, like a long-haul flight. Online-offline applications will handle these cases with varying degrees of gracefulness. An example is <a href="http://gmailblog.blogspot.com/2009/01/new-in-labs-offline-gmail.html">GMail's offline facility</a>.</p>
+<p>However, it gets more nuanced than "always-offline". Another class of applications are "online-offline" apps (sometimes just called "offline apps", somewhat ambiguously). These apps are ultimately intended to sync with the cloud, but can survive periods of downtime. The downtime might be an interim loss of connection, like passing through a tunnel, or an extended period of offline activity, like a long-haul flight. Online-offline applications will handle these cases with varying degrees of gracefulness. An example is <a href="https://chrome.google.com/webstore/detail/gmail-offline/ejidjjhkpiempkbhmpbfngldlkglhimk?hl=en">GMail's offline facility</a>.</p>
 
-<p>There are also online-offline applications which intentionally keep certain information locally. Sometimes, that might be done to tie data to the browser, rather than the user's account, e.g. the current song being played by a media player application. Local storage is also an interesting alternative to server-based storage for simple applications without user registration; by offloading data storage to clients, you avoid the hassle of maintaining a database on your server. Of course, you should only do this for non-critical data, e.g. a list of recent searches. Another reason is about security and privacy, the concept of <a href="http://ajaxpatterns.org/Host-Proof_Hosting">Host-Proof Hosting</a>. An early example is <a href="http://www.youngpup.net/2006/10/09/">HalfNote</a>, by Aaron Boodman (now a Chrome engineer).</p>
+<p>There are also online-offline applications which intentionally keep certain information locally. Sometimes, that might be done to tie data to the browser, rather than the user's account, e.g. the current song being played by a media player application. Local storage is also an interesting alternative to server-based storage for simple applications without user registration; by offloading data storage to clients, you avoid the hassle of maintaining a database on your server. Of course, you should only do this for non-critical data, e.g. a list of recent searches. Another reason is about security and privacy, the concept of <a href="http://ajaxpatterns.org/Host-Proof_Hosting">Host-Proof Hosting</a>. An early example is <a href="http://aaronboodman.com/halfnote/">HalfNote</a>, by Aaron Boodman (now a Chrome engineer).</p>
 
 <p>Online-offline applications comes at the cost of increased complexity, and you ought to consider whether offline support is justified. The argument against this mode is best summed up in <a href="http://37signals.com/svn/posts/347-youre-not-on-a-fucking-plane-and-if-you-are-it-doesnt-matter">a famous article from a few years back</a>. David Hanson makes the argument that it's not worth making offline apps just for airplane activity, which is the one place you're likely to be offline for a long period of time. But there are still situations where it's worthwhile, and also situations where offline technologies are useful for protecting aganst server or network outages. Just beware that it comes at the cost of complexity, and that complexity needs to be justified.</p>
 
@@ -48,7 +48,7 @@ varies
 
 <p>In our game example, visiting the site the second time round would load the site instantly, but what if we wanted to let the user continue playing the game from a previous position, i.e. we'd like to restore the state of the game. The kind of data required is not held in the application cache, because it's user-specific, so this is a job for offline storage. Whenever the user hits save, we upload to the cloud but we also store game data on disk at the same time, i.e. store it offline (for example, we might save the player's health level and the states of all objects and characters inside the game universe). We might even keep a loop running to continuously store the game data offline. That way, the latest changes are still there if the user lost connectivity and had to shut down the browser before they could get online again. It also takes less bandwidth than continuously uploading state to the server, e.g. we might save data locally every 10 seconds, while uploading it only every 5 minutes as a bandwidth-saving measure.</p>
 
-<p><a href="/tutorials/#appcache">Read more</a> about AppCache.</p>
+<p><a href="/en/tutorials/appcache/beginner/">Read more</a> about AppCache.</p>
 
 <h2 id="toc-older-storage">Older Offline Storage Techniques</h2>
 
@@ -64,7 +64,7 @@ varies
 
 <h3 id="toc-browser-specific-features">Browser-specific features</h3>
 
-Browser-specific features are capabilities that are available, but outside the realm of standard web technologies. They typically have an "underground" nature, being little-known and lightly documented. For example, TiddlyWiki and the derivative <a href="http://jquery.tiddlywiki.org/twFile.html">twFile jQuery plugin</a> use IE-specific and Firefox-specific APIs to access the underlying file system on those respective browsers, falling back to Java applets where that's not possible. IE, since version 5, also supports <a href="http://msdn.microsoft.com/en-us/library/ms531424(VS.85).aspx">the UserData API</a>. Similar to plugin based storage, the problem with these is significant: You're requiring the user to be working with a particular browser and you're putting faith in the browser manufacturer going forward. This is different from using features only present in just one or two browsers <i>so far</i>, where the feature is part of an open standards process and other manufacturers are likely to include it in the future.</li>
+<p>Browser-specific features are capabilities that are available, but outside the realm of standard web technologies. They typically have an "underground" nature, being little-known and lightly documented. For example, TiddlyWiki and the derivative <a href="http://jquery.tiddlywiki.org/twFile.html">twFile jQuery plugin</a> use IE-specific and Firefox-specific APIs to access the underlying file system on those respective browsers, falling back to Java applets where that's not possible. IE, since version 5, also supports <a href="http://msdn.microsoft.com/en-us/library/ms531424(VS.85).aspx">the UserData API</a>. Similar to plugin based storage, the problem with these is significant: You're requiring the user to be working with a particular browser and you're putting faith in the browser manufacturer going forward. This is different from using features only present in just one or two browsers <i>so far</i>, where the feature is part of an open standards process and other manufacturers are likely to include it in the future.</p>
 
 <h2 id="toc-html5-offline-storage">Offline Storage in the Era of HTML5</h2>
 
@@ -94,7 +94,7 @@ Browser-specific features are capabilities that are available, but outside the r
 
 <p>On the other hand, Web SQL Database also comes at the cost of complexity. Do you really need a full-blown database in your front-end web client? Do you really want to go through the effort of specifying a schema, and coding up SQL for every data access? Sometimes it's overkill. The other issue is compatibility. For now, Microsoft and Mozilla haven't put it in their plans and don't have any (public) plans to do so. You can still use it if you feel there will be advantages, but unless you only need to target a particular browser which supports it (e.g. a Chrome extension), don't use it in a way that assumes it's definitely present.</p>
 
-<p><a href="/tutorials/#webdatabase">Read more</a> about IndexedDB.</p>
+<p><a href="/en/tutorials/indexeddb/todo/">Read more</a> about IndexedDB.</p>
 
 <h3 id="toc-indexedDB">IndexedDB</h3>
 
@@ -102,7 +102,7 @@ Browser-specific features are capabilities that are available, but outside the r
 
 <p>As with Web SQL Database, you also have transactions available to protect against race conditions.</p>
 
-<p><a href="/tutorials/#indexeddb">Read more</a> about IndexedDB.</p>
+<p><a href="/en/tutorials/indexeddb/todo/">Read more</a> about IndexedDB.</p>
 
 <h3 id="toc-fileAPI">Filesystem API</h3>
 
@@ -112,7 +112,7 @@ Browser-specific features are capabilities that are available, but outside the r
 
 <p>If you need a directory structure, use this API to store large chunks of data, e.g. large text documents or even entire movies.</p>
 
-<p><a href="/tutorials/#file">Read more</a> about the File APIs.</p>
+<p><a href="/en/tutorials/file/filesystem/">Read more</a> about the File APIs.</p>
 
 <h2 id="toc-offline-technologies">How to Use the Offline Technologies</h2>
 
@@ -157,7 +157,7 @@ See <a href="/tutorials/file/xhr2/#toc-bin-data">Fetching data</a>.</p>
 
 <p>There's an HTML5 API to let you query if a browser is online: <code>navigator.onLine()</code>. It works on recent IE, Firefox, Opera, and Chrome. You can also listen for these online/offline events using <code>document.body.addEventListener("online", function () {...}</code> and <code>document.body.addEventListener("offline", function () {...}</code>.</p>
 
-<p>You should generally assume the network is present and make calls as normal. It's only in the event of a server timeout or related error that you should invoke <tt>navigator.online</tt>. Doing so will serve two purposes: (a) you can decide if the error is caused by a network outage versus a server-specific outage, and if it's a network outage, inform the user so they can get back online; (b) you can start watching for the "online" event, and take action when the user's back online.</p>
+<p>You should generally assume the network is present and make calls as normal. It's only in the event of a server timeout or related error that you should invoke <tt>navigator.onLine</tt>. Doing so will serve two purposes: (a) you can decide if the error is caused by a network outage versus a server-specific outage, and if it's a network outage, inform the user so they can get back online; (b) you can start watching for the "online" event, and take action when the user's back online.</p>
 
 <h3 id="toc-structure">Structuring file data</h3>
 

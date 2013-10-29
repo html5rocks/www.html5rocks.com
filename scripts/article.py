@@ -1,3 +1,4 @@
+#! /usr/bin/python
 import getpass
 import sys
 
@@ -26,9 +27,8 @@ def main():
         print "Article delivery date is required"
         sys.exit(1)
 
-    if options.owner is None or options.owner == "":
-        print "Article owner is required"
-        sys.exit(1)
+    title = options.title
+    description = options.description or ""
 
     username = raw_input("Username: ")
     password = getpass.getpass() 
@@ -36,16 +36,12 @@ def main():
     g = Github(username, password)
 
     repo = g.get_repo(repository)
-
-    due_on = datetime.strptime(options.due_on, "%Y-%m-%d")
-
-    try:
-        milestone = repo.create_milestone(options.title, state="open", due_on=due_on)
-    except GithubException as e:
-        print "A milestone has already been created for this date, no two articles can be launched on the same day"
-        sys.exit(1)
- 
-    issue = repo.create_issue(options.title, body=options.description, milestone=milestone)
+    label = repo.get_label("new article") 
+    
+    due_on = "due on: " + datetime.strptime(options.due_on, "%Y-%m-%d")
+    description = due_on + "\n" + description  
+  
+    issue = repo.create_issue(title, body=description, labels=[label])
 
     print "Created issue: %s" % issue.url
 

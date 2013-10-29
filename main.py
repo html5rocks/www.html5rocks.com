@@ -56,17 +56,19 @@ class ContentHandler(webapp2.RequestHandler):
   def get_language(self):
     lang_match = re.match("^/(\w{2,3})(?:/|$)", self.request.path)
     return lang_match.group(1) if lang_match else None
-    
+
   def activate_language(self, language_code):
     self.locale = language_code or settings.LANGUAGE_CODE
     translation.activate( self.locale )
 
   def browser(self):
-    return str(self.request.headers['User-Agent'])
+    """Returns a string representing the user agent, or None."""
+    return self.request.headers.get('User-Agent')
 
   def is_awesome_mobile_device(self):
+    """Returns True if the browser is a string indicating an awesome device."""
     browser = self.browser()
-    return browser.find('Android') != -1 or browser.find('iPhone') != -1
+    return browser and (browser.find('Android') != -1 or browser.find('iPhone') != -1)
 
   def get_toc(self, path):
     # Only have TOC on tutorial pages. Don't do work for others.
@@ -170,7 +172,11 @@ class ContentHandler(webapp2.RequestHandler):
       'host': '%s://%s' % (self.request.scheme, self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
-      'prod': settings.PROD
+      'prod': settings.PROD,
+      'description': _(u'A resource for developers looking to put HTML5 to use '
+                      'today, including information on specific features and '
+                      'when to use them in your apps.'),
+      'canonical_url': self.request.path_url
     }
 
     # If the tutorial contains a social URL override, use it.
@@ -266,15 +272,18 @@ class ContentHandler(webapp2.RequestHandler):
     if not relpath.startswith("%s/" % locale):
       return self.redirect("/%s/" % locale, permanent=True)
 
-    # If we get here, is because the language is specified correctly, 
+    # If we get here, is because the language is specified correctly,
     # so let's activate it
     self.activate_language(locale)
-    
+
     # Strip off leading `/[en|de|fr|...]/`
     relpath = re.sub('^/?\w{2,3}(?:/)?', '', relpath)
 
     # Are we looking for a feed?
     is_feed = self.request.path.endswith('.xml')
+
+    # Which CSS should this use? (Will get overwritten.)
+    css_file = 'base'
 
     # Setup handling of redirected article URLs: If a user tries to access an
     # article from a non-supported language, we'll redirect them to the
@@ -296,6 +305,20 @@ class ContentHandler(webapp2.RequestHandler):
     if ((relpath == '' or relpath[-1] == '/') or  # Landing page.
         (relpath[-1] != '/' and relpath in ['mobile', 'tutorials', 'features',
                                             'gaming', 'business', 'updates'])):
+
+      # Check if path ends with a / and adds if necessary
+      if (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string == ''):
+          return self.redirect(relpath + '/', permanent=True)
+      # Check if path ends with a / and adds along with the query string
+      elif (relpath != '' and relpath[-1] != '/' and
+        self.request.query_string != ''):
+          return self.redirect(relpath + '/?' + self.request.query_string,
+                               permanent=True)
+
+      if (relpath == ''):
+        css_file = 'home'
+
       path = os.path.join('content', relpath, 'index.html')
     else:
       path = os.path.join('content', relpath)
@@ -307,8 +330,10 @@ class ContentHandler(webapp2.RequestHandler):
       profiles = models.get_sorted_profiles()
       for p in profiles:
         p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
-      return self.render(data={'sorted_profiles': profiles},
-                         template_path='content/profiles.html', relpath=relpath)
+      return self.render(data={
+            'css_file':css_file,
+            'sorted_profiles': profiles
+          }, template_path='content/profiles.html', relpath=relpath)
     elif ((re.search('tutorials/.+', relpath) or
            re.search('mobile/.+', relpath) or
            re.search('gaming/.+', relpath) or
@@ -372,7 +397,7 @@ class ContentHandler(webapp2.RequestHandler):
           'es': 'Español',
           'it': 'Italiano',
           'ja': '日本語',
-          'ko': '한국의',
+          'ko': '한국어',
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
           'zh': '中文 (简体)'
@@ -385,6 +410,7 @@ class ContentHandler(webapp2.RequestHandler):
                              'lang': langs[loc]})
 
         data = {
+          'css_file': css_file,
           'tut': tut,
           'localizations': loc_list,
           'redirect_from_locale': redirect_from_locale
@@ -400,29 +426,33 @@ class ContentHandler(webapp2.RequestHandler):
                                                                  locale))
     elif os.path.isfile(path):
       #TODO(ericbidelman): Don't need these tutorial/update results for query.
-      
+
       page_number = int(self.request.get('page', default_value=0)) or None
       template_args = dict()
-      
+
       if page_number:
         template_args['previous_page'] = page_number - 1
         template_args['next_page'] = page_number + 1
-      
-      if relpath in ['mobile', 'gaming', 'business']:
+
+      if relpath[:-1] in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
-            relpath, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+            relpath[:-1], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
       elif relpath == 'updates':
         results = []
       else:
+        include_updates = None
         if relpath == '':
-          resource_limit = 10
+          resource_limit = 9
+          include_updates = True
         else:
           resource_limit = None
-          
+
         if page_number is not None:
-          results = models.Resource.get_all(order='-publication_date', page=page_number)
+          results = models.Resource.get_all(order='-publication_date',
+              page=page_number, include_updates=include_updates)
         else:
-          results = models.Resource.get_all(order='-publication_date', limit=resource_limit)
+          results = models.Resource.get_all(order='-publication_date',
+              limit=resource_limit, include_updates=include_updates)
 
       tutorials = [] # List of final result set.
       authors = [] # List of authors related to the result set.
@@ -458,16 +488,23 @@ class ContentHandler(webapp2.RequestHandler):
       # Remove duplicate authors from the list.
       author_dict = {}
       for a in authors:
-        author_dict[a.key().name()] = a
+        if a is not None:
+          author_dict[a.key().name()] = a
       authors = author_dict.values()
-      
-      data={'tutorials': tutorials, 'authors': authors, 'args': template_args}
-      
+
+      data = {
+        'css_file': css_file,
+        'tutorials': tutorials,
+        'authors': authors,
+        'args': template_args
+      }
+
       return self.render(data, template_path=path, relpath=relpath)
 
     elif os.path.isfile(path[:path.rfind('.')] + '.html'):
-      return self.render(data={}, template_path=path[:path.rfind('.')] + '.html',
-                         relpath=relpath)
+      return self.render(data={'css_file': css_file},
+                        template_path=path[:path.rfind('.')] + '.html',
+                        relpath=relpath)
 
     elif os.path.isfile(path + '.html'):
       category = relpath.replace('features/', '')
@@ -484,6 +521,7 @@ class ContentHandler(webapp2.RequestHandler):
           r.url = "/%s%s" % (self.locale, r.url)
 
       data = {
+        'css_file': css_file,
         'category': category,
         'updates': updates
       }
@@ -492,7 +530,7 @@ class ContentHandler(webapp2.RequestHandler):
           data['local_content_path'] = os.path.join(relpath, locale, 'index.html')
         else:
           data['local_content_path'] = os.path.join(relpath, 'en', 'index.html')
-        
+
       return self.render(data=data, template_path=path + '.html', relpath=relpath)
 
     # If we've reached here, assume 404.
@@ -598,7 +636,7 @@ class DBHandler(ContentHandler):
     if (relpath == 'live'):
       user = users.get_current_user()
 
-      # Restrict access to this page to admins and whitelisted users. 
+      # Restrict access to this page to admins and whitelisted users.
       if (not users.is_current_user_admin() and
           user.email() not in settings.WHITELISTED_USERS):
         return self.redirect('/')
@@ -632,27 +670,27 @@ class DBHandler(ContentHandler):
 
     elif (relpath == 'drop_all'):
       if settings.PROD:
-        return self.response.out.write('Handler not allowed in production.')  
+        return self.response.out.write('Handler not allowed in production.')
       self._NukeDB()
 
     elif (relpath == 'load_tutorials'):
       if settings.PROD:
-        return self.response.out.write('Handler not allowed in production.')  
+        return self.response.out.write('Handler not allowed in production.')
       self._AddTestResources()
 
     elif (relpath == 'load_authors'):
       if settings.PROD:
-        return self.response.out.write('Handler not allowed in production.')  
+        return self.response.out.write('Handler not allowed in production.')
       self._AddTestAuthors()
 
     elif (relpath == 'load_playground_samples'):
       if settings.PROD:
-        return self.response.out.write('Handler not allowed in production.')  
+        return self.response.out.write('Handler not allowed in production.')
       self._AddTestPlaygroundSamples()
 
     elif (relpath == 'load_studio_samples'):
       if settings.PROD:
-        return self.response.out.write('Handler not allowed in production.')  
+        return self.response.out.write('Handler not allowed in production.')
       self._AddTestStudioSamples()
 
     elif (relpath == 'load_all'):
@@ -710,7 +748,7 @@ class DBHandler(ContentHandler):
       live_data = models.LiveData.all().get()
       if live_data is None:
         live_data = models.LiveData()
-      
+
       live_data.gdl_page_url = self.request.get('gdl_page_url') or None
 
       #if live_data.gdl_page_url is not None:

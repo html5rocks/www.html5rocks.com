@@ -16,7 +16,7 @@
 
     html5rocks.webdb.open = function() {
       var dbSize = 5 * 1024 * 1024; // 5MB
-      html5rocks.webdb.db = openDatabase("Todo", "1.0", "Todo manager", dbSize);
+      html5rocks.webdb.db = openDatabase("Todo", "1", "Todo manager", dbSize);
     }
 
     html5rocks.webdb.createTable = function() {
@@ -95,15 +95,7 @@
 {% block onload %}{% if is_mobile %}init();{% endif %}{% endblock %}
 
 {% block content %}
-  <h2 id="toc-intro">Introduction</h2>
-  <p>
-    <a href="http://dev.w3.org/html5/webdatabase">Web Databases</a> are new
-    in HTML5. Web Databases are hosted and persisted inside a user's browser.
-    By allowing developers to create applications with rich query abilities 
-    it is envisioned that a new breed of web applications will emerge that
-    have the ability to work online and off-line.
-  </p>
-  <p>
+  <p class="notice">
     On November 18, 2010, the <a href="http://www.w3.org/TR/webdatabase/">W3C
     announced</a> that Web SQL database is a deprecated specification. This is a
     recommendation for web developers to no longer use the technology as
@@ -112,6 +104,16 @@
     Safari, Opera and nearly all Webkit based mobile devices support WebSQL and
     will likely maintain support for the foreseeable future.
   </p>
+
+  <h2 id="toc-intro">Introduction</h2>
+  <p>
+    <a href="http://dev.w3.org/html5/webdatabase">Web Databases</a> are new
+    in HTML5. Web Databases are hosted and persisted inside a user's browser.
+    By allowing developers to create applications with rich query abilities 
+    it is envisioned that a new breed of web applications will emerge that
+    have the ability to work online and off-line.
+  </p>
+  
   <p class="notice" style="text-align:center;">
     This tutorial is also <a href="/tutorials/indexeddb/todo/">
     available written using "IndexedDB"</a>, the replacement offline storage 
@@ -152,7 +154,7 @@ html5rocks.webdb = {};</pre>
 
 html5rocks.webdb.open = function() {
   var dbSize = 5 * 1024 * 1024; // 5MB
-  html5rocks.webdb.db = openDatabase("Todo", "1.0", "Todo manager", dbSize);
+  html5rocks.webdb.db = openDatabase("Todo", "1", "Todo manager", dbSize);
 }
 
 html5rocks.webdb.onError = function(tx, e) {
@@ -252,8 +254,8 @@ html5rocks.webdb.onSuccess = function(tx, r) {
 }
 function renderTodo(row) {
   return "&lt;li&gt;" + row.todo + 
-         " [&lt;a href='javascript:void(0);' onclick='html5rocks.webdb.deleteTodo(" + 
-         row.ID +");'&gt;Delete&lt;/a&gt;]&lt;/li&gt;";
+         " [&lt;a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" + 
+         row.ID +");\'&gt;Delete&lt;/a&gt;]&lt;/li&gt;";
 }</pre>
   <p>
     The effect of this method call is that the todo list is rendered into

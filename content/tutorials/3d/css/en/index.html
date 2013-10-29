@@ -38,12 +38,12 @@
   <p>It must be noted that the CSS 3D module is designed to help developers build rich and visually interesting applications, it is not designed to enable you to build immersive 3d worlds.</p>
 
   <h2>Browser Support and Hardware Acceleration</h2>
-  <p>As of September 2010, several browsers support the CSS 3D module namely Safari and Chrome.  The important piece of information to remember is that although a browser may "support" 3d, it might not be able to render 3D.</p>
+  <p>As of October 2013, [all major browsers support the CSS 3D module](http://caniuse.com/#feat=transforms3d).  The important piece of information to remember is that although a browser may "support" 3d, it might not be able to render 3D due to hardware and driver limitations.</p>
   <p>3D scenes based of the DOM can be very computationally expensive and therefore browser vendors have decided rather than slow the browsers down with a pure software rendering solution, they instead will take advantage of GPU which might not be available on all platforms</p>
 
   <h2 id="toc-featuredetection">Feature Detection</h2>
   <p>What about feature detection? I was hoping that you weren't going to ask!</p>
-  <p>Developers have been using tools such as modernizr to detect support for specific browser features and abilities.  Whilst it is possible to detect the presence of support for 3D transformations, it is not possible to detect for the presence of hardware acceleration, and hardware acceleration is the key ingredient.</p>
+  <p>Developers have been using tools such as Modernizr to detect support for specific browser features and abilities.  Whilst it is possible to detect the presence of support for 3D transformations, it is not possible to detect for the presence of hardware acceleration, and hardware acceleration is the key ingredient.</p>
 
   <h2 id="toc-sample1">Basic Sample</h2>
   <p>There is nothing better than jumping straight in. In this sample we will apply a basic set of rotations of an arbitrary DOM element.</p>
@@ -56,20 +56,12 @@
     style="-webkit-transform: rotate3d(0, 1, 1, 30deg)"&gt;&lt;/iframe&gt;</pre>
   <div style="-webkit-perspective: 800; perspective: 800;
     margin: 100px 0 100px 50px">
-    <iframe src="http://www.html5rocks.com/" style="-webkit-transform: rotate3d(0, 1, 1, 30deg);
-    transform: rotate3d(0, 1, 1, 30deg);"></iframe>
+    <iframe src="http://www.html5rocks.com/" style="
+    -webkit-transform: rotate3d(0, 1, 1, 30deg);
+            transform: rotate3d(0, 1, 1, 30deg);"></iframe>
   </div>
   <p>BAM! That is it, the element is fully interactive, and in all respects it is a fully fledged DOM element (excpect that it now looks even cooler).</p>
   <p>If your browser doesn't support 3D transformations, nothing will happen. You will just see a simple iframe with no rotation applied.  If your browser supports 3d transformations but without hardware acceleration, it might look a little odd.</p>
-  {% if is_mobile %}
-  <pre class="prettyprint">&lt;div style="-webkit-perspective: 800; perspective: 800; margin: 100px 0 100px 50px"&gt;
-    &lt;iframe src="http://www.html5rocks.com/"
-      style="-webkit-transform: rotate3d(0, 1, 1, 30deg);
-      transform: rotate3d(0, 1, 1, 30deg);"&gt;&lt;/iframe&gt;
-&lt;/div&gt;</pre>
-  {% else %}
-  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=150&hl=300#3d_transformation_basic" style="border: none; width: 100%; height: 570px;"></iframe>
-  {% endif %}
 
   <h2 id="toc-animation">Animating</h2>
   <p>The thing that I love about CSS3 3D transformations is that it ties so beautifully with the <a href="">CSS Transition module</a>.  Animations and transitions are easy to define in CSS, and applying these to 3d is no exception.</p>
@@ -87,14 +79,14 @@
 
   #anim1 iframe {
     -webkit-transition: -webkit-transform 1s ease-in-out;
+            transition: transform 1s ease-in-out;
     -webkit-transform: rotate3d(0, 1, 1, 30deg);
-    transition: transform 1s ease-in-out;
-    transform: rotate3d(0, 1, 1, 30deg);
+            transform: rotate3d(0, 1, 1, 30deg);
   }
 
   #anim1 iframe:hover {
     -webkit-transform: rotate3d(0, 0, 1, 30deg);
-    transform: rotate3d(0, 0, 1, 30deg);
+            transform: rotate3d(0, 0, 1, 30deg);
   }
 &lt;/style&gt;
   </pre>

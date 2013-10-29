@@ -1,0 +1,231 @@
+{% extends "tutorial.html" %}
+{% load i18n %}
+{% load mixin from templatefilters %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block headtitle %}{% trans "Style Guide" %}{% endblock %}
+
+{% block head %}
+<style>
+h1 {
+  text-transform: none;
+}
+article.tutorial {
+  margin-left: auto;
+}
+figure {
+  margin-bottom: 1em;
+  padding: 10px;
+}
+figure img {
+  border: 1px solid #ccc;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<article class="pattern-bg-lighter">
+  <hgroup>
+    <h1>Style Guide</h1>
+    <b>Updated:</b> 2013-10-29
+  </hgroup>
+</article>
+<article class="pattern-bg-lighter tutorial">
+
+<h1 id="articlewide">Article wide concepts</h1>
+
+<h2 id="warning">New feature warning</h2>
+
+<p>For experimental features, include the warning.html text at the top of your content:</p>
+
+<pre class="prettyprint">
+&lt;p>{% templatetag openblock %} include "warning.html" {% templatetag closeblock %}&lt;/p>
+</pre>
+
+<p>Example:</p>
+
+<p>{% include "warning.html" %}</p>
+
+<h2 id="featuredetection">Adding browser support to the article</h2>
+
+<p>Articles can indicate if the user's browser does/does not support the feature discussed
+in the article by including an <code>{% templatetag openblock %} block iscompatible {% templatetag closeblock %}</code> at the top of the file:</p>
+
+<pre class="prettyprint">
+{% templatetag openblock %} block iscompatible {% templatetag closeblock %}
+  return 'register' in document;
+{% templatetag openblock %} endblock {% templatetag closeblock %}
+</pre>
+
+<p>The content of the <code>{% templatetag openblock %} block iscompatible {% templatetag closeblock %}</code> block should be a JS expression that returns a boolean for the feature detect.</p>
+
+<p>Example:</p>
+
+<figure>
+  <img src="/static/images/styleguide/browsersupport.png">
+  <figcaption>Example: the user's browser supports the feature</figcaption>
+</figure>
+
+<figure>
+  <img src="/static/images/styleguide/browsersupport-no.png">
+  <figcaption>Example: the user's browser doesn't support the feature</figcaption>
+</figure>
+
+<h1 id="stylingfeatures">Styling features</h1>
+
+<h2 id="keyboard">Keyboard actions</h2>
+
+To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> class:
+
+<pre class="prettyprint">
+&lt;kbd>Ctrl&lt;/kbd>+&lt;span class="kbd">Shift&lt;/span>+&lt;kbd>J&lt;/kbd> (or &lt;kbd>Cmd&lt;/kbd>+&lt;kbd>Opt&lt;/kbd>+&lt;kbd>J&lt;/kbd>)
+</pre>
+
+<p>Example:</p>
+
+<kbd>Ctrl</kbd>+<span class="kbd">Shift</span>+<kbd>J</kbd> (or <kbd>Cmd</kbd>+<kbd>Opt</kbd>+<kbd>J</kbd>)
+
+<h2 id="notices">Tips &amp; notices</h2>
+
+<p>Call out important tips/callouts by adding the <code>notice</code> class on <code>&lt;p></code>:</p>
+
+<pre class="prettyprint">
+&lt;p class="notice">&lt;b>Note:&lt;/b> this is a tip you all should know.&lt;/p>
+</pre>
+
+<p>Example:</p>
+
+<p class="notice"><b>Note:</b> this is a tip you all should know.</p>
+
+<p>You can additionally super charge your tips with a label with the <code>fact</code> and <code>tip</code> classes:</p>
+
+<pre class="prettyprint">
+&lt;p class="notice tip">This is a tip to remember!&lt;/p>
+&lt;p class="notice fact">It's a fact Jack.&lt;/p>
+</pre>
+
+<p>Example:</p>
+
+<p class="notice tip">This is a tip to remember!</p>
+<p class="notice fact">It's a fact Jack.</p>
+
+<h2 id="quotes">Quotes</h2>
+
+<p>Commentary quotes can be added using the <code>commentary</code> class on <code>&lt;blockquote></code>:</p>
+
+<pre class="prettyprint">
+&lt;blockquote class="commentary">My ideas are golden.&lt;/blockquote>
+</pre>
+
+<h3 id="talkinghead">Talking head</h3>
+
+<p>To add your mug to the mix, add the <code>talkinghead</code> class and to the blockquote
+  and add in a style to adjust the generated content's background-image and positioning:</p>
+
+<pre class="prettyprint">
+&lt;style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+&lt;/style>
+
+&lt;blockquote class="commentary talkinghead">Listen to my words of wisdom!&lt;/blockquote>
+</pre>
+
+<p>Example:</p>
+
+<blockquote class="talkinghead commentary">Listen to my words of wisdom!</blockquote>
+
+<h2 id="figures">Figures / screenshots</h2>
+
+<p>Images within a <code>&lt;figure></code> are set to <code>max-width: 100%</code> and centered in the article body:</p>
+
+<pre class="prettyprint">
+&lt;figure>
+  &lt;img src="screenshot.png">
+  &lt;figcaption>Screenshot of amazing things&lt;/figcaption>
+&lt;/figure>
+</pre>
+
+<h2 id="code">Code</h2>
+
+<h3 id="code-inline">Snippets</h2>
+
+<p>Inline code snippets in paragraph should be put in a <code>&lt;code></code> element
+for easier reading.</p>
+
+<pre class="prettyprint">
+&lt;p>Some text with an inline &lt;/code>navigator.vibrate(...);&lt;code>&lt;/p>
+</pre>
+
+<h3 id="code-blocks">Blocks</h2>
+
+<p>Larger blocks of code should be wrapped in <code>&lt;pre class="prettyprint"></code>:</p>
+
+<pre class="prettyprint">
+&lt;pre class="prettyprint">
+function myAwesomeFunc() {
+  ...
+}
+&lt;/pre>
+</pre>
+
+<h2 id="vendorprefxies">CSS vendor prefixes</h2>
+
+<p>We have a custom Django mixin tag to handle CSS vendor prefixes. The tag renders only
+the unprefixed property and shows a tooltip when hovering over the property to shows
+the rest. In this way, we prevent users from directly copying stale code snippets from
+an article.</p>
+
+<p>To use the mixin tag, <b>ensure it is loaded at the top of your article</b>:</p>
+
+<pre class="prettyprint">
+{% templatetag openblock %} load mixin from templatefilters {% templatetag closeblock %}
+</pre>
+
+Then, use it inside a code block like so:
+
+<pre class="prettyprint">
+&lt;pre class="prettyprint">
+&lt;style>
+.grayscale {
+  {% templatetag openblock %} mixin filter: grayscale(1); {% templatetag closeblock %}
+}
+.promotelayer {
+  {% templatetag openblock %} mixin transform: rotateZ(0); {% templatetag closeblock %}
+}
+.gradient {
+  background-image: {% templatetag openblock %} mixin linear-gradient(...); {% templatetag closeblock %}
+}
+&lt;/style>
+&lt;/pre>
+</pre>
+
+<p>Example:</p>
+
+<pre class="prettyprint">
+&lt;style>
+.grayscale {
+  {% mixin filter: grayscale(1); %}
+}
+.promotelayer {
+  {% mixin transform: rotateZ(0); %}
+}
+.gradient {
+  background-image: {% mixin linear-gradient(...); %}
+}
+&lt;/style>
+</pre>
+
+</article>
+
+<script async src="/static/js/prettify{% if prod %}.min{% endif %}.js" onload="prettyPrint()"></script>
+
+{% endblock %}
+
