@@ -25,7 +25,7 @@ Articles due this quater
 |Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-12-09|@scottrowe|open
 |Alex Danilo|[Stopping the blocking: Eliminate render blocking resources](https://github.com/html5rocks/www.html5rocks.com/issues/509)|2013-12-11|@arthurevans|open
 |Pete LePage|[Real-world responsive images](https://github.com/html5rocks/www.html5rocks.com/issues/490)|2013-12-11|@scottrowe|open
-|Chris Wilson|[Viewport units - a full width experience](https://github.com/html5rocks/www.html5rocks.com/issues/480)|2013-12-11|@arthurevans|open
+|Chris Wilson|[Understanding the viewport](https://github.com/html5rocks/www.html5rocks.com/issues/488)|2013-12-11|@arthurevans|open
 |Paul Kinlan|[How to prioritize your page for visible content](https://github.com/html5rocks/www.html5rocks.com/issues/508)|2013-12-15|@arthurevans|open
-|Chris Wilson|[Understanding the viewport](https://github.com/html5rocks/www.html5rocks.com/issues/488)|2013-12-18|@arthurevans|open
+|Chris Wilson|[Viewport units - a full width experience](https://github.com/html5rocks/www.html5rocks.com/issues/480)|2013-12-18|@arthurevans|open
 |Eiji Kitamura|[Quota Management on browsers](https://github.com/html5rocks/www.html5rocks.com/issues/514)|2013-12-20|@dr4b|open
