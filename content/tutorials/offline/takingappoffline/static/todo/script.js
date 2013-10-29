@@ -105,7 +105,7 @@ function init() {
   cache.addEventListener('updateready', function() {
     prog("There is an update ready");
     update.style.display = "block";
-  }, false);
+  });
 }
 
 function addTodo() {
