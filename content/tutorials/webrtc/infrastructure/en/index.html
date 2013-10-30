@@ -33,24 +33,23 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 </ul>
 
-<p>In this article we show you how to build a signaling service, and how to set up servers (STUN and TURN) to deal with the quirks of real-world connectivity. We also explain how WebRTC apps can handle multi-party calls and interact with services such as VoIP and PSTN (aka telephones).</p>
+<p>In this article we show you how to build a signaling service, and how to deal with the quirks of real-world connectivity by using STUN and TURN servers. We also explain how WebRTC apps can handle multi-party calls and interact with services such as VoIP and PSTN (aka telephones).</p>
 
-<p>If you're not familiar with the basics of WebRTC, take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before reading this article.</p>
+<p>If you're not familiar with the basics of WebRTC, we strongly recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before reading this article.</p>
 
 <h2 id="what-is-signaling">What is signaling?</h2>
 
-<p>Signaling is the process of coordinating communication. In order to set up a 'call', the clients of a WebRTC application need to exchange information:</p>
+<p>Signaling is the process of coordinating communication. In order for a WebRTC application to set up a 'call', its clients need to exchange information:</p>
 
 <ul>
   <li>Session control messages used to open or close communication.</li>
   <li>Error messages.</li>
   <li>Media metadata such as codecs and codec settings, bandwidth and media types.</li>
   <li>Key data, used to establish secure connections.</li>
-  <li>Network configuration data, such as a host's IP address and port as seen by the outside world.</li>
-
+  <li>Network data, such as a host's IP address and port as seen by the outside world.</li>
 </ul>
 
-<p class="notice"><strong>Note</strong>: the signaling mechanism used to exchange session metadata can also be used to communicate other application data, such as messages to the users.</p>
+<p>This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs: you need to build it yourself. We describe below some ways to build a signaling service. First, however, a little context...</p>
 
 <h3 id="jsep">JSEP</h3>
 
@@ -220,6 +219,8 @@ function logError(error) {
 
 <p>As well as being relatively undemanding in terms of bandwidth, WebRTC signaling services don't consume much processing or memory, since they only need to relay messages and retain a small amount of session state data (such as which clients are connected).</p>
 
+<p class="notice"><strong>Note</strong>: the signaling mechanism used to exchange session metadata can also be used to communicate application data, such as messages between the app and users. It's just a messaging service!</p>
+
 <h3 id="pushing-messages-from-the-server-to-the-client">Pushing messages from the server to the client</h3>
 
 <p>A message service for signaling needs to be bidirectional: client to server and server to client. Bidirectional communication goes against the HTTP client/server request/response model, but various hacks such as <a href="https://en.wikipedia.org/wiki/Comet_(programming)">long polling</a> have been developed over many years in order to push data from a service running on a web server to a web app running in a browser.</p>
@@ -228,9 +229,9 @@ function logError(error) {
 
 <p><a href="http://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a> is a more natural solution, designed for full duplex client–server communication (messages can flow in both directions at the same time). One advantage of a signaling service built with pure WebSocket or Server-Sent Events (EventSource) is that the back-end for these APIs can be implemented on a variety of web frameworks common to most web hosting packages, for languages such as PHP, Python and Ruby.</p>
 
-<p>About three quarters of browsers support <a href="http://caniuse.com/#search=websocket">WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all WebSocket connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see Ilya Grigorik's <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch17.html#_http_upgrade_negotiation">WebRTC chapter</a> in the forthcoming O'Reilly's forthcoming <em>High Performance Browser Networking. </em>Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
+<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see Ilya Grigorik's <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch17.html#_http_upgrade_negotiation">WebRTC chapter</a> in the forthcoming O'Reilly's forthcoming <em>High Performance Browser Networking. </em>Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
-<p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. Star the bug to vote it up!) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
+<p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
 
 <figure>
   <img src="apprtc.jpg" alt="The apprtc.appspot.com video chat application" />
@@ -249,7 +250,7 @@ function logError(error) {
 
 <p>Socket.io uses WebSocket with the following fallbacks: Adobe Flash Socket, AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version. We use Socket.io in the example below.</p>
 
-<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. (See Coding WebRTC for signaling, above.) View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="http://bitbucket.org/webrtc/codelab/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
+<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. (See Coding WebRTC for signaling, above.) View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="https://bitbucket.org/webrtc/codelab/src/master/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
 
 <p>Here is the client, <em>index.html</em>:</p>
 
@@ -400,7 +401,10 @@ io.sockets.on('connection', function (socket){
 
 <h3 id="signaling-security">Signaling security</h3>
 
-<blockquote class="commentary">Security is the </blockquote>
+<blockquote class="commentary">
+  <p>Security is the art of making nothing happen.</p>
+  <p>&mdash; <a href="http://t.co/S9cUM7bVfd" title="Salman Rushdie reading and discussing Donald Barthelme's story, The Bodyguard">Salman Rushdie</a></p>
+</blockquote>
 
 <p>Encryption is <a href="http://www.ietf.org/proceedings/82/slides/rtcweb-13.pdf">mandatory</a> for all WebRTC components.</p>
 
