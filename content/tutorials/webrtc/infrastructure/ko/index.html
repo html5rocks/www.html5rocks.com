@@ -27,52 +27,52 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <blockquote class="commentary talkinghead">
 
-  <p>WebRTC enables peer to peer communication.</p>
+  <p>WebRTC는 P2P 통신을 가능하게 합니다.<!-- WebRTC enables peer to peer communication. --></p>
 
-  <p>BUT...</p>
+  <p>그러나<!-- BUT -->...</p>
 
-  <p>WebRTC still needs servers:</p>
+  <p>WebRTC는 여전히 다음과 같은 서버를 필요로 합니다.<!-- WebRTC still needs servers: --></p>
 
   <ul>
-    <li>For clients to exchange metadata to coordinate communication: this is called signaling.</li>
-    <li>To cope with network address translators (NATs) and firewalls.</li>
+    <li>클라이언트들의 통신을 조정하기 위한 메타데이터의 교환. 이것은 시그널링(Signaling)이라고 불립니다.<!-- For clients to exchange metadata to coordinate communication: this is called signaling. --></li>
+    <li>네트워크 주소 변환기 (NAT를) 및 방화벽에 대한 대응.<!-- To cope with network address translators (NATs) and firewalls. --></li>
   </ul>
 
 
 </blockquote>
 
-<p>In this article we show you how to build a signaling service, and how to deal with the quirks of real-world connectivity by using STUN and TURN servers. We also explain how WebRTC apps can handle multi-party calls and interact with services such as VoIP and PSTN (aka telephones).</p>
+<p>이 글에서 우리는 여러분에게 시그널링 서비스를 어떻게 구축하는지와 STUN과 TURN 서버들을 이용하여 실제 연결에 있어 이상한 사항들에 대해 어떻게 타협해야 하는지를 보여줄 것입니다. 또한 WebRTC 앱들이 어떻게 다단위의 호출을 제어할 수 있는지와 VoIP나 PSTN(전화라고도 하는)과 같은 서비스들과 어떻게 상호작용하는지에 대해 설명할 것입니다.<!-- In this article we show you how to build a signaling service, and how to deal with the quirks of real-world connectivity by using STUN and TURN servers. We also explain how WebRTC apps can handle multi-party calls and interact with services such as VoIP and PSTN (aka telephones). --></p>
 
-<p>If you're not familiar with the basics of WebRTC, we strongly recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before reading this article.</p>
+<p>만약 여러분이 WebRTC의 기초에 대해 익숙하지 않다면, 이 글을 읽기 전에 <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">WebRTC와 함께 시작하기</a>를 찾아서 읽어보기를 강력하게 권장합니다.<!-- If you're not familiar with the basics of WebRTC, we strongly recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before reading this article. --></p>
 
-<h2 id="what-is-signaling">What is signaling?</h2>
+<h2 id="what-is-signaling">시그널링(Signaling)이란 무엇인가?<!-- What is signaling? --></h2>
 
-<p>Signaling is the process of coordinating communication. In order for a WebRTC application to set up a 'call', its clients need to exchange information:</p>
+<p>시그널링은 통신 조정의 프로세스입니다. WebRTC 어플리케이션이 'call'을 초기화하기 위해서 클라이언트는 다음과 같은 정보의 교환을 필요로 합니다.<!-- Signaling is the process of coordinating communication. In order for a WebRTC application to set up a 'call', its clients need to exchange information: --></p>
 
 <ul>
-  <li>Session control messages used to open or close communication.</li>
-  <li>Error messages.</li>
-  <li>Media metadata such as codecs and codec settings, bandwidth and media types.</li>
-  <li>Key data, used to establish secure connections.</li>
-  <li>Network data, such as a host's IP address and port as seen by the outside world.</li>
+  <li>통신을 열고 닫는데 사용되는 세션 컨트롤 메세지들.<!-- Session control messages used to open or close communication. --></li>
+  <li>에러 메세지들.<!-- Error messages. --></li>
+  <li>코덱이나 코덱 설정, 대역폭, 미디어 타입 같은 미디어 메타데이터.<!-- Media metadata such as codecs and codec settings, bandwidth and media types. --></li>
+  <li>보안 연결을 수립하기 위해 사용되는 키 데이터.<!-- Key data, used to establish secure connections. --></li>
+  <li>밖에서 보이는 것처럼 호스트의 IP 주소와 포트와 같은 네트워크 데이터.<!-- Network data, such as a host's IP address and port as seen by the outside world. --></li>
 </ul>
 
-<p>This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs: you need to build it yourself. We describe below some ways to build a signaling service. First, however, a little context...</p>
+<p>이 시그널링 프로세스는 클라이언트에서 메세지를 앞/뒤로 전달하기 위한 방법을 필요로 합니다. 그 메커니즘은 WebRTC API에 의해 구현되지 않습니다. 여러분이 직접 구축하여야 합니다. 시그널링 서비스 구축을 위한 몇가지 방법을 아래에 기술할 것입니다. 그러나 그 전에 아주 작은 것부터 설명하도록 하겠습니다...<!-- This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs: you need to build it yourself. We describe below some ways to build a signaling service. First, however, a little context... --></p>
 
 <h3 id="jsep">JSEP</h3>
 
-<p>To avoid redundancy and to maximize compatibility with established technologies, signaling methods and protocols are not specified by WebRTC standards. This approach is outlined by JSEP, the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-1.1">JavaScript Session Establishment Protocol</a>:</p>
+<p>중복의 회피와 호환성을 최대화하기 위해 기술, 시그널링 방법 그리고 프로토콜의 설정은 WebRTC 표준 규격에 정의되어 있지 않습니다. 이 접근 방식은 다음과 같이 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-1.1">JavaScript Session Establishment Protocol</a>(JSEP)에 의해 설명할 수 있습니다.<!-- To avoid redundancy and to maximize compatibility with established technologies, signaling methods and protocols are not specified by WebRTC standards. This approach is outlined by JSEP, the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-1.1">JavaScript Session Establishment Protocol</a>: --></p>
 
-<blockquote class="commentary">The thinking behind WebRTC call setup has been to fully specify and control the media plane, but to leave the signaling plane up to the application as much as possible. The rationale is that different applications may prefer to use different protocols, such as the existing SIP or Jingle call signaling protocols, or something custom to the particular application, perhaps for a novel use case. In this approach, the key information that needs to be exchanged is the multimedia session description, which specifies the necessary transport and media configuration information necessary to establish the media plane.</blockquote>
+<blockquote class="commentary">WebRTC call 설정은 완전하게 규격화되어 미디어 plane을 제어하지만 어플리케이션에 가능한한 최대의 시그널링 증가를 방지해야 합니다. 기존의 SIP나 Jingle call 시그널링 프로토콜, 혹은 소설 적용 사례같은 특정 어플리케이션이 특화된 무언가 다른 프로토콜을 사용에 적합한 다른 어플리케이션들이 그 근거일 것입니다. 이러한 접근에서 교환되어야 할 핵심 정보들은 요구되는 송수신과 미디어 plane을 설정하기 위한 미디어 설정 정보를 구성하는데 필요한 멀티미디어 세션 설명(Description) 정보입니다.<!-- The thinking behind WebRTC call setup has been to fully specify and control the media plane, but to leave the signaling plane up to the application as much as possible. The rationale is that different applications may prefer to use different protocols, such as the existing SIP or Jingle call signaling protocols, or something custom to the particular application, perhaps for a novel use case. In this approach, the key information that needs to be exchanged is the multimedia session description, which specifies the necessary transport and media configuration information necessary to establish the media plane. --></blockquote>
 
-<p>JSEP's architecture also avoids a browser having to save state: that is, to function as a signaling state machine. This would be problematic if, for example, signaling data was lost each time a page was reloaded. Instead, signaling state can be saved on a server.</p>
+<p>또한 JSEP의 구조는 브라우저가 상태를 저장하는 것을 회피합니다. (즉, 시그널링 상태 기계로써 함수에 전달하는 경우.) 이 경우도 문제가 있을 수 있습니다. 시그널링 데이터가 페이지가 리로딩되면서 매번 사라지는 경우가 그 예입니다. 대신 시그널링 상태는 서버에 저장될 수 있습니다.<!-- JSEP's architecture also avoids a browser having to save state: that is, to function as a signaling state machine. This would be problematic if, for example, signaling data was lost each time a page was reloaded. Instead, signaling state can be saved on a server. --></p>
 
 <figure>
   <img src="jsep.png" alt="JSEP architecture diagram" />
-  <figcaption>JSEP architecture</figcaption>
+  <figcaption>JSEP 구조<!-- JSEP architecture --></figcaption>
 </figure>
 
-<p>JSEP requires the exchange between peers of <em>offer</em> and <em>answer</em>: the media metadata mentioned above. Offers and answers are communicated in Session Description Protocol format (SDP), which look like this:</p>
+<p>JESP는 다음과 같이 <em>제안</em>과 <em>응답</em>의 종단(Peer)간의 교환이 필요합니다.위에서 언급한 미디어 메타데이터. 제안들과 응답들은 다음과 같은 '세션 기술 프로토콜(SDP)' 형식입니다.<!-- JSEP requires the exchange between peers of <em>offer</em> and <em>answer</em>: the media metadata mentioned above. Offers and answers are communicated in Session Description Protocol format (SDP), which look like this: --></p>
 
 <pre class="prettyprint">v=0
 o=- 7614219274584779017 2 IN IP4 127.0.0.1
@@ -92,58 +92,58 @@ a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:9c1AHz27dZ9xPI91YNfSlI67/EMkjHHIHORiCl
 a=rtpmap:111 opus/48000/2
 …</pre>
 
-<p>Want to know what all this SDP gobbledygook actually means? Take a look at the <a href="http://datatracker.ietf.org/doc/draft-nandakumar-rtcweb-sdp/?include_text=1">IETF examples</a>.</p>
+<p>이 모든 SDP의 까다로운 표현들이 실제로 무엇을 의미하는지 알고 싶으십니까? 그렇다면 <a href="http://datatracker.ietf.org/doc/draft-nandakumar-rtcweb-sdp/?include_text=1">IETF 예제들</a>을 살펴보시기 바랍니다.<!-- Want to know what all this SDP gobbledygook actually means? Take a look at the <a href="http://datatracker.ietf.org/doc/draft-nandakumar-rtcweb-sdp/?include_text=1">IETF examples</a>. --></p>
 
-<p>Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description, by editing the values in the SDP text. For example, the <em>preferAudioCodec() </em>function in <a href="https://apprtc.appspot.com/js/main.js">apprtc.appspot.com</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript, and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP.</p>
+<p>WebRTC는 제안이나 응답은 로컬이나 원격 기술(Description)로 설정되기 전에 SDP 텍스트에서 값의 편집을 통해 변경될 수 있도록 디자인되었음을 명심하여야 합니다. 예를 들어 <a href="https://apprtc.appspot.com/js/main.js">apprtc.appspot.com</a>의 <em>preferAudioCodec()</em> 함수는 기본 코덱과 비트레이트를 설정하기 위해 사용할 수 있습니다. SDP는 자바스크립트로 관리하기에 조금은 고통스럽고 WebRTC의 향후 버전은 대신 JSON을 사용하도록 하자는 논의가 있지만 SDP와 붙어있음으로 인한 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">몇가지 이점들</a>이 있습니다.<!-- Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description, by editing the values in the SDP text. For example, the <em>preferAudioCodec() </em>function in <a href="https://apprtc.appspot.com/js/main.js">apprtc.appspot.com</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript, and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP. --></p>
 
-<h3 id="rtcpeerconnection-signaling-offer-answer-and-candidate">RTCPeerConnection + signaling: offer, answer and candidate</h3>
+<h3 id="rtcpeerconnection-signaling-offer-answer-and-candidate">RTCPeerConnection + 시그널링 : 제안, 응답 그리고 후보<!-- RTCPeerConnection + signaling: offer, answer and candidate --></h3>
 
-<p>RTCPeerConnection is the API used by WebRTC applications to create a connection between peers and communicate audio and video.</p>
+<p>RTCPeerConnection은 WebRTC 어플리케이션이 Peer 간의 연결을 생성하고 오디오와 비디오의 통신에 사용되는 API입니다.<!-- RTCPeerConnection is the API used by WebRTC applications to create a connection between peers and communicate audio and video. --></p>
 
-<p>To initialise this process RTCPeerConnection has two tasks:</p>
+<p>이 프로세스를 초기화하기 위해 RTCPeerConnection는 다음과 같은 2가지 태스크를 가지고 있습니다.<!-- To initialise this process RTCPeerConnection has two tasks: --></p>
 
 <ul>
-  <li>Ascertain local media conditions, such as resolution and codec capabilities. This is the metadata used for the offer and answer mechanism.</li>
-  <li>Get potential network addresses for the application's host, known as <em>candidates</em>.</li>
+  <li>해상도나 가용한 코덱 정보 등의 로컬 미디어 상태들을 알아냅니다. 이것은 제안/응답 메커니즘에서 사용되는 메타데이터입니다.<!-- Ascertain local media conditions, such as resolution and codec capabilities. This is the metadata used for the offer and answer mechanism. --></li>
+  <li><em>후보들</em>로 알려진 어플리케이션 호스트의 잠재적인 네트워크 주소들을 가져옵니다.<!-- Get potential network addresses for the application's host, known as <em>candidates</em>. --></li>
 
 </ul>
 
-<p>Once this local data has been ascertained, it must be exchanged via a signaling mechanism with the remote peer.</p>
+<p>일단 로컬 데이터가 알아내지면, 시그널링 메커니즘를 통해 리모트 Peer와 반드시 교환되어야 합니다.<!-- Once this local data has been ascertained, it must be exchanged via a signaling mechanism with the remote peer. --></p>
 
-<p>Imagine <a href="http://xkcd.com/177/">Alice is trying to call Eve</a>. Here's the full offer/answer mechanism in all its gory detail:</p>
+<p><a href="http://xkcd.com/177/">앨리스가 이브를 부르려고 시도하는 것</a>을 상상해 보시기 바랍니다. 완전한 제안/응답 메커니즘에 대한 이런저런 뒷얘기들을 얘기하도록 하겠습니다.<!-- Imagine <a href="http://xkcd.com/177/">Alice is trying to call Eve</a>. Here's the full offer/answer mechanism in all its gory detail: --></p>
 
 <ol style="list-style-type: decimal">
-  <li>Alice creates an RTCPeerConnection object.</li>
-  <li>Alice creates an <strong>offer</strong> (an SDP session description) with the RTCPeerConnection <em>createOffer() </em>method.</li>
-  <li>Alice calls <em>setLocalDescription() </em>with his offer.</li>
-  <li><p>Alice stringifies the offer and uses a signaling mechanism to send it to Eve.</p></li>
-  <li>Eve calls <em>setRemoteDescription()</em> with Alice's offer, so that her RTCPeerConnection knows about Alice's setup.</li>
-  <li>Eve calls <em>createAnswer()</em>, and the success callback for this_ _is passed a local session description: Eve's <strong>answer</strong>.</li>
-  <li>Eve sets her answer as the local description by calling <em>setLocalDescription()</em>.</li>
-  <li>Eve then uses the signaling mechanism to send her stringified answer back to Alice.</li>
-  <li><p>Alice sets Eve's answer as the remote session description using <em>setRemoteDescription()</em>.</p></li>
+  <li>앨리스가 RTCPeerConnection 객체를 생성합니다.<!-- Alice creates an RTCPeerConnection object. --></li>
+  <li>앨리스가 <em>createOffer()</em> 메소드를 사용하여 <stong>제안</strong>(SDP Session Description)을 생성합니다.<!-- Alice creates an <strong>offer</strong> (an SDP session description) with the RTCPeerConnection <em>createOffer() </em>method. --></li>
+  <li>앨리스가 제안과 함께 <em>setLocalDescription()</em>를 호출합니다.<!-- Alice calls <em>setLocalDescription() </em>with his offer. --></li>
+  <li><p>앨리스는 제안을 문자열화하고 시그널링 메커니즘을 이용하여 이브에게 보냅니다.<!-- Alice stringifies the offer and uses a signaling mechanism to send it to Eve. --></p></li>
+  <li>이브는 앨리스의 제안을 가지고 <em>setRemoteDescription()</em>를 호출하였으므로 그녀의 RTCPeerConnection가 앨리스의 설정을 알게됩니다.<!-- Eve calls <em>setRemoteDescription()</em> with Alice's offer, so that her RTCPeerConnection knows about Alice's setup. --></li>
+  <li>이브는 em>createAnswer()</em>를 호출하고 이에 대해 로컬 세션 정보(Local Session Description), 즉 이브의 <strong>응답</strong>을 인자로 전달하는 성공 콜백 함수를 호출합니다.<!-- Eve calls <em>createAnswer()</em>, and the success callback for this_ _is passed a local session description: Eve's <strong>answer</strong>. --></li>
+  <li>이브는 <em>setLocalDescription()</em>의 호출을 통해 그녀의 응답을 로컬 기술(Description)으로 설정합니다.<!-- Eve sets her answer as the local description by calling <em>setLocalDescription()</em>. --></li>
+  <li>그리고나서 이브는 시그널링 메커니즘을 사용하여 그녀의 문자열화된 응답을 앨리스에게 다시 전송합니다.<!-- Eve then uses the signaling mechanism to send her stringified answer back to Alice. --></li>
+  <li><p>앨리스는 <em>setRemoteDescription()</em>을 사용하여 이브의 응답을 원격 세션 기술(Description)으로 설정합니다.<!-- Alice sets Eve's answer as the remote session description using <em>setRemoteDescription()</em>. --></p></li>
 </ol>
 
 <!-- flow diagram -->
 
 <blockquote class="commentary talkinghead">
-  <p><a href="http://www.urbandictionary.com/define.php?term=strewth">Strewth</a>!</p>
+  <p><a href="http://www.urbandictionary.com/define.php?term=strewth">맙소사!<!-- Strewth --></a>!</p>
 </blockquote>
 
-<p>Alice and Eve also need to exchange network information. The expression 'finding candidates' refers to the process of finding network interfaces and ports using the <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment">ICE framework</a>.</p>
+<p>앨리스와 이브는 또한 네트워크 정보의 교환이 필요합니다. '후보들의 발견' 표시는 네트워크 인터페이스의 탐색 절차와 <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment">ICE framework</a>를 사용한 포팅과 관련이 있습니다.<!-- Alice and Eve also need to exchange network information. The expression 'finding candidates' refers to the process of finding network interfaces and ports using the <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment">ICE framework</a>. --></p>
 
 <ol style="list-style-type: decimal">
-  <li>Alice creates an RTCPeerConnection object with an <em>onicecandidate</em> handler.</li>
-  <li>The handler is called when network candidates become available.</li>
-  <li>In the handler, Alice sends stringified candidate data to Eve, via their signaling channel.</li>
-  <li>When Eve gets a candidate message from Alice, she calls <em>addIceCandidate()</em>, to add the candidate to the remote peer description.</li>
+  <li>앨리스는 <em>onicecandidate</em> 핸들러를 가진 RTCPeerConnection 객체를 생성합니다.<!-- Alice creates an RTCPeerConnection object with an <em>onicecandidate</em> handler. --></li>
+  <li>핸들러는 네트워크가 가용 대기 상태가 되면 호출됩니다.<!-- The handler is called when network candidates become available. --></li>
+  <li>핸들러에서 앨리스는 이브에게 그들의 시그널링 채널을 통해 문자열화된 후보 데이터를 전송합니다.<!-- In the handler, Alice sends stringified candidate data to Eve, via their signaling channel. --></li>
+  <li>이브가 후보 메세지를 앨리스로부터 수신할 때 원격 Peer 기술(Description)으로의 후보를 추가하는 <em>addIceCandidate()</em>를 호출합니다.<!-- When Eve gets a candidate message from Alice, she calls <em>addIceCandidate()</em>, to add the candidate to the remote peer description. --></li>
 </ol>
 
-<p>JSEP supports <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.4.1">ICE Candidate Trickling</a>, which allows the caller to incrementally provide candidates to the callee after the initial offer, and for the callee to begin acting on the call and setting up a connection without waiting for all candidates to arrive.</p>
+<p>JSEP는 초기 제안 뒤에 피호출자에 대한 후보들을 증분 제공하는 호출자를 가능하게 하는<a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.4.1">ICE Candidate Trickling</a>와 피호출자에게 호출시 동작을 시작하고 도착한 모든 호부들에 대한 대기없이 연결을 설정할 수 있는 기능을 지원하고 있습니다.<!-- JSEP supports <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.4.1">ICE Candidate Trickling</a>, which allows the caller to incrementally provide candidates to the callee after the initial offer, and for the callee to begin acting on the call and setting up a connection without waiting for all candidates to arrive. --></p>
 
-<h3 id="coding-webrtc-for-signaling">Coding WebRTC for signaling</h3>
+<h3 id="coding-webrtc-for-signaling">시그널링을 위한 WebRTC 코딩하기<!-- Coding WebRTC for signaling --></h3>
 
-<p>Below is a <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C code example</a> that summarises the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below.</p>
+<p>아래는 완전한 시그널링 프로세스를 요약한 <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C 코드 예제</a>입니다. 코드는 <em>SignalingChannel</em> 같은 어떤 시그널링 메커니즘이 존재하고 있다고 가정합니다. 시그널링은 아래에서 훨씬 더 자세하게 논의하도록 하겠습니다.<!-- Below is a <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C code example</a> that summarises the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below. --></p>
 
 <pre class="prettyprint">var signalingChannel = new SignalingChannel();
 var configuration = {
@@ -153,12 +153,12 @@ var configuration = {
 };
 var pc;
 
-// call start() to initiate
+// 초기화하려면 start()를 호출합니다.<!-- call start() to initiate -->
 
 function start() {
   pc = new RTCPeerConnection(configuration);
 
-  // send any ice candidates to the other peer
+  // 다른 Peer에 대한 ICE 후보들을 전송합니다. <!-- send any ice candidates to the other peer -->
   pc.onicecandidate = function (evt) {
     if (evt.candidate)
       signalingChannel.send(JSON.stringify({
@@ -166,17 +166,17 @@ function start() {
       }));
   };
 
-  // let the 'negotiationneeded' event trigger offer generation
+  // '제안'이 생성되면 'negotiationneeded' 이벤트를 발생합니다. <!-- let the 'negotiationneeded' event trigger offer generation -->
   pc.onnegotiationneeded = function () {
     pc.createOffer(localDescCreated, logError);
   }
 
-  // once remote stream arrives, show it in the remote video element
+  // 일단 원격 스트림이 도착하면 원격 비디오 엘리먼트 안에 그것을 보여줍니다. <!-- once remote stream arrives, show it in the remote video  -->element
   pc.onaddstream = function (evt) {
     remoteView.src = URL.createObjectURL(evt.stream);
   };
 
-  // get a local stream, show it in a self-view and add it to be sent
+  // 로컬 스트림을 받으면 그것을 자체 뷰에서 보여주고 전송을 위해 추가합니다. <!-- get a local stream, show it in a self-view and add it to be sent -->
   navigator.getUserMedia({
     'audio': true,
     'video': true
@@ -213,17 +213,19 @@ function logError(error) {
   log(error.name + ': ' + error.message);
 }</pre>
 
-<p>To see the offer/answer and candidate exchange processes in action, take a look at the console log for the 'single-page' video chat example at <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page.</p>
+<p>액션에서 제안/응답과 후보 교환 프로세스를 보기 위해서, <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>의 '단일 페이지' 비디오 채팅 예제의 콘솔 로그를 살펴봅시다. 만약 여러분이 원한다면 chrome://webrtc-internals 페이지에서 WebRTC 시그널링의 완전한 덤프(Dump)나 상태를 다운로드할 수 있습니다.<!-- To see the offer/answer and candidate exchange processes in action, take a look at the console log for the 'single-page' video chat example at <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page. --></p>
 
-<h3 id="peer-discovery">Peer discovery</h3>
+<h3 id="peer-discovery">Peer의 탐색<!-- Peer discovery --></h3>
 
-<p>This is fancy way of saying &mdash; how do I find someone to talk to?</p>
+<p>어떻게 내가 대화할 사람을 찾을 수 있을까요? &mdash;라고 말하는 것은 복잡한 방법입니다.<!-- This is fancy way of saying &mdash; how do I find someone to talk to? --></p>
 
-<p>For telephone calls we have telephone numbers and directories. For online video chat and messaging, we need identity and presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call.</p>
+<p>전화는 우리가 가진 전화번호와 디렉토리들에 호출을 합니다. 온라인 비디오 채팅과 메세지를 위해서도 우리는 신원과 참석 관리 시스템과 사용자들의 세션 초기화 방법이 필요합니다. WebRTC 앱들은 클라이언트들이 호출에 대한 시작이나 참여를 서로에게 신호할 수 있도록 방법이 필요합니다.<!-- For telephone calls we have telephone numbers and directories. For online video chat and messaging, we need identity and presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call. --></p>
 
-<p>Peer discovery mechanisms are not defined by WebRTC and we won't go into the options here. The process can be as simple as emailing or messaging a URL: for video chat applications such as <a href="http://talky.io">talky.io</a>, <a href="http://tawk.com">tawk.com</a> and <a href="http://browsermeeting.com">browsermeeting.com</a> you invite people to a call by sharing a custom link. Developer Chris Ball has built an intriguing <a href="http://blog.printf.net/articles/2013/05/17/webrtc-without-a-signaling-server/">serverless-webrtc</a> experiment that enables WebRTC call participants to exchange metadata by any messaging service they like, such as IM, email or homing pigeon.</p>
+<p>Peer 탐색 메커니즘은 WebRTC에 의해 정의되지 않으며 그렇게 할 수 있는 옵션도 없습니다. 절차는 다음과 같이 URL을 통해 이메일이나 메세지를 하는 것처럼 간단합니다. 
 
-<h2 id="how-can-i-build-a-signaling-service">How can I build a signaling service?</h2>
+<a href="http://talky.io">talky.io</a>, <a href="http://tawk.com">tawk.com</a> 그리고 <a href="http://browsermeeting.com">browsermeeting.com</a>과 같은 비디오 채팅 어플리케이션들은 커스텀 링크의 공유를 통해 호출하여 사람들을 초대할 수 있습니다. 개발자 Chris Ball은 WebRTC 호출 시 참가자들간의 인스턴트 메세지, 이메일이나 집 비둘기와 같이 그들이 원하는 그 어떤 메세지 서비스에 의해서도 메타 데이터를 교환할 수 있도록 하는 <a href="http://blog.printf.net/articles/2013/05/17/webrtc-without-a-signaling-server/">serverless-webrtc</a>라는 아주 흥미로운 실험을 구축했습니다.<!-- Peer discovery mechanisms are not defined by WebRTC and we won't go into the options here. The process can be as simple as emailing or messaging a URL: for video chat applications such as <a href="http://talky.io">talky.io</a>, <a href="http://tawk.com">tawk.com</a> and <a href="http://browsermeeting.com">browsermeeting.com</a> you invite people to a call by sharing a custom link. Developer Chris Ball has built an intriguing <a href="http://blog.printf.net/articles/2013/05/17/webrtc-without-a-signaling-server/">serverless-webrtc</a> experiment that enables WebRTC call participants to exchange metadata by any messaging service they like, such as IM, email or homing pigeon. --></p>
+
+<h2 id="how-can-i-build-a-signaling-service">어떻게 시그널링 서비스를 구축할 수 있을까요?<!-- How can I build a signaling service? --></h2>
 
 <p>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!' <br/> <br/> Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> and <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a> we found that, for a video chat session, a total of around 30–45 messages were handled by the signaling service, with a total size for all messages of around 10kB.</p>
 
