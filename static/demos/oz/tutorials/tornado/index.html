@@ -7,7 +7,7 @@
 
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-		
+
 		<style>
 
 			body {
@@ -73,8 +73,8 @@ var shading_types=["Normal", "Fog", "Cam Light", "Fog 2"];
 <script id="example" type="x-shader/x-fragment">
 // ---
 
-//The "Storm Shader" by Dmytry Lavrov, Copyright 2012 (http://dmytry.com/) with permission from Moritz Helmsteadter at 
-//The Max Plank Institute is licensed under a Creative Commons attribution license http://creativecommons.org/licenses/by/3.0/ 
+//The "Storm Shader" by Dmytry Lavrov, Copyright 2012 (http://dmytry.com/) with permission from Moritz Helmsteadter at
+//The Max Plank Institute is licensed under a Creative Commons attribution license http://creativecommons.org/licenses/by/3.0/
 //free to share and remix for any purpose as long as it includes this note.
 //Uses 'Computed noise' by Flavien Brebion.
 
@@ -124,7 +124,7 @@ float ridged(float f){
 }
 
 float Shape(vec3 q)/// the isosurface shape function, the surface is at o(q)=0
-{ 
+{
 	float t=spin_speed*time;
 	if(q.z<0.0)return length(q);
 	vec3 spin_pos=vec3(Spin(t-sqrt(q.z))*q.xy,q.z-t*5.0);
@@ -137,7 +137,7 @@ float Shape(vec3 q)/// the isosurface shape function, the surface is at o(q)=0
 void FogStep(float dist, vec3 fog_absorb, vec3 fog_reemit, inout vec3 colour, inout vec3 multiplier){/// calculates fog colour, and the multiplier for the colour of item behind the fog. If you do two intervals consecutively it will calculate the result correctly.
  	vec3 fog=exp(-dist*fog_absorb);
 	colour+=multiplier*(vec3(1.0)-fog)*fog_reemit;
-	multiplier*=fog; 
+	multiplier*=fog;
 }
 
 const vec3 towards_sun=vec3(1,1,5.0);
@@ -146,11 +146,11 @@ void RaytraceFoggy(vec3 dir, float max_dist, inout vec3 colour, inout vec3 multi
 	vec3 org=camera_matrix[3].xyz;/// origin of the ray
 	vec3 q=org;
 	vec3 pp;
-	
+
 	float d=.0;
 	float old_d=d;
 	float dist=0.0;
-	
+
 	float step_scaling=base_step_scaling;
 
 	const float extra_step=min_step_size;
@@ -161,17 +161,17 @@ void RaytraceFoggy(vec3 dir, float max_dist, inout vec3 colour, inout vec3 multi
 		float density=-shape_value;
 		d=max(shape_value*step_scaling,0.0);
 		float step_dist=d+extra_step;
-		if(density>0.0){			
+		if(density>0.0){
 			float brightness=exp(-0.6*density);
 			FogStep(step_dist*0.2, clamp(density, 0.0, 1.0)*vec3(1,1,1),vec3(1)*brightness, colour, multiplier);
 		}
-		
+
 		if(dist>max_dist || multiplier.x<0.01){
 			return;
 		}
-		dist+=step_dist; 
+		dist+=step_dist;
 		q=org+dist*dir;
-	}	
+	}
 	return;
 }
 
@@ -183,7 +183,7 @@ void main(void)
 
 	vec3 dir=normalize(vec3(p.x,p.y,2.5));
 	dir=(camera_matrix*vec4(dir,0.0)).xyz;
-	
+
 	//Raymarching the isosurface:
 	float dist;
 	vec3 multiplier=vec3(1.0);
@@ -193,7 +193,7 @@ void main(void)
 	gl_FragColor=vec4(col , 1.0);
 }
 
-// --- 
+// ---
 </script>
 
 		<script id="fragmentShader" type="x-shader/x-fragment">
@@ -227,7 +227,7 @@ void main(void)
 		</script>
 
 		<script>
-		
+
 		var oGetVars = new (function (sSearch) {
 		  if (sSearch.length > 1) {
 		    for (var aItKey, nKeyId = 0, aCouples = sSearch.substr(1).split("&"); nKeyId < aCouples.length; nKeyId++) {
@@ -236,7 +236,7 @@ void main(void)
 		    }
 		  }
 		})(window.location.search);
-		
+
 
 			initialize_helper();
 
@@ -264,7 +264,7 @@ void main(void)
 			// message about how to download newer browsers.
 			if (!Date.now) {
 				Date.now = function() {
-					return +new Date();
+					return Date.now();
 				};
 			}
 
@@ -272,12 +272,12 @@ void main(void)
 
 			var quality = 4, quality_levels = [ 0.5, 1, 2, 4, 8 ];
 			var texture_res=128;
-			
+
 			var toolbar, compileButton, fullscreenButton, compileTimer, errorLines = [];
 			var code, canvas, gl, buffer, currentProgram, vertexPosition,
 			parameters = { startTime: Date.now(), time: 0, mouseX: 0.5, mouseY: 0.5, screenWidth: 0, screenHeight: 0 },
 			frontTarget, backTarget, screenProgram, getWebGL, resizer = {}, compileOnChangeCode = true;
-			
+
 			var cam={
 			  pos:vec3.createFrom(10,10,10),
 			  dir:quat4.createFrom(0,0,0,1),
@@ -287,28 +287,28 @@ void main(void)
 			  keys:[],
 			  prev_update_time:Date.now(),
 			};
-			
-			
+
+
 			/// camera movement parameters
-			
+
 			var turn_speed=0.003;
 			var key_turn_speed=0.2;
 			var roll_speed=0.1;
-			
-			
+
+
 			var initial_motion_speed=4.0;
 			var motion_accel=0.1;
 			var motion_decel=0.7;
-			
+
 			var forward_speed=1.0;/// now set internally to do acceleration etc
 			var strafe_speed=1.0;
-			
+
 			var threshold_speed=0.01;
 			var max_dt=0.2;
 			var debug_mode=0;
 			var max_debug_mode=2;
 			var shading_type=3;
-			
+
 			function init_cam() {
 				document.addEventListener('mouseup', function(event){cam.mouse_is_down=false;});
 				document.addEventListener('mousedown', function(event){cam.mouse_is_down=true;});
@@ -326,7 +326,7 @@ void main(void)
 					var x=event.clientX;
 					var y=event.clientY;
 					var dx=x-cam.mouse_prev_x;
-					var dy=y-cam.mouse_prev_y;					
+					var dy=y-cam.mouse_prev_y;
 					cam.mouse_prev_x=x;
 					cam.mouse_prev_y=y;
 					if(cam.mouse_is_down){
@@ -378,7 +378,7 @@ void main(void)
 					if(forward_speed<initial_motion_speed)forward_speed=initial_motion_speed;
 					strafe_speed=forward_speed;
 				}
-				
+
 				if(cam.keys[38]){// up arrow
 					rotation[0]=dt*key_turn_speed;
 				}
@@ -390,21 +390,21 @@ void main(void)
 				}
 				if(cam.keys[39]){/// right arrow
 					rotation[1]=dt*key_turn_speed;
-				}				
+				}
 				if(cam.keys[69]){//e
 				    rotation[2]=-roll_speed*dt;
 				}
 				if(cam.keys[81]){//q
-				    rotation[2]=roll_speed*dt;				    
+				    rotation[2]=roll_speed*dt;
 				}
 				quat4.multiply(cam.dir, rotation);
 				quat4.normalize(cam.dir);
-				
+
 				quat4.multiplyVec3(cam.dir, movement);
 				vec3.add(cam.pos,movement);
 			}
-			
-			
+
+
 			init();
 			init_cam();
 			if (gl) { animate(); }
@@ -501,18 +501,18 @@ void main(void)
 					onWindowResize();
 
 				}, false );
-				
+
 
 				toolbar.appendChild( select );
-				
+
 				var shading_select = document.createElement( 'select' );
 				for(var i=0; i<shading_types.length; i++){
 				  var option=document.createElement('option');
 				  option.textContent = shading_types[ i ];
 				  if(i==shading_type)option.selected=true;
-				  shading_select.appendChild( option );				  
+				  shading_select.appendChild( option );
 				}
-				
+
 				shading_select.addEventListener( 'change', function ( event ) {
 					shading_type =  event.target.selectedIndex;
 				}, false );
@@ -562,7 +562,7 @@ void main(void)
 						parameters.mouseY = 1 - event.clientY / window.innerHeight;
 
 					}, false );
-					
+
 				}
 
 				// initialize code editor
@@ -605,7 +605,7 @@ void main(void)
 						event.preventDefault();
 					}
 				}, false );
-				
+
 				document.addEventListener( 'mousemove', function ( event ) {
 					var codeElement;
 					if (resizer.isResizing) {
@@ -621,7 +621,7 @@ void main(void)
 				document.addEventListener( 'mouseup', function ( event ) {
 					resizer.isResizing = false;
 				}, false );
-				
+
 				document.addEventListener( 'mouseleave', function ( event ) {
 					resizer.isResizing = false;
 				}, false );
@@ -629,20 +629,20 @@ void main(void)
 				onWindowResize();
 				window.addEventListener( 'resize', onWindowResize, false );
 				load_url_code();
-				
+
 
 				compileScreenProgram();
-								
+
 				/// camera code
 
 			}
 
 			function compile() {
-			
+
 				if (!gl) {
-				
+
 					if (!getWebGL) {
-					
+
 						getWebGL = true;
 						compileButton.addEventListener( 'click', function ( event ) {
 
@@ -653,10 +653,10 @@ void main(void)
 						compileButton.style.color = '#ff0000';
 						compileButton.textContent = 'WebGL not supported!';
 						set_save_button('hidden');
-						
+
 					}
 					return;
-					
+
 				}
 
 				var program = gl.createProgram();
@@ -712,7 +712,7 @@ void main(void)
 				cacheUniformLocation( program, 'mouse' );
 				cacheUniformLocation( program, 'resolution' );
 				cacheUniformLocation( program, 'camera_matrix' );
-		
+
 				// Load program into GPU
 
 				gl.useProgram( currentProgram );
@@ -726,7 +726,7 @@ void main(void)
 			}
 
 			function compileScreenProgram() {
-			
+
 				if (!gl) { return; }
 
 				var program = gl.createProgram();
@@ -825,7 +825,7 @@ void main(void)
 
 
 			//
-			
+
 			function htmlEncode(str){
 
 				return String(str)
@@ -840,7 +840,7 @@ void main(void)
 			//
 
 			function createShader( src, type ) {
-			
+
 				var shader = gl.createShader( type );
 				var line, lineNum, lineError, index = 0, indexEnd;
 
@@ -858,7 +858,7 @@ void main(void)
 				if ( !gl.getShaderParameter( shader, gl.COMPILE_STATUS ) ) {
 
 					var error = gl.getShaderInfoLog( shader );
-					
+
 					// Remove trailing linefeed, for FireFox's benefit.
 					while ((error.length > 1) && (error.charCodeAt(error.length - 1) < 32)) {
 						error = error.substring(0, error.length - 1);
@@ -932,11 +932,11 @@ void main(void)
 				parameters.screenHeight = canvas.height;
 
 				if (gl) {
-				
+
 					gl.viewport( 0, 0, canvas.width, canvas.height );
 
 					createRenderTargets();
-					
+
 				}
 			}
 
@@ -951,7 +951,7 @@ void main(void)
 			}
 
 			function render() {
-			
+
 				if ( !currentProgram ) return;
 
 				parameters.time = Date.now() - parameters.startTime;
@@ -965,8 +965,8 @@ void main(void)
 				gl.uniform2f( currentProgram.uniformsCache[ 'resolution' ], parameters.screenWidth, parameters.screenHeight );
 
 				var cam_matrix=mat4.fromRotationTranslation(cam.dir, cam.pos);
-				gl.uniformMatrix4fv( currentProgram.uniformsCache[ 'camera_matrix' ], false, cam_matrix );	
-				
+				gl.uniformMatrix4fv( currentProgram.uniformsCache[ 'camera_matrix' ], false, cam_matrix );
+
 				gl.uniform1i( currentProgram.uniformsCache[ 'debug_mode' ], debug_mode);
 				gl.uniform1i( currentProgram.uniformsCache[ 'shading_type' ], shading_type);
 

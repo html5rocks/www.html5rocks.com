@@ -57,7 +57,7 @@ The web generally assumes a single column, vertical orientation for text. Althou
 <ol>
 <li>Open a new tab or window in Chrome.</li>
 <li>Type <code>chrome://flags</code> in the location bar.</li>
-<li>Use <em>find in page</em> (control/command + f) and search for the "experimental WebKit features" section.</li>
+<li>Use <em>find in page</em> (control/command + f) and search for the <a href="chrome://flags/#enable-experimental-web-platform-features">"experimental Web Platform features"</a> section.</li>
 <li>Click on the <em>Enable</em> link.</li>
 <li>Click on the <em>Relaunch Now</em> button at the bottom.</li>
 </ol>
@@ -177,7 +177,7 @@ The web generally assumes a single column, vertical orientation for text. Althou
 
 <p class="notice" style="text-align:center;">
 To be concise, this section uses only one vendor prefix (<code>webkit</code>),
-but you should write code that works across browsers that support this feature!
+but you should write code that works across [browsers that support](http://html.adobe.com/webplatform/enable/) this feature!
 </p>
 
 <p>The <a href="http://dev.w3.org/csswg/cssom/">CSS Object Model</a>, or CSSOM, defines JavaScript APIs for working with CSS. Below is a list of the new APIs related to CSS Regions:</p>
@@ -198,7 +198,8 @@ but you should write code that works across browsers that support this feature!
 <li><code>getRegions()</code>: A function that returns a collection with references to regions that hold the content of the named flow.</li>
 <li><code>getRegionsByContentNode(node)</code>: A function that returns a reference to the region containing the specified node. This is especially useful for finding regions containing things like named anchors.</li>
 </ul></li>
-<li><code>webkitregionlayoutupdate</code> event. This event is triggered on a <code>WebkitNamedFlow</code> whenever the layout of the associated content changes for any reason (content is added or removed, the font size changes, the shape of the region changes, etc.).</li>
+<li><code>webkitregionoversetchange</code> event. This event is triggered on a <code>WebkitNamedFlow</code> whenever the layout of the associated content changes for any reason (content is added or removed, the font size changes, the shape of the region changes, etc.) <em>and</em> causes the <code>webkitRegionOverset</code> property of a region to change. This event is useful for listening to coarse layout changes. It is an indicator that something important happened and the layout might need attention, such as: more regions are required, some regions might be empty, etc.</li>
+<li><code>webkitregionfragmentchange</code> event. Not implemented at the time of this edit. This event is triggered on a <code>WebkitNamedFlow</code> whenever the layout of the associated content changes for any reason, similar to <code>webkitregionoversetchange</code>, but <em>regardless</em> of any change in <code>webkitRegionOverset</code> properties. This event is useful for listening for fine-grained layout changes which don't necessarily impact the whole layout of the named flow, for example: content moves from one region to another, but the overall content still fits in all the regions.</li>
 <li><code>Element.webkitRegionOverset</code>: Elements become regions when they have the <code>flow-from</code> CSS property assigned. These elements have a <code>webkitRegionOverset</code> property which, if they are part of a named flow, indicates whether or not content from a flow is overflowing the region. The possible of values webkitRegionOverset are:
 <ul>
 <li>"overflow" if there is more content than the region can hold</li>
@@ -207,12 +208,12 @@ but you should write code that works across browsers that support this feature!
 </ul></li>
 </ul>
 
-<p>One of the primary uses for the CSSOM is listening for <code>webkitregionlayoutupdate</code> events and dynamically adding or removing regions in order to accommodate varying amounts of text. For instance, if the amount of text to be formatted is unpredictable (perhaps user-generated), if the browser window is resized, or if the font size changes, it might be necessary to add or remove regions to accommodate the change in the flow. Additionally, if you want to organize your content into pages, you will need a mechanism for dynamically modifying the DOM as well as your regions.</p>
+<p>One of the primary uses for the CSSOM is listening for <code>webkitregionoversetchange</code> events and dynamically adding or removing regions in order to accommodate varying amounts of text. For instance, if the amount of text to be formatted is unpredictable (perhaps user-generated), if the browser window is resized, or if the font size changes, it might be necessary to add or remove regions to accommodate the change in the flow. Additionally, if you want to organize your content into pages, you will need a mechanism for dynamically modifying the DOM as well as your regions.</p>
 
 <p>The following snippet of JavaScript code demonstrates the use of the CSSOM to dynamically add regions as necessary. Note that for the sake of simplicity, it does not handle removing regions or defining the size and positions of regions; it is for demonstration purposes only.</p>
 
 <pre class="prettyprint"><code>var flow = document.webkitGetNamedFlows().namedItem("article")
-flow.addEventListener("webkitregionlayoutupdate", onLayoutUpdate);
+flow.addEventListener("webkitregionoversetchange", onLayoutUpdate);
 
 function onLayoutUpdate(event) {
   var flow = event.target;
@@ -236,7 +237,7 @@ function regionLayoutComplete() {
 }
 </code></pre>
 
-<p>More demos are available on the <a href="http://adobe.github.com/web-platform/samples/css-regions/">CSS Regions samples page</a>.</p>
+<p>More demos are available on the <a href="http://html.adobe.com/webplatform/layout/regions/">CSS Regions samples page</a>.</p>
 
 <h3 id="toc-pagetemplates">CSS Page Templates</h3>
 

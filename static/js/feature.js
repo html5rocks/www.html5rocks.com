@@ -23,8 +23,14 @@ window.caniusecallback = function(data) {
 
       var resulttext = '—';
 
-      $.each(browserobj, function(version, result) {
-        if (result.indexOf('y') == 0) {
+      $.each(data.agents[browser].versions, function(index, version) {
+        if (!version) {
+          return;
+        }
+        
+        var result = browserobj[version];
+
+        if (result.indexOf('y') === 0) {
           if (resulttext != '—') {
             resulttext += '+';
             return false;

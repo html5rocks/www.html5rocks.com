@@ -4,6 +4,7 @@ from google.appengine.ext import db
 from django import forms
 
 import settings
+import urllib2
 
 def get_profiles(update_cache=False):
   profiles = memcache.get('%s|profiles' % (settings.MEMCACHE_KEY_PREFIX))
@@ -89,34 +90,83 @@ class Resource(DictModel):
   draft = db.BooleanProperty(default=True) # Don't publish by default.
 
   @classmethod
-  def get_all(self, order=None, limit=None, page=None, qfilter=None):
+  def get_all(self, order=None, limit=None, page=None, qfilter=None, include_updates=None):
     limit = limit or settings.MAX_FETCH_LIMIT
     offset = None
-    
+
     key = '%s|tutorials' % (settings.MEMCACHE_KEY_PREFIX,)
-    
+
     if page:
       limit = settings.FETCH_PAGE_LIMIT
       offset = (page - 1) * limit
       key += '|page%s' % (page,)
-    
+
     if order is not None:
       key += '|%s' % (order,)
 
     if qfilter is not None:
       key += '|%s%s' % (qfilter[0], qfilter[1])
 
+    if include_updates is not None:
+      key += '|updates'
+
     key += '|%s' % (str(limit),)
 
     results = memcache.get(key)
     if results is None:
+
       query = self.all()
       query.order(order)
       if qfilter is not None:
         query.filter(qfilter[0], qfilter[1])
       query.filter('draft =', False) # Never return drafts by default.
       results = query.fetch(offset=offset, limit=limit)
-      memcache.set(key, results)
+
+      if include_updates is not None:
+        results = self.include_updates(results)
+
+    memcache.set(key, results)
+
+    return results
+
+  @classmethod
+  def include_updates(self, results):
+
+    from google.appengine.api import urlfetch
+    from datetime import date
+    from time import mktime
+    import json
+    import time
+    import re
+
+    # Retrieve the updates results
+    url = "http://updates.html5rocks.com/json"
+    result = urlfetch.fetch(url)
+    if result.status_code == 200:
+      updates = json.loads(result.content)
+
+      # Append the updates to the results
+      for u in updates:
+
+        publication_date = re.sub(r"\.\d*$", "", u['published'])
+        updated_date = re.sub(r"\.\d*$", "", u['updated'])
+
+        publication_time = time.strptime(publication_date, "%Y-%m-%d %H:%M:%S")
+
+        update = Resource(title=u['title'])
+        update.author = Author.get_by_key_name(u['author_id'])
+        update.url = 'http://updates.html5rocks.com%s' % (u['path'])
+        update.publication_date = date.fromtimestamp(mktime(publication_time))
+        update.description = u['description']
+
+        if updated_date != "None":
+          updated_time = time.strptime(updated_date, "%Y-%m-%d %H:%M:%S")
+          update.update_date = date.fromtimestamp(mktime(updated_time))
+
+        results.append(update)
+
+      # Now sort them by date
+      results.sort(key=lambda update:update.publication_date, reverse=True)
 
     return results
 
