@@ -39,36 +39,36 @@ table.code {
 
 {% block content %}
 
-<p>We’re going to cut straight to the chase. Modern browsers can animate four things really cheaply: <strong>position</strong>, <strong>scale</strong>, <strong>rotation</strong> and <strong>opacity</strong>. If you animate anything else, it’s <em>at your own risk</em>, and the chances are you’re not going to hit a silky smooth 60fps.</p>
+<p>우리는 추적을 잘라내려고 합니다. 모던 브라우저들은 다음과 같이 정말 저비용으로 애니메이션을 할 수 있는 4가지가 있습니다. : <strong>위치</strong>, <strong>(축소/확대) 비율</strong>, <strong>회전</strong>과 <strong>투명도</strong>. 만약 다른 방식으로= 애니메이션을 하는 것은 <em>위험을 각오하고</em>, 비단결처럼 부드러운 60fps에 도달할 기회를 잃어버리게 될 것입니다.<!-- We’re going to cut straight to the chase. Modern browsers can animate four things really cheaply: <strong>position</strong>, <strong>scale</strong>, <strong>rotation</strong> and <strong>opacity</strong>. If you animate anything else, it’s <em>at your own risk</em>, and the chances are you’re not going to hit a silky smooth 60fps. --></p>
 
 <figure>
   <img src="cheap-operations.jpg" alt="Cheap to animate" />
 </figure>
 
-<p>Take a look at this side-by-side slow motion video of the same animation:</p>
+<p>동일한 애니메이션에 대 슬로우 모션 비디오를 다음과 같이 나란히 살펴보도록 합시다.<!-- Take a look at this side-by-side slow motion video of the same animation: --></p>
 
 <div style="position: relative; padding-top: 56.25%;">
   <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/-62uPWUxgcg?rel=0" frameborder="0" allowfullscreen=""></iframe>
 </div>
 
-<p>One is done with transforms, the other isn’t. You can see what a difference it makes, so let’s take look at why that is.</p>
+<p>하나는 transforms로 했고 다른 하나는 적용하지 않았습니다. 어떤 차이점을 만들어 내는지 볼 있습니다. 그러므로 왜 저렇게 되는지 살펴보도록 합시다.<!-- One is done with transforms, the other isn’t. You can see what a difference it makes, so let’s take look at why that is. --></p>
 
-<h2 id="toc-dom-to-pixels">From DOM to Pixels in DevTools</h1>
+<h2 id="toc-dom-to-pixels">개발자도구에서 DOM부터 픽셀까지<!-- From DOM to Pixels in DevTools --></h1>
 
-<p>When you use the Chrome DevTools timeline you should see a pattern similar to this:</p>
+<p>크롬 개발자 도구의 타임라인을 사용하면 다음과 같은 유사한 패턴을 볼 수 있습니다.<!-- When you use the Chrome DevTools timeline you should see a pattern similar to this: --></p>
 
 <figure>
   <img src="devtools-waterfall.jpg" alt="DevTools waterfall" />
-  <figcaption>Chrome DevTools frame mode. The higher up the waterfall you start, the more work the browser does.</figcaption>
+  <figcaption>크롬 개발자도구의 프레임 모드.<!-- Chrome DevTools frame mode. --> The higher up the waterfall you start, the more work the browser does.</figcaption>
 </figure>
 
-<p>The process that the browser goes through is pretty simple: calculate the styles that apply to the elements (Recalculate Style), generate the geometry and position for each element (Layout), fill out the pixels for each element into <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">layers</a> (Paint Setup and Paint) and draw the layers out to screen (Composite Layers).</p>
+<p>브라우저가 거치는 프로세스는 다음과 같이 꽤나 단순합니다. : 엘리먼트에 적용할 스타일의 계산(스타일 재계산), 각 엘리먼트에 대한 기하정보(Geomerty)와 위치의 생성 (레이아웃), 각 엘리먼트에 해당하는 픽셀들을 <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">레이어들</a>에 채우기 (페인트 설정 및 페인트) 그리고 레어를 스크린으로 출력 (레이어들의 합성). <!-- The process that the browser goes through is pretty simple: calculate the styles that apply to the elements (Recalculate Style), generate the geometry and position for each element (Layout), fill out the pixels for each element into <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">layers</a> (Paint Setup and Paint) and draw the layers out to screen (Composite Layers). --></p>
 
 <p>To achieve silky smooth animations you need to avoid work, and the best way to do that is to only change properties that affect compositing -- transform and opacity. <strong>The <em>higher up</em> you start on the timeline waterfall the <em>more work</em> the browser has to do to get pixels on to the screen</strong>.</p>
 
 <blockquote class="commentary talkinghead talkinghead-irish">This advice is broadly cross-browser compatible. Chrome, Firefox, Safari and Opera all hardware accelerate transforms and opacity. Unfortunately it is not clear what criteria Internet Explorer 10+ uses to determine if hardware acceleration is suitable, but hopefully that will become clearer when the F12 tools in IE11 are shipped.</blockquote>
 
-<h2 id="toc-animating-layout-properties">Animating Layout Properties</h1>
+<h2 id="toc-animating-layout-properties">레이아웃 속성들을 애니메이션하기<!-- Animating Layout Properties --></h1>
 
 <p>When you change elements, the browser may need to do a layout, which involves calculating the geometry (position and size) of all the elements affected by the change. If you change one element, the geometry of other elements may need to be recalculated. For example, if you change the width of the <code>&lt;html&gt;</code> element any of its children may be affected. Due to the way elements overflow and affect one another, changes further down the tree can sometimes result in layout calculations all the way back up to the top.</p>
 
