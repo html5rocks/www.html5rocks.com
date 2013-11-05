@@ -9,4 +9,3 @@
 [![HTML5Rocks Screenshot](https://github.com/html5rocks/www.html5rocks.com/raw/master/static/images/screenshots/landing_page.png)](http://www.html5rocks.com)
 
 *HTML5Rocks is by [Google](https://github.com/google)*
-
