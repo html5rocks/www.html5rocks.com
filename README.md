@@ -10,4 +10,3 @@
 
 *HTML5Rocks is by [Google](https://github.com/google)*
 
-
