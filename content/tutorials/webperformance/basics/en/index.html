@@ -48,7 +48,7 @@ writeDynamicElements();
 
 <p>People like web pages that load quickly. Google <a href="http://googleresearch.blogspot.com/2009/06/speed-matters.html" title="Google Official Research Blog: Speed Matters" target="_blank">experiments</a> show that a delay as small as a hundred milliseconds can have an adverse effect. But how do we measure web page load speed? And what does "page load" actually mean?</p>
 
-<p><a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html" title="W3C Navigation Timing Editor's Draft">Navigation Timing</a> is a JavaScript API for accurately measuring performance on the web. The API provides a simple way to get accurate and detailed timing statistics&mdash;natively&mdash;for page navigation and load events.  It's available now in <a href="http://msdn.microsoft.com/en-us/library/ff975118(v=VS.85).aspx" title="MSDN performance Object documentation" target="_blank">Internet Explorer 9</a>, <a href="http://www.google.com/chrome" title="Google Chrome home page">Google Chrome</a> and in <a href="http://nightly.mozilla.org/" title="Firefox nightly build downloads">Firefox nightly builds</a>.</p>
+<p><a href="http://www.w3.org/TR/navigation-timing/" title="W3C Navigation Timing Recommendation">Navigation Timing</a> is a JavaScript API for accurately measuring performance on the web. The API provides a simple way to get accurate and detailed timing statistics&mdash;natively&mdash;for page navigation and load events.  It's available now in <a href="http://msdn.microsoft.com/en-us/library/ie/hh673552(v=vs.85).aspx" title="MSDN performance Object documentation" target="_blank">Internet Explorer 9</a>, <a href="http://www.google.com/chrome" title="Google Chrome home page">Google Chrome</a> and in <a href="http://www.mozilla.org/en-US/firefox/" title="Firefox downloads">Firefox</a>.</p>
 
 <p>This article describes the API and shows ways to make use of the timing data it exposes.</p>
 
@@ -113,11 +113,11 @@ console.log("Page load took " + (Date.now() - start) + "milliseconds");
 
 <p>Each performance.timing attribute shows the time of a navigation event (such as when the page was requested) or page load event (such as when the DOM began loading), measured in milliseconds since midnight of January 1, 1970 (UTC). A zero value means that an event (such as <code>secureConnectionStart</code> or <code>redirectStart</code>) did not occur.</p>
 
-<p>The meaning of these events is described in Microsoft's <a href="http://msdn.microsoft.com/en-us/library/ff975075" title="MSDN: peformanceTiming members table" target="_blank">performance.timing documentation</a> and more formally in the <a href="https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#sec-navigation-timing-interface" title="W3C PerformanceTiming interface documentation" target="_blank">W3C Editor's Draft</a>. Internet Explorer 9 supports all the attributes described in the API draft except <code>secureConnectionStart</code>, and in addition provides the <a href="http://msdn.microsoft.com/en-us/library/ff974719" title="MSDN: msFirstPaint Property documentation" target="_blank"><code>msFirstPaint</code></a> event which occurs when document display begins, after <code>loadEventEnd</code>.</p>
+<p>The meaning of these events is described in Microsoft's <a href="http://msdn.microsoft.com/en-us/library/ff975075" title="MSDN: peformanceTiming members table" target="_blank">performance.timing documentation</a> and more formally in the <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" title="W3C PerformanceTiming interface documentation" target="_blank">W3C Recommendation</a>. Internet Explorer 9 supports all the attributes described in the API draft except <code>secureConnectionStart</code>, and in addition provides the <a href="http://msdn.microsoft.com/en-us/library/ff974719" title="MSDN: msFirstPaint Property documentation" target="_blank"><code>msFirstPaint</code></a> event which occurs when document display begins, after <code>loadEventEnd</code>.</p>
 
-<p>The order of performance.timing events is shown in the image below from the <a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#processing-model" title="Navigation Timing Processing Model">Navigation Timing draft</a>:</p>
+<p>The order of performance.timing events is shown in the image below from the <a href="http://www.w3.org/TR/navigation-timing/#processing-model" title="Navigation Timing Processing Model">Navigation Timing Recommendation</a>:</p>
 
-<div><a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#processing-model" title="Navigation Timing Processing Model"><img src="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/timing-overview.png" title="Navigation timing overview" style="width: 100%" /></a></div>
+<div><a href="http://www.w3.org/TR/navigation-timing/#processing-model#processing-model" title="Navigation Timing Processing Model"><img src="http://www.w3.org/TR/navigation-timing/timing-overview.png" title="Navigation timing overview" style="width: 100%" /></a></div>
 
 <p>Below is a dynamically generated timeline of all the performance.timing events that occurred in navigating to this page and loading its content, normalised to start from zero.</p>
 
@@ -151,7 +151,7 @@ window.onload = function(){
 
 <h2 id="navigation">How did I get to this page?</h2>
 
-<p>There are, of course, several ways to "open a page". This is where <a href="https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#sec-navigation-info-interface" title="W3C PerformanceNavigation interface documentation" target="_blank">performance.navigation</a> comes in handy. This API has just two attributes:</p>
+<p>There are, of course, several ways to "open a page". This is where <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-info-interface" title="W3C PerformanceNavigation interface documentation" target="_blank">performance.navigation</a> comes in handy. This API has just two attributes:</p>
 <ul>
   <li><strong>redirectCount</strong>: the number of times the document request was redirected</li>
   <li><strong>type</strong>: the navigation that lead to the page being loaded.
@@ -173,7 +173,7 @@ window.onload = function(){
 
 <p>Unlike timing tests that use the Date object, the Navigation Timing API can be used in ways that do not affect page load. This makes it extremely useful for measuring page load latency in the 'real world', as experienced by actual users&mdash;rather than as tested by a developer using a development computer inside a corporate network.</p>
 
-<p>For example, <a href="http://www.w3schools.com/ajax/default.asp" title="w3schools AJAX tutorial">XHR</a> can be used to pass performance.timing data to the host server every time a page is loaded (or unloaded). This produces statistics in real time, but isn't very efficient. Alternatively, timing data could be recorded in <a href="http://diveintohtml5.info/storage.html" title="Dive Into HTML5: Local Storage">local storage</a> for a subset of users for a subset of pages, and periodically packaged and filed to the server. In this way, the API provides a simple way to build up historical data for page performance.</p>
+<p>For example, <a href="http://www.w3schools.com/ajax/ajax_xmlhttprequest_create.asp" title="w3schools XHR tutorial">XHR</a> can be used to pass performance.timing data to the host server every time a page is loaded (or unloaded). This produces statistics in real time, but isn't very efficient. Alternatively, timing data could be recorded in <a href="http://diveintohtml5.info/storage.html" title="Dive Into HTML5: Local Storage">local storage</a> for a subset of users for a subset of pages, and periodically packaged and filed to the server. In this way, the API provides a simple way to build up historical data for page performance.</p>
 
 <h2 id="future">The future of Navigation Timing</h2>
 

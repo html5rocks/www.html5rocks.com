@@ -188,7 +188,7 @@ its slider thumb <span style="color:blue">blue</span>:
     </style>
     <div id="host"></div>
     <script>
-    var root document.querySelector('#host').webkitCreateShadowRoot();
+    var root = document.querySelector('#host').webkitCreateShadowRoot();
     root.innerHTML = '<div>' +
                        '<div pseudo="x-slider-thumb"></div>' + 
                      '</div>';
@@ -235,7 +235,7 @@ works beautifully! The whole picture looks like this:
     </style>
     <div id="host">Host node</div>
     <script>
-    var root document.querySelector('#host').webkitCreateShadowRoot();
+    var root = document.querySelector('#host').webkitCreateShadowRoot();
     root.innerHTML = '<style>' + 
         'button {' + 
           'color: {% mixin var(button-text-color, pink) %}' + 

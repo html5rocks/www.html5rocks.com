@@ -3,6 +3,7 @@
 {% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
 {% block head %}{% endblock %}
 {% block onload %}{% endblock %}
+{% block updated %}October 29, 2013{% endblock %}
 
 {% block iscompatible %}
   var xhr = new XMLHttpRequest();
@@ -384,10 +385,6 @@ Its recommended that you don’t set this header unless you are sure you want co
 If you want clients to be able to access other headers, you have to use the <code>Access-Control-Expose-Headers</code> header. The value of this header is a comma-delimited list of response headers you want to expose to the client.
 </p>
 
-<p>
-As of this writing, all browsers have buggy <code>getRequestHeader()</code> implementations, so the headers may not be accessible to clients even after you set the Access-Control-Expose-Headers header. See the <a href="#toc-known-bugs">Known Bugs</a> section below for more details.
-</p>
-
 <h3 id="toc-handling-a-not-so-simple-request">Handling a not-so-simple request</h3>
 
 <p>
@@ -436,7 +433,7 @@ Like the simple request, the browser adds the Origin header to every request, in
 </p>
 
 <p>
-The preflight request is a way of asking permissions for the actual request, before making the actual request. The server should inspect the two headers above to verify that both the HTTP method and the requested headers are valid and accepted. 
+The preflight request is a way of asking permissions for the actual request, before making the actual request. The server should inspect the two headers above to verify that both the HTTP method and the requested headers are valid and accepted.
 </p>
 
 <p>
@@ -580,7 +577,7 @@ $.ajax({
     // Set the value to 'true' if you'd like to pass cookies to the server.
     // If this is enabled, your server must respond with the header
     // 'Access-Control-Allow-Credentials: true'.
-    withCredentials: false 
+    withCredentials: false
   },
 
   headers: {
@@ -629,9 +626,9 @@ The server doesn't need to include any additional CORS headers or do any more wo
 Known Issues
 </h2>
 <p>
-CORS support is still being actively developed in all browsers; here's a list of known issues (as of 9/21/2012):
+CORS support is still being actively developed in all browsers; here's a list of known issues (as of 10/2/2013):
 <ol>
-<li>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - Firefox doesn't return response headers when calling getAllResponseHeaders(). (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>). A similar <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">bug in WebKit</a> has been fixed.</li>
+<li>FIXED <strike>XMLHttpRequests' getAllResponseHeaders() doesn't honor Access-Control-Expose-Headers - Firefox doesn't return response headers when calling getAllResponseHeaders(). (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">Firefox bug</a>). A similar <a href="https://bugs.webkit.org/show_bug.cgi?id=41210">bug in WebKit</a> has been fixed.</strike></li>
 <li>No error information provided to onerror handler - When the onerror handler is fired, the status code is 0, and there is no statusText. This may be by design, but it can be confusing when trying to debug why CORS requests are failing.</li>
 </ol>
 </p>
@@ -644,6 +641,10 @@ CORS support is still being actively developed in all browsers; here's a list of
 <a href="/static/images/cors_server_flowchart.png"><img src="/static/images/cors_server_flowchart.png" width="800" /></a>
 <figcaption>CORS Server Flowchart</figcaption>
 </figure>
+
+<h2 id="toc-images">CORS w/ Images</h2>
+
+<p>In Canvas and WebGL contexts, cross origin images can pose big problems. You can use the crossOrigin attribute on the image element to address much of them. Read <a href="http://blog.chromium.org/2011/07/using-cross-domain-images-in-webgl-and.html">Chromium Blog: Using Cross-domain images in WebGL</a> and <a href="https://hacks.mozilla.org/2011/11/using-cors-to-load-webgl-textures-from-cross-domain-images/">Mozilla Hacks: Using CORS to load WebGL textures from cross-domain images</a> for the details. Implementation specifics can be found at the MDN page for <a href="https://developer.mozilla.org/en-US/docs/HTML/CORS_Enabled_Image">CORS-enabled Image</a>.
 
 <h2 id="toc-resources">Resources</h2>
 
