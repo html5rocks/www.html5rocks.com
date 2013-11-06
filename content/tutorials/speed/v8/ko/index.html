@@ -19,26 +19,26 @@
 
 <p>Daniel Clifford는 V8의 JavaScript 처리 성능을 향상시키기 위한 팁과 트릭에 대하여 <a href="http://www.youtube.com/watch?v=UJPdhx5zTaw">Google I/O에서 훌륭한 발표</a>를 했습니다. Daniel은 C++과 JavaScript 간의 성능 차이를 주의 깊게 분석하고 JavaScript의 동작 방식을 유념하여 코드를 작성하면 더 빠른 속도를 낼 수 있다고 말합니다. Daniel의 이야기 중에서 가장 중요한 포인트를 요약해서 이 글에 담았는데요, 성능에 대한 지침이 바뀌면 이 글의 내용 역시 업데이트하겠습니다.</p>
 
-<h2 id="toc-mostimportant">가장 중요한 조언</h2>
+<h2 id="toc-mostimportant">가장 중요하게 생각해야 할 것</h2>
 
-<p>문맥 안에 모든 성능에 대한 조언을 넣는 것은 중요합니다. 성능에 대한 조언은 중독성이 있어서, 때로는 깊은 조언에 우선적으로 초점을 맞추다가 실질적인 문제에 집중하지 못하게 될 수도 있습니다. 웹 애플리케이션의 성능에 대한 전체적인 관점을 가져야 할 필요가 있습니다. 이러한 성능 팁에 초점을 맞추기 전에 아마도 PageSpeed 같은 도구로 코드를 분석해서 점수를 높혀야 합니다. 이를 통해서 성급한 최적화를 피할 수 있습니다.</p>
+<p>성능 향상에 대한 모든 것을 담는 다는 것은 중요한 일입니다. 그러나 성능을 진단하는 일은 중독성이 있어서, 때로는 너무 깊은 부분에 초점을 맞추려다가 실질적인 문제를 놓치기도 합니다. 전체적인 관점에서 웹 애플리케이션의 성능을 바라볼 필요가 있습니다. 이러한 성능 팁에 초점을 맞추기 전에 <a href="https://developers.google.com/speed/pagespeed/">PageSpeed<</a> 같은 도구로 코드를 분석해서 점수를 높히는 게 좋습니다. 이렇게하면 성급한 최적화를 피할 수 있습니다.</p>
 
-<p>좋은 성능을 얻기 위한 가장 기본적인 조언 세가지입니다.</p>
+<p>좋은 성능을 얻기 위한 가장 기본적으로 생각해야 할 세가지입니다.</p>
 <ul>
-	<li>문제가 생기기 전에 준비합니다.</li>
+	<li>문제가 발생하기 전에 준비합니다.</li>
 	<li>그 다음에, 문제의 핵심을 파악하고 이해합니다.</li>
 	<li>마지막으로 문제가 되는 것을 수정합니다.</li>
 </ul>
 
-<p>In order to accomplish these steps, it can be important to understand how V8 optimizes JS, so you can write code mindful of the JS runtime design.  It's also important to learn about the tools available and how they can help you.  Daniel goes into some more explanation of how to use the developer tools in his talk; this document just captures some of the most important points of the V8 engine design.</p>
+<p>이러한 단계를 수행하기 위해서, V8이 어떻게 JS 코드를 최적화하는지 이해하는 것은 중요한 일이라고 할 수 있습니다. JS 런타임 디자인을 염두에 두고 코드를 작성할 수 있기 때문이죠. 이용 가능한 도구가 무엇이 있는지, 그리고 어떤 도움을 줄 수 있는지에 대해서 알아두는 것 또한 중요한 일입니다. Daniel은 개발자 도구 사용법에 대해서 몇 가지를 더 설명하고 있습니다만, 이 글에서는 V8 엔진 설계의 중요한 부분 몇 개만 다룹니다.</p>
 
-<p>So, on to the V8 tips!</p>
+<p>자, 그럼 V8 사용 팁 속으로 들어가보시죠!</p>
 
 <h2 id="toc-topic-hiddenclasses">Hidden Classes</h3>
 
-<p>JavaScript has limited compile-time type information: types can be changed at runtime, so it's natural to expect that it is expensive to reason about JS types at compile time.  This might lead you to question how JavaScript performance could ever get anywhere close to C++.  However, V8 has hidden types created internally for objects at runtime; objects with the same hidden class can then use the same optimized generated code.</p>
+<p>JavaScript는 컴파일을 할 때 이용할 type 정보가 제한적입니다. JavaScript는 런타임에 type을 변경할 수 있기 때문에 컴파일 시에 JS 코드의 type을 추론하는 비용이 비쌀 것이라고 예측할 수 있습니다. 아마 JavaScript 성능을 어떻게 C++의 성능에 근접한 수준으로 끌어올릴 수 있을지에 대한 의문이 생길 것입니다. 그러나, V8은 런타임 시에 객체에 사용할 내부적으로 만든 hidden type을 가지고 있습니다. 같은 hidden class를 가지고 있는 객체는 다음에 같은 최적화된 생성 코드를 사용할 수 있습니다.</p>
 
-<p>For example:</p>
+<p>예제:</p>
 <pre class="prettyprint">function Point(x, y) {
   this.x = x;
   this.y = y;
@@ -50,27 +50,27 @@ var p2 = new Point(33, 44);
 p2.z = 55;
 // warning! p1 and p2 now have different hidden classes!</pre>
 
-<p>Until the object instance p2 has additional member ".z" added, p1 and p2 internally have the same hidden class - so V8 can generate a single version of optimized assembly for JavaScript code that manipulates either p1 or p2.  The more you can avoid causing the hidden classes to diverge, the better performance you'll obtain.</p>
+<p>객체 인스턴스 p2에 멤버 ".z"를 추가하기 전까지, p1과 p2는 내부적으로 같은 hidden class를 갖습니다. 이로써 V8은 p1이나 p2를 다루는 JavaScript 코드에 대한 단일 버전의 최적화된 어셈블리어를 만들 수 있습니다. 같은 JavaSript 코드의 hidden class가 달라지는 원인을 찾아서 막을 수 있다면, 더 나은 성능을 얻을 수 있는 것이죠.</p>
 
-<h3>Therefore:</h3>
+<h3>따라서:</h3>
 <ul>
-	<li>Initialize all object members in constructor functions (so the instances don't change type later)</li>
-	<li>Always initialize object members in the same order</li>
+	<li>모든 객체 멤버를 생성자 함수 안에서 초기화하세요(그래야 나중에 인스턴스가 멤버의 type을 변경하지 않습니다).</li>
+	<li>항상 같은 순서로 객체 멤버를 초기화합니다.</li>
 </ul>
 
 <h2 id="toc-topic-numbers">Numbers</h3>
 
-<p>V8 uses tagging to represent values efficiently when types can change.  V8 infers from the values that you use what number type you are dealing with. Once V8 has made this inference, it uses tagging to represent values efficiently, because these types can change dynamically. However, there is sometimes a cost to changing these type tags, so it's best to use number types consistently, and in general it is most optimal to use 31-bit signed integers where appropriate.</p>
+<p>V8은 type이 변할 때 효율적으로 값을 나타내는 태그를 사용합니다. 사용자가 사용하고 있는 값을 통해서 어떤 number type을 다루고 있는지 추론합니다. 이러한 type은 동적으로 변할 수 있기 때문에, 일단 V8이 추론을 해서 type을 결정하면, 효율적으로 값을 나타낼 수 있는 태그를 사용합니다. 그러나, 이러한 type을 나타내는 태그를 변경하는 데에 가끔 비용이 들기 때문에, number type을 지속적으로 사용하는 것이 가장 좋습니다. 일반적으로 적합하다면, 31비트 부호있는 정수를 사용하는 것이 최적입니다.</p>
 
-<p>For example:</p>
+<p>예제:</p>
 <pre class="prettyprint">var i = 42;  // this is a 31-bit signed integer
 var j = 4.2;  // this is a double-precision floating point number</pre>
 
 
 
-<h3>Therefore:</h3>
+<h3>결과:</h3>
 <ul>
-	<li>Prefer numeric values that can be represented as 31-bit signed integers.</li>
+	<li>31비트 부호있는 정수로 나타낼 수 있는 숫자 값 사용을 우선적으로 검토하세요.</li>
 </ul>
 
 <h2 id="toc-topic-numbers">Arrays</h3>
