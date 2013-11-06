@@ -18,7 +18,7 @@ window.tuts = {
       "nuts_and_bolts": ['devtools'],
   },
 
-  
+
 
   init : function() {
 
@@ -286,7 +286,7 @@ function filterTag(opt_tag) {
       window.history.pushState(null, document.title,
         [window.location.pathname, '#', filter_str].join('')
       );
-      
+
     $('#filter_tag').text(filter_str);
     $('#filter').parent().removeClass('hidden');
   } else {
@@ -294,18 +294,6 @@ function filterTag(opt_tag) {
     $('#filter').parent().addClass('hidden');
   }
 };
-
-// Adds back button support.
-window.addEventListener('hashchange', function(e) {
-  if (window.location.hash) {
-    filterTag(window.location.hash.substring(1));
-  } else {
-    clearFilter();
-  }
-  if (window._gaq) {
-    _gaq.push(['_trackPageview', window.location.href]);
-  }
-}, false);
 
 function initPage() {
   $('.tag').live('click', function(e){
