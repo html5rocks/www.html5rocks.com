@@ -1,4 +1,4 @@
-HTML5 Rocks Quarter Report for 2013-10-31
+HTML5 Rocks Quarter Report for 2013-11-06
 =========================================
 
 Articles due this quater
@@ -14,6 +14,7 @@ Articles due this quater
 |Deanna Rubin|[October DevTools Digest](https://github.com/html5rocks/www.html5rocks.com/issues/529)|2013-10-30||open
 |Paul Lewis|[60fps animations](https://github.com/html5rocks/www.html5rocks.com/issues/504)|2013-10-30|@arthurevans|closed
 |Sam Dutton|[WebRTC Infrastructure Article](https://github.com/html5rocks/www.html5rocks.com/issues/646)|2013-11-04|@scottrowe|open
+|Eric Bidelman|[Article: Using HTML Imports to deliver web components](https://github.com/html5rocks/www.html5rocks.com/issues/743)|2013-11-08|@scottrowe|open
 |Eric Bidelman|[HTML Imports](https://github.com/html5rocks/www.html5rocks.com/issues/493)|2013-11-08|@scottrowe|open
 |Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-11-15|@dr4b|open
 |Pete LePage|[Building Amazing forms with semantic input types](https://github.com/html5rocks/www.html5rocks.com/issues/482)|2013-11-15|@scottrowe|open
