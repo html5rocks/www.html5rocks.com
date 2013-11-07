@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "v2-base.html" %}
 {% load i18n %}
 {% load toc from templatefilters %}
 
@@ -9,101 +9,36 @@
 
 {% block body %}
 
-  <header class="tutorial clearfix pattern-bg-lighter">
-    {% if not is_mobile %}
-    <hgroup>
-      <h1>{% trans "HTML5 Rocks" %}</h1>
-      <h2><a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "Tutorials" %}</a></h2>
-    </hgroup>
-    {% endif %}
+  <header>
+    <h1>{{ tut.title|safe }}</h1>
+    {% if tut.subtitle %}<h2>{{tut.subtitle|safe}}</h2>{% endif %}
 
     <section>
-      <h1>{{ tut.title|safe }}</h1>
-      {% if tut.subtitle %}<h2>{{tut.subtitle|safe}}</h2>{% endif %}
 
       <section class="byline">
-        <a href="/profiles/#{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{ tut.author.key.name }}.75.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}"></a>
+        <a href="/profiles/#{{ tut.author.key.name }}">
+          <img src="/static/images/profiles/75/{{ tut.author.key.name }}.75.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
+        </a>
+
+        {% if tut.second_author %}
+          <a href="/profiles/#{{ tut.second_author.key.name }}">
+            <img src="/static/images/profiles/75/{{ tut.second_author.key.name }}.75.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
+          </a>
+        {% endif %}
+
         <hgroup>
           <h3>
             By <strong><a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a></strong>
             {% if tut.second_author %}
-              &amp; <strong><a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a></strong>
+              and <strong><a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a></strong>
             {% endif %}
           </h3>
         </hgroup>
         <div class="date">
-          <time pubdate>{% blocktrans %}Published{% endblocktrans %} <strong>{{ tut.publication_date }}</strong></time>
-          {%if tut.update_date %}<time class="updated">{% blocktrans %}Updated{% endblocktrans %} <strong>{{ tut.update_date }}</strong></time>{% endif %}
+          <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F dS, Y"}}</time>
+          {% if tut.update_date %}
+          <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date }}</time>{% endif %}
         </div>
-      </section>
-
-      <section class="browser_support">
-          <h3>{% trans "Supported browsers:" %}</h3>
-          <span class="browsers">
-            <span class="browser opera {% if 'opera' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Opera" %}</span>
-              <span class="support">
-                {% if 'opera' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser ie {% if 'ie' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "IE" %}</span>
-              <span class="support">
-                {% if 'ie' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser safari {% if 'safari' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Safari" %}</span>
-              <span class="support">
-                {% if 'safari' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser ff {% if 'ff' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Firefox" %}</span>
-              <span class="support">
-                {% if 'ff' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser chrome {% if 'chrome' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Chrome" %}</span>
-              <span class="support">
-                {% if 'chrome' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-          </span>
-
-          <div class="compatible-block">
-            <p id="notcompatible" class="hidden">
-              {% block notcompatible_text %}
-              {% trans "Your browser may not support all of the functionality in this article." %}
-              {% endblock %}
-            </p>
-            <p id="compatible" class="hidden">
-              {% block compatible_text %}
-              {% trans "Your browser appears to support the functionality in this article." %}
-              {% endblock %}
-            </p>
-          </div>
       </section>
 
       {% if not is_mobile %}
@@ -111,27 +46,11 @@
       {% endif %}
     </section>
 
-    {% if not is_mobile %}
-    <span class="share">
-      <ul>
-        <li class="googleplus"><a href="https://plus.google.com/share?url={{ disqus_url }}" onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"><img src="https://www.gstatic.com/images/icons/gplus-32.png" alt="Share on Google+"/></a></li>
-        <li class="facebook"><a href="https://www.facebook.com/sharer/sharer.php?u={{ disqus_url}}" target="_blank"><img src="/static/images/facebook.png" alt="Share on Facebook"></a></li>
-        <li class="twitter">
-          <a href="https://twitter.com/share?url={{ disqus_url }}&text={{ tut.title }}&lang={{ LANGUAGE_CODE }}&via=ChromiumDev&related=ChromiumDev" target="_blank">
-            <img src="/static/images/twitter.png">
-          </a></li>
-      </ul>
-    </span>
-    {% endif %}
   </header>
 
   {% if redirect_from_locale %}
   <section class="redirect_notification pattern-bg-lighter" lang="{{ redirect_from_locale.lang }}">{{ redirect_from_locale.msg }}</section>
   {% endif %}
-
-  <article class="cds-banner">
-    <a href="http://developer.chrome.com/devsummit" target="_blank">Chrome Dev Summit</a>
-  </article>
 
   <article class="tutorial pattern-bg-lighter">
     <div class="outline_nav_toggle">

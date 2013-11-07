@@ -317,7 +317,7 @@ class ContentHandler(webapp2.RequestHandler):
                                permanent=True)
 
       if (relpath == ''):
-        css_file = 'home'
+        css_file = 'v2'
 
       path = os.path.join('content', relpath, 'index.html')
     else:
@@ -373,10 +373,6 @@ class ContentHandler(webapp2.RequestHandler):
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
 
-        # If tutorial is marked as draft, redirect and don't show it.
-        if tut and tut.draft:
-          return self.redirect('/tutorials')
-
         # Localize title and description.
         if tut:
           if tut.title:
@@ -385,6 +381,8 @@ class ContentHandler(webapp2.RequestHandler):
             tut.subtitle = _(tut.subtitle)
           if tut.description:
             tut.description = _(tut.description)
+
+        css_file = 'v2'
 
         # Gather list of localizations by globbing matching directories, then
         # stripping out the current locale and 'static'. Once we have a list,
