@@ -1,6 +1,6 @@
 HTML5 Rocks Quarter Report for 2013-11-06
 =========================================
- 
+
 Articles due this quater
 ------------------------
 
