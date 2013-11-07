@@ -16,6 +16,18 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
   background-image: url(/static/images/profiles/75/dutton.75.png);
   background-position: 0px 0px !important;
 }
+
+.page header a[href^='http']:not([href*='html5rocks.']),
+.tutorials a[href^='http']:not([href*='html5rocks.']),
+.feed-section a[href^='http']:not([href*='html5rocks']),
+.info-section a[href^='http']:not([href*='html5rocks.']),
+article section a[href^='http']:not([href*='html5rocks']),
+a[rel='external']
+{
+  background: none;
+  padding-right: 0;
+}
+
 </style>
 {% endblock %}
 
@@ -38,12 +50,11 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
     <li>To cope with network address translators (NATs) and firewalls.</li>
   </ul>
 
-
-</blockquote>
-
 <p>In this article we show you how to build a signaling service, and how to deal with the quirks of real-world connectivity by using STUN and TURN servers. We also explain how WebRTC apps can handle multi-party calls and interact with services such as VoIP and PSTN (aka telephones).</p>
 
 <p>If you're not familiar with the basics of WebRTC, we strongly recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before reading this article.</p>
+
+</blockquote>
 
 <h2 id="what-is-signaling">What is signaling?</h2>
 
@@ -59,7 +70,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs: you need to build it yourself. We describe below some ways to build a signaling service. First, however, a little context...</p>
 
-<h3 id="jsep">JSEP</h3>
+<h3 id="jsep">Why is signaling not defined by WebRTC?</h3>
 
 <p>To avoid redundancy and to maximize compatibility with established technologies, signaling methods and protocols are not specified by WebRTC standards. This approach is outlined by JSEP, the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-1.1">JavaScript Session Establishment Protocol</a>:</p>
 
@@ -118,7 +129,7 @@ a=rtpmap:111 opus/48000/2
   <li>Alice calls <em>setLocalDescription() </em>with his offer.</li>
   <li><p>Alice stringifies the offer and uses a signaling mechanism to send it to Eve.</p></li>
   <li>Eve calls <em>setRemoteDescription()</em> with Alice's offer, so that her RTCPeerConnection knows about Alice's setup.</li>
-  <li>Eve calls <em>createAnswer()</em>, and the success callback for this_ _is passed a local session description: Eve's <strong>answer</strong>.</li>
+  <li>Eve calls <em>createAnswer()</em>, and the success callback for this is passed a local session description: Eve's <strong>answer</strong>.</li>
   <li>Eve sets her answer as the local description by calling <em>setLocalDescription()</em>.</li>
   <li>Eve then uses the signaling mechanism to send her stringified answer back to Alice.</li>
   <li><p>Alice sets Eve's answer as the remote session description using <em>setRemoteDescription()</em>.</p></li>
@@ -127,7 +138,7 @@ a=rtpmap:111 opus/48000/2
 <!-- flow diagram -->
 
 <blockquote class="commentary talkinghead">
-  <p><a href="http://www.urbandictionary.com/define.php?term=strewth">Strewth</a>!</p>
+  <p><a href="http://www.urbandictionary.com/define.php?term=strewth">Strewth!</a></p>
 </blockquote>
 
 <p>Alice and Eve also need to exchange network information. The expression 'finding candidates' refers to the process of finding network interfaces and ports using the <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment">ICE framework</a>.</p>
@@ -225,7 +236,7 @@ function logError(error) {
 
 <h2 id="how-can-i-build-a-signaling-service">How can I build a signaling service?</h2>
 
-<p>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!' <br/> <br/> Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> and <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a> we found that, for a video chat session, a total of around 30–45 messages were handled by the signaling service, with a total size for all messages of around 10kB.</p>
+<p>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!' <br/> <br/> Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> and <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a> we found that, for a video chat session, a total of around 30&ndash;45 messages were handled by the signaling service, with a total size for all messages of around 10kB.</p>
 
 <p>As well as being relatively undemanding in terms of bandwidth, WebRTC signaling services don't consume much processing or memory, since they only need to relay messages and retain a small amount of session state data (such as which clients are connected).</p>
 
@@ -241,7 +252,7 @@ function logError(error) {
 
 <p><a href="http://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a> is a more natural solution, designed for full duplex client–server communication (messages can flow in both directions at the same time). One advantage of a signaling service built with pure WebSocket or Server-Sent Events (EventSource) is that the back-end for these APIs can be implemented on a variety of web frameworks common to most web hosting packages, for languages such as PHP, Python and Ruby.</p>
 
-<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see Ilya Grigorik's <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch17.html#_http_upgrade_negotiation">WebRTC chapter</a> in the forthcoming O'Reilly's forthcoming <em>High Performance Browser Networking. </em>Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
+<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see Ilya Grigorik's <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in O'Reilly's <em>High Performance Browser Networking</em>. Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
 <p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
 
@@ -254,19 +265,20 @@ function logError(error) {
 
 <h3 id="scaling-signaling">Scaling signaling</h3>
 
-<p>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load. We won't discuss them here, but for high volume messaging there are a variety of high performance realtime messaging options available that can be used for signaling, such as <a href="http://zeromq.org/">ZeroMQ</a> (used by TokBox for their <a href="http://www.tokbox.com/blog/tokbox-builds-it%E2%80%99s-own-internal-messaging-infrastructure/">Rumour</a> service).</p>
+<p>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load. We won't discuss them here, but for high volume messaging there are a variety of high performance realtime messaging options available that can be used for signaling, such as the commercial services offered by <a href="https://vline.com/" title="vLine WebRTC platform">vLine</a>, or <a href="http://zeromq.org/">ZeroMQ</a> (used by TokBox for their <a href="http://www.tokbox.com/blog/tokbox-builds-it%E2%80%99s-own-internal-messaging-infrastructure/">Rumour</a> service).</p>
 
 <h3 id="building-a-signaling-service-with-socket.io-on-node">Building a signaling service with Socket.io on Node</h3>
 
-<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC because of its built-in concept of 'rooms'.</p>
+<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of 'rooms'.  This example is not designed to scale as a production-grade signaling service, but works well for a relatively small number of users.</p>
 
-<p>Socket.io uses WebSocket with the following fallbacks: Adobe Flash Socket, AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version. We use Socket.io in the example below.</p>
+<p>Socket.io uses WebSocket with the following fallbacks: Adobe Flash Socket, AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version, which we use in the example below. </p>
 
-<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. (See Coding WebRTC for signaling, above.) View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="https://bitbucket.org/webrtc/codelab/src/master/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
+<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="https://bitbucket.org/webrtc/codelab/src/master/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
 
 <p>Here is the client, <em>index.html</em>:</p>
 
-<pre class="prettyprint">&lt;!DOCTYPE html&gt;
+<pre class="prettyprint">
+&lt;!DOCTYPE html&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;title&gt;WebRTC client&lt;/title&gt;
@@ -279,7 +291,8 @@ function logError(error) {
 
 <p>...and the JavaScript file <em>main.js </em>referenced in the client:</p>
 
-<pre class="prettyprint">var isInitiator;
+<pre class="prettyprint">
+var isInitiator;
 
 room = prompt('Enter room name:');
 
@@ -364,19 +377,18 @@ io.sockets.on('connection', function (socket){
 
 <p>To run this app on localhost, you need to have Node, socket.io and <a href="https://github.com/cloudhead/node-static">node-static</a> installed. Node can be downloaded from <a href="http://nodejs.org/">nodejs.org</a> (installation is straightforward and quick). To install socket.io and node-static, run Node Package Manager from a terminal in your application directory:</p>
 
-<blockquote>
 
-<p><code>npm install socket.io&lt;br/&gt; npm install node-static</code><br/></p>
-
-</blockquote>
+<pre class="prettyprint">
+npm install socket.io
+npm install node-static
+</pre>
 
 <p>To start the server, run the following command from a terminal in your application directory:</p>
 
-<blockquote>
 
-<p><code>node server.js</code><br/></p>
-
-</blockquote>
+<pre class="prettyprint">
+node server.js
+</pre>
 
 <p>From your browser, open <em>localhost:2013</em>. Open a new tab page or window in any browser and open <em>localhost:2013</em> again. To see what's happening, check the console: in Chrome, you can access this via the Chrome DevTools with Command-Option-J or Ctrl-Shift-J.</p>
 
@@ -386,7 +398,7 @@ io.sockets.on('connection', function (socket){
 
 <p>A signaling service is required to initiate a WebRTC session.</p>
 
-<p>However, once a connection has been established between two peers, RTCDataChannel could, in theory, take over as the signaling channel. This might reduce latency for signaling &mdash; since messages fly direct &mdash; and help reduce signaling server bandwidth and processing costs.</p>
+<p>However, once a connection has been established between two peers, RTCDataChannel could, in theory, take over as the signaling channel. This might reduce latency for signaling &mdash; since messages fly direct &mdash; and help reduce signaling server bandwidth and processing costs. We don't have a demo, but watch this space!</p>
 
 <h3 id="signaling-gotchas">Signaling gotchas</h3>
 
@@ -551,20 +563,22 @@ io.sockets.on('connection', function (socket){
   <figcaption>Full mesh topology: everyone connected to everyone</figcaption>
 </figure>
 
-<p>Alternatively, a WebRTC app could choose one endpoint to distribute streams to all others, in a star configuration. It would also be possible to run a WebRTC endpoint on a server and roll your own redistribution mechanism (a <a href="https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk">sample client application</a> is provided by webrtc.org).</p>
+<p>Alternatively, a WebRTC app could choose one endpoint to distribute streams to all others, in a star configuration. It would also be possible to run a WebRTC endpoint on a server and construct your own redistribution mechanism (a <a href="https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk">sample client application</a> is provided by webrtc.org).</p>
+
+<p>In Chrome 31 and above, a MediaStream from one RTCPeerConnection can be used as the input for another: there's a demo at <a href="http://simpl.info/rtcpeerconnection/multi">simpl.info/multi</a>. This can enable more flexible architectures, since it enables a web app to handle call routing by choosing which other peer to connect to.</p>
 
 <h3 id="multipoint-control-unit">Multipoint Control Unit</h3>
 
-<p>A better option for a large number of endpoints is to use a <a href="https://en.wikipedia.org/wiki/Multipoint_control_unit">Multipoint Control Unit</a> (MCU). This is a server that works as a bridge to distribute media between a large numbers of participants. MCUs can cope with different resolutions, codecs and frame rates within a video conference, handle transcoding, do selective stream forwarding, and mix or record audio and video. For multi-party calls, there are a number of issues to consider: in particular, how to display multiple video inputs and mix audio from multiple sources. Cloud platforms such as <a href="http://www.vline.com/">vLine</a> also attempt to optimise traffic routing.</p>
+<p>A better option for a large number of endpoints is to use a <a href="https://en.wikipedia.org/wiki/Multipoint_control_unit">Multipoint Control Unit</a> (MCU). This is a server that works as a bridge to distribute media between a large numbers of participants. MCUs can cope with different resolutions, codecs and frame rates within a video conference, handle transcoding, do selective stream forwarding, and mix or record audio and video. For multi-party calls, there are a number of issues to consider: in particular, how to display multiple video inputs and mix audio from multiple sources. Cloud platforms such as <a href="http://www.vline.com/">vLine</a> also attempt to optimize traffic routing.</p>
+
+<p>It's possible to buy a complete MCU hardware package, or build your own.</p>
 
 <figure>
-  <img src="mcu.jpg" alt="Rear view of Cisco MCU5300" />
+  <a href="http://cisco.com/en/US/products/ps12283"><img src="mcu.jpg" alt="Rear view of Cisco MCU5300" /></a>
   <figcaption>The back of a <a href="http://cisco.com/en/US/products/ps12283">Cisco MCU</a></figcaption>
 </figure>
 
-<p><a href="http://lynckia.com/">Licode</a> (previously know as Lynckia) produces an open source MCU for WebRTC; OpenTok has <a href="http://www.tokbox.com/blog/mantis-next-generation-cloud-technology-for-webrtc/">Mantis</a>.</p>
-
-<p>In Chrome 31 and above, a MediaStream from one RTCPeerConnection can be used as the input for another: there's a demo at <a href="http://simpl.info/rtcpeerconnection/multi">simpl.info/multi</a>. This could enable interesting architectures, since a web app can choose which client(s) to connect to.</p>
+<p>Several open source MCU software options are available. For example, <a href="http://lynckia.com/">Licode</a> (previously know as Lynckia) produces an open source MCU for WebRTC; OpenTok has <a href="http://www.tokbox.com/blog/mantis-next-generation-cloud-technology-for-webrtc/">Mantis</a>.</p>
 
 <h2 id="beyond-browsers-voip-telephones-and-messaging">Beyond browsers: VoIP, telephones and messaging</h2>
 
@@ -592,7 +606,7 @@ io.sockets.on('connection', function (socket){
 
 <p>The infrastructure requirements for WebRTC applications are inherently more complex than for simpler web apps.</p>
 
-<p>Signaling and peer discovery services are not part of the WebRTC specs, and that might seem to make WebRTC applications more difficult to develop, but this approach gives you considerable power to tailor an application to meet your needs. Likewise, the ICE framework provides well-established techniques to get around real-world problems.</p> -->
+<p>Signaling and peer discovery services are not part of the WebRTC specs, and though that might seem to make WebRTC applications more complex to develop, this approach gives you considerable power to tailor an application to meet your needs. Likewise, the ICE framework provides well-established techniques to get around real-world problems.</p> -->
 
 <h2 id="find-out-more">Find out more</h2>
 
@@ -604,7 +618,9 @@ io.sockets.on('connection', function (socket){
 
 <p><a href="http://www.tokbox.com/blog/webrtc-and-signaling-what-two-years-has-taught-us/">WebRTC and Signaling: What Two Years Has Taught Us</a>: TokBox blog post about why leaving signaling out of the spec was a good idea.</p>
 
-<p>Ilya Grigorik's <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">WebRTC chapter</a> in O'Reilly's forthcoming <em>High Performance Browser Networking</em>.</p>
+<p><a href="http://www.linkedin.com/in/strongben" title="Ben Strong on LinkedIn">Ben Strong</a>'s presentation <a href="https://thenewcircle.com/s/post/1548/a_practical_guide_to_building_webrtc_apps_ben_strong_video" title="A Practical Guide to Building WebRTC Apps: presentation slides and video">A Practical Guide to Building WebRTC Apps</a> provides a lot of information about WebRTC topologies and infrastructure.</p>
+
+<p><a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>'s <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">WebRTC chapter</a> in O'Reilly's forthcoming <em>High Performance Browser Networking</em> goes deep into WebRTC architecture, use cases and performance.</p>
 
 
 {% endblock %}
