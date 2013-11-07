@@ -1,0 +1,509 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+label.bad, label.good, label.sortof {
+  padding: 4px;
+  line-height: 1.7;
+  border-radius: 50%;
+  color: white;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  -webkit-transform: rotateZ(90deg);
+  -moz-transform: rotateZ(90deg);
+  -ms-transform: rotateZ(90deg);
+  -o-transform: rotateZ(90deg);
+  transform: rotateZ(90deg);
+  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+}
+label.good::after,
+label.bad::after,
+label.sortof::after {
+  position: relative;
+  left: 2px;
+  top: -5px;
+}
+label.bad {
+  background-color: red;
+}
+label.bad::after {
+  content: ':(';
+}
+label.good {
+  background-color: green;
+}
+label.good::after {
+  content: ':)';
+}
+label.sortof {
+  background-color: rgb(230, 190, 32);
+  line-height: 1.8;
+}
+label.sortof::after {
+  content: ':|';
+}
+button a {
+  color: inherit !important;
+}
+.centered {
+  text-align: center;
+}
+figure img {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+article.tutorial section {
+  overflow: visible;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+
+/*
+.tutorial table td,
+.tutorial table th {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.tutorial table th {
+  background: #222;
+  color: white;
+  padding: 10px;
+  font-weight: 600;
+}*/
+
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea {
+  margin-top: 20px;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return 'import' in document.createElement('link');
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<p>{% include "warning.html" %}</p>
+<h2 id="why">Why imports?</h2>
+
+<p>Think about how we load different types of resources on the web. For JS, we have <code>&lt;script src&gt;</code>. For CSS, your go-to is probably <code>&lt;link rel="stylesheet"&gt;</code>. For images it's <code>&lt;img&gt;</code>. Video has <code>&lt;video&gt;</code>. Audio, <code>&lt;audio&gt;</code>.... Get to the point! The majority of the web's content has a simple and declarative way to load itself. Not so for HTML. Here's your options:</p>
+<ol>
+<li><strong><code>&lt;iframe&gt;</code></strong> - tried and true but heavy weight. An iframe's content lives entirely in a separate context than your page. While that's mostly a great feature, it creates additional challenges (shrink wrapping the size of the frame to its content is tough, insanely frustrating to script into/out of, nearly impossible to style).</li>
+<li><strong>AJAX</strong> - <a href="http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document">I love <code>xhr.responseType="document"</code></a>, but you're saying I need JS to load HTML? That doesn't seem right.</li>
+<li><strong>CrazyHacks&#8482;</strong> - embedded in strings, hidden as comments (e.g. <code>&lt;script type="text/html"&gt;</code>). Yuck!</li>
+</ol>
+<p>See the irony? <strong>The web's most basic content, HTML, requires the greatest amount
+of effort to work with</strong>. Fortunately, <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> are here to get us back on track.</p>
+<h2 id="started">Getting started</h2>
+
+<p><a href="http://www.w3.org/TR/2013/WD-html-imports-20130514/">HTML Imports</a>, a cast member of <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a>, are a way to include HTML documents in other HTML documents. You're not limited to markup either. An import can also include CSS, JavaScript, or anything else an <code>.html</code> file can contain. In other words, this makes imports a <strong>fantastic tool for loading related HTML/CSS/JS</strong>.</p>
+<h3 id="basics">The basics</h3>
+
+<p>Include an import on your page by declaring a <code>&lt;link rel="import"&gt;</code>:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/imports/stuff.html"&gt;
+&lt;/head&gt;
+</code></pre>
+<p>The URL of an import is called an <em>import location</em>. To load content from another domain, the import location needs to be CORs-enabled:</p>
+<pre class="prettyprint"><code>&lt;!-- Resources on other origins must be CORs-enabled. --&gt;
+&lt;link rel="import" href="http://example.com/elements.html"&gt;
+</code></pre>
+<p class="notice fact">Thanks to browser caching, multiple imports that reference the same URL will only be retrieved once. Resources are automatically de-duped for you!</p>
+
+<h3 id="featuredetect">Feature detection and support</h3>
+
+<p>To detect support, check if <code>.import</code> exists on the <code>&lt;link&gt;</code> element:</p>
+<pre class="prettyprint"><code>function supportsImports() {
+  return 'import' in document.createElement('link');
+}
+
+if (supportsImports()) {
+  // Good to go!
+} else {
+  // Use other libraries/require systems to load files.
+}
+</code></pre>
+<p>Browser support is still in the early days. Chrome 31 is the first browser to have an implementation. You can enable the flag by turning on <strong>Enable HTML Imports</strong> in <code>about:flags</code>. For other browsers, <a href="http://www.polymer-project.org/platform/html-imports.html">Polymer's polyfill</a> works great until things are widely supported.</p>
+<figure>
+  <img src="aboutflag.png">
+  <figcaption><b>Enable HTML Imports</b> in <code>about:flags</code>.</figcpation>
+</figure>
+
+<p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
+
+<h3 id="bundling">Bundling resources</h3>
+
+<p>Imports provide convention for bundling HTML/CSS/JS (even other HTML Imports) into a single deliverable. It's an intrinsic feature, but a powerful one. If you're creating a theme, library, or just want to segment your app into logical chunks, giving users a single URL is compelling. Heck, you could even deliver an entire app via an import. Think about that for a second.</p>
+<blockquote class="commentary talkinghead">Using only one URL, you can package together a single relocatable bundle of web goodness for others to consume.
+</blockquote>
+
+<p>A real-world example is <a href="http://getbootstrap.com/">Bootstrap</a>. Bootstrap is comprised of
+individual files (bootstrap.css, bootstrap.js, fonts), requires JQuery for its plugins, and provides markup examples. Developers like à la carte flexibility. It allows them buy in to the parts of the framework <em>they</em> want to use. That said, I'd wager your typical JoeDeveloper&#8482; goes the easy route and downloads all of Bootstrap.</p>
+<p>Imports make a ton of sense for something like Bootstrap. I present to you, the future of loading Bootstrap:</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="bootstrap.html"&gt;
+</code></pre>
+<p>bootstrap.html:</p>
+<pre class="prettyprint"><code>&lt;link rel="stylesheet" href="bootstrap.css"&gt;
+&lt;link rel="stylesheet" href="fonts.css"&gt;
+&lt;script src="jquery.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap-tooltip.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap-dropdown.js"&gt;&lt;/script&gt;
+...
+
+&lt;!-- scaffolding markup --&gt;
+&lt;template&gt;
+  ...
+&lt;/template&gt;
+</code></pre>
+<p>Let this sit. It's exciting stuff.</p>
+<h3 id="events">Load/error events</h3>
+
+<p>The <code>&lt;link&gt;</code> element fires a <code>load</code> event when an import is loaded successfully
+and <code>onerror</code> when the attempt fails (e.g. if the resource 404s). </p>
+<p>Imports try to load immediately. An easy way avoid headaches
+is to use <code>onload</code>/<code>onerror</code> attributes:</p>
+<pre class="prettyprint"><code>&lt;script async&gt;
+  function handleLoad(e) {
+    console.log('Loaded import: ' + e.target.href);
+  }
+  function handleError(e) {
+    console.log('Error loading import: ' + e.target.href);
+  }
+&lt;/script&gt;
+
+&lt;link rel="import" href="file.html"
+      onload="handleLoad(event)" onerror="handleError(event)"&gt;
+</code></pre>
+<p class="notice tip">Notice the event handlers are defined before the import is loaded on the page. This is because the import tries to load immediately. If the functions don't exist yet, you'll get console errors for missing function names.</p>
+
+<p>Or, if you're creating the import dynamically:</p>
+<pre class="prettyprint"><code>var link = document.createElement('link');
+link.rel = 'import';
+link.href = 'file.html'
+link.onload = function(e) {...};
+link.onerror = function(e) {...};
+document.head.appendChild(link);
+</code></pre>
+<h2 id="usingcontent">Using the content</h2>
+
+<p>Including <code>&lt;link rel="import" href="file.html"</code>&gt; on a page doesn't mean "plop the content of file.html here". It means "parser, go off an fetch this document so I can use it". To actually use the content, we have to take action and write some script.</p>
+<p>A critical aha! moment is realizing that an import is just a document. In fact, the content of an import is called an <em>import document</em>. We're able to <strong>manipulate the guts of an import using standard DOM APIs</strong>!</p>
+<h3 id="importprop">link.import</h3>
+
+<p>The content of an import is accessed through the <code>&lt;link&gt;</code>'s <code>.import</code> property:</p>
+<pre class="prettyprint"><code>var content = document.querySelector('link[rel="import"]').import;
+</code></pre>
+<p><code>link.import</code> is <code>null</code> under the following conditions:</p>
+<ol>
+<li>the browser doesn't support HTML Imports</li>
+<li>the <code>&lt;link&gt;</code> doesn't have <code>rel="import"</code></li>
+<li>the <code>&lt;link&gt;</code> has not been added to the DOM</li>
+<li>the <code>&lt;link&gt;</code> has been removed from the DOM</li>
+<li>the resource is not CORS-enabled</li>
+</ol>
+<p><strong>Full example</strong></p>
+<p>Let's say <code>warnings.html</code> contains:</p>
+<pre class="prettyprint"><code>&lt;div class="warning"&gt;
+  &lt;style scoped&gt;
+    h3 {
+      color: red;
+    }
+  &lt;/style&gt;
+  &lt;h3&gt;Warning!&lt;/h3&gt;
+  &lt;p&gt;This page is under construction&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="outdated"&gt;
+  &lt;h3&gt;Heads up!&lt;/h3&gt;
+  &lt;p&gt;This content may be out of date&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Importers can grab specific portions of this document and clone it into their page:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="warnings.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  ...
+  &lt;script&gt;
+    var link = document.querySelector('link[rel="import"]');
+    var content = link.import;
+
+    // Grab DOM from warning.html's document.
+    var el = content.querySelector('.warning');
+
+    document.body.appendChild(el.cloneNode(true));
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p class="notice">Notice there's no need for <code>DOMContentLoaded</code>/<code>load</code> event handling. Things are assumed to be ready when we start to drill into the import.</p>
+
+<div class="demoarea" id="warning-example-area"></div>
+
+<p><link rel="import" id="warning-example-link" href="warning.html">
+<script>
+  var link = document.querySelector('#warning-example-link');
+  if ('import' in link) {
+    var content = link.import;
+    var alertDOM = content.querySelector('div.alert');
+    document.querySelector('#warning-example-area').appendChild(alertDOM.cloneNode(true));
+  }
+</script></p>
+<h3 id="includejs">Scripting in imports</h3>
+
+<p>Imports are not in the main document. They're satellite to it. However, your import can still act on the main page even though it reigns supreme. An import can access its own DOM and/or the DOM of the page that's importing it:</p>
+<p><strong>Example</strong> - import.html that adds one of its stylesheets to the main page</p>
+<pre class="prettyprint"><code>&lt;link rel="stylesheet" href="http://www.example.com/styles.css"&gt;
+&lt;link rel="stylesheet" href="http://www.example.com/styles2.css"&gt;
+...
+
+&lt;script&gt;
+  // importDoc references this import's document
+  var importDoc = document.currentScript.ownerDocument;
+
+  // mainDoc references the main document (the page that's importing us)
+  var mainDoc = document;
+
+  // Grab the first stylesheet from this import, clone it,
+  // and append it to the importing document.
+  var styles = importDoc.querySelector('link[rel="stylesheet"]');
+  mainDoc.head.appendChild(styles.cloneNode(true));
+&lt;/script&gt;
+</code></pre>
+<p>Notice what's going on here. From within an import, we're not only able to reference the import itself (<code>document.currentScript.ownerDocument</code>), but have it <em>append itself</em> to the page that's importing it (<code>mainDoc.head.appendChild(...)</code>). Pretty gnarly if you ask me.</p>
+<blockquote class="commentary talkinghead">Using script in imports makes them conceptually similar to <a href="http://docs.python.org/2/tutorial/modules.html#more-on-modules">Python modules</a>. They can be loaded as definitions or execute code by running directly.
+</blockquote>
+
+<p>Rules of JavaScript in an import</p>
+<ol>
+<li>Script is executed, and executed in the context of the main document (e.g. <code>window.document</code>) in an import refers to the main page. This is inherently useful if you're loading resources that depend on this to be true. Today, that's essentially every library out there.<ul>
+<li>functions defined in an import end up on <code>window</code>.</li>
+<li>you don't have to do anything crazy like append the import's <code>&lt;script&gt;</code> blocks to the main page. Again, script gets executed.</li>
+</ul>
+</li>
+<li>Imports do not block parsing the main page. However, scripts inside them are processed in order. This means you get defer-like behavior while maintaining proper script order. More on this below.</li>
+</ol>
+<h2 id="performance">Performance considerations</h2>
+
+<h3 id="perf-concat">Consider concatenating imports</h3>
+
+<p><a href="https://github.com/Polymer/vulcanize">Vulcanizer</a> is an npm build tool from the <a href="http://www.polymer-project.org/">Polymer</a> team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components. If you're keen on reducing network requests, check out Vulcanizer.</p>
+<h3 id="perf-caching">Imports leverage browser caching</h3>
+
+<p>Many people often forget that the browser's
+networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.</p>
+<h3 id="perf-inert">Content is "inert" until you use it</h3>
+
+<p>Think of content as inert until you call upon its services. Take normal, dynamically created stylesheet:</p>
+<pre class="prettyprint"><code>var link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = 'styles.css';
+</code></pre>
+<p>The browser won't request styles.css until <code>link</code> is added to the DOM:</p>
+<pre class="prettyprint"><code>document.head.appendChild(link); // browser requests styles.css
+</code></pre>
+<p>Another example is dynamically created markup:</p>
+<pre class="prettyprint"><code>var h2 = document.createElement('h2');
+h2.textContent = 'Booyah!';
+</code></pre>
+<p>The <code>h2</code> is relatively meaningless until you add it to the DOM.</p>
+<p>The same concept holds true for the import document. Unless you append it's content to the DOM, it's a no-op. In fact, the only thing that "executes" in the import document directly is <code>&lt;script&gt;</code>. See <a href="#includejs">scripting in imports</a>.</p>
+<h3 id="perf-parsing">Optimizing for async loading</h3>
+
+<p><strong>Imports don't block parsing the main page</strong>. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the <code>&lt;head&gt;</code> is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember <code>&lt;script&gt;</code> in the main document <em>still</em> continues to block the page:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import_that_takes_5secs.html"&gt;
+  &lt;script&gt;console.log('I block page rendering');&lt;/script&gt;
+&lt;/head&gt;
+</code></pre>
+<p>Depending on your app structure and use case, there are several ways to optimize to get async behavior. All of these methods do not block the main page rendering.</p>
+<p><strong>Scenario #1 (preferred): you don't have script in <code>&lt;head&gt;</code> or inlined in <code>&lt;body&gt;</code></strong></p>
+<p>My recommendation for placing <code>&lt;script&gt;</code> is to avoid immediately following your imports. Move scripts as late in the game as possible...but you're already doing that best practice, AREN'T YOU!? ;)</p>
+<p>Here's an example:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import.html"&gt;
+  &lt;link rel="import" href="/path/to/import2.html"&gt;
+  &lt;!-- avoid including script --&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- avoid including script --&gt;
+
+  &lt;div id="container"&gt;&lt;/div&gt;
+
+  &lt;!-- avoid including script --&gt;
+  ...
+
+  &lt;script&gt;
+    // Other scripts n' stuff.
+
+    // Bring in the import content.
+    var link = document.querySelector('link[rel="import"]');
+    var post = link.import.querySelector('#blog-post');
+
+    var container = document.querySelector('#container');
+    container.appendChild(post.cloneNode(true));
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p>Everything is at the bottom.</p>
+<p><strong>Scenario 1.5: the import adds itself</strong></p>
+<p>Another option, though brittle, is to have the import <a href="#includejs">add its own content</a>. <em>I don't recommend this technique</em> because it requires the import to know the structure of the main page ahead of time. I'm including it here for the sake of completeness.</p>
+<p>import.html:</p>
+<pre class="prettyprint"><code>&lt;div id="blog-post"&gt;...&lt;/div&gt;
+&lt;script&gt;
+  var me = document.currentScript.ownerDocument;
+  var post = me.querySelector('#blog-post');
+
+  var container = document.querySelector('#container');
+  container.appendChild(post.cloneNode(true));
+&lt;/script&gt;
+</code></pre>
+<p>index.html</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- no need for script. the import takes care of things --&gt;
+&lt;/body&gt;
+</code></pre>
+<p><strong>Scenario #2: you <em>have</em> script in <code>&lt;head&gt;</code> or inlined in <code>&lt;body&gt;</code></strong></p>
+<p>If you can't avoid <code>&lt;script&gt;</code> in the <code>&lt;head&gt;</code>, dynamically add the import:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;script&gt;
+    function addImportLink(url) {
+      var link = document.createElement('link');
+      link.rel = 'import';
+      link.href = url;
+      link.onload = function(e) {
+        var post = this.import.querySelector('#blog-post');
+
+        var container = document.querySelector('#container');
+        container.appendChild(post.cloneNode(true));
+      };
+      document.head.appendChild(link);
+    }
+
+    addImportLink('/path/to/import.html'); // Import is added early :)
+  &lt;/script&gt;
+  &lt;script&gt;
+    // other scripts
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+   &lt;div id="container"&gt;&lt;/div&gt;
+   ...
+&lt;/body&gt;
+</code></pre>
+<p>Alternatively, do things near <code>&lt;/body&gt;</code>:</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;script&gt;
+    // other scripts
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="container"&gt;&lt;/div&gt;
+  ...
+
+  &lt;script&gt;
+    function addImportLink(url) { ... }
+
+    addImportLink('/path/to/import.html'); // Import is added very late :(
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p class="notice"><b>Note:</b> This very last approach is least preferable. The parser doesn't start to work on the import content until late in the page.</p>
+
+<h2 id="tips">Things to remember</h2>
+
+<ol>
+<li>
+<p>An import's mimetype is <code>text/html</code>.</p>
+</li>
+<li>
+<p>Resources from other origins need to be CORs-enabled.</p>
+</li>
+<li>
+<p>Consecutive imports from the same URL are retrieved once. That shouldn't be surprising given that stylseheets behave the same way. For example:</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="file.html"&gt;
+&lt;link rel="import" href="file.html"&gt;
+</code></pre>
+<p>results in a single request for <code>file.html</code>.</p>
+</li>
+<li>
+<p>Scripts in an import are processed in order, but do not block the main document parsing.</p>
+</li>
+<li>
+<p>While scripts execute in an import, stylesheets, markup, and other resources need to be added to the main page.</p>
+</li>
+<li>
+<p><code>&lt;link rel="import" href="file.html"</code>&gt; doesn't mean "#include the content of file.html here". It means "parser, go off an fetch this document so I can use it later". This is a major difference between HTML Imports and <code>&lt;iframe&gt;</code>, which says "load and render this content here".</p>
+</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+
+<p>HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely <a href="/tutorials/webcomponents/imports-201/">powerful in the world of Web Components</a>. Developers can create reusable components for others to consume and bring in to their own app, all delivered through <code>&lt;link rel="import"&gt;</code>.</p>
+<p>HTML Imports are a simple concept, but enable a number of interesting use cases
+for the platform.</p>
+<h3 id="usecases">Use cases</h3>
+
+<ul>
+<li>distribute related <a href="#bundling">HTML/CSS/JS as a single bundle</a>. Theoretically, one could import an entire web app into another.</li>
+<li>encourages <strong>modularity &amp; reusability</strong>.</li>
+<li><strong>code organization</strong> - segment concepts logically into different files.</li>
+<li>wrapping up one or more <a href="/tutorials/webcomponents/customelements/">Custom Element</a> definitions, an import can be used to <a href="/tutorials/webcomponents/customelements/#registering">register</a> and deliver them to an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.</li>
+<li><a href="/tutorials/webcomponents/imports-201/#depssubimports"><strong>eases dependency management</strong></a> - resources are automatically de-duped.</li>
+<li>
+<p><strong>Chunking scripts</strong> - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!</p>
+<p><code>&lt;link rel="import" href="chunks.html"&gt;</code></p>
+<pre class="prettyprint"><code>&lt;script&gt;/* script chunk A goes here */&lt;/script&gt;
+&lt;script&gt;/* script chunk B goes here */&lt;/script&gt;
+&lt;script&gt;/* script chunk C goes here */&lt;/script&gt;
+...
+</code></pre>
+</li>
+<li>
+<p>First time the <strong>browser is able to run two (or more) HTML parsers in parallel</strong>.</p>
+</li>
+</ul><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+  }
+});
+</script>
+{% endblock %}
