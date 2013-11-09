@@ -5,7 +5,7 @@ The design of HTML Imports lends itself nicely to loading reusable content on th
 
 <h2 id="include-templates">Including templates</h2>
 
-The [HTML Template](/tutorials/webcomponents/template/) element is a natural fit for HTML Imports. `<template>` is great for scaffolding out sections of markup for the importing app to use as it desires. Wrapping content in a `<template>` also gives you the added benefit of its inertness (e.g. scripts don't run until the template is added to the DOM). Boom!
+The [HTML Template](/tutorials/webcomponents/template/) element is a natural fit for HTML Imports. `<template>` is great for scaffolding out sections of markup for the importing app to use as it desires. Wrapping content in a `<template>` also gives you the added benefit of making the content inert until used. That is, scripts don't run until the template is added to the DOM). Boom!
 
 import.html
 
@@ -40,7 +40,7 @@ index.html
 elements.html
 
     <script>
-      // Define and register <one-element>.
+      // Define and register <say-hi>.
       var proto = Object.create(HTMLElement.prototype);
       
       proto.createdCallback = function() {
@@ -50,7 +50,7 @@ elements.html
 
       document.register('say-hi', {prototype: proto});
 
-      // Define and register <two-element> that uses Shadow DOM.
+      // Define and register <shadow-element> that uses Shadow DOM.
       var proto2 = Object.create(HTMLElement.prototype);
 
       proto2.createdCallback = function() {
@@ -62,7 +62,7 @@ elements.html
       document.register('shadow-element', {prototype: proto2});
     </script>
 
-This import defines (and registers) two elements, `<one-element>` and `<two-element>`. The importer can simply declare them on their page. No wiring needed.
+This import defines (and registers) two elements, `<say-hi>` and `<shadow-element>`. The importer can simply declare them on their page. No wiring needed.
 
 index.html
 
@@ -92,7 +92,7 @@ In my opinion, this workflow alone makes HTML Imports an ideal way to share Web 
 
 <h2 id="depssubimports">Managing dependencies and sub-imports</h2>
 
-Yo dawg. I hear you like imports, so I included an import _in_ your import.
+> Yo dawg. I hear you like imports, so I included an import _in_ your import.
 
 <h3 id="sub-imports">Sub-imports</h3>
 
@@ -115,19 +115,20 @@ polymer-ui-tabs.html
 
 [full source](https://github.com/Polymer/polymer-ui-elements/blob/master/polymer-ui-tabs/polymer-ui-tabs.html)
 
-Then user can import this new element:
+App developers can import this new element using:
 
     <link rel="import" href="polymer-ui-tabs.html">
-    <polymer-ui-tabs.html></polymer-ui-tabs.html>
+    <polymer-ui-tabs></polymer-ui-tabs>
 
-When a new, more awesome `<polymer-selector2>` comes along in the future, we can swap out `<polymer-selector>` and start using it straight away. We won't break users thanks to imports and web components.
+When a new, more awesome `<polymer-selector2>` comes along in the future, you can swap out `<polymer-selector>` and start using it straight away. You won't break your users thanks to imports and web components.
 
 <h3 id="deps">Dependency management</h3>
 
 We all know that loading JQuery more than once per page causes errors. Isn't this
 going to be a _huge_ problem for Web Components when multiple components use the same library? Not if we use HTML Imports! They can be used to manage dependencies.
 
-**HTML Imports from the same URL are only loaded once**. By wrapping libraries in an HTML Import, you can automatically de-duped resources. Say we define an import, jquery.html, that includes jquery.js:
+By wrapping libraries in an HTML Import, you automatically de-dupe resources.
+The document is only parsed once. Scripts are only executed once. Say you define an import, jquery.html, that includes jquery.js:
 
 jquery.html
 
@@ -167,7 +168,7 @@ index.html (main page)
     </script>
     </body>
 
-Despite JQuery being used in many places, it's only loaded once because we're reusing the import.
+Despite JQuery being used in many places, it's only loaded once because the browser is reusing the import.
 
 <h2 id="conslusion">Conclusion</h2>
 

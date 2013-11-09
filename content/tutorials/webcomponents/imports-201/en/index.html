@@ -22,6 +22,30 @@ article.tutorial section {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
+blockquote {
+  position: relative;
+}
+blockquote:not(.talkinghead) {
+  background: rgb(238, 238, 238);
+  padding: 1px 15px;
+}
+blockquote:not(.talkinghead):before {
+  content: '“';
+  top: -25px;
+  left: -15px;
+}
+blockquote:not(.talkinghead):after {
+  content: '”';
+  right: -5px;
+  bottom: -55px;
+}
+blockquote:not(.talkinghead):before,
+blockquote:not(.talkinghead):after {
+  font-size: 75px;
+  position: absolute;
+  color: rgb(204, 204, 204);
+}
+
 .disabledemos .demoarea {
   display: none !important;
 }
@@ -66,7 +90,7 @@ article.tutorial section {
 <p>The design of HTML Imports lends itself nicely to loading reusable content on the web. In particular, it's an ideal way to distribute Web Components. Everything from basic <a href="/webcomponents/template/">HTML <code>&lt;template&gt;</code></a>s to full blown <a href="/tutorials/webcomponents/customelements/#registering">Custom Elements</a> with Shadow DOM [<a href="/tutorials/webcomponents/shadowdom/">1</a>, <a href="/tutorials/webcomponents/shadowdom-201/">2</a>, <a href="/tutorials/webcomponents/shadowdom-301/">3</a>]. When these technologies are used in tandem, imports become a <a href="http://en.cppreference.com/w/cpp/preprocessor/include"><code>#include</code></a> for Web Components.</p>
 <h2 id="include-templates">Including templates</h2>
 
-<p>The <a href="/tutorials/webcomponents/template/">HTML Template</a> element is a natural fit for HTML Imports. <code>&lt;template&gt;</code> is great for scaffolding out sections of markup for the importing app to use as it desires. Wrapping content in a <code>&lt;template&gt;</code> also gives you the added benefit of its inertness (e.g. scripts don't run until the template is added to the DOM). Boom!</p>
+<p>The <a href="/tutorials/webcomponents/template/">HTML Template</a> element is a natural fit for HTML Imports. <code>&lt;template&gt;</code> is great for scaffolding out sections of markup for the importing app to use as it desires. Wrapping content in a <code>&lt;template&gt;</code> also gives you the added benefit of making the content inert until used. That is, scripts don't run until the template is added to the DOM). Boom!</p>
 <p>import.html</p>
 <pre class="prettyprint"><code>&lt;template&gt;
   &lt;h1&gt;Hello World!&lt;/h1&gt;
@@ -96,7 +120,7 @@ article.tutorial section {
 <p><a href="tutorials/webcomponents/customelements/">Custom Elements</a> is another Web Component technology that plays absurdly well with HTML Imports. <a href="/tutorials/webcomponents/imports/#includejs">Imports can execute script</a>, so why not define + register your custom elements so users don't have to? Call it..."auto-registration". </p>
 <p>elements.html</p>
 <pre class="prettyprint"><code>&lt;script&gt;
-  // Define and register &lt;one-element&gt;.
+  // Define and register &lt;say-hi&gt;.
   var proto = Object.create(HTMLElement.prototype);
 
   proto.createdCallback = function() {
@@ -106,7 +130,7 @@ article.tutorial section {
 
   document.register('say-hi', {prototype: proto});
 
-  // Define and register &lt;two-element&gt; that uses Shadow DOM.
+  // Define and register &lt;shadow-element&gt; that uses Shadow DOM.
   var proto2 = Object.create(HTMLElement.prototype);
 
   proto2.createdCallback = function() {
@@ -118,7 +142,7 @@ article.tutorial section {
   document.register('shadow-element', {prototype: proto2});
 &lt;/script&gt;
 </code></pre>
-<p>This import defines (and registers) two elements, <code>&lt;one-element&gt;</code> and <code>&lt;two-element&gt;</code>. The importer can simply declare them on their page. No wiring needed.</p>
+<p>This import defines (and registers) two elements, <code>&lt;say-hi&gt;</code> and <code>&lt;shadow-element&gt;</code>. The importer can simply declare them on their page. No wiring needed.</p>
 <p>index.html</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;link rel="import" href="elements.html"&gt;
@@ -144,7 +168,9 @@ article.tutorial section {
 <p>In my opinion, this workflow alone makes HTML Imports an ideal way to share Web Components.</p>
 <h2 id="depssubimports">Managing dependencies and sub-imports</h2>
 
+<blockquote>
 <p>Yo dawg. I hear you like imports, so I included an import <em>in</em> your import.</p>
+</blockquote>
 <h3 id="sub-imports">Sub-imports</h3>
 
 <p>It can be useful for one import to include another. For example, if you want to reuse or extend another component, use an import to load the other element(s).</p>
@@ -162,16 +188,17 @@ article.tutorial section {
 &lt;/polymer-element&gt;
 </code></pre>
 <p><a href="https://github.com/Polymer/polymer-ui-elements/blob/master/polymer-ui-tabs/polymer-ui-tabs.html">full source</a></p>
-<p>Then user can import this new element:</p>
+<p>App developers can import this new element using:</p>
 <pre class="prettyprint"><code>&lt;link rel="import" href="polymer-ui-tabs.html"&gt;
-&lt;polymer-ui-tabs.html&gt;&lt;/polymer-ui-tabs.html&gt;
+&lt;polymer-ui-tabs&gt;&lt;/polymer-ui-tabs&gt;
 </code></pre>
-<p>When a new, more awesome <code>&lt;polymer-selector2&gt;</code> comes along in the future, we can swap out <code>&lt;polymer-selector&gt;</code> and start using it straight away. We won't break users thanks to imports and web components.</p>
+<p>When a new, more awesome <code>&lt;polymer-selector2&gt;</code> comes along in the future, you can swap out <code>&lt;polymer-selector&gt;</code> and start using it straight away. You won't break your users thanks to imports and web components.</p>
 <h3 id="deps">Dependency management</h3>
 
 <p>We all know that loading JQuery more than once per page causes errors. Isn't this
 going to be a <em>huge</em> problem for Web Components when multiple components use the same library? Not if we use HTML Imports! They can be used to manage dependencies.</p>
-<p><strong>HTML Imports from the same URL are only loaded once</strong>. By wrapping libraries in an HTML Import, you can automatically de-duped resources. Say we define an import, jquery.html, that includes jquery.js:</p>
+<p>By wrapping libraries in an HTML Import, you automatically de-dupe resources.
+The document is only parsed once. Scripts are only executed once. Say you define an import, jquery.html, that includes jquery.js:</p>
 <p>jquery.html</p>
 <pre class="prettyprint"><code>&lt;script src="jquery.js"&gt;&lt;/script&gt;
 </code></pre>
@@ -206,7 +233,7 @@ going to be a <em>huge</em> problem for Web Components when multiple components 
 &lt;/script&gt;
 &lt;/body&gt;
 </code></pre>
-<p>Despite JQuery being used in many places, it's only loaded once because we're reusing the import.</p>
+<p>Despite JQuery being used in many places, it's only loaded once because the browser is reusing the import.</p>
 <h2 id="conslusion">Conclusion</h2>
 
 <p>While HTML Imports is useful as a standalone technology, it becomes extremely powerful
