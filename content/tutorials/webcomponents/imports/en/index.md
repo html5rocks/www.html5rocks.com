@@ -222,7 +222,7 @@ Rules of JavaScript in an import:
     - you don't have to do anything crazy like append the import's `<script>` blocks to the main page. Again, script gets executed.
 - Imports do not block parsing of the main page. However, scripts inside them are processed in order. This means you get defer-like behavior while maintaining proper script order. More on this below.
 
-<h2 id="deliver-webcomponents">Using HTML Imports to deliver Web Components</h2>
+<h2 id="deliver-webcomponents">Delivering Web Components</h2>
 
 The design of HTML Imports lends itself nicely to loading reusable content on the web. In particular, it's an ideal way to distribute Web Components. Everything from basic [HTML `<template>`](/webcomponents/template/)s to full blown [Custom Elements](/tutorials/webcomponents/customelements/#registering) with Shadow DOM [[1](/tutorials/webcomponents/shadowdom/), [2](/tutorials/webcomponents/shadowdom-201/), [3](/tutorials/webcomponents/shadowdom-301/)]. When these technologies are used in tandem, imports become a [`#include`](http://en.cppreference.com/w/cpp/preprocessor/include) for Web Components.
 
@@ -258,7 +258,7 @@ index.html
 
 <h3 id="include-elements">Registering custom elements</h3>
 
-[Custom Elements](tutorials/webcomponents/customelements/) is another Web Component technology that plays absurdly well with HTML Imports. [Imports can execute script](/tutorials/webcomponents/imports/#includejs), so why not define + register your custom elements so users don't have to? Call it..."auto-registration". 
+[Custom Elements](tutorials/webcomponents/customelements/) is another Web Component technology that plays absurdly well with HTML Imports. [Imports can execute script](#includejs), so why not define + register your custom elements so users don't have to? Call it..."auto-registration". 
 
 elements.html
 
@@ -564,7 +564,7 @@ Alternatively, do things near `</body>`:
 
 <h2 id="conclusion">Conclusion</h2>
 
-HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely [powerful in the world of Web Components](/tutorials/webcomponents/imports-201/). Developers can create reusable components for others to consume and bring in to their own app, all delivered through `<link rel="import">`.
+HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely powerful in the world of Web Components. Developers can create reusable components for others to consume and bring in to their own app, all delivered through `<link rel="import">`.
 
 HTML Imports are a simple concept, but enable a number of interesting use cases
 for the platform.
@@ -575,7 +575,7 @@ for the platform.
 - encourages **modularity &amp; reusability**.
 - **code organization** - segment concepts logically into different files.
 - wrapping up one or more [Custom Element](/tutorials/webcomponents/customelements/) definitions, an import can be used to [register](/tutorials/webcomponents/customelements/#registering) and deliver them to an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.
-- [**eases dependency management**](/tutorials/webcomponents/imports-201/#depssubimports) - resources are automatically de-duped.
+- [**eases dependency management**](#depssubimports) - resources are automatically de-duped.
 - **Chunking scripts** - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!
 
       `<link rel="import" href="chunks.html">`

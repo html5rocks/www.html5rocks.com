@@ -66,6 +66,11 @@ article.tutorial section {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
+blockquote:not(.talkinghead) {
+  background: rgb(238, 238, 238);
+  padding: 1px 15px;
+  position: relative;
+}
 blockquote:not(.talkinghead):before {
   content: '“';
   top: -25px;
@@ -76,6 +81,13 @@ blockquote:not(.talkinghead):after {
   right: -5px;
   bottom: -55px;
 }
+blockquote:not(.talkinghead):before,
+blockquote:not(.talkinghead):after {
+  font-size: 75px;
+  position: absolute;
+  color: rgb(204, 204, 204);
+}
+
 
 /*
 .tutorial table td,
@@ -329,7 +341,7 @@ document.head.appendChild(link);
 </li>
 <li>Imports do not block parsing of the main page. However, scripts inside them are processed in order. This means you get defer-like behavior while maintaining proper script order. More on this below.</li>
 </ul>
-<h2 id="deliver-webcomponents">Using HTML Imports to deliver Web Components</h2>
+<h2 id="deliver-webcomponents">Delivering Web Components</h2>
 
 <p>The design of HTML Imports lends itself nicely to loading reusable content on the web. In particular, it's an ideal way to distribute Web Components. Everything from basic <a href="/webcomponents/template/">HTML <code>&lt;template&gt;</code></a>s to full blown <a href="/tutorials/webcomponents/customelements/#registering">Custom Elements</a> with Shadow DOM [<a href="/tutorials/webcomponents/shadowdom/">1</a>, <a href="/tutorials/webcomponents/shadowdom-201/">2</a>, <a href="/tutorials/webcomponents/shadowdom-301/">3</a>]. When these technologies are used in tandem, imports become a <a href="http://en.cppreference.com/w/cpp/preprocessor/include"><code>#include</code></a> for Web Components.</p>
 <h3 id="include-templates">Including templates</h3>
@@ -361,7 +373,7 @@ document.head.appendChild(link);
 </code></pre>
 <h3 id="include-elements">Registering custom elements</h3>
 
-<p><a href="tutorials/webcomponents/customelements/">Custom Elements</a> is another Web Component technology that plays absurdly well with HTML Imports. <a href="/tutorials/webcomponents/imports/#includejs">Imports can execute script</a>, so why not define + register your custom elements so users don't have to? Call it..."auto-registration". </p>
+<p><a href="tutorials/webcomponents/customelements/">Custom Elements</a> is another Web Component technology that plays absurdly well with HTML Imports. <a href="#includejs">Imports can execute script</a>, so why not define + register your custom elements so users don't have to? Call it..."auto-registration". </p>
 <p>elements.html</p>
 <pre class="prettyprint"><code>&lt;script&gt;
   // Define and register &lt;say-hi&gt;.
@@ -636,7 +648,7 @@ h2.textContent = 'Booyah!';
 </ol>
 <h2 id="conclusion">Conclusion</h2>
 
-<p>HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely <a href="/tutorials/webcomponents/imports-201/">powerful in the world of Web Components</a>. Developers can create reusable components for others to consume and bring in to their own app, all delivered through <code>&lt;link rel="import"&gt;</code>.</p>
+<p>HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely powerful in the world of Web Components. Developers can create reusable components for others to consume and bring in to their own app, all delivered through <code>&lt;link rel="import"&gt;</code>.</p>
 <p>HTML Imports are a simple concept, but enable a number of interesting use cases
 for the platform.</p>
 <h3 id="usecases">Use cases</h3>
@@ -646,7 +658,7 @@ for the platform.</p>
 <li>encourages <strong>modularity &amp; reusability</strong>.</li>
 <li><strong>code organization</strong> - segment concepts logically into different files.</li>
 <li>wrapping up one or more <a href="/tutorials/webcomponents/customelements/">Custom Element</a> definitions, an import can be used to <a href="/tutorials/webcomponents/customelements/#registering">register</a> and deliver them to an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.</li>
-<li><a href="/tutorials/webcomponents/imports-201/#depssubimports"><strong>eases dependency management</strong></a> - resources are automatically de-duped.</li>
+<li><a href="#depssubimports"><strong>eases dependency management</strong></a> - resources are automatically de-duped.</li>
 <li>
 <p><strong>Chunking scripts</strong> - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!</p>
 <p><code>&lt;link rel="import" href="chunks.html"&gt;</code></p>
