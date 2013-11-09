@@ -492,16 +492,17 @@ The document is only parsed once. Scripts are only executed once. Say you define
 <p>Despite JQuery being used in many places, it's only loaded once because the browser is reusing the import.</p>
 <h2 id="performance">Performance considerations</h2>
 
+<p>HTML Imports are totally awesome but as with any new web technology, you should
+use them wisely. Web development best practices still hold true. Below are some things to keep in mind.</p>
 <h3 id="perf-concat">Concatenate imports</h3>
 
 <p>Reducing network requests is important. <a href="https://github.com/Polymer/vulcanize">Vulcanizer</a> is an npm build tool from the <a href="http://www.polymer-project.org/">Polymer</a> team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.</p>
 <h3 id="perf-caching">Imports leverage browser caching</h3>
 
-<p>Many people often forget that the browser's
-networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.</p>
-<h3 id="perf-inert">Content is "inert" until you use it</h3>
+<p>Many people often forget that the browser's networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.</p>
+<h3 id="perf-inert">Content is useful only when you add it</h3>
 
-<p>Think of content as inert until you call upon its services. Take normal, dynamically created stylesheet:</p>
+<p>Think of content as inert until you call upon its services. Take a normal, dynamically created stylesheet:</p>
 <pre class="prettyprint"><code>var link = document.createElement('link');
 link.rel = 'stylesheet';
 link.href = 'styles.css';
@@ -517,7 +518,7 @@ h2.textContent = 'Booyah!';
 <p>The same concept holds true for the import document. Unless you append it's content to the DOM, it's a no-op. In fact, the only thing that "executes" in the import document directly is <code>&lt;script&gt;</code>. See <a href="#includejs">scripting in imports</a>.</p>
 <h3 id="perf-parsing">Optimizing for async loading</h3>
 
-<p><strong>Imports don't block parsing the main page</strong>. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the <code>&lt;head&gt;</code> is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember <code>&lt;script&gt;</code> in the main document <em>still</em> continues to block the page:</p>
+<p><strong>Imports don't block parsing of the main page</strong>. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the <code>&lt;head&gt;</code> is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember <code>&lt;script&gt;</code> in the main document <em>still</em> continues to block the page:</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;link rel="import" href="/path/to/import_that_takes_5secs.html"&gt;
   &lt;script&gt;console.log('I block page rendering');&lt;/script&gt;
@@ -554,7 +555,8 @@ h2.textContent = 'Booyah!';
 </code></pre>
 <p>Everything is at the bottom.</p>
 <p><strong>Scenario 1.5: the import adds itself</strong></p>
-<p>Another option, though brittle, is to have the import <a href="#includejs">add its own content</a>. <em>I don't recommend this technique</em> because it requires the import to know the structure of the main page ahead of time. I'm including it here for the sake of completeness.</p>
+<p>Another option is to have the import <a href="#includejs">add its own content</a>. If the
+import author establishes a contract for the app developer to follow, the import can add itself to an area of the main page:</p>
 <p>import.html:</p>
 <pre class="prettyprint"><code>&lt;div id="blog-post"&gt;...&lt;/div&gt;
 &lt;script&gt;
@@ -574,7 +576,8 @@ h2.textContent = 'Booyah!';
 &lt;/body&gt;
 </code></pre>
 <p><strong>Scenario #2: you <em>have</em> script in <code>&lt;head&gt;</code> or inlined in <code>&lt;body&gt;</code></strong></p>
-<p>If you can't avoid <code>&lt;script&gt;</code> in the <code>&lt;head&gt;</code>, dynamically add the import:</p>
+<p>If you have an import that takes a long time to load, the first <code>&lt;script&gt;</code> that follows it on the page will block the page from rendering. Google Analytics for example, 
+recommends putting the tracking code in the <code>&lt;head&gt;</code>, If you can't avoid putting <code>&lt;script&gt;</code> in the <code>&lt;head&gt;</code>, dynamically adding the import will prevent blocking the page:</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;script&gt;
     function addImportLink(url) {
@@ -601,7 +604,7 @@ h2.textContent = 'Booyah!';
    ...
 &lt;/body&gt;
 </code></pre>
-<p>Alternatively, do things near <code>&lt;/body&gt;</code>:</p>
+<p>Alternatively, add the import near the end of the <code>&lt;body&gt;</code>:</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;script&gt;
     // other scripts
@@ -622,7 +625,7 @@ h2.textContent = 'Booyah!';
 
 <h2 id="tips">Things to remember</h2>
 
-<ol>
+<ul>
 <li>
 <p>An import's mimetype is <code>text/html</code>.</p>
 </li>
@@ -640,12 +643,9 @@ h2.textContent = 'Booyah!';
 <p>Scripts in an import are processed in order, but do not block the main document parsing.</p>
 </li>
 <li>
-<p>While scripts execute in an import, stylesheets, markup, and other resources need to be added to the main page.</p>
+<p>An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly This is a major difference between HTML Imports and <code>&lt;iframe&gt;</code>, which says "load and render this content here".</p>
 </li>
-<li>
-<p><code>&lt;link rel="import" href="file.html"</code>&gt; doesn't mean "#include the content of file.html here". It means "parser, go off an fetch this document so I can use it later". This is a major difference between HTML Imports and <code>&lt;iframe&gt;</code>, which says "load and render this content here".</p>
-</li>
-</ol>
+</ul>
 <h2 id="conclusion">Conclusion</h2>
 
 <p>HTML Imports allow bundling HTML/CSS/JS as a single resource. While useful by themselves, this idea becomes extremely powerful in the world of Web Components. Developers can create reusable components for others to consume and bring in to their own app, all delivered through <code>&lt;link rel="import"&gt;</code>.</p>
@@ -654,13 +654,12 @@ for the platform.</p>
 <h3 id="usecases">Use cases</h3>
 
 <ul>
-<li>distribute related <a href="#bundling">HTML/CSS/JS as a single bundle</a>. Theoretically, one could import an entire web app into another.</li>
-<li>encourages <strong>modularity &amp; reusability</strong>.</li>
-<li><strong>code organization</strong> - segment concepts logically into different files.</li>
-<li>wrapping up one or more <a href="/tutorials/webcomponents/customelements/">Custom Element</a> definitions, an import can be used to <a href="/tutorials/webcomponents/customelements/#registering">register</a> and deliver them to an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.</li>
-<li><a href="#depssubimports"><strong>eases dependency management</strong></a> - resources are automatically de-duped.</li>
+<li><strong>Distribute</strong> related <a href="#bundling">HTML/CSS/JS as a single bundle</a>. Theoretically, you could import an entire web app into another.</li>
+<li><strong>Code organization</strong> - segment concepts logically into different files, encouraging modularity &amp; reusability**.</li>
+<li><strong>Deliver</strong> one or more <a href="/tutorials/webcomponents/customelements/">Custom Element</a> definitions. An import can be used to <a href="/tutorials/webcomponents/customelements/#registering">register</a> and include them in an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.</li>
+<li><a href="#depssubimports"><strong>Manage dependencies</strong></a> - resources are automatically de-duped.</li>
 <li>
-<p><strong>Chunking scripts</strong> - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!</p>
+<p><strong>Chunk scripts</strong> - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!</p>
 <p><code>&lt;link rel="import" href="chunks.html"&gt;</code></p>
 <pre class="prettyprint"><code>&lt;script&gt;/* script chunk A goes here */&lt;/script&gt;
 &lt;script&gt;/* script chunk B goes here */&lt;/script&gt;
@@ -669,10 +668,10 @@ for the platform.</p>
 </code></pre>
 </li>
 <li>
-<p>First time the <strong>browser is able to run two (or more) HTML parsers in parallel</strong>.</p>
+<p><strong>Parallelizes HTML parsing</strong> - first time the browser has been able to run two (or more) HTML parsers in parallel.</p>
 </li>
 <li>
-<p>Easily switch between debug and non-debug modes in an app, just by changing the import target itself. Your app doesn't need to know if the import target is a bundled/compiled resource or an import tree. </p>
+<p><strong>Enables switching between debug and non-debug modes</strong> in an app, just by changing the import target itself. Your app doesn't need to know if the import target is a bundled/compiled resource or an import tree. </p>
 </li>
 </ul><script>
 document.addEventListener('DOMContentLoaded', function(e) {

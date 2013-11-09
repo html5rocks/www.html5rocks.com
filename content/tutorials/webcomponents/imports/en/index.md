@@ -395,18 +395,20 @@ Despite JQuery being used in many places, it's only loaded once because the brow
 
 <h2 id="performance">Performance considerations</h2>
 
+HTML Imports are totally awesome but as with any new web technology, you should
+use them wisely. Web development best practices still hold true. Below are some things to keep in mind.
+
 <h3 id="perf-concat">Concatenate imports</h3>
 
 Reducing network requests is important. [Vulcanizer](https://github.com/Polymer/vulcanize) is an npm build tool from the [Polymer](http://www.polymer-project.org/) team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.
 
 <h3 id="perf-caching">Imports leverage browser caching</h3>
 
-Many people often forget that the browser's
-networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.
+Many people often forget that the browser's networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.
 
-<h3 id="perf-inert">Content is "inert" until you use it</h3>
+<h3 id="perf-inert">Content is useful only when you add it</h3>
 
-Think of content as inert until you call upon its services. Take normal, dynamically created stylesheet:
+Think of content as inert until you call upon its services. Take a normal, dynamically created stylesheet:
 
     var link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -427,7 +429,7 @@ The same concept holds true for the import document. Unless you append it's cont
 
 <h3 id="perf-parsing">Optimizing for async loading</h3>
 
-**Imports don't block parsing the main page**. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the `<head>` is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember `<script>` in the main document *still* continues to block the page:
+**Imports don't block parsing of the main page**. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the `<head>` is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember `<script>` in the main document *still* continues to block the page:
 
     <head>
       <link rel="import" href="/path/to/import_that_takes_5secs.html">
@@ -471,7 +473,8 @@ Everything is at the bottom.
 
 **Scenario 1.5: the import adds itself**
 
-Another option, though brittle, is to have the import [add its own content](#includejs). *I don't recommend this technique* because it requires the import to know the structure of the main page ahead of time. I'm including it here for the sake of completeness.
+Another option is to have the import [add its own content](#includejs). If the
+import author establishes a contract for the app developer to follow, the import can add itself to an area of the main page:
 
 import.html:
 
@@ -495,7 +498,8 @@ index.html
 
 **Scenario #2: you *have* script in `<head>` or inlined in `<body>`**
 
-If you can't avoid `<script>` in the `<head>`, dynamically add the import:
+If you have an import that takes a long time to load, the first `<script>` that follows it on the page will block the page from rendering. Google Analytics for example, 
+recommends putting the tracking code in the `<head>`, If you can't avoid putting `<script>` in the `<head>`, dynamically adding the import will prevent blocking the page:
 
     <head>
       <script>
@@ -523,7 +527,7 @@ If you can't avoid `<script>` in the `<head>`, dynamically add the import:
        ...
     </body>
 
-Alternatively, do things near `</body>`:
+Alternatively, add the import near the end of the `<body>`:
 
     <head>
       <script>
@@ -545,7 +549,7 @@ Alternatively, do things near `</body>`:
 
 <h2 id="tips">Things to remember</h2>
 
-1. An import's mimetype is `text/html`.
+- An import's mimetype is `text/html`.
 
 - Resources from other origins need to be CORS-enabled.
 
@@ -558,9 +562,7 @@ Alternatively, do things near `</body>`:
 
 - Scripts in an import are processed in order, but do not block the main document parsing.
 
-- While scripts execute in an import, stylesheets, markup, and other resources need to be added to the main page.
-
--  `<link rel="import" href="file.html"`> doesn't mean "#include the content of file.html here". It means "parser, go off an fetch this document so I can use it later". This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
+- An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -571,12 +573,11 @@ for the platform.
 
 <h3 id="usecases">Use cases</h3>
 
-- distribute related [HTML/CSS/JS as a single bundle](#bundling). Theoretically, one could import an entire web app into another.
-- encourages **modularity &amp; reusability**.
-- **code organization** - segment concepts logically into different files.
-- wrapping up one or more [Custom Element](/tutorials/webcomponents/customelements/) definitions, an import can be used to [register](/tutorials/webcomponents/customelements/#registering) and deliver them to an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.
-- [**eases dependency management**](#depssubimports) - resources are automatically de-duped.
-- **Chunking scripts** - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!
+- **Distribute** related [HTML/CSS/JS as a single bundle](#bundling). Theoretically, you could import an entire web app into another.
+- **Code organization** - segment concepts logically into different files, encouraging modularity &amp; reusability**.
+- **Deliver** one or more [Custom Element](/tutorials/webcomponents/customelements/) definitions. An import can be used to [register](/tutorials/webcomponents/customelements/#registering) and include them in an app. This practices good software patterns, keeping the element's interface/definition separate from how its used.
+- [**Manage dependencies**](#depssubimports) - resources are automatically de-duped.
+- **Chunk scripts** - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!
 
       `<link rel="import" href="chunks.html">`
 
@@ -585,6 +586,6 @@ for the platform.
         <script>/* script chunk C goes here */</script>
         ...
 
-- First time the **browser is able to run two (or more) HTML parsers in parallel**.
+- **Parallelizes HTML parsing** - first time the browser has been able to run two (or more) HTML parsers in parallel.
 
-- Easily switch between debug and non-debug modes in an app, just by changing the import target itself. Your app doesn't need to know if the import target is a bundled/compiled resource or an import tree. 
+- **Enables switching between debug and non-debug modes** in an app, just by changing the import target itself. Your app doesn't need to know if the import target is a bundled/compiled resource or an import tree. 
