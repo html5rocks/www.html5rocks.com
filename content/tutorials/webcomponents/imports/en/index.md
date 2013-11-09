@@ -28,7 +28,7 @@ The URL of an import is called an _import location_. To load content from anothe
     <!-- Resources on other origins must be CORS-enabled. -->
     <link rel="import" href="http://example.com/elements.html">
 
-<p class="notice fact">The browser's network stack automatically de-dupes all requests from the same URL. This means that imports that reference the same URL are only retrieved once. No matter how many times an import at the same location is loaded, it only executes once. This means resources are automatically de-duped for you!</p>
+<p class="notice fact">The browser's network stack automatically de-dupes all requests from the same URL. This means that imports that reference the same URL are only retrieved once. No matter how many times an import at the same location is loaded, it only executes once.</p>
 
 <h3 id="featuredetect">Feature detection and support</h3>
 
@@ -351,29 +351,37 @@ We all know that loading JQuery more than once per page causes errors. Isn't thi
 going to be a _huge_ problem for Web Components when multiple components use the same library? Not if we use HTML Imports! They can be used to manage dependencies.
 
 By wrapping libraries in an HTML Import, you automatically de-dupe resources.
-The document is only parsed once. Scripts are only executed once. Say you define an import, jquery.html, that includes jquery.js:
+The document is only parsed once. Scripts are only executed once. As an example, say you define an import, jquery.html, that loads a copy of JQuery.
 
 jquery.html
 
-    <script src="jquery.js"></script>
+    <script src="http://cdn.com/jquery.js"></script>
 
-In subsequent imports, that import gets reused:
+This import can be reused in subsequent imports like so:
+
+import2.html
+
+    <link rel="import" href="jquery.html">
+    <div>Hello, I'm import 2</div>
 
 ajax-element.html
 
     <link rel="import" href="jquery.html">
+    <link rel="import" href="import2.html">
 
     <script>
       var proto = Object.create(HTMLElement.prototype);
 
       proto.makeRequest = function(url, done) {
-        return $.ajax(url).done(function() { ... });
+        return $.ajax(url).done(function() {
+          done();
+        });
       };
 
       document.register('ajax-element', {prototype: proto});
     </script>
 
-index.html (main page)
+Even the main page itself can include jquery.html if it needs the library:
 
     <head>
       <link rel="import" href="jquery.html">
@@ -391,7 +399,12 @@ index.html (main page)
     </script>
     </body>
 
-Despite JQuery being used in many places, it's only loaded once because the browser is reusing the import.
+Despite jquery.html being included in many different import trees, it's document is only fetched and processed once by the browser. Examining the network panel proves this:
+
+<figure>
+  <img src="requests-devtools.png">
+  <figcaption>jquery.html is requested once</figcpation>
+</figure>
 
 <h2 id="performance">Performance considerations</h2>
 
@@ -400,11 +413,14 @@ use them wisely. Web development best practices still hold true. Below are some 
 
 <h3 id="perf-concat">Concatenate imports</h3>
 
-Reducing network requests is important. [Vulcanizer](https://github.com/Polymer/vulcanize) is an npm build tool from the [Polymer](http://www.polymer-project.org/) team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.
+Reducing network requests is always important. If you have many top-level import
+links, consider combining them into a single resource and importing that file!
+
+[Vulcanizer](https://github.com/Polymer/vulcanize) is an npm build tool from the [Polymer](http://www.polymer-project.org/) team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.
 
 <h3 id="perf-caching">Imports leverage browser caching</h3>
 
-Many people often forget that the browser's networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too.
+Many people forget that the browser's networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too. The `http://cdn.com/bootstrap.html` import might have sub-resources, but they'll be cached.
 
 <h3 id="perf-inert">Content is useful only when you add it</h3>
 
@@ -553,12 +569,7 @@ Alternatively, add the import near the end of the `<body>`:
 
 - Resources from other origins need to be CORS-enabled.
 
--  Consecutive imports from the same URL are retrieved once. That shouldn't be surprising given that stylseheets behave the same way. For example:
-
-        <link rel="import" href="file.html">
-        <link rel="import" href="file.html">
-
-    results in a single request for `file.html`.
+-  Imports from the same URL are retrieved and parsed once. That means script in an import is only executed the first time the import is seen.
 
 - Scripts in an import are processed in order, but do not block the main document parsing.
 
@@ -579,7 +590,7 @@ for the platform.
 - [**Manage dependencies**](#depssubimports) - resources are automatically de-duped.
 - **Chunk scripts** - before imports, a large-sized JS library would have its file wholly parsed in order to start running, which was slow. With imports, the library can start working as soon as chunk A is parsed. Less latency!
 
-      `<link rel="import" href="chunks.html">`
+      `<link rel="import" href="chunks.html">`:
 
         <script>/* script chunk A goes here */</script>
         <script>/* script chunk B goes here */</script>
