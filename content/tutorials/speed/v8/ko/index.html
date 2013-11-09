@@ -1,6 +1,6 @@
 {% extends "tutorial.html" %}
 
-{% block pagebreadcrumb %}Performance Tips for Javascript in V8{% endblock %}
+{% block pagebreadcrumb %}V8의 JavaScript 처리 성능을 향상시키기 위한 팁{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -17,26 +17,26 @@
 
 <h2 id="toc-introduction">소개</h2>
 
-<p>Daniel Clifford는 V8의 JavaScript 처리 성능을 향상시키기 위한 팁과 트릭에 대하여 <a href="http://www.youtube.com/watch?v=UJPdhx5zTaw">Google I/O에서 훌륭한 발표</a>를 했습니다. Daniel은 C++과 JavaScript 간의 성능 차이를 주의 깊게 분석하고 JavaScript의 동작 방식을 유념하여 코드를 작성하면 더 빠른 속도를 낼 수 있다고 말합니다. Daniel의 이야기 중에서 가장 중요한 포인트를 요약해서 이 글에 담았는데요, 성능에 대한 지침이 바뀌면 이 글의 내용 역시 업데이트하겠습니다.</p>
+<p>Daniel Clifford는 V8의 JavaScript 처리 성능을 향상시키기 위한 팁과 트릭에 대하여 <a href="http://www.youtube.com/watch?v=UJPdhx5zTaw">Google I/O에서 훌륭한 발표</a>를 했습니다. Daniel은 C++과 JavaScript 간의 성능 차이를 주의 깊게 분석하고 JavaScript의 동작 방식을 유념하여 코드를 작성하면 더 빠른 속도를 낼 수 있다고 말합니다. Daniel의 이야기 중 핵심을 요약해서 이 글에 담았는데요, 성능에 대한 지침이 바뀌면 이 글의 내용 역시 업데이트하겠습니다.</p>
 
 <h2 id="toc-mostimportant">가장 중요하게 생각해야 할 것</h2>
 
-<p>성능 향상에 대한 모든 것을 담는 다는 것은 중요한 일입니다. 그러나 성능을 진단하는 일은 중독성이 있어서, 때로는 너무 깊은 부분에 초점을 맞추려다가 실질적인 문제를 놓치기도 합니다. 전체적인 관점에서 웹 애플리케이션의 성능을 바라볼 필요가 있습니다. 이러한 성능 팁에 초점을 맞추기 전에 <a href="https://developers.google.com/speed/pagespeed/">PageSpeed</a> 같은 도구로 코드를 분석해서 점수를 높히는 게 좋습니다. 이렇게하면 성급한 최적화를 피할 수 있습니다.</p>
+<p>이 글에 성능에 대한 모든 조언을 넣는 것은 중요한 일입니다. 그러나 성능을 진단하는 일은 중독성이 있어서, 때로는 너무 깊은 부분에 초점을 맞추려다가 실질적인 문제를 놓치기도 합니다. 전체적인 관점에서 웹 애플리케이션의 성능을 바라볼 필요가 있습니다. 이러한 성능 팁에 초점을 맞추기 전에 <a href="https://developers.google.com/speed/pagespeed/">PageSpeed</a> 같은 도구로 코드를 분석해서 점수를 높히는 게 좋습니다. 성급한 최적화를 피할 수 있기 때문입니다.</p>
 
-<p>좋은 성능을 얻기 위한 가장 기본적으로 생각해야 할 세가지입니다.</p>
+<p>좋은 성능을 얻기 위해 가장 기본적으로 생각해야 할 것은 세가지입니다.</p>
 <ul>
 	<li>문제가 발생하기 전(또는 발견하기 전)에 준비합니다.</li>
 	<li>그 다음에, 문제의 핵심을 파악하고 이해합니다.</li>
 	<li>마지막으로 문제가 되는 것을 수정합니다.</li>
 </ul>
 
-<p>이러한 단계를 수행하기 위해서, V8이 어떻게 JS 코드를 최적화하는지 이해하는 것은 중요한 일이라고 할 수 있습니다. JS 런타임 디자인을 염두에 두고 코드를 작성할 수 있기 때문이죠. 이용 가능한 도구가 무엇이 있는지, 그리고 어떤 도움을 줄 수 있는지에 대해서 알아두는 것 또한 중요한 일입니다. Daniel은 개발자 도구 사용법에 대해서 몇 가지를 더 설명하고 있습니다만, 이 글에서는 V8 엔진 설계의 중요한 부분 몇 개만 다룹니다.</p>
+<p>이러한 단계를 수행하기 위해서, V8이 어떻게 JS 코드를 최적화하는지 이해하는 것은 중요한 일이라고 할 수 있습니다. JS 런타임 설계를 염두에 두고 코드를 작성할 수 있기 때문이죠. 어떤 도구를 이용할 수 있는지, 그리고 어떤 도움을 받을 수 있는지에 대해서 알아두는 것 또한 중요한 일입니다. Daniel은 개발자 도구 사용법에 대해서 몇 가지를 더 설명하고 있습니다만, 이 글에서는 V8 엔진 설계의 중요한 부분 몇 개만 다루겠습니다.</p>
 
 <p>자, 그럼 V8 사용 팁 속으로 들어가보시죠!</p>
 
 <h2 id="toc-topic-hiddenclasses">Hidden Classes</h3>
 
-<p>JavaScript는 컴파일을 할 때 이용할 type 정보가 제한적입니다. JavaScript는 런타임에 type을 변경할 수 있기 때문에 컴파일 시에 JS 코드의 type을 추론하는 비용이 비쌀 것이라고 예측할 수 있습니다. 아마 JavaScript 성능을 어떻게 C++의 성능에 근접한 수준으로 끌어올릴 수 있을지에 대한 의문이 생길 것입니다. 그러나, V8은 런타임 시에 객체에 사용할 내부적으로 만든 hidden type을 가지고 있습니다. 같은 hidden class를 가지고 있는 객체는 다음에 같은 최적화된 생성 코드를 사용할 수 있습니다.</p>
+<p>JavaScript는 컴파일을 할 때 이용할 데이터 타입에 대한 정보가 제한적입니다. JavaScript는 런타임에 데이터 타입을 변경할 수 있기 때문에 컴파일 시에 JS 코드의 데이터 타입을 추론하는 비용이 비쌀 것이라고 예측해 볼 수 있습니다. 아마 JavaScript 성능을 어떻게 C++의 성능에 근접한 수준으로 끌어올릴 수 있을지에 대한 의문이 생길 것입니다. 그러나, V8은 런타임 시에 객체에 사용하기 위해서 내부적으로 만든 hidden 타입을 가지고 있습니다. 같은 hidden class를 가지고 있는 객체는 다음에 같은 최적화된 생성 코드를 사용할 수 있습니다.</p>
 
 <p>예제:</p>
 <pre class="prettyprint">function Point(x, y) {
@@ -46,25 +46,25 @@
 
 var p1 = new Point(11, 22);
 var p2 = new Point(33, 44);
-// At this point, p1 and p2 have a shared hidden class
+// 여기에서 p1과 p2는 hidden class를 공유합니다.
 p2.z = 55;
-// warning! p1 and p2 now have different hidden classes!</pre>
+// 경고! p1과 h2는 이제 다른 hidden class를 갖습니다.</pre>
 
 <p>객체 인스턴스 p2에 멤버 ".z"를 추가하기 전까지, p1과 p2는 내부적으로 같은 hidden class를 갖습니다. 이로써 V8은 p1이나 p2를 다루는 JavaScript 코드에 대한 단일 버전의 최적화된 어셈블리어를 만들 수 있습니다. 같은 JavaSript 코드의 hidden class가 달라지는 원인을 찾아서 막을 수 있다면, 더 좋은 성능을 얻을 수 있습니다.</p>
 
 <h3>따라서:</h3>
 <ul>
-	<li>모든 객체 멤버를 생성자 함수 안에서 초기화하세요(그래야 나중에 인스턴스가 멤버의 type을 변경하지 않습니다).</li>
+	<li>모든 객체 멤버를 생성자 함수 안에서 초기화하세요(그래야 나중에 인스턴스가 멤버의 데이터 타입을 변경하지 않습니다).</li>
 	<li>항상 같은 순서로 객체 멤버를 초기화합니다.</li>
 </ul>
 
 <h2 id="toc-topic-numbers">Numbers</h3>
 
-<p>V8은 type이 변할 때 효율적으로 값을 나타내는 태그를 사용합니다. 사용자가 사용하고 있는 값을 통해서 어떤 number type을 다루고 있는지 추론합니다. 이러한 type은 동적으로 변할 수 있기 때문에, 일단 V8이 추론을 해서 type을 결정하면, 효율적으로 값을 나타낼 수 있는 태그를 사용합니다. 그러나, 이러한 type을 나타내는 태그를 변경하는 데에 가끔 비용이 들기 때문에, number type을 지속적으로 사용하는 것이 가장 좋습니다. 일반적으로 적합하다면, 31비트 부호있는 정수를 사용하는 것이 최적입니다.</p>
+<p>V8은 데이터 타입이 변할 때 효율적으로 값을 나타내는 태그를 사용합니다. 사용자가 사용하고 있는 값을 통해서 어떤 number 타입을 다루고 있는지 추론합니다. 이러한 데이터 타입은 동적으로 변할 수 있기 때문에, 일단 V8이 추론을 해서 데이터 타입을 결정하면, 효율적으로 값을 나타낼 수 있는 태그를 사용합니다. 그러나, 이러한 데이터 타입을 나타내는 태그를 변경하는 데에 가끔 비용이 들기 때문에, number 타입을 지속적으로 사용하는 것이 가장 좋습니다. 일반적으로 적합하다면, 31비트 부호있는 정수를 사용하는 것이 최적입니다.</p>
 
 <p>예제:</p>
-<pre class="prettyprint">var i = 42;  // this is a 31-bit signed integer
-var j = 4.2;  // this is a double-precision floating point number</pre>
+<pre class="prettyprint">var i = 42;  // 31비트 부호있는 정수입니다.
+var j = 4.2;  // 이 값은 double 타입의 부동 소수점 숫자 데이터입니다.</pre>
 
 
 
@@ -101,10 +101,10 @@ for (var b = 0; b &lt; 10; b++) {
 
 <p>또한, double 타입의 배열은 더 빠릅니다. - 배열의 hidden class가 원소의 데이터 타입을 추적하여, double 타입의 값만을 원소로 갖는 배열을 언박싱(hidden class 변경을 일으키는) 처리를 하기 때문이죠. 그러나, 부주의한 배열 조작은 박싱과 언박싱으로 인한 추가 연산을 해야하는 원인이 될 수 있습니다.
 <pre class="prettyprint">var a = new Array();
-a[0] = 77;   // Allocates
+a[0] = 77;   // 할당합니다.
 a[1] = 88;
-a[2] = 0.5;   // Allocates, converts
-a[3] = true; // Allocates, converts</pre>
+a[2] = 0.5;   // 할당하고, 변환홥니다.
+a[3] = true; // 할당하고, 변환합니다. </pre>
 
 <p>위의 코드는 아래의 코드보다 덜 효율적입니다.</p>
 
@@ -143,8 +143,8 @@ a[3] = true; // Allocates, converts</pre>
   return x + y;
 }
 
-add(1, 2);      // + in add is monomorphic
-add("a", "b");  // + in add becomes polymorphic</pre>
+add(1, 2);      // add 함수의 더하기는 단형적 연산입니다.
+add("a", "b");  // add 함수의 더하기는 다형적 연산이 됩니다.</pre>
 
 <h2>최적화 컴파일러(The Optimizing Compiler)</h2>
 <p>완전 컴파일러의 처리와 병렬적으로, V8은 최적화 컴파일러를 이용해서 "hot" 함수(여러번 실행되는 함수를 의미합니다)를 재컴파일 합니다. 이 컴파일러는 컴파일된 코드를 더 빠르게 만들기 위해서 타입 피드백을 이용합니다. 사실 좀 전에 이야기했던 ICs를 통해서 얻은 데이터 타입을 이용하는 거죠.</p>
@@ -161,13 +161,13 @@ add("a", "b");  // + in add becomes polymorphic</pre>
 <ul>
 	<li>try {} catch {} 블록을 사용해야 한다면, 성능에 민감한 코드를 중첩 함수에 넣습니다.
 <pre class="prettyprint">function perf_sensitive() {
-  // Do performance-sensitive work here
+  // 성능에 민감한 작업을 여기에서 처리합니다.
 }
 
 try {
   perf_sensitive()
 } catch (e) {
-  // Handle exceptions here
+  // 예외를 여기에서 처리합니다. 
 }</pre>
 </li>
 </ul>
