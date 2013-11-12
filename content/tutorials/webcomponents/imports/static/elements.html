@@ -1,0 +1,21 @@
+<script>
+  var proto = Object.create(HTMLElement.prototype);
+
+  proto.createdCallback = function() {
+    this.innerHTML = "Hello, <b>" + (this.getAttribute('name') || '?') + "</b>";
+  };
+
+  document.register('say-hi', {prototype: proto});
+
+
+  var proto2 = Object.create(HTMLElement.prototype);
+
+  proto2.createdCallback = function() {
+    var root = this.createShadowRoot();
+    root.innerHTML = "<style>::content > *{color: red}</style>" +
+                         "I'm a " + this.localName +
+                         " using Shadow DOM!<content></content>";
+  };
+
+  document.register('shadow-element', {prototype: proto2});
+</script>

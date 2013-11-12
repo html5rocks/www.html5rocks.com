@@ -19,38 +19,42 @@
 
     <section class="byline">
       <div class="container">
-        <section class="author-images">
-          <a href="/profiles/#{{ tut.author.key.name }}">
-            <img src="/static/images/profiles/75/{{ tut.author.key.name }}.75.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
-          </a>
-
-          {% if tut.second_author %}
-            <a href="/profiles/#{{ tut.second_author.key.name }}">
-              <img src="/static/images/profiles/75/{{ tut.second_author.key.name }}.75.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
+        <div class="byline-content">
+          <section class="author-images">
+            <a href="/profiles/#{{ tut.author.key.name }}">
+              <img src="/static/images/profiles/{{ tut.author.key.name }}.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}" width="100">
             </a>
-          {% endif %}
-        </section>
 
-        <section class="meta">
-          <div class="authors">
-            <strong>By</strong> <a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a>
             {% if tut.second_author %}
-              and <a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a>
+              <a href="/profiles/#{{ tut.second_author.key.name }}">
+                <img src="/static/images/profiles/{{ tut.second_author.key.name }}.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" width="100">
+              </a>
             {% endif %}
-          </div>
+          </section>
 
-          <div class="date">
-            <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F dS, Y"}}</time>
-            {% if tut.update_date %}
-            <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date }}</time>{% endif %}
-            <a href="#disqus_thread"><strong>Comments:</strong> <span data-disqus-identifier="{{ disqus_url }}">{% trans "Leave a comment" %}</a></a>
-          </div>
-        </section>
+          <section class="meta">
+            <div class="authors">
+              <strong>By</strong> <a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a>
+              {% if tut.second_author %}
+                and <a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a>
+              {% endif %}
+            </div>
 
-        <div class="clear"></div>
+            <div class="date">
+              <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F dS, Y"}}</time>
+              {% if tut.update_date %}
+              <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date }}</time>{% endif %}
+              <span><strong>Comments:</strong> <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">{% trans "..." %}</a></span>
+            </div>
+          </section>
+
+          <div class="clear"></div>
+        </div>
       </div>
     </section>
   </section>
+
+  <div class="divider"></div>
 
   {% if redirect_from_locale %}
   <section class="redirect_notification pattern-bg-lighter" lang="{{ redirect_from_locale.lang }}">{{ redirect_from_locale.msg }}</section>
