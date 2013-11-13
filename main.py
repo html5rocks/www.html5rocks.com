@@ -284,6 +284,7 @@ class ContentHandler(webapp2.RequestHandler):
 
     # Which CSS should this use? (Will get overwritten.)
     css_file = 'base'
+    page_class = None
 
     # Setup handling of redirected article URLs: If a user tries to access an
     # article from a non-supported language, we'll redirect them to the
@@ -331,7 +332,8 @@ class ContentHandler(webapp2.RequestHandler):
       for p in profiles:
         p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
       return self.render(data={
-            'css_file':css_file,
+            'page_class': page_class,
+            'css_file': css_file,
             'sorted_profiles': profiles
           }, template_path='content/profiles.html', relpath=relpath)
     elif ((re.search('tutorials/.+', relpath) or
@@ -383,6 +385,7 @@ class ContentHandler(webapp2.RequestHandler):
             tut.description = _(tut.description)
 
         css_file = 'v2'
+        page_class = 'article'
 
         # Gather list of localizations by globbing matching directories, then
         # stripping out the current locale and 'static'. Once we have a list,
@@ -408,6 +411,7 @@ class ContentHandler(webapp2.RequestHandler):
                              'lang': langs[loc]})
 
         data = {
+          'page_class': page_class,
           'css_file': css_file,
           'tut': tut,
           'localizations': loc_list,
@@ -491,6 +495,7 @@ class ContentHandler(webapp2.RequestHandler):
       authors = author_dict.values()
 
       data = {
+        'page_class': page_class,
         'css_file': css_file,
         'tutorials': tutorials,
         'authors': authors,
@@ -505,6 +510,13 @@ class ContentHandler(webapp2.RequestHandler):
                         relpath=relpath)
 
     elif os.path.isfile(path + '.html'):
+
+      page_title = None
+      if path == 'content/style-guide':
+        css_file = 'v2'
+        page_class = 'article'
+        page_title = 'Style Guide'
+
       category = relpath.replace('features/', '')
       updates = TagsHandler().get_as_db(
           'class:' + category, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
@@ -519,6 +531,8 @@ class ContentHandler(webapp2.RequestHandler):
           r.url = "/%s%s" % (self.locale, r.url)
 
       data = {
+        'page_title': page_title,
+        'page_class': page_class,
         'css_file': css_file,
         'category': category,
         'updates': updates
