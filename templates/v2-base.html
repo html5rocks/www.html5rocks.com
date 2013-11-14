@@ -121,29 +121,37 @@
     var siteHeader = document.getElementById('siteheader');
     var navToggle = document.getElementById('navtoggle');
     var siteNav = document.getElementById('sitenav');
-
-    var tocToggle = document.getElementById('toctoggle');
     var articleMeta = document.getElementById('articlemeta');
 
     navToggle.addEventListener('click', function(e) {
-      articleMeta.classList.remove('active');
+
+      if (articleMeta)
+        articleMeta.classList.remove('active');
+
       siteNav.classList.toggle('active');
 
-      document.body.classList.toggle('locked',
-          siteNav.classList.contains('active'));
+      var isActive = siteNav.classList.contains('active');
+      document.body.classList.toggle('locked', isActive);
+      siteHeader.classList.toggle('expanded', isActive);
 
       e.preventDefault();
-    })
+    });
+
+    {% if tut %}
+    var tocToggle = document.getElementById('toctoggle');
 
     tocToggle.addEventListener('click', function(e) {
       siteNav.classList.remove('active');
+      siteHeader.classList.remove('expanded');
       articleMeta.classList.toggle('active');
 
-      document.body.classList.toggle('locked',
-          articleMeta.classList.contains('active'));
+      var isActive = articleMeta.classList.contains('active');
+      document.body.classList.toggle('locked', isActive);
 
       e.preventDefault();
-    })
+    });
+
+    {% endif %}
   })();
   </script>
   <script>
