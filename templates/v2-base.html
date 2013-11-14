@@ -79,11 +79,16 @@
 </head>
 <body data-href="{{self_pagename}}" onload="{% block onload %}{% endblock %}"{% if page_class %} class="{{ page_class }}"{% endif %}>
 
-  <header class="main">
+  <header class="main" id="siteheader">
     <h1 id="title">
       <a href="/{{LANGUAGE_CODE}}/" title="{% trans "HTML5 Rocks" %}">{% trans "HTML5 Rocks" %}</a>
     </h1>
-    <button id="navtoggle">Show navigation</button>
+    <a href="#sitenav" id="navtoggle">Show navigation</a>
+
+    {% if tut %}
+    <a id="toctoggle" href="#toc">{% trans "Table of Contents" %}</a>
+    {% endif %}
+
     <nav id="sitenav">
       <ul>
         {% if tut %}
@@ -113,10 +118,30 @@
       }
     }, 2000);
 
+    var siteHeader = document.getElementById('siteheader');
     var navToggle = document.getElementById('navtoggle');
     var siteNav = document.getElementById('sitenav');
+
+    var tocToggle = document.getElementById('toctoggle');
+    var articleMeta = document.getElementById('articlemeta');
+
     navToggle.addEventListener('click', function(e) {
+      articleMeta.classList.remove('active');
       siteNav.classList.toggle('active');
+
+      document.body.classList.toggle('locked',
+          siteNav.classList.contains('active'));
+
+      e.preventDefault();
+    })
+
+    tocToggle.addEventListener('click', function(e) {
+      siteNav.classList.remove('active');
+      articleMeta.classList.toggle('active');
+
+      document.body.classList.toggle('locked',
+          articleMeta.classList.contains('active'));
+
       e.preventDefault();
     })
   })();
