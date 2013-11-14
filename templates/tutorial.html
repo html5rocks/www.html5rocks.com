@@ -21,76 +21,28 @@
 
       <a href="/" class="watermark">HTML5 Rocks</a>
     </section>
-
-    <section class="byline">
-
-      <div class="container">
-        <div class="byline-content">
-          {% if tut %}
-          <section class="author-images">
-            <a href="/profiles/#{{ tut.author.key.name }}">
-              <img src="/static/images/profiles/{{ tut.author.key.name }}.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
-            </a>
-
-            {% if tut.second_author %}
-              <a href="/profiles/#{{ tut.second_author.key.name }}">
-                <img src="/static/images/profiles/{{ tut.second_author.key.name }}.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
-              </a>
-            {% endif %}
-          </section>
-
-          <section class="meta">
-            <div class="authors">
-              <strong>By</strong> <a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a>
-              {% if tut.second_author %}
-                and <a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a>
-              {% endif %}
-            </div>
-
-            <div class="date">
-              <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F dS, Y"}}</time>
-              {% if tut.update_date %}
-              <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date }}</time>{% endif %}
-              <span><strong>Comments:</strong> <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">{% trans "..." %}</a></span>
-            </div>
-          </section>
-          <div class="clear"></div>
-
-          {% endif %}
-        </div>
-      </div>
-    </section>
   </section>
-
-  <div class="divider"></div>
 
   {% if redirect_from_locale %}
   <section class="redirect_notification pattern-bg-lighter" lang="{{ redirect_from_locale.lang }}">{{ redirect_from_locale.msg }}</section>
   {% endif %}
 
-  <article class="content-wrapper">
-    <nav class="outline toc pattern-bg-lighter">
-      <h3>{% trans "Table of Contents" %}</h3>
+  <div id="notcompatible" class="hidden">
+    Your browser may not support the functionality in this article
+  </div>
 
-      {% toc %}
-      {% if localizations %}
-      <h3>{% trans "Localizations" %}</h3>
-      <p>{% trans "This article is additionally available in the following languages:" %}</p>
-      <ul>
-        {% for alt_locale in localizations %}
-        <li><a href="{{ alt_locale.path }}">{{ alt_locale.lang }}</a></li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-    </nav>
+  <article class="content-wrapper{% if tut == None %} wide{% endif %}">
 
     <section class="container">
-      <div class="content">
-        <div id="notcompatible" class="hidden">
-          Your browser may not support the functionality in this article
-        </div>
 
-        {% if tut %}
+      {% if tut %}
+      <div class="article-meta">
+        <nav class="toc">
+          <h1>{% trans "Table of Contents" %}</h1>
+
+          {% toc %}
+        </nav>
+
         <aside class="localizations">
           <h1>{% trans "Localizations" %}</h1>
           <ul>
@@ -104,7 +56,50 @@
             {% endif %}
           </ul>
         </aside>
-        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="content">
+
+        <section class="byline">
+
+          <div class="byline-content">
+            {% if tut %}
+            <section class="author-images">
+              <a href="/profiles/#{{ tut.author.key.name }}">
+                <img src="/static/images/profiles/{{ tut.author.key.name }}.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
+              </a>
+
+              {% if tut.second_author %}
+                <a href="/profiles/#{{ tut.second_author.key.name }}">
+                  <img src="/static/images/profiles/{{ tut.second_author.key.name }}.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
+                </a>
+              {% endif %}
+            </section>
+
+            <section class="meta">
+              <div class="authors">
+                <strong>By</strong> <a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a>
+                {% if tut.second_author %}
+                  and <a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a>
+                {% endif %}
+              </div>
+
+              {% block translator %}{% endblock %}
+
+              <div class="date">
+                <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F dS, Y"}}</time>
+                {% if tut.update_date %}
+                <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date|date:"F dS, Y"}}</time>{% endif %}
+                <span><strong>Comments:</strong> <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">{% trans "..." %}</a></span>
+              </div>
+            </section>
+            <div class="clear"></div>
+
+            {% endif %}
+          </div>
+        </section>
+
         {% block content %}{% endblock %}
       </div>
     </section>
@@ -165,8 +160,12 @@
 
       window.addEventListener('load', function(e) {
 
-        var c = document.createElement('script'); c.type = 'text/javascript';
+        return;
+
+        var c = document.createElement('script');
+        c.type = 'text/javascript';
         c.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        c.async = true;
 
         var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
         sp.insertBefore(c, s);
@@ -185,7 +184,10 @@
         disqus_loaded = true;
 
         var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript';
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+
         var disqusContainer = document.getElementById('disqus');
         disqusContainer.classList.add('active');
 
@@ -226,11 +228,11 @@
         <aside class="panel share">
           <h2>Share</h2>
 
-            <a href="https://twitter.com/share?url={{ disqus_url }}&text={{ tut.title }}&lang={{ LANGUAGE_CODE }}&via=ChromiumDev&related=ChromiumDev" target="_blank"><img src="/static/images/twitter.png"></a>
+            <a href="https://twitter.com/share?url={{ disqus_url }}&text={{ tut.title }}&lang={{ LANGUAGE_CODE }}&via=ChromiumDev&related=ChromiumDev" class="twitter" target="_blank">Twitter</a>
 
-            <a href="https://www.facebook.com/sharer/sharer.php?u={{ disqus_url}}" target="_blank"><img src="/static/images/facebook.png" alt="Share on Facebook"></a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ disqus_url}}" class="facebook" target="_blank">Facebook</a>
 
-            <a href="https://plus.google.com/share?url={{ disqus_url }}" onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"><img src="/static/images/gplus.png" alt="Share on Google+"/></a>
+            <a href="https://plus.google.com/share?url={{ disqus_url }}" class="gplus" onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;">Google+</a>
 
         </aside>
 

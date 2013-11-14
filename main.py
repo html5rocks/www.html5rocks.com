@@ -87,7 +87,7 @@ class ContentHandler(webapp2.RequestHandler):
       current = None
       for element in stream:
         if element['type'] == 'StartTag':
-          if element['name'] in ['h2', 'h3', 'h4']:
+          if element['name'] in ['h2']:
             for attr in element['data']:
               if attr[0] == 'id':
                 current = {

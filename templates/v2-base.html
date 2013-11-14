@@ -64,7 +64,6 @@
 
   {% if page_class == 'article' %}
   <link rel="stylesheet" media="all" href="/static/css/article.css?cachebust=1">
-  <link rel="stylesheet" media="all" href="/static/css/prettyprint.css?cachebust=1">
   {% endif %}
 
   <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
@@ -84,7 +83,8 @@
     <h1 id="title">
       <a href="/{{LANGUAGE_CODE}}/" title="{% trans "HTML5 Rocks" %}">{% trans "HTML5 Rocks" %}</a>
     </h1>
-    <nav>
+    <button id="navtoggle">Show navigation</button>
+    <nav id="sitenav">
       <ul>
         {% if tut %}
         <li id="home_menu"><a href="/{{LANGUAGE_CODE}}/" class="home">{% trans "Home" %}</a></li>
@@ -112,6 +112,13 @@
             {}, '', document.location.href.replace(/\?utm_.*/, ''));
       }
     }, 2000);
+
+    var navToggle = document.getElementById('navtoggle');
+    var siteNav = document.getElementById('sitenav');
+    navToggle.addEventListener('click', function(e) {
+      siteNav.classList.toggle('active');
+      e.preventDefault();
+    })
   })();
   </script>
   <script>
