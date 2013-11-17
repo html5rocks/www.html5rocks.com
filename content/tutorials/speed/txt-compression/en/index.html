@@ -10,36 +10,6 @@
   background-image: url(/static/images/profiles/75/coltmcanlis.75.png);
   background-position: 0px 0px !important;
 }
-.talkinghead-ja:before {
-  background-image: url(/static/images/profiles/75/jakearchibald.75.png);
-  background-position: 0px 0px !important;
-}
-.talkinghead-ao:before {
-  background-image: url(/static/images/profiles/75/addyosmani.75.png);
-  background-position: 0px 0px !important;
-}
-article.tutorial .notice.fact {
-  position: relative;
-  padding-left: 25px;
-}
-article.tutorial .notice.fact:before {
-  position: absolute;
-  top: -5px;
-  left: -10px;
-  text-transform: uppercase;
-  -webkit-transform: rotateZ(-30deg);
-  -moz-transform: rotateZ(-30deg);
-  -o-transform: rotateZ(-30deg);
-  -ms-transform: rotateZ(-30deg);
-  transform: rotateZ(-30deg);
-  /*color: rgb(80, 139, 136);*/
-  color: rgb(237, 71, 50);
-  font-weight: bold;
-  content: "Fact";
-}
-
-
-
 </style>
 <meta property="og:title" content="Text compression for web developers"/>
 <meta property="og:image" content="story_small.jpg"/>
@@ -65,9 +35,9 @@ article.tutorial .notice.fact:before {
 
 <p>Most text data on the web is comprised of HTML, Javascript, and CSS. These formats don’t lend themselves to lossy compression formats. So you’re limited to lossless encoders, which don’t offer the dramatic compression ratios of some lossy image and video codecs. So how do you shrink your web-app’s footprint without going insane? This article will walk you through the process, and help you keep your sanity.
 
-</p>
-<center><img src="banner.jpg"  title="Who likes parrots? Everyone." alt="I should take a vacation."></center>
-<p>
+<figure>
+  <img src="banner.jpg" alt="Text Compression for Developers">
+</figure>
 
 
 <h2 id="toc-tldr">TL;DR : Text Data Compression Checklist</h2>
@@ -133,13 +103,19 @@ The federation of text compression is dominantly made up of lossless compression
 
 </p>
 <p>
-   
+
     <figure>
-      <table width="100%" border="1">
-        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
-        <tr><td width="50%"><center>aaaaabbbbbcccddddeeeeffffaaaaabb</center></td><td width="50%"><center>a5b4c2d4e4f4a5bb0</center></td></tr>
+      <table border="1">
+        <tr>
+          <td width="50%" align="center">Before</td>
+          <td width="50%" align="center">After</td>
+        </tr>
+        <tr>
+          <td width="50%">aaaaabbbbbcccddddeeeeffffaaaaabb</td>
+          <td width="50%">a5b4c2d4e4f4a5bb0</td>
+        </tr>
       </table>
-    
+
     <figcaption>
     Figure 1 - An example of lossless compression. Runs of values are encoded as the symbol followed by the length of the run. We can properly restore the origional stream. Note that if the length of the run is &lt;= 2 characters, it makes sense to just leave the symbols alone. You see this at the end of the stream with ‘bb’.
     </figcaption>
@@ -151,16 +127,22 @@ The federation of text compression is dominantly made up of lossless compression
 </p>
 
 <p>
-  
+
   <figure>
-      <table width="100%" border="1">
-        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
-        <tr><td width="50%"><center>0.123, 1.2345, 21.2165, 21.999, 12.123</center></td><td width="50%"><center>0,0,20,20,10</center></td></tr>
-      </table>
+    <table border="1">
+      <tr>
+        <td width="50%" align="center">Before</td>
+        <td width="50%" align="center">After</td>
+      </tr>
+      <tr>
+        <td width="50%">0.123, 1.2345, 21.2165, 21.999, 12.123</td>
+        <td width="50%">0,0,20,20,10</td>
+      </tr>
+    </table>
     <figcaption>
-      <i>Figure 2 - An example of lossy compression. Values are quantized to the smallest multiple of 10 they occupy. This transform cannot be reversed.</i>
+      Figure 2 - An example of lossy compression. Values are quantized to the smallest multiple of 10 they occupy. This transform cannot be reversed.
     </figcaption>
-    </figure>
+  </figure>
 </p>
 
 
@@ -182,11 +164,9 @@ Next-generation transfer protocols like <a href="http://en.wikipedia.org/wiki/SP
 </p>
 
 
-<p>
-  <center>
-  <table width="100%"><iframe width="560" height="315" src="//www.youtube.com/embed/Mjab_aZsdxw" frameborder="0" allowfullscreen></iframe></table>
-</center>
-</p>
+<div style="position: relative; padding-top: 56.25%; margin-bottom: 30px">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/Mjab_aZsdxw" frameborder="0" allowfullscreen></iframe>
+</div>
 
 <p>
 <b>Rolling your own Smaller GZIP files</b><br>
@@ -194,7 +174,7 @@ Most developers simply upload uncompressed content and rely on the web server to
 
 You can get better compression by using <a href="http://en.wikipedia.org/wiki/Gzip">GZIP</a> to compress your files offline, and uploading the compressed files to the server. You could use GZIP directly for this process, but more advanced compressors like <a href="https://code.google.com/p/zopfli/">Zopfli</a> and <a href="http://www.7-zip.org/">7zip</a> will regularly produce <i>smaller</i> gzip files, through more advanced searching / matching algorithms, and data structures that utilize more memory for better pattern matching.<br><br>
 
-To take advantage of these savings, compress your files offline, and upload the compressed files to your server. You’ll need to configure your server to deliver the pre-compressed content correctly (here’s how to do that on <a href="http://blog.codegrill.org/2009/07/how-to-pre-compress-static-files-in.html">Apache</a> and <a href="https://forums.aws.amazon.com/message.jspa?messageID=137563">Amazon Web Services</a>). When a client requests your page, it will be delivered and unpacked like normal, without any changes to your client-side code. 
+To take advantage of these savings, compress your files offline, and upload the compressed files to your server. You’ll need to configure your server to deliver the pre-compressed content correctly (here’s how to do that on <a href="http://blog.codegrill.org/2009/07/how-to-pre-compress-static-files-in.html">Apache</a> and <a href="https://forums.aws.amazon.com/message.jspa?messageID=137563">Amazon Web Services</a>). When a client requests your page, it will be delivered and unpacked like normal, without any changes to your client-side code.
 </p>
 
 
@@ -287,7 +267,7 @@ While general purpose lossless compression algorithms produce great savings, the
         <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
         <tr><td width="50%"><center>“1,2,3,4,5,6,7,8,0,2,3,4,2,1,2”</center></td><td width="50%"><center>“123456780234212”0</center></td></tr>
       </table>
-    
+
     <figcaption>
     Figure 3 - An example of removing known, redundant text. We know in this example that all the values are single digit bytes, we can remove the commas and recover them later.
     </figcaption>
@@ -300,7 +280,7 @@ While general purpose lossless compression algorithms produce great savings, the
         <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
         <tr><td width="50%"><center>0.123, 1.2345, 21.2165, 21.999, 12.123</center></td><td width="50%"><center>0,0,20,20,10</center></td></tr>
       </table>
-    
+
     <figcap>Figure 4 - An example of lossy compression. Values are quantized to the smallest multiple of 10 they occupy. This transform cannot be reversed.
     </figcaption>
    </figure>
@@ -314,7 +294,7 @@ While general purpose lossless compression algorithms produce great savings, the
         <tr><td width="50%"><center>[8,2,1,5,3,7,6,3,2,9,0,4]</center></td><td width="50%"><center>sorted = [0,1,2,3,4,5,6,7,8,9,0]<br>
 delta encoded = [0,1,1,1,1,1,1,1,1,1,1]</center></td></tr>
       </table>
-    
+
     <figcaption>
     Figure 5 - An example of sorting and delta encoding. We first sort the data, and then encode it, such that each element is represented as the difference between the previous element. Note how the delta encoded form contains many repetitive symbols.
     </figcaption>
