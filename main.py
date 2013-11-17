@@ -318,7 +318,7 @@ class ContentHandler(webapp2.RequestHandler):
                                permanent=True)
 
       if (relpath == ''):
-        css_file = 'v2'
+        css_file = 'v2-base'
 
       path = os.path.join('content', relpath, 'index.html')
     else:
@@ -384,7 +384,7 @@ class ContentHandler(webapp2.RequestHandler):
           if tut.description:
             tut.description = _(tut.description)
 
-        css_file = 'v2'
+        css_file = 'v2-combined'
         page_class = 'article'
 
         # Gather list of localizations by globbing matching directories, then
