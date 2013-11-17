@@ -318,7 +318,7 @@ class ContentHandler(webapp2.RequestHandler):
                                permanent=True)
 
       if (relpath == ''):
-        css_file = 'v2-base'
+        css_file = 'v2-combined'
 
       path = os.path.join('content', relpath, 'index.html')
     else:
