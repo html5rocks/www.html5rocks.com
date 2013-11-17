@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load i18n %}
+{% load toc from templatefilters %}
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
 <html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
@@ -101,9 +102,19 @@
         <li id="resources_menu"><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
       </ul>
     </nav>
+
+    {% if tut %}
+    <nav class="toc" id="toc">
+      <h1>{% trans "Table of Contents" %}</h1>
+
+      {% toc %}
+    </nav>
+    {% endif %}
   </header>
 
-  {% block body %}{% endblock %}
+  <div class="body-content">
+    {% block body %}{% endblock %}
+  </div>
 
   <script>
   (function() {
@@ -121,61 +132,38 @@
     var siteHeader = document.getElementById('siteheader');
     var navToggle = document.getElementById('navtoggle');
     var siteNav = document.getElementById('sitenav');
-    var articleMeta = document.getElementById('articlemeta');
 
-    function toggleHeader(forceActive) {
+    function toggle(target, forceActive) {
 
-      if (articleMeta)
-        articleMeta.classList.remove('active');
+      // Switch off whichever one is not the
+      // current target
+      if (target === toc)
+        siteNav.classList.remove('active');
+      else
+        toc.classList.remove('active');
 
       // Toggle if no force parameter is set
       if (typeof forceActive === 'undefined') {
-        siteNav.classList.toggle('active');
+        target.classList.toggle('active');
       } else {
         if (forceActive)
-          siteNav.classList.add('active');
+          target.classList.add('active');
         else
-          siteNav.classList.remove('active');
+          target.classList.remove('active');
       }
 
       // now find out what the set state ended up being
-      var isActive = siteNav.classList.contains('active');
-
-      if (isActive) {
-        document.body.classList.add('locked');
-        siteHeader.classList.add('expanded');
-      } else {
-        document.body.classList.remove('locked');
-        siteHeader.classList.remove('expanded');
-      }
-
-    }
-
-    function toggleToc(forceActive) {
-
-      siteNav.classList.remove('active');
-      siteHeader.classList.remove('expanded');
-
-      // Toggle if no force parameter is set
-      if (typeof forceActive === 'undefined') {
-        articleMeta.classList.toggle('active');
-      } else {
-        if (forceActive)
-          articleMeta.classList.add('active');
-        else
-          articleMeta.classList.remove('active');
-      }
-
-      var isActive = articleMeta.classList.contains('active');
+      var isActive = target.classList.contains('active');
 
       if (isActive)
-        document.body.classList.add('locked');
+        siteHeader.classList.add('expanded');
       else
-        document.body.classList.remove('locked');
+        siteHeader.classList.remove('expanded');
+
     }
 
     navToggle.addEventListener('click', function(e) {
-      toggleHeader();
+      toggle(siteNav);
       e.preventDefault();
     });
 
@@ -184,13 +172,13 @@
     var toc = document.getElementById('toc');
 
     tocToggle.addEventListener('click', function(e) {
-      toggleToc();
+      toggle(toc);
       e.preventDefault();
     });
 
     toc.addEventListener('click', function(e) {
       if (e.target !== siteNav)
-        toggleHeader(false);
+        toggle(toc, false);
     });
 
     {% endif %}
