@@ -123,32 +123,74 @@
     var siteNav = document.getElementById('sitenav');
     var articleMeta = document.getElementById('articlemeta');
 
-    navToggle.addEventListener('click', function(e) {
+    function toggleHeader(forceActive) {
 
       if (articleMeta)
         articleMeta.classList.remove('active');
 
-      siteNav.classList.toggle('active');
+      // Toggle if no force parameter is set
+      if (typeof forceActive === 'undefined') {
+        siteNav.classList.toggle('active');
+      } else {
+        if (forceActive)
+          siteNav.classList.add('active');
+        else
+          siteNav.classList.remove('active');
+      }
 
+      // now find out what the set state ended up being
       var isActive = siteNav.classList.contains('active');
-      document.body.classList.toggle('locked', isActive);
-      siteHeader.classList.toggle('expanded', isActive);
 
+      if (isActive) {
+        document.body.classList.add('locked');
+        siteHeader.classList.add('expanded');
+      } else {
+        document.body.classList.remove('locked');
+        siteHeader.classList.remove('expanded');
+      }
+
+    }
+
+    function toggleToc(forceActive) {
+
+      siteNav.classList.remove('active');
+      siteHeader.classList.remove('expanded');
+
+      // Toggle if no force parameter is set
+      if (typeof forceActive === 'undefined') {
+        articleMeta.classList.toggle('active');
+      } else {
+        if (forceActive)
+          articleMeta.classList.add('active');
+        else
+          articleMeta.classList.remove('active');
+      }
+
+      var isActive = articleMeta.classList.contains('active');
+
+      if (isActive)
+        document.body.classList.add('locked');
+      else
+        document.body.classList.remove('locked');
+    }
+
+    navToggle.addEventListener('click', function(e) {
+      toggleHeader();
       e.preventDefault();
     });
 
     {% if tut %}
     var tocToggle = document.getElementById('toctoggle');
+    var toc = document.getElementById('toc');
 
     tocToggle.addEventListener('click', function(e) {
-      siteNav.classList.remove('active');
-      siteHeader.classList.remove('expanded');
-      articleMeta.classList.toggle('active');
-
-      var isActive = articleMeta.classList.contains('active');
-      document.body.classList.toggle('locked', isActive);
-
+      toggleToc();
       e.preventDefault();
+    });
+
+    toc.addEventListener('click', function(e) {
+      if (e.target !== siteNav)
+        toggleHeader(false);
     });
 
     {% endif %}
