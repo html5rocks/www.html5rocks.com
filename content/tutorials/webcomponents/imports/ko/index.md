@@ -4,15 +4,13 @@
 
 여러분이 웹에서 각기 다른 형태의 리소스들을 어떻게 로딩하는지 생각해봅시다. JS의 경우 `<script src>`. CSS의 경우 아마도 `<link rel="stylesheet">`일 것이고 이미지들의 경우 `<img>`일 것이며 비디오는 `<video>`를 가지고 오디오는 `<audio>`로.... 결론을 말하면! 웹 컨텐츠의 대다수는 스스로를 로딩하기 위한 단순하고 선언적인 방법을 가지고 있습니다. HTML에서만 그런 것은 아닙니다. 다른 것을 한번 보도록 하겠습니다.
 
-1. **`<iframe>`** - tried and true but heavy weight. An iframe's content lives entirely in a separate context than your page. While that's mostly a great feature, it creates additional challenges (shrink wrapping the size of the frame to its content is tough, insanely frustrating to script into/out of, nearly impossible to style).
+1. **`<iframe>`** - 시도했었고 됩니다만 무겁습니다. iFrame의 컨텐츠는 여러분의 페이지보다 더 분리된 컨텍스트에서 전부 존재하고 있습니다. 대부분의 경우 훌륭한 기능이기 때문에 추가적인 도전을 창출합니다. (프레임의 사이즈를 그 컨텐츠에 맞춰 감싸서 줄이는 것은 힘들고 내부나 외부에 스크립트를 넣는 것은  엄청나게 불편하며 스타일은 거의 불가능합니다.)
 
--  **AJAX** - [I love `xhr.responseType="document"`](http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document), but you're saying I need JS to load HTML? That doesn't seem right.
+-  **AJAX** - [저는 `xhr.responseType="document"`를 사랑합니다](http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document), 그러나 여러분은 내가 HTML을 로딩하는데 JS가 필요해? 라고 말할 수 있습니다. 그건 올바르게 보이지 않습니다.
 
-- **CrazyHacks&#8482;** - embedded in strings, hidden as comments (e.g. `<script type="text/html">`). Yuck!
+- **CrazyHacks&#8482;** - 문자열을 내장하고, 코멘트처럼 안보이게 합니다. (예를 들어 `<script type="text/html">`). 윽!
 
 아이러니해 보이나요? **웹의 기본 컨텐츠와 HTML 대부분이 동작을 위한 정말 굉장한 노력을 필요로 합니다.** 다행스럽게도 우리를 정상으로 돌려줄 수 있는 [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html)가 여기 있습니다.
-<!-- See the irony? **The web's most basic content, HTML, requires the greatest amount
-of effort to work with**. Fortunately, [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) are here to get us back on track. -->
 
 <h2 id="started">시작하기</h2>
 
@@ -94,12 +92,8 @@ of files. Instead, the entirety of Bootstrap is managed and wrapped up in an imp
 <h3 id="events">로드/에러 이벤트</h3>
 
 `<link>` 엘리먼트는 import가 성공적으로 로딩되면 `load` 이벤트가 그리고 `onerror`는 (가령 리소스 404s 같은) 실패가 발생할 때 발생합니다.
-<!-- The `<link>` element fires a `load` event when an import is loaded successfully
-and `onerror` when the attempt fails (e.g. if the resource 404s). -->
 
 Imports는 즉시 로딩을 시도합니다. 투통을 피하는 쉬운 방법은 다음과 같이 `onload`/`onerror` 속성들을 사용하는 것입니다.
-<!-- Imports try to load immediately. An easy way avoid headaches
-is to use the `onload`/`onerror` attributes: -->
 
     <script async>
       function handleLoad(e) {
@@ -145,11 +139,6 @@ import의 컨텐츠를 액세스하기 위해 다음과 같이 link 엘리먼트
 - `<link>`가 DOM에 추가되지 않은 경우.
 - `<link>`가 DOM으로부터 제거된 경우.
 - 리소스가 'CORS가 가능한 상태'가 아닐 경우.
-<!-- - The browser doesn't support HTML Imports.
-- The `<link>` doesn't have `rel="import"`.
-- The `<link>` has not been added to the DOM.
-- The `<link>` has been removed from the DOM.
-- The resource is not CORS-enabled. -->
 
 **전체 예제**
 
@@ -222,24 +211,7 @@ Imports는 메인 도큐먼트 안에 있지 않습니다. 그 주위를 맴돌�
       var styles = importDoc.querySelector('link[rel="stylesheet"]');
       mainDoc.head.appendChild(styles.cloneNode(true));
     </script>
-<!-- 
-    <link rel="stylesheet" href="http://www.example.com/styles.css">
-    <link rel="stylesheet" href="http://www.example.com/styles2.css">
-    ...
 
-    <script>
-      // importDoc references this import's document
-      var importDoc = document.currentScript.ownerDocument;
-
-      // mainDoc references the main document (the page that's importing us)
-      var mainDoc = document;
-
-      // Grab the first stylesheet from this import, clone it,
-      // and append it to the importing document.
-      var styles = importDoc.querySelector('link[rel="stylesheet"]');
-      mainDoc.head.appendChild(styles.cloneNode(true));
-    </script>
- -->
 
 어떻게 이렇게 되는지 주의하여 보시기 바랍니다. import 안의 스크립트는 삽입된(imported) 문서를 참조하고 있으며(`document.currentScript.ownerDocument`) 그 문서의 일부를 삽입된(imported) 페이지에 추가합니다. (`mainDoc.head.appendChild(...)`) 여러분이 물어보신다면 꽤나 기가 막힌 방법이라고 대답하고 싶습니다.
 
@@ -253,10 +225,6 @@ import 내의 자바스크립트 룰들은 다음과 같습니다.
     - import의 `&lt;script>` 블록들을 메인 페이지에 덧붙이기는 것 같은 미친 짓을 할 필요가 없습니다. 다시 말해, 스크립트는 이미 실행된 상태입니다.
 - Imports는 메인 페이지의 파싱을 블록하지 않습니다. 그러나 그것들 내의 스크립트는 순서대로 처리됩니다. 이것은 여러분이 적합한 스크립트 순서를 유지하는 동안 연기하는 것(defer-like)과 같은 동작을 여러분이 가지게 된다는 것을 뜻합니다. 자세한 것은 아래에서 살펴보시기 바랍니다.
 
-<!-- - Script in the import is executed in the context of the window that contains the importing `document`. So `window.document` refers to the main page document. This has two useful corollaries:
-    - functions defined in an import end up on `window`.
-    - you don't have to do anything crazy like append the import's `<script>` blocks to the main page. Again, script gets executed.
-- Imports do not block parsing of the main page. However, scripts inside them are processed in order. This means you get defer-like behavior while maintaining proper script order. More on this below. -->
 
 <h2 id="deliver-webcomponents">웹 컴포넌트(Web Components) 배포하기</h2>
 
@@ -388,8 +356,7 @@ polymer-ui-tabs.html
 
 우리 모두는 페이지당 여러번 jQuery의 로딩되면 에러를 발생한다는 것을 알고 있습니다. 여러개의 컴포넌트가 동일한 라이브러리를 사용할 때 웹 컴포넌트에 _거대한_ 문제가 되지 않을까요? 우리가 HTML Imports를 사용한다면 그렇지 않습니다! 의존성을 관리하기 위해 사용될 수 있기 때문입니다.
 
-HTML Import에서 라이브러리를 감싸는 것으로 인해 여러분은 자동으로 리소스의 중복 처리를 할 수 있습니다. 문서는 단 한번 파싱됩니다. 스크립트는 단 한번 실행됩니다. 예를 들어 여러분이 jQuery의 사본을 로딩하는 jQuery.html이라는 import를 정의했다고 해보겠습니다.<!-- By wrapping libraries in an HTML Import, you automatically de-dupe resources.
-The document is only parsed once. Scripts are only executed once. As an example, say you define an import, jquery.html, that loads a copy of JQuery. -->
+HTML Import에서 라이브러리를 감싸는 것으로 인해 여러분은 자동으로 리소스의 중복 처리를 할 수 있습니다. 문서는 단 한번 파싱됩니다. 스크립트는 단 한번 실행됩니다. 예를 들어 여러분이 jQuery의 사본을 로딩하는 jQuery.html이라는 import를 정의했다고 해보겠습니다.
 
 jquery.html
 
@@ -477,11 +444,11 @@ HTML Imports는 전체적으로 놀랍습니다만 어떠한 새로운 웹 기�
 
 `h2`는 DOM에 추가되기 전까지 비교적 무의미하다고 할 수 있습니다.
 
-동일한 개념이 문서의 import에 해당됩니다. 여러분이 컨텐츠를 DOM에 추가하지 않는다면 어떠한 동작(no-op)도 하지 않습니다. 사실, 삽입(import)된 문서에서 바로 "실행(executes)"되는 것은 `&lt;script>`뿐입니다. [imports에서의 스크립팅](#includejs)을 살펴보시기 바랍니다.<!-- The same concept holds true for the import document. Unless you append it's content to the DOM, it's a no-op. In fact, the only thing that "executes" in the import document directly is `<script>`. See [scripting in imports](#includejs).-->
+동일한 개념이 문서의 import에 해당됩니다. 여러분이 컨텐츠를 DOM에 추가하지 않는다면 어떠한 동작(no-op)도 하지 않습니다. 사실, 삽입(import)된 문서에서 바로 "실행(executes)"되는 것은 `&lt;script>`뿐입니다. [imports에서의 스크립팅](#includejs)을 살펴보시기 바랍니다.
 
 <h3 id="perf-parsing">비동기 로딩에 대한 최적화</h3>
 
-**Imports는 메인 페이지의 파싱을 블록하지 않습니다.** import 내의 스크립트들은 순서대로 처리되지만 페이지의 삽입(importing)을 블록하지 않습니다. 이것은 적합한 스크립트 순서를 유지하는 동안 연기하는 듯한(defer-like) 동작을 가지게 된다는 것을 뜻합니다. `&lt;head>` 내에 imports를 밀어넣는 한가지 이점은 가능한한 빠르게 파서가 동작을 시작하도록 하는 것입니다. 말한 바와 같이 메인 도큐먼트 내의 `&lt;script>`가 다음과 같이 페이지를 블록하는 것을 *여전히* 계속하고 있다는 것을 기억하는 것이 중요합니다.<!--**Imports don't block parsing of the main page**. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the `<head>` is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember `<script>` in the main document *still* continues to block the page:-->
+**Imports는 메인 페이지의 파싱을 블록하지 않습니다.** import 내의 스크립트들은 순서대로 처리되지만 페이지의 삽입(importing)을 블록하지 않습니다. 이것은 적합한 스크립트 순서를 유지하는 동안 연기하는 듯한(defer-like) 동작을 가지게 된다는 것을 뜻합니다. `&lt;head>` 내에 imports를 밀어넣는 한가지 이점은 가능한한 빠르게 파서가 동작을 시작하도록 하는 것입니다. 말한 바와 같이 메인 도큐먼트 내의 `&lt;script>`가 다음과 같이 페이지를 블록하는 것을 *여전히* 계속하고 있다는 것을 기억하는 것이 중요합니다.
 
     <head>
       <link rel="import" href="/path/to/import_that_takes_5secs.html">
@@ -550,7 +517,6 @@ index.html
 **시나리오 #2: 여러분은 `&lt;head>` 안의 스크립트나 `&lt;body>` 내의 인라인을 가지고 있지 않습니다.**
 
 로딩에 오랜 시간이 걸리는 import를 가지고 있다면 페이지 상에서 그에 이어지는 첫번째 `&lt;script>`는 렌더링으로부터 페이지를 블록할 것입니다. `>head>`내에 추적 코드를 넣는 것을 권장하는 Google Analytics가 그 예로, 만약 `&lt;head>` 내에 `&lt;script>`를 넣는 것을 피할 수 없다면, 다음과 같이 동적으로 import를 추가하는 것이 페이지의 블로킹을 방지할 것입니다.
-<!--If you have an import that takes a long time to load, the first `<script>` that follows it on the page will block the page from rendering. Google Analytics for example, recommends putting the tracking code in the `<head>`, If you can't avoid putting `<script>` in the `<head>`, dynamically adding the import will prevent blocking the page: -->
 
     <head>
       <script>
