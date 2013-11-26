@@ -4,11 +4,11 @@
 
 여러분이 웹에서 각기 다른 형태의 리소스들을 어떻게 로딩하는지 생각해봅시다. JS의 경우 `<script src>`. CSS의 경우 아마도 `<link rel="stylesheet">`일 것이고 이미지들의 경우 `<img>`일 것이며 비디오는 `<video>`를 가지고 오디오는 `<audio>`로.... 결론을 말하면! 웹 컨텐츠의 대다수는 스스로를 로딩하기 위한 단순하고 선언적인 방법을 가지고 있습니다. HTML에서만 그런 것은 아닙니다. 다른 것을 한번 보도록 하겠습니다.
 
-1. **`<iframe>`** - 시도했었고 됩니다만 무겁습니다. iFrame의 컨텐츠는 여러분의 페이지보다 더 분리된 컨텍스트에서 전부 존재하고 있습니다. 대부분의 경우 훌륭한 기능이기 때문에 추가적인 도전을 창출합니다. (프레임의 사이즈를 그 컨텐츠에 맞춰 감싸서 줄이는 것은 힘들고 내부나 외부에 스크립트를 넣는 것은  엄청나게 불편하며 스타일은 거의 불가능합니다.)
+1. **`<iframe>`** - 유효성이 증명되었습니다만 무겁습니다. iframe의 컨텐츠는 여러분의 페이지보다 더욱 분리된 컨텍스트에서 완전하게 존재하고 있습니다. 대부분 커다란 특징이기 때문에 추가적인 도전들을 창출합니다. (프레임의 사이즈를 그 컨텐츠에 맞춰 감싸서 줄이는 것은 힘들고 내부로나 외부로의 스크립트도 굉장히 불편하며 스타일링은 거의 불가능합니다.)
 
--  **AJAX** - [저는 `xhr.responseType="document"`를 사랑합니다](http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document), 그러나 여러분은 내가 HTML을 로딩하는데 JS가 필요해? 라고 말할 수 있습니다. 그건 올바르게 보이지 않습니다.
+-  **AJAX** - [저는 `xhr.responseType="document"`를 사랑합니다](http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document), 그러나 '여러분은 내가 HTML을 로딩하는데 JS가 필요해?'라고 말할 수 있습니다. 그렇지 않습니다.
 
-- **CrazyHacks&#8482;** - 문자열을 내장하고, 코멘트처럼 안보이게 합니다. (예를 들어 `<script type="text/html">`). 윽!
+- **CrazyHacks&#8482;** - 문자열을 내장하고, 마치 코멘트처럼 안보이게 합니다. (예를 들어 `<script type="text/html">`). 윽!
 
 아이러니해 보이나요? **웹의 기본 컨텐츠와 HTML 대부분이 동작을 위한 정말 굉장한 노력을 필요로 합니다.** 다행스럽게도 우리를 정상으로 돌려줄 수 있는 [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html)가 여기 있습니다.
 
