@@ -71,8 +71,11 @@ class ContentHandler(webapp2.RequestHandler):
     return browser and (browser.find('Android') != -1 or browser.find('iPhone') != -1)
 
   def get_toc(self, path):
+
+    print path
+
     # Only have TOC on tutorial pages. Don't do work for others.
-    if not (re.search('/tutorials', path) or re.search('/mobile', path)):
+    if not (re.search('/tutorials', path) or re.search('/mobile', path) or re.search('style-guide', path)):
       return ''
 
     toc = memcache.get('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path))
@@ -513,7 +516,7 @@ class ContentHandler(webapp2.RequestHandler):
 
       page_title = None
       if path == 'content/style-guide':
-        css_file = 'v2'
+        css_file = 'v2-combined'
         page_class = 'article'
         page_title = 'Style Guide'
 
