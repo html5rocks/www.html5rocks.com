@@ -1,6 +1,6 @@
-HTML5 Rocks Quarter Report for 2013-11-06
+HTML5 Rocks Quarter Report for 2013-11-19
 =========================================
- 
+
 Articles due this quater
 ------------------------
 
@@ -13,10 +13,10 @@ Articles due this quater
 |Paul Kinlan|[Building a fullscreen experience](https://github.com/html5rocks/www.html5rocks.com/issues/484)|2013-10-23|@arthurevans|closed
 |Deanna Rubin|[October DevTools Digest](https://github.com/html5rocks/www.html5rocks.com/issues/529)|2013-10-30||open
 |Paul Lewis|[60fps animations](https://github.com/html5rocks/www.html5rocks.com/issues/504)|2013-10-30|@arthurevans|closed
-|Sam Dutton|[WebRTC Infrastructure Article](https://github.com/html5rocks/www.html5rocks.com/issues/646)|2013-11-04|@scottrowe|open
-|Eric Bidelman|[Article: Using HTML Imports to deliver web components](https://github.com/html5rocks/www.html5rocks.com/issues/743)|2013-11-08|@scottrowe|open
-|Eric Bidelman|[HTML Imports](https://github.com/html5rocks/www.html5rocks.com/issues/493)|2013-11-08|@scottrowe|open
-|Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-11-15|@dr4b|open
+|Sam Dutton|[WebRTC Infrastructure Article](https://github.com/html5rocks/www.html5rocks.com/issues/646)|2013-11-04|@scottrowe|closed
+|Eric Bidelman|[Article: Using HTML Imports to deliver web components](https://github.com/html5rocks/www.html5rocks.com/issues/743)|2013-11-08|@scottrowe|closed
+|Eric Bidelman|[HTML Imports](https://github.com/html5rocks/www.html5rocks.com/issues/493)|2013-11-08|@arthurevans|closed
+|Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-12-15|@dr4b|open
 |Pete LePage|[Building Amazing forms with semantic input types](https://github.com/html5rocks/www.html5rocks.com/issues/482)|2013-11-15|@scottrowe|open
 |Addy Osmani|[Mobile web development workflow](https://github.com/html5rocks/www.html5rocks.com/issues/527)|2013-11-18|@dr4b|open
 |Alex Danilo|[User timing: understanding execution timing in your web app](https://github.com/html5rocks/www.html5rocks.com/issues/486)|2013-11-20|@dr4b|open
