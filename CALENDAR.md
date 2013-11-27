@@ -1,6 +1,8 @@
 HTML5 Rocks Quarter Report for 2013-11-27
 =========================================
 
+This file is auto generated. Edit the issue to update this file.
+
 Articles due this quater
 ------------------------
 
