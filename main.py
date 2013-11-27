@@ -388,7 +388,7 @@ class ContentHandler(webapp2.RequestHandler):
             tut.description = _(tut.description)
 
         css_file = 'v2-combined'
-        page_class = 'article'
+        page_class = 'article tutorial'
 
         # Gather list of localizations by globbing matching directories, then
         # stripping out the current locale and 'static'. Once we have a list,
