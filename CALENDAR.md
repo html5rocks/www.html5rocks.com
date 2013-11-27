@@ -1,4 +1,4 @@
-HTML5 Rocks Quarter Report for 2013-11-25
+HTML5 Rocks Quarter Report for 2013-11-27
 =========================================
 
 Articles due this quater
@@ -25,8 +25,8 @@ Articles due this quater
 |Addy Osmani|[Access The Terminal From Chrome DevTools](https://github.com/html5rocks/www.html5rocks.com/issues/662)|2013-12-04|@dr4b|open
 |Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-12-09|@scottrowe|open
 |Alex Danilo|[Stopping the blocking: Eliminate render blocking resources](https://github.com/html5rocks/www.html5rocks.com/issues/509)|2013-12-11|@arthurevans|open
-|Pete LePage|[Real-world responsive images](https://github.com/html5rocks/www.html5rocks.com/issues/490)|2013-12-11|@scottrowe|open
 |Chris Wilson|[Understanding the viewport](https://github.com/html5rocks/www.html5rocks.com/issues/488)|2013-12-11|@arthurevans|open
 |Paul Kinlan|[How to prioritize your page for visible content](https://github.com/html5rocks/www.html5rocks.com/issues/508)|2013-12-15|@arthurevans|open
+|Pete LePage|[Update HTML5 Video Tutorial - http://www.html5rocks.com/en/tutorials/video/basics/](https://github.com/html5rocks/www.html5rocks.com/issues/771)|2013-12-18||open
 |Chris Wilson|[Viewport units - a full width experience](https://github.com/html5rocks/www.html5rocks.com/issues/480)|2013-12-18|@arthurevans|open
 |Eiji Kitamura|[Quota Management on browsers](https://github.com/html5rocks/www.html5rocks.com/issues/514)|2013-12-20|@dr4b|open
