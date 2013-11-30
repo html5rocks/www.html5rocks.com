@@ -1,7 +1,3 @@
-Generally speaking, text on HTML5Rocks is split into two groups. On the one hand, we have articles, tutorials, case studies, etc. On the other, we have strings that make up the site's UI (menu items and the like). This document explains the localization workflow for both, and describes how you can participate in the process.
-
-# How Can You Help?
-
 Help us make HTML5Rocks more accessible to an international audience! We'd appreciate at least three kinds of help:
 
 * **Proofreading existing translations**: We're not experts in many languages beyond English (and, honestly, our mastery even there is debatable). If you can help us ensure that the translations on the site make good sense, and sound stylistically reasonable, we'd appreciate it. Likewise, if we've missed some strings in the site's UI, we'd like to know about it.
