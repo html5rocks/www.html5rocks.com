@@ -373,10 +373,6 @@ class ContentHandler(webapp2.RequestHandler):
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
 
-        # If tutorial is marked as draft, redirect and don't show it.
-        if tut and tut.draft:
-          return self.redirect('/tutorials')
-
         # Localize title and description.
         if tut:
           if tut.title:
