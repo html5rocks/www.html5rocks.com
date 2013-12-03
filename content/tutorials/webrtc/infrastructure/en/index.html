@@ -27,7 +27,6 @@ a[rel='external']
   background: none;
   padding-right: 0;
 }
-
 </style>
 {% endblock %}
 
@@ -257,7 +256,7 @@ function logError(error) {
 <p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
 
 <figure>
-  <img src="apprtc.jpg" alt="The apprtc.appspot.com video chat application" />
+  <a href="http://apprtc.appspot.com"><img src="apprtc.jpg" alt="The apprtc.appspot.com video chat application" /></a>
   <figcaption><a href="http://apprtc.appspot.com">apprtc</a> in action</figcaption>
 </figure>
 
@@ -265,7 +264,17 @@ function logError(error) {
 
 <h3 id="scaling-signaling">Scaling signaling</h3>
 
-<p>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load. We won't discuss them here, but for high volume messaging there are a variety of high performance realtime messaging options available that can be used for signaling, such as the commercial services offered by <a href="https://vline.com/" title="vLine WebRTC platform">vLine</a>, or <a href="http://zeromq.org/">ZeroMQ</a> (used by TokBox for their <a href="http://www.tokbox.com/blog/tokbox-builds-it%E2%80%99s-own-internal-messaging-infrastructure/">Rumour</a> service).</p>
+<p>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, from different locations, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load.</p>
+<p>We won't go into detail here, but there are a number of options for high volume, high performance messaging, including the following:
+    <ul>
+      <li><a href="http://en.wikipedia.org/wiki/Xmpp" title="XMPP Wikipedia article">eXtensible Messaging and Presence Protocol</a> (XMPP), originally known as Jabber: a protocol developed for instant messaging that can be used for signaling. Server implementations include <a href="http://en.wikipedia.org/wiki/Ejabberd" title="ejabberd article on Wikipedia">ejabberd</a> and <a href="http://en.wikipedia.org/wiki/Openfire" title="Openfire Wikipedia article">Openfire</a>. JavaScript clients such as <a href="http://strophe.im/strophejs/" title="Strophe XMPP library for JavaScript">Strophe.js</a> use <a href="http://en.wikipedia.org/wiki/BOSH" title="BOSH article on Wikipedia">BOSH</a> to emulate bidirectional streaming, but for <a href="http://stackoverflow.com/questions/7327153/xmpp-bosh-vs-comet" title="Stack Overflow question about XMPP BOSH v Comet: see also http://stackoverflow.com/questions/6434088/why-isnt-bosh-more-popular-especially-as-an-alternative-to-websockets-and-long">various reasons</a> BOSH may not be as efficient as WebSocket, and for the same reasons may not scale well. (On a tangent: <a href="http://en.wikipedia.org/wiki/Jingle_(protocol)" title="Jingle Wikipedia article">Jingle</a> is an XMPP extension to enable voice and video; the WebRTC project uses network and transport components from the <a href="https://developers.google.com/talk/libjingle/" title="Google Talk for Developers: About libjingle">libjingle</a> library, a C++ implementation of Jingle.) </li>
+        <li>Open source libraries such as <a href="http://zeromq.org/">ZeroMQ</a> (as used by TokBox for their <a href="http://www.tokbox.com/blog/tokbox-builds-it%E2%80%99s-own-internal-messaging-infrastructure/">Rumour</a> service) and <a href="http://en.wikipedia.org/wiki/Open_Message_Queue" title="OpenMQ Wikipedia article">OpenMQ</a>. <a href="http://avalanche123.com/blog/2012/02/25/interacting-with-zeromq-from-the-browser/" title="Blog post: Interacting With ZeroMQ From the Browser">NullMQ</a> applies ZeroMQ concepts to web platforms, using the <a href="http://stomp.github.io/" title="Simple Text Oriented Messaging Protocol">STOMP protocol</a> over WebSocket.</li>
+        <li>Commercial cloud messaging platforms that use WebSocket (though they may fall back to long polling) such as <a href="http://pusher.com/" title="Pusher website">Pusher</a>, <a href="http://kaazing.com/" title="Kaazing website">Kaazing</a> and <a href="http://pubnub.com" title="PubNub website">PubNub</a>. (PubNub also has an <a href="https://github.com/pubnub/webrtc" title="PubNub WebRTC SDK v0.7.0">API for WebRTC</a>.)</li>
+       <li>Commercial WebRTC platforms such as <a href="https://vline.com/" title="vLine WebRTC platform">vLine</a>.</li>
+    </ul>
+ </p>
+
+ <p>(Developer Phil Leggetter's <a href="http://www.leggetter.co.uk/real-time-web-technologies-guide" title="Comprehensive list of realtime services and libraries">Real-Time Web Technologies Guide</a> provides a comprehensive list of messaging services and libraries.)</p>
 
 <h3 id="building-a-signaling-service-with-socket.io-on-node">Building a signaling service with Socket.io on Node</h3>
 
@@ -536,12 +545,12 @@ node server.js
     <code>sudo apt-get install make<br />
     sudo apt-get install gcc</code>
   </li>
-  <li style="line-height: 1.8em;">Download and build restund:<br />
-      libre: <a href="http://creytiv.com/re.html" title="libre">creytiv.com/re.html</a><br />
-      restund: <a href="http://creytiv.com/restund.html" title="">creytiv.com/restund.html</a>
-  </li>
-  <li>Update <em>restund/mk</em> to disable IPv6 due to build error (HAVE_INET6)</li>
-  <li>Run <code>sudo make install</code> for libre and restund</li>
+  <li style="line-height: 1.8em;">Install libre from <a href="http://creytiv.com/re.html" title="libre">creytiv.com/re.html</a></li>
+  <li>Fetch restund from <a href="http://creytiv.com/restund.html" title="">creytiv.com/restund.html</a> and unpack</li>
+  <li><code>wget</code> <a href="http://hancke.name/restund-auth.patch" title="restund patch file">hancke.name/restund-auth.patch</a> and apply with <code>patch -p1 &lt; restund-auth.patch</code></li>
+  <li>Run <code>make</code>, <code>sudo make install</code> for libre and restund</li>
+  <li>Adapt <em>restund.conf</em> to your needs (replace IP addresses and make sure it contains the same shared secret) and copy to <em>/etc</em></li>
+  <li>Copy <em>restund/etc/restund</em> to <em>/etc/init.d/</em></li>
   <li style="line-height: 1.8em;">Configure restund:<br />
     Set <em>LD_LIBRARY_PATH</em><br />
     Copy <em>restund.conf</em> to <em>/etc/restund.conf</em><br />
@@ -613,6 +622,8 @@ node server.js
 <p>WebRTC <a href="https://bitbucket.org/webrtc/codelab">codelab</a>: step-by-step instructions how to build a video and text chat application, using a Socket.io signaling service running on Node.</p>
 
 <p><a href="http://www.youtube.com/watch?v=p2HzZkd2A40">2013 Google I/O WebRTC presentation</a> with WebRTC tech lead, Justin Uberti.</p>
+
+<p>Chris Wilson's SFHTML5 presentation: <a href="http://www.youtube.com/watch?v=3Ifbqaw5l_I" title="Video of Chris Wilson's WebRTC talk at SFHTML5">Introduction to WebRTC Apps</a></p>
 
 <p>The <a href="http://webrtcbook.com">WebRTC Book</a> gives a lot of detail about data and signaling pathways, and includes a number of detailed network topology diagrams.</p>
 
