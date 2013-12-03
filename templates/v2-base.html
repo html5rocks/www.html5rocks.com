@@ -66,7 +66,7 @@
   <link rel="stylesheet" media="all" href="/static/css/v2-base.css">
   <link rel="stylesheet" media="all" href="/static/css/v2-article.css">
 
-  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
+  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article tutorial' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
 
   <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
   <link rel="apple-touch-icon-precomposed" href="/static/images/identity/HTML5_Badge_64.png">
@@ -177,6 +177,10 @@
     var articleMetaMinY = 0;
     var articleContentPadding = 200;
 
+    var tocLinks = document.querySelectorAll('.toc a');
+    for (var t = 0; t < tocLinks.length; t++)
+      tocLinks[t].addEventListener('click', onTocLinkClick);
+
     tocToggle.addEventListener('click', function(e) {
       toggle(toc);
       e.preventDefault();
@@ -187,11 +191,16 @@
         toggle(toc, false);
     });
 
+    function onTocLinkClick() {
+      _gaq.push(['_trackEvent', 'Interactions', 'TOC', 'TOC Clicked']);
+    }
+
     function setMinScrollYFromMetaY() {
-      var scrollPosition = document.documentElement.scrollTop;
+      var scrollPosition = window.scrollY;
 
       var articleMetaBounds = articleMeta.getBoundingClientRect();
-      var articleMetaTop = articleMetaBounds.top - 20 + scrollPosition;
+      var articleMetaTop = Math.max(352,
+          articleMetaBounds.top - 20 + scrollPosition);
 
       articleMetaHeight = articleMetaBounds.bottom - articleMetaBounds.top;
       articleMetaMinY = articleMetaTop;
@@ -199,7 +208,7 @@
 
     function setMaxScrollYFromContentHeight() {
 
-      var scrollPosition = document.documentElement.scrollTop;
+      var scrollPosition = window.scrollY;
 
       var articleContentBounds = articleContent.getBoundingClientRect();
       var articleContentTop = articleContentBounds.top + scrollPosition;
