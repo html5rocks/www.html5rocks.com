@@ -25,6 +25,7 @@ import re
 import urllib2
 import webapp2
 import yaml
+import cgi
 
 # App libs.
 import settings
@@ -85,6 +86,7 @@ class ContentHandler(webapp2.RequestHandler):
       stream = walker(dom_tree)
       toc = []
       current = None
+      innerTagCount = 0
       for element in stream:
         if element['type'] == 'StartTag':
           if element['name'] in ['h2', 'h3', 'h4']:
@@ -92,13 +94,32 @@ class ContentHandler(webapp2.RequestHandler):
               if attr[0] == 'id':
                 current = {
                   'level' : int(element['name'][-1:]) - 1,
-                  'id' : attr[1]
+                  'id' : attr[1],
+                  'text': ''
                 }
+          elif current is not None:
+            innerTagCount += 1
         elif element['type'] == 'Characters' and current is not None:
-          current['text'] = element['data']
+
+          # if we already have text check:
+          # - whether the last character is a < or a (
+          # - the string being added starts with > or )
+          # in which case do not add a space
+          if current['text'] != '':
+
+            if current['text'][-1] != '<' and not re.match(r"^[\>\)]", element['data']):
+              current['text'] += ' '
+
+          current['text'] = current['text'] + element['data']
+
         elif element['type'] == 'EndTag' and current is not None:
-          toc.append(current)
-          current = None
+          if innerTagCount > 0:
+            innerTagCount -= 1
+          else:
+            current['text'] = cgi.escape(current['text'])
+            toc.append(current)
+            current = None
+
       memcache.set('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path), toc, 3600)
 
     return toc
