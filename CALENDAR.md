@@ -16,8 +16,8 @@ Articles due this quater
 |Sam Dutton|[WebRTC Infrastructure Article](https://github.com/html5rocks/www.html5rocks.com/issues/646)|2013-11-04|@scottrowe|closed
 |Eric Bidelman|[Article: Using HTML Imports to deliver web components](https://github.com/html5rocks/www.html5rocks.com/issues/743)|2013-11-08|@scottrowe|closed
 |Eric Bidelman|[HTML Imports](https://github.com/html5rocks/www.html5rocks.com/issues/493)|2013-11-08|@arthurevans|closed
-|Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-11-15|@dr4b|open
 |Pete LePage|[Building Amazing forms with semantic input types](https://github.com/html5rocks/www.html5rocks.com/issues/482)|2013-11-15|@scottrowe|closed
+|Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-11-16|@dr4b|open
 |Addy Osmani|[Mobile web development workflow](https://github.com/html5rocks/www.html5rocks.com/issues/527)|2013-11-18|@dr4b|closed
 |Alex Danilo|[User timing: understanding execution timing in your web app](https://github.com/html5rocks/www.html5rocks.com/issues/486)|2013-11-20|@dr4b|open
 |Matthew  Gaunt|[Tooling for mobile web testing](https://github.com/html5rocks/www.html5rocks.com/issues/645)|2013-11-27|@dr4b|open
