@@ -2,7 +2,7 @@
 
 **Interested in contributing? Help us:**
 
-- [Localize content](https://github.com/html5rocks/www.html5rocks.com/wiki/Localization-Guide)
+- [Localize content](https://github.com/html5rocks/www.html5rocks.com/blob/master/LOCALIZATION.md)
 - [File or fix bugs](https://github.com/html5rocks/www.html5rocks.com/issues)
 - [Author an article, tutorial, or case study](https://github.com/html5rocks/www.html5rocks.com/wiki/Contributors-Guide)
 
