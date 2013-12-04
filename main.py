@@ -73,8 +73,6 @@ class ContentHandler(webapp2.RequestHandler):
 
   def get_toc(self, path):
 
-    print path
-
     # Only have TOC on tutorial pages. Don't do work for others.
     if not (re.search('/tutorials', path) or re.search('/mobile', path) or re.search('style-guide', path)):
       return ''
