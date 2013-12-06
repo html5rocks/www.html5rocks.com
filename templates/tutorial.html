@@ -11,6 +11,12 @@
 
   <section class="title">
 
+    {% if redirect_from_locale %}
+    <section class="redirect_notification error-block" lang="{{ redirect_from_locale.lang }}">
+      <p>{{ redirect_from_locale.msg }}</p>
+    </section>
+    {% endif %}
+
     <section class="title-text container">
       {% if tut %}
       <h1>{{ tut.title|safe }}</h1>
@@ -22,14 +28,6 @@
       <a href="/" class="watermark">HTML5 Rocks</a>
     </section>
   </section>
-
-  {% if redirect_from_locale %}
-  <section class="redirect_notification pattern-bg-lighter" lang="{{ redirect_from_locale.lang }}">{{ redirect_from_locale.msg }}</section>
-  {% endif %}
-
-  <div id="notcompatible" class="hidden">
-    <p>Your browser may not support the functionality in this article</p>
-  </div>
 
   <article class="content-wrapper{% if hide_toc != None %} wide{% endif %}">
 
@@ -93,6 +91,10 @@
                 {% if tut.update_date %}
                 <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date|date:"F jS, Y"}}</time>{% endif %}
                 <span><strong>Comments:</strong> <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">{% trans "..." %}</a></span>
+              </div>
+
+              <div id="notcompatible" class="hidden">
+                Your browser may not support the functionality in this article.
               </div>
             </section>
             <div class="clear"></div>
