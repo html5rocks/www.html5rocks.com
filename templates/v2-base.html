@@ -62,6 +62,7 @@
   <link rel="publisher" href="https://plus.google.com/111395306401981598462">
 
   <link rel="stylesheet" media="all" href="/static/css/{{css_file}}.{% if prod %}min.{% endif %}css">
+  <link rel="stylesheet" media="all" href="/static/css/v2-tutorials.css">
 
   <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article tutorial' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
 
@@ -90,7 +91,7 @@
 
     <nav id="sitenav">
       <ul>
-        {% if tut %}
+        {% if include_home_link %}
         <li id="home_menu"><a href="/{{LANGUAGE_CODE}}/" class="home">{% trans "Home" %}</a></li>
         {% endif %}
         <li id="tutorials_menu"><a href="/{{LANGUAGE_CODE}}/tutorials/?page=1" class="tutorials">{% trans "Tutorials" %}</a></li>
@@ -133,12 +134,14 @@
 
     function toggle(target, forceActive) {
 
-      // Switch off whichever one is not the
-      // current target
-      if (target === toc)
-        siteNav.classList.remove('active');
-      else
-        toc.classList.remove('active');
+      if (typeof toc !== 'undefined') {
+        // Switch off whichever one is not the
+        // current target
+        if (target === toc)
+          siteNav.classList.remove('active');
+        else
+          toc.classList.remove('active');
+      }
 
       // Toggle if no force parameter is set
       if (typeof forceActive === 'undefined') {
