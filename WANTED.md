@@ -3,7 +3,7 @@ HTML5 Rocks Open Articles for 2013-10-10
 
 We are always looking for developers and writers to help build the content for HTML5Rocks.
 
-We have a huge list of content that we would love to get produced. If you have skills or experience in any of these areas, please leave a comment that you would like to work on the article.
+We have a huge list of content that we would love to get produced. If you have skills or experience in any of these areas, please leave a comment on that article that you would like to work on.
 
 |Proposer|Article|
 |------|-------|
