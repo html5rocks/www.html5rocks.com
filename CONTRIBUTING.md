@@ -1,4 +1,4 @@
-Step-by-step guide for third-party developers to contribute to html5rocks.com. Before you draft the article, read our [writing tips](https://github.com/html5rocks/www.html5rocks.com/wiki/Writing-Tips). 
+A step-by-step guide for third-party developers to contribute to html5rocks.com. Before you draft the article, read our [writing tips](https://github.com/html5rocks/www.html5rocks.com/wiki/Writing-Tips). 
 
 # Before you start
 
