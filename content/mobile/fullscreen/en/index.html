@@ -5,7 +5,7 @@
 
 {% block head %}
 <style>
-.talkinghead:before{ 
+.talkinghead:before{
   background-image:url();
   background-position:0px 0px!important;
 }
@@ -20,7 +20,7 @@
 }
 
 pre.inline {
-  display: inline;  
+  display: inline;
 }
 </style>
 
@@ -37,10 +37,9 @@ pre.inline {
 
 {% block content %}
 
-<h2 id="toc-introduction">Building an amazing fullscreen mobile experience</h2>
-
-<blockquote class="commentary talkinghead talkinghead-everyone">
-"One of the best thing about native apps is that they are full-screen" - lots of people, all the time.
+<blockquote class="commentary">
+  "One of the best thing about native apps is that they are full-screen"
+  <cite>lots of people, all the time.</cite>
 </blockquote>
 
 <blockquote class="commentary talkinghead talkinghead-pk" id="compressors">
@@ -91,7 +90,7 @@ You will notice that in the prefixed versions there is a lot of inconsitency bet
 
 <p>When your app is fullscreen you no longer have the browser's UI controls chrome available to you.  This changes the way that users interact with your experience. They don't have the standard navigation controls such as Forwards and Backwards; they have their escape hatch that is the Refresh button.  It's important to cater for this scenario.  You can use some CSS selectors to help you change the style and presentation of your site when the browser enters fullscreen mode.</p>
 
-<pre class="prettyprint">&lt;button id="goFS">Go fullscreen&lt;button> 
+<pre class="prettyprint">&lt;button id="goFS">Go fullscreen&lt;button>
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
@@ -105,20 +104,20 @@ You will notice that in the prefixed versions there is a lot of inconsitency bet
 Damn you vendor prefixes!
 </blockquote>
 
-<p>The actual code is a lot more complex. <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Using_full_screen_mode">Mozilla has created</a> a very useful script that you can use to toggle fullscreen.  As you can see, due to the vendor prefix situation it is rather complex and cumbersome compared to the specified API. Even with the slightly simplified code below, it is still complex.</p> 
+<p>The actual code is a lot more complex. <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Using_full_screen_mode">Mozilla has created</a> a very useful script that you can use to toggle fullscreen.  As you can see, due to the vendor prefix situation it is rather complex and cumbersome compared to the specified API. Even with the slightly simplified code below, it is still complex.</p>
 
 <pre class="prettyprint">function toggleFullScreen() {
   var doc = window.document;
   var docEl = doc.documentElement;
-      
+
   var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen;
   var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen;
-      
-  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement) { 
+
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement) {
     requestFullScreen.call(docEl);
   }
   else {
-    cancelFullScreen.call(doc);  
+    cancelFullScreen.call(doc);
   }
 }</pre>
 
@@ -135,9 +134,9 @@ Damn you vendor prefixes!
 
 <pre class="prettyprint">&lt;meta name="apple-mobile-web-app-capable" content="yes"></pre>
 
-<p><a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html">From Apple</a>:</p>
 <blockquote>If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
 You can determine whether a webpage is displayed in full-screen mode using the window.navigator.standalone read-only Boolean JavaScript property.
+<cite><a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html">Apple</a></cite>
 </blockquote>
 
 <h4>Chrome for Android</h4>
@@ -145,8 +144,11 @@ You can determine whether a webpage is displayed in full-screen mode using the w
 
 <pre class="prettyprint">&lt;meta name="mobile-web-app-capable" content="yes"></pre>
 
-<p><a href="https://developers.google.com/chrome/mobile/docs/installtohomescreen">From Chrome</a>:</p>
-<blockquote>You can set up your web app to have an application shortcut icon added to a device's homescreen, and have the app launch in full-screen "app mode" using Chrome for Android's "Add to homescreen" menu item.</blockquote>
+<blockquote>You can set up your web app to have an application shortcut icon added to a device's homescreen, and have the app launch in full-screen "app mode" using Chrome for Android's "Add to homescreen" menu item.
+<cite>
+  <a href="https://developers.google.com/chrome/mobile/docs/installtohomescreen">Google Chrome</a>
+</cite>
+</blockquote>
 
 <h4>Firefox OS</h4>
 <p>Firefox OS has implemented a installable web app and packaged app model for developers to create apps for the user's phone.  This model is a little more complex, but it fits in to a wider strategy of installable apps.  The developer has to define a manifest for the app that Firefox OS will parse at install time.</p>
@@ -172,7 +174,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 <p>It is natural to think that you take the body element fullscreen, but if you are on a WebKit or Blink based rendering engine you will see it has an odd effect of shrinking the body width to the smallest possible size that will contain all the content (Mozilla Gecko is fine).</p>
 
 <figure>
-<img src="/static/images/mobile/fullscreen/body.png" style="width:300px;">
+<img src="/static/images/mobile/fullscreen/body.png" style="width:300px;" class="bordered">
 <figcaption>Figure 1: Fullscreen on the body element.</figcaption>
 </figure>
 
@@ -181,14 +183,14 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 <pre class="prettyprint">document.documentElement.requestFullScreen();</pre>
 
 <figure>
-<img src="/static/images/mobile/fullscreen/document.png" style="width:300px;">
+<img src="/static/images/mobile/fullscreen/document.png" style="width:300px;" class="bordered">
 <figcaption>Figure 2: Fullscreen on the document element.</figcaption>
 </figure>
 
 <h3 id="toc-videofullscreen">Making a video element fullscreen</h3>
 <p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullScreen</pre> method on the video element.</p>
 <pre class="prettyprint">&lt;video id=videoElement>&lt;/video>
-&lt;button id="goFS">Go Fullscreen&lt;/button> 
+&lt;button id="goFS">Go Fullscreen&lt;/button>
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
@@ -204,7 +206,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
   &lt;div>
     &lt;button>Play&lt;button>
     &lt;button>Stop&lt;button>
-    &lt;button id="goFS">Go fullscreen&lt;button> 
+    &lt;button id="goFS">Go fullscreen&lt;button>
   &lt;div>
 &lt;div>
 &lt;script>
@@ -220,13 +222,13 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 <pre class="prettyprint">&lt;style>
 #goFS:full-screen #goFS {
   display: none;
-} 
+}
 #goFS:-webkit-full-screen #goFS {
   display: none;
-} 
+}
 #goFS:-moz-full-screen #goFS {
   display: none;
-} 
+}
 &lt;style></pre>
 
 <p>Using these patterns you can detect when full-screen is running and adapt your user interface appropriately:</p>
@@ -301,7 +303,7 @@ selector {
   <li>Manage your UI and app state using the # fragment.</li>
 </ol>
 
-<p>By using the #syntax to update the url (window.location = "#somestate"), and listening to the window.onhashchange event you can use the browser's own history stack to manage changes in the application state, allow the user to use their hardware back buttons, or offer a simple programmatic back button experience by using the history API as follows:</p> 
+<p>By using the #syntax to update the url (window.location = "#somestate"), and listening to the window.onhashchange event you can use the browser's own history stack to manage changes in the application state, allow the user to use their hardware back buttons, or offer a simple programmatic back button experience by using the history API as follows:</p>
 
 <pre class="prettyprint">window.history.go(-1)</pre>
 

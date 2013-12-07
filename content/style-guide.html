@@ -8,19 +8,6 @@
 
 {% block head %}
 <style>
-h1 {
-  text-transform: none;
-}
-article.tutorial {
-  margin-left: auto;
-}
-figure {
-  margin-bottom: 1em;
-  padding: 10px;
-}
-figure img {
-  border: 1px solid #ccc;
-}
 .talkinghead:before {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
@@ -28,32 +15,24 @@ figure img {
 </style>
 {% endblock %}
 
-{% block body %}
-<article class="pattern-bg-lighter">
-  <hgroup>
-    <h1>Style Guide</h1>
-    <b>Updated:</b> 2013-10-29
-  </hgroup>
-</article>
+{% block content %}
 <article class="pattern-bg-lighter tutorial">
+<b>Updated:</b> 2013-11-13
+<h2 id="articlewide">Article wide concepts</h2>
 
-<h1 id="articlewide">Article wide concepts</h1>
-
-<h2 id="warning">New feature warning</h2>
+<h3 id="warning">New feature warning</h3>
 
 <p>For experimental features, include the warning.html text at the top of your content:</p>
 
 <pre class="prettyprint">
-&lt;p>{% templatetag openblock %} include "warning.html" {% templatetag closeblock %}&lt;/p>
+{% templatetag openblock %} include "warning.html" {% templatetag closeblock %}
 </pre>
-
-<p>Example:</p>
 
 <p>{% include "warning.html" %}</p>
 
-<h2 id="featuredetection">Adding browser support to the article</h2>
+<h3 id="featuredetection">Adding browser support to the article</h3>
 
-<p>Articles can indicate if the user's browser does/does not support the feature discussed
+<p>Articles can indicate if the user's browser does not support the feature discussed
 in the article by including an <code>{% templatetag openblock %} block iscompatible {% templatetag closeblock %}</code> at the top of the file:</p>
 
 <pre class="prettyprint">
@@ -64,21 +43,37 @@ in the article by including an <code>{% templatetag openblock %} block iscompati
 
 <p>The content of the <code>{% templatetag openblock %} block iscompatible {% templatetag closeblock %}</code> block should be a JS expression that returns a boolean for the feature detect.</p>
 
-<p>Example:</p>
-
-<figure>
-  <img src="/static/images/styleguide/browsersupport.png">
-  <figcaption>Example: the user's browser supports the feature</figcaption>
-</figure>
-
 <figure>
   <img src="/static/images/styleguide/browsersupport-no.png">
   <figcaption>Example: the user's browser doesn't support the feature</figcaption>
 </figure>
 
-<h1 id="stylingfeatures">Styling features</h1>
+<h3 id="translators">Translations</h3>
+<p>If you provide a translation you can add the translator with <code>{% templatetag openblock %} block translator {% templatetag closeblock %}</code> around code that looks this:
 
-<h2 id="keyboard">Keyboard actions</h2>
+<pre class="prettyprint">
+&lt;div class="translator">
+  &lt;strong>Translator:&lt;/strong> &lt;a href="#">Person Name&lt;/a>
+&lt;/div>
+</pre>
+
+<h3 id="relatedreading">Related reading</h3>
+<p>There are sometimes other articles that you want users to read after they're done with the one they're on. To do that add <code>{% templatetag openblock %} block relatedreading {% templatetag closeblock %}</code> around code that looks this:
+
+<pre class="prettyprint">
+&lt;aside class="panel">
+  &lt;h2>Related reading&lt;/h2>
+  &lt;ul>
+    &lt;li>&lt;a href="#">Some article title&lt;/a>&lt;/li>
+    &lt;li>&lt;a href="#">Some article title&lt;/a>&lt;/li>
+    &lt;li>&lt;a href="#">Some article title&lt;/a>&lt;/li>
+  &lt;/ul>
+&lt;/aside>
+</pre>
+
+<h2 id="stylingfeatures">Styling features</h2>
+
+<h3 id="keyboard">Keyboard actions</h3>
 
 To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> class:
 
@@ -86,19 +81,15 @@ To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> clas
 &lt;kbd>Ctrl&lt;/kbd>+&lt;span class="kbd">Shift&lt;/span>+&lt;kbd>J&lt;/kbd> (or &lt;kbd>Cmd&lt;/kbd>+&lt;kbd>Opt&lt;/kbd>+&lt;kbd>J&lt;/kbd>)
 </pre>
 
-<p>Example:</p>
-
 <kbd>Ctrl</kbd>+<span class="kbd">Shift</span>+<kbd>J</kbd> (or <kbd>Cmd</kbd>+<kbd>Opt</kbd>+<kbd>J</kbd>)
 
-<h2 id="notices">Tips &amp; notices</h2>
+<h3 id="notices">Tips &amp; notices</h3>
 
 <p>Call out important tips/callouts by adding the <code>notice</code> class on <code>&lt;p></code>:</p>
 
 <pre class="prettyprint">
 &lt;p class="notice">&lt;b>Note:&lt;/b> this is a tip you all should know.&lt;/p>
 </pre>
-
-<p>Example:</p>
 
 <p class="notice"><b>Note:</b> this is a tip you all should know.</p>
 
@@ -109,23 +100,38 @@ To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> clas
 &lt;p class="notice fact">It's a fact Jack.&lt;/p>
 </pre>
 
-<p>Example:</p>
-
 <p class="notice tip">This is a tip to remember!</p>
 <p class="notice fact">It's a fact Jack.</p>
 
-<h2 id="quotes">Quotes</h2>
+<h3 id="quotes">Quotes</h3>
 
-<p>Commentary quotes can be added using the <code>commentary</code> class on <code>&lt;blockquote></code>:</p>
+<p>Use <code>&lt;blockquote&gt;</code>:</p>
 
 <pre class="prettyprint">
-&lt;blockquote class="commentary">My ideas are golden.&lt;/blockquote>
+&lt;blockquote>
+  A wise person knows wisdom from folly; truth from lies.
+&lt;/blockquote>
 </pre>
+
+<blockquote>A wise person knows wisdom from folly; truth from lies.</blockquote>
+
+<p>You can also add citations with the &lt;cite&gt; element.</p>
+
+<pre class="prettyprint">
+&lt;blockquote>
+  A wise person knows wisdom from folly; truth from lies.
+  &lt;cite>T. Thinker&lt;/cite>
+&lt;/blockquote>
+</pre>
+
+<blockquote>
+  A wise person knows wisdom from folly; truth from lies
+  <cite>T. Thinker</cite>
+</blockquote>
 
 <h3 id="talkinghead">Talking head</h3>
 
-<p>To add your mug to the mix, add the <code>talkinghead</code> class and to the blockquote
-  and add in a style to adjust the generated content's background-image and positioning:</p>
+<p>To add your mug to the mix, add the <code>talkinghead</code> class to the blockquote and add in a style to adjust the generated content's background-image and positioning:</p>
 
 <pre class="prettyprint">
 &lt;style>
@@ -137,8 +143,6 @@ To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> clas
 
 &lt;blockquote class="commentary talkinghead">Listen to my words of wisdom!&lt;/blockquote>
 </pre>
-
-<p>Example:</p>
 
 <blockquote class="talkinghead commentary">Listen to my words of wisdom!</blockquote>
 
@@ -153,15 +157,24 @@ To show keyboard actions, use <code>&lt;kbd></code> or the <code>kbd</code> clas
 &lt;/figure>
 </pre>
 
+<p>You can add a class of <code>bordered</code> if you want a thin gray outline to be added to the image.</p>
+
+<pre class="prettyprint">
+&lt;figure>
+  &lt;img src="screenshot.png" class="bordered">
+  &lt;figcaption>Screenshot of amazing things&lt;/figcaption>
+&lt;/figure>
+</pre>
+
 <h2 id="code">Code</h2>
 
 <h3 id="code-inline">Snippets</h2>
 
-<p>Inline code snippets in paragraph should be put in a <code>&lt;code></code> element
+<p>Inline code snippets in paragraph should be put in a <code>&lt;code&gt;</code> element
 for easier reading.</p>
 
 <pre class="prettyprint">
-&lt;p>Some text with an inline &lt;/code>navigator.vibrate(...);&lt;code>&lt;/p>
+&lt;p>Some text with an inline &lt;code&gt;navigator.vibrate(...);&lt;/code&gt;&lt;/p>
 </pre>
 
 <h3 id="code-blocks">Blocks</h2>
@@ -207,8 +220,6 @@ Then, use it inside a code block like so:
 &lt;/pre>
 </pre>
 
-<p>Example:</p>
-
 <pre class="prettyprint">
 &lt;style>
 .grayscale {
@@ -228,4 +239,3 @@ Then, use it inside a code block like so:
 <script async src="/static/js/prettify{% if prod %}.min{% endif %}.js" onload="prettyPrint()"></script>
 
 {% endblock %}
-

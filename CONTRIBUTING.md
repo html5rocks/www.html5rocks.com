@@ -1,13 +1,13 @@
 Step-by-step guide for third-party developers to contribute to html5rocks.com. Before you draft the article, read our [writing tips](https://github.com/html5rocks/www.html5rocks.com/wiki/Writing-Tips). 
 
-# Before you start #
+# Before you start
 
 HTML5Rocks runs on Google App Engine (Python). Before you check out the code, download
 the [App Engine Python SDK](http://code.google.com/appengine/downloads.html#Google_App_Engine_SDK_for_Python). The SDK is not required, but highly recommended. You'll want to run a local development server and preview your changes before submitting a tutorial, sample, or patch.
 
 **If you're interested in writing an article, please [file an issue](https://github.com/html5rocks/www.html5rocks.com/issues/new) and wait to hear from us before writing the content!**
 
-# Getting the code #
+# Getting the code
 
 The entirety of HTML5Rocks ([www](http://www.html5rocks.com/), [slides](http://slides.html5rocks.com/), [playground](http://playground.html5rocks.com/), [updates](http://updates.html5rocks.com/)) is located on Github.
 
@@ -28,11 +28,11 @@ To checkout the corresponding source, fork us an run the following command:
 3. Import data by navigating to [http://localhost:8080/database/load_all](http://localhost:8080/database/load_all).
 4. You'll find your local version of html5rocks.com being served on [http://localhost:8080](http://localhost:8080)
 
-# Contributing: submitting patches and tutorials #
+# Contributing: submitting patches and tutorials
 
-## Submitting a code patch, studio/playground sample ##
+## Submitting a code patch, studio/playground sample
 
-### Contributor License Agreements ###
+### Contributor License Agreements
 
 This section only applies if you are submitting a patch for us. The CLA mentioned below does not apply if you are giving us a brand new article or tutorial.
 
