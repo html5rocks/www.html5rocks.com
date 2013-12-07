@@ -22,7 +22,7 @@ import os
 import stat
 
 
-DIRS = ['../content', '../static']
+DIRS = ['../content', '../static', '../webappfieldguide']
 EXT = '.png'
 
 def GetAllPngs(dirs):
