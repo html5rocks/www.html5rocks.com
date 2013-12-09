@@ -23,7 +23,6 @@
 
 body ::-webkit-scrollbar {
   height: 16px;
-  overflow: visible;
   width: 16px;
 }
 
@@ -59,12 +58,9 @@ audio, canvas, video { display: inline-block; *display: inline; *zoom: 1; }
 audio:not([controls]) { display: none; }
 [hidden] { display: none; }
 
-html { font-size: 100%; overflow-y: scroll; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-body { margin: 0; font-size: 13px; line-height: 1.231; overflow: hidden; }
+html { font-size: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+body { margin: 0;}
 body, button, input, select, textarea { font-family: sans-serif; color: #222; }
-
-::-moz-selection { background: #f04530; color: #fff; text-shadow: none; }
-::selection { background: #f04530; color: #fff; text-shadow: none; }
 
 a { color: #508B88; text-decoration: none;}
 a:visited { color: #508B88; }
@@ -115,6 +111,8 @@ td { vertical-align: top; }
 
 .clear {
   clear: both;
+  content: '';
+  display: block;
 }
 
 .padder {
@@ -122,17 +120,37 @@ td { vertical-align: top; }
 }
 
 html, body {
+  height: 100%;
+  width: 100%;
   background: #EEE;
 }
 
 .main {
-  height: 38px;
+  min-height: 38px;
   overflow: hidden;
   background: #ED4732;
+  background: linear-gradient(0deg, #DA421C, #DB5945);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  position: relative;
 }
 
 .main #title {
   display: none;
+}
+
+.main #navtoggle {
+  display: block;
+  height: 25px;
+  width: 44px;
+  border-radius: 4px;
+  border: none;
+  margin: 6px 7px;
+  text-indent: -1000em;
+  box-shadow: 0 1px 1px rgba(255,255,255,0.6);
+  background: #531911;
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIg0KCSB3aWR0aD0iNDRweCIgaGVpZ2h0PSIyNXB4Ij4NCg0KPHJlY3QgeD0iMTEiIHk9IjciIGZpbGw9IiNEQjg3N0QiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyIiAvPg0KPHJlY3QgeD0iMTEiIHk9IjkiIGZpbGw9IiMwMDAwMDAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxIiAvPg0KDQo8cmVjdCB4PSIxMSIgeT0iMTEiIGZpbGw9IiNEQjg3N0QiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyIiAvPg0KPHJlY3QgeD0iMTEiIHk9IjEzIiBmaWxsPSIjMDAwMDAwIiB3aWR0aD0iMjIiIGhlaWdodD0iMSIgLz4NCg0KPHJlY3QgeD0iMTEiIHk9IjE1IiBmaWxsPSIjREI4NzdEIiB3aWR0aD0iMjIiIGhlaWdodD0iMiIgLz4NCjxyZWN0IHg9IjExIiB5PSIxNyIgZmlsbD0iIzAwMDAwMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEiIC8+DQoNCjwvc3ZnPg0K);
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 .main nav {
@@ -140,21 +158,54 @@ html, body {
   margin: 0 auto;
 }
 
+.main nav {
+  display: none;
+  position: relative;
+  background: #333;
+  width: 100%;
+  z-index: 4;
+  padding-bottom: 100px;
+}
+
+.main nav.active {
+  display: block;
+}
+
 .main nav ul {
-  padding-left: 17px;
+  padding: 20px 0 0 17px;
 }
 
 .main nav ul li {
-  display: inline;
+  font-family: Arial, sans-serif;
+  display: block;
   text-transform: uppercase;
-  line-height: 38px;
   margin-right: 10px;
+  border-bottom: 1px solid #444;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.main nav ul li:after {
+  content: '';
+  width: 100%;
+  height: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid #111;
 }
 
 .main nav ul li a {
+  display: block;
   color: #FFF;
-  font-size: 12px;
+  opacity: 0.7;
+  font-size: 18px;
+  line-height: 50px;
   font-weight: normal;
+}
+
+.main nav ul li a:hover {
+  opacity: 1;
 }
 
 .masthead {
@@ -309,7 +360,12 @@ html, body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-.latest-articles .rss-feed {
+.latest-articles .container {
+  padding-bottom: 30px;
+}
+
+.latest-articles .rss-feed,
+.articles-list .rss-feed {
   width: 28px;
   height: 28px;
   position: absolute;
@@ -318,13 +374,14 @@ html, body {
   text-indent: 30px;
   font-size: 0;
   overflow: hidden;
-  background: url(data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAQDAwMEAwQEBAQGBAQEBggGBAQGCAkHBwgHBwkLCQkJCQkJCwkLCwwLCwkODg8PDg4UFBQUFBYWFhYWFhYWFhb/2wBDAQUFBQkICRELCxEUEA0QFBgXFxcXGBgWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhb/wAARCAAcABwDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABwYDBf/EAC4QAAEDAwMCAwcFAAAAAAAAAAECAwQFBhEAEiEHMRNBURQVFiIjMmFCY3GBkv/EABcBAAMBAAAAAAAAAAAAAAAAAAIEBgP/xAAkEQACAAUCBwEAAAAAAAAAAAABAgADBBESIWETFCIyUZGSQf/aAAwDAQACEQMRAD8AbKFTKvdVXfQmShUxaFSHXpClAEAgcYCj+rgY12Kl0yuqG2XEstzUp5V7Mrcf8qCFH+hqSs/4dfqRRXJzsCIGyWn2fu8XcnaPscwMZ5xpQZpdShxDVLMr66vGZ5fpzqg6TjkjbwM/jaD6ag6WkSal2BJ2YZfJi3q57ynspAG6nH6gtUlSVFKgUqScKSeCCNdWnXjcFNj+zQ5y2mAdwb7gE+me2rC4mqddlru3HTmfAqdP4qkZPdQSPmz67RyFenHloiVJ50pNkvTv0toRoRpcQzJdahepdQdQfwxX9Hrat2vT6i3V/rLjttmLD8RTe8KKt6/kKVHZhPn562gVenWp1TcjQJg9z+OmNIWpeUBt1Kd4Ur9lZ7/j+dRt9UaHSLqqVPh7hGYc+klRyQFDOM8ds6ndPccSwFCjNG7vMFyvFJYscHXt8bw929cNrxOod1xveUVujVBhLiXi6gMLcISVhK87Ty6vgaCS+rWWnPpp00tWr2qxUKgw4/JfcXuVvKQAk4AAGPTRjKqIQWFsj7N4zYJRgubm+I9C14//2Q==);
+  background: url(/static/images/rss.png);
+  background-size: 28px 28px;
 }
 
 .latest-articles h2 {
   font-family: 'Open Sans';
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 800;
   color: #5FA49F;
   margin: 0 0 0.8em 0;
   padding: 0.7em 0 0 4%;
@@ -381,7 +438,7 @@ html, body {
   color: #333;
   font-size: 15px;
   font-family: 'Open Sans';
-  font-weight: 700;
+  font-weight: 800;
   display: block;
   margin-bottom: 0.6em;
   transition: color 0.3s ease-out;
@@ -486,6 +543,21 @@ html, body {
   width: 100%;
 }
 
+kbd, .kbd {
+  padding: 0.1em 0.6em;
+  border: 1px solid rgb(204, 204, 204);
+  font-family: Arial,Helvetica,sans-serif;
+  background-color: rgb(247, 247, 247);
+  color: rgb(51, 51, 51);
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2),0 0 0 2px rgb(255, 255, 255) inset;
+  border-radius: 3px;
+  display: inline-block;
+  margin: 0 0.1em;
+  text-shadow: 0 1px 0 rgb(255, 255, 255);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 @media screen and (min-width: 430px) {
   .divider {
     padding-top: 25px;
@@ -503,17 +575,6 @@ html, body {
 }
 
 @media screen and (min-width: 500px) {
-  .main {
-    height: 50px;
-  }
-
-  .main nav ul li {
-    line-height: 50px;
-  }
-
-  .main nav ul li a {
-    font-size: 14px;
-  }
 
   .masthead {
     height: 198px;
@@ -610,6 +671,45 @@ html, body {
 }
 
 @media screen and (min-width: 700px) {
+
+  .main {
+    min-height: 50px;
+  }
+
+  .main #navtoggle {
+    display: none;
+  }
+
+  .main nav {
+    display: block;
+    background: none;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: auto;
+    padding-bottom: 0;
+  }
+
+  .main nav ul {
+    padding: 0 17px;
+  }
+
+  .main nav ul li {
+    display: inline;
+    line-height: 50px;
+    border-bottom: none;
+  }
+
+  .main nav ul li:after {
+    display: none;
+  }
+
+  .main nav ul li a {
+    font-size: 14px;
+    display: inline;
+  }
+
   .masthead .container span.large {
     left: 18.5%;
     top: 79px;

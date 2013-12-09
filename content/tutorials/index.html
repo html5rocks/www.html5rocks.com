@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "v2-base.html" %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -7,139 +7,87 @@
 {% block head %}{% endblock %}
 
 {% block body %}
-<div data-import-html>
-  {% if not is_mobile %}
-  <header class="clearfix pattern-bg-lighter">
-    <hgroup>
-      <h1>HTML5 Rocks</h1>
-      <h2>{% trans "Tutorials" %}</h2>
-    </hgroup>
-    <section class="filter">
-      <div class="one_quarter">
-        <h3>Format:</h3>
-        <ul id="updates_format_filter">
-          <li><label><input type="checkbox" value="tutorial"> {% trans "Tutorial" %}</label></li>
-          <li><label><input type="checkbox" value="article"> {% trans "Article" %}</label></li>
-          <li><label><input type="checkbox" value="casestudy"> {% trans "Case Study" %}</label></li>
-          <!--<li><label><input type="checkbox" value="announcement"> {% trans "Announcement" %}</label></li>-->
-          <li><label><input type="checkbox" value="update"> {% trans "Post" %}</label></li>
-          <!--<li><label><input type="checkbox" value="presentation"> {% trans "Presentation" %}</label></li>
-          <li><label><input type="checkbox" value="video"> {% trans "Video" %}</label></li>-->
-          <li><label><input type="checkbox" value="demo"> {% trans "Demo" %}</label></li>
-          <li><label><input type="checkbox" value="sample"> {% trans "Sample" %}</label></li>
-        </ul>
+  <section class="title">
+
+    {% if redirect_from_locale %}
+    <section class="redirect_notification error-block" lang="{{ redirect_from_locale.lang }}">
+      <p>{{ redirect_from_locale.msg }}</p>
+    </section>
+    {% endif %}
+
+    <section class="title-text container">
+      <h1>{% trans "Tutorials" %}</h1>
+      <a href="/" class="watermark">HTML5 Rocks</a>
+    </section>
+  </section>
+
+  <article class="content-wrapper wide">
+
+    <section class="container">
+
+      <section class="search">
+        <form action="/{{LANGUAGE_CODE}}/search" role="search">
+          <legend>Search</legend>
+          <label for="q">{% trans "Search" %}:</label>
+          <input type="search" name="q" id="q" autocomplete="off" placeholder="{% trans "Search" %}" />
+          <input type="submit" id="search-button" value="{% trans "Search" %}">
+        </form>
+      </section>
+
+      <div class="pager">
+        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "All Tutorials" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next Page" %}</a>{% endif %}
       </div>
-      <div class="one_quarter">
-        <h3>Audience:</h3>
-        <ul id="updates_audience_filter">
-          <!--<li><label><input type="checkbox" value="general"> {% trans "General" %}</label></li>-->
-          <li><label><input type="checkbox" value="mobile"> {% trans "Mobile" %}</label></li>
-          <li><label><input type="checkbox" value="gaming"> {% trans "Gaming" %}</label></li>
-          <li><label><input type="checkbox" value="business"> {% trans "Business" %}</label></li>
-        </ul>
+
+      <div class="articles-list">
+
+        <ul>
+        {% for tut in tutorials %}
+          <li>
+            <a href="{{tut.url}}">
+              <span class="left">
+                <span class="author" data-author_id="{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{tut.author.key.name}}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}" width="60" height="60"></span>
+              </span>
+
+              <span class="right">
+                <span class="date">{{tut.publication_date|date:"F jS, Y"}}</span>
+                <span class="title">
+                  {{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}
+                </span>
+                <span class="description">{{tut.description}}</span>
+                {% for tag in tut.tags %}
+                  <span class="tag">{{tag}}</span>
+                {% endfor %}
+              </span>
+
+              <span class="clear"></span>
+            </a>
+          </li>
+        {% empty %}
+          Sorry, nothing available yet. Become a <a href="http://code.google.com/p/html5rocks/wiki/ContributorsGuide" target="_blank">contributor</a>.
+        {% endfor %}
+      </ul>
+      <div class="clear"></div>
       </div>
-      <div class="one_half">
-        <h3>Technology:</h3>
-        <ul id="updates_technology_filter">
-          <li><label><input type="checkbox" value="offline"> {% trans "Offline" %}</label></li>
-          <li><label><input type="checkbox" value="storage"> {% trans "Storage" %}</label></li>
-          <li><label><input type="checkbox" value="connectivity"> {% trans "Connectivity" %}</label></li>
-          <li><label><input type="checkbox" value="file_access"> {% trans "File Access" %}</label></li>
-          <li><label><input type="checkbox" value="semantics"> {% trans "Semantics" %}</label></li>
-          <li><label><input type="checkbox" value="multimedia"> {% trans "Audio/Video" %}</label></li>
-          <li><label><input type="checkbox" value="graphics"> {% trans "3D/Graphics" %}</label></li>
-          <li><label><input type="checkbox" value="presentation"> {% trans "Presentation" %}</label></li>
-          <li><label><input type="checkbox" value="performance"> {% trans "Performance" %}</label></li>
-          <li><label><input type="checkbox" value="nuts_and_bolts"> {% trans "Nuts &amp; Bolts" %}</label></li>
-        </ul>
+
+      <div class="pager">
+        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "All Tutorials" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next Page" %}</a>{% endif %}
       </div>
 
     </section>
+  </article>
 
-    <!-- span class="share">
-      <ul>
-        <li class="googleplus"><div class="g-plusone" data-size="medium" data-count="true" data-href="{{disqus_url}}?utm_source=gplus&utm_medium=social"></div></li>
-        <li class="facebook" data-url="{{disqus_url}}?utm_source=facebook&utm_medium=social"></li>
-        <li class="twitter"><a href="http://twitter.com/share" class="twitter-share-button" data-url="{{disqus_url}}?utm_source=twitter&utm_medium=social" data-lang="{{LANGUAGE_CODE}}" data-related="ChromiumDev:News and announcements for developers from the Google Chrome team and makers of HTML5 Rocks.">{% trans "Tweet" %}</a></li>
-      </ul>
-    </span -->
+  <div class="padder"></div>
 
-    <!--
-    <div id="google_plus_page_link">
-      <a href="https://plus.google.com/102860501900098846931?prsrc=3">
-        {% trans "<strong>Follow us</strong> on <span>Google+</span>" %}
-      </a>
+  <footer>
+    <div class="container">
+
+      <p class="licensing">
+      {% blocktrans %}
+        Except as otherwise <a href="http://code.google.com/policies.html#restrictions">noted</a>, the content of this page is licensed under the <a href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 License</a>, and code samples are licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a>.
+      {% endblocktrans %}
+      </p>
+
     </div>
-    -->
+  </footer>
 
-  </header>
-  {% endif %}
-
-  <section class="hidden pattern-bg-lighter">
-    <div id="filter" style="text-align: center;">
-      {% trans "Filtering by tag" %}: <span id="filter_tag"></span>.
-      <a href="#">{% trans "[Clear filter]" %}</a>
-    </div>
-  </section>
-
-  <section class="pattern-bg-lighter">
-    <div id="index">
-      <h2>{% trans "Recent Articles" %}
-      <a href="http://feeds.feedburner.com/html5rocks" style="vertical-align:text-top;" target="_blank">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJpSURBVDjLfVNJT1NRGL0/wY0/wonaEesOAxoTF4bEpY1GFGGBqEUhggjYaCVIcIKC1TiHiCEBiXEhVdm4EDaaKI2WofTRlqbYR8sbOhzfd5v3tEK8i5d3F+fcM3wf+3x065bZc9t6F5rNCLeYsXTJgkibBUK7FcsdVkS7bIh57Ihfs2PFa0fihgOx6w4QhrCMfmKXnYi4y7DcbEK8zYxEhwVJjxW/vDaIPXak+xxYv1MOqX8PlEEn1PtOKP4KTsLoZQLH  vQeRfjeAzPsBiE9O/Rec9e+F7HMiqiljJJteXvXX4O9TkEUon4awPlS5KThzq5xbY+SZZCf7DkGa8kH9Mo58SvjDpKwh+/biBnCq245opw2MAtvMszxah0IiaPDkPl4tASc9Nh40ow+B089ruexceBrqVC/kB5Vcdj44YZDIr5sM8Eq71larBYyqopczw6dLMuDSR11cdm52wshltaeCg6MtVLtGQD3rsqVHh6FOdqEgCgaJOuLisvVcMgEfBwtuExYvmMEoyQ1VPd5vSC9oQPH2PqRHzhfvksjB4YYyLLh3g9GE6eD83AcUhBkemPKwylCSHrvCZROYTtR7BPP1uzB3ViOg8SSwOl5v2M9HprlsOXCz6ORbgMuWvk7ye/KlF6GTOxE6YwKj2SbZ2eFq7pmOOvOCp732tJbfs8J3Ljv1pr9IMHYXP47vwM8GjYAWQx8S5Vk1pFd1JVUlB2uQuHeCe15qPQCh+xjmm6oQdG1HqFGzQAtBi/HvkOhV6YGRZ5JNLxN4sbG4kUxfZ1oMaoTGk4aLhoR6pqoobQqMPJNsellf598J2Or0Mh3FtwAAAABJRU5ErkJggg==" width="16" height="16" />
-      </a>
-      </h2>
-
-      <!-- Paging -->
-      <div class="pager">
-        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "All" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next" %}</a>{% endif %}
-      </div>
-
-      {% for tut in tutorials %}
-      <article class="tutorial_listing" data-type="{{ tut.type }}" data-classes="{{ tut.classes|join:',' }}"
-        data-pubdate="{{tut.publication_date.year}}-{{tut.publication_date|date:"m"}}-{{tut.publication_date|date:"d"}}">
-        <h3 id="{{tut.title|slugify}}" >
-          <a href="{{tut.url}}">{{tut.title|safe}}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %}</a>
-        </h3>
-        <div>
-          <span class="date">{{tut.publication_date}}</span>
-          <span class="author" data-author_id="{{ tut.author.key.name }}">By
-            <a href="/profiles/#{{ tut.author.key.name }}">
-              <img class="author_image" src="/static/images/profiles/75/{{ tut.author.key.name }}.75.png" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
-              {{ tut.author.given_name }} {{ tut.author.family_name }}
-            </a>
-            {% if tut.second_author %}
-            <a href="/profiles/#{{ tut.second_author.key.name }}">
-              <img class="author_image" src="/static/images/profiles/75/{{ tut.second_author.key.name }}.75.png" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
-              {{ tut.second_author.given_name }} {{ tut.second_author.family_name }}
-            </a>
-            {% endif %}
-          </span>
-
-          {% for tag in tut.tags %}
-            <span class="tag">{{tag}}</span>
-          {% endfor %}
-
-          <div class="classes">
-            {% for tag in tut.classes %}
-              <span class="class {{tag}}"><span class="class_name">{{tag}}</span></span>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="summary">
-          {% if tut.description %}{{tut.description|safe}}{% endif %}
-        </div>
-      </article>
-      {% endfor %}
-
-      <!-- Paging -->
-      <div class="pager">
-        {% if args.previous_page or args.next_page %}<a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "All" %}</a> | {% endif %}{% if args.previous_page %}<a href="?page={{args.previous_page}}">{% trans "Previous" %}</a> {% endif %}{% if args.previous_page and args.next_page %} | {% endif %}{% if args.next_page %}<a href="?page={{args.next_page}}">{% trans "Next" %}</a>{% endif %}
-      </div>
-    </div>
-  </section>
-</div>
-
-<script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
-<script defer src="/static/js/tutsapp{% if prod %}.min{% endif %}.js"></script>
 {% endblock %}

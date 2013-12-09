@@ -25,6 +25,7 @@ import re
 import urllib2
 import webapp2
 import yaml
+import cgi
 
 # App libs.
 import settings
@@ -71,8 +72,9 @@ class ContentHandler(webapp2.RequestHandler):
     return browser and (browser.find('Android') != -1 or browser.find('iPhone') != -1)
 
   def get_toc(self, path):
+
     # Only have TOC on tutorial pages. Don't do work for others.
-    if not (re.search('/tutorials', path) or re.search('/mobile', path)):
+    if not (re.search('/tutorials', path) or re.search('/mobile', path) or re.search('style-guide', path)):
       return ''
 
     toc = memcache.get('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path))
@@ -85,20 +87,40 @@ class ContentHandler(webapp2.RequestHandler):
       stream = walker(dom_tree)
       toc = []
       current = None
+      innerTagCount = 0
       for element in stream:
         if element['type'] == 'StartTag':
-          if element['name'] in ['h2', 'h3', 'h4']:
+          if element['name'] in ['h2']:
             for attr in element['data']:
               if attr[0] == 'id':
                 current = {
                   'level' : int(element['name'][-1:]) - 1,
-                  'id' : attr[1]
+                  'id' : attr[1],
+                  'text': ''
                 }
+          elif current is not None:
+            innerTagCount += 1
         elif element['type'] == 'Characters' and current is not None:
-          current['text'] = element['data']
+
+          # if we already have text check:
+          # - whether the last character is a < or a (
+          # - the string being added starts with > or )
+          # in which case do not add a space
+          if current['text'] != '':
+
+            if current['text'][-1] != '<' and not re.match(r"^[\>\)]", element['data']):
+              current['text'] += ' '
+
+          current['text'] = current['text'] + element['data']
+
         elif element['type'] == 'EndTag' and current is not None:
-          toc.append(current)
-          current = None
+          if innerTagCount > 0:
+            innerTagCount -= 1
+          else:
+            current['text'] = cgi.escape(current['text'])
+            toc.append(current)
+            current = None
+
       memcache.set('%s|toc|%s' % (settings.MEMCACHE_KEY_PREFIX, path), toc, 3600)
 
     return toc
@@ -287,6 +309,8 @@ class ContentHandler(webapp2.RequestHandler):
 
     # Which CSS should this use? (Will get overwritten.)
     css_file = 'base'
+    page_class = None
+    include_home_link = True
 
     # Setup handling of redirected article URLs: If a user tries to access an
     # article from a non-supported language, we'll redirect them to the
@@ -316,7 +340,12 @@ class ContentHandler(webapp2.RequestHandler):
         return self.redirect('/'+locale+'/'+relpath, permanent=True)
 
       if (relpath == ''):
-        css_file = 'home'
+        include_home_link = None
+        css_file = 'v2-combined'
+
+      if (relpath == 'tutorials/'):
+        css_file = 'v2-combined'
+        page_class = 'article tutorial listing'
 
       path = os.path.join('content', relpath, 'index.html')
     else:
@@ -330,7 +359,9 @@ class ContentHandler(webapp2.RequestHandler):
       for p in profiles:
         p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
       return self.render(data={
-            'css_file':css_file,
+            'include_home_link': include_home_link,
+            'page_class': page_class,
+            'css_file': css_file,
             'sorted_profiles': profiles
           }, template_path='content/profiles.html', relpath=relpath)
     elif ((re.search('tutorials/.+', relpath) or
@@ -372,10 +403,6 @@ class ContentHandler(webapp2.RequestHandler):
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
 
-        # If tutorial is marked as draft, redirect and don't show it.
-        if tut and tut.draft:
-          return self.redirect('/tutorials')
-
         # Localize title and description.
         if tut:
           if tut.title:
@@ -384,6 +411,9 @@ class ContentHandler(webapp2.RequestHandler):
             tut.subtitle = _(tut.subtitle)
           if tut.description:
             tut.description = _(tut.description)
+
+        css_file = 'v2-combined'
+        page_class = 'article tutorial'
 
         # Gather list of localizations by globbing matching directories, then
         # stripping out the current locale and 'static'. Once we have a list,
@@ -409,6 +439,8 @@ class ContentHandler(webapp2.RequestHandler):
                              'lang': settings.LANGS[loc]})
 
         data = {
+          'include_home_link': include_home_link,
+          'page_class': page_class,
           'css_file': css_file,
           'tut': tut,
           'no_lang': no_lang, # if url doesn't include language param
@@ -493,6 +525,8 @@ class ContentHandler(webapp2.RequestHandler):
       authors = author_dict.values()
 
       data = {
+        'include_home_link': include_home_link,
+        'page_class': page_class,
         'css_file': css_file,
         'tutorials': tutorials,
         'authors': authors,
@@ -507,6 +541,13 @@ class ContentHandler(webapp2.RequestHandler):
                         relpath=relpath)
 
     elif os.path.isfile(path + '.html'):
+
+      page_title = None
+      if path == 'content/style-guide':
+        css_file = 'v2-combined'
+        page_class = 'article'
+        page_title = 'Style Guide'
+
       category = relpath.replace('features/', '')
       updates = TagsHandler().get_as_db(
           'class:' + category, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
@@ -521,6 +562,9 @@ class ContentHandler(webapp2.RequestHandler):
           r.url = "/%s%s" % (self.locale, r.url)
 
       data = {
+        'include_home_link': include_home_link,
+        'page_title': page_title,
+        'page_class': page_class,
         'css_file': css_file,
         'category': category,
         'updates': updates
