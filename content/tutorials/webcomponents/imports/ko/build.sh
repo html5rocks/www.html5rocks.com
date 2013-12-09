@@ -6,7 +6,7 @@
 # Modified: Eric Bidelman <ericbidelman@html5rocks.com>
 
 rm index.html
-cat ../en/header.html >> index.html
+cat ./header.html >> index.html
 /usr/local/bin/markdown_py index.md >> index.html
 cat ../en/footer.html >> index.html
 

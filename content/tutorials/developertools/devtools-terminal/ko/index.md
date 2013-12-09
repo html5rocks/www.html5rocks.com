@@ -1,6 +1,6 @@
 <h2 id="toc-intro">소개</h2>
 
-[개발자도구의 터미널(DevTools Terminal)](https://github.com/petethepig/devtools-terminal)은 브라우저에 [강력함](http://blog.dfilimonov.com/2013/09/12/devtools-terminal.html)을 가져다주는 새로운 크롬 개발자도구 확장기능입니다. 만약 태스크를 위해 Asset의 획득, git의 사용, grunt, wget 뿐만이 아니라 vim 같은 크롬과 커맨드라인 간의 컨텍스트-스위칭을 하고 있음을 발견할지라도 유용하게 시간을 절약할 수 있는 이 확장기능을 발견하게 될 것입니다.
+[개발자도구의 터미널(DevTools Terminal)](https://github.com/petethepig/devtools-terminal)은 브라우저에 [강력함](http://blog.dfilimonov.com/2013/09/12/devtools-terminal.html)을 가져다주는 새로운 크롬 개발자도구 확장기능입니다. 만약 태스크를 위해 (리소스 다운로드, git 사용, grunt, wget뿐만이 아니라 vim까지도 포함한) 커맨드라인 도구와 크롬 간에 컨텍스트-스위칭을 하고 있음을 깨달을지라도 이 확장 기능이 시간을 절약하는 유용한 도구라는 사실을 발견하게 될 것입니다.
 
 <figure>
   <img src="image_0.png" alt="개발자도구의 터미널은 빠르게 커맨드라인을 다루는데 훌륭합니다." />

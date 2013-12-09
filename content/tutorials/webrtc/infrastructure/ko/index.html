@@ -23,6 +23,12 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 // TODO
 {% endblock %}
 
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="http://cwdoh.com">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
 {% block content %}
 
 <blockquote class="commentary talkinghead">
@@ -34,16 +40,15 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
   <p>WebRTC는 여전히 다음과 같은 서버를 필요로 합니다.</p>
 
   <ul>
-    <li>클라이언트들의 통신을 조정하기 위한 메타데이터의 교환. 이것은 시그널링(Signaling)이라고 불립니다.</li>
-    <li>네트워크 주소 변환기 (NAT를) 및 방화벽에 대한 대응.</li>
+    <li>시그널링(Signaling)이라 불리는, 클라이언트들의 통신을 조정하기 위한 메타데이터의 교환 서버</li>
+    <li>네트워크 주소 변환기(NAT) 및 방화벽 대응을 위한 서버</li>
   </ul>
-
-
-</blockquote>
 
 <p>이 글에서 우리는 여러분에게 시그널링 서비스를 어떻게 구축하는지와 STUN과 TURN 서버들을 이용하여 실제 연결에 있어 이상한 사항들에 대해 어떻게 타협해야 하는지를 보여줄 것입니다. 또한 WebRTC 앱들이 어떻게 다단위의 호출을 제어할 수 있는지와 VoIP나 PSTN(전화라고도 하는)과 같은 서비스들과 어떻게 상호작용하는지에 대해 설명할 것입니다.</p>
 
 <p>만약 여러분이 WebRTC의 기초에 대해 익숙하지 않다면, 이 글을 읽기 전에 <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">WebRTC와 함께 시작하기</a>를 찾아서 읽어보기를 강력하게 권장합니다.</p>
+
+</blockquote>
 
 <h2 id="what-is-signaling">시그널링(Signaling)이란 무엇인가?</h2>
 
@@ -227,7 +232,7 @@ function logError(error) {
 
 <h2 id="how-can-i-build-a-signaling-service">어떻게 시그널링 서비스를 구축할 수 있을까요?</h2>
 
-<p>반복하자면 시그널링 프로토콜들과 메커니즘들은 WebRTC 표준에서 정의하고 있지 않습니다. 어떤 것을 선택하더라도 클라이언트들 사이에 시그널링 메세지들과 어플리케이션 데이터를 교환하기 위한 중간 서버가 필요할 수 있습니다. 슬프케도 웹 앱은 단순하게 인터넷으로 '나와 접속해주게, 친구!'라고 외칠 수 없습니다. <br/> <br/> 고맙게도 시그널링 메세지들은 작고 호출의 시작 단계에서 대부분 교환됩니다. <a href="http://apprtc.appspot.com">apprtc.appspot.com</a>과 <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>로 시험해본 결과 비디오 챗 세션의 경우 시그널링 서비스에 의해 다뤄지는 전체 메세지가 약 30~45개 정도 모든 메세지의 총 크기는 약 10KB 정도라는 사실을 확인했습니다.</p>
+<p>반복하자면 시그널링 프로토콜들과 메커니즘들은 WebRTC 표준에서 정의하고 있지 않습니다. 어떤 것을 선택하더라도 클라이언트들 사이에 시그널링 메세지들과 어플리케이션 데이터를 교환하기 위한 중간 서버가 필요할 수 있습니다. 슬프게도 웹 앱은 단순하게 인터넷으로 '나와 접속해주게, 친구!'라고 외칠 수 없습니다. <br/> <br/> 고맙게도 시그널링 메세지들은 작고 호출의 시작 단계에서 대부분 교환됩니다. <a href="http://apprtc.appspot.com">apprtc.appspot.com</a>과 <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>로 시험해본 결과 비디오 챗 세션의 경우 시그널링 서비스에 의해 다뤄지는 전체 메세지가 약 30~45개 정도 모든 메세지의 총 크기는 약 10KB 정도라는 사실을 확인했습니다.</p>
 
 <p><!--cwdoh; 이상해-->게다가 대역폭 용어와 관계되어 요청되지 않은 것으로는 WebRTC 시그널링 서비스는 더 많은 과정이나 메모리를 소모하지 않기 때문에 단지 메세지의 릴레이나 적은 량의 세션 상태 데이터(클라이언트들이 접속 여부 같은)만 획득하는 것만 필요합니다.</p>
 
@@ -237,7 +242,7 @@ function logError(error) {
 
 <h3 id="pushing-messages-from-the-server-to-the-client">서버에서 클라이언트측으로의 메세지 푸시</h3>
 
-<p>시그널링을 위한 메세지 서비스는 클라이언트에서 서버로 그리고 서버로부터 클라이언트로의 양방향이어야 합니다. 양방향 통신은 HTTP 클라이언트/서버의 요청/응답 모델과 대비되지만 <a href="https://en.wikipedia.org/wiki/Comet_(programming)">롱폴링(long polling)</a>과 같은 다양한 핵들이 웹서버 상에서 동작하는 서비스로부터 브라우저에서 동작하는 웹앱으로 데이터를 푸시하기 위해 몇년이 넘게 개발되어 왔습니다.</p>
+<p>시그널링을 위한 메세지 서비스는 클라이언트에서 서버로 그리고 서버로부터 클라이언트로의 양방향이어야 합니다. 양방향 통신은 HTTP 클라이언트/서버의 요청/응답 모델과 대비되지만 <a href="https://en.wikipedia.org/wiki/Comet_(programming)">롱폴링(long polling)</a>과 같은 다양한 핵들이 웹서버 상에서 동작하는 서비스로부터 브라우저에서 동작하는 웹앱으로 데이터를 푸시하기 위해 몇년이 넘도록 개발되어 왔습니다.</p>
 
 <p>보다 최근에는 <a href="http://www.html5rocks.com/en/tutorials/eventsource/basics/">EventSource API</a>가 <a href="http://caniuse.com/#feat=eventsource">폭넓게 구현되었습니다.</a> 이는 HTTP를 통해 웹서버로부터 브라우저 클라이언트에 데이터를 보내는 '서버-송신 이벤트(sever-sent events)'를 가능하게 하였습니다. <a href="http://simpl.info/es">simpl.info/es</a>에서 간단한 데모를 확인할 수 있습니다. EventSource는 단방향 메시징을 위해 디자인되었으나 다음과 같이 XHR과의 결합을 통해 시그널링 메세지의 교환을 위한 서비스 구축에 사용될 수 있습니다. 시그널링 서비스는 XHR 요청을 통해 호출자로부터 메세지를 넘겨받아 EventSource를 통해 그것을 피호출자에게 푸시할 수 있습니다.</p>
 
@@ -427,7 +432,7 @@ io.sockets.on('connection', function (socket){
 
 <p>보안 시그널링에서 가장 중요한 점은 암호화되지 않은 메세지가 가로채지지 않도록 하는 HTTPS와 WSS(예: TLS) 보안 프로토콜들을 사용하는 것입니다. 또한 동일한 시그널링 서버를 사용하는 다른 호출자들로부터 액세스될 수 있게 시그널링 메세지들이 브로드캐스팅되지 않도록 주의해야 합니다.</p>
 
-<p class="notice fact"><a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>를 사용한 시그널링은 WebRTC 앱을 보호하기 위한 <strong>절대적 명령 사항</strong>입니다.</p>
+<p class="notice fact"><a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>를 사용한 시그널링은 WebRTC 앱을 보호하기 위한 <strong>절대적인 필수 적용 사항</strong>입니다.</p>
 
 <h2 id="after-signaling-using-ice-to-cope-with-nats-and-firewalls">시그널링 후: NAT와 방화벽들에 대응하기 위한 ICE의 사용</h2>
 
@@ -493,7 +498,7 @@ io.sockets.on('connection', function (socket){
 
 <p>STUN 서버들은 많은 것을 하거나 많은 것을 기억하지 말아야하므로 관련된 저사양 STUN 서버들은 아주 많은 양의 응답을 관리할 수 있습니다.</p>
 
-<p>대부분의 WebRTC 호출은 STUN을 이용한 연결을 성공적으로 만들어냅니다. 방화벽과 복잡한 NAT 설정들 뒤에 존재하는 피어(Peer)들 사이의 호출은 더 작을 수 있겠지만<a href="http://webrtcstats.com/">webrtcstats.com</a>에 따른 (호출에 대한 연결 생성 성공률은) 86%입니다.</p>
+<p>대부분의 WebRTC 호출은 STUN을 이용한 연결을 성공적으로 만들어냅니다. 방화벽과 복잡한 NAT 설정들 뒤에 존재하는 피어(Peer)들 사이의 호출은 더 작을 수 있겠지만 <a href="http://webrtcstats.com/">webrtcstats.com</a>에 따른 (호출에 대한 연결 생성 성공률은) 86%입니다.</p>
 
 <figure>
   <img src="stun.png" alt="STUN 서버를 이용한 피어(Peer) 대 피어(Peer) 연결" />
@@ -561,7 +566,7 @@ io.sockets.on('connection', function (socket){
   <figcaption>완전한 그물망 형태의 위상 구조: 모든 것이 모두 연결되어 있음</figcaption>
 </figure>
 
-<p>그 대신에 star configuration에서 WebRTC 앱은 다른 모두에게 스트림들을 분배하기 위한 하나의 종단점(Endpoint)를 선택할 수 있으며 또한 서버에서 WebRTC 종단점(Endpoint)를 실행할 수 있으며 여러분 각자의 재분배 메커니즘을 구성할 수도 있습니다. (webrtc.org에서 제공하는 a href="https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk">샘플 클라이언트 어플리케이션</a>)</p>
+<p>그 대신에 star configuration에서 WebRTC 앱은 다른 모두에게 스트림들을 분배하기 위한 하나의 종단점(Endpoint)를 선택할 수 있으며 또한 서버에서 WebRTC 종단점(Endpoint)를 실행할 수 있으며 여러분 각자의 재분배 메커니즘을 구성할 수도 있습니다. (webrtc.org에서 제공하는 <a href="https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk">샘플 클라이언트 어플리케이션</a>)</p>
 
 <h3 id="multipoint-control-unit">Multipoint Control Unit</h3>
 
