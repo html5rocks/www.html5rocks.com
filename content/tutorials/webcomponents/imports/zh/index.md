@@ -572,7 +572,7 @@ HTML 导入是个简单的概念，但却促成了许多有趣的使用案例。
 
 <h3 id="usecases">使用案例</h3>
 
-- 将相关的[HTML/CSS/JS 作为一个单独的包](#bundling) 来**分发**。理论上来说，你可以在应用里面导入一个完整的 web 应用。
+- 将相关的 [HTML/CSS/JS 作为一个单独的包](#bundling) 来**分发**。理论上来说，你可以在应用里面导入一个完整的 web 应用。
 - **代码组织** - 将概念按照逻辑划分为不同的文件，鼓励模块化 &amp; 复用性**。
 - **传输** 一或多个[自定义元素](/tutorials/webcomponents/customelements/) 的定义。可以在应用内使用导入来[注册](/tutorials/webcomponents/customelements/#registering) 和包含自定义元素。这符合良好的软件模式，即将接口/定义与使用分离。
 - [**管理依赖**](#depssubimports) - 自动解决资源的重复加载。
