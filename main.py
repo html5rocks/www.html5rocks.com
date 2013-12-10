@@ -159,7 +159,18 @@ class ContentHandler(webapp2.RequestHandler):
     return articles
 
   def render(self, data={}, template_path=None, status=None,
-             message=None, relpath=''):
+             message=None, relpath='', locale=settings.LANGUAGE_CODE):
+    """
+    Renders output.
+    @param self             self
+    @param data             input data for template
+    @param template_path    path to a template
+    @param status           http status code
+    @param message          
+    @param relpath          relative path from url
+    @param locale           locale of the page
+    @return
+    """
     if status is not None and status != 200:
       self.response.set_status(status, message)
 
@@ -201,7 +212,7 @@ class ContentHandler(webapp2.RequestHandler):
     }
 
     # If the tutorial contains a social URL override, use it.
-    template_data['disqus_url'] = template_data['host'] + '/' + relpath
+    template_data['disqus_url'] = template_data['host'] + '/' + relpath # Ignore locale
     if data.get('tut') and data['tut'].social_url:
       template_data['disqus_url'] = (template_data['host'] +
                                      data['tut'].social_url)
@@ -267,24 +278,32 @@ class ContentHandler(webapp2.RequestHandler):
       self.request.cache = False
 
   def get(self, locale, relpath=''):
+    self._set_cache_param()
 
     no_lang = False
     if locale == '':
       # If locale is empty string, relpath should be also empty
       no_lang = True
       locale = settings.LANGUAGE_CODE
-    elif locale not in settings.LANGS.keys():
+    elif locale[:-1] not in settings.LANGS.keys():
       # If locale does not match any of lang keys, this should be relpath
       if relpath != '':
         # ex) tutorials/casestudies/
-        relpath = locale+'/'+relpath
+        relpath = locale+relpath
       else:
         # ex) mobile/
         relpath = locale
       no_lang = True
       locale = settings.LANGUAGE_CODE
+    else:
+      locale = locale[:-1]
 
-    self._set_cache_param()
+    parsed_path = relpath.split('/')
+    if parsed_path[-1] == '':
+      del parsed_path[-1]
+      trailing_slash = True
+    else:
+      trailing_slash = False
 
     # Handle bug redirects before anything else, as it's trivial.
     if relpath == 'new-bug':
@@ -298,7 +317,8 @@ class ContentHandler(webapp2.RequestHandler):
       return self.render(data={'sorted_profiles': sorted_profiles,
                                'profile_amount': len(sorted_profiles)},
                          template_path='content/humans.txt',
-                         relpath=relpath)
+                         relpath=relpath,
+                         locale=locale)
 
     # If we get here, is because the language is specified correctly, 
     # so let's activate it
@@ -320,144 +340,34 @@ class ContentHandler(webapp2.RequestHandler):
     if redirect_from_locale not in settings.LANGS.keys():
       redirect_from_locale = False
     else:
+      # Enable translation in original language
       translation.activate(redirect_from_locale)
       redirect_from_locale = {
         'lang': redirect_from_locale,
         'msg': _('Sorry, this article isn\'t available in your native '
                  'language; we\'ve redirected you to the English version.')
       }
+      # Enable translation in default language
       translation.activate(locale)
 
-    # Landing page or /mobile|tutorials|features|gaming|business|updates/
-    if (relpath in ['', 'mobile', 'tutorials', 'features', 'gaming', 'business', 'updates']):
+    # Primary directories where no lang indication is required
+    if (parsed_path[0] in ['', 'mobile', 'tutorials', 'features', 'gaming', 'business', 'updates']
+        and len(parsed_path) == 1):
       # Ignore locale setting and serve content here
-      path = os.path.join('content', relpath, 'index.html')
 
-    # ends with '/'
-    elif (relpath[-1] == '/'):
-      # If language is not specified, redirect
-      if no_lang:
-        return self.redirect('/'+locale+'/'+relpath, permanent=True)
-
-      if (relpath == ''):
+      if relpath == '':
         include_home_link = None
         css_file = 'v2-combined'
 
-      if (relpath == 'tutorials/'):
+      if relpath == 'tutorials/':
         css_file = 'v2-combined'
         page_class = 'article tutorial listing'
 
+      # redirect if trailing slash is missing
+      if trailing_slash == False:
+        return self.redirect(relpath+'/', permanent=True)
+
       path = os.path.join('content', relpath, 'index.html')
-    else:
-      path = os.path.join('content', relpath)
-
-    # Render the .html page if it exists. Otherwise, check that the Atom feed
-    # the user is requesting has a corresponding .html page that exists.
-
-    if (relpath == 'profiles' or relpath == 'profiles/'):
-      profiles = models.get_sorted_profiles()
-      for p in profiles:
-        p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
-      return self.render(data={
-            'include_home_link': include_home_link,
-            'page_class': page_class,
-            'css_file': css_file,
-            'sorted_profiles': profiles
-          }, template_path='content/profiles.html', relpath=relpath)
-    elif ((re.search('tutorials/.+', relpath) or
-           re.search('mobile/.+', relpath) or
-           re.search('gaming/.+', relpath) or
-           re.search('business/.+', relpath) or
-           re.search('updates/.+', relpath) or
-           re.search('tutorials/casestudies/.+', relpath))
-          and not is_feed):
-      # If this is an old-style mobile article or case study, redirect to the
-      # new style.
-      match = re.search(('(?P<type>mobile|tutorials/casestudies)'
-                         '/(?P<slug>[a-z-_0-9]+).html$'), relpath)
-      if match:
-        return self.redirect('/%s/%s/%s/' % (locale, match.group('type'),
-                                             match.group('slug')))
-
-      # If no trailing / (e.g. /tutorials/blah), redirect to /tutorials/blah/.
-      if (relpath[-1] != '/' and not relpath.endswith('.html')):
-        return self.redirect(self.request.url + '/')
-
-      # Tutorials look like this on the filesystem:
-      #
-      #   .../tutorials +
-      #                 |
-      #                 +-- article-slug  +
-      #                 |                 |
-      #                 |                 +-- en  +
-      #                 |                 |       |
-      #                 |                 |       +-- index.html
-      #                 ...
-      #
-      # So, to determine if an HTML page exists for the requested language
-      # `split` the file's path, add in the locale, and check existence:
-      (dir, filename) = os.path.split(path)
-      if os.path.isfile(os.path.join(dir, locale, filename)):
-        # Lookup tutorial by its url. Return the first one that matches.
-        # get_all() not used because we don't care about caching on individual
-        # tut page.
-        tut = models.Resource.all().filter('url =', '/' + relpath).get()
-
-        # Localize title and description.
-        if tut:
-          if tut.title:
-            tut.title = _(tut.title)
-          if hasattr(tut, 'subtitle') and tut.subtitle:
-            tut.subtitle = _(tut.subtitle)
-          if tut.description:
-            tut.description = _(tut.description)
-
-        css_file = 'v2-combined'
-        page_class = 'article tutorial'
-
-        # Gather list of localizations by globbing matching directories, then
-        # stripping out the current locale and 'static'. Once we have a list,
-        # convert it to a series of dictionaries containing the localization's
-        # path and name:
-        langs = {
-          'de': 'Deutsch',
-          'en': 'English',
-          'fr': 'Français',
-          'es': 'Español',
-          'it': 'Italiano',
-          'ja': '日本語',
-          'ko': '한국어',
-          'pt': 'Português (Brasil)',
-          'ru': 'Pусский',
-          'zh': '中文 (简体)'
-        }
-        loc_list = []
-        for d in glob.glob(os.path.join(dir, '*', 'index.html')):
-          loc = os.path.basename(os.path.dirname(d))
-          if loc not in [locale, 'static']:
-            loc_list.append({'path': '/%s/%s' % (loc, relpath),
-                             'lang': settings.LANGS[loc]})
-
-        data = {
-          'include_home_link': include_home_link,
-          'page_class': page_class,
-          'css_file': css_file,
-          'tut': tut,
-          'no_lang': no_lang, # if url doesn't include language param
-          'localizations': loc_list,
-          'redirect_from_locale': redirect_from_locale
-        }
-        return self.render(template_path=os.path.join(dir, locale, filename),
-                           data=data, relpath=relpath)
-
-      # If the localized file doesn't exist, and the locale isn't English, look
-      # for an english version of the file, and redirect the user there if
-      # it's found:
-      elif os.path.isfile( os.path.join(dir, settings.LANGUAGE_CODE, filename)):
-        return self.redirect("/"+settings.LANGUAGE_CODE+"/%s?redirect_from_locale=%s" % (relpath,
-                                                                 locale))
-    elif os.path.isfile(path):
-      #TODO(ericbidelman): Don't need these tutorial/update results for query.
 
       page_number = int(self.request.get('page', default_value=0)) or None
       template_args = dict()
@@ -466,10 +376,10 @@ class ContentHandler(webapp2.RequestHandler):
         template_args['previous_page'] = page_number - 1
         template_args['next_page'] = page_number + 1
 
-      if relpath[:-1] in ['mobile', 'gaming', 'business']:
+      if parsed_path[0] in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
-            relpath[:-1], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
-      elif relpath == 'updates':
+            parsed_path[0], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+      elif parsed_path[0] == 'updates':
         results = []
       else:
         include_updates = None
@@ -533,51 +443,161 @@ class ContentHandler(webapp2.RequestHandler):
         'args': template_args
       }
 
-      return self.render(data, template_path=path, relpath=relpath)
+      return self.render(data, template_path=path, relpath=relpath, locale=locale)
 
-    elif os.path.isfile(path[:path.rfind('.')] + '.html'):
-      return self.render(data={'css_file': css_file},
-                        template_path=path[:path.rfind('.')] + '.html',
-                        relpath=relpath)
 
-    elif os.path.isfile(path + '.html'):
+    elif parsed_path[0] in ['community', 'privacy', 'profiles', 'resources',
+        'live', 'search', 'slides', 'style-guide', 'tos'] and len(parsed_path) == 1:
+      if trailing_slash == False:
+        return self.redirect('/'+locale+'/'+relpath+'/', permanent=True)
+
+      path = os.path.join('content', parsed_path[0]+'.html')
 
       page_title = None
-      if path == 'content/style-guide':
+
+      if relpath == 'profiles/':
+        profiles = models.get_sorted_profiles()
+        for p in profiles:
+          p['tuts_by_author'] = models.Resource.get_tutorials_by_author(p['id'])
+        return self.render(data={
+              'include_home_link': include_home_link,
+              'page_class': page_class,
+              'css_file': css_file,
+              'sorted_profiles': profiles
+            }, template_path='content/profiles.html', relpath=relpath, locale=locale)
+
+      if relpath == 'style-guide/':
         css_file = 'v2-combined'
         page_class = 'article'
         page_title = 'Style Guide'
 
-      category = relpath.replace('features/', '')
-      updates = TagsHandler().get_as_db(
-          'class:' + category, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
-      for r in updates:
-        if r.url.startswith('/'):
-          # Localize title if article is localized.
-          filepath = os.path.join(self.BASEDIR, 'content', r.url[1:], self.locale,
-                                  'index.html')
-          if r.url.startswith('/') and os.path.isfile(filepath) and r.title:
-            r.title = _(r.title)
-          # Point the article to the localized version, regardless.
-          r.url = "/%s%s" % (self.locale, r.url)
+      if os.path.isfile(path):
+        data = {
+          'include_home_link': include_home_link,
+          'page_title': page_title,
+          'page_class': page_class,
+          'css_file': css_file
+        }
 
-      data = {
-        'include_home_link': include_home_link,
-        'page_title': page_title,
-        'page_class': page_class,
-        'css_file': css_file,
-        'category': category,
-        'updates': updates
-      }
-      if relpath == 'why':
-        if os.path.isfile(os.path.join(path, locale, 'index.html')):
-          data['local_content_path'] = os.path.join(relpath, locale, 'index.html')
-        else:
-          data['local_content_path'] = os.path.join(relpath, 'en', 'index.html')
+        return self.render(data=data, template_path=path, relpath=relpath, locale=locale)
 
-      return self.render(data=data, template_path=path + '.html', relpath=relpath)
+    elif ((re.search('tutorials/.+', relpath) or
+           re.search('mobile/.+', relpath) or
+           re.search('features/.+', relpath) or
+           re.search('tutorials/casestudies/.+', relpath))
+          and not is_feed):
 
-    # If we've reached here, assume 404.
+      page_title = None
+
+      if no_lang:
+        return self.redirect('/'+locale+'/'+relpath, permanent=True)
+
+      # If this is an old-style mobile article or case study, redirect to the
+      # new style.
+      match = re.search(('(?P<type>mobile|tutorials/casestudies)'
+                         '/(?P<slug>[a-z-_0-9]+).html$'), relpath)
+      if match:
+        return self.redirect('/%s/%s/%s/' % (locale, match.group('type'),
+                                             match.group('slug')))
+
+      if trailing_slash == False and not relpath.endswith('.html'):
+        return self.redirect('/'+locale+'/'+relpath+'/', permanent=True)
+
+      if parsed_path[0] == 'features' and len(parsed_path) == 2:
+        path = os.path.join('content', 'features', parsed_path[1]+'.html')
+
+        category = relpath.replace('features/', '')
+        updates = TagsHandler().get_as_db(
+            'class:' + category, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+        for r in updates:
+          if r.url.startswith('/'):
+            # Localize title if article is localized.
+            filepath = os.path.join(self.BASEDIR, 'content', r.url[1:], self.locale,
+                                    'index.html')
+            if r.url.startswith('/') and os.path.isfile(filepath) and r.title:
+              r.title = _(r.title)
+            # Point the article to the localized version, regardless.
+            r.url = "/%s%s" % (self.locale, r.url)
+
+        data = {
+          'include_home_link': include_home_link,
+          'page_title': page_title,
+          'page_class': page_class,
+          'css_file': css_file,
+          'category': category,
+          'updates': updates
+        }
+
+        return self.render(data=data, template_path=path, relpath=relpath, locale=locale)
+
+      elif relpath.endswith('.html'):
+        path = relpath
+
+      else:
+        path = os.path.join('content', relpath, 'index.html')
+
+      # Tutorials look like this on the filesystem:
+      #
+      #   .../tutorials +
+      #                 |
+      #                 +-- article-slug  +
+      #                 |                 |
+      #                 |                 +-- en  +
+      #                 |                 |       |
+      #                 |                 |       +-- index.html
+      #                 ...
+      #
+      # So, to determine if an HTML page exists for the requested language
+      # `split` the file's path, add in the locale, and check existence:
+      (dir, filename) = os.path.split(path)
+      if os.path.isfile(os.path.join(dir, locale, filename)):
+        # Lookup tutorial by its url. Return the first one that matches.
+        # get_all() not used because we don't care about caching on individual
+        # tut page.
+        tut = models.Resource.all().filter('url =', '/' + relpath).get()
+
+        # Localize title and description.
+        if tut:
+          if tut.title:
+            tut.title = _(tut.title)
+          if hasattr(tut, 'subtitle') and tut.subtitle:
+            tut.subtitle = _(tut.subtitle)
+          if tut.description:
+            tut.description = _(tut.description)
+
+        css_file = 'v2-combined'
+        page_class = 'article tutorial'
+
+        # Gather list of localizations by globbing matching directories, then
+        # stripping out the current locale and 'static'. Once we have a list,
+        # convert it to a series of dictionaries containing the localization's
+        # path and name:
+        loc_list = []
+        for d in glob.glob(os.path.join(dir, '*', 'index.html')):
+          loc = os.path.basename(os.path.dirname(d))
+          if loc not in [locale, 'static']:
+            loc_list.append({'path': '/%s/%s' % (loc, relpath),
+                             'lang': settings.LANGS[loc]})
+
+        data = {
+          'include_home_link': include_home_link,
+          'page_class': page_class,
+          'css_file': css_file,
+          'tut': tut,
+          'no_lang': no_lang, # if url doesn't include language param
+          'localizations': loc_list,
+          'redirect_from_locale': redirect_from_locale
+        }
+        return self.render(data=data, template_path=os.path.join(dir, locale, filename),
+                           relpath=relpath, locale=locale)
+
+      # If the localized file doesn't exist, and the locale isn't English, look
+      # for an english version of the file, and redirect the user there if
+      # it's found:
+      elif os.path.isfile( os.path.join(dir, settings.LANGUAGE_CODE, filename)):
+        return self.redirect("/"+settings.LANGUAGE_CODE+"/%s?redirect_from_locale=%s" % (relpath,
+                                                                 locale))
+
     return self.render(status=404, message='Page Not Found', template_path='404.html')
 
   def handle_exception(self, exception, debug_mode):
@@ -1025,7 +1045,7 @@ routes = [
   ('/database/(.*)/(.*)', DBHandler),
   ('/database/(.*)', DBHandler),
   ('/tags/(.*)/(.*)', TagsHandler),
-  ('/(.*?)/(.*)', ContentHandler),
+  ('/(.*?/)(.*)', ContentHandler),
   ('/(.*)', ContentHandler)
 ]
 
