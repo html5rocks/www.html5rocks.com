@@ -299,11 +299,14 @@ class ContentHandler(webapp2.RequestHandler):
       locale = locale[:-1]
 
     parsed_path = relpath.split('/')
+
     if parsed_path[-1] == '':
       del parsed_path[-1]
       trailing_slash = True
     else:
       trailing_slash = False
+
+    primary_path = '' if len(parsed_path) == 0 else parsed_path[0]
 
     # Handle bug redirects before anything else, as it's trivial.
     if relpath == 'new-bug':
@@ -351,8 +354,8 @@ class ContentHandler(webapp2.RequestHandler):
       translation.activate(locale)
 
     # Primary directories where no lang indication is required
-    if (parsed_path[0] in ['', 'mobile', 'tutorials', 'features', 'gaming', 'business', 'updates']
-        and len(parsed_path) == 1):
+    if (relpath == '' or (len(parsed_path) == 1 and
+        primary_path in ['mobile', 'tutorials', 'features', 'gaming', 'business', 'updates'])):
       # Ignore locale setting and serve content here
 
       if relpath == '':
@@ -376,10 +379,10 @@ class ContentHandler(webapp2.RequestHandler):
         template_args['previous_page'] = page_number - 1
         template_args['next_page'] = page_number + 1
 
-      if parsed_path[0] in ['mobile', 'gaming', 'business']:
+      if primary_path in ['mobile', 'gaming', 'business']:
         results = TagsHandler().get_as_db(
-            parsed_path[0], limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
-      elif parsed_path[0] == 'updates':
+            primary_path, limit=self.FEATURE_PAGE_WHATS_NEW_LIMIT)
+      elif primary_path == 'updates':
         results = []
       else:
         include_updates = None
@@ -446,12 +449,12 @@ class ContentHandler(webapp2.RequestHandler):
       return self.render(data, template_path=path, relpath=relpath, locale=locale)
 
 
-    elif parsed_path[0] in ['community', 'privacy', 'profiles', 'resources',
+    elif primary_path in ['community', 'privacy', 'profiles', 'resources',
         'live', 'search', 'slides', 'style-guide', 'tos'] and len(parsed_path) == 1:
       if trailing_slash == False:
         return self.redirect('/'+locale+'/'+relpath+'/', permanent=True)
 
-      path = os.path.join('content', parsed_path[0]+'.html')
+      path = os.path.join('content', primary_path+'.html')
 
       page_title = None
 
@@ -503,7 +506,7 @@ class ContentHandler(webapp2.RequestHandler):
       if trailing_slash == False and not relpath.endswith('.html'):
         return self.redirect('/'+locale+'/'+relpath+'/', permanent=True)
 
-      if parsed_path[0] == 'features' and len(parsed_path) == 2:
+      if primary_path == 'features' and len(parsed_path) == 2:
         path = os.path.join('content', 'features', parsed_path[1]+'.html')
 
         category = relpath.replace('features/', '')
