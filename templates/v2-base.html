@@ -61,7 +61,13 @@
   {% endif %}
   <link rel="publisher" href="https://plus.google.com/111395306401981598462">
 
-  <link rel="stylesheet" media="all" href="/static/css/{{css_file}}.{% if prod %}min.{% endif %}css">
+  {% if localizations %}
+  {% for alt_locale in localizations %}
+  <link rel="alternate" hreflang="{{alt_locale.loc}}" href="{{host}}{{alt_locale.path}}">
+  {% endfor %}
+  {% endif %}
+
+  <link rel="stylesheet" media="all" href="/static/css/{{css_file}}.{% if prod %}min.{% endif %}css?cachebust=20131209">
 
   <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article tutorial' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
 
@@ -106,6 +112,18 @@
       <h1>{% trans "Table of Contents" %}</h1>
 
       {% toc %}
+
+      <h1 class="visible-title">{% trans "Localizations" %}:</h1>
+      <ul>
+        {% if localizations %}
+          {% for l in localizations %}
+          <li><a href="{{ l.path }}">{{ l.lang }}</a></li>
+          {% endfor %}
+          <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute another</a></li>
+        {% else %}
+          <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute one</a></li>
+        {% endif %}
+      </ul>
     </nav>
     {% endif %}
   </header>
