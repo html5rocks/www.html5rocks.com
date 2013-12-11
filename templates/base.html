@@ -5,6 +5,7 @@
 <html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
 <head>
   <meta charset="utf-8">
+  <meta property="twitter:account_id" content="1593210261" />
   <!-- Copyright (c) 2012 Google Inc.
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,7 +70,11 @@
   {% endfor %}
   {% endif %}
   
-  <link rel="stylesheet" media="all" href="/static/css/base{% if prod %}.min{% endif %}.css?20130806">
+  {% if css_file %}
+  <link rel="stylesheet" media="all" href="/static/css/{{css_file}}{% if prod %}.min{% endif %}.css?20131111">
+  {% else %}
+  <link rel="stylesheet" media="all" href="/static/css/base{% if prod %}.min{% endif %}.css?20131111">
+  {% endif %}
   <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800|Source+Code+Pro" rel="stylesheet">
 
   <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
@@ -100,11 +105,9 @@
         <li id="home_menu"><a class="home" href="/{{LANGUAGE_CODE}}/" rel="home">{% trans "Home" %}</a></li>
         <li id="tutorials_menu"><a href="/{{LANGUAGE_CODE}}/tutorials/?page=1" class="tutorials">{% trans "Tutorials" %}</a></li>
         <li id="updates_menu"><a href="/{{LANGUAGE_CODE}}/updates/" class="updates">{% trans "Updates" %}</a></li>
-        <li id="features_show"><a href="#features">{% trans "HTML5 Features" %}</a></li>
+        <li id="contrib_menu"><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
         <li id="slides_menu"><a href="/{{LANGUAGE_CODE}}/slides" class="slides">{% trans "Slides" %}</a></li>
         <li id="resources_menu"><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
-        <li id="profiles_menu"><a href="/{{LANGUAGE_CODE}}/profiles" class="profiles">{% trans "Who We Are" %}</a></li>
-        <li id="contrib_menu"><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
         <li id="search_show">
           <a href="#search_form">
             <span>{% trans "Search" %}</span>
@@ -356,12 +359,6 @@
 
   <script>
   (function() {
-    {% if is_mobile %}
-      // Hides mobile browser's address bar when page is done loading.
-      window.addEventListener('load', function(e) {
-        setTimeout(function() { window.scrollTo(0, 1); }, 1);
-      }, false);
-    {% endif %}
 
     $(document).keydown(function(e) {
       if (e.keyCode === 27) { // ESC
@@ -415,12 +412,15 @@
       document.getElementById('compatible').className = '';
     }
 
-    // Kill feedburner and marketing tracking arguments cuz they're ugly.
-    if (/^\?utm_/.test(document.location.search) &&
-        window.history.replaceState) {
-      window.history.replaceState(
-          {}, '', document.location.href.replace(/\?utm_.*/, ''));
-    }
+    // Kill feedburner and marketing tracking arguments, but let them register
+    // before we do it.
+    setTimeout(function() {
+      if (/^\?utm_/.test(document.location.search) &&
+          window.history.replaceState) {
+        window.history.replaceState(
+            {}, '', document.location.href.replace(/\?utm_.*/, ''));
+      }
+    }, 2000);
 
     //if ($(window).width() < 1200 && $(window).width() > 1000 && $('.toc').length) {
     if ($('.toc').length && $(window).width() > 1000) {

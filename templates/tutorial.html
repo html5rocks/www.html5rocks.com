@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "v2-base.html" %}
 {% load i18n %}
 {% load toc from templatefilters %}
 
@@ -9,151 +9,270 @@
 
 {% block body %}
 
-  <header class="tutorial clearfix pattern-bg-lighter">
-    {% if not is_mobile %}
-    <hgroup>
-      <h1>{% trans "HTML5 Rocks" %}</h1>
-      <h2><a href="/{{LANGUAGE_CODE}}/tutorials/">{% trans "Tutorials" %}</a></h2>
-    </hgroup>
+  <section class="title">
+
+    {% if redirect_from_locale %}
+    <section class="redirect_notification error-block" lang="{{ redirect_from_locale.lang }}">
+      <p>{{ redirect_from_locale.msg }}</p>
+    </section>
     {% endif %}
 
-    <section>
+    <section class="title-text container">
+      {% if tut %}
       <h1>{{ tut.title|safe }}</h1>
       {% if tut.subtitle %}<h2>{{tut.subtitle|safe}}</h2>{% endif %}
-
-      <section class="byline">
-        <a href="/profiles/#{{ tut.author.key.name }}"><img src="/static/images/profiles/75/{{ tut.author.key.name }}.75.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}"></a>
-        <hgroup>
-          <h3>
-            By <strong><a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a></strong>
-            {% if tut.second_author %}
-              &amp; <strong><a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a></strong>
-            {% endif %}
-          </h3>
-        </hgroup>
-        <div class="date">
-          <time pubdate>{% blocktrans %}Published{% endblocktrans %} <strong>{{ tut.publication_date }}</strong></time>
-          {%if tut.update_date %}<time class="updated">{% blocktrans %}Updated{% endblocktrans %} <strong>{{ tut.update_date }}</strong></time>{% endif %}
-        </div>
-      </section>
-
-      <section class="browser_support">
-          <h3>{% trans "Supported browsers:" %}</h3>
-          <span class="browsers">
-            <span class="browser opera {% if 'opera' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Opera" %}</span>
-              <span class="support">
-                {% if 'opera' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser ie {% if 'ie' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "IE" %}</span>
-              <span class="support">
-                {% if 'ie' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser safari {% if 'safari' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Safari" %}</span>
-              <span class="support">
-                {% if 'safari' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser ff {% if 'ff' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Firefox" %}</span>
-              <span class="support">
-                {% if 'ff' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-            <span class="browser chrome {% if 'chrome' in tut.browser_support %}supported{% endif %}">
-              <span class="browser_name">{% trans "Chrome" %}</span>
-              <span class="support">
-                {% if 'chrome' in tut.browser_support %}
-                  {% trans "supported" %}
-                {% else %}
-                  {% trans "unsupported" %}
-                {% endif %}
-              </span>
-            </span>
-          </span>
-
-          <div class="compatible-block">
-            <p id="notcompatible" class="hidden">
-              {% block notcompatible_text %}
-              {% trans "Your browser may not support all of the functionality in this article." %}
-              {% endblock %}
-            </p>
-            <p id="compatible" class="hidden">
-              {% block compatible_text %}
-              {% trans "Your browser appears to support the functionality in this article." %}
-              {% endblock %}
-            </p>
-          </div>
-      </section>
-
-      {% if not is_mobile %}
-      <a href="#disqus_thread" data-disqus-identifier="{{ disqus_url }}" class="disqus_comments">{% trans "Leave a comment" %}</a>
+      {% elif page_title %}
+      <h1>{{ page_title }}</h1>
       {% endif %}
+
+      <a href="/" class="watermark">HTML5 Rocks</a>
     </section>
+  </section>
 
-    {% if not is_mobile %}
-    <span class="share">
-      <ul>
-        <li class="googleplus"><a href="https://plus.google.com/share?url={{ disqus_url }}" onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"><img src="https://www.gstatic.com/images/icons/gplus-32.png" alt="Share on Google+"/></a></li>
-        <li class="facebook"><a href="https://www.facebook.com/sharer/sharer.php?u={{ disqus_url}}" target="_blank"><img src="/static/images/facebook.png" alt="Share on Facebook"></a></li>
-        <li class="twitter">
-          <a href="https://twitter.com/share?url={{ disqus_url }}&text={{ tut.title }}&lang={{ LANGUAGE_CODE }}&via=ChromiumDev&related=ChromiumDev" target="_blank">
-            <img src="/static/images/twitter.png">
-          </a></li>
-      </ul>
-    </span>
-    {% endif %}
-  </header>
+  <article class="content-wrapper{% if hide_toc != None %} wide{% endif %}">
 
-  {% if redirect_from_locale %}
-  <section class="redirect_notification pattern-bg-lighter" lang="{{ redirect_from_locale.lang }}">{{ redirect_from_locale.msg }}</section>
+    <section class="container">
+
+      {% if hide_toc == None %}
+
+      <div class="article-meta" id="article-meta">
+        <nav class="toc">
+          <h1>{% trans "Table of Contents" %}</h1>
+
+          {% toc %}
+        </nav>
+
+        <aside class="localizations">
+          <h1>{% trans "Localizations" %}</h1>
+          <ul>
+            {% if localizations %}
+              {% for l in localizations %}
+              <li><a href="{{ l.path }}">{{ l.lang }}</a></li>
+              {% endfor %}
+              <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute another</a></li>
+            {% else %}
+              <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute one</a></li>
+            {% endif %}
+          </ul>
+        </aside>
+      </div>
+      {% endif %}
+
+      <div class="content" id="article-content">
+
+        <section class="byline">
+
+          <div class="byline-content">
+            {% if tut %}
+            <section class="author-images">
+              <a href="/profiles/#{{ tut.author.key.name }}">
+                <img src="/static/images/profiles/{{ tut.author.key.name }}.png" itemprop="photo" alt="{{ tut.author.given_name }} {{ tut.author.family_name }}" title="{{ tut.author.given_name }} {{ tut.author.family_name }}">
+              </a>
+
+              {% if tut.second_author %}
+                <a href="/profiles/#{{ tut.second_author.key.name }}">
+                  <img src="/static/images/profiles/{{ tut.second_author.key.name }}.png" itemprop="photo" alt="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}" title="{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}">
+                </a>
+              {% endif %}
+            </section>
+
+            <section class="meta">
+              <div class="authors">
+                <strong>By</strong> <a href="/profiles/#{{ tut.author.key.name }}">{{ tut.author.given_name }} {{ tut.author.family_name }}</a>
+                {% if tut.second_author %}
+                  and <a href="/profiles/#{{ tut.second_author.key.name }}">{{ tut.second_author.given_name }} {{ tut.second_author.family_name }}</a>
+                {% endif %}
+              </div>
+
+              {% block translator %}{% endblock %}
+
+              <div class="date">
+                <time pubdate><strong>{% blocktrans %}Published{% endblocktrans %}:</strong> {{ tut.publication_date|date:"F jS, Y"}}</time>
+                {% if tut.update_date %}
+                <time class="updated"><strong>{% blocktrans %}Updated{% endblocktrans %}:</strong> {{ tut.update_date|date:"F jS, Y"}}</time>{% endif %}
+                <span><strong>Comments:</strong> <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">0</a></span>
+              </div>
+
+              <div id="notcompatible" class="hidden">
+                Your browser may not support the functionality in this article.
+              </div>
+            </section>
+            <div class="clear"></div>
+
+            {% endif %}
+          </div>
+        </section>
+
+        {% block content %}{% endblock %}
+      </div>
+    </section>
+  </article>
+
+  {% if tut %}
+  <section class="disqus pattern-bg-lighter">
+
+    <div id="disqus" class="container">
+
+      <h2>Comments</h2>
+
+      <div id="disqus_thread">
+
+        <a href="#disqus_thread" class="load-comments" data-disqus-identifier="{{ disqus_url }}">0</a>
+
+      </div>
+    </div>
+
+    <noscript>
+      <p class="center">
+        <strong>
+          <a href="http://disqus.com/?ref_noscript">{% trans "Please enable JavaScript to view the comments powered by Disqus." %}</a>
+        </strong>
+      </p>
+    </noscript>
+
+    <script>
+
+      var disqus_shortname = 'html5rocks';
+      var disqus_identifier = '{{disqus_url}}';
+      var disqus_url = '{{disqus_url}}';
+      var disqus_developer = {% if not prod %}1{% else %}0{% endif %};
+
+      var disqus_config = function () {
+        var funky_language_code_mapping = {
+          'de': 'de_inf',
+          'es': 'es_ES',
+          'pt': 'pt_EU',
+          'sr': 'sr_CYRL',
+          'sv': 'sv_SE',
+          'zh': 'zh_HANT'
+        };
+        this.language = funky_language_code_mapping['{{LANGUAGE_CODE}}'] ||
+                        '{{LANGUAGE_CODE}}';
+
+        this.callbacks.onReady = [ function () {
+                                      try {
+                                        _gaq.push(['_trackEvent', 'View comments']);
+                                      } catch(err){}
+                                   } ];
+        this.callbacks.onNewComment = [ function (comment) {
+                                          try {
+                                            _gaq.push(['_trackEvent', 'Commented']);
+                                          } catch(err){}
+                                        } ];
+      };
+
+      window.addEventListener('load', function(e) {
+
+        var c = document.createElement('script');
+        c.type = 'text/javascript';
+        c.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        c.async = true;
+
+        var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
+        sp.insertBefore(c, s);
+
+        if (window.location.hash === '#disqus_thread')
+          loadComments();
+
+      }, false);
+
+      var disqus_loaded = false;
+      function loadComments() {
+
+        if (disqus_loaded)
+          return;
+
+        disqus_loaded = true;
+
+        _gaq.push(['_trackEvent', 'Interactions', 'Comments', 'Comments Loaded']);
+
+        var s = document.getElementsByTagName('script')[0], sp = s.parentNode;
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+
+        var disqusContainer = document.getElementById('disqus');
+        disqusContainer.classList.add('active');
+
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        sp.insertBefore(dsq, s);
+      }
+
+      function outgoing(url) {
+        try {
+          _gaq.push(['_trackEvent', 'Outbound Links' , url]);
+        } catch(err){}
+      }
+      // Open external links (also that don't have a target defined) in a new tab.
+      var externLinks = document.querySelectorAll('article.tutorial a[href^="http"]:not([target])');
+      for(var i = 0, a; a = externLinks[i]; ++i) {
+        a.target = '_blank';
+        a.addEventListener('click', new Function('outgoing(' + '"' + a.href.replace(/.*?:\/\//g, "") + '"' + ');'));
+      }
+
+      var loadCommentsButtons = document.querySelectorAll('.load-comments');
+      for(var l = 0; l < loadCommentsButtons.length; l++)
+        loadCommentsButtons[l].addEventListener('click', loadComments);
+
+    </script>
+  </section>
+  {% else %}
+  <div class="padder"></div>
   {% endif %}
 
-  <article class="cds-banner">
-    <a href="http://developer.chrome.com/devsummit" target="_blank">Chrome Dev Summit</a>
-  </article>
+  <footer>
+    <div class="container">
 
-  <article class="tutorial pattern-bg-lighter">
-    <div class="outline_nav_toggle">
-      <nav class="outline toc pattern-bg-lighter">
-        <h3>{% trans "Table of Contents" %}</h3>
+      {% if tut %}
+        <h1>Next steps</h2>
 
-        {% toc %}
-        {% if localizations %}
-        <h3>{% trans "Localizations" %}</h3>
-        <p>{% trans "This article is additionally available in the following languages:" %}</p>
-        <ul>
-          {% for alt_locale in localizations %}
-          <li><a href="{{ alt_locale.path }}">{{ alt_locale.lang }}</a></li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </nav>
+        {% block relatedreading %}{% endblock %}
+
+        <aside class="panel share">
+          <h2>Share</h2>
+
+            <a href="https://twitter.com/share?url={{ disqus_url }}&text={{ tut.title }}&lang={{ LANGUAGE_CODE }}&via=ChromiumDev&related=ChromiumDev" class="twitter" target="_blank">Twitter</a>
+
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ disqus_url}}" class="facebook" target="_blank">Facebook</a>
+
+            <a href="https://plus.google.com/share?url={{ disqus_url }}" class="gplus" onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;">Google+</a>
+
+        </aside>
+
+        <aside class="panel rss">
+          <h2>Subscribe</h2>
+          <p>{% blocktrans %}Enjoyed this article? Grab the <a href="http://feeds.feedburner.com/html5rocks">RSS feed</a> and stay up-to-date.{% endblocktrans %}</p>
+        </aside>
+
+      {% endif %}
+
+      <p class="licensing">
+      {% blocktrans %}
+        Except as otherwise <a href="http://code.google.com/policies.html#restrictions">noted</a>, the content of this page is licensed under the <a href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 License</a>, and code samples are licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a>.
+      {% endblocktrans %}
+      </p>
+
     </div>
-    <section>
-    {% block content %}{% endblock %}
-    </section>
-  </article>
-  {% include "article_footer.html" %}
+  </footer>
+
+  <script>
+    window.isCompatible = function() {
+      {% block iscompatible %}
+      return null;
+      {% endblock %}
+    };
+
+    if (isCompatible() === false) {
+      document.getElementById('notcompatible').className = '';
+    }
+
+    function _prettyPrint() {
+      if (typeof customPrettyPrintLanguage != 'undefined') {
+        customPrettyPrintLanguage();
+      }
+      prettyPrint();
+    }
+  </script>
+  <script async src="/static/js/prettify.min.js" onload="_prettyPrint()"></script>
 
 {% endblock %}

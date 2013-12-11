@@ -1,0 +1,340 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before{
+  background-image:url();
+  background-position:0px 0px!important;
+}
+.talkinghead-everyone:before {
+  background-image:url();
+  background-position:0px 0px!important;
+}
+.talkinghead-pk:before {
+  background-image:url(/static/images/profiles/paulkinlan.png);
+  background-size: 60px 60px;
+  background-position:0px 0px!important;
+}
+
+pre.inline {
+  display: inline;
+}
+</style>
+
+
+{% endblock %}
+
+{% block iscompatible %}
+  return !!Modernizr.___COMPAT_TEST___
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block content %}
+
+<blockquote class="commentary">
+  "One of the best thing about native apps is that they are full-screen"
+  <cite>lots of people, all the time.</cite>
+</blockquote>
+
+<blockquote class="commentary talkinghead talkinghead-pk" id="compressors">
+It irks me somewhat that this common perception stands.  Yes, web pages aren't fullscreen: they have an address bar, usually some other navigational controls. But a lot of modern browsers are pretty good at getting all their junk out of the way pretty quickly.
+</blockquote>
+
+<p>We have the ability to easily make immersive fullscreen web sites and applications, but like anything on the web there are a couple of ways to do it.  This is especially important now that more browsers are supporting an "installed web app" experience which launch fullscreen.</p>
+
+<figure>
+<iframe width="324" height="576" src="//www.youtube.com/embed/ZRqr5x73-ng" frameborder="0" allowfullscreen></iframe>
+<figcaption>Example of a site going fullscreen in Chrome for Android</figcaption>
+</figure>
+<h2 id="toc-getting">Getting your app or site fullscreen</h2>
+
+<p>There are several ways that a user or developer can get an web app fullscreen.</p>
+<ul>
+  <li>Fake it: auto-hide the address bar</li>
+  <li>Request the browser to go fullscreen in response to a user gesture.</li>
+  <li>Install the app to the home screen</li>
+</ul>
+
+<h3 id="toc-faking">Fake it: auto-hide the address bar</h3>
+<p>You can "fake fullscreen" by auto-hiding the address bar as follows:</p>
+<pre class="prettyprint">window.scrollTo(0,1);</pre>
+
+<blockquote class="commentary talkinghead talkinghead-pk">
+I am telling you this as a friend.  It exists, it is a thing, but it is a hack. Please don't use it.
+</blockquote>
+
+<p>This is a pretty simple method, the page loads and the browser bar is told to get out of the way.  Unfortunately it is not standardised and not well supported. You also have to work around a bunch of quirks. For example browsers often restore the position on the page when the user navigates back to it.  Using <pre class="inline">window.scrollTo</pre> overrides this, which annoys the user. To work around this you have to store the last position in localStorage, and deal with the edge cases (for example, if the user has the page open in multiple windows).</p>
+
+<h3 id="toc-request">Request the browser to go fullscreen in response to a user gesture</h3>
+
+<p><a href="http://caniuse.com/#feat=fullscreen">Not all platforms are equal</a>. iOS Safari doesn't have a fullscreen API, but we do on Chrome on Android and Firefox.</p>
+<p>Most applications you build will use a combination of the JS API and the CSS selectors provided by the fullscreen specification.</p>
+<p>The main JS API's that you need to care about when building a fullscreen experience are:</p>
+
+<ul>
+  <li><pre class="inline"><i>element</i>.requestFullscreen()</pre> (currently prefixed for both Chrome and Firefox) displays the element in fullscreen mode.</li>
+  <li><pre class="inline">document.cancelFullscreen()</pre> (currently prefixed for both Chrome and Firefox) cancels fullscreen mode.</li>
+  <li><pre class="inline">document.fullscreenElement</pre> (currently prefixed for both Chrome and Firefox) returns true if any of the elements are in fullscreen mode.
+  </li>
+</ul>
+
+<blockquote class="commentary talkinghead talkinghead-pk">
+You will notice that in the prefixed versions there is a lot of inconsitency between the casing of the 'S' in screen.  This is awkward, but this is the problem with specs that are inflight.
+</blockquote>
+
+<p>When your app is fullscreen you no longer have the browser's UI controls chrome available to you.  This changes the way that users interact with your experience. They don't have the standard navigation controls such as Forwards and Backwards; they have their escape hatch that is the Refresh button.  It's important to cater for this scenario.  You can use some CSS selectors to help you change the style and presentation of your site when the browser enters fullscreen mode.</p>
+
+<pre class="prettyprint">&lt;button id="goFS">Go fullscreen&lt;button>
+&lt;script>
+   var goFS = document.getElementById("goFS");
+   goFS.addEventListener("click", function() {
+      document.body.requestFullScreen();
+   }, false);
+&lt;/script></pre>
+
+<p>The above example is a little contrived; I've hidden all the complexity around the use of vendor prefixes.</p>
+
+<blockquote class="commentary talkinghead talkinghead-pk">
+Damn you vendor prefixes!
+</blockquote>
+
+<p>The actual code is a lot more complex. <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Using_full_screen_mode">Mozilla has created</a> a very useful script that you can use to toggle fullscreen.  As you can see, due to the vendor prefix situation it is rather complex and cumbersome compared to the specified API. Even with the slightly simplified code below, it is still complex.</p>
+
+<pre class="prettyprint">function toggleFullScreen() {
+  var doc = window.document;
+  var docEl = doc.documentElement;
+
+  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen;
+  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen;
+
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement) {
+    requestFullScreen.call(docEl);
+  }
+  else {
+    cancelFullScreen.call(doc);
+  }
+}</pre>
+
+<p>We web developers hate complexity.  A nice high-level abstract API you can use is <a href="http://sindresorhus.com/screenfull.js"/>Sindre Sorhus'</a> <a href="https://github.com/sindresorhus/screenfull.js">Screenfull.js</a>  module which unifies the two slightly different JS API's and vendor prefixes into one consistent API.</p>
+
+<h3 id="toc-launch">Launching a page fullscreen</h3>
+
+<p>Launching a fullscreen web page when the user navigates to it is not possible.  Browser vendors are very aware that a fullscreen experience on every page load is a huge annoyance, therefore a user gesture is required to enter fullscreen.  Vendors do allow users to "install" apps though, and the act of installing is a signal to the operating system that the user wants to launch as an app on the platform.</p>
+
+<p>Across the major Mobile platforms it is pretty easy to implement using either meta tags, or manifest files as follows. </p>
+
+<h4>iOS</h4>
+<p>Ever since the launch of the iPhone, users have been able to install Web Apps to the home screen and have them launch as full-screen web apps.</p>
+
+<pre class="prettyprint">&lt;meta name="apple-mobile-web-app-capable" content="yes"></pre>
+
+<blockquote>If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
+You can determine whether a webpage is displayed in full-screen mode using the window.navigator.standalone read-only Boolean JavaScript property.
+<cite><a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html">Apple</a></cite>
+</blockquote>
+
+<h4>Chrome for Android</h4>
+<p>The Chrome team has recently implemented a feature that tells the browser to launch the page fullscreen when the user has added it to the home screen.  It is similar to the iOS Safari model.</p>
+
+<pre class="prettyprint">&lt;meta name="mobile-web-app-capable" content="yes"></pre>
+
+<blockquote>You can set up your web app to have an application shortcut icon added to a device's homescreen, and have the app launch in full-screen "app mode" using Chrome for Android's "Add to homescreen" menu item.
+<cite>
+  <a href="https://developers.google.com/chrome/mobile/docs/installtohomescreen">Google Chrome</a>
+</cite>
+</blockquote>
+
+<h4>Firefox OS</h4>
+<p>Firefox OS has implemented a installable web app and packaged app model for developers to create apps for the user's phone.  This model is a little more complex, but it fits in to a wider strategy of installable apps.  The developer has to define a manifest for the app that Firefox OS will parse at install time.</p>
+
+<p><a href="https://developer.mozilla.org/en-US/Apps/Developing/Manifest#fullscreen">From Mozilla</a>:</p>
+<pre class="prettyprint">{
+  "name": "My App",
+  "description": "My elevator pitch goes here",
+  "launch_path": "/",
+  "icons": {
+    "128": "/img/icon-128.png"
+  },
+  <b>"fullscreen": true</b>
+}</pre>
+
+<blockquote class="commentary talkinghead talkinghead-pk">
+If you want to have an "installed app" feel, the "install" API's are the methods you should use, they will integrate far more tightly with the OS than just pure web content for the time being and you will get a seamless fullscreen transiton.
+</blockquote>
+
+<h2 id="toc-apitips">API Tips</h2>
+
+<h3 id="toc-documentfullscreen">Making the document fullscreen</h3>
+<p>It is natural to think that you take the body element fullscreen, but if you are on a WebKit or Blink based rendering engine you will see it has an odd effect of shrinking the body width to the smallest possible size that will contain all the content (Mozilla Gecko is fine).</p>
+
+<figure>
+<img src="/static/images/mobile/fullscreen/body.png" style="width:300px;" class="bordered">
+<figcaption>Figure 1: Fullscreen on the body element.</figcaption>
+</figure>
+
+<p>To fix this, use the document element instead of the body element:</p>
+
+<pre class="prettyprint">document.documentElement.requestFullScreen();</pre>
+
+<figure>
+<img src="/static/images/mobile/fullscreen/document.png" style="width:300px;" class="bordered">
+<figcaption>Figure 2: Fullscreen on the document element.</figcaption>
+</figure>
+
+<h3 id="toc-videofullscreen">Making a video element fullscreen</h3>
+<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullScreen</pre> method on the video element.</p>
+<pre class="prettyprint">&lt;video id=videoElement>&lt;/video>
+&lt;button id="goFS">Go Fullscreen&lt;/button>
+&lt;script>
+   var goFS = document.getElementById("goFS");
+   goFS.addEventListener("click", function() {
+      var videoElement = document.getElementById("videoElement");
+      videoElement.requestFullScreen();
+   }, false);
+&lt;/script></pre>
+
+<p>If your &lt;video&gt; element doesn't have the controls attribute defined, there's no way for the user to control the video once they are fullscreen.  The recommended way to do this is to have a basic container that wraps the video and the controls that you want the user to see.</p>
+
+<pre class="prettyprint">&lt;div id="container">
+  &lt;video>&lt;video>
+  &lt;div>
+    &lt;button>Play&lt;button>
+    &lt;button>Stop&lt;button>
+    &lt;button id="goFS">Go fullscreen&lt;button>
+  &lt;div>
+&lt;div>
+&lt;script>
+   var goFS = document.getElementById("goFS");
+   goFS.addEventListener("click", function() {
+      var container = document.getElementById("container");
+      container.requestFullScreen();
+   }, false);
+&lt;script></pre>
+
+<p>This gives you a lot more flexibility because you can combine the container object with the CSS pseudo selector (for example to hide the "goFS" button.)</p>
+
+<pre class="prettyprint">&lt;style>
+#goFS:full-screen #goFS {
+  display: none;
+}
+#goFS:-webkit-full-screen #goFS {
+  display: none;
+}
+#goFS:-moz-full-screen #goFS {
+  display: none;
+}
+&lt;style></pre>
+
+<p>Using these patterns you can detect when full-screen is running and adapt your user interface appropriately:</p>
+
+<ul>
+  <li>Provide a link to get back to the start page</li>
+  <li>Provide a mechanism to close dialogs or travel backwards</li>
+</ul>
+
+<h2 id="toc-uxguidelines">UX Guidelines</h2>
+
+<h3 id="toc-dontrely">Don't rely on navigation controls</h3>
+<p>iOS and Firefox OS don't have a hardware back button or refresh gesture, therefore you must ensure that users can navigate throughout the app without getting locked in.</p>
+
+<p>You can detect if you are running in a fullscreen mode or an installed mode easily on all the major platforms.</p>
+
+<h4>iOS</h4>
+<pre class="prettyprint">if(window.navigator.standalone == true) {
+  // My app is installed and therefore fullscreen
+}</pre>
+
+<h4>Chrome for Android</h4>
+<p>When launching as an installed app, Chrome is not running in true fullscreen experience so <pre class="inline">document.fullscreenElement</pre> returns null and the CSS selectors don't work.  Chrome also does not an API comparable to iOS's navigator.standalone property.</p>
+
+<p>When the user requests fullscreen via a gesture on your site, the standard fullscreen API's are available including the CSS pseudo selector that lets you adapt your UI to react to the fullscreen state like the following</p>
+
+<pre class="prettyprint">selector:-webkit-full-screen {
+  display: block; // displays the element only when in fullscreen
+}
+
+selector {
+  display: none; // hides the element when not in fullscreen mode
+}</pre>
+
+<h4>Firefox</h4>
+<p>When the user requests fullscreen via your site or the user launches the app in fullscreen mode all the standard fullscreen API's are available including the CSS pseudo selector that lets you adapt your UI to react to the fullscreen state like the following:</p>
+
+<pre class="prettyprint">selector:-moz-full-screen {
+  display: block; // hides the element when not in fullscreen mode
+}
+
+selector {
+  display: none; // hides the element when not in fullscreen mode
+}</pre>
+
+<h4>Specification</h4>
+<p>The spelling in the specification differs slightly from the implementations in Chrome and Firefox, but the functionality is the same.
+</p>
+
+<pre class="prettyprint">selector:fullscreen {
+  display: block;
+}
+
+selector {
+  display: none; // hides the element when not in fullscreen mode
+}</pre>
+
+<h3 id="toc-keepuserin">Keep the user in the fullscreen experience</h3>
+
+<p>The fullscreen API can be a little finicky sometimes. Browser vendors don't want to lock users in a fullscreen page so they have developed mechanisms to break out of fullscreen as soon as they possibly can.  This means you can't build a fullscreen website that spans multiple pages because:</p>
+
+<ul>
+  <li>Changing the URL programmatically by using window.location = "http://example.com" breaks out of fullscreen</li>
+  <li>A user clicking on an external link inside your page will exit fullscreen</li>
+  <li>Changing the URL via the <pre class="inline">navigator.pushState</pre> API will also break out of the fullscreen experience.</li>
+</ul>
+
+<p>You have two options if you want to keep the user in a fullscreen experience:</p>
+
+<ol>
+  <li>Use the installable web app mechanisms to go fullscreen</li>
+  <li>Manage your UI and app state using the # fragment.</li>
+</ol>
+
+<p>By using the #syntax to update the url (window.location = "#somestate"), and listening to the window.onhashchange event you can use the browser's own history stack to manage changes in the application state, allow the user to use their hardware back buttons, or offer a simple programmatic back button experience by using the history API as follows:</p>
+
+<pre class="prettyprint">window.history.go(-1)</pre>
+
+<h3 id="toc-letuserchoose">Let the user choose when to go fullscreen</h3>
+<p>There is nothing more annoying to the user than a web site doing something unexpected.  When a user navigates to your site don't try and trick them into fullscreen.</p>
+
+<p>Don't intercept the first touch event and issue a requestFullScreen.</p>
+<ol>
+  <li>it is annoying</li>
+  <li>Browsers may decided to prompt the user at some point in the future about allowing the app to take up the fullscreen.</li>
+</ol>
+
+<figure>
+<img src="/static/images/mobile/fullscreen/ffos.png" style="width:300px;">
+<figcaption>Figure 3: FirefoxOS prompting for access to fullscreen.</figcaption>
+</figure>
+
+<p>If you want to launch apps fullscreen do think about using the install experiences for each platform.</p>
+
+<h3 id="toc-nospam">Don't spam the user to install your app to a homescreen</h3>
+<p>If you plan on offering a fullscreen experience via the installed app mechanisms be considerate to the user:</p>
+<ul>
+  <li>Be discreet. Use a banner or footer to let them know they can install the app.</li>
+  <li>If they dismiss the prompt, don't show it again.</li>
+  <li>On a users first visit they are unlikely to want to install the app unless they are happy with your service.  Consider prompting them to install after a positive interaction on your site.</li>
+  <li>If a user visit your site regularly and they don't install the app, they are unlikely to install your app in the future.  Don't keep spamming them.</li>
+</ul>
+
+<h2 id="conslusions">Conclusions</h2>
+<p>While we don't have a fully standardised and implemented API, using some of the guidance presented in this article you can easily build experiences that take advantage of the user's entire screen, irrespective of the client.</p>
+
+<blockquote class="commentary talkinghead talkinghead-pk">If you know of any good patterns for full-screen, leave a comment and we can let the world know.  If you know of anti-patterns in full-screen let us know so we can update the article to save the frustrations of millions of users on the web. </blockquote>
+
+{% endblock %}

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% load toc from templatefilters %}
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
+<head>
+  <meta charset="utf-8">
+  <meta property="twitter:account_id" content="1593210261" />
+  <!-- Copyright (c) 2012 Google Inc.
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *     http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   * Author: {% block headauthor %}{% endblock %}
+   *
+   * {% block credits %}{% endblock %}
+   *
+  -->
+  <title>{% if self_pagename == 'home' %}{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}{% else %}{% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %} - {% trans "HTML5 Rocks" %}{% endif %}</title>
+  <meta name="description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  <meta name="keywords" content="{% trans "html5,html 5,html5 demos,html5 examples,javascript,css3,notifications,geolocation,web workers,apppcache,file api,filereader,indexeddb,offline,audio,video,drag and drop,chrome,sse,mobile" %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="{% trans "HTML5 Rocks RSS" %}" href="http://feeds.feedburner.com/html5rocks">
+
+  <meta itemprop="name" content="{% trans "HTML5 Rocks" %}">
+  <meta itemprop="description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  {% block share_image %}
+  <meta itemprop="image" content="{{host}}/static/images/html5rocks-logo-wings.png">
+  {% endblock %}
+
+  {% if tut %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@ChromiumDev">
+  {% if tut.author.twitter_account %}<meta name="twitter:creator" content="@{{tut.author.twitter_account}}">{% endif %}
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{% if tut.title %}{{tut.title|safe}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle|safe}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta property="og:url" content="{{canonical_url}}">
+  <meta property="og:description" content="{% if tut.description %}{{tut.description|safe}}{% else %}{{description|safe}}{% endif %}">
+  <meta property="og:image" content="{% if tut.author %}{{host}}/static/images/profiles/{{ tut.author.key.name }}.png{% else %}{{host}}/static/images/html5rocks-logo-wings.png{% endif %}">
+  <meta property="og:site_name" content="{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}">
+  {% endif %}
+
+  {% if tut.author.google_account %}
+  <link rel="author" href="https://www.google.com/profiles/{{tut.author.google_account}}">
+  {% endif %}
+  {% if tut.second_author.google_account %}
+  <link rel="author" href="https://www.google.com/profiles/{{tut.second_author.google_account}}">
+  {% endif %}
+  <link rel="publisher" href="https://plus.google.com/111395306401981598462">
+
+  <link rel="stylesheet" media="all" href="/static/css/{{css_file}}.{% if prod %}min.{% endif %}css?cachebust=20131209">
+
+  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article tutorial' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
+
+  <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
+  <link rel="apple-touch-icon-precomposed" href="/static/images/identity/HTML5_Badge_64.png">
+
+  <script src="/static/js/modernizr.custom.82437.js"></script>
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5-els.js"></script>
+  <![endif]-->
+
+  {% block head %}{% endblock %}
+</head>
+<body data-href="{{self_pagename}}" onload="{% block onload %}{% endblock %}"{% if page_class %} class="{{ page_class }}"{% endif %}>
+
+  <header class="main" id="siteheader">
+    <h1 id="title">
+      <a href="/{{LANGUAGE_CODE}}/" title="{% trans "HTML5 Rocks" %}">{% trans "HTML5 Rocks" %}</a>
+    </h1>
+    <a href="#sitenav" id="navtoggle">Show navigation</a>
+
+    {% if tut %}
+    <a id="toctoggle" href="#toc">{% trans "Table of Contents" %}</a>
+    {% endif %}
+
+    <nav id="sitenav">
+      <ul>
+        {% if include_home_link %}
+        <li id="home_menu"><a href="/{{LANGUAGE_CODE}}/" class="home">{% trans "Home" %}</a></li>
+        {% endif %}
+        <li id="tutorials_menu"><a href="/{{LANGUAGE_CODE}}/tutorials/?page=1" class="tutorials">{% trans "Tutorials" %}</a></li>
+        <li id="updates_menu"><a href="/{{LANGUAGE_CODE}}/updates/" class="updates">{% trans "Updates" %}</a></li>
+        <li id="contrib_menu"><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md" target="_blank">{% trans "Contribute" %}</a></li>
+        <li id="slides_menu"><a href="/{{LANGUAGE_CODE}}/slides" class="slides">{% trans "Slides" %}</a></li>
+        <li id="resources_menu"><a href="/{{LANGUAGE_CODE}}/resources" class="resources">{% trans "Resources" %}</a></li>
+      </ul>
+    </nav>
+
+    {% if tut %}
+    <nav class="toc" id="toc">
+      <h1>{% trans "Table of Contents" %}</h1>
+
+      {% toc %}
+
+      <h1 class="visible-title">{% trans "Localizations" %}:</h1>
+      <ul>
+        {% if localizations %}
+          {% for l in localizations %}
+          <li><a href="{{ l.path }}">{{ l.lang }}</a></li>
+          {% endfor %}
+          <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute another</a></li>
+        {% else %}
+          <li><a href="https://github.com/html5rocks/www.html5rocks.com/blob/master/CONTRIBUTING.md">Contribute one</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </header>
+
+  <div class="body-content">
+    {% block body %}{% endblock %}
+  </div>
+
+  <script>
+  (function() {
+
+    // Kill feedburner and marketing tracking arguments, but let them register
+    // before we do it.
+    setTimeout(function() {
+      if (/^\?utm_/.test(document.location.search) &&
+          window.history.replaceState) {
+        window.history.replaceState(
+            {}, '', document.location.href.replace(/\?utm_.*/, ''));
+      }
+    }, 2000);
+
+    var siteHeader = document.getElementById('siteheader');
+    var navToggle = document.getElementById('navtoggle');
+    var siteNav = document.getElementById('sitenav');
+
+    function toggle(target, forceActive) {
+
+      if (typeof toc !== 'undefined') {
+        // Switch off whichever one is not the
+        // current target
+        if (target === toc)
+          siteNav.classList.remove('active');
+        else
+          toc.classList.remove('active');
+      }
+
+      // Toggle if no force parameter is set
+      if (typeof forceActive === 'undefined') {
+        target.classList.toggle('active');
+      } else {
+        if (forceActive)
+          target.classList.add('active');
+        else
+          target.classList.remove('active');
+      }
+
+      // now find out what the set state ended up being
+      var isActive = target.classList.contains('active');
+
+      if (isActive)
+        siteHeader.classList.add('expanded');
+      else
+        siteHeader.classList.remove('expanded');
+
+    }
+
+    navToggle.addEventListener('click', function(e) {
+      toggle(siteNav);
+      e.preventDefault();
+    });
+
+    {% if tut %}
+
+    var tocToggle = document.getElementById('toctoggle');
+    var toc = document.getElementById('toc');
+    var articleMeta = document.getElementById('article-meta');
+    var articleContent = document.getElementById('article-content');
+    var articleMetaHeight = 0;
+    var articleMetaMaxY = 0;
+    var articleMetaMinY = 0;
+    var articleContentPadding = 200;
+
+    var tocLinks = document.querySelectorAll('.toc a');
+    for (var t = 0; t < tocLinks.length; t++)
+      tocLinks[t].addEventListener('click', onTocLinkClick);
+
+    tocToggle.addEventListener('click', function(e) {
+      toggle(toc);
+      e.preventDefault();
+    });
+
+    toc.addEventListener('click', function(e) {
+      if (e.target !== siteNav)
+        toggle(toc, false);
+    });
+
+    function onTocLinkClick() {
+      _gaq.push(['_trackEvent', 'Interactions', 'TOC', 'TOC Clicked']);
+    }
+
+    function setMinScrollYFromMetaY() {
+      var scrollPosition = window.scrollY;
+
+      var articleMetaBounds = articleMeta.getBoundingClientRect();
+      var articleMetaTop = Math.max(352,
+          articleMetaBounds.top - 20 + scrollPosition);
+
+      articleMetaHeight = articleMetaBounds.bottom - articleMetaBounds.top;
+      articleMetaMinY = articleMetaTop;
+    }
+
+    function setMaxScrollYFromContentHeight() {
+
+      var scrollPosition = window.scrollY;
+
+      var articleContentBounds = articleContent.getBoundingClientRect();
+      var articleContentTop = articleContentBounds.top + scrollPosition;
+      var articleContentHeight = articleContentBounds.bottom - articleContentBounds.top;
+
+      articleMetaMaxY = articleContentTop +
+          articleContentHeight -
+          articleMetaHeight -
+          articleContentPadding;
+
+    }
+
+    function onScroll(e) {
+
+      if (window.scrollY >= articleMetaMinY) {
+
+        articleMeta.classList.add('sticky');
+
+        var articleMetaTop = 22 - Math.max(0, window.scrollY - articleMetaMaxY);
+        articleMeta.style.top = articleMetaTop + 'px';
+
+      } else {
+        articleMeta.classList.remove('sticky');
+        articleMeta.style.top = 'auto';
+      }
+    }
+
+    if (articleMeta.getBoundingClientRect) {
+      setMinScrollYFromMetaY();
+      setMaxScrollYFromContentHeight();
+      document.addEventListener('scroll', onScroll);
+      window.addEventListener('load', setMaxScrollYFromContentHeight, false);
+    }
+
+    {% endif %}
+  })();
+  </script>
+  <script>
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-15028909-1']);
+  _gaq.push(['_setSiteSpeedSampleRate', 50]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+  </script>
+
+</body>
+</html>
