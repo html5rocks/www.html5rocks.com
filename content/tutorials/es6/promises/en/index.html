@@ -215,7 +215,7 @@ jqDeferred.then(function(response, statusText, xhrObj) {
 
 <p>…thankfully this is usually what you want, or at least gives you access to what you want. Also, be aware that jQuery doesn't follow the convention of passing Error objects into rejections.</p>
 
-<h2 id="toc-coding-with-promises">Complex async code made simple(r)</h2>
+<h2 id="toc-coding-with-promises">Complex async code made easier</h2>
 <p>Right, let's code some things. Say we want to:</p>
 
 <ol>
@@ -228,7 +228,7 @@ jqDeferred.then(function(response, statusText, xhrObj) {
 </ol>
 
 <p>…but also tell the user if something went wrong along the way. We'll want to stop the spinner at that point too, else it'll keep on spinning, get dizzy, and crash into some other UI.</p>
-<p>This pattern is pretty common: Multiple data fetches, then do something happens when it's all done.</p>
+<p>This pattern is pretty common: Multiple data fetches, then do something when it's all done.</p>
 <p>To start with, let's deal with fetching data from the network:</p>
 
 <h2 id="toc-promisifying-xmlhttprequest">Promisifying XMLHttpRequest</h2>
@@ -316,18 +316,18 @@ promise.then(function(val) {
 
 <p><span class="live-example json-example"><a href="story.json">Click here to see that in action</a>, check the console in DevTools to see the result.</span> In fact, we could make a <code>getJSON</code> function really easily:</p>
 
-<pre class="prettyprint">function getJson(url) {
+<pre class="prettyprint">function getJSON(url) {
   return get(url).then(JSON.parse);
 }</pre>
 
-<p><code>getJson</code> still returns a promise, one that fetches a url then parses the response as JSON.</p>
+<p><code>getJSON</code> still returns a promise, one that fetches a url then parses the response as JSON.</p>
 
 <h3 id="toc-promises-queues">Queuing asynchronous actions</h2>
 <p>You can also chain "then"s to run async actions in sequence.</p>
 <p>When you return something from a "then" callback, it's a bit magic. If you return a value, the next "then" is called with that value. However, if you return something promise-like, the next "then" waits on it, and is only called when that promise settles (succeeds/fails). For example:</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
-  return getJson(story.chapterUrls[0]);
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  return getJSON(story.chapterUrls[0]);
 }).then(function(chapter1) {
   console.log("Got chapter 1!", chapter1);
 });</pre>
@@ -339,10 +339,10 @@ promise.then(function(val) {
 <pre class="prettyprint">var storyPromise;
 
 function getChapter(i) {
-  storyPromise = storyPromise || getJson('story.json');
+  storyPromise = storyPromise || getJSON('story.json');
   
   return storyPromise.then(function(story) {
-    return getJson(story.chapterUrls[i]);
+    return getJSON(story.chapterUrls[i]);
   })
 }
 
@@ -442,8 +442,8 @@ jsonPromise.then(function(data) {
 
 <p>With our story and chapters, we can use catch to display an error to the user:</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
-  return getJson(story.chapterUrls[0]);
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  return getJSON(story.chapterUrls[0]);
 }).then(function(chapter1) {
   addHtmlToPage(chapter1.html);
 }).catch(function() {
@@ -452,12 +452,12 @@ jsonPromise.then(function(data) {
   document.querySelector('.spinner').style.display = 'none';
 });</pre>
 
-<p>If fetching <code>story.chapterUrls[0]</code> fails (eg http 500 or user is offline), it'll skip all following success callbacks, which includes the one in getJSON which tries to parse the response as JSON, and also skips the callback that adds chapter1.html to the page. Instead it moves onto the catch callback. As a result, "Failed to show chapter" will be added to the page if any of the previous actions failed.</p>
+<p>If fetching <code>story.chapterUrls[0]</code> fails (eg http 500 or user is offline), it'll skip all following success callbacks, which includes the one in <code>getJSON</code> which tries to parse the response as JSON, and also skips the callback that adds chapter1.html to the page. Instead it moves onto the catch callback. As a result, "Failed to show chapter" will be added to the page if any of the previous actions failed.</p>
 <p>Like JavaScript's try/catch, the error is caught and subsequent code continues, so the spinner is always hidden, which is what we want. The above becomes a non-blocking async version of:</p>
 
 <pre class="prettyprint">try {
-  var story = getJsonSync('story.json');
-  var chapter1 = getJsonSync(story.chapterUrls[0]);
+  var story = getJSONSync('story.json');
+  var chapter1 = getJSONSync(story.chapterUrls[0]);
   addHtmlToPage(chapter1.html);
 }
 catch (e) {
@@ -466,26 +466,27 @@ catch (e) {
 
 document.querySelector('.spinner').style.display = 'none';</pre>
 
-<p>You may want to "catch" simply for logging purposes, without recovering from the error. To do this, just rethrow the error. We could do this in our <code>getJson</code> method:</p>
+<p>You may want to "catch" simply for logging purposes, without recovering from the error. To do this, just rethrow the error. We could do this in our <code>getJSON</code> method:</p>
 
-<pre class="prettyprint">function getJson(url) {
+<pre class="prettyprint">function getJSON(url) {
   return get(url).then(JSON.parse).catch(function(err) {
-    console.log("getJson failed for", url, err);
+    console.log("getJSON failed for", url, err);
     throw err;
   });
 }</pre>
 
 <p>So we've managed to fetch one chapter, but we want them all. Let's make that happen.</p>
 
-<h2 id="toc-show-all-chapters">Showing all chapters</h2>
+<h2 id="toc-parallelism-sequencing">Parallelism and sequencing - Getting the best of both</h2>
+
 <p>Thinking async isn't easy. If you're struggling to get off the mark, try writing the code as if it were synchronous. In this case:</p>
 
 <pre class="prettyprint">try {
-  var story = getJsonSync('story.json');
+  var story = getJSONSync('story.json');
   addHtmlToPage(story.heading);
 
   story.chapterUrls.forEach(function(chapterUrl) {
-    var chapter = getJsonSync(chapterUrl);
+    var chapter = getJSONSync(chapterUrl);
     addHtmlToPage(chapter.html);
   });
 
@@ -497,9 +498,9 @@ catch (err) {
 
 document.querySelector('.spinner').style.display = 'none';</pre>
 
-<p>That works (<a href="sync-example.html">see example</a>)! But it's sync and locks up the browser. To make this work async we use "then" to make things happen one after another.</p>
+<p>That works (<a href="sync-example.html">see example</a>)! But it's sync and locks up the browser while things download. To make this work async we use "then" to make things happen one after another.</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
   addHtmlToPage(story.heading);
 
   // TODO: for each url in story.chapterUrls, fetch &amp; display
@@ -518,7 +519,7 @@ document.querySelector('.spinner').style.display = 'none';</pre>
 
 <pre class="prettyprint">story.chapterUrls.forEach(function(chapterUrl) {
   // Fetch chapter
-  getJson(chapterUrl).then(function(chapter) {
+  getJSON(chapterUrl).then(function(chapter) {
     // and add it to the page
     addHtmlToPage(chapter.html);
   });
@@ -527,7 +528,7 @@ document.querySelector('.spinner').style.display = 'none';</pre>
 <p>"forEach" isn't async-aware, so our chapters would appear in whatever order they download, which is basically how Pulp Fiction was written. This isn't Pulp Fiction, so let's fix it…</p>
 
 <h3 id="toc-creating-sequences">Creating a sequence</h3>
-<p>We want to turn our chapterUrls array into a sequence of promises. We can do that using "then":</p>
+<p>We want to turn our <code>chapterUrls</code> array into a sequence of promises. We can do that using "then":</p>
 
 <pre class="prettyprint">// Start off with a promise that always resolves
 var sequence = Promise.resolve();
@@ -536,38 +537,38 @@ var sequence = Promise.resolve();
 story.chapterUrls.forEach(function(chapterUrl) {
   // Add these actions to the end of the sequence
   sequence = sequence.then(function() {
-    return getJson(chapterUrl);
+    return getJSON(chapterUrl);
   }).then(function(chapter) {
     addHtmlToPage(chapter.html);
   });
 });</pre>
 
-<p>This is the first time we've seen Promise.resolve, which creates a promise that resolves to whatever value you give it. If you pass it something promise-like (has a 'then' method), it creates a new promise that fulfills/rejects in the same way, effectively a clone. If you pass in any other value, eg <code>Promise.resolve('Hello')</code>, it creates a promise that fulfills with that value. If you call it with no value, as above, it fulfills with "undefined".</p>
+<p>This is the first time we've seen <code>Promise.resolve</code>, which creates a promise that resolves to whatever value you give it. If you pass it something promise-like (has a 'then' method), it creates a new promise that fulfills/rejects in the same way, effectively a clone. If you pass in any other value, eg <code>Promise.resolve('Hello')</code>, it creates a promise that fulfills with that value. If you call it with no value, as above, it fulfills with "undefined".</p>
 
-<p>There's also <code>Promise.reject(val)</code>, which creates a promise that rejects with val.</p>
+<p>There's also <code>Promise.reject(val)</code>, which creates a promise that rejects with the value you give it (or undefined).</p>
 <p>We can tidy up the above code using <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">array.reduce</a></code>:</p>
 
 <pre class="prettyprint">// Loop through our chapter urls
 story.chapterUrls.reduce(function(sequence, chapterUrl) {
   // Add these actions to the end of the sequence
   return sequence.then(function() {
-    return getJson(chapterUrl);
+    return getJSON(chapterUrl);
   }).then(function(chapter) {
     addHtmlToPage(chapter.html);
   });
 }, Promise.resolve());</pre>
 
-<p>This is doing the same as above, but doesn't need the separate "sequence" variable. Our reduce callback is called for each item in the array. "sequence" is <code>Promise.resolve()</code> the first time around, but for the rest of the calls "sequence" is whatever we returned from the previous call. reduce is really useful for boiling an array down to a single value, which in this case is a promise.</p>
+<p>This is doing the same as the previous example, but doesn't need the separate "sequence" variable. Our reduce callback is called for each item in the array. "sequence" is <code>Promise.resolve()</code> the first time around, but for the rest of the calls "sequence" is whatever we returned from the previous call. <code>array.reduce</code> is really useful for boiling an array down to a single value, which in this case is a promise.</p>
 <p>Let's put it all together…</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
   addHtmlToPage(story.heading);
 
-  return story.chapterUrls.reduce(function(chain, chapterUrl) {
+  return story.chapterUrls.reduce(function(sequence, chapterUrl) {
     // Once the last chapter's promise is done…
-    return chain.then(function() {
+    return sequence.then(function() {
       // …fetch the next chapter
-      return getJson(chapterUrl);
+      return getJSON(chapterUrl);
     }).then(function(chapter) {
       // and add it to the page
       addHtmlToPage(chapter.html);
@@ -596,16 +597,16 @@ story.chapterUrls.reduce(function(sequence, chapterUrl) {
   //...
 });</pre>
 
-<p><code>Promise.all</code> takes an array of promises and creates a promise that fulfills when all of them successfully complete. You get an array of results (whatever the promises fulfilled to) in the same order as the promises.</p>
+<p><code>Promise.all</code> takes an array of promises and creates a promise that fulfills when all of them successfully complete. You get an array of results (whatever the promises fulfilled to) in the same order as the promises you passed in.</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
   addHtmlToPage(story.heading);
 
   // Take an array of promises and wait on them all
   return Promise.all(
     // Map our array of chapter urls to
     // an array of chapter json promises
-    story.chapterUrls.map(getJson)
+    story.chapterUrls.map(getJSON)
   );
 }).then(function(chapters) {
   // Now we have the chapters jsons in order! Loop through…
@@ -630,21 +631,24 @@ story.chapterUrls.reduce(function(sequence, chapterUrl) {
 <p>However, we can still improve perceived performance. When chapter one arrives we should add it to the page. This lets the user start reading before the rest of the chapters have arrived. When chapter three arrives, we wouldn't add it to the page because the user may not realise chapter two is missing. When chapter two arrives, we can add chapters two and three, etc etc.</p>
 <p>To do this, we fetch JSON for all our chapters at the same time, then create a sequence to add them to the document:</p>
 
-<pre class="prettyprint">getJson('story.json').then(function(story) {
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
   addHtmlToPage(story.heading);
 
-  // Map our array of chapter urls to an array of chapter json promises
-  return story.chapterUrls.map(getJson).reduce(function(sequence, chapterPromise) {
-    // Use reduce to chain the promises together,
-    // adding content to the page for each chapter
-    return sequence.then(function() {
-      // Wait for everything in the sequence so far,
-      // then wait for this chapter to arrive.
-      return chapterPromise;
-    }).then(function(chapter) {
-      addHtmlToPage(chapter.html);
-    });
-  }, Promise.resolve());
+  // Map our array of chapter urls to
+  // an array of chapter json promises.
+  // This makes sure they all download parallel.
+  return story.chapterUrls.map(getJSON)
+    .reduce(function(sequence, chapterPromise) {
+      // Use reduce to chain the promises together,
+      // adding content to the page for each chapter
+      return sequence.then(function() {
+        // Wait for everything in the sequence so far,
+        // then wait for this chapter to arrive.
+        return chapterPromise;
+      }).then(function(chapter) {
+        addHtmlToPage(chapter.html);
+      });
+    }, Promise.resolve());
 }).then(function() {
   addTextToPage("All done");
 }).catch(function(err) {
@@ -665,8 +669,9 @@ story.chapterUrls.reduce(function(sequence, chapterUrl) {
 <p>Doing the above with <a href="https://gist.github.com/jakearchibald/0e652d95c07442f205ce">Node.js-style callbacks or events</a> is around double the code, but more importantly isn't as easy to follow. However, this isn't the end of the story for promises, when combined with other ES6 features they get even easier…</p>
 
 <h2 class="toc-generators">Bonus round: Promises and Generators</h2>
+
 <p>This next bit involves a whole bunch of new ES6 features, but it's not something you need to understand to use promises in your code today. Treat it like a movie trailer for some upcoming blockbuster features.</p>
-<p>ES6 also gives us <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">Generators</a>, which allow functions to exit at a particular point, like "return", but later resume from the same point and state. Eg:</p>
+<p>ES6 also gives us <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">generators</a>, which allow functions to exit at a particular point, like "return", but later resume from the same point and state. Eg:</p>
 
 <pre class="prettyprint">function *addGenerator() {
   var i = 0;
@@ -684,7 +689,7 @@ adder.next(5).value; // 10
 adder.next(5).value; // 15
 adder.next(50).value; // 65</pre>
 
-<p>But what does this mean for promises? Well, you can use this return/resume behaviour to write async code that looks (and is as easy to follow as) synchronous. Here's a helper function to do that with JavaScript promises:</p>
+<p>But what does this mean for promises? Well, you can use this return/resume behaviour to write async code that looks (and is as easy to follow as) synchronous code. Don't worry too much about understanding it line-for-line, but here's a helper function that lets us use 'yield' to wait for promises to settle:</p>
 
 <pre class="prettyprint">function spawn(generatorFunc) {
   function continuer(verb, arg) {
@@ -706,19 +711,19 @@ adder.next(50).value; // 65</pre>
   return onFulfilled();
 }</pre>
 
-<p>…which I stole pretty much <a href="https://github.com/kriskowal/q/blob/db9220d714b16b96a05e9a037fa44ce581715e41/q.js#L500">line for line from Q</a>. With this, we can take our final best-case chapter example, mix it with a load of new ES6 goodness, and turn it into:</p>
+<p>…which I pretty much <a href="https://github.com/kriskowal/q/blob/db9220d714b16b96a05e9a037fa44ce581715e41/q.js#L500">lifted verbatim from Q</a>, but adapted for JavaScript promises. With this, we can take our final best-case chapter example, mix it with a load of new ES6 goodness, and turn it into:</p>
 
 <pre class="prettyprint">spawn(function *() {
   try {
     // 'yield' effectively does an async wait,
     // returning the result of the promise
-    let story = yield getJson('story.json');
+    let story = yield getJSON('story.json');
     addHtmlToPage(story.heading);
 
     // Map our array of chapter urls to
     // an array of chapter json promises.
     // This makes sure they all download parallel.
-    let chapterPromises = story.chapterUrls.map(getJson);
+    let chapterPromises = story.chapterUrls.map(getJSON);
 
     for (let chapterPromise of chapterPromises) {
       // Wait for each chapter to be ready, then add it to the page
@@ -737,7 +742,7 @@ adder.next(50).value; // 65</pre>
 
 <p>It works exactly as before (<a href="async-generators-example.html">see example</a>)! This throws together a lot of new ES6 stuff: promises, generators, let, for-of. When we yield a promise, the spawn helper waits for the promise to resolve and returns the final value. If the promise rejects, spawn causes our yield statement to throw an exception, which we can catch with normal JavaScript try/catch. Amazingly simple async coding!</p>
 
-<h2 id="toc-api">API Reference</h2>
+<h2 id="toc-api">Promise API Reference</h2>
 
 <p>All methods work in the nightly versions of Chrome and Firefox unless otherwise noted. <a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">The polyfill</a> provides the below for all browers.</p>
 
@@ -750,7 +755,7 @@ adder.next(50).value; // 65</pre>
   <dd>Make a promise that fulfills to obj.
   <p class="notice"><b>Note:</b> Only implemented in Chrome so far</p></dd>
   <dt><code>Promise.resolve(thenable);</code></dt>
-  <dd>Make a new promise from the thenable. thenable is promise-like in as far as it has a "then" method. This also createsdd new promise if you pass it a genuine JavaScript promise, making it less efficient for casting an <code>Promise.cast</code>.
+  <dd>Make a new promise from the thenable. A thenable is promise-like in as far as it has a "then" method. This also creates a new promise if you pass it a genuine JavaScript promise, making it less efficient for casting an <code>Promise.cast</code>.
   <p class="notice"><b>Note:</b> Chrome incorrectly calls this <code>Promise.resolved</code></p>
   </dd>
   <dt><code>Promise.resolve(obj);</code></dt>
@@ -772,21 +777,21 @@ adder.next(50).value; // 65</pre>
 <pre class="prettyprint">new Promise(function(resolve, reject) {});</pre>
 <dl>
   <dt><code>resolve(thenable)</code></dt>
-  <dd>Your promise will be fulfilled/rejected with the outcome of thenable</dd>
+  <dd>Your promise will be fulfilled/rejected with the outcome of <code>thenable</code></dd>
   <dt><code>resolve(obj)</code></dt>
-  <dd>Your promise is fulfilled with obj</dd>
+  <dd>Your promise is fulfilled with <code>obj</code></dd>
   <dt><code>reject(obj)</code></dt>
-  <dd>Your promise is rejected with obj. For consistency and debugging (eg stack traces), obj should be an instanceof Error. Any errors thrown in the constructor callback will be implicitly passed to reject().</dd>
+  <dd>Your promise is rejected with <code>obj</code>. For consistency and debugging (eg stack traces), obj should be an <code>instanceof Error</code>. Any errors thrown in the constructor callback will be implicitly passed to <code>reject()</code>.</dd>
 </dl>
 
 <h3>Instance Methods</h3>
 <dl>
   <dt><code>promise.then(onFulfilled, onRejected)</code></dt>
-  <dd>onFulfilled is called when/if "promise" resolves.
-  onRejected is called when/if "promise" rejects.
-  Both are optional, if either/both are omitted the next onFulfilled/onRejected in the chain is called.
+  <dd><code>onFulfilled</code> is called when/if "promise" resolves.
+  <code>onRejected</code> is called when/if "promise" rejects.
+  Both are optional, if either/both are omitted the next <code>onFulfilled</code>/<code>onRejected</code> in the chain is called.
   Both callbacks have a single parameter , the fulfillment value or rejection reason.
-  "then" returns a new promise equivalent to the value you return from onFulfilled/onRejected after being passed through <code>Promise.resolve</code>. If an error is thrown in the callback, the returned promise rejects with that error.</dd>
+  "then" returns a new promise equivalent to the value you return from <code>onFulfilled</code>/<code>onRejected</code> after being passed through <code>Promise.resolve</code>. If an error is thrown in the callback, the returned promise rejects with that error.</dd>
   <dt><code>promise.catch(onRejected)</code></dt>
   <dd>Sugar for <code>promise.then(undefined, onRejected)</code></dd>
 </dl>
