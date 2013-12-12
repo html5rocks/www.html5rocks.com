@@ -30,9 +30,7 @@
 
 {% block content %}
 
-The Front-end of Middle-earth: A walkthrough of multi-device development
-
-<p>In our first article about the development of the Chrome Experiment A Journey Through Middle-earth we focused on WebGL development for mobile devices. In this article we discuss the challenges, problems and solutions we encountered when creating the rest of the HTML5 front-end.</p>
+<p>In <a href="http://www.html5rocks.com/en/tutorials/casestudies/hobbit/">our first article</a> about the development of the Chrome Experiment <a href="http://middle-earth.thehobbit.com/">A Journey Through Middle-earth</a> we focused on WebGL development for mobile devices. In this article we discuss the challenges, problems and solutions we encountered when creating the rest of the HTML5 front-end.</p>
 
 <h2 id="toc-three-versions">Three versions of the same site</h2>
 
@@ -87,13 +85,13 @@ The Front-end of Middle-earth: A walkthrough of multi-device development
 <p>It’s important to note that layout shouldn’t be mixed up with feature detection like input type, device orientation, sensors etc. Those features can exist in all of these modes and should span across all. Supporting mouse and touch at the same time is one example. Retina compensation for quality but most of all performance is another, sometimes lesser quality is better. As an example the canvas is half the resolution in the WebGL experiences on retina displays, which would otherwise have to render four times the number of pixels</p>
 
 <p class="notice tip">
-You can easily try out all sizes right in your browser by emulate a device in Chrome DevTools. When switching between mobile, tablet and desktop versions you have to reload the site to use the correct dependencies and settings.</p>
+You can easily try out all sizes right in your browser by <a href="https://developers.google.com/chrome-developer-tools/docs/mobile-emulation">emulating</a> a device in Chrome DevTools. When switching between mobile, tablet and desktop versions you have to reload the site to use the correct dependencies and settings.</p>
 
 <p>We frequently used the emulator tool in DevTools during development, especially in Chrome Canary which has new improved features and lots of presets. It is a good way of quickly validating design. We still needed to test on real devices regularly. One reason was because the site is adapting to fullscreen. Pages with vertical scroll hide the browser UI when scrolling in most cases (Safari on iOS7 has problems with this currently) but we had to fit everything independent of the that. We also used a preset in the emulator and changed the screen size setting to simulate the loss of available space. Testing on real devices is also important for monitoring memory-consumption and performance</p>
 
 <h2 id="toc-state">Handling the state</h2>
 
-<p>After the landing page we land at the map of Middle-earth. Did you notice the URL changing? The site is a single page application that uses the History API to handle routing.</p>
+<p>After the <a href="http://middle-earth.thehobbit.com/">landing page</a> we land at the map of Middle-earth. Did you notice the URL changing? The site is a single page application that uses the <a href="http://diveintohtml5.info/history.html">History API</a> to handle <a href="http://visionmedia.github.io/page.js/">routing</a>.</p>
 
 <p>Each section of the site is its own object inheriting a boilerplate of functionality such as DOM-elements, transitions, loading of assets, disposing etc. When you explore different parts of the site, sections are initiated, elements are added to and removed from the DOM and assets for the current section are loaded.</p>
 
@@ -107,12 +105,12 @@ Keep calm and add those event listeners. Make a practice of adding a dispose fun
 To show off the beautiful settings and the characters of Middle-earth we built a modular system of image and text components that you can drag or swipe horizontally. We haven’t enabled a scrollbar here since we want to have different speeds on different ranges, like in image sequences where you stop the motion sideways until the clip has played out.
 
 <blockquote class="commentary talkinghead nktalkinghead">
-A scrollbar sets expectations about the behavior of your site, it can be a bad user experience when a website hijacks this control.
+A scrollbar sets expectations about the behavior of your site. It can be a bad user experience when a website hijacks this control.
 </blockquote>
 
 <figure>
 <img src="/static/images/tutorials/casestudies/hobbit-front-end/thranduils-hall.jpg" width="620px" alt="" />
-<figcaption>Thranduil's Hall timeline</figcaption>
+<figcaption><a href="http://middle-earth.thehobbit.com/thranduils-hall">Thranduil's Hall</a> timeline</figcaption>
 </figure>
 
 <h3>The timeline</h3>
@@ -125,16 +123,16 @@ The parallax scene module has an opaque background with a custom number of layer
 
 The focus-shift scene is a variant of the parallax bucket, with the addition that we use two images for each layer which fades in and out to simulate a focus change. We tried to use the blur filter, but it’s still to expensive, so we’ll wait for CSS shaders for this.
 
-The content in the text module is drag-enabled with the TweenMax plugin Draggable. You can also use the scrollwheel or two-finger swipe to scroll vertically. Note the throw-props-plugin that adds the fling-style physics when you swipe and release.
+The content in the text module is drag-enabled with the TweenMax plugin <a href="http://www.greensock.com/draggable/">Draggable</a>. You can also use the scrollwheel or two-finger swipe to scroll vertically. Note the <a href="http://www.greensock.com/throwprops/">throw-props-plugin</a> that adds the fling-style physics when you swipe and release.
 
 The modules can also have different behaviours that are added as a set of components. They all have their own target selectors and settings. Translate to move an element, scale to zoom, hotspots for info overlay, debug metrics for testing visually, a start-title overlay, a flare layer, and some more. These will be appended to the DOM or controlling their target element inside the module.
 
-With this in place we can create the different locations with just a config file that defines what 
+With this in place we can create the different locations with just a <a href="https://gist.github.com/inear/7626665">config file</a> that defines what 
 assets to load and setup the different kinds of modules and components.
 
 <h3>Image sequences</h3>
 
-<p>The most challenging of the modules from a performance and a download-size aspect is the image sequence. There’s a bunch to read about this topic. On mobile and tablets we replace this with a still image. It’s too much data to decode and store in memory if we want decent quality on mobile. We tried multiple alternative solutions; using a background image and a spritesheet first, but it led to memory problems and lag when the GPU needed to swap between spritesheets. Then we tried swapping img elements, but it was also too slow. Drawing a frame from a spritesheet to a canvas was the most performant, so we began optimizing that. To save computation time each frame, the image data to write into the canvas is pre-processed via a temporary canvas and saved with putImageData() to an array, decoded and ready to use. The original spritesheet can then be garbage collected, and we store only the minimum amount of data needed in memory. Maybe it’s actually less to store undecoded images, but we get better performance while scrubbing the sequence this way. The frames are pretty small, just 640x400, but those will just be visible during scrubbing. When you stop, a high-res image loads and quickly fades in.</p>
+<p>The most challenging of the modules from a performance and a download-size aspect is the image sequence. There’s a bunch to read about this <a href="http://awardwinningfjords.com/2012/03/08/image-sequences.html">topic</a>. On mobile and tablets we replace this with a still image. It’s too much data to decode and store in memory if we want decent quality on mobile. We tried multiple alternative solutions; using a background image and a spritesheet first, but it led to memory problems and lag when the GPU needed to swap between spritesheets. Then we tried swapping img elements, but it was also too slow. Drawing a frame from a spritesheet to a canvas was the most performant, so we began optimizing that. To save computation time each frame, the image data to write into the canvas is pre-processed via a temporary canvas and saved with putImageData() to an array, decoded and ready to use. The original spritesheet can then be garbage collected, and we store only the minimum amount of data needed in memory. Maybe it’s actually less to store undecoded images, but we get better performance while scrubbing the sequence this way. The frames are pretty small, just 640x400, but those will just be visible during scrubbing. When you stop, a high-res image loads and quickly fades in.</p>
 
 <pre class="prettyprint">
 var canvas = document.createElement('canvas');
@@ -168,7 +166,7 @@ for (i = 0; i < tilesY; i++) {
 }
 </pre>
 
-<p>The sprite-sheets are generated with Imagemagick. Here is a simple <a href="https://gist.github.com/inear/7616849">example on GitHub</a> that shows how to create a spritesheet of all images inside a folder.
+<p>The sprite-sheets are generated with <a href="http://www.imagemagick.org/script/index.php">Imagemagick</a>. Here is a simple <a href="https://gist.github.com/inear/7616849">example on GitHub</a> that shows how to create a spritesheet of all images inside a folder.
 
 <h3>Animating the modules</h3>
 <p>To place the modules on the timeline, a hidden representation of the timeline, displayed offscreen, keeps track on the ‘playhead’ and the width of the timeline. This can be done with just code, but it was good with a visual representation when developing and debugging. When running for real it’s just updated on resize to set dimensions. Some modules fills the viewport and some have their own ratio, so it was a little tricky to scale and position everything in all resolutions so everything is visible and not cropped too much. Each module has two progress indicators, one for the visible position on screen and one for the duration of the module itself. When making parallax movement it’s often hard to calculate start- and end-position of objects to sync with the expected position when it’s in view. It’s good to know exactly when a module enters the view, plays its internal timeline and when it animates out of view again.</p>
@@ -185,7 +183,7 @@ for (i = 0; i < tilesY; i++) {
 
 Moving from a functioning prototype to a jank-free release version means going from guessing to knowing of what happens in the browser. This is where Chrome DevTools is your best friend.
 
-We have spent quite a lot of time optimising the site. Forcing hardware-acceleration is one of the most important tools of course to get smooth animations. But also hunting colorful columns and red rectangles in Chrome DevTools. There are many good articles about the topics, and you should read them all. The reward for removing skipping frames is instant, but so is the frustration when they return again. And they will. It's an ongoing process that needs iterations.
+We have spent quite a lot of time optimising the site. Forcing hardware-acceleration is one of the most important tools of course to get smooth animations. But also hunting <a href="https://developers.google.com/chrome-developer-tools/docs/tips-and-tricks#timeline-frames-mode">colorful columns</a> and red rectangles in Chrome DevTools. There are many good articles about the topics, and you should read them <a href="http://jankfree.org/">all</a>. The reward for removing skipping frames is instant, but so is the frustration when they return again. And they will. It's an ongoing process that needs iterations.
 
 <p class="notice tip">Watch the layers panel (only in Canary) and the “paint rectangles” in Chrome DevTools. If, for example, child elements need to be updated per frame and be painted you should investigate if it’s faster to rearrange the layers to minimize the areas that need to be painted as much as possible.</p>
 
@@ -193,7 +191,7 @@ We have spent quite a lot of time optimising the site. Forcing hardware-accelera
 
 <p>Don’t force hardware acceleration where it’s not needed. GPU memory can quickly fill up and cause unwanted results when you want to hardware-accelerate many containers, especially on iOS where memory have more constraints. To load smaller assets and scale them up with css and disable some of the effects in mobile mode made huge improvements.</p>
 
-<p>Memory leaks was another field we needed to improve our skills in. When navigating between the different WebGL experiences a lot of objects, materials, textures and geometry are created. If those are not ready for garbage collection when you navigate away and remove the section they will probably cause the device to crash after a while when it runs out of memory.</p>
+<p><a href="http://www.html5rocks.com/en/tutorials/memory/effectivemanagement/">Memory leaks</a> was another field we needed to improve our skills in. When navigating between the different WebGL experiences a lot of objects, materials, textures and geometry are created. If those are not ready for garbage collection when you navigate away and remove the section they will probably cause the device to crash after a while when it runs out of memory.</p>
 
 <figure>
 <img src="/static/images/tutorials/casestudies/hobbit-front-end/failing-dispose.png" width="620px" alt="" />
@@ -205,7 +203,7 @@ We have spent quite a lot of time optimising the site. Forcing hardware-accelera
 <figcaption>Much better!</figcaption>
 </figure>
 
-<p>To find the leak it was pretty straight forward workflow in DevTools, recording the timeline and capturing heap snapshots. It’s easier if there are specific objects, like 3D geometry or a specific library, that you can filter out. In the example above it turned out that the 3D scene was still around and also an array that stored geometry was not cleared. If you find it hard to locate where the object lives, there is a nice feature that let you view this called retaining paths. Just click the object you want to inspect in the heap snapshot and you get the information in a panel below. Using a good structure with smaller objects helps when locating your references.</p>
+<p>To find the leak it was pretty straight forward workflow in DevTools, recording the timeline and capturing heap snapshots. It’s easier if there are specific objects, like 3D geometry or a specific library, that you can filter out. In the example above it turned out that the 3D scene was still around and also an array that stored geometry was not cleared. If you find it hard to locate where the object lives, there is a nice feature that let you view this called <a href="https://developers.google.com/chrome-developer-tools/docs/heap-profiling?hl=sv&csw=1#views_paths">retaining paths</a>. Just click the object you want to inspect in the heap snapshot and you get the information in a panel below. Using a good structure with smaller objects helps when locating your references.</p>
 
 <figure>
 <img src="/static/images/tutorials/casestudies/hobbit-front-end/effectcompositor.png" width="620px" alt="" />
@@ -214,7 +212,7 @@ We have spent quite a lot of time optimising the site. Forcing hardware-accelera
 
 <p>In general, it's healthy to think twice before you manipulate the DOM. When you do, think about efficiency. Don't manipulate the DOM inside a game loop if you can help it. Store references in variables for reuse. If you need to search for an element, use the shortest route by storing references to strategic containers and searching inside the nearest ancestor element.</p>
 
-<p>Delay reading dimensions of newly added elements or when removing/adding classes if you experience layout bugs. Or make sure Layout is triggered. Sometimes the browser batch changes to styles, and will not update after the next layout trigger. This can really be a big problem sometimes, but it’s there for a reason, so try to learn how it’s working behind the scenes and you will gain a lot.</p>
+<p>Delay reading dimensions of newly added elements or when removing/adding classes if you experience layout bugs. Or make sure <a href="http://www.html5rocks.com/en/tutorials/speed/high-performance-animations/#toc-animating-layout-properties">Layout is triggered</a>. Sometimes the browser batch changes to styles, and will not update after the next layout trigger. This can really be a big problem sometimes, but it’s there for a reason, so try to learn how it’s working behind the scenes and you will gain a lot.</p>
 
 <h3>Fullscreen</h3>
 <p>When available, you have the option to put the site in fullscreen-mode in the menu via the Fullscreen API. But on devices there is also the browsers decision to put it into fullscreen. Safari on iOS had previously a hack to let you control that, but that is not available anymore so you have to prepare your design to work without it when making a non-scrolling page. We can probably expect updates on this in future updates, since it has broke a lot of web-apps.</p>
@@ -242,5 +240,9 @@ We have spent quite a lot of time optimising the site. Forcing hardware-accelera
 <p>In some cases animating SVG elements with code can be very time consuming, especially when the animation needs to be changed a lot during the design process. To improve the workflow between designers and developers we use Adobe Edge for some animations (the instructions before the games). The animation workflow is really close to Flash and that helped the team but there are a few drawbacks, especially with integrating the Edge animations in our asset loading process since it comes with it’s own loaders and implementation logic.</p>
 
 <p>I still feel we have a long way to go before we have a perfect workflow for handling assets and handmade animations on the web. We’re looking forward to seeing how tools like Edge will evolve. Feel free to add suggestions on other animation tools and workflows in the comments.</p>
+
+<h2 id="toc-conclusion">Conclusion</h2>
+
+Now when all the parts of the project are released and we look at the final result I must say we are quite impressed with the state of modern mobile browsers. When we started off this project we had much lower expectations on how seamless, integrated and performant we would be able to make it. It's been a great learning experience for us and all the time spent iterating and testing (a lot) has improved our understanding of how modern browsers work. And that's what it will take if we want to shorten the production time on these types of projects, going from guessing to knowing.
 
 {% endblock %}
