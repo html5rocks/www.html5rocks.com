@@ -22,8 +22,8 @@ Articles due this quater
 |Alex Danilo|[User timing: understanding execution timing in your web app](https://github.com/html5rocks/www.html5rocks.com/issues/486)|2013-11-20|@dr4b|closed
 |Matthew  Gaunt|[Tooling for mobile web testing](https://github.com/html5rocks/www.html5rocks.com/issues/645)|2013-11-27|@dr4b|open
 |Addy Osmani|[Access The Terminal From Chrome DevTools](https://github.com/html5rocks/www.html5rocks.com/issues/662)|2013-12-05|@dr4b|closed
-|Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-12-09|@scottrowe|open
-|Jake Archibald|[Article on DOM Promises](https://github.com/html5rocks/www.html5rocks.com/issues/446)|2013-12-09|@scottrowe|closed
+|Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-12-09|@arthurevans|open
+|Jake Archibald|[Article on DOM Promises](https://github.com/html5rocks/www.html5rocks.com/issues/446)|2013-12-09|@arthurevans|closed
 |Alex Danilo|[Stopping the blocking: Eliminate render blocking resources](https://github.com/html5rocks/www.html5rocks.com/issues/509)|2013-12-11|@arthurevans|open
 |Chris Wilson|[Understanding the viewport](https://github.com/html5rocks/www.html5rocks.com/issues/488)|2013-12-11|@arthurevans|open
 |Paul Kinlan|[How to prioritize your page for visible content](https://github.com/html5rocks/www.html5rocks.com/issues/508)|2013-12-15|@arthurevans|open
