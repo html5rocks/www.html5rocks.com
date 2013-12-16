@@ -10,6 +10,8 @@
 
 versionStr=${1:-master}
 
+./combine_css_files.sh
 ./compress_js_css.sh
+
 appcfg.py --oauth2 --version=$versionStr update ../
 
