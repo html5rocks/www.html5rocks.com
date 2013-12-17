@@ -3,6 +3,8 @@
 This article discusses more of the amazing things you can do with Shadow DOM! It builds on the concepts discussed in [Shadow DOM 101](/tutorials/webcomponents/shadowdom/)
 and [Shadow DOM 201](/tutorials/webcomponents/shadowdom-201/).
 
+<p class="tip notice">In Chrome, turn on the "Enable experimental Web Platform features" in about:flags to experiment with everything covered in this article.</p>
+
 <h2 id="toc-shadow-multiple">Using multiple shadow roots</h2>
 
 If you're hosting a party, it gets stuffy if everyone is crammed into the same room.
@@ -16,8 +18,8 @@ Let's see what happens if we try to attach multiple shadow roots to a host:
 &lt;div id="example1">Host node&lt;/div>
 &lt;script>
 var container = document.querySelector('#example1');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
 root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>';
 root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
 &lt;/script>
@@ -77,8 +79,8 @@ invite list. Adding a `<shadow>` insertion point brings it back:
 &lt;div id="example2">Host node&lt;/div>
 &lt;script>
 var container = document.querySelector('#example2');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
 root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
 <b>root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>&lt;shadow>&lt;/shadow>';</b>
 &lt;/script>
@@ -122,12 +124,12 @@ sense in the context of Shadow DOM...which is already prefixed :)
 <h2 id="toc-get-shadowroot">Obtaining a host's shadow root</h2>
 
 If an element is hosting Shadow DOM you can access its [youngest shadow root](#youngest-tree)
-using `.webkitShadowRoot`:
+using `.shadowRoot`:
 
 <pre class="prettyprint">
-var root = host.webkitCreateShadowRoot();
-console.log(host.webkitShadowRoot === root); // true
-console.log(document.body.webkitShadowRoot); // null
+var root = host.createShadowRoot();
+console.log(host.shadowRoot === root); // true
+console.log(document.body.shadowRoot); // null
 </pre>
 
 <blockquote class="commentary talkinghead">
@@ -140,7 +142,7 @@ If you're worried about people crossing into your shadows, redefine
  `.shadowRoot` to be null:
 
 <pre class="prettyprint">
-Object.defineProperty(host, 'webkitShadowRoot', {
+Object.defineProperty(host, 'shadowRoot', {
   get: function() { return null; },
   set: function(value) { }
 });</pre>
@@ -163,8 +165,8 @@ have interfaces for that.
 &lt;/div>
 &lt;script>
 var container = document.querySelector('#example3');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
   
 var div = document.createElement('div');
 div.textContent = 'Root 1 FTW';
@@ -205,7 +207,7 @@ For example:
 <pre class="prettyprint">
 &lt;div>&lt;h2>Host node&lt;/h2>&lt;/div>
 &lt;script>
-var shadowRoot = document.querySelector('div').webkitCreateShadowRoot();
+var shadowRoot = document.querySelector('div').createShadowRoot();
 shadowRoot.innerHTML = '&lt;content select="h2">&lt;/content>';
 
 var h2 = document.querySelector('h2');
@@ -250,7 +252,7 @@ allows us to query the distributed nodes at an insertion point:
 &lt;script>
 var container = document.querySelector('#example4');
 
-var root = container.webkitCreateShadowRoot();
+var root = container.createShadowRoot();
 root.appendChild(document.querySelector('#sdom').content.cloneNode(true));
   
 var html = [];
@@ -373,6 +375,9 @@ how the `mouseout` and `focusin` events bubble up to the main page.
     content::-webkit-distributed(*) {
       border: 4px solid #FC0;
     }
+    ::content * {
+      border: 4px solid #FC0;
+    }
     </style>
     <section class="scopestyleforolderbrowsers">
       <div>I'm a node in Shadow DOM</div>
@@ -444,6 +449,11 @@ function playAnimation(idx) {
 }
 
 wrapper.addEventListener('webkitAnimationEnd', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+wrapper.addEventListener('animationend', function(e) {
   this.classList.remove('playing');
   cleanUpAnimations(this);
 });

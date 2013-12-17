@@ -127,25 +127,22 @@ root.innerHTML = '<style>\
 
 <h3 id="toc-style-themeing">Theming an element</h3>
 
-`:host` is also great for theming. The other form of it takes a selector, `:host(<selector>)`, to match the host element if it or any of its ancestors match `<selector>`. 
+Another use for `:host` is theming. The functional form of `:host(<selector>)` takes a selector,
+which matches the host element if it or any of its ancestors matches. 
 
-As an example, many people do theming by applying a class to `<html>` or `<body>`:
+**Example** - many people do theming by applying a class to `<html>` or `<body>`:
 
     <body class="different">
       <x-foo></x-foo>
     </body>
 
-To style `<x-foo>`'s differently when it is a descendant of `.different`, use `:host(.different)`:
+Use `:host(.different)` to style `<x-foo>` uniquely when it's a descendant of `.different`:
 
     :host(.different) {
       color: red;
     }
 
-Note, you can also write a rule that matches only if the host itself has `.different`:
-
-    <x-foo class="different"></x-foo>
-
-would match:
+**Example** - match only if the host itself has the class (e.g.. `<x-foo class="different"></x-foo>`):
 
     :host(.different:host) {
       ...  
@@ -208,7 +205,7 @@ root.innerHTML = '<span>Shadow DOM</span>' +
 })();
 </script>
 
-**Example** (custom elements) -  `<x-tabs>`  contains `<x-panel>` elements in its Shadow DOM. Each panel hosts its own shadow tree, contain `h2` headings. To style those headings
+**Example** (custom elements) -  `<x-tabs>`  has `<x-panel>` children in its Shadow DOM. Each panel hosts its own shadow tree containing `h2` headings. To style those headings
 from the main page, use:
 
     x-tabs ^ x-panel ^ h2 {
@@ -217,9 +214,8 @@ from the main page, use:
 
 <h3 id="toc-style-cat">The ^^ combinator</h3>
 
-The `^^` combinator is similar to `^` but more powerful. A selector of the form
-`A ^^ B` matches an arbitrary descendant element B of an ancestor A, but completely
-ignores shadow boundaries. Put simply, `^^` **crosses any number of shadow boundaries**. 
+The `^^` combinator is similar, but more powerful. A selector of the form
+`A ^^ B` ignores all shadow boundaries and matches the arbitrary descendant element B. Put simply, `^^` **crosses any number of shadow boundaries**. 
 
 The `^^` combinator is particularly useful in the world of Custom Elements where it's common to have multiple levels of Shadow DOM. Prime examples are nesting a bunch of custom elements (each having their own Shadow DOM) or creating an element that inherits from another using [`<shadow>`](/tutorials/webcomponents/shadowdom-301/#toc-shadow-insertion).
 
@@ -230,13 +226,33 @@ The `^^` combinator is particularly useful in the world of Custom Elements where
       ...
     }
 
-`^` and `^^` open shadow trees for selector traversal, just like [`.shadowRoot`](/tutorials/webcomponents/shadowdom-301/#toc-get-shadowroot) does for DOM traversal. Instead of writing a nested chain of madness:
+<h3 id="toc-css-traverasl">Working with querySelector()</h3>
 
-    document.querySelector('x-tabs').shadowRoot.querySelector('x-panel').shadowRoot.querySelector('#foo')
+Just like [`.shadowRoot`](/tutorials/webcomponents/shadowdom-301/#toc-get-shadowroot) opens
+shadow trees up for DOM traversal, the combinators open shadow trees for selector traversal.
+Instead of writing a nested chain of madness, you can write a single statement:
 
-simply write a selector:
+    // No fun.
+    document.querySelector('x-tabs').shadowRoot
+            .querySelector('x-panel').shadowRoot
+            .querySelector('#foo');
 
+    // Fun.
     document.querySelector('x-tabs ^ x-panel ^ #foo');
+
+<h3 id="toc-style-native">Styling native elements</h3>
+
+Native HTML controls are a challenge to style. Many people simply give up
+and roll their own. However, with ^ and ^^, any element in the web platform that
+uses Shadow DOM can be styled. Good examples are `<video>` and `<input>`.
+
+    video ^ input[type="range"] {
+      background: hotpink;
+    }
+
+<div class="demoarea">  
+  <video id="ex-style-video" controls></video>
+</div>
 
 <blockquote class="commentary talkinghead">
 Do ^ and ^^ defeat the purpose of style encapsulation? Out of the box, Shadow DOM prevents <em>accidental</em> styling from outsiders but it never promises to be a bullet proof vest. Developers should be allowed to <em>intentionally</em> style inner parts of your Shadow tree...if they know what they're doing. Having more control is also good for flexibility, theming, and the re-usability of your elements.
