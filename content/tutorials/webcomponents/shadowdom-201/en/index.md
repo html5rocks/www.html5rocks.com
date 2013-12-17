@@ -10,6 +10,8 @@ Let's face it. There's nothing sexy about unstyled markup. Lucky for us, [the br
 foresaw this and didn't leave us hanging. We have many options when it
 comes to styling content in a shadow tree.
 
+<p class="tip notice">In Chrome, turn on the "Enable experimental Web Platform features" in about:flags to experiment with everything covered in this article.</p>
+
 <h2 id="toc-style-scoped">Style encapsulation</h2>
 
 One of the core features of Shadow DOM is the [shadow boundary](http://w3c.github.io/webcomponents/spec/shadow/#shadow-trees). It has a lot of nice properties,
@@ -304,8 +306,7 @@ but loosened for custom pseudo element definitions.
 
 <h3 id="toc-vars">Using CSS Variables</h3>
 
-<p class="notice">CSS Variables can be enabled in Chrome under "Enable experimental Web Platform features"
-  in about:flags.</p>
+<p class="notice">CSS Variables can be enabled in Chrome under "Enable experimental Web Platform features" in about:flags.</p>
 
 A powerful way to create theming hooks will be through [CSS Variables](http://dev.w3.org/csswg/css-variables/). Essentially, creating "style placeholders" for other users to fill in.
 
