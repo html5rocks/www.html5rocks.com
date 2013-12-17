@@ -33,19 +33,19 @@ What if the markup for GMail wasn't atrocious? What if it was beautiful:
     </hangout-module>
 
 <p class="centered">
-  <button><a href="https://html5-demos.appspot.com/static/webcomponents-bdconf/demos/components/hangouts/index.html">Try the demo!</a></button>
+  <button><a href="https://html5-demos.appspot.com/hangouts">Try the demo!</a></button>
 </p>
 
 How refreshing! This app totally makes sense too. It's **meaningful**, **easy to understand**,
 and best of all, it's **maintainable**. Future me/you will know exactly what it does
 just by examining its declarative backbone.
 
-<blockquote class="commentary talkinghead singleline">Help us custom elements. You're our only hope!</blockquote>
+<blockquote class="commentary talkinghead">Help us custom elements. You're our only hope!</blockquote>
 
 <h2 id="gettingstarted">Getting started</h2>
 
-[Custom Elements](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html)
-**allow web developers to define new types of HTML elements**. The spec is one of several new API primitives landing under the [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) umbrella, but it's quite possibly the most important. Web Components don't exist
+[Custom Elements](http://w3c.github.io/webcomponents/spec/custom/)
+**allow web developers to define new types of HTML elements**. The spec is one of several new API primitives landing under the [Web Components](http://w3c.github.io/webcomponents/explainer/) umbrella, but it's quite possibly the most important. Web Components don't exist
 without the features unlocked by custom elements:
 
 1. Define new HTML/DOM elements
@@ -355,10 +355,10 @@ renders basic markup. The difference is in `createdCallback()`:
 Instead of setting the element's `.innerHTML`, I've created a
 Shadow Root for `<x-foo-shadowdom>` and then filled it with markup.
 With the "Show Shadow DOM" setting enabled in the DevTools, you'll see a
-`#document-fragment` that can be expanded:
+`#shadow-root` that can be expanded:
 
     ▾<x-foo-shadowdom>
-       ▾#document-fragment
+       ▾#shadow-root
          <b>I'm in the element's Shadow DOM!</b>
      </x-foo-shadowdom>
 
@@ -366,7 +366,7 @@ That's the Shadow Root!
 
 <h3 id="fromtemplate">Creating elements from a template</h3>
 
-[HTML Templates](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html) are another new API primitive that fits nicely into the world of custom elements.
+[HTML Templates](http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element) are another new API primitive that fits nicely into the world of custom elements.
 
 For those unfamiliar, the [`<template>` element](/tutorials/webcomponents/template/)
 allows you to declare fragments of DOM which are parsed, inert at page load, and instantiated later at runtime. They're an ideal placeholder for declaring the structure of custom element.
@@ -385,7 +385,8 @@ allows you to declare fragments of DOM which are parsed, inert at page load, and
       createdCallback: {
         value: function() {
           var t = document.querySelector('#sdtemplate');
-          this.createShadowRoot().appendChild(t.content.cloneNode(true));
+          var clone = document.importNode(t.content, true);
+          this.createShadowRoot().appendChild(clone);
         }
       }
     });
@@ -519,7 +520,7 @@ not to elements that inherit from `HTMLUnkownElement` (see [How elements are upg
     <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
 
 <div class="demoarea">
-  <panel>I'm black because :unresolved doesn't apply to "panel". It isn't a valid name.</panel>
+  <panel>I'm black because :unresolved doesn't apply to "panel". It's not a valid custom element name.</panel>
   <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
   <p><button id="register-x-panel">Register &lt;x-panel></button></p>
 </div>
@@ -623,7 +624,8 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
     createdCallback: {
       value: function() {
         var t = document.querySelector('#sdtemplate');
-        this.createShadowRoot().appendChild(t.content.cloneNode(true));
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
       }
     }
   });
