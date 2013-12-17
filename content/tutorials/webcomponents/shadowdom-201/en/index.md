@@ -6,7 +6,7 @@ If you're looking for an introduction, see that article.
 
 <h2 id="toc-intro">Introduction</h2>
 
-Let's face it. There's nothing sexy about unstyled markup. Lucky for us, [the brilliant folks behind Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#acknowledgements)
+Let's face it. There's nothing sexy about unstyled markup. Lucky for us, [the brilliant folks behind Web Components](http://w3c.github.io/webcomponents/explainer/#acknowledgements)
 foresaw this and didn't leave us hanging. We have many options when it
 comes to styling content in a shadow tree.
 
@@ -125,19 +125,21 @@ root.innerHTML = '<style>\
 
 <h3 id="toc-style-themeing">Theming an element</h3>
 
-The selector `:host(<selector>)` matches the host element if it or any of its ancestors matches `<selector>`. For example, say we want to color the host element if it or an ancestor has the `.different` class:
+`:host` is also great for theming. The other form of it takes a selector, `:host(<selector>)`, to match the host element if it or any of its ancestors match `<selector>`. 
 
-    :host(.different) {
-      color: red;
-    }
-
-`:host()` becomes useful for theming. Many people do theming by applying a class to `<html>` or `<body>`. Something like:
+As an example, many people do theming by applying a class to `<html>` or `<body>`:
 
     <body class="different">
       <x-foo></x-foo>
     </body>
 
-Note, you can also write a rule that matches only if the host itself has the `.different` class:
+To style `<x-foo>`'s differently when it is a descendant of `.different`, use `:host(.different)`:
+
+    :host(.different) {
+      color: red;
+    }
+
+Note, you can also write a rule that matches only if the host itself has `.different`:
 
     <x-foo class="different"></x-foo>
 
@@ -164,10 +166,95 @@ support styling many types of host elements from within the same Shadow DOM.
       /* Applies if the host element or an ancestor is a <div>. */
     }
 
+<h2 id="toc-style-cat-hat">The ^ and ^^ combinators</h2>
+
+The `^^` (Cat) and `^` (Hat) combinators are like having a Vorpal sword of CSS authority.
+They allow piercing through Shadow DOM's boundary and styling elements within shadow trees.
+
+<h3 id="toc-style-hat">The ^ combinator</h3>
+
+The `^` combinator is generally equivalent to a descendant combinator (e.g. `div p {...}`), except **it crosses one shadow boundary**. This allows you to easily select elements in a shadow tree:
+
+    <style>
+      #host ^ span {
+        color: red;
+      }
+    </style>
+
+    <div id="host">
+      <span>Light DOM</span>
+    </div>
+
+    <script>
+      var host = document.querySelector('div');
+      var root = host.createShadowRoot();
+      root.innerHTML = "<span>Shadow DOM</span>" + 
+                       "<content></content>";
+    </script>
+
+<div class="demoarea">
+  <div id="style-hat-ex">
+    <span>Light DOM</span>
+  </div>
+</div>
+<script>
+(function() {
+var host = document.querySelector('#style-hat-ex');
+var root = host.createShadowRoot();
+root.innerHTML = '<span>Shadow DOM</span>' + 
+                 '<content></content>';
+})();
+</script>
+
+**Example** (custom elements) -  `<x-tabs>`  contains `<x-panel>` elements in its Shadow DOM. Each panel hosts its own shadow tree, contain `h2` headings. To style those headings
+from the main page, use:
+
+    x-tabs ^ x-panel ^ h2 {
+      ...
+    }
+
+<h3 id="toc-style-cat">The ^^ combinator</h3>
+
+The `^^` combinator is similar to `^` but more powerful. A selector of the form
+`A ^^ B` matches an arbitrary descendant element B of an ancestor A, but completely
+ignores shadow boundaries. Put simply, `^^` **crosses any number of shadow boundaries**. 
+
+The `^^` combinator is particularly useful in the world of Custom Elements where it's common to have multiple levels of Shadow DOM. Prime examples are nesting a bunch of custom elements (each having their own Shadow DOM) or creating an element that inherits from another using [`<shadow>`](/tutorials/webcomponents/shadowdom-301/#toc-shadow-insertion).
+
+**Example** (custom elements) -  select all `<x-panel>` elements that are descendants of
+`<x-tabs>`, ignoring all shadow boundaries:
+
+    x-tabs ^^ x-panel {
+      ...
+    }
+
+`^` and `^^` open shadow trees for selector traversal, just like [`.shadowRoot`](/tutorials/webcomponents/shadowdom-301/#toc-get-shadowroot) does for DOM traversal. Instead of writing a nested chain of madness:
+
+    document.querySelector('x-tabs').shadowRoot.querySelector('x-panel').shadowRoot.querySelector('#foo')
+
+simply write a selector:
+
+    document.querySelector('x-tabs ^ x-panel ^ #foo');
+
+<blockquote class="commentary talkinghead">
+Do ^ and ^^ defeat the purpose of style encapsulation? Out of the box, Shadow DOM prevents <em>accidental</em> styling from outsiders but it never promises to be a bullet proof vest. Developers should be allowed to <em>intentionally</em> style inner parts of your Shadow tree...if they know what they're doing. Having more control is also good for flexibility, theming, and the re-usability of your elements.
+</blockquote>
+
 <h2 id="toc-style-hooks">Creating style hooks</h2>
 
 Customization is good. In certain cases, you may want to poke holes in your Shadow's
 styling shield and create hooks for others to style.
+
+<h3 id="toc-custom-pseduo">Using the ^ and ^^</h3>
+
+There's a lot of power behind `^^`. It gives component authors a way to designate
+individual elements as styleable or a slew of elements as themeable.
+
+**Example** - style all elements that have the class `.library-theme`, ignoring all shadow trees:
+
+    body ^^ .library-theme {
+      ...
+    }
 
 {% comment %}
 <h3 id="toc-custom-pseduo">Using custom pseudo elements</h3>
@@ -345,7 +432,7 @@ also apply to elements with that same class in the Shadow DOM (e.g "applying the
 
 <p class="notice fact">Even with the <code>apply-author-styles</code> attribute set,
 CSS selectors defined in the document do not cross the shadow boundary.
-<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b></p>
+<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b> If you need something more powerful, see the <a href="#toc-style-cat-hat">Cat (^^) and Hat (^) combinators</a></p>
 
 <img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="height:215px;border:1px solid #ccc;float:right;margin-left:10px;">
 
