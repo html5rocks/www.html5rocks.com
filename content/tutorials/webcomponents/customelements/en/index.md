@@ -109,7 +109,10 @@ Example:
 Have you ever wondered why the HTML parser doesn't throw a fit on non-standard tags?
 For example, it's perfectly happy if we declare `<randomtag>` on the page. According to the [HTML specification](http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#htmlunknownelement):
 
-> The <code>HTMLUnknownElement</code> interface must be used for HTML elements that are not defined by this specification.
+<blockquote>
+  The <code>HTMLUnknownElement</code> interface must be used for HTML elements that are not defined by this specification.
+  <cite>HTML spec</cite>
+</blockquote>
 
 Sorry `<randomtag>`! You're non-standard and inherit from `HTMLUnknownElement`.
 
@@ -121,7 +124,7 @@ The same is not true for custom elements. **Elements with valid custom element n
     // "x-tabs" is a valid custom element name
     document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 
-<p class="notice"><b>Note:</b> <code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.register()</code>.</p>
+<p class="notice fact"><code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.register()</code>.</p>
 
 <h4 id="unresolvedels">Unresolved elements</h4>
 

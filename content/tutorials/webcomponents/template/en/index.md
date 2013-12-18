@@ -1,9 +1,3 @@
-{% include "warning.html" %}
-
-<script>
-HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot;
-</script>
-
 <h2 id="toc-intro">Introduction</h2>
 
 The concept of templating is not new to web development. In fact, server-side
