@@ -66,12 +66,12 @@ article.tutorial section {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
-blockquote:not(.talkinghead) {
+/*blockquote:not(.talkinghead) {
   background: rgb(238, 238, 238);
   padding: 1px 15px;
   position: relative;
-}
-blockquote:not(.talkinghead):before {
+}*/
+/*blockquote:not(.talkinghead):before {
   content: '“';
   top: -25px;
   left: -15px;
@@ -87,7 +87,7 @@ blockquote:not(.talkinghead):after {
   position: absolute;
   color: rgb(204, 204, 204);
 }
-
+*/
 
 /*
 .tutorial table td,
@@ -140,7 +140,7 @@ blockquote:not(.talkinghead):after {
 
 {% block content %}
 
-{% include "warning.html" %}
+<p>{% include "warning.html" %}</p>
 <h2 id="why">Why imports?</h2>
 
 <p>Think about how you load different types of resources on the web. For JS, we have <code>&lt;script src&gt;</code>. For CSS, your go-to is probably <code>&lt;link rel="stylesheet"&gt;</code>. For images it's <code>&lt;img&gt;</code>. Video has <code>&lt;video&gt;</code>. Audio, <code>&lt;audio&gt;</code>.... Get to the point! The majority of the web's content has a simple and declarative way to load itself. Not so for HTML. Here's your options:</p>
@@ -150,10 +150,10 @@ blockquote:not(.talkinghead):after {
 <li><strong>CrazyHacks&#8482;</strong> - embedded in strings, hidden as comments (e.g. <code>&lt;script type="text/html"&gt;</code>). Yuck!</li>
 </ol>
 <p>See the irony? <strong>The web's most basic content, HTML, requires the greatest amount
-of effort to work with</strong>. Fortunately, <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> are here to get us back on track.</p>
+of effort to work with</strong>. Fortunately, <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> are here to get us back on track.</p>
 <h2 id="started">Getting started</h2>
 
-<p><a href="http://www.w3.org/TR/2013/WD-html-imports-20130514/">HTML Imports</a>, part of the <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> cast, is a way to include HTML documents in other HTML documents. You're not limited to markup either. An import can also include CSS, JavaScript, or anything else an <code>.html</code> file can contain. In other words, this makes imports a <strong>fantastic tool for loading related HTML/CSS/JS</strong>.</p>
+<p><a href="http://w3c.github.io/webcomponents/spec/imports/">HTML Imports</a>, part of the <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> cast, is a way to include HTML documents in other HTML documents. You're not limited to markup either. An import can also include CSS, JavaScript, or anything else an <code>.html</code> file can contain. In other words, this makes imports a <strong>fantastic tool for loading related HTML/CSS/JS</strong>.</p>
 <h3 id="basics">The basics</h3>
 
 <p>Include an import on your page by declaring a <code>&lt;link rel="import"&gt;</code>:</p>
@@ -350,7 +350,8 @@ document.head.appendChild(link);
 <p>import.html</p>
 <pre class="prettyprint"><code>&lt;template&gt;
   &lt;h1&gt;Hello World!&lt;/h1&gt;
-  &lt;img src="world.png"&gt; &lt;!-- !requested until the template goes live. --&gt;
+  &lt;!-- Img is not requested until the &lt;template&gt; goes live. --&gt;
+  &lt;img src="world.png"&gt;
   &lt;script&gt;alert("Executed when the template is activated.");&lt;/script&gt;
 &lt;/template&gt;
 </code></pre>
@@ -365,9 +366,9 @@ document.head.appendChild(link);
 
     // Clone the &lt;template&gt; in the import.
     var template = link.import.querySelector('template');
-    var content = template.content.cloneNode(true)
+    var clone = document.importNode(template.content, true);
 
-    document.querySelector('#container').appendChild(content);
+    document.querySelector('#container').appendChild(clone);
   &lt;/script&gt;
 &lt;/body&gt;
 </code></pre>
@@ -425,8 +426,9 @@ document.head.appendChild(link);
 <h3 id="depssubimports">Managing dependencies and sub-imports</h3>
 
 <blockquote>
-<p>Yo dawg. I hear you like imports, so I included an import <em>in</em> your import.</p>
+  Yo dawg. I hear you like imports, so I included an import <em>in</em> your import.
 </blockquote>
+
 <h4 id="sub-imports">Sub-imports</h4>
 
 <p>It can be useful for one import to include another. For example, if you want to reuse or extend another component, use an import to load the other element(s).</p>
@@ -510,7 +512,7 @@ use them wisely. Web development best practices still hold true. Below are some 
 
 <p>Reducing network requests is always important. If you have many top-level import
 links, consider combining them into a single resource and importing that file!</p>
-<p><a href="https://github.com/Polymer/vulcanize">Vulcanizer</a> is an npm build tool from the <a href="http://www.polymer-project.org/">Polymer</a> team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.</p>
+<p><a href="https://github.com/Polymer/vulcanize">Vulcanize</a> is an npm build tool from the <a href="http://www.polymer-project.org/">Polymer</a> team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.</p>
 <h3 id="perf-caching">Imports leverage browser caching</h3>
 
 <p>Many people forget that the browser's networking stack has been finely tuned over the years. Imports (and sub-imports) take advantage of this logic too. The <code>http://cdn.com/bootstrap.html</code> import might have sub-resources, but they'll be cached.</p>
@@ -590,7 +592,7 @@ import author establishes a contract for the app developer to follow, the import
 &lt;/body&gt;
 </code></pre>
 <p><strong>Scenario #2: you <em>have</em> script in <code>&lt;head&gt;</code> or inlined in <code>&lt;body&gt;</code></strong></p>
-<p>If you have an import that takes a long time to load, the first <code>&lt;script&gt;</code> that follows it on the page will block the page from rendering. Google Analytics for example,
+<p>If you have an import that takes a long time to load, the first <code>&lt;script&gt;</code> that follows it on the page will block the page from rendering. Google Analytics for example, 
 recommends putting the tracking code in the <code>&lt;head&gt;</code>, If you can't avoid putting <code>&lt;script&gt;</code> in the <code>&lt;head&gt;</code>, dynamically adding the import will prevent blocking the page:</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;script&gt;

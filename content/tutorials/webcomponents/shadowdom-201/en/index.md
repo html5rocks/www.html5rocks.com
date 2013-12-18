@@ -6,34 +6,36 @@ If you're looking for an introduction, see that article.
 
 <h2 id="toc-intro">Introduction</h2>
 
-Let's face it. There's nothing sexy about unstyled markup. Lucky for us, [the brilliant folks behind Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#acknowledgements)
+Let's face it. There's nothing sexy about unstyled markup. Lucky for us, [the brilliant folks behind Web Components](http://w3c.github.io/webcomponents/explainer/#acknowledgements)
 foresaw this and didn't leave us hanging. We have many options when it
 comes to styling content in a shadow tree.
 
+<p class="tip notice">In Chrome, turn on the "Enable experimental Web Platform features" in about:flags to experiment with everything covered in this article.</p>
+
 <h2 id="toc-style-scoped">Style encapsulation</h2>
 
-One of the core features of Shadow DOM is the [shadow boundary](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#shadow-trees). It has a lot of nice properties,
+One of the core features of Shadow DOM is the [shadow boundary](http://w3c.github.io/webcomponents/spec/shadow/#shadow-trees). It has a lot of nice properties,
 but one of the best is that it provides style encapsulation for free. Stated another way:
 
-<p class="notice fact">By default, CSS styles defined inside Shadow DOM are scoped to its ShadowRoot.</p>
+<p class="notice fact">CSS styles defined inside Shadow DOM are scoped to the ShadowRoot. This means styles are encapsulated.</p>
 
-Below is an example. If all goes well and your browser supports Shadow DOM (it does<span class="featuresupported no">n't</span>!), you'll see "<span style="color:red">Shadow DOM Title</span>".
+Below is an example. If all goes well and your browser supports Shadow DOM (it does<span class="featuresupported no">n't</span>!), you'll see "<span style="color:red">Shadow DOM</span>".
 
-    <div><h3>Host title</h3></div>
+    <div><h3>Light DOM</h3></div>
     <script>
-    var root = document.querySelector('div').webkitCreateShadowRoot();
+    var root = document.querySelector('div').createShadowRoot();
     root.innerHTML = '<style>h3{ color: red; }</style>' + 
-                     '<h3>Shadow DOM Title</h3>';
+                     '<h3>Shadow DOM</h3>';
     </script>
 
 <div class="demoarea">
-  <div id="style-ex-scoped"><h3>Host Title</h3></div>
+  <div id="style-ex-scoped"><h3>Light DOM</h3></div>
 </div>
 <script>
 (function() {
 var container = document.querySelector('#style-ex-scoped');
 var root = container.createShadowRoot();
-root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM Title</h3>';
+root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM</h3>';
 })();
 </script>
 
@@ -49,59 +51,56 @@ Moral of the story? We have style encapsulation from the outside world. Thanks S
 
 <h2 id="toc-style-host">Styling the host element</h2>
 
-The `@host` [at-rule](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#host-at-rule) allows you to select and style the element hosting a shadow tree:
+<p class="notice"><b>Note:</b> <code>@host</code> was replaced with <code>:host()</code> in the Shadow DOM spec.</p>
 
-    <button class="bigger">My Button</button>
+The `:host` allows you to select and style the element hosting a shadow tree:
+
+    <button class="red">My Button</button>
     <script>
-    var root = document.querySelector('button').webkitCreateShadowRoot();
+    var button = document.querySelector('button');
+    var root = button.createShadowRoot();
     root.innerHTML = '<style>' + 
-        '@host{' + 
-          'button { text-transform: uppercase; }' +
-          '.bigger { padding: 20px; }' +
-        '}' +
+        ':host { text-transform: uppercase; }' +
         '</style>' + 
-        '<content select=""></content>';
+        '<content></content>';
     </script>
 
 <div class="demoarea">
-  <button id="style-athost" class="bigger">My Button</button>
+  <button id="style-athost" class="red">My Button</button>
 </div>
 <script>
 (function() {
 var container = document.querySelector('#style-athost');
 var root = container.createShadowRoot();
 root.innerHTML = '<style>' + 
-                     '@host{' + 
-                        'button { text-transform: uppercase; text-shadow:none }' +
-                        '.bigger { padding: 20px; }' +
-                      '}' +
+                     ':host { text-transform: uppercase; }' +
                       '</style>' + 
-                      '<content select=""></content>';
+                      '<content></content>';
 })();
 </script>
 
-One gotcha is that rules wrapped in a `@host` have higher specificity than
-any selector in the parent page, but a lower specificity than a `style` attribute
-defined on the host element. `@host` also only works in the context
+One gotcha is that rules in the parent page have higher specificity than `:host`
+rules defined in the element, but lower specificity than a `style` attribute
+defined on the host element. `:host` also only works in the context
 of a ShadowRoot so you can't use it outside of Shadow DOM.
 
-A common use case for `@host` is when you're creating a custom element and
+<h3 id="toc-style-states">Reacting to user states</h3>
+
+A common use case for `:host` is when you're creating a [Custom Element](/tutorials/webcomponents/customelements/) and
 want to react to different user states (:hover, :focus, :active, etc.).
 
     <style>
-    @host {
-      * {
-        opacity: 0.4;
-        {% mixin transition: opacity 420ms ease-in-out; %}
-      }
-      *:hover {
-        opacity: 1;
-      }
-      *:active {
-        position: relative;
-        top: 3px;
-        left: 3px;
-      }
+    :host {
+      opacity: 0.4;
+      transition: opacity 420ms ease-in-out;
+    }
+    :host:hover {
+      opacity: 1;
+    }
+    :host:active {
+      position: relative;
+      top: 3px;
+      left: 3px;
     }
     </style>
 
@@ -113,49 +112,169 @@ want to react to different user states (:hover, :focus, :active, etc.).
 var container = document.querySelector('#style-athost-ex2');
 var root = container.createShadowRoot();
 root.innerHTML = '<style>\
-     @host {\
-      * {\
+      :host {\
         opacity: 0.4;\
-        -webkit-transition: opacity 200ms ease-in-out;\
+        transition: opacity 200ms ease-in-out;\
       }\
-      *:active { position:relative;top:3px;left:3px; }\
-      *:hover {\
+      :host:active { position:relative;top:3px;left:3px; }\
+      :host:hover {\
         opacity: 1;\
       }\
-    }</style><content select=""></content>';
+    }</style><content></content>';
 })();
 </script>
 
-In this example, I've used "*" to select any type of element that's hosting my
-shadow tree. "I don't care what type of element you are. Just style yourself like this."
 
-Another need for `@host` is if you want to potentially style multiple types of
-hosts from within the same Shadow DOM, say if you're creating a custom element.
-Or perhaps you have different themes based on the host element.
+<h3 id="toc-style-themeing">Theming an element</h3>
 
-    @host {
-      g-foo { 
-        /* Applies if the host is a <g-foo> element.*/
-      }
+Another use for `:host` is theming. The functional form of `:host(<selector>)` takes a selector,
+which matches the host element if it or any of its ancestors matches. 
 
-      g-bar {
-        /* Applies if the host is a <g-bar> element. */
-      }
+**Example** - many people do theming by applying a class to `<html>` or `<body>`:
 
-      div {
-        /* Applies if the host element is a <div>. */
-      }
+    <body class="different">
+      <x-foo></x-foo>
+    </body>
 
-      * {
-        /* Applies to any type of element hosting this ShadowRoot. */
-      }
+Use `:host(.different)` to style `<x-foo>` uniquely when it's a descendant of `.different`:
+
+    :host(.different) {
+      color: red;
     }
+
+**Example** - match only if the host itself has the class (e.g.. `<x-foo class="different"></x-foo>`):
+
+    :host(.different:host) {
+      ...  
+    }
+
+<h3 id="toc-style-multi">Support multiple host types from within one shadow root</h3>
+
+Another use for `:host` is if you're creating a theming library and want to
+support styling many types of host elements from within the same Shadow DOM.
+
+    :host(x-foo:host) { 
+      /* Applies if the host is a <x-foo> element.*/
+    }
+
+    :host(x-bar:host) { 
+      /* Applies if the host is a <x-bar> element. */
+    }
+
+    :host(div) {  {
+      /* Applies if the host element or an ancestor is a <div>. */
+    }
+
+<h2 id="toc-style-cat-hat">The ^ and ^^ combinators</h2>
+
+The `^^` (Cat) and `^` (Hat) combinators are like having a Vorpal sword of CSS authority.
+They allow piercing through Shadow DOM's boundary and styling elements within shadow trees.
+
+<h3 id="toc-style-hat">The ^ combinator</h3>
+
+The `^` combinator is generally equivalent to a descendant combinator (e.g. `div p {...}`), except **it crosses one shadow boundary**. This allows you to easily select elements in a shadow tree:
+
+    <style>
+      #host ^ span {
+        color: red;
+      }
+    </style>
+
+    <div id="host">
+      <span>Light DOM</span>
+    </div>
+
+    <script>
+      var host = document.querySelector('div');
+      var root = host.createShadowRoot();
+      root.innerHTML = "<span>Shadow DOM</span>" + 
+                       "<content></content>";
+    </script>
+
+<div class="demoarea">
+  <div id="style-hat-ex">
+    <span>Light DOM</span>
+  </div>
+</div>
+<script>
+(function() {
+var host = document.querySelector('#style-hat-ex');
+var root = host.createShadowRoot();
+root.innerHTML = '<span>Shadow DOM</span>' + 
+                 '<content></content>';
+})();
+</script>
+
+**Example** (custom elements) -  `<x-tabs>`  has `<x-panel>` children in its Shadow DOM. Each panel hosts its own shadow tree containing `h2` headings. To style those headings
+from the main page, use:
+
+    x-tabs ^ x-panel ^ h2 {
+      ...
+    }
+
+<h3 id="toc-style-cat">The ^^ combinator</h3>
+
+The `^^` combinator is similar, but more powerful. A selector of the form
+`A ^^ B` ignores all shadow boundaries and matches the arbitrary descendant element B. Put simply, `^^` **crosses any number of shadow boundaries**. 
+
+The `^^` combinator is particularly useful in the world of Custom Elements where it's common to have multiple levels of Shadow DOM. Prime examples are nesting a bunch of custom elements (each having their own Shadow DOM) or creating an element that inherits from another using [`<shadow>`](/tutorials/webcomponents/shadowdom-301/#toc-shadow-insertion).
+
+**Example** (custom elements) -  select all `<x-panel>` elements that are descendants of
+`<x-tabs>`, ignoring all shadow boundaries:
+
+    x-tabs ^^ x-panel {
+      ...
+    }
+
+<h3 id="toc-css-traverasl">Working with querySelector()</h3>
+
+Just like [`.shadowRoot`](/tutorials/webcomponents/shadowdom-301/#toc-get-shadowroot) opens
+shadow trees up for DOM traversal, the combinators open shadow trees for selector traversal.
+Instead of writing a nested chain of madness, you can write a single statement:
+
+    // No fun.
+    document.querySelector('x-tabs').shadowRoot
+            .querySelector('x-panel').shadowRoot
+            .querySelector('#foo');
+
+    // Fun.
+    document.querySelector('x-tabs ^ x-panel ^ #foo');
+
+<h3 id="toc-style-native">Styling native elements</h3>
+
+Native HTML controls are a challenge to style. Many people simply give up
+and roll their own. However, with ^ and ^^, any element in the web platform that
+uses Shadow DOM can be styled. Good examples are `<video>` and `<input>`.
+
+    video ^ input[type="range"] {
+      background: hotpink;
+    }
+
+<div class="demoarea">  
+  <video id="ex-style-video" controls></video>
+</div>
+
+<blockquote class="commentary talkinghead">
+Do ^ and ^^ defeat the purpose of style encapsulation? Out of the box, Shadow DOM prevents <em>accidental</em> styling from outsiders but it never promises to be a bullet proof vest. Developers should be allowed to <em>intentionally</em> style inner parts of your Shadow tree...if they know what they're doing. Having more control is also good for flexibility, theming, and the re-usability of your elements.
+</blockquote>
 
 <h2 id="toc-style-hooks">Creating style hooks</h2>
 
 Customization is good. In certain cases, you may want to poke holes in your Shadow's
 styling shield and create hooks for others to style.
 
+<h3 id="toc-custom-pseduo">Using the ^ and ^^</h3>
+
+There's a lot of power behind `^^`. It gives component authors a way to designate
+individual elements as styleable or a slew of elements as themeable.
+
+**Example** - style all elements that have the class `.library-theme`, ignoring all shadow trees:
+
+    body ^^ .library-theme {
+      ...
+    }
+
+{% comment %}
 <h3 id="toc-custom-pseduo">Using custom pseudo elements</h3>
 
 Both [WebKit](http://trac.webkit.org/browser/trunk/Source/WebCore/css/html.css?format=txt) and
@@ -188,7 +307,7 @@ its slider thumb <span style="color:blue">blue</span>:
     </style>
     <div id="host"></div>
     <script>
-    var root = document.querySelector('#host').webkitCreateShadowRoot();
+    var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<div>' +
                        '<div pseudo="x-slider-thumb"></div>' + 
                      '</div>';
@@ -199,17 +318,15 @@ What's really neat about custom pseudo elements? You can style them with outside
 but can't access them via outside JS. The shadow boundary is preserved for JS
 but loosened for custom pseudo element definitions.
 </blockquote>
+{% endcomment %}
 
 <h3 id="toc-vars">Using CSS Variables</h3>
 
-<p class="notice">CSS Variables can be enabled in Chrome under "Enable experimental WebKit features"
-  in about:flags.</p>
+<p class="notice">CSS Variables can be enabled in Chrome under "Enable experimental Web Platform features" in about:flags.</p>
 
-Another powerful way to create theming hooks will be through [CSS Variables](http://dev.w3.org/csswg/css-variables/). Essentially, creating "style placeholders" for others to fill in.
+A powerful way to create theming hooks will be through [CSS Variables](http://dev.w3.org/csswg/css-variables/). Essentially, creating "style placeholders" for other users to fill in.
 
-A possible scenario might be a custom element author who marks out variable
-placeholders in their Shadow DOM. One for styling an internal button's font and another for
-its color:
+Imagine a custom element author who marks out variable placeholders in their Shadow DOM. One for styling an internal button's font and another for its color:
 
     button {
       color: {% mixin var(button-text-color, pink) %} /* default color will be pink */
@@ -217,7 +334,7 @@ its color:
     }
 
 Then, the embedder of the element defines those values to their liking. Perhaps
-to match the awesome Comic Sans theme of their own page:
+to match the super cool Comic Sans theme of their own page:
 
     #host {
       {% mixin var-button-text-color: green %}
@@ -235,7 +352,7 @@ works beautifully! The whole picture looks like this:
     </style>
     <div id="host">Host node</div>
     <script>
-    var root = document.querySelector('#host').webkitCreateShadowRoot();
+    var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<style>' + 
         'button {' + 
           'color: {% mixin var(button-text-color, pink) %}' + 
@@ -246,9 +363,8 @@ works beautifully! The whole picture looks like this:
     </script>
 
 <blockquote class="commentary talkinghead">
-I've already mentioned <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#the-element-element">Custom Elements</a> a few times in this article. I'm not going to cover
-them here. For now, just know that Shadow DOM forms their structural foundation
-and the styling concepts in this article pertain to Custom Elements.
+I've already mentioned <a href="/tutorials/webcomponents/customelements/">Custom Elements</a> a few times in this article. For now, just know that Shadow DOM forms their structural foundation
+by providing styling and DOM encapsulation. The concepts here pertain to styling Custom Elements.
 </blockquote>
 
 <h2 id="toc-style-inheriting">Inheriting and resetting styles</h2>
@@ -273,32 +389,46 @@ There are two properties to control the what bleeds in:
 Below is a demo for seeing how a shadow tree is affected by changing these two properties.
 
 <pre class="prettyprint">
-&lt;div>&lt;h3>Host title&lt;/h3>&lt;/div>
+&lt;style>
+  .border {
+    border: 1px solid black;
+  }
+&lt;/style>
+
+&lt;div>
+  &lt;h3 class="border">Light DOM&lt;/h3>
+&lt;/div>
+
 &lt;script>
-var root = document.querySelector('div').webkitCreateShadowRoot();
+var root = document.querySelector('div').createShadowRoot();
 root.applyAuthorStyles = <span id="code-applyAuthorStyles">true</span>;
 root.resetStyleInheritance = <span id="code-resetStyleInheritance">false</span>;
 root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' + 
-                 '&lt;h3>Shadow DOM Title&lt;/h3>' + 
+                 '&lt;h3 class="border">Shadow DOM&lt;/h3>' + 
                  '&lt;content select="h3">&lt;/content>';
 &lt;/script>
 </pre>
 
 <div class="demoarea" style="width:225px;">
-  <div id="style-ex-inheritance"><h3>Host Title</h3></div>
+  <div id="style-ex-inheritance"><h3 class="border">Light DOM</h3></div>
 </div>
 <div id="inherit-buttons">
   <button id="demo-applyAuthorStyles">applyAuthorStyles=true</button>
   <button id="demo-resetStyleInheritance">resetStyleInheritance=false</button>
 </div>
 
+<style>
+  .border {
+    border: 1px solid black;
+  }
+</style>
 <script>
 (function() {
 var container = document.querySelector('#style-ex-inheritance');
 var root = container.createShadowRoot();
 root.applyAuthorStyles = true;
 //root.resetStyleInheritance = false;
-root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM Title</h3><content select="h3"></content>';
+root.innerHTML = '<style>h3{ color: red; }</style><h3 class="border">Shadow DOM</h3><content select="h3"></content>';
 
 document.querySelector('#demo-applyAuthorStyles').addEventListener('click', function(e) {
   root.applyAuthorStyles = !root.applyAuthorStyles;
@@ -314,12 +444,12 @@ document.querySelector('#demo-resetStyleInheritance').addEventListener('click', 
 })();
 </script>
 
-It's easy to see how `.applyAuthorStyles` works. It makes the Shadow DOM's h3
-inherit the look of the other h3s on this page (e.g "applying the page author's styles").
+It's easy to see how `.applyAuthorStyles` works. It makes the author's `.border` class
+also apply to elements with that same class in the Shadow DOM (e.g "applying the page author's styles").
 
 <p class="notice fact">Even with the <code>apply-author-styles</code> attribute set,
 CSS selectors defined in the document do not cross the shadow boundary.
-<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b></p>
+<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b> If you need something more powerful, see the <a href="#toc-style-cat-hat">Cat (^^) and Hat (^) combinators</a></p>
 
 <img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="height:215px;border:1px solid #ccc;float:right;margin-left:10px;">
 
@@ -352,49 +482,83 @@ Carry this around in your pocket. It's gold!
 `.applyAuthorStyles`/`.resetStyleInheritance` are strictly for effecting the
 styling behavior of the nodes defined **in** the Shadow DOM. 
 
-Distributed nodes are a different beast. They're not logically in the
-Shadow DOM; they're still children of the host element which are swizzled into place at "render time."
-Naturally, they get their styles from the document they're in (the host's document).
+Distributed nodes are a different beast. `<content>` elements allow you to select nodes from the Light DOM and render them at predefined locations in your Shadow DOM. They're not logically in the
+Shadow DOM; they're children of the host element. They're swizzled into place at "render time."
+
+Naturally, distributed nodes get their styles from the document they're in (the host's document).
 The only exception to that rule is that they may gain additional styles from the place
 they've been swizzled into (the Shadow DOM).
 
-<h3 id="toc-distributed">::distributed() pseudo element</h3>
+<h3 id="toc-distributed">::content pseudo element</h3>
 
-If distributed nodes are children of the host element, how then do we target + style
-them from *within* the Shadow DOM? The answer is the `::distributed()` pseudo element. It's the
-first-ever *functional* pseudo element which takes a CSS selector for its parameter.
+<p class="notice"><b>Note:</b> <code>::content</code> replaced <code>::distributed()</code> in the Shadow DOM spec.</p>
+
+If distributed nodes are children of the host element, how then do we target
+them from *within* the Shadow DOM? The answer is the CSS `::content` pseudo element.
+It's a way to target nodes that pass through an insertion point. For example:
+
+`::content > h3` to style any `h3` tags that pass through an insertion.
 
 Let's see a simple example:
 
-    <div><h3>Host title</h3></div>
+    <div>
+      <h3>Light DOM</h3>
+      <section>
+        <div>I'm not underlined</div>
+        <p>I'm underlined in Shadow DOM!</p>
+      </section>
+    </div>
+
     <script>
-    var root = document.querySelector('div').webkitCreateShadowRoot();
-    root.innerHTML = '<style>' + 
-                       'h3{ color: red; }' + 
-                       'content::-webkit-distributed(h3) { color: green; }' + 
-                     '</style>' + 
-                     '<h3>Shadow DOM Title</h3>' +
-                     '<content select="h3"></content>';
+    var div = document.querySelector('div');
+    var root = div.createShadowRoot();
+    root.innerHTML = '\
+        <style>\
+          h3 { color: red; }\
+          content[select="h3"]::content > h3 {\
+            color: green;\
+          }\
+          ::content section p {\
+            text-decoration: underline;\
+          }\
+        </style>\
+        <h3>Shadow DOM</h3>\
+        <content select="h3"></content>\
+        <content select="section"></content>';
     </script>
 
 <div class="demoarea">
-  <div id="style-ex-distributed"><h3>Host Title</h3></div>
+  <div id="style-ex-distributed">
+    <h3>Light DOM</h3>
+    <section>
+      <div>I'm not underlined</div>
+      <p>I'm underlined in Shadow DOM!</p>
+      </section>
+  </div>
 </div>
 <script>
 (function() {
 var container = document.querySelector('#style-ex-distributed');
 var root = container.createShadowRoot();
-root.innerHTML = '<style>h3{ color: red; }' + 
-                 'content::-webkit-distributed(h3) { color: green; }' + 
-                 '</style>' + 
-                 '<h3>Shadow DOM Title</h3>' +
-                 '<content select="h3"></content>';
+root.innerHTML = '\
+  <style>\
+    h3 { color: red; }\
+    content[select="h3"]::content > h3 {\
+      color: green;\
+    }\
+    ::content section p {\
+      text-decoration: underline;\
+    }\
+  </style>\
+  <h3>Shadow DOM</h3>\
+  <content select="h3"></content>\
+  <content select="section"></content>';
 })();
 </script>
 
-You should see "<span style="color:red">Shadow DOM Title</span>"" and
-"<span style="color:green">Host Title</span>" below it. Also note that
-"Host title" is still retaining the styles from its document. In this case, the page.
+You should see "<span style="color:red">Shadow DOM</span>" and
+"<span style="color:green">Light DOM</span>" below it. Also note that
+"Light DOM" is still retaining the styles (margins etc.) from this page.
 
 <h3 id="toc-shadow-resetstyles">Resetting styles at insertion points</h3>
 
@@ -433,5 +597,16 @@ Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and
 <a href="https://plus.google.com/111648463906387632236/posts">Dimitri Glazkov</a> for reviewing
 the content of this tutorial.
 </p>
+
+{% block relatedreading %}
+<aside class="panel">
+  <h2>Related reading</h2>
+  <ul>
+    <li><a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a></li>
+    <li><a href="/tutorials/webcomponents/shadowdom-301/">Shadow DOM 301 - Advanced Concepts &amp; DOM APIs</a></li>
+    <li><a href="/tutorials/webcomponents/customelements/">Custom Elements - defining new elements in HTML</a></li>
+  </ul>
+</aside>
+{% endblock %}
 
 
