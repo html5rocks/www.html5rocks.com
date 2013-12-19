@@ -91,6 +91,7 @@ class Resource(DictModel):
 
   @classmethod
   def get_all(self, order=None, limit=None, page=None, qfilter=None, include_updates=None):
+
     limit = limit or settings.MAX_FETCH_LIMIT
     offset = None
 
@@ -113,19 +114,20 @@ class Resource(DictModel):
     key += '|%s' % (str(limit),)
 
     results = memcache.get(key)
-    if results is None:
 
+    if results is None:
       query = self.all()
       query.order(order)
       if qfilter is not None:
         query.filter(qfilter[0], qfilter[1])
       query.filter('draft =', False) # Never return drafts by default.
       results = query.fetch(offset=offset, limit=limit)
+      print limit
 
       if include_updates is not None:
         results = self.include_updates(results)
 
-    memcache.set(key, results)
+      memcache.set(key, results)
 
     return results
 

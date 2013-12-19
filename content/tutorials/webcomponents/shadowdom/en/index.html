@@ -36,7 +36,7 @@ span.unchanged * {
 {% endblock %}
 
 {% block iscompatible %}
-  return window.HTMLTemplateElement && HTMLElement.prototype.webkitCreateShadowRoot ? true : false;
+  return window.HTMLTemplateElement && (HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot) ? true : false;
 {% endblock %}
 
 {% block html5badge %}
@@ -121,9 +121,10 @@ can also pick and choose which parts of Web Components to use. This
 tutorial shows you how to use Shadow DOM.
 </p>
 
-<p>
-Shadow DOM is currently only available from Chrome 25, which is why
-the API has a <code>webkit</code> prefix.
+<p class="notice">
+<b>Note:</b> Shadow DOM is available in Chrome 25+ prefixed with <code>webkit</code>. In newer
+versions of Chrome, a newer, unprefixed version can be enabled in <code>about:flags</code>
+under the "Experimental Web Platform features" flag.
 </p>
 
 <h2 id="toc-hello-world">Hello, Shadow World</h2>
@@ -144,7 +145,7 @@ For example, if you had markup like this:
 &lt;button&gt;Hello, world!&lt;/button&gt;
 &lt;script&gt;
 var host = document.querySelector('button');
-<b>var root = host.webkitCreateShadowRoot();</b>
+<b>var root = host.createShadowRoot();</b>
 root.textContent = 'こんにちは、影の世界!';
 &lt;/script&gt;
 </pre>
@@ -344,7 +345,7 @@ populate the shadow root:
 
 <pre class="prettyprint">
 &lt;script&gt;
-var shadow = document.querySelector('#nameTag').webkitCreateShadowRoot();
+var shadow = document.querySelector('#nameTag').createShadowRoot();
 var template = document.querySelector('#nameTagTemplate');
 shadow.appendChild(template.content);
 template.remove();
@@ -854,5 +855,9 @@ Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell,
 and <a href="/profiles/#paulirish">Paul Irish</a> for comments on
 earlier versions of this tutorial.
 </p>
+
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot;
+</script>
 
 {% endblock %}

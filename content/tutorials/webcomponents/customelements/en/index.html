@@ -5,7 +5,7 @@
 
 {% block head %}
 <style>
-blockquote:not(.talkinghead) {
+/*blockquote:not(.talkinghead) {
   background: rgb(238, 238, 238);
   padding: 1px 15px;
   position: relative;
@@ -25,7 +25,7 @@ blockquote:not(.talkinghead):after {
   content: '”';
   right: -5px;
   bottom: -55px;
-}
+}*/
 .talkinghead.singleline:before {
   top: 5px !important;
 }
@@ -103,7 +103,7 @@ article.tutorial .notice.tip:before {
 .demoarea:before {
   content: 'Live demo:';
   position: absolute;
-  top: -20px;
+  top: -30px;
   left: 0;
   font-weight: bold;
   text-transform: uppercase;
@@ -211,18 +211,18 @@ the <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/">HTML 
 &lt;/hangout-module&gt;
 </code></pre>
 <p class="centered">
-  <button><a href="https://html5-demos.appspot.com/static/webcomponents-bdconf/demos/components/hangouts/index.html">Try the demo!</a></button>
+  <button><a href="https://html5-demos.appspot.com/hangouts">Try the demo!</a></button>
 </p>
 
 <p>How refreshing! This app totally makes sense too. It's <strong>meaningful</strong>, <strong>easy to understand</strong>,
 and best of all, it's <strong>maintainable</strong>. Future me/you will know exactly what it does
 just by examining its declarative backbone.</p>
-<blockquote class="commentary talkinghead singleline">Help us custom elements. You're our only hope!</blockquote>
+<blockquote class="commentary talkinghead">Help us custom elements. You're our only hope!</blockquote>
 
 <h2 id="gettingstarted">Getting started</h2>
 
-<p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html">Custom Elements</a>
-<strong>allow web developers to define new types of HTML elements</strong>. The spec is one of several new API primitives landing under the <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a> umbrella, but it's quite possibly the most important. Web Components don't exist
+<p><a href="http://w3c.github.io/webcomponents/spec/custom/">Custom Elements</a>
+<strong>allow web developers to define new types of HTML elements</strong>. The spec is one of several new API primitives landing under the <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> umbrella, but it's quite possibly the most important. Web Components don't exist
 without the features unlocked by custom elements:</p>
 <ol>
 <li>Define new HTML/DOM elements</li>
@@ -278,8 +278,10 @@ They inherit from a specialized version of <code>HTMLElement</code> as a way to 
 <p>Have you ever wondered why the HTML parser doesn't throw a fit on non-standard tags?
 For example, it's perfectly happy if we declare <code>&lt;randomtag&gt;</code> on the page. According to the <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#htmlunknownelement">HTML specification</a>:</p>
 <blockquote>
-<p>The <code>HTMLUnknownElement</code> interface must be used for HTML elements that are not defined by this specification.</p>
+  The <code>HTMLUnknownElement</code> interface must be used for HTML elements that are not defined by this specification.
+  <cite>HTML spec</cite>
 </blockquote>
+
 <p>Sorry <code>&lt;randomtag&gt;</code>! You're non-standard and inherit from <code>HTMLUnknownElement</code>.</p>
 <p>The same is not true for custom elements. <strong>Elements with valid custom element names inherit from <code>HTMLElement</code>.</strong> You can verify this fact by firing up the Console: <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">J</span> (or <span class="kbd">Cmd</span>+<span class="kbd">Opt</span>+<span class="kbd">J</span> on Mac), and paste in the following lines of code; they return <code>true</code>:</p>
 <pre class="prettyprint"><code>// "tabs" is not a valid custom element name
@@ -288,7 +290,7 @@ document.createElement('tabs').__proto__ === HTMLUnknownElement.prototype
 // "x-tabs" is a valid custom element name
 document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 </code></pre>
-<p class="notice"><b>Note:</b> <code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.register()</code>.</p>
+<p class="notice fact"><code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.register()</code>.</p>
 
 <h4 id="unresolvedels">Unresolved elements</h4>
 
@@ -496,16 +498,16 @@ var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
 <p>Instead of setting the element's <code>.innerHTML</code>, I've created a
 Shadow Root for <code>&lt;x-foo-shadowdom&gt;</code> and then filled it with markup.
 With the "Show Shadow DOM" setting enabled in the DevTools, you'll see a
-<code>#document-fragment</code> that can be expanded:</p>
+<code>#shadow-root</code> that can be expanded:</p>
 <pre class="prettyprint"><code>▾&lt;x-foo-shadowdom&gt;
-   ▾#document-fragment
+   ▾#shadow-root
      &lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;
  &lt;/x-foo-shadowdom&gt;
 </code></pre>
 <p>That's the Shadow Root!</p>
 <h3 id="fromtemplate">Creating elements from a template</h3>
 
-<p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">HTML Templates</a> are another new API primitive that fits nicely into the world of custom elements.</p>
+<p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">HTML Templates</a> are another new API primitive that fits nicely into the world of custom elements.</p>
 <p>For those unfamiliar, the <a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> element</a>
 allows you to declare fragments of DOM which are parsed, inert at page load, and instantiated later at runtime. They're an ideal placeholder for declaring the structure of custom element.</p>
 <p><strong>Example:</strong> registering an element created from a <code>&lt;template&gt;</code> and Shadow DOM:</p>
@@ -521,7 +523,8 @@ var proto = Object.create(HTMLElement.prototype, {
   createdCallback: {
     value: function() {
       var t = document.querySelector('#sdtemplate');
-      this.createShadowRoot().appendChild(t.content.cloneNode(true));
+      var clone = document.importNode(t.content, true);
+      this.createShadowRoot().appendChild(clone);
     }
   }
 });
@@ -647,7 +650,7 @@ not to elements that inherit from <code>HTMLUnkownElement</code> (see <a href="#
 &lt;x-panel&gt;I'm red because I match x-panel:unresolved.&lt;/x-panel&gt;
 </code></pre>
 <div class="demoarea">
-  <panel>I'm black because :unresolved doesn't apply to "panel". It isn't a valid name.</panel>
+  <panel>I'm black because :unresolved doesn't apply to "panel". It's not a valid custom element name.</panel>
   <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
   <p><button id="register-x-panel">Register &lt;x-panel></button></p>
 </div>
@@ -742,7 +745,8 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
     createdCallback: {
       value: function() {
         var t = document.querySelector('#sdtemplate');
-        this.createShadowRoot().appendChild(t.content.cloneNode(true));
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
       }
     }
   });

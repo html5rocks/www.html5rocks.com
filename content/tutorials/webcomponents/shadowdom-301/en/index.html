@@ -69,7 +69,7 @@ article.tutorial .notice.fact:before {
 .demodevtools:before {
   content: 'DevTools view:';
   position: absolute;
-  top: -20px;
+  top: -30px;
   left: 0;
   font-weight: bold;
   text-transform: uppercase;
@@ -84,7 +84,7 @@ article.tutorial .notice.fact:before {
 .demoarea:before {
   content: 'Live demo:';
   position: absolute;
-  top: -20px;
+  top: -30px;
   left: 0;
   font-weight: bold;
   text-transform: uppercase;
@@ -96,13 +96,16 @@ article.tutorial .notice.fact:before {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
-#example4-log {
+#example4-log,
+#example5-getDestInsertinoPoints {
   width: 100%;
   box-sizing: border-box;
 }
-#example4-log:before {
+#example4-log:before,
+#example5-getDestInsertinoPoints:before {
   content: 'Output:';
 }
+#example5-getDestInsertinoPoints textarea, 
 #example4-log textarea {
   outline:none;
   border:none;
@@ -339,6 +342,8 @@ HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot 
 <p>{% include "warning.html" %}</p>
 <p>This article discusses more of the amazing things you can do with Shadow DOM! It builds on the concepts discussed in <a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a>
 and <a href="/tutorials/webcomponents/shadowdom-201/">Shadow DOM 201</a>.</p>
+<p class="tip notice">In Chrome, turn on the "Enable experimental Web Platform features" in about:flags to experiment with everything covered in this article.</p>
+
 <h2 id="toc-shadow-multiple">Using multiple shadow roots</h2>
 
 <p>If you're hosting a party, it gets stuffy if everyone is crammed into the same room.
@@ -347,22 +352,22 @@ Shadow DOM can do this too, that is to say, they can host more than one shadow
 root at a time.</p>
 <p>Let's see what happens if we try to attach multiple shadow roots to a host:</p>
 <pre class="prettyprint">
-&lt;div id="example1">Host node&lt;/div>
+&lt;div id="example1">Light DOM&lt;/div>
 &lt;script>
 var container = document.querySelector('#example1');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
 root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>';
 root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
 &lt;/script>
 </pre>
 
 <div class="demodevtools"> 
-<img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:200px;">
+<img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:250px;">
 </div>
 
 <div class="demoarea">
-  <div id="example1">Host node</div>
+  <div id="example1">Light DOM</div>
 </div>
 
 <script>
@@ -375,7 +380,7 @@ root2.innerHTML = '<div>Root 2 FTW</div>';
 })();
 </script>
 
-<p class="notice"><b>Tip</b>: In the DevTools, turn on "Show Shadow DOM" to be
+<p class="notice tip">In the DevTools, turn on "Show Shadow DOM" to be
   able to inspect ShadowRoots.</p>
 
 <p>What renders is "Root 2 FTW", despite the fact that we had already attached a shadow tree.
@@ -405,22 +410,22 @@ in a shadow tree, only the first is recognized. The rest are ignored.</p>
 <p>Looking back to our original example, the first shadow <code>root1</code> got left off the
 invite list. Adding a <code>&lt;shadow&gt;</code> insertion point brings it back:</p>
 <pre class="prettyprint">
-&lt;div id="example2">Host node&lt;/div>
+&lt;div id="example2">Light DOM&lt;/div>
 &lt;script>
 var container = document.querySelector('#example2');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
 root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
 <b>root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>&lt;shadow>&lt;/shadow>';</b>
 &lt;/script>
 </pre>
 
 <div class="demodevtools"> 
-<img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:200px;">
+<img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:250px;">
 </div>
 
 <div class="demoarea">
-  <div id="example2">Host node</div>
+  <div id="example2">Light DOM</div>
 </div>
 
 <script>
@@ -438,45 +443,34 @@ root2.innerHTML = '<div>Root 2 FTW</div><shadow></shadow>';
 <li>"Root 2 FTW" still renders above "Root 1 FTW". This is because of where we've placed
 the <code>&lt;shadow&gt;</code> insertion point. If you want the reverse, move the insertion point: <code>root2.innerHTML = '&lt;shadow&gt;&lt;/shadow&gt;&lt;div&gt;Root 2 FTW&lt;/div&gt;';</code>.</li>
 <li>Notice there's now a <code>&lt;content&gt;</code> insertion point in root1. This makes
-the text node "Host node" come along for the rendering ride.</li>
+the text node "Light DOM" come along for the rendering ride.</li>
 </ol>
 <p><b id="toc-shadow-older">What's rendered at &lt;shadow&gt;?</b></p>
-<p>Sometimes it's useful to know the shadow tree that was rendered at a
-<code>&lt;shadow&gt;</code>. You can get a reference to that tree through <code>.olderShadowRoot</code>:</p>
+<p>Sometimes it's useful to know the older shadow tree being rendered at a <code>&lt;shadow&gt;</code>. You can get a reference to that tree through <code>.olderShadowRoot</code>:</p>
 <pre class="prettyprint">
-<b>root2.querySelector('shadow').olderShadowRoot</b> === root1 //true
+<b>root2.olderShadowRoot</b> === root1 //true
 </pre>
 
-<p><code>.olderShadowRoot</code> isn't vendor prefixed because <code>HTMLShadowElement</code> only makes
-sense in the context of Shadow DOM...which is already prefixed :)</p>
 <h2 id="toc-get-shadowroot">Obtaining a host's shadow root</h2>
 
 <p>If an element is hosting Shadow DOM you can access its <a href="#youngest-tree">youngest shadow root</a>
-using <code>.webkitShadowRoot</code>:</p>
+using <code>.shadowRoot</code>:</p>
 <pre class="prettyprint">
-var root = host.webkitCreateShadowRoot();
-console.log(host.webkitShadowRoot === root); // true
-console.log(document.body.webkitShadowRoot); // null
+var root = host.createShadowRoot();
+console.log(host.shadowRoot === root); // true
+console.log(document.body.shadowRoot); // null
 </pre>
-
-<blockquote class="commentary talkinghead">
-I'm not entirely sure why <code>.shadowRoot</code> is spec'd. It defeats the encapsulation
-principles of Shadow DOM and gives outsiders an outlet for traversing into my
-supposed-to-be-hidden DOM.
-</blockquote>
 
 <p>If you're worried about people crossing into your shadows, redefine
  <code>.shadowRoot</code> to be null:</p>
 <pre class="prettyprint">
-Object.defineProperty(host, 'webkitShadowRoot', {
+Object.defineProperty(host, 'shadowRoot', {
   get: function() { return null; },
   set: function(value) { }
 });</pre>
 
-<p>A bit of a hack, but it works. The powers that be are also looking at ways
-to make Shadow DOM private.</p>
-<p>In the end, it's important to remember that while amazingly fantastic,
-<strong>Shadow DOM wasn't designed to be a security feature</strong>. Don't rely on it for
+<p>A bit of a hack, but it works. In the end, it's important to remember that while amazingly fantastic,
+<strong>Shadow DOM has not been designed to be a security feature</strong>. Don't rely on it for
 complete content isolation.</p>
 <h2 id="toc-creating-js">Building Shadow DOM in JS</h2>
 
@@ -484,12 +478,12 @@ complete content isolation.</p>
 have interfaces for that.</p>
 <pre class="prettyprint">
 &lt;div id="example3">
-  &lt;span>Host node&lt;/span>
+  &lt;span>Light DOM&lt;/span>
 &lt;/div>
 &lt;script>
 var container = document.querySelector('#example3');
-var root1 = container.webkitCreateShadowRoot();
-var root2 = container.webkitCreateShadowRoot();
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
 
 var div = document.createElement('div');
 div.textContent = 'Root 1 FTW';
@@ -512,11 +506,11 @@ root2.appendChild(shadow);
 
 <p>This example is nearly identical to the one in the <a href="#toc-shadow-insertion">previous section</a>.
 The only difference is that now I'm using <code>select</code> to pull out the newly added <code>&lt;span&gt;</code>.</p>
-<h2 id="toc-distributed-nodes">Fetching distributed nodes</h2>
+<h2 id="toc-distributed-nodes">Working with insertion points</h2>
 
 <p>Nodes that are selected out of the host element and "distribute" into the shadow tree
 are called...drumroll...distributed nodes! They're allowed to cross the shadow boundary
-when insertion points invite them.</p>
+when insertion points invite them in.</p>
 <p>What's conceptually bizarre about insertion points is that they don't physically
 move DOM. The host's nodes stay intact. Insertion points merely re-project nodes
 from the host into the shadow tree. It's a presentation/rendering thing: <s>"Move these nodes over here"</s> "Render these nodes at this location."</p>
@@ -524,14 +518,14 @@ from the host into the shadow tree. It's a presentation/rendering thing: <s>"Mov
 
 <p>For example:</p>
 <pre class="prettyprint">
-&lt;div>&lt;h2>Host node&lt;/h2>&lt;/div>
+&lt;div>&lt;h2>Light DOM&lt;/h2>&lt;/div>
 &lt;script>
-var shadowRoot = document.querySelector('div').webkitCreateShadowRoot();
-shadowRoot.innerHTML = '&lt;content select="h2">&lt;/content>';
+var root = document.querySelector('div').createShadowRoot();
+root.innerHTML = '&lt;content select="h2">&lt;/content>';
 
 var h2 = document.querySelector('h2');
-console.log(shadowRoot.querySelector('content[select="h2"] h2')); // null;
-console.log(shadowRoot.querySelector('content').contains(h2)); // false
+console.log(root.querySelector('content[select="h2"] h2')); // null;
+console.log(root.querySelector('content').contains(h2)); // false
 &lt;/script>
 </pre>
 
@@ -569,8 +563,11 @@ allows us to query the distributed nodes at an insertion point:</p>
 &lt;script>
 var container = document.querySelector('#example4');
 
-var root = container.webkitCreateShadowRoot();
-root.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+var root = container.createShadowRoot();
+
+var t = document.querySelector('#sdom');
+var clone = document.importNode(t.content, true);
+root.appendChild(clone);
 
 var html = [];
 [].forEach.call(root.querySelectorAll('content'), function(el) {
@@ -612,9 +609,9 @@ if ('HTMLTemplateElement' in window) {
   var container = document.querySelector('#example4');
 
   var root1 = container.createShadowRoot();
-  //root1.applyAuthorStyles = false;
-  //root1.resetStyleInheritance = true;
-  root1.appendChild(document.querySelector('#sdom').content.cloneNode(true));
+  var t = document.querySelector('#sdom');
+  var clone = document.importNode(t.content, true);
+  root1.appendChild(clone);
 
   var html = [];
   [].forEach.call(root1.querySelectorAll('content'), function(el) {
@@ -627,6 +624,60 @@ if ('HTMLTemplateElement' in window) {
   });
 
   document.querySelector('#example4-log textarea').value = html.join('');
+}
+})();
+</script>
+
+<h3 id="toc-getDestinationInsertionPoints">Element.getDestinationInsertionPoints()</h3>
+
+<p>Similar to <code>.getDistributedNodes()</code>, you can check what insertion points
+a node is distributed into by calling its <code>.getDestinationInsertionPoints()</code>:</p>
+<pre class="prettyprint"><code>&lt;div id="host"&gt;
+  &lt;h2&gt;Light DOM&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var host = document.querySelector('div');
+
+  var root1 = container.createShadowRoot();
+  var root2 = container.createShadowRoot();
+  root1.innerHTML = '&lt;content select="h2"&gt;&lt;/content&gt;';
+  root2.innerHTML = '&lt;shadow&gt;&lt;/shadow&gt;';
+
+  var h2 = document.querySelector('#host h2');
+  var insertionPoints = h2.getDestinationInsertionPoints();
+  [].forEach.call(insertionPoints, function(contentEl) {
+    console.log(contentEl);
+  });
+&lt;/script&gt;
+</code></pre>
+<div id="example5-gip" style="display:none">
+  <h2>Light DOM</h2>
+</div>
+
+<div id="example5-getDestInsertinoPoints" class="demoarea">
+ <textarea readonly></textarea>
+</div>
+
+<script>
+(function() {
+if (!!Element.prototype.getDestinationInsertionPoints) { 
+  var container = document.querySelector('#example5-gip');
+  var h2 = container.querySelector('h2');
+
+  var root1 = container.createShadowRoot();
+  var root2 = container.createShadowRoot();
+  root1.innerHTML = '<content select="h2"></content>';
+  root2.innerHTML = '<shadow></shadow>';
+
+  var html = [];
+  var insertionPoints = h2.getDestinationInsertionPoints();
+  [].forEach.call(insertionPoints, function(contentEl) {
+    html.push(contentEl.outerHTML);
+    html.push('\n');
+  });
+
+  document.querySelector('#example5-getDestInsertinoPoints textarea').value = html.join('');
 }
 })();
 </script>
@@ -656,6 +707,8 @@ cross the boundary, the event target is adjusted in order to maintain the
 encapsulation that the shadow root's upper boundary provides. That is, <strong>events
 are retargeted to look like they've come from the host element rather than internal
 elements to the Shadow DOM</strong>.</p>
+<p class="tip notice">Access <code>event.path</code> to see the adjusted event path.</p>
+
 <p>If your browser supports Shadow DOM (it does<span class="featuresupported no">n't</span>),
 you should see a play area below that helps visualize events. Elements in <span style="color:#ffcc00">yellow</span> are part of the Shadow DOM's markup. Elements in <span style="color:steelblue">blue</span> are
 part of the host element. The <span style="color:#ffcc00">yellow</span> border
@@ -683,6 +736,9 @@ how the <code>mouseout</code> and <code>focusin</code> events bubble up to the m
       margin: 5px 0;
     }
     content::-webkit-distributed(*) {
+      border: 4px solid #FC0;
+    }
+    ::content * {
       border: 4px solid #FC0;
     }
     </style>
@@ -722,6 +778,7 @@ var root = host.createShadowRoot();
 root.innerHTML = document.querySelector('#example5 template').innerHTML;
 
 host.addEventListener('mouseout', function(e) {
+
   out.innerHTML += [
     '<span>[' + e.type + ']</span>', 
     'on:', stringify(e.target) + ',', 
@@ -756,6 +813,11 @@ function playAnimation(idx) {
 }
 
 wrapper.addEventListener('webkitAnimationEnd', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+wrapper.addEventListener('animationend', function(e) {
   this.classList.remove('playing');
   cleanUpAnimations(this);
 });
