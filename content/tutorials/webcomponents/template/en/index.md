@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 <h2 id="toc-intro">Introduction</h2>
 
 The concept of templating is not new to web development. In fact, server-side
@@ -16,14 +14,15 @@ Let's face it. Templates are fantastic. Go ahead, ask around. Even its [definiti
 avoiding extra work. Why then does the web platform lack
 native support for something developers clearly care about?
 
-The [W3C HTML Templates specification][spec-link] is the answer. It defines a
+The [WhatWG HTML Templates specification][spec-link] is the answer. It defines a
 new `<template>` element which describes a standard DOM-based approach
 for client-side templating. Templates allow you to declare fragments of markup which are parsed as HTML, go unused at page load, but can be instantiated
-later on at runtime. To quote [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts) (spec author):
+later on at runtime. To quote [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts):
 
-> "They're a place to put a big wad of HTML that you don't want the browser to mess
-with at all...for any reason."
-
+<blockquote>
+  They're a place to put a big wad of HTML that you don't want the browser to mess with at all...for any reason.
+  <cite>Rafael Weinstein (spec author)</cite>
+</blockquote>
 
 <h3 id="toc-detect">Feature Detection</h3>
 
@@ -90,13 +89,14 @@ but [content model](http://www.w3.org/TR/html5-diff/#content-model) children. It
 <h2 id="toc-using">Activating a template</h2>
 
 To use a template, you need to activate it. Otherwise its content will never render.
-The simplest way to do this is by creating a deep copy of its `.content` using `cloneNode()`.
-`.content` is a read-only property that references a `DocumentFragment` containing the guts of a template. 
+The simplest way to do this is by creating a deep copy of its `.content` using `document.importNode()`. The `.content` property is a read-only `DocumentFragment` containing the guts of the template. 
 
     var t = document.querySelector('#mytemplate');
     // Populate the src at runtime.
     t.content.querySelector('img').src = 'logo.png';
-    document.body.appendChild(t.content.cloneNode(true));
+
+    var clone = document.importNode(t.content, true);
+    document.body.appendChild(clone);
 
 After stamping out a template, its content "goes live". In this particular example, the content is cloned, the image request is made, and the final markup is rendered.
 
@@ -116,7 +116,7 @@ runs when the button is pressed, stamping out the template.
         var span = content.querySelector('span');
         span.textContent = parseInt(span.textContent) + 1;
         document.querySelector('#container').appendChild(
-            content.cloneNode(true));
+            document.importNode(content, true));
       }
     </script>
 
@@ -137,7 +137,7 @@ runs when the button is pressed, stamping out the template.
     var content = document.querySelector('#inert-demo').content;
     var span = content.querySelector('span');
     span.textContent = parseInt(span.textContent) + 1;
-    document.querySelector('#container').appendChild(content.cloneNode(true));
+    document.querySelector('#container').appendChild(document.importNode(content, true));
   }
 </script>
 </div>
@@ -148,7 +148,7 @@ Most people attach [Shadow DOM](/webcomponents/shadowdom/) to a host by setting 
 
     <div id="host"></div>
     <script>
-      var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+      var shadow = document.querySelector('#host').createShadowRoot();
       shadow.innerHTML = '<span>Host node</span>';
     </script>
 
@@ -162,19 +162,17 @@ content to a shadow root:
 
     <template>
     <style>
-      @host {
-        * {
-          background: #f8f8f8;
-          padding: 10px;
-          -webkit-transition: all 400ms ease-in-out;
-          box-sizing: border-box;
-          border-radius: 5px;
-          width: 450px;
-          max-width: 100%;
-        } 
-        *:hover {
-          background: #ccc;
-        }
+      :host {
+        background: #f8f8f8;
+        padding: 10px;
+        transition: all 400ms ease-in-out;
+        box-sizing: border-box;
+        border-radius: 5px;
+        width: 450px;
+        max-width: 100%;
+      } 
+      :host:hover {
+        background: #ccc;
       }
       div {
         position: relative;
@@ -216,25 +214,23 @@ content to a shadow root:
     </div>
 
     <script>
-      var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+      var shadow = document.querySelector('#host').createShadowRoot();
       shadow.appendChild(document.querySelector('template').content);
     </script>
 
 <template id="demo-sd-template">
 <style>
-  @host {
-    * {
-      background: #f8f8f8;
-      padding: 10px;
-      -webkit-transition: all 400ms ease-in-out;
-      box-sizing: border-box;
-      border-radius: 5px;
-      width: 450px;
-      max-width: 100%;
-    } 
-    *:hover {
-      background: #ccc;
-    }
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  } 
+  :host:hover {
+    background: #ccc;
   }
   #unsupportedbrowsersneedscoping {
     position: relative;
@@ -281,7 +277,7 @@ content to a shadow root:
   var compat = HTMLElement.prototype.webkitCreateShadowRoot ||
                HTMLElement.prototype.createShadowRoot ? true : false;
   if (compat && 'HTMLTemplateElement' in window) {
-    var shadow = host.webkitCreateShadowRoot();
+    var shadow = host.createShadowRoot();
     shadow.applyAuthorStyles = true;
     shadow.appendChild(document.querySelector('#demo-sd-template').content);
   } else {
@@ -379,10 +375,10 @@ full featured is always a good thing in my book.
 
 <h2 id="toc-resources">Additional resources</h2>
 
-- [W3C Specification][spec-link]
-- [Introduction to Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section)
+- [WhatWG Specification][spec-link]
+- [Introduction to Web Components](http://w3c.github.io/webcomponents/explainer/#template-section)
 - [&lt;web>components&lt;/web>](http://html5-demos.appspot.com/static/webcomponents/index.html) ([video](http://www.youtube.com/watch?v=eJZx9c6YL8k)) - a fantastically comprehensive presentation by yours truly.
 
-[spec-link]: https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html
+[spec-link]: http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element
 
 

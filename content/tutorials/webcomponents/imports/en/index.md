@@ -9,11 +9,11 @@ Think about how you load different types of resources on the web. For JS, we hav
 - **CrazyHacks&#8482;** - embedded in strings, hidden as comments (e.g. `<script type="text/html">`). Yuck!
 
 See the irony? **The web's most basic content, HTML, requires the greatest amount
-of effort to work with**. Fortunately, [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) are here to get us back on track.
+of effort to work with**. Fortunately, [Web Components](http://w3c.github.io/webcomponents/explainer/) are here to get us back on track.
 
 <h2 id="started">Getting started</h2>
 
-[HTML Imports](http://www.w3.org/TR/2013/WD-html-imports-20130514/), part of the [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) cast, is a way to include HTML documents in other HTML documents. You're not limited to markup either. An import can also include CSS, JavaScript, or anything else an `.html` file can contain. In other words, this makes imports a **fantastic tool for loading related HTML/CSS/JS**.
+[HTML Imports](http://w3c.github.io/webcomponents/spec/imports/), part of the [Web Components](http://w3c.github.io/webcomponents/explainer/) cast, is a way to include HTML documents in other HTML documents. You're not limited to markup either. An import can also include CSS, JavaScript, or anything else an `.html` file can contain. In other words, this makes imports a **fantastic tool for loading related HTML/CSS/JS**.
 
 <h3 id="basics">The basics</h3>
 
@@ -234,7 +234,8 @@ import.html
 
     <template>
       <h1>Hello World!</h1>
-      <img src="world.png"> <!-- !requested until the template goes live. -->
+      <!-- Img is not requested until the <template> goes live. -->
+      <img src="world.png">
       <script>alert("Executed when the template is activated.");</script>
     </template>
 
@@ -250,9 +251,9 @@ index.html
 
         // Clone the <template> in the import.
         var template = link.import.querySelector('template');
-        var content = template.content.cloneNode(true)
+        var clone = document.importNode(template.content, true);
 
-        document.querySelector('#container').appendChild(content);
+        document.querySelector('#container').appendChild(clone);
       </script>
     </body>
 
@@ -315,7 +316,9 @@ In my opinion, this workflow alone makes HTML Imports an ideal way to share Web 
 
 <h3 id="depssubimports">Managing dependencies and sub-imports</h3>
 
-> Yo dawg. I hear you like imports, so I included an import _in_ your import.
+<blockquote>
+  Yo dawg. I hear you like imports, so I included an import <em>in</em> your import.
+</blockquote>
 
 <h4 id="sub-imports">Sub-imports</h4>
 
@@ -416,7 +419,7 @@ use them wisely. Web development best practices still hold true. Below are some 
 Reducing network requests is always important. If you have many top-level import
 links, consider combining them into a single resource and importing that file!
 
-[Vulcanizer](https://github.com/Polymer/vulcanize) is an npm build tool from the [Polymer](http://www.polymer-project.org/) team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.
+[Vulcanize](https://github.com/Polymer/vulcanize) is an npm build tool from the [Polymer](http://www.polymer-project.org/) team that recursively flattens a set of HTML Imports into a single file. Think of it as a concatenation build step for Web Components.
 
 <h3 id="perf-caching">Imports leverage browser caching</h3>
 

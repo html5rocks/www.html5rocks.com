@@ -1,0 +1,266 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block iscompatible %}
+return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || window.webkitRTCPeerConnection);
+{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/danristic.75.png);
+  background-position: 0px 0px !important;
+}
+td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+.page header a[href^='http']:not([href*='html5rocks.']),
+.tutorials a[href^='http']:not([href*='html5rocks.']),
+.feed-section a[href^='http']:not([href*='html5rocks']),
+.info-section a[href^='http']:not([href*='html5rocks.']),
+article section a[href^='http']:not([href*='html5rocks']),
+a[rel='external']
+{
+  background: none;
+  padding-right: 0;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+
+<p>Sending data between two browsers for communication, gaming, or file transfer is a rather involved process. It requires setting up a server to act as the middle man to relay data, which in turn means paying for hosting of a web service to transfer the data, and scaling this to multiple data centers. In this scenario there is potential for high latency, and it's difficult to keep data private.</p>
+
+<p>These problems can be alleviated by using WebRTC's RTCDataChannel API to transfer data directly from one peer to another. In this article we will cover the basics of how to set up and use data channels, as well as the common use cases on the web today.</p>
+
+  <blockquote class="notice tip">
+    <p>To make the most of this article, you will need to have some knowledge of the RTCPeerConnection API, and an understanding of how STUN, TURN, and signaling work.</p>
+    <p>We recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> and <a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC&nbsp;in&nbsp;the real world: STUN, TURN, and signaling</a>.</p>
+  </blockquote>
+
+
+<h2 id="why-another-data-channel">Why another data channel?</h2>
+
+
+<p>We have <a href="http://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a>, <a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">AJAX</a> and <a href="http://www.html5rocks.com/en/tutorials/eventsource/basics/">Server Sent Events</a>. Why do we need another communication channel? WebSocket is bidirectional, but all these technologies are designed for communication to or from a server.</p>
+
+<p>RTCDataChannel takes a different approach:</p>
+
+<ul>
+  <li>It works with the RTCPeerConnection API, which enables peer to peer connectivity. This can result in lower latency: no intermediary server, less 'hops'.</li>
+  <li>RTCDataChannel uses <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol#Features">Stream Control Transmission Protocol</a> (SCTP), allowing configurable delivery semantics: out-of-order delivery and retransmit configuration.</li>
+</ul>
+
+<p>RTCDataChannel is available now, with SCTP support, in Chrome and Firefox for desktop and Android, and Opera on desktop.</p>
+
+<h2 id="the-capabilities">The capabilities</h2>
+
+
+<p>The RTCDataChannel API supports a flexible set of data types. The API is designed to mimic WebSocket exactly, and RTCDataChannel supports <a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-DOMString-data" title="W3C DOMString spec">strings</a> as well as some of the binary types in JavaScript such as <a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-Blob-data" title="W3C Blob spec">Blob</a>, <a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-ArrayBuffer-data" title="W3C ArrayBuffer spec">ArrayBuffer</a> and <a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-ArrayBufferView-data" title="W3C ArrayBufferView spec">ArrayBufferView</a>. These types can be helpful when working with file transfer and multiplayer gaming.</p>
+
+<table>
+<th>
+  <td style="font-weight: bold;">TCP</td><td style="font-weight: bold;">UDP</td><td style="font-weight: bold;">SCTP</td>
+</th>
+<tr>
+  <td style="font-weight: bold;">Reliability</td><td>reliable</td><td>unreliable</td><td>configurable</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">Delivery</td><td>ordered</td><td>unordered</td><td>configurable</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">Transmission</td><td>byte-oriented</td><td>message-oriented</td><td>message-oriented</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">Flow control</td><td>yes</td><td>no</td><td>yes</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">Congestion control</td><td>yes</td><td>no</td><td>yes</td>
+</tr>
+</table>
+
+<p>(From <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">High Performance Browser Networking</a> by <a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>.)</p>
+
+<p>RTCDataChannel can work in either unreliable mode (analogous to User Datagram Protocol or UDP) or reliable mode (analogous to Transmission Control Protocol or TCP). The two modes have a simple distinction:</p>
+
+<ul>
+  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus making this mode slower.</li>
+  <li><strong>Unreliable mode</strong> does not guarantee every message will get to the other side nor what order they get there. This removes the overhead, allowing this mode to work much faster.</li>
+</ul>
+
+<p>We show below how to configure RTCDataChannel to use reliable or unreliable mode.</p>
+
+<h2 id="just-show-me-the-action">Just show me the action!</h2>
+
+
+<p>There are several simple demos of RTCDataChannel online:</p>
+
+<ul>
+  <li><a href="http://www.simpl.info/rtcdatachannel/index.html">simpl.info/dc</a></li>
+  <li><a href="http://googlechrome.github.io/webrtc/dc1.html">googlechrome.github.io/webrtc/dc1.html</a> (SCTP or RTP)</li>
+  <li><a href="http://pubnub.github.io/webrtc">pubnub.github.io/webrtc</a> (between two PubNub clients)</li>
+</ul>
+
+<p>In these examples the browser is making a peer connection to itself. It is then creating a data channel and sending the message along the peer connection. Finally, your message appears in the box on the other side of the page!</p>
+
+<p>The code to get started with this is short:</p>
+
+<pre class="prettyprint">
+var peerConnection = new RTCPeerConnection();
+
+// Establish your peer connection using your signaling channel here
+var dataChannel =
+  peerConnection.createDataChannel("myLabel", dataChannelOptions);
+
+dataChannel.onerror = function (err) {
+  console.log("Data Channel Error:", err);
+};
+
+dataChannel.onmessage = function (evt) {
+  console.log("Got Data Channel Message:", event.data);
+};
+
+dataChannel.onopen = function () {
+  dataChannel.send("Hello World!");
+};
+
+dataChannel.onclose = function () {
+  console.log("The Data Channel is Closed");
+};
+</pre>
+
+<p>The <code>dataChannel</code> object is created from an already established peer connection. It can be created before or after signaling happens. You then pass in a label to distinguish this channel from others and a set of optional configuration settings:</p>
+
+<pre class="prettyprint">
+var dataChannelOptions = {
+  ordered: false, // do not guarantee order
+  maxRetransmitTime: 3000, // in milliseconds
+  maxRetransmits: 15 // try 15 times before failing
+};
+</pre>
+
+
+<ul>
+  <li><strong>ordered:</strong> If the data channel should guarantee order or not</li>
+  <li><strong>maxRetransmitTime:</strong> The maximum time to try and retransmit a failed message (forces unreliable mode)</li>
+  <li><strong>maxRetransmits:</strong> The maximum number of times to try and retransmit a failed message (forces unreliable mode)</li>
+  <li><strong>protocol:</strong> Allows to set a subprotocol to be used, but will fail if the protocol specified is unsupported</li>
+  <li><strong>negotiated:</strong> If set to true, it removes the automatic setting up of a data channel on the other peer, meaning that you are provided your own way to create a data channel with the same id on the other side</li>
+  <li><strong>id:</strong> Allows you to provide your own ID for the channel</li>
+</ul>
+
+<p>The only options most people will need to use are the first three: <code>ordered</code>, <code>maxRetransmitTime</code>, and <code>maxRetransmits</code>. With <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol" title="Wikipedia article about SCTP">SCTP</a> (now used by all browsers that support WebRTC) reliable and ordered is true by default. It makes sense to use full unreliable if you want full control from the application layer, but in most cases, partially reliable is helpful.</p>
+
+<p>Note that, as with WebSocket, RTCDataChannel fires events when a connection is established, closed, or errors, and when it receives a message from the other peer.</p>
+
+<h2 id="is-it-safe">Is it safe?</h2>
+
+
+<p>Encryption is mandatory for all WebRTC components. With RTCDataChannel all data is secured with <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security</a> (DTLS). DTLS is a derivative of SSL, meaning your data will be as secure as using any standard SSL based connection. DTLS is standardized and built in to all browsers that support WebRTC. You can find more information about DTLS on the <a href="http://wiki.wireshark.org/DTLS">Wireshark wiki</a>.</p>
+
+<figure>
+  <img src="securityAuthority.png" alt="Secure Authority" />
+  <figcaption>Coping with malicious application users</figcaption>
+</figure>
+
+<p>A bigger concern when building with RTCDataChannel is malicious application users. Since everything is done in JavaScript, it is easy to get a hold of the RTCDataChannel object and send any data over the connection. One way to combat this is to build a software model in which you can control what users are safe to connect to, and force peer to peer connections to close when problems are discovered. </p>
+
+<figure>
+  <img src="authorityServer.png" alt="Malicious message detection process diagram" />
+  <figcaption>Malicious message detection and handling</figcaption>
+</figure>
+
+<p>A technique for this is to use a <a href="http://nodejs.org/">NodeJS</a> server built with <a href="http://socket.io/">Socket.io</a>. Each peer in the network logs in to the server and gets a list of users it can connect to. The server then monitors in real-time the messages coming from other peers and looks for malicious messages. When a malicious message is detected (when the client-side calculated hash of the message doesn't equal the hash provided by the server), the server forces all the users in the network to disconnect from the bad peer.</p>
+
+<h2 id="change-how-you-think-about-data">Change how you think about data</h2>
+
+<p>Security is just the tip of the iceberg when dealing with peer to peer data transfer. A client can only open so many connections. In fact, it can only open 256 connections, but the browser will crash far before that happens. If you want to send data to more than just a few peers it is a good idea to pair RTCDataChannel with other technologies such as WebSocket or AJAX. There are also cloud hosted solutions such as <a href="http://pubnub.com">PubNub</a> or <a href="https://www.firebase.com/">Firebase</a> that provide out of the box solutions for broadcasting data and signaling peers.</p>
+
+<p>Handling large amounts of data is also a pain point in JavaScript. As the developers of <a href="http://www.sharefest.me/">Sharefest</a> have pointed out, this requires thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
+<h2 id="build-a-file-sharing-application">Build a file sharing application</h2>
+
+<p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. Combined with the possibility of connecting to multiple clients for faster sharing, this makes WebRTC file sharing a strong candidate for the web.</p>
+
+<p>Several steps are required to make a successful transfer:</p>
+<ol style="list-style-type: decimal">
+  <li><a href="http://www.html5rocks.com/en/tutorials/file/dndfiles/">Read a file in JavaScript using the </a><a href="http://www.html5rocks.com/en/tutorials/file/dndfiles/">File API</a></li>
+  <li>Make a peer connection between clients, using RTCPeerConnection.</li>
+  <li>Create a data channel between clients, using RTCDataChannel.</li>
+</ol>
+
+<p>There are several points to consider when trying to send files over RTCDataChannel:</p>
+
+<ul>
+  <li><strong>File size:</strong> if file size is reasonably small and can be stored and loaded as one blob, you can load into memory using the File API and then send the file over a reliable channel as is (though bear in mind that browsers impose limits on maximum transfer size). As file size get larger, things get trickier. A chunking mechanism is required: file chunks are loaded and sent to another peer, accompanied with chunkId metadata so the peer can recognize them. Note that in this case you will also need to save the chunks first to offline storage (for example, using the FileSystem API) and only when you have the file in its entirety save it to the user's disk.</li>
+  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport are better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself – even if you're good – it won't be much faster than using reliable transport. This approach changes significantly when multi-party (mesh) file transfer is considered.</li>
+  <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. When using reliable data channels there are no limitations on chunk size (other than described above). It gets a bit trickier when using unreliable data channels. The <a href="https://en.wikipedia.org/wiki/Maximum_transmission_unit">MTU</a> size of the payload is about 1200 bytes. This means that both your data and all your application headers (such as chunkId, swarmId, etc.) should in total be under 1200 bytes. If you're using non-binary data channels to send binary data, take into account that converting into base64 will inflate your data by about 30%.</li>
+  <li>To send the file, it must be split into separate chunks of data. The recommended size is ~800 bytes. Chunks can be sent across the data channel like this:</li>
+</ul>
+
+<pre class="prettyprint">
+var start = 0,
+  stop = start + 800,
+  reader = new FileReader();
+
+reader.onloadend = function(evt){
+  if (evt.target.readyState === FileReader.DONE) {
+    dataChannel.send(evt.target.result);
+  }
+};
+
+var blob = file.slice(start, stop);
+reader.readAsBinaryString(blob);
+</pre>
+
+<p>Once the file is fully transferred to the other side, it can be downloaded using an anchor tag:</p>
+
+<pre class="prettyprint">
+function saveFile(blob) {
+  var link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.download = 'File Name';
+  link.click();
+};
+</pre>
+
+<p>The file sharing apps at <a href="http://pubnub.github.io/rtc-pubnub-fileshare/">pubnub.github.io/rtc-pubnub-fileshare</a> and <a href="https://github.com/Peer5/ShareFest">github.com/Peer5/ShareFest</a> use this technique; they are both open source and provide a good foundation for a file sharing application based on RTCDataChannel.</p>
+
+<h2 id="so-what-can-we-do">So what can we do?</h2>
+
+
+<p>RTCDataChannel opens the doors to new ways to build apps for file sharing, multiplayer gaming, and content delivery.</p>
+
+<ul>
+  <li>Peer to peer file sharing as described above.</li>
+  <li>Multiplayer gaming, paired with other technologies like WebGL, as seen in Mozilla's <a href="https://hacks.mozilla.org/2013/03/webrtc-data-channels-for-great-multiplayer/">Banana Bread</a>.</li>
+  <li>Content delivery: as being reinvented by <a href="https://peercdn.com/">PeerCDN</a>, a framework that delivers web assets through peer to peer data communication.</li>
+</ul>
+
+<h2 id="change-the-way-you-build-applications">Change the way you build applications</h2>
+
+
+<p>We can now provide more engaging applications by using high performance, low latency connections via RTCDataChannel. Frameworks such as <a href="http://peerjs.com/">PeerJS</a> and the <a href="https://github.com/pubnub/webrtc">PubNub WebRTC SDK</a> make RTCDataChannel easier to implement, and the API now has wide support across platforms.</p>
+
+<p>The advent of RTCDataChannel can change the way we think about data transfer in the browser.</p>
+
+<h2 id="find-out-more">Find out more</h2>
+
+
+<p><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting started with WebRTC</a><br/> <a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC in the real world: STUN, TURN and signaling</a><br/> <a href="http://bit.ly/webrtcwebaudio">WebRTC resources</a><br/> <a href="http://www.w3.org/TR/webrtc/#peer-to-peer-data-api">W3C Working Draft</a><br/> <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04">IETF WebRTC Data Channel Protocol Draft</a><br/> <a href="http://bloggeek.me/send-file-webrtc-data-api/">How to send a File Using WebRTC Data API</a></p>
+
+<p><strong>Thanks to Hadar Weiss and Shachar Zohar for their help in preparing this article.</strong></p>
+
+
+
+{% endblock %}

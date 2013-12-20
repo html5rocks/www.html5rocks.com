@@ -36,7 +36,7 @@ a[rel='external']
 
 {% block content %}
 
-<blockquote class="commentary talkinghead">
+<blockquote class="commentary">
 
   <p>WebRTC enables peer to peer communication.</p>
 
@@ -73,7 +73,7 @@ a[rel='external']
 
 <p>To avoid redundancy and to maximize compatibility with established technologies, signaling methods and protocols are not specified by WebRTC standards. This approach is outlined by JSEP, the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-1.1">JavaScript Session Establishment Protocol</a>:</p>
 
-<blockquote class="commentary">The thinking behind WebRTC call setup has been to fully specify and control the media plane, but to leave the signaling plane up to the application as much as possible. The rationale is that different applications may prefer to use different protocols, such as the existing SIP or Jingle call signaling protocols, or something custom to the particular application, perhaps for a novel use case. In this approach, the key information that needs to be exchanged is the multimedia session description, which specifies the necessary transport and media configuration information necessary to establish the media plane.</blockquote>
+<blockquote>The thinking behind WebRTC call setup has been to fully specify and control the media plane, but to leave the signaling plane up to the application as much as possible. The rationale is that different applications may prefer to use different protocols, such as the existing SIP or Jingle call signaling protocols, or something custom to the particular application, perhaps for a novel use case. In this approach, the key information that needs to be exchanged is the multimedia session description, which specifies the necessary transport and media configuration information necessary to establish the media plane.</blockquote>
 
 <p>JSEP's architecture also avoids a browser having to save state: that is, to function as a signaling state machine. This would be problematic if, for example, signaling data was lost each time a page was reloaded. Instead, signaling state can be saved on a server.</p>
 
@@ -239,9 +239,7 @@ function logError(error) {
 
 <p>As well as being relatively undemanding in terms of bandwidth, WebRTC signaling services don't consume much processing or memory, since they only need to relay messages and retain a small amount of session state data (such as which clients are connected).</p>
 
-<blockquote class="commentary talkinghead">
-<strong>Note</strong>: the signaling mechanism used to exchange session metadata can also be used to communicate application data, such as messages between the app and users. It's just a messaging service!
-</blockquote>
+<p class="notice tip">The signaling mechanism used to exchange session metadata can also be used to communicate application data. It's just a messaging service!</p>
 
 <h3 id="pushing-messages-from-the-server-to-the-client">Pushing messages from the server to the client</h3>
 
@@ -251,7 +249,7 @@ function logError(error) {
 
 <p><a href="http://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a> is a more natural solution, designed for full duplex client–server communication (messages can flow in both directions at the same time). One advantage of a signaling service built with pure WebSocket or Server-Sent Events (EventSource) is that the back-end for these APIs can be implemented on a variety of web frameworks common to most web hosting packages, for languages such as PHP, Python and Ruby.</p>
 
-<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see Ilya Grigorik's <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in O'Reilly's <em>High Performance Browser Networking</em>. Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
+<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see the <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in Ilya Grigorik's <em>High Performance Browser Networking</em>. Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
 <p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
 
@@ -623,7 +621,7 @@ node server.js
 
 <p><a href="http://www.youtube.com/watch?v=p2HzZkd2A40">2013 Google I/O WebRTC presentation</a> with WebRTC tech lead, Justin Uberti.</p>
 
-<p>Chris Wilson's SFHTML5 presentation: <a href="http://www.youtube.com/watch?v=3Ifbqaw5l_I" title="Video of Chris Wilson's WebRTC talk at SFHTML5">Introduction to WebRTC Apps</a></p>
+<p>Chris Wilson's SFHTML5 presentation: <a href="http://www.youtube.com/watch?v=3Ifbqaw5l_I" title="Video of Chris Wilson's WebRTC talk at SFHTML5">Introduction to WebRTC Apps</a>.</p>
 
 <p>The <a href="http://webrtcbook.com">WebRTC Book</a> gives a lot of detail about data and signaling pathways, and includes a number of detailed network topology diagrams.</p>
 
@@ -631,7 +629,6 @@ node server.js
 
 <p><a href="http://www.linkedin.com/in/strongben" title="Ben Strong on LinkedIn">Ben Strong</a>'s presentation <a href="https://thenewcircle.com/s/post/1548/a_practical_guide_to_building_webrtc_apps_ben_strong_video" title="A Practical Guide to Building WebRTC Apps: presentation slides and video">A Practical Guide to Building WebRTC Apps</a> provides a lot of information about WebRTC topologies and infrastructure.</p>
 
-<p><a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>'s <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">WebRTC chapter</a> in O'Reilly's forthcoming <em>High Performance Browser Networking</em> goes deep into WebRTC architecture, use cases and performance.</p>
-
+<p>The <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">WebRTC chapter</a> in <a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>'s <em>High Performance Browser Networking</em> goes deep into WebRTC architecture, use cases and performance.</p>
 
 {% endblock %}
