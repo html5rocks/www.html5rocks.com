@@ -168,7 +168,7 @@ x-panel {
 {% endblock %}
 
 {% block iscompatible %}
-  return 'register' in document;
+  return 'registerElement' in document;
 {% endblock %}
 
 {% block html5badge %}
@@ -232,11 +232,11 @@ without the features unlocked by custom elements:</p>
 </ol>
 <h3 id="registering">Registering new elements</h3>
 
-<p>Custom elements are created using <code>document.register()</code>:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo');
+<p>Custom elements are created using <code>document.registerElement()</code>:</p>
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo');
 document.body.appendChild(new XFoo());
 </code></pre>
-<p>The first argument to <code>document.register()</code> is the element's tag name.
+<p>The first argument to <code>document.registerElement()</code> is the element's tag name.
 The name <strong>must contain a dash (-)</strong>. So for example, <code>&lt;x-tags&gt;</code>, <code>&lt;my-element&gt;</code>, and <code>&lt;my-awesome-app&gt;</code> are all valid names, while <code>&lt;tabs&gt;</code> and <code>&lt;foo_bar&gt;</code> are not. This restriction allows the parser
 to distinguish custom elements from regular elements but also ensures forward
 compatibility when new tags are added to HTML.</p>
@@ -244,23 +244,23 @@ compatibility when new tags are added to HTML.</p>
 This is the place to add custom functionality (e.g. public properties and methods) to your elements.
 <a href="#publicapi">More on that</a> later.</p>
 <p>By default, custom elements inherit from <code>HTMLElement</code>. Thus, the previous example is equivalent to:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo', {
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
   prototype: Object.create(HTMLElement.prototype)
 });
 </code></pre>
-<p>A call to <code>document.register('x-foo')</code> teaches the browser about the new element,
+<p>A call to <code>document.registerElement('x-foo')</code> teaches the browser about the new element,
 and returns a constructor that you can use to create instances of <code>&lt;x-foo&gt;</code>.
 Alternatively, you can use the other <a href="#instantiating">techniques of instantiating elements</a>
 if you don't want to use the constructor.</p>
 <p class="notice tip">If it's undesirable that the constructor ends up on the global <code>window</code>
-object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>) or drop it on the floor.</p>
+object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) or drop it on the floor.</p>
 
 <h3 id="extending">Extending native elements</h3>
 
 <p>Say you aren't happy with Regular Joe&#8482; <code>&lt;button&gt;</code>. You'd like to
 supercharge its capabilities to be a "Mega Button". To extend the <code>&lt;button&gt;</code> element,
 create a new element that inherits the <code>prototype</code> of <code>HTMLButtonElement</code>:</p>
-<pre class="prettyprint"><code>var MegaButton = document.register('mega-button', {
+<pre class="prettyprint"><code>var MegaButton = document.registerElement('mega-button', {
   prototype: Object.create(HTMLButtonElement.prototype)
 });
 </code></pre>
@@ -290,13 +290,13 @@ document.createElement('tabs').__proto__ === HTMLUnknownElement.prototype
 // "x-tabs" is a valid custom element name
 document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 </code></pre>
-<p class="notice fact"><code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.register()</code>.</p>
+<p class="notice fact"><code>&lt;x-tabs></code> will still be an <code>HTMLUnknownElement</code> in browsers that don't support <code>document.registerElement()</code>.</p>
 
 <h4 id="unresolvedels">Unresolved elements</h4>
 
-<p>Because custom elements are registered by script using <code>document.register()</code>, <strong>they can be
+<p>Because custom elements are registered by script using <code>document.registerElement()</code>, <strong>they can be
 declared or created <em>before</em> their definition is registered</strong> by the browser. For example,
-you can declare <code>&lt;x-tabs&gt;</code> on the page but end up invoking <code>document.register('x-tabs')</code> much later.</p>
+you can declare <code>&lt;x-tabs&gt;</code> on the page but end up invoking <code>document.registerElement('x-tabs')</code> much later.</p>
 <p>Before elements are upgraded to their definition, they're called <strong>unresolved elements</strong>.
 These are HTML elements that have a valid custom element name but haven't been registered.</p>
 <p>This table might help keep things straight:</p>
@@ -347,7 +347,7 @@ that takes the <code>is=""</code> attribute as its second parameter.</p>
 <pre class="prettyprint"><code>var megaButton = new MegaButton();
 document.body.appendChild(megaButton);
 </code></pre>
-<p>So far, we've learned how to use <code>document.register()</code> to tell the browser about a new tag&hellip;but
+<p>So far, we've learned how to use <code>document.registerElement()</code> to tell the browser about a new tag&hellip;but
 it doesn't do much. Let's add properties and methods.</p>
 <h2 id="publicapi">Adding JS properties and methods</h2>
 
@@ -366,7 +366,7 @@ XFooProto.foo = function() {
 Object.defineProperty(XFooProto, "bar", {value: 5});
 
 // 3. Register x-foo's definition.
-var XFoo = document.register('x-foo', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo', {prototype: XFooProto});
 
 // 4. Instantiate an x-foo.
 var xfoo = document.createElement('x-foo');
@@ -376,7 +376,7 @@ document.body.appendChild(xfoo);
 </code></pre>
 <p>Of course there are umpteen thousand ways to construct a <code>prototype</code>. If you're not
 a fan of creating prototypes like this, here's a more condensed version of the same thing:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo', {
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
   prototype: Object.create(HTMLElement.prototype, {
     bar: {
       get: function() { return 5; }
@@ -407,11 +407,11 @@ These methods are appropriately named the <strong>lifecycle callbacks</strong>. 
       <td>an instance of the element is created</td>
     </tr>
     <tr>
-      <td>enteredViewCallback</td>
+      <td>attachedCallback</td>
       <td>an instance was inserted into the document</td>
     </tr>
     <tr>
-      <td>leftViewCallback</td>
+      <td>detachedCallback</td>
       <td>an instance was removed from the document</td>
     </tr>
     <tr>
@@ -421,18 +421,18 @@ These methods are appropriately named the <strong>lifecycle callbacks</strong>. 
   </tbody>
 </table>
 
-<p><strong>Example:</strong> defining <code>createdCallback()</code> and <code>enteredViewCallback()</code> on <code>&lt;x-foo&gt;</code>:</p>
+<p><strong>Example:</strong> defining <code>createdCallback()</code> and <code>attachedCallback()</code> on <code>&lt;x-foo&gt;</code>:</p>
 <pre class="prettyprint"><code>var proto = Object.create(HTMLElement.prototype);
 
 proto.createdCallback = function() {...};
-proto.enteredViewCallback = function() {...};
+proto.attachedCallback = function() {...};
 
-var XFoo = document.register('x-foo', {prototype: proto});
+var XFoo = document.registerElement('x-foo', {prototype: proto});
 </code></pre>
 <p><strong>All of the lifecycle callbacks are optional</strong>, but define them if/when it makes sense.
 For example, say your element is sufficiently complex and opens a connection to IndexedDB
 in <code>createdCallback()</code>. Before it gets removed from the DOM, do the necessary
-cleanup work in <code>leftViewCallback()</code>. <strong>Note:</strong> you shouldn't rely on this,
+cleanup work in <code>detachedCallback()</code>. <strong>Note:</strong> you shouldn't rely on this,
 for example, if the user closes the tab, but think of it as a possible optimization hook.</p>
 <p>Another use case lifecycle callbacks is for setting up default event listeners
 on the element:</p>
@@ -457,7 +457,7 @@ XFooProto.createdCallback = function() {
   this.innerHTML = "&lt;b&gt;I'm an x-foo-with-markup!&lt;/b&gt;";
 };
 
-var XFoo = document.register('x-foo-with-markup', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
 </code></pre>
 <div class="demoarea">
   <x-foo-with-markup></x-foo-with-markup>
@@ -489,7 +489,7 @@ XFooProto.createdCallback = function() {
   shadow.innerHTML = "&lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;";
 };
 
-var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
 </code></pre>
 <div class="demoarea">
   <x-foo-shadowdom></x-foo-shadowdom>
@@ -528,7 +528,7 @@ var proto = Object.create(HTMLElement.prototype, {
     }
   }
 });
-document.register('x-foo-from-template', {prototype: proto});
+document.registerElement('x-foo-from-template', {prototype: proto});
 &lt;/script&gt;
 </code></pre>
 <p><template id="sdtemplate">
@@ -660,9 +660,9 @@ not to elements that inherit from <code>HTMLUnkownElement</code> (see <a href="#
 
 <h3 id="featuredetect">Feature detection</h3>
 
-<p>Feature detecting is a matter of checking if <code>document.register()</code> exists:</p>
+<p>Feature detecting is a matter of checking if <code>document.registerElement()</code> exists:</p>
 <pre class="prettyprint"><code>function supportsCustomElements() {
-  return 'register' in document;
+  return 'registerElement' in document;
 }
 
 if (supportsCustomElements()) {
@@ -673,7 +673,7 @@ if (supportsCustomElements()) {
 </code></pre>
 <h3 id="support">Browser support</h3>
 
-<p><code>document.register()</code> first started landing behind a flag in Chrome 27 and Firefox ~23. However, the specification has evolved quite a bit since then. Chrome 31 is the first to have
+<p><code>document.registerElement()</code> first started landing behind a flag in Chrome 27 and Firefox ~23. However, the specification has evolved quite a bit since then. Chrome 31 is the first to have
 true support for the updated spec. </p>
 <p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experimental Web Platform features" in <code>about:flags</code>.</p>
 
@@ -693,7 +693,7 @@ It was the bees knees. You could use it to declaratively register new elements:<
 <p>Unfortunately, there were too many timing issues with the <a href="#upgrades">upgrade process</a>,
 corner cases, and Armageddon-like scenarios to work it all out. <code>&lt;element&gt;</code> had to be shelved. In August 2013, Dimitri Glazkov posted to <a href="http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html">public-webapps</a> announcing its removal, at least for now.</p>
 <p>It's worth noting that Polymer implements a declarative form of element registration
-with <code>&lt;polymer-element&gt;</code>. How? It uses <code>document.register('polymer-element')</code> and
+with <code>&lt;polymer-element&gt;</code>. How? It uses <code>document.registerElement('polymer-element')</code> and
 the techniques I described in <a href="#fromtemplate">Creating elements from a template</a>.</p>
 <h2 id="conclusion">Conclusion</h2>
 
@@ -704,40 +704,38 @@ the picture of Web Components. Markup can be sexy again!</p>
 <p>If you're interested in getting started with web components, I recommend checking
 out <a href="http://polymer-project.org">Polymer</a>. It's got more than enough to get you going.</p>
 <script>
-if ('register' in document) {
+if ('registerElement' in document) {
   (function() {
-    if ('register' in document) {
+    if ('registerElement' in document) {
       var XFooProto = Object.create(HTMLElement.prototype);
 
       XFooProto.createdCallback = function() {
         this.innerHTML = "<b>I'm an x-foo-with-markup!</b>";
       };
 
-      var XFoo = document.register('x-foo-with-markup', {prototype: XFooProto});
+      var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
     }
   })();
 
   (function() {
     document.querySelector('#register-x-panel').addEventListener('click', function(e) {
-      var XFoo = document.register('x-panel', {prototype: Object.create(HTMLElement.prototype)});
+      var XFoo = document.registerElement('x-panel', {prototype: Object.create(HTMLElement.prototype)});
       document.querySelector('x-panel').textContent = "x-panel is registered!";
     });
   })();
 }
 
-if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document.body) &&
-      'register' in document) {
+if ('createShadowRoot' in document.body && 'registerElement' in document) {
 
 (function() {
     var XFooProto = Object.create(HTMLElement.prototype);
 
     XFooProto.createdCallback = function() {
-      var shadow = this.createShadowRoot ? this.createShadowRoot() :
-                                           this.webkitCreateShadowRoot();
+      var shadow = this.createShadowRoot();
       shadow.innerHTML = "<b>I'm in the element's Shadow DOM!</b>";
     };
 
-    var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
+    var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
 })();
 
 (function() {
@@ -750,7 +748,7 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
       }
     }
   });
-  document.register('x-foo-from-template', {prototype: proto});
+  document.registerElement('x-foo-from-template', {prototype: proto});
 })();
 
 }

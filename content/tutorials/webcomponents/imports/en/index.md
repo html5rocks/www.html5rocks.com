@@ -272,7 +272,7 @@ elements.html
                          (this.getAttribute('name') || '?') + '</b>';
       };
 
-      document.register('say-hi', {prototype: proto});
+      document.registerElement('say-hi', {prototype: proto});
 
       // Define and register <shadow-element> that uses Shadow DOM.
       var proto2 = Object.create(HTMLElement.prototype);
@@ -283,7 +283,7 @@ elements.html
                          "I'm a " + this.localName +
                          " using Shadow DOM!<content></content>";
       };
-      document.register('shadow-element', {prototype: proto2});
+      document.registerElement('shadow-element', {prototype: proto2});
     </script>
 
 This import defines (and registers) two elements, `<say-hi>` and `<shadow-element>`. The importer can simply declare them on their page. No wiring needed.
@@ -381,7 +381,7 @@ ajax-element.html
         });
       };
 
-      document.register('ajax-element', {prototype: proto});
+      document.registerElement('ajax-element', {prototype: proto});
     </script>
 
 Even the main page itself can include jquery.html if it needs the library:
