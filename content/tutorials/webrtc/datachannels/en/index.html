@@ -58,7 +58,7 @@ a[rel='external']
 <p>RTCDataChannel takes a different approach:</p>
 
 <ul>
-  <li>It works with the RTCPeerConnection API, which enables peer to peer connectivity. This can result in lower latency: no intermediary server, less 'hops'.</li>
+  <li>It works with the RTCPeerConnection API, which enables peer to peer connectivity. This can result in lower latency: no intermediary server, fewer 'hops'.</li>
   <li>RTCDataChannel uses <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol#Features">Stream Control Transmission Protocol</a> (SCTP), allowing configurable delivery semantics: out-of-order delivery and retransmit configuration.</li>
 </ul>
 
@@ -95,9 +95,11 @@ a[rel='external']
 <p>RTCDataChannel can work in either unreliable mode (analogous to User Datagram Protocol or UDP) or reliable mode (analogous to Transmission Control Protocol or TCP). The two modes have a simple distinction:</p>
 
 <ul>
-  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus making this mode slower.</li>
+  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus potentially making this mode slower. </li>
   <li><strong>Unreliable mode</strong> does not guarantee every message will get to the other side nor what order they get there. This removes the overhead, allowing this mode to work much faster.</li>
 </ul>
+
+<p>Performance for both modes is about the same when there are no packet losses. However, in reliable mode a lost packet will cause other packets to get blocked behind it, and the lost packet might be stale by the time it is retransmitted and arrives. It is, of course, possible to use multiple data channels within the same application, each with their own (un)reliable semantics.</p>
 
 <p>We show below how to configure RTCDataChannel to use reliable or unreliable mode.</p>
 
@@ -107,7 +109,7 @@ a[rel='external']
 <p>There are several simple demos of RTCDataChannel online:</p>
 
 <ul>
-  <li><a href="http://www.simpl.info/rtcdatachannel/index.html">simpl.info/dc</a></li>
+  <li><a href="http://simpl.info/dc">simpl.info/dc</a></li>
   <li><a href="http://googlechrome.github.io/webrtc/dc1.html">googlechrome.github.io/webrtc/dc1.html</a> (SCTP or RTP)</li>
   <li><a href="http://pubnub.github.io/webrtc">pubnub.github.io/webrtc</a> (between two PubNub clients)</li>
 </ul>
@@ -123,11 +125,11 @@ var peerConnection = new RTCPeerConnection();
 var dataChannel =
   peerConnection.createDataChannel("myLabel", dataChannelOptions);
 
-dataChannel.onerror = function (err) {
-  console.log("Data Channel Error:", err);
+dataChannel.onerror = function (error) {
+  console.log("Data Channel Error:", error);
 };
 
-dataChannel.onmessage = function (evt) {
+dataChannel.onmessage = function (event) {
   console.log("Got Data Channel Message:", event.data);
 };
 
@@ -146,16 +148,16 @@ dataChannel.onclose = function () {
 var dataChannelOptions = {
   ordered: false, // do not guarantee order
   maxRetransmitTime: 3000, // in milliseconds
-  maxRetransmits: 15 // try 15 times before failing
 };
 </pre>
 
+<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing) but you can only specify maxRetransmits or maxRetransmitTime, not both.</p>
 
 <ul>
   <li><strong>ordered:</strong> If the data channel should guarantee order or not</li>
   <li><strong>maxRetransmitTime:</strong> The maximum time to try and retransmit a failed message (forces unreliable mode)</li>
   <li><strong>maxRetransmits:</strong> The maximum number of times to try and retransmit a failed message (forces unreliable mode)</li>
-  <li><strong>protocol:</strong> Allows to set a subprotocol to be used, but will fail if the protocol specified is unsupported</li>
+  <li><strong>protocol:</strong> Allows a subprotocol to be used, but will fail if the specified protocol is unsupported</li>
   <li><strong>negotiated:</strong> If set to true, it removes the automatic setting up of a data channel on the other peer, meaning that you are provided your own way to create a data channel with the same id on the other side</li>
   <li><strong>id:</strong> Allows you to provide your own ID for the channel</li>
 </ul>
@@ -166,13 +168,7 @@ var dataChannelOptions = {
 
 <h2 id="is-it-safe">Is it safe?</h2>
 
-
 <p>Encryption is mandatory for all WebRTC components. With RTCDataChannel all data is secured with <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security</a> (DTLS). DTLS is a derivative of SSL, meaning your data will be as secure as using any standard SSL based connection. DTLS is standardized and built in to all browsers that support WebRTC. You can find more information about DTLS on the <a href="http://wiki.wireshark.org/DTLS">Wireshark wiki</a>.</p>
-
-<figure>
-  <img src="securityAuthority.png" alt="Secure Authority" />
-  <figcaption>Coping with malicious application users</figcaption>
-</figure>
 
 <p>A bigger concern when building with RTCDataChannel is malicious application users. Since everything is done in JavaScript, it is easy to get a hold of the RTCDataChannel object and send any data over the connection. One way to combat this is to build a software model in which you can control what users are safe to connect to, and force peer to peer connections to close when problems are discovered. </p>
 
@@ -190,7 +186,7 @@ var dataChannelOptions = {
 <p>Handling large amounts of data is also a pain point in JavaScript. As the developers of <a href="http://www.sharefest.me/">Sharefest</a> have pointed out, this requires thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
 <h2 id="build-a-file-sharing-application">Build a file sharing application</h2>
 
-<p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. Combined with the possibility of connecting to multiple clients for faster sharing, this makes WebRTC file sharing a strong candidate for the web.</p>
+<p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. This functionality, combined with the possibility of connecting to multiple clients for faster sharing, makes WebRTC file sharing a strong candidate for the web.</p>
 
 <p>Several steps are required to make a successful transfer:</p>
 <ol style="list-style-type: decimal">
