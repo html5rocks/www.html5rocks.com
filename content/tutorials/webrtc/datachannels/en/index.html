@@ -45,8 +45,7 @@ a[rel='external']
 <p>These problems can be alleviated by using WebRTC's RTCDataChannel API to transfer data directly from one peer to another. In this article we will cover the basics of how to set up and use data channels, as well as the common use cases on the web today.</p>
 
   <blockquote class="notice tip">
-    <p>To make the most of this article, you will need to have some knowledge of the RTCPeerConnection API, and an understanding of how STUN, TURN, and signaling work.</p>
-    <p>We recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> and <a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC&nbsp;in&nbsp;the real world: STUN, TURN, and signaling</a>.</p>
+    <p>To make the most of this article, you will need to have some knowledge of the RTCPeerConnection API, and an understanding of how STUN, TURN, and signaling work. We recommend you take a look at <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a>.</p>
   </blockquote>
 
 
@@ -58,11 +57,22 @@ a[rel='external']
 <p>RTCDataChannel takes a different approach:</p>
 
 <ul>
-  <li>It works with the RTCPeerConnection API, which enables peer to peer connectivity. This can result in lower latency: no intermediary server, less 'hops'.</li>
+  <li>It works with the RTCPeerConnection API, which enables peer to peer connectivity. This can result in lower latency: no intermediary server, fewer 'hops'.</li>
   <li>RTCDataChannel uses <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol#Features">Stream Control Transmission Protocol</a> (SCTP), allowing configurable delivery semantics: out-of-order delivery and retransmit configuration.</li>
 </ul>
 
 <p>RTCDataChannel is available now, with SCTP support, in Chrome and Firefox for desktop and Android, and Opera on desktop.</p>
+
+<h2>A caveat: signaling, STUN and TURN</h2>
+
+<p>Although WebRTC enables peer-to-peer communication, it still needs servers:</p>
+
+<ul>
+  <li><strong>For signaling:</strong> to enable the exchange of media and network metadata to bootstrap a peer connection.</li>
+  <li><strong>To cope with NATs and firewalls</strong>: by using the ICE framework to establish the best possible network path between peers, by working with STUN servers (to ascertain a publicly accessible IP and port for each peer) and TURN servers (if direct connection fails and data relaying is required).</li>
+</ul>
+
+<p>The HTML5 Rocks article <a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC&nbsp;in&nbsp;the real world: STUN, TURN, and signaling</a> explains in detail how WebRTC works with servers for signaling and networking.</p>
 
 <h2 id="the-capabilities">The capabilities</h2>
 
@@ -83,9 +93,6 @@ a[rel='external']
   <td style="font-weight: bold;">Transmission</td><td>byte-oriented</td><td>message-oriented</td><td>message-oriented</td>
 </tr>
 <tr>
-  <td style="font-weight: bold;">Flow control</td><td>yes</td><td>no</td><td>yes</td>
-</tr>
-<tr>
   <td style="font-weight: bold;">Congestion control</td><td>yes</td><td>no</td><td>yes</td>
 </tr>
 </table>
@@ -95,9 +102,11 @@ a[rel='external']
 <p>RTCDataChannel can work in either unreliable mode (analogous to User Datagram Protocol or UDP) or reliable mode (analogous to Transmission Control Protocol or TCP). The two modes have a simple distinction:</p>
 
 <ul>
-  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus making this mode slower.</li>
+  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus potentially making this mode slower. </li>
   <li><strong>Unreliable mode</strong> does not guarantee every message will get to the other side nor what order they get there. This removes the overhead, allowing this mode to work much faster.</li>
 </ul>
+
+<p>Performance for both modes is about the same when there are no packet losses. However, in reliable mode a lost packet will cause other packets to get blocked behind it, and the lost packet might be stale by the time it is retransmitted and arrives. It is, of course, possible to use multiple data channels within the same application, each with their own (un)reliable semantics.</p>
 
 <p>We show below how to configure RTCDataChannel to use reliable or unreliable mode.</p>
 
@@ -107,7 +116,7 @@ a[rel='external']
 <p>There are several simple demos of RTCDataChannel online:</p>
 
 <ul>
-  <li><a href="http://www.simpl.info/rtcdatachannel/index.html">simpl.info/dc</a></li>
+  <li><a href="http://simpl.info/dc">simpl.info/dc</a></li>
   <li><a href="http://googlechrome.github.io/webrtc/dc1.html">googlechrome.github.io/webrtc/dc1.html</a> (SCTP or RTP)</li>
   <li><a href="http://pubnub.github.io/webrtc">pubnub.github.io/webrtc</a> (between two PubNub clients)</li>
 </ul>
@@ -123,11 +132,11 @@ var peerConnection = new RTCPeerConnection();
 var dataChannel =
   peerConnection.createDataChannel("myLabel", dataChannelOptions);
 
-dataChannel.onerror = function (err) {
-  console.log("Data Channel Error:", err);
+dataChannel.onerror = function (error) {
+  console.log("Data Channel Error:", error);
 };
 
-dataChannel.onmessage = function (evt) {
+dataChannel.onmessage = function (event) {
   console.log("Got Data Channel Message:", event.data);
 };
 
@@ -146,16 +155,16 @@ dataChannel.onclose = function () {
 var dataChannelOptions = {
   ordered: false, // do not guarantee order
   maxRetransmitTime: 3000, // in milliseconds
-  maxRetransmits: 15 // try 15 times before failing
 };
 </pre>
 
+<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing) but you can only specify maxRetransmits or maxRetransmitTime, not both. For UDP semantics, set <code>maxRetransmits</code> to 0 and <code>ordered</code> to <code>false</code>. For more information, see <a href="http://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">RFC 4960</a> (SCTP) and <a href="http://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">RFC 3758</a> (SCTP partial reliability).</p>
 
 <ul>
   <li><strong>ordered:</strong> If the data channel should guarantee order or not</li>
   <li><strong>maxRetransmitTime:</strong> The maximum time to try and retransmit a failed message (forces unreliable mode)</li>
   <li><strong>maxRetransmits:</strong> The maximum number of times to try and retransmit a failed message (forces unreliable mode)</li>
-  <li><strong>protocol:</strong> Allows to set a subprotocol to be used, but will fail if the protocol specified is unsupported</li>
+  <li><strong>protocol:</strong> Allows a subprotocol to be used, but will fail if the specified protocol is unsupported</li>
   <li><strong>negotiated:</strong> If set to true, it removes the automatic setting up of a data channel on the other peer, meaning that you are provided your own way to create a data channel with the same id on the other side</li>
   <li><strong>id:</strong> Allows you to provide your own ID for the channel</li>
 </ul>
@@ -166,31 +175,16 @@ var dataChannelOptions = {
 
 <h2 id="is-it-safe">Is it safe?</h2>
 
-
 <p>Encryption is mandatory for all WebRTC components. With RTCDataChannel all data is secured with <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security</a> (DTLS). DTLS is a derivative of SSL, meaning your data will be as secure as using any standard SSL based connection. DTLS is standardized and built in to all browsers that support WebRTC. You can find more information about DTLS on the <a href="http://wiki.wireshark.org/DTLS">Wireshark wiki</a>.</p>
 
-<figure>
-  <img src="securityAuthority.png" alt="Secure Authority" />
-  <figcaption>Coping with malicious application users</figcaption>
-</figure>
 
-<p>A bigger concern when building with RTCDataChannel is malicious application users. Since everything is done in JavaScript, it is easy to get a hold of the RTCDataChannel object and send any data over the connection. One way to combat this is to build a software model in which you can control what users are safe to connect to, and force peer to peer connections to close when problems are discovered. </p>
-
-<figure>
-  <img src="authorityServer.png" alt="Malicious message detection process diagram" />
-  <figcaption>Malicious message detection and handling</figcaption>
-</figure>
-
-<p>A technique for this is to use a <a href="http://nodejs.org/">NodeJS</a> server built with <a href="http://socket.io/">Socket.io</a>. Each peer in the network logs in to the server and gets a list of users it can connect to. The server then monitors in real-time the messages coming from other peers and looks for malicious messages. When a malicious message is detected (when the client-side calculated hash of the message doesn't equal the hash provided by the server), the server forces all the users in the network to disconnect from the bad peer.</p>
 
 <h2 id="change-how-you-think-about-data">Change how you think about data</h2>
 
-<p>Security is just the tip of the iceberg when dealing with peer to peer data transfer. A client can only open so many connections. In fact, it can only open 256 connections, but the browser will crash far before that happens. If you want to send data to more than just a few peers it is a good idea to pair RTCDataChannel with other technologies such as WebSocket or AJAX. There are also cloud hosted solutions such as <a href="http://pubnub.com">PubNub</a> or <a href="https://www.firebase.com/">Firebase</a> that provide out of the box solutions for broadcasting data and signaling peers.</p>
-
-<p>Handling large amounts of data is also a pain point in JavaScript. As the developers of <a href="http://www.sharefest.me/">Sharefest</a> have pointed out, this requires thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
+<p>Handling large amounts of data can be a pain point in JavaScript. As the developers of <a href="http://www.sharefest.me/">Sharefest</a> have pointed out, this requires thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
 <h2 id="build-a-file-sharing-application">Build a file sharing application</h2>
 
-<p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. Combined with the possibility of connecting to multiple clients for faster sharing, this makes WebRTC file sharing a strong candidate for the web.</p>
+<p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. This functionality, combined with the possibility of connecting to multiple clients for faster sharing, makes WebRTC file sharing a strong candidate for the web.</p>
 
 <p>Several steps are required to make a successful transfer:</p>
 <ol style="list-style-type: decimal">
@@ -202,26 +196,10 @@ var dataChannelOptions = {
 <p>There are several points to consider when trying to send files over RTCDataChannel:</p>
 
 <ul>
-  <li><strong>File size:</strong> if file size is reasonably small and can be stored and loaded as one blob, you can load into memory using the File API and then send the file over a reliable channel as is (though bear in mind that browsers impose limits on maximum transfer size). As file size get larger, things get trickier. A chunking mechanism is required: file chunks are loaded and sent to another peer, accompanied with chunkId metadata so the peer can recognize them. Note that in this case you will also need to save the chunks first to offline storage (for example, using the FileSystem API) and only when you have the file in its entirety save it to the user's disk.</li>
-  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport are better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself – even if you're good – it won't be much faster than using reliable transport. This approach changes significantly when multi-party (mesh) file transfer is considered.</li>
-  <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. When using reliable data channels there are no limitations on chunk size (other than described above). It gets a bit trickier when using unreliable data channels. The <a href="https://en.wikipedia.org/wiki/Maximum_transmission_unit">MTU</a> size of the payload is about 1200 bytes. This means that both your data and all your application headers (such as chunkId, swarmId, etc.) should in total be under 1200 bytes. If you're using non-binary data channels to send binary data, take into account that converting into base64 will inflate your data by about 30%.</li>
-  <li>To send the file, it must be split into separate chunks of data. The recommended size is ~800 bytes. Chunks can be sent across the data channel like this:</li>
+  <li><strong>File size:</strong> if file size is reasonably small and can be stored and loaded as one Blob, you can load into memory using the File API and then send the file over a reliable channel as is (though bear in mind that browsers impose limits on maximum transfer size). As file size get larger, things get trickier. A chunking mechanism is required: file chunks are loaded and sent to another peer, accompanied with chunkId metadata so the peer can recognize them. Note that in this case you will also need to save the chunks first to offline storage (for example, using the FileSystem API) and only when you have the file in its entirety save it to the user's disk.</li>
+  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport are better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself &mdash; even if you're good &mdash; it won't be much faster than using reliable transport. Reliable and unordered should provide the best of both worlds, but results may vary when considering multi-party (mesh) file transfer.</li>
+  <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. Chunking is required, since there is currently a send size limit (though this will be fixed in a future version of data channels). The current recommendation for maximum chunk size is 16KB.</li>
 </ul>
-
-<pre class="prettyprint">
-var start = 0,
-  stop = start + 800,
-  reader = new FileReader();
-
-reader.onloadend = function(evt){
-  if (evt.target.readyState === FileReader.DONE) {
-    dataChannel.send(evt.target.result);
-  }
-};
-
-var blob = file.slice(start, stop);
-reader.readAsBinaryString(blob);
-</pre>
 
 <p>Once the file is fully transferred to the other side, it can be downloaded using an anchor tag:</p>
 
