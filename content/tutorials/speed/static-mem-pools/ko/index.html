@@ -88,9 +88,9 @@ article.tutorial .notice.fact:before {
   <a href="https://en.wikipedia.org/wiki/Supercomputer">고성능(High performance)</a> 애플리케이션이 되기 위해서는 부드러운 사용자 경험을 보장하는 일관성 있는 성능을 유지해야 합니다. 임의의 시간에, 임의의 시간 동안 동작할 수 있는 가비지 콜렉터 시스템은 애플리케이션이 성능 목표를 달성하기 위해 필요한 시간을 차지해버림으로써 일관성 있는 성능 유지를 방해합니다.
 </p>
 
-<h3 id="toc-churn-taxes">메모리 회전율을 낮춰서 가비지 콜렉션 비용 줄이기(Reduce Memory Churn, Reduce Garbage Collection taxes)</h3>
+<h3 id="toc-churn-taxes">메모리 변동을 줄여서 가비지 콜렉션 비용 줄이기(Reduce Memory Churn, Reduce Garbage Collection taxes)</h3>
 <p>
-    언급한 바와 같이, 경험적으로 판단한 결과 충분한 비활성 객체가 있어서 펄스가 더 유리하다고 보이면 GC 펄스가 발생합니다. 따라서, 지나친 객체 생성/제거를 할 수 있는 한 막는 것이 가비지 콜렉터가 애플리케이션을 차지하는 시간을 줄이는 핵심입니다. 이러한 객체 생성/제거 과정을 "메모리 회전율(memory churn)"이라고 합니다. 애플리케이션이 동작하는 동안에 발생하는 메모리 회전율(memory churn)을 낮출 수 있다면, 전체 실행 시간 중 GC가 차지하는 비율을 줄일 수 있습니다. 생성하고 파괴하는 객체의 수를 줄인다는 것은 메모리 할당을 효과적으로 중지하는 것을 뜻합니다.
+    언급한 바와 같이, 경험적으로 판단한 결과 충분한 비활성 객체가 있어서 펄스가 더 유리하다고 보이면 GC 펄스가 발생합니다. 따라서, 지나친 객체 생성/제거를 할 수 있는 한 막는 것이 가비지 콜렉터가 애플리케이션을 차지하는 시간을 줄이는 핵심입니다. 이러한 객체 생성/제거 과정을 "메모리 변동(memory churn)"이라고 합니다. 애플리케이션이 동작하는 동안에 메모리 변동(memory churn) 발생을 줄일 수 있다면, 전체 실행 시간 중 GC가 차지하는 비율을 줄일 수 있습니다. 생성하고 파괴하는 객체의 수를 줄인다는 것은 메모리 할당을 효과적으로 중지하는 것을 뜻합니다.
 
 이렇게 하면 메모리 그래프가 다음과 같은 모습에서,
 </p>
@@ -99,7 +99,7 @@ article.tutorial .notice.fact:before {
 <center><img src="fig3.jpg"  title="Static Memory Javascript" alt="Ahhhh, that's better."></center>
 
 <p>
-    이 모델의 그래프에서 더 이상 <a href="http://en.wikipedia.org/wiki/Sawtooth_wave">톱니</a>와 같은 패턴이 나타나지 않는 것을 볼 수 있습니다. 오히려 초기에 그래프가 급증하고 시간이 지남에 따라 천천히 증가하고 있죠. 메모리 회전율(memory churn) 때문에 성능 문제를 겪고 있다면, 이런 형태의 그래프를 만들고 싶어집니다.
+    이 모델의 그래프에서 더 이상 <a href="http://en.wikipedia.org/wiki/Sawtooth_wave">톱니</a>와 같은 패턴이 나타나지 않는 것을 볼 수 있습니다. 오히려 초기에 그래프가 급증하고 시간이 지남에 따라 천천히 증가하고 있죠. 메모리 변동(memory churn) 때문에 성능 문제를 겪고 있다면, 이런 형태의 그래프를 만들고 싶어집니다.
 </p>
 
 <h2 id="toc-moving-static">정적 메모리 JavaScript를 향해서</h2>
@@ -115,7 +115,7 @@ article.tutorial .notice.fact:before {
 <h3 id="toc-objpool">객체 풀(Object Pools)</h3>
 <p>간단히 말해서, <a href="http://en.wikipedia.org/wiki/Object_pool_pattern">객체 풀링(object pooling)</a>은 사용하지 않는 객체 집함을 유지하는 과정입니다. 이 집합의 객체는 동일한 타입을 갖습니다. 코드 작성을 하다 새로운 객체가 필요하면, <a href="https://en.wikipedia.org/wiki/Memory_management">메모리 힙(Memory Heap)</a>에 할당하는 대신에, 풀에 있는 사용하지 않는 객체 중 하나를 재사용합니다. 객체를 사용하는 외부 코드의 수행이 끝나면, 메인 메모리에서 객체를 해제하지 않고 객체 풀로 반환합니다. 객체를 코드에서 <a href="http://en.wikipedia.org/wiki/Reference_(computer_science)">역참조(dereferenced)</a>(일명 삭제)하지 않기 때문에 객체는 가비지 콜렉팅이 대상이 아닙니다. 객체 풀을 활용하면 프로그래머가 메모리를 제어할 수 있어, 가비지 콜렉터가 성능에 미치는 영향을 줄일 수 있습니다.</b></p>
 <blockquote class="commentary talkinghead" id="how-works">
-    객체 풀은 시스템에 발생하는 메모리 회전율(memory churn)을 줄이기 위해서 많은 고성능 애플리케이션이 일반적으로 사용하는 방법입니다. 객체 풀 자체는 두가지 주요한 특징을 가지고 있습니다.
+    객체 풀은 시스템에 발생하는 메모리 변동(memory churn)을 줄이기 위해서 많은 고성능 애플리케이션이 일반적으로 사용하는 방법입니다. 객체 풀 자체는 두가지 주요한 특징을 가지고 있습니다.
     <ol>
 <li> 살아있는 객체가 증가하는 만큼 풀이 차지하는 메모리 공간도 계속 증가합니다.</li>
 <li> 프레임당 생성/해제하는 객체의 수는 애플리케이션에 필요한 최소치까지 감소합니다.</li>
@@ -123,7 +123,7 @@ article.tutorial .notice.fact:before {
 </blockquote>
 
 <p>
-    애플리케이션이 관리하는 객체의 타입이 다르기 때문에, 객체 풀을 적절하게 사용하려면 애플리케이션 실행 중 높은 회전율(churn)을 겪는 타입별로 객체 풀이 하나씩 필요합니다.
+    애플리케이션이 관리하는 객체의 타입이 다르기 때문에, 객체 풀을 적절하게 사용하려면 애플리케이션 실행 중 잦은 변동(churn)을 겪는 타입별로 객체 풀이 하나씩 필요합니다.
 </p>
 <pre class="prettyprint">
 var newEntity = gEntityObjectPool.allocate();
@@ -165,7 +165,7 @@ function init() {
 <p>
 <blockquote class="commentary talkinghead talkinghead-rm" id="watchiout">
 
-    객체 풀을 모든 애플리케이션에 적용할 수는 없습니다. 심지어 고성능 애플리케이션인 경우도 그렇습니다. 객체 풀과 정적 메모리 방법을 채택하기 전에 다음의 손실을 고려하세요. 초기화 시점의 메모리 할당 주기 때문에 시작 시간이 더 길어집니다. 애플리케이션이 탐욕스럽게 메모리를 차지하고 있기 때문에 적은 메모리가 필요한 경우에도 메모리 사용량이 줄지 않습니다. 풀에 객체를 반환할 때 가끔씩 객체를 정리할 필요가 있는데, 메모리 회전율이 아주 높은(high-memory-churn) 영역에서 이런 일이 발생하면 적지 않은 오버헤드가 발생할 수 있습니다.
+    객체 풀을 모든 애플리케이션에 적용할 수는 없습니다. 심지어 고성능 애플리케이션인 경우도 그렇습니다. 객체 풀과 정적 메모리 방법을 채택하기 전에 다음의 손실을 고려하세요. 초기화 시점의 메모리 할당 주기 때문에 시작 시간이 더 길어집니다. 애플리케이션이 탐욕스럽게 메모리를 차지하고 있기 때문에 적은 메모리가 필요한 경우에도 메모리 사용량이 줄지 않습니다. 풀에 객체를 반환할 때 가끔씩 객체를 정리할 필요가 있는데, 메모리 변동이 아주 높은(high-memory-churn) 영역에서 이런 일이 발생하면 적지 않은 오버헤드가 발생할 수 있습니다.
 
 </blockquote>
 
