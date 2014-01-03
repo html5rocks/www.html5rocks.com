@@ -483,7 +483,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
 기능 탐지는 `document.registerElement()`의 존재 유무를 확인한다.:
     
     function supportsCustomElements() {
-      return 'register' in document;
+      return 'registerElement' in document;
     }
 
     if (supportsCustomElements()) {
