@@ -66,12 +66,12 @@ article.tutorial section {
   background-image: url(/static/images/profiles/75/ericbidelman.75.png);
   background-position: 0px 0px !important;
 }
-blockquote:not(.talkinghead) {
+/*blockquote:not(.talkinghead) {
   background: rgb(238, 238, 238);
   padding: 1px 15px;
   position: relative;
-}
-blockquote:not(.talkinghead):before {
+}*/
+/*blockquote:not(.talkinghead):before {
   content: '“';
   top: -25px;
   left: -15px;
@@ -87,7 +87,7 @@ blockquote:not(.talkinghead):after {
   position: absolute;
   color: rgb(204, 204, 204);
 }
-
+*/
 
 /*
 .tutorial table td,
@@ -145,7 +145,6 @@ blockquote:not(.talkinghead):after {
 {% endblock %}
 
 {% block content %}
-
 <p>{% include "warning.html" %}</p>
 <h2 id="why">왜 imports인가?</h2>
 
@@ -161,10 +160,10 @@ blockquote:not(.talkinghead):after {
 <p><strong>CrazyHacks&#8482;</strong> - 문자열을 내장하고, 마치 코멘트처럼 안보이게 합니다. (예를 들어 <code>&lt;script type="text/html"&gt;</code>). 윽!</p>
 </li>
 </ol>
-<p>아이러니해 보이나요? <strong>웹의 기본 컨텐츠와 HTML 대부분이 동작을 위한 정말 굉장한 노력을 필요로 합니다.</strong> 다행스럽게도 우리를 정상으로 돌려줄 수 있는 <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a>가 여기 있습니다.</p>
+<p>아이러니해 보이나요? <strong>웹의 기본 컨텐츠와 HTML 대부분이 동작을 위한 정말 굉장한 노력을 필요로 합니다.</strong> 다행스럽게도 우리를 정상으로 돌려줄 수 있는 <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a>가 여기 있습니다.</p>
 <h2 id="started">시작하기</h2>
 
-<p><a href="http://www.w3.org/TR/2013/WD-html-imports-20130514/">HTML Imports</a>는 <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">Web Components</a>의 일부로 일컬어지는 HTML 문서를 다른 HTML 문서들에 가져오기 위한 방법입니다. 또한 Import는 CSS, JavaScript 혹은 '.html' 외의 어떠한 것도 가져올 수 있습니다. 다시 말해서 이러한 것이 Import를 <strong>HTML/CSS/JS의 로딩 관련된 환상적인 도구</strong>로 만듭니다.</p>
+<p><a href="http://w3c.github.io/webcomponents/spec/imports/">HTML Imports</a>는 <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a>의 일부로 일컬어지는 HTML 문서를 다른 HTML 문서들에 가져오기 위한 방법입니다. 또한 Import는 CSS, JavaScript 혹은 '.html' 외의 어떠한 것도 가져올 수 있습니다. 다시 말해서 이러한 것이 Import를 <strong>HTML/CSS/JS의 로딩 관련된 환상적인 도구</strong>로 만듭니다.</p>
 <h3 id="basics">기본 사항</h3>
 
 <p>다음과 같이 <code>&lt;link rel="import"&gt;</code>의 선언을 통해 페이지 내에 Import를 포함합니다.</p>
@@ -357,7 +356,8 @@ document.head.appendChild(link);
 <p>import.html</p>
 <pre class="prettyprint"><code>&lt;template&gt;
   &lt;h1&gt;Hello World!&lt;/h1&gt;
-  &lt;img src="world.png"&gt; &lt;!-- 템플릿이 라이브될 때까지 요청되지 않습니다. --&gt;
+  &lt;!-- 이미지는 템플릿이 라이브될 때까지 요청되지 않습니다. --&gt;
+  &lt;img src="world.png"&gt;
   &lt;script&gt;alert("Executed when the template is activated.");&lt;/script&gt;
 &lt;/template&gt;
 </code></pre>
@@ -372,9 +372,9 @@ document.head.appendChild(link);
 
     // import에서 &lt;template&gt;를 복제합니다.
     var template = link.import.querySelector('template');
-    var content = template.content.cloneNode(true)
+    var clone = document.importNode(template.content, true);
 
-    document.querySelector('#container').appendChild(content);
+    document.querySelector('#container').appendChild(clone);
   &lt;/script&gt;
 &lt;/body&gt;
 </code></pre>
@@ -432,8 +432,9 @@ document.head.appendChild(link);
 <h3 id="depssubimports">의존성 및 부-삽입(sub-imports) 관리하기</h3>
 
 <blockquote>
-<p>어이 강아지. 난 네가 imports를 좋아한다고 들었어. 그러니, 나도 너의 import <em>안에</em> import를 포함할께.</p>
+    어이 강아지. 난 네가 imports를 좋아한다고 들었어. 그러니, 나도 너의 import _안에_ import를 포함할께.
 </blockquote>
+
 <h4 id="sub-imports">부-삽입(Sub-imports)</h4>
 
 <p>하나의 import에 다른 것(import)를 포함하는 것은 유용할 수 있습니다. 예를 들어, 다른 컴포넌트를 재사용하거나 확장하고자 할 때 다른 엘리먼트(들)을 삽입하는데 사용할 수 있습니다.</p>
@@ -513,7 +514,7 @@ document.head.appendChild(link);
 <h3 id="perf-concat">Imports 결합하기</h3>
 
 <p>네트워크 요청의 감소는 언제나 중요합니다. 만약 여러분이 많은 최상위 import 링크를 가지고 있다면, 그것들을 하나의 리소스로 결합하고 그 파일을 삽입(import)하는 것을 고려하시기 바랍니다!</p>
-<p><a href="https://github.com/Polymer/vulcanize">Vulcanizer</a>는 <a href="http://www.polymer-project.org/">Polymer</a> 팀이 HTML Import의 세트를 하나의 파일 상에 재귀적으로 평탄화하기 위해 만든 npm 빌드 도구입니다. 웹 컴포넌트의 결합 빌드 과정 순으로 생각해 보시기 바랍니다.</p>
+<p><a href="https://github.com/Polymer/vulcanize">Vulcanize</a>는 <a href="http://www.polymer-project.org/">Polymer</a> 팀이 HTML Import의 세트를 하나의 파일 상에 재귀적으로 평탄화하기 위해 만든 npm 빌드 도구입니다. 웹 컴포넌트의 결합 빌드 과정 순으로 생각해 보시기 바랍니다.</p>
 <h3 id="perf-caching">Imports에 대한 브라우저 캐싱의 지렛대 효과</h3>
 
 <p>많은 사람들이 브라우저의 네트워킹 스택이 몇년동안 잘 튜닝되었다는 것을 잊고 있습니다. Imports(그리고 sub-imports) 역시도 이 로직의 이점을 취하고 있습니다. <code>http://cdn.com/bootstrap.html</code> import는 부-리소스(sub-resource)들을 가지고 있지만 그것들은 캐싱될 것입니다.</p>
@@ -674,7 +675,7 @@ h2.textContent = 'Booyah!';
 <p>하나 이상의 <a href="/tutorials/webcomponents/customelements/">커스텀 엘리먼트(Custom Element)</a> 정의를 <strong>전달</strong>. import는 <a href="/tutorials/webcomponents/customelements/#registering">등록(Register)</a>하고 앱 안에 포함하고자 할 때 사용할 수 잇습니다. 이 사례는 엘리먼트의 인터페이스와 정의를 어떻게 사용하는가와 분리하는 좋은 소프트웨어 패턴입니다.</p>
 </li>
 <li>
-<p><strong>의존성 관리</strong>](#depssubimports) - 자동적으로 리소스의 중복처리가 됩니다.</p>
+<p><a href="#depssubimports"><strong>의존성 관리</strong></a> - 자동적으로 리소스의 중복처리가 됩니다.</p>
 </li>
 <li>
 <p><strong>스크립트 덩어리(Chunk scripts)</strong> - import 전에 대용량의 JS 라이브러리는 실행을 시작하기 위해 그 파일 전체가 순서대로 파싱되어 느립니다. Imports를 사용하면 라이브러리는 chunk A가 파싱되자마자 동작을 시작할 수 있습니다. 더 낮은 지연시간을 보입니다!</p>
