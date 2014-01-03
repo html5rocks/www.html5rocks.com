@@ -31,16 +31,16 @@ HTML은 문서를 구조화 하기 위한 훌륭한 도구를 제공합니다만
     </hangout-module>
 
 <p class="centered">
-  <button><a href="https://html5-demos.appspot.com/static/webcomponents-bdconf/demos/components/hangouts/index.html">데모를 실행해 보세요!</a></button>
+  <button><a href="https://html5-demos.appspot.com/hangouts">데모를 실행해 보세요!</a></button>
 </p>
 
 얼마나 상쾌한가요! 위의 코드의 element들은 전체적으로 의미가 있습니다. **의미가 있으며**, **이해하기 쉬우며**, 그리고 무엇보다도 **유지보수가 가능합니다**. 미래의 저와 여러분은 단지 그것이 선언된 뼈대만을 검사하는 것만으로도 무엇을 하는 코드인지 정확히 알수 있을 것입니다.
 
-<blockquote class="commentary talkinghead singleline">우리를 돕는 custom element가 우리의 유일한 희망입니다!</blockquote>
+<blockquote class="commentary talkinghead">우리를 돕는 custom element가 우리의 유일한 희망입니다!</blockquote>
 
 <h2 id="gettingstarted">시작하기</h2>
 
-[Custom Elements](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html)는 **모든 웹 개발자들이 새로운 타입의 HTML element를 정의 하는 것을 허락합니다.** 이 사양은 [Web Components](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html) 산하 몇몇 새로운 기본 형식 API 중 하나입니다만 이 사양이 가장 중요할 것입니다. Web Components는 Custom Element에 의해 해제된 특성 없이는 존재하지 않습니다.:
+[Custom Elements](http://w3c.github.io/webcomponents/spec/custom/)는 **모든 웹 개발자들이 새로운 타입의 HTML element를 정의 하는 것을 허락합니다.** 이 사양은 [Web Components](http://w3c.github.io/webcomponents/explainer/) 산하 몇몇 새로운 기본 형식 API 중 하나입니다만 이 사양이 가장 중요할 것입니다. Web Components는 Custom Element에 의해 해제된 특성 없이는 존재하지 않습니다.:
 
 1. 새 HTML/DOM elements 정의하기
 2. 다른 elements로부터 확장된 element 만들기
@@ -56,7 +56,7 @@ Custom element는 `document.register()`를 사용하여 만듭니다.:
 
 `document.register()`의 첫번째 인자는 element의 태그 이름입니다. 태그 이름은 **반드시 dash(-)를 포함해야 합니다.** 그래서 예를 들면, `<x-tags>`, `<my-element>`, 그리고 `<my-awesome-app>`은 모두 유효한 이름이며 `<tabs>` 그리고 `<foo_bar>`는 유효하지 않습니다. 이 제한 조건은 parser가 일반 element 들로부터 custom element를 구별할 수 있도록 하며 HTML 에 새 태그가 추가될때 앞으로의 호환성을 보장합니다.
 
-두번째 인자는 element의 `prototype`을 표현하는 (optional) object 입니다. 이것은 element에 사용자 지정 기능 (예를 들어 공용 속성 및 메서드들)을 추가할 수 있습니다. [<a href="#publicapi">]그 이상의 기능은 아래에 설명합니다.](#publicapi)
+두번째 인자는 element의 `prototype`을 표현하는 (optional) object 입니다. 이것은 element에 사용자 지정 기능 (예를 들어 공용 속성 및 메서드들)을 추가할 수 있습니다. [그 이상의 기능은 아래에 설명합니다.](#publicapi)
 
 기본적으로 custom element는 `HTMLElement`에서 상속됩니다. 따라서 앞의 예제는 다음의 예제와 동일하게 동작합니다.:
 
@@ -89,8 +89,11 @@ Custom element는 `document.register()`를 사용하여 만듭니다.:
 
 HTML Parser가 표준에 맞지 않는 태그에서 exception을 던지지 않는 이유를 궁금해 한 적이 있습니까? 예를 들면, 만약 우리가 페이지 상에 `<randomtag>`를 선언한다면 완벽히 만족한다. [HTML specification](http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#htmlunknownelement)에 따르면:
 
-> <code>HTMLUnknownElement</code> interface는 현재 specification에 정의 되지 않은 HTML element에서 사용되기 위해 제공된다.
-
+<blockquote>
+    <code>HTMLUnknownElement</code> interface는 현재 specification에 정의 되지 않은 HTML element에서 사용되기 위해 제공된다.
+    <cite>HTML spec</cite>
+</blockquote>
+ 
 `<randomtag>` 미안! `<randomtag>`는 비표준이며 `HTMLUnknownElement`로부터 상속된다.
 
 custom elements의 같음 비교는 true가 아닌 결과를 줍니다. **유효한 custom element이름을 갖는 element는 `HTMLElement`로부터 상속받는다.** 여러분은 콘솔에서 이 사실을 확인할 수 있습니다:  <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">J</span> (또는 Mac에서는  <span class="kbd">Cmd</span>+<span class="kbd">Opt</span>+<span class="kbd">J</span>) 실행된 콘솔에 다음 코드 라인들을 붙여보면 다음 코드 라인들의 return이 `true`인 것을 확인 할 수 있습니다.:
@@ -101,7 +104,7 @@ custom elements의 같음 비교는 true가 아닌 결과를 줍니다. **유효
     // "x-tabs"는 유효한 custom element 이름입니다.
     document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 
-<p class="notice"><b>Note:</b> <code>&lt;x-tabs></code> 은 <code>document.register()</code>를 지원하지 않는 브라우저에서는 여전히 <code>HTMLUnknownElement</code> 이다.</p>
+<p class="notice fact"><code>&lt;x-tabs></code> 은 <code>document.register()</code>를 지원하지 않는 브라우저에서는 여전히 <code>HTMLUnknownElement</code> 이다.</p>
 
 <h4 id="unresolvedels">Unresolved elements</h4>
 
@@ -310,10 +313,10 @@ Shadow DOM으로부터 element를 만드는 것은 기본 markup를 렌더링 �
   <x-foo-shadowdom></x-foo-shadowdom>
 </div>
 
-element의 `.innerHTML`를 설정하는 것 대신에 저는 `<x-foo-shadowdom>`를 위한 Shadow Root를 만들고 markup으로 채웠습니다. DevTools에 있는 "Show Shadow DOM" 설정을 활성화 하면 여러분은 확장 가능한 `#document-fragment`를 볼 수 있습니다.:
+element의 `.innerHTML`를 설정하는 것 대신에 저는 `<x-foo-shadowdom>`를 위한 Shadow Root를 만들고 markup으로 채웠습니다. DevTools에 있는 "Show Shadow DOM" 설정을 활성화 하면 여러분은 확장 가능한 `#shadow-root`를 볼 수 있습니다.:
 
     ▾<x-foo-shadowdom>
-       ▾#document-fragment
+       ▾#shadow-root
          <b>I'm in the element's Shadow DOM!</b>
      </x-foo-shadowdom>
 
@@ -321,7 +324,7 @@ element의 `.innerHTML`를 설정하는 것 대신에 저는 `<x-foo-shadowdom>`
 
 <h3 id="fromtemplate">template으로부터 element 만들기</h3>
 
-[HTML Templates](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html)는 custom element의 세계에서도 잘 맞는 또다른 새로운 API 기본 요소 입니다.
+[HTML Templates](http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element)는 custom element의 세계에서도 잘 맞는 또다른 새로운 API 기본 요소 입니다.
 
 익숙하지 않은 경우에 [`<template>` element](/tutorials/webcomponents/template/)는 페이지 로드시에 파싱되어 활성되지 않은 상태로 runtime에 인스턴스화 할 수 있는 DOM 조각들을 선언할 수 있도록 합니다. 그들은 custom element의 선언을 위한 이상적인 placeholder 입니다.
 
@@ -339,7 +342,8 @@ element의 `.innerHTML`를 설정하는 것 대신에 저는 `<x-foo-shadowdom>`
       createdCallback: {
         value: function() {
           var t = document.querySelector('#sdtemplate');
-          this.createShadowRoot().appendChild(t.content.cloneNode(true));
+          var clone = document.importNode(t.content, true);
+          this.createShadowRoot().appendChild(clone);
         }
       }
     });
@@ -464,7 +468,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
     <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
 
 <div class="demoarea">
-  <panel>I'm black because :unresolved doesn't apply to "panel". It isn't a valid name.</panel>
+  <panel>I'm black because :unresolved doesn't apply to "panel". It's not a valid custom element name</panel>
   <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
   <p><button id="register-x-panel">Register &lt;x-panel></button></p>
 </div>
@@ -559,7 +563,8 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
     createdCallback: {
       value: function() {
         var t = document.querySelector('#sdtemplate');
-        this.createShadowRoot().appendChild(t.content.cloneNode(true));
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
       }
     }
   });
