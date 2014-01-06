@@ -103,7 +103,7 @@ article.tutorial .notice.tip:before {
 .demoarea:before {
   content: 'Live demo:';
   position: absolute;
-  top: -20px;
+  top: -30px;
   left: 0;
   font-weight: bold;
   text-transform: uppercase;
@@ -168,7 +168,7 @@ x-panel {
 {% endblock %}
 
 {% block iscompatible %}
-  return 'register' in document;
+  return 'registerElement' in document;
 {% endblock %}
 
 {% block html5badge %}
@@ -177,6 +177,12 @@ x-panel {
 
 {% block share_image %}
 <!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https://github.com/ShinHyunjin">신현진 (Hyunjin Shin)</a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -209,15 +215,15 @@ x-panel {
 &lt;/hangout-module&gt;
 </code></pre>
 <p class="centered">
-  <button><a href="https://html5-demos.appspot.com/static/webcomponents-bdconf/demos/components/hangouts/index.html">데모를 실행해 보세요!</a></button>
+  <button><a href="https://html5-demos.appspot.com/hangouts">데모를 실행해 보세요!</a></button>
 </p>
 
 <p>얼마나 상쾌한가요! 위의 코드의 element들은 전체적으로 의미가 있습니다. <strong>의미가 있으며</strong>, <strong>이해하기 쉬우며</strong>, 그리고 무엇보다도 <strong>유지보수가 가능합니다</strong>. 미래의 저와 여러분은 단지 그것이 선언된 뼈대만을 검사하는 것만으로도 무엇을 하는 코드인지 정확히 알수 있을 것입니다.</p>
-<blockquote class="commentary talkinghead singleline">우리를 돕는 custom element가 우리의 유일한 희망입니다!</blockquote>
+<blockquote class="commentary talkinghead">우리를 돕는 custom element가 우리의 유일한 희망입니다!</blockquote>
 
 <h2 id="gettingstarted">시작하기</h2>
 
-<p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html">Custom Elements</a>는 <strong>모든 웹 개발자들이 새로운 타입의 HTML element를 정의 하는 것을 허락합니다.</strong> 이 사양은 Web Components 산하 몇몇 새로운 기본 형식 API 중 하나입니다만 이 사양이 가장 중요할 것입니다. Web Components는 Custom Element에 의해 해제된 특성 없이는 존재하지 않습니다.:</p>
+<p><a href="http://w3c.github.io/webcomponents/spec/custom/">Custom Elements</a>는 <strong>모든 웹 개발자들이 새로운 타입의 HTML element를 정의 하는 것을 허락합니다.</strong> 이 사양은 <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> 산하 몇몇 새로운 기본 형식 API 중 하나입니다만 이 사양이 가장 중요할 것입니다. Web Components는 Custom Element에 의해 해제된 특성 없이는 존재하지 않습니다.:</p>
 <ol>
 <li>새 HTML/DOM elements 정의하기</li>
 <li>다른 elements로부터 확장된 element 만들기</li>
@@ -226,28 +232,28 @@ x-panel {
 </ol>
 <h3 id="registering">새 elements 등록하기</h3>
 
-<p>Custom element는 <code>document.register()</code>를 사용하여 만듭니다.:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo');
+<p>Custom element는 <code>document.registerElement()</code>를 사용하여 만듭니다.:</p>
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo');
 document.body.appendChild(new XFoo());
 </code></pre>
-<p><code>document.register()</code>의 첫번째 인자는 element의 태그 이름입니다. 태그 이름은 <strong>반드시 dash(-)를 포함해야 합니다.</strong> 그래서 예를 들면, <code>&lt;x-tags&gt;</code>, <code>&lt;my-element&gt;</code>, 그리고 <code>&lt;my-awesome-app&gt;</code>은 모두 유효한 이름이며 <code>&lt;tabs&gt;</code> 그리고 <code>&lt;foo_bar&gt;</code>는 유효하지 않습니다. 이 제한 조건은 parser가 일반 element 들로부터 custom element를 구별할 수 있도록 하며 HTML 에 새 태그가 추가될때 앞으로의 호환성을 보장합니다.</p>
+<p><code>document.registerElement()</code>의 첫번째 인자는 element의 태그 이름입니다. 태그 이름은 <strong>반드시 dash(-)를 포함해야 합니다.</strong> 그래서 예를 들면, <code>&lt;x-tags&gt;</code>, <code>&lt;my-element&gt;</code>, 그리고 <code>&lt;my-awesome-app&gt;</code>은 모두 유효한 이름이며 <code>&lt;tabs&gt;</code> 그리고 <code>&lt;foo_bar&gt;</code>는 유효하지 않습니다. 이 제한 조건은 parser가 일반 element 들로부터 custom element를 구별할 수 있도록 하며 HTML 에 새 태그가 추가될때 앞으로의 호환성을 보장합니다.</p>
 
 <p>
   두번째 인자는 element의 prototype을 표현하는 (optional) object 입니다. 이것은 element에 사용자 지정 기능 (예를 들어 공용 속성 및 메서드들)을 추가할 수 있습니다. <a href="#publicapi">그 이상의 기능은 아래에 설명합니다.</a></p>
 <p>기본적으로 custom element는 <code>HTMLElement</code>에서 상속됩니다. 따라서 앞의 예제는 다음의 예제와 동일하게 동작합니다.:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo', {
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
   prototype: Object.create(HTMLElement.prototype)
 });
 </code></pre>
-<p><code>document.register('x-foo')</code> 를 호출하는 것은 새 element에 대해 브라우저에 알려주며 <code>&lt;x-foo&gt;</code> 인스턴스를 만드는 데 사용할 수 있는 생성자를 반환합니다. 생성자를 사용하지 않으려는 경우 <a href="#instantiating">element를 인스턴스화 하는 다른 기술</a>을 사용할 수도 있습니다.</p>
+<p><code>document.registerElement('x-foo')</code> 를 호출하는 것은 새 element에 대해 브라우저에 알려주며 <code>&lt;x-foo&gt;</code> 인스턴스를 만드는 데 사용할 수 있는 생성자를 반환합니다. 생성자를 사용하지 않으려는 경우 <a href="#instantiating">element를 인스턴스화 하는 다른 기술</a>을 사용할 수도 있습니다.</p>
 <p class="notice tip">
-  생성자가 전역 <code>window</code> 객체 끝에 위치하는 것을 원하지 않는다면 namespace 안에 넣거나(<code>var myapp = {}; myapp.XFoo = document.register('x-foo');</code>) 특정 영역에 놓습니다.</p>
+  생성자가 전역 <code>window</code> 객체 끝에 위치하는 것을 원하지 않는다면 namespace 안에 넣거나(<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) 특정 영역에 놓습니다.</p>
 
 <h3 id="extending">native element의 확장</h3>
 
 <p>
   여러분은 일반적인 Joe&#8482; <code>&lt;button&gt;</code>에 만족하지 못합니다. 여러분은 그 기능을 "Mega Button"으로 확장하고 싶습니다. <code>&lt;button&gt;</code> element를 확장하기 위해서는 <code>HTMLButtonElement</code> 의 <code>prototype</code>으로부터 상속받는 새로운 element를 만들어야 합니다.:</p>
-<pre class="prettyprint"><code>var MegaButton = document.register('mega-button', {
+<pre class="prettyprint"><code>var MegaButton = document.registerElement('mega-button', {
   prototype: Object.create(HTMLButtonElement.prototype)
 });
 </code></pre>
@@ -276,12 +282,12 @@ document.createElement('tabs').__proto__ === HTMLUnknownElement.prototype
 // "x-tabs"는 유효한 custom element 이름입니다.
 document.createElement('x-tabs').__proto__ == HTMLElement.prototype
 </code></pre>
-<p class="notice"><b>Note:</b> <code>&lt;x-tabs></code> 은 <code>document.register()</code>를 지원하지 않는 브라우저에서는 여전히 <code>HTMLUnknownElement</code> 이다.</p>
+<p class="notice fact"><code>&lt;x-tabs></code> 은 <code>document.registerElement()</code>를 지원하지 않는 브라우저에서는 여전히 <code>HTMLUnknownElement</code> 이다.</p>
 
 <h4 id="unresolvedels">Unresolved elements</h4>
 
 <p>
-  custom element는 <code>document.register()</code> 스크립트 사용으로 등록되기 때문에 <strong>그들의 정의가 브라우저에 등록되기 <em>전엔</em> 선언되거나 만들어 질 수 없다. </strong> 예를 들면, 여러분은 <code>&lt;x-tabs&gt;</code> 을 페이지 상에 선언할 수 있지만 <code>document.register('x-tabs')</code>  호출 이후 훨씬 나중에 종료할 수 있다.</p>
+  custom element는 <code>document.registerElement()</code> 스크립트 사용으로 등록되기 때문에 <strong>그들의 정의가 브라우저에 등록되기 <em>전엔</em> 선언되거나 만들어 질 수 없다. </strong> 예를 들면, 여러분은 <code>&lt;x-tabs&gt;</code> 을 페이지 상에 선언할 수 있지만 <code>document.registerElement('x-tabs')</code>  호출 이후 훨씬 나중에 종료할 수 있다.</p>
 
 <p>
   elements가 그들의 정의로 업그레이드 되기 전에 그들은 <strong>unresolved elements</strong>으로 불립니다. 이것들은 유효한 custom element 이름을 갖지만 등록되지 않은 HTML elements입니다.</p>
@@ -342,7 +348,7 @@ document.body.appendChild(xFoo);
 document.body.appendChild(megaButton);
 </code></pre>
 <p>
-  지금까지, 우리는 새로운 태그를 브라우저에게 알려주는 <code>document.register()</code> 사용법을 배웠습니다. 그러나 그것은 많이 사용되지 않습니다. 프로퍼티 및 메서드를 추가해 보겠습니다.</p>
+  지금까지, 우리는 새로운 태그를 브라우저에게 알려주는 <code>document.registerElement()</code> 사용법을 배웠습니다. 그러나 그것은 많이 사용되지 않습니다. 프로퍼티 및 메서드를 추가해 보겠습니다.</p>
 <h2 id="publicapi">JS 프로퍼티 및 메서드 추가</h2>
 
 <p>
@@ -360,7 +366,7 @@ XFooProto.foo = function() {
 Object.defineProperty(XFooProto, "bar", {value: 5});
 
 // 3. x-foo의 정의를 등록하기.
-var XFoo = document.register('x-foo', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo', {prototype: XFooProto});
 
 // 4. x-foo 인스턴스화.
 var xfoo = document.createElement('x-foo');
@@ -370,7 +376,7 @@ document.body.appendChild(xfoo);
 </code></pre>
 <p>
   물론 <code>prototype</code>을 구성하는 방법으로 무수한 수천가지 방법이 있습니다. 이와 같이 prototype들을 생성하는 것을 좋아하지 않는면 아래에 같은 일을 더 압축적으로 수행하는 버전이 있습니다.:</p>
-<pre class="prettyprint"><code>var XFoo = document.register('x-foo', {
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
   prototype: Object.create(HTMLElement.prototype, {
     bar: {
       get: function() { return 5; }
@@ -402,11 +408,11 @@ document.body.appendChild(xfoo);
       <td>element의 인스턴스가 생성되었을 때</td>
     </tr>
     <tr>
-      <td>enteredViewCallback</td>
+      <td>attachedCallback</td>
       <td>document에 인스턴스가 삽입되었을 때</td>
     </tr>
     <tr>
-      <td>leftViewCallback</td>
+      <td>detachedCallback</td>
       <td>document에서 인스턴스가 삭제되었을 때</td>
     </tr>
     <tr>
@@ -416,16 +422,16 @@ document.body.appendChild(xfoo);
   </tbody>
 </table>
 
-<p><strong>예:</strong> <code>&lt;x-foo&gt;</code>에 <code>createdCallback()</code> 과 <code>enteredViewCallback()</code> 정의하기:</p>
+<p><strong>예:</strong> <code>&lt;x-foo&gt;</code>에 <code>createdCallback()</code> 과 <code>attachedCallback()</code> 정의하기:</p>
 <pre class="prettyprint"><code>var proto = Object.create(HTMLElement.prototype);
 
 proto.createdCallback = function() {...};
-proto.enteredViewCallback = function() {...};
+proto.attachedCallback = function() {...};
 
-var XFoo = document.register('x-foo', {prototype: proto});
+var XFoo = document.registerElement('x-foo', {prototype: proto});
 </code></pre>
 <p>
-  모든 lifecycle callbacks는 optional입니다만 그것이 의미를 갖거나 필요한 때에 정의 됩니다. 예를 들면, 여러분의 element가 충분히 복잡하거나 <code>leftViewCallback()</code>에서 IndexedDB에 연결을 여는 경우 입니다. DOM으로부터 제거되기 전에 <code>leftViewCallback()</code>에서 필요한 정리작업을 합니다. <strong>Note:</strong> 여러분은 사용자가 탭을 닫을 경우, 예를 들어, 이에 의존하지만 이것을 가능한 최적화된 훅으로 생각해서는 안됩니다.</p>
+  모든 lifecycle callbacks는 optional입니다만 그것이 의미를 갖거나 필요한 때에 정의 됩니다. 예를 들면, 여러분의 element가 충분히 복잡하거나 <code>leftViewCallback()</code>에서 IndexedDB에 연결을 여는 경우 입니다. DOM으로부터 제거되기 전에 <code>detachedCallback()</code>에서 필요한 정리작업을 합니다. <strong>Note:</strong> 여러분은 사용자가 탭을 닫을 경우, 예를 들어, 이에 의존하지만 이것을 가능한 최적화된 훅으로 생각해서는 안됩니다.</p>
 <p>
   lifecycle callbacks의 또 다른 사용 예는 element에 기본 이벤트 리스너를 생성하는 경우입니다:</p>
 <pre class="prettyprint"><code>proto.createdCallback = function() {
@@ -449,7 +455,7 @@ XFooProto.createdCallback = function() {
   this.innerHTML = "&lt;b&gt;I'm an x-foo-with-markup!&lt;/b&gt;";
 };
 
-var XFoo = document.register('x-foo-with-markup', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
 </code></pre>
 <div class="demoarea">
   <x-foo-with-markup></x-foo-with-markup>
@@ -485,16 +491,16 @@ XFooProto.createdCallback = function() {
   shadow.innerHTML = "&lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;";
 };
 
-var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
+var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
 </code></pre>
 <div class="demoarea">
   <x-foo-shadowdom></x-foo-shadowdom>
 </div>
 
 <p>
-  element의 <code>.innerHTML</code>를 설정하는 것 대신에 저는 <code>&lt;x-foo-shadowdom&gt;</code>를 위한 Shadow Root를 만들고 markup으로 채웠습니다. DevTools에 있는 "Show Shadow DOM" 설정을 활성화 하면 여러분은 확장 가능한 <code>#document-fragment</code>를 볼 수 있습니다.:</p>
+  element의 <code>.innerHTML</code>를 설정하는 것 대신에 저는 <code>&lt;x-foo-shadowdom&gt;</code>를 위한 Shadow Root를 만들고 markup으로 채웠습니다. DevTools에 있는 "Show Shadow DOM" 설정을 활성화 하면 여러분은 확장 가능한 <code>#shadow-root</code>를 볼 수 있습니다.:</p>
 <pre class="prettyprint"><code>▾&lt;x-foo-shadowdom&gt;
-   ▾#document-fragment
+   ▾#shadow-root
      &lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;
  &lt;/x-foo-shadowdom&gt;
 </code></pre>
@@ -504,9 +510,9 @@ var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
   template으로부터 element 만들기</h3>
 
 <p>
-  <a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">HTML Templates</a>는 custom element의 세계에서도 잘 맞는 또다른 새로운 API 기본 요소 입니다.</p>
+  <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">HTML Templates</a>는 custom element의 세계에서도 잘 맞는 또다른 새로운 API 기본 요소 입니다.</p>
 <p>
-  익숙하지 않은 경우에 <a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> 요소는 페이지 로드시에 파싱되어 활성되지 않은 상태로 runtime에 인스턴스화 할 수 있는 DOM 조각들을 선언할 수 있도록 합니다. 그들은 custom element의 선언을 위한 이상적인 placeholder 입니다.</p>
+  익숙하지 않은 경우에 <a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> 요소</a>는 페이지 로드시에 파싱되어 활성되지 않은 상태로 runtime에 인스턴스화 할 수 있는 DOM 조각들을 선언할 수 있도록 합니다. 그들은 custom element의 선언을 위한 이상적인 placeholder 입니다.</p>
 <p><strong>예:</strong> 
   <code>&lt;template&gt;</code>과 Shadow DOM으로부터 생성된 element를 등록하기:</p>
 <pre class="prettyprint"><code>&lt;template id="sdtemplate"&gt;
@@ -521,11 +527,12 @@ var proto = Object.create(HTMLElement.prototype, {
   createdCallback: {
     value: function() {
       var t = document.querySelector('#sdtemplate');
-      this.createShadowRoot().appendChild(t.content.cloneNode(true));
+      var clone = document.importNode(t.content, true);
+      this.createShadowRoot().appendChild(clone);
     }
   }
 });
-document.register('x-foo-from-template', {prototype: proto});
+document.registerElement('x-foo-from-template', {prototype: proto});
 &lt;/script&gt;
 </code></pre>
 <p><template id="sdtemplate">
@@ -667,9 +674,9 @@ document.register('x-foo-from-template', {prototype: proto});
   기능 탐지 </h3>
 
 <p>
-  기능 탐지는 <code>document.register()</code>의 존재 유무를 확인한다.:</p>
+  기능 탐지는 <code>document.registerElement()</code>의 존재 유무를 확인한다.:</p>
 <pre class="prettyprint"><code>function supportsCustomElements() {
-  return 'register' in document;
+  return 'registerElement' in document;
 }
 
 if (supportsCustomElements()) {
@@ -681,7 +688,7 @@ if (supportsCustomElements()) {
 <h3 id="support">브라우저 지원</h3>
 
 <p>
-  <code>document.register()</code>는 Chrome 27, Firefox ~23에서 처음 지원되었습니다. 그러나 스펙에 포함된 것은 최근 입니다. Chrome 31은 갱신된 스펙을 지원하는 최초 버전입니다.</p>
+  <code>document.registerElement()</code>는 Chrome 27, Firefox ~23에서 처음 지원되었습니다. 그러나 스펙에 포함된 것은 최근 입니다. Chrome 31은 갱신된 스펙을 지원하는 최초 버전입니다.</p>
 <p class="notice fact">
   custom element는 Chrome 31 에서 "실험 웹 플랫폼 기능"으로 about:flags에 활성화 할 수 있었습니다.</p>
 
@@ -702,7 +709,7 @@ if (supportsCustomElements()) {
 <p>
   불행하게도 <a href="#upgrades">upgrade process</a>의 너무 많은 타이밍 이슈, corner cases 그리고 그것을 모두 해결하는 아마겟돈과 같은 시나리오들이 있었습니다. <code>&lt;element&gt;</code> 는 보류 되었습니다. 2013년 8월에 Dimitri Glazkov는 그것의 제거 발표를 <a href="http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html">public-webapps</a>에 포스팅 하였습니다. (적어도 지금까지는)</p>
 <p>
-  <code>&lt;polymer-element&gt;</code>로 element 등록의 선언적 형태를 구현하는 것은 주목할 만한 가치가 있습니다. 어떻게 사용되나요? 그것은 <code>document.register('polymer-element')</code>와 제가 <a href="#fromtemplate">template으로부터 elements 만들기</a>에 설명한 기술들로 사용합니다.</p>
+  <code>&lt;polymer-element&gt;</code>로 element 등록의 선언적 형태를 구현하는 것은 주목할 만한 가치가 있습니다. 어떻게 사용되나요? 그것은 <code>document.registerElement('polymer-element')</code>와 제가 <a href="#fromtemplate">template으로부터 elements 만들기</a>에 설명한 기술들로 사용합니다.</p>
 <h2 id="conclusion">
   결론</h2>
 
@@ -720,13 +727,13 @@ if ('register' in document) {
         this.innerHTML = "<b>I'm an x-foo-with-markup!</b>";
       };
 
-      var XFoo = document.register('x-foo-with-markup', {prototype: XFooProto});
+      var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
     }
   })();
 
   (function() {
     document.querySelector('#register-x-panel').addEventListener('click', function(e) {
-      var XFoo = document.register('x-panel', {prototype: Object.create(HTMLElement.prototype)});
+      var XFoo = document.registerElement('x-panel', {prototype: Object.create(HTMLElement.prototype)});
       document.querySelector('x-panel').textContent = "x-panel is registered!";
     });
   })();
@@ -744,7 +751,7 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
       shadow.innerHTML = "<b>I'm in the element's Shadow DOM!</b>";
     };
 
-    var XFoo = document.register('x-foo-shadowdom', {prototype: XFooProto});
+    var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
 })();
 
 (function() {
@@ -752,11 +759,12 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
     createdCallback: {
       value: function() {
         var t = document.querySelector('#sdtemplate');
-        this.createShadowRoot().appendChild(t.content.cloneNode(true));
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
       }
     }
   });
-  document.register('x-foo-from-template', {prototype: proto});
+  document.registerElement('x-foo-from-template', {prototype: proto});
 })();
 
 }
