@@ -423,7 +423,7 @@ Shadow DOM 的样式是一个很大的话题！如果你想更多地了解它，
 
 <h3 id="fouc">使用 :unresolved 伪类避免无样式内容闪烁（FOUC）</h3>
 
-为了缓解[无样式内容闪烁](http://en.wikipedia.org/wiki/Flash_of_unstyled_content)的影响，自定义元素规范提出了一个新的 CSS 伪类 `:unresolved`。在浏览器调用你的 `createdCallback()`（见[生命周期回调方法](#lifecycle)一节）之前，这个伪类都可以匹配到[unresolved 元素](#unresolvedels)。一旦产生调用，就意味着元素已经完成提升，成为它被定义的形态，该元素就不再是一个 unresolved 元素了。
+为了缓解[无样式内容闪烁](http://en.wikipedia.org/wiki/Flash_of_unstyled_content)的影响，自定义元素规范提出了一个新的 CSS 伪类 `:unresolved`。在浏览器调用你的 `createdCallback()`（见[生命周期回调方法](#lifecycle)一节）之前，这个伪类都可以匹配到 [unresolved 元素](#unresolvedels)。一旦产生调用，就意味着元素已经完成提升，成为它被定义的形态，该元素就不再是一个 unresolved 元素了。
 
 <p class="notice">Chrome 29 已经原生支持 CSS <code>:unresolved</code> 伪类。</p>
 
