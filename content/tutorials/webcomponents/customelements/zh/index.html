@@ -224,7 +224,6 @@ x-panel {
 <blockquote class="commentary talkinghead">自定义元素，救救我们！就指望你了！</blockquote>
 
 <h2 id="gettingstarted">赶紧开始吧</h2>
-[自定义元素](http://w3c.github.io/webcomponents/spec/custom/)**允许开发者定义新的 HTML 元素类型**。该规范只是 [Web 组件](http://w3c.github.io/webcomponents/explainer/)模块提供的众多新 API 中的一个，但它也很可能是最重要的一个。缺少自定义元素带来的以下特性，Web 组件根本玩不转：
 <p><a href="http://w3c.github.io/webcomponents/spec/custom/">自定义元素</a>
 <strong>允许开发者定义新的 HTML 元素类型</strong>。该规范只是 <a href="http://w3c.github.io/webcomponents/explainer/">Web 组件</a>模块提供的众多新 API 中的一个，但它也很可能是最重要的一个。没有自定义元素带来的以下特性，Web 组件都不会存在：</p>
 <ol>
@@ -241,7 +240,6 @@ document.body.appendChild(new XFoo());
 </code></pre>
 
 <p><code>document.registerElement()</code> 的第一个参数是元素的标签名。这个标签名<strong>必须包括一个连字符（-）</strong>。因此，诸如 <code>&lt;x-tags&gt;</code>、<code>&lt;my-element&gt;</code> 和 <code>&lt;my-awesome-app&gt;</code> 都是合法的标签名，而 <code>&lt;tabs&gt;</code> 和 <code>&lt;foo_bar&gt;</code> 则不是。这个限定使解析器能很容易地区分自定义元素和 HTML 规范定义的元素，同时确保了 HTML 增加新标签时的向前兼容。</p>
-第二个参数是一个（可选的）对象，用于描述该元素的原型。在这里可以为元素添加自定义功能（例如：公开属性和方法）。稍后[详述](#publicapi)。
 <p>第二个参数是一个（可选的）对象，用于描述该元素的 <code>prototype</code>。在这里可以为元素添加自定义功能（例如：公开属性和方法）。稍后<a href="#publicapi">详述</a>。</p>
 <p>自定义元素默认继承自 <code>HTMLElement</code>，因此上一个示例等同于：</p>
 <pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
@@ -475,7 +473,7 @@ var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
 <h3 id="fromtemplate">从模板创建元素</h3>
 
 <p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">HTML 模板</a>是另一组跟自定义元素完美融合的新 API。</p>
-<p><a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> element</a>可用于声明 DOM 片段。它们可以被解析并在页面加载后插入，以及延迟到运行时才进行实例化。模板是声明自定义元素结构的理想方案。</p>
+<p><a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> 元素</a>可用于声明 DOM 片段。它们可以被解析并在页面加载后插入，以及延迟到运行时才进行实例化。模板是声明自定义元素结构的理想方案。</p>
 <p><strong>示例：</strong>注册一个由 <code>&lt;template&gt;</code> 和 Shadow DOM 创建的元素：</p>
 <pre class="prettyprint"><code>&lt;template id="sdtemplate"&gt;
   &lt;style&gt;
@@ -565,7 +563,7 @@ document.registerElement('x-foo-from-template', {prototype: proto});
 </ul>
 <h3 id="fouc">使用 :unresolved 伪类避免无样式内容闪烁（FOUC）</h3>
 
-<p>为了缓解<a href="http://en.wikipedia.org/wiki/Flash_of_unstyled_content">无样式内容闪烁</a>的影响，自定义元素规范提出了一个新的 CSS 伪类 <code>:unresolved</code>。在浏览器调用你的 <code>createdCallback()</code>（见<a href="#lifecycle">生命周期回调方法</a>一节）之前，这个伪类都可以匹配到<a href="#unresolvedels">unresolved 元素</a>。一旦产生调用，就意味着元素已经完成提升，成为它被定义的形态，该元素就不再是一个 unresolved 元素了。</p>
+<p>为了缓解<a href="http://en.wikipedia.org/wiki/Flash_of_unstyled_content">无样式内容闪烁</a>的影响，自定义元素规范提出了一个新的 CSS 伪类 <code>:unresolved</code>。在浏览器调用你的 <code>createdCallback()</code>（见<a href="#lifecycle">生命周期回调方法</a>一节）之前，这个伪类都可以匹配到 <a href="#unresolvedels">unresolved 元素</a>。一旦产生调用，就意味着元素已经完成提升，成为它被定义的形态，该元素就不再是一个 unresolved 元素了。</p>
 
 <p class="notice">Chrome 29 已经原生支持 CSS <code>:unresolved</code> 伪类。</p>
 
