@@ -152,7 +152,7 @@ class Resource(DictModel):
       # Append the updates to the results
       for u in updates:
 
-        #
+        # Prevent bad updates data from causing site errors.
         try:
           publication_date = re.sub(r"\.\d*$", "", u['published'])
           updated_date = re.sub(r"\.\d*$", "", u['updated'])
