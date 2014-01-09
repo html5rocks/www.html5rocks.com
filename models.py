@@ -170,7 +170,7 @@ class Resource(DictModel):
             update.update_date = date.fromtimestamp(mktime(updated_time))
 
           results.append(update)
-        except BadValueError, e:
+        except db.BadValueError, e:
           logging.error(str(e))
 
       # Now sort them by date
