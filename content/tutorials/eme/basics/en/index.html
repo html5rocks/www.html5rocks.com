@@ -50,7 +50,7 @@ a[rel='external']
 
 </blockquote>
 
-<p>EME is designed around the concept of <a href="#common-encryption" title="Common Encryption section">Common Encryption</a> to enable the same encrypted files to be played back in any browser &mdash; and the same app to be used in any browser. Proponents argue that without this EME would just be a way to add proprietary streams, without providing interoperability.</p>
+<p>EME is designed to enable the same app and encrypted files to be used in any browser, regardless of the underlying protection system. The former is made possible by the standardized APIs and flow while the latter is made possible by the concept of <a href="#common-encryption" title="Common Encryption section">Common Encryption</a>.</p>
 
 <p>EME is an extension to the <code>HTMLMediaElement</code> specification &mdash; hence the name. Being an 'extension' means that browser support for EME is optional: if a browser does not support encrypted media, it will not be able to play encrypted media, but EME is not required for HTML spec compliance. From <a href="http://www.w3.org/TR/encrypted-media/">the EME spec</a>:</p>
 
@@ -58,9 +58,9 @@ a[rel='external']
 
   <p>This proposal extends HTMLMediaElement providing APIs to control playback of protected content.</p>
 
-  <p>The API supports use cases ranging from simple clear key decryption to high value video (given an appropriate user agent implementation). License/key exchange is controlled by the application, facilitating the development of robust playback applications supporting a range of content decryption and protection technologies.</p>
+  <p>The API supports use cases ranging from simple <a href="#clear-key-encryption" title="Clear Key Encryption">Clear Key</a> decryption to high value video (given an appropriate user agent implementation). License/key exchange is controlled by the application, facilitating the development of robust playback applications supporting a range of content decryption and protection technologies.</p>
 
-  <p>This specification does not define a content protection or Digital Rights Management system. Rather, it defines a common API that may be used to discover, select and interact with such systems as well as with simpler content encryption systems. Implementation of Digital Rights Management is not required for compliance with this specification: only the simple clear key system is required to be implemented as a common baseline.</p>
+  <p>This specification does not define a content protection or Digital Rights Management system. Rather, it defines a common API that may be used to discover, select and interact with such systems as well as with simpler content encryption systems. Implementation of Digital Rights Management is not required for compliance with this specification: only the simple Clear Key system is required to be implemented as a common baseline.</p>
 
   <p>The common API supports a simple set of content encryption capabilities, leaving application functions such as authentication and authorization to page authors. This is achieved by requiring content protection system-specific messaging to be mediated by the page rather than assuming out-of-band communication between the encryption system and a license or other server.</p>
 
@@ -69,10 +69,10 @@ a[rel='external']
 <p>EME implementations use the following external components:</p>
 
 <ul>
-  <li><strong>Key System:</strong> a content protection (DRM) mechanism. EME doesn't define Key Systems themselves, apart from Clear Key (more about that <a href="#clear-key-encryption" title="Clear Key Encryption">below</a>).</li>
-  <li><strong>Content Decryption Module (CDM):</strong> a client-side software or hardware mechanism that enables playback of encrypted media. As with Key Systems, EME doesn't define any CDMs, but provides an interface for applications to interact with CDMs that are available.</li>
-  <li><strong>License (Key) server:</strong> interacts with a CDM to provide keys to decrypt media. Negotiation with the license server is the responsibility of the application.</li>
-  <li><strong>Packaging service:</strong> encodes and encrypts media for distribution/consumption.</li>
+  <li><strong>Key System:</strong> A content protection (DRM) mechanism. EME doesn't define Key Systems themselves, apart from Clear Key (more about that <a href="#clear-key-encryption" title="Clear Key Encryption">below</a>).</li>
+  <li><strong>Content Decryption Module (CDM):</strong> A client-side software or hardware mechanism that enables playback of encrypted media. As with Key Systems, EME doesn't define any CDMs, but provides an interface for applications to interact with CDMs that are available.</li>
+  <li><strong>License (Key) server:</strong> Interacts with a CDM to provide keys to decrypt media. Negotiation with the license server is the responsibility of the application.</li>
+  <li><strong>Packaging service:</strong> Encodes and encrypts media for distribution/consumption.</li>
 </ul>
 
 <p>Note that an application using EME interacts with a license server to get keys to enable decryption, but user identity and authentication are not part of EME. Retrieval of keys to enable media playback happens after (optionally) authenticating a user. Services such as Netflix must authenticate users within their web application: when a user signs into the application, the application determines the user's identity and privileges.</p>
@@ -86,8 +86,7 @@ a[rel='external']
   <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires a <code>needkey</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
   <li>The application handles the <code>needkey</code> event:
     <ol style="list-style-type: lower-alpha; margin: 0">
-      <li>If no <code>MediaKeys</code> object has been created, select an available Key System and license server URL by using <code>MediaKeys.isTypeSupported()</code> to check what Key Systems are available. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
-      <li>If a <code>MediaKeys</code> object has not already been associated with the media element, create one for an available Key System.</li>
+      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>MediaKeys.isTypeSupported()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
@@ -95,7 +94,7 @@ a[rel='external']
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
   <li>The application receives a response from the license server and passes the data to the CDM by using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
-  <li>The CDM decrypts the media using the keys in the license. A valid key from any session within the (attached) <code>MediaKey</code>s may be used. Each key is identified by a Key ID; the CDM will store the key and related data, indexed by key ID.</li>
+  <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. Each key is identified by a Key ID; the CDM will store the key and related data, indexed by key ID.</li>
   <li>Media playback begins.</li>
   </ol>
 
@@ -164,14 +163,14 @@ function selectKeySystem() {
 
 function handleKeyNeeded(event) {
   var video = event.target;
-  if (!video.mediaKeys) { // was video.keys
+  if (!video.mediaKeys) {
     selectKeySystem();
     video.setMediaKeys(new MediaKeys(keySystem));
   }
   if (!video.keys) {
     throw "Could not create MediaKeys";
   }
-  var keySession = video.keys.createSession( event.contentType, event.initData);
+  var keySession = video.keys.createSession(event.contentType, event.initData);
   if (!keySession) {
     throw "Could not create key session";
   }
@@ -261,7 +260,7 @@ function onKeyMessage(e) {
 
 <p>The Media Source API is an extension to HTMLMediaElement enabling more fine-grained control over the source of media, by allowing JavaScript to build streams for playback from 'chunks' of video. This in turn enables techniques such as adaptive streaming and time shifting.</p>
 
-<p>Why is MSE important to EME? Because commercial content providers can only distribute protected content <em>and</em> must be able to adapt content delivery to network conditions and other requirements: <code>src</code> is not enough. Netflix, for example, dynamically changes stream bitrate as network conditions change. EME works with playback of media streams provided by an MSE implementation, just as it would with media provided via a <code>src</code> attribute.</p>
+<p>Why is MSE important to EME? Because in addition to distributing protected content, commercial content providers must be able to adapt content delivery to network conditions and other requirements. Netflix, for example, dynamically changes stream bitrate as network conditions change. EME works with playback of media streams provided by an MSE implementation, just as it would with media provided via a <code>src</code> attribute.</p>
 
 <p>How to chunk and play back media encoded at different bitrates? See the <a href="#related-technology-2" title="Dynamic Adaptive Streaming over HTTP">DASH section below</a>.</p>
 
@@ -367,30 +366,30 @@ type="static"&gt;
 <h3 id="specs-and-standards">Specs &amp; standards</h3>
 
 <ul>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html">EME spec</a>: latest Editor's Draft</li>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as currently implemented by Chrome</li>
-  <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">Common Encryption (CENC)</a></li>
-  <li><a href="http://www.w3.org/TR/media-source/">Media Source Extensions</a></li>
-  <li><a href="http://standards.iso.org/ittf/licence.html">DASH standard</a> (yes, it's a PDF)</li>
-  <li><a href="http://dashif.org/mpeg-dash/" title="Overview of MPEG-DASH Standard from DASH Industry Forum">Overview of the DASH standard</a></li>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: latest Editor's Draft</li>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as currently implemented by Chrome</li>
+  <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397" target="_blank">Common Encryption (CENC)</a></li>
+  <li><a href="http://www.w3.org/TR/media-source/" target="_blank">Media Source Extensions</a></li>
+  <li><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c057623_ISO_IEC_23009-1_2012.zip" target="_blank">DASH standard</a> (yes, it's a PDF)</li>
+  <li><a href="http://dashif.org/mpeg-dash/" title="Overview of MPEG-DASH Standard from DASH Industry Forum" target="_blank">Overview of the DASH standard</a></li>
 </ul>
 
 <h3 id="articles">Articles</h3>
 <ul>
-  <li><a href="http://updates.html5rocks.com/2011/11/Stream-video-using-the-MediaSource-API">HTML5 Rocks Media Source Extensions article</a></li>
-  <li><a href="http://vimeo.com/62269279">DTG Webinar</a> (partially obsolete)</li>
-  <li><a href="https://hsivonen.fi/eme/" title="Article by member of HTML Working Group of the W3C">What is EME?</a>, by Henri Sivonen</li>
-  <li>MPEG-DASH Test Streams: <a href="http://bbc.co.uk/rd/blog/2013/09/mpeg-dash-test-streams">BBC R&amp;D blog post</a></li>
+  <li><a href="http://updates.html5rocks.com/2011/11/Stream-video-using-the-MediaSource-API" target="_blank">HTML5 Rocks Media Source Extensions article</a></li>
+  <li><a href="http://vimeo.com/62269279" target="_blank">DTG Webinar</a> (partially obsolete)</li>
+  <li><a href="https://hsivonen.fi/eme/" title="Article by member of HTML Working Group of the W3C" target="_blank">What is EME?</a>, by Henri Sivonen</li>
+  <li>MPEG-DASH Test Streams: <a href="http://bbc.co.uk/rd/blog/2013/09/mpeg-dash-test-streams" target="_blank">BBC R&amp;D blog post</a></li>
 </ul>
 
 <h2 id="demos">Demos</h2>
 
-<p><a href="http://simpl.info/clearkey" title="Clear Key encryption demo">Clear Key encryption</a></p>
+<p><a href="http://simpl.info/clearkey" title="Clear Key encryption demo" target="_blank">Clear Key encryption</a></p>
 
-<p><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive">WebM adaptive encrypted video</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">repo</a>)</p>
+<p><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive" target="_blank">WebM adaptive encrypted video</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">repo</a>)</p>
 
-<p><a href="http://dash-mse-test.appspot.com/">YouTube MPEG-DASH / Media Source demo</a></p>
+<p><a href="http://dash-mse-test.appspot.com/" target="_blank">YouTube MPEG-DASH / Media Source demo</a></p>
 
-<p><a href="http://html5-demos.appspot.com/static/media-source.html">Media Source Extensions (MSE) demo</a></p>
+<p><a href="http://html5-demos.appspot.com/static/media-source.html" target="_blank">Media Source Extensions (MSE) demo</a></p>
 
 {% endblock %}
