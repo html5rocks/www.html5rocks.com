@@ -44,11 +44,13 @@ a[rel='external']
 
 <blockquote>
 
-  <p>This article is about the EME API and how to use it. For those interested in the politics of EME, we've summarised arguments pro and con in <a href="https://docs.google.com/document/d/1EV1O26wP3y3OkPLBDcJdrbU9S-x5lyjBZ2jRITcTCfM">this document</a>.</p>
+  <p>This article is about the EME API and how to use it. For those interested in the politics of EME, we've summarized arguments pro and con in <a href="https://docs.google.com/document/d/1EV1O26wP3y3OkPLBDcJdrbU9S-x5lyjBZ2jRITcTCfM" target="_blank">this document</a>.</p>
 
-  <p>For a general introduction to digital media, take a look at Monty Montgomery's <a href="http://xiph.org/video/vid1.shtml">Digital Media Primer for Geeks</a>.</p>
+  <p>For a general introduction to digital media, take a look at Monty Montgomery's <a href="http://xiph.org/video/vid1.shtml" target="_blank">Digital Media Primer for Geeks</a>.</p>
 
 </blockquote>
+
+<p>EME is designed around the concept of <a href="#common-encryption" title="Common Encryption section">Common Encryption</a> to enable the same encrypted files to be played back in any browser &mdash; and the same app to be used in any browser. Proponents argue that without this EME would just be a way to add proprietary streams, without providing interoperability.</p>
 
 <p>EME is an extension to the <code>HTMLMediaElement</code> specification &mdash; hence the name. Being an 'extension' means that browser support for EME is optional: if a browser does not support encrypted media, it will not be able to play encrypted media, but EME is not required for HTML spec compliance. From <a href="http://www.w3.org/TR/encrypted-media/">the EME spec</a>:</p>
 
@@ -68,9 +70,9 @@ a[rel='external']
 
 <ul>
   <li><strong>Key System:</strong> a content protection (DRM) mechanism. EME doesn't define Key Systems themselves, apart from Clear Key (more about that <a href="#clear-key-encryption" title="Clear Key Encryption">below</a>).</li>
-  <li><strong>Content Decryption Module (CDM):</strong> a client-side software or hardware mechanism that enables playback of encrypted media. As for Key Systems, EME doesn't define any CDMs, but provides an interface for applications to interact with CDMs that are available.</li>
+  <li><strong>Content Decryption Module (CDM):</strong> a client-side software or hardware mechanism that enables playback of encrypted media. As with Key Systems, EME doesn't define any CDMs, but provides an interface for applications to interact with CDMs that are available.</li>
   <li><strong>License (Key) server:</strong> interacts with a CDM to provide keys to decrypt media. Negotiation with the license server is the responsibility of the application.</li>
-  <li><strong>Packaging service: </strong>encodes and encrypts media for distribution/consumption.</li>
+  <li><strong>Packaging service:</strong> encodes and encrypts media for distribution/consumption.</li>
 </ul>
 
 <p>Note that an application using EME interacts with a license server to get keys to enable decryption, but user identity and authentication are not part of EME. Retrieval of keys to enable media playback happens after (optionally) authenticating a user. Services such as Netflix must authenticate users within their web application: when a user signs into the application, the application determines the user's identity and privileges.</p>
@@ -81,19 +83,19 @@ a[rel='external']
 
 <ol>
   <li>A web application attempts to play audio or video that has one or more encrypted streams.</li>
-  <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires a <code>needkey</code> event with metadata (<code>InitData</code>) obtained from the media about the encryption.</li>
+  <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires a <code>needkey</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
   <li>The application handles the <code>needkey</code> event:
     <ol style="list-style-type: lower-alpha; margin: 0">
-      <li>Select an available Key System and license server URL by using <code>MediaKeys.isTypeSupported()</code> to check what Key Systems are available.</li>
-      <li>If a <code>MediaKeys</code> object has not already been associated with the media element, create one for an available Key System. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
-      <li>Once the <code>MediaKeys </code>have been created, set them for the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that those keys can be used during playback, i.e. during decoding.</li>
+      <li>If no <code>MediaKeys</code> object has been created, select an available Key System and license server URL by using <code>MediaKeys.isTypeSupported()</code> to check what Key Systems are available. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
+      <li>If a <code>MediaKeys</code> object has not already been associated with the media element, create one for an available Key System.</li>
+      <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
-  <li>The app passes the media data obtained in the <code>needkey</code> handler to a CDM, by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a key.</li>
+  <li>The app passes the media data obtained in the <code>needkey</code> handler to a CDM, by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a license and its key(s).</li>
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
-  <li>The <code>MediaKeySession</code> object handles the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
+  <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
   <li>The application receives a response from the license server and passes the data to the CDM by using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
-  <li>The CDM decrypts the media using the keys in the license.</li>
+  <li>The CDM decrypts the media using the keys in the license. A valid key from any session within the (attached) <code>MediaKey</code>s may be used. Each key is identified by a Key ID; the CDM will store the key and related data, indexed by key ID.</li>
   <li>Media playback begins.</li>
   </ol>
 
@@ -133,7 +135,7 @@ a[rel='external']
 
 <p>How a CDM is made available is not defined by the EME spec, but in all cases the browser is responsible for vetting and exposing the CDM.</p>
 
-<p>EME doesn't mandate a particular Key System; among current desktop and mobile browsers, Chrome supports Widevine, IE11 supports PlayReady.</p>
+<p>EME doesn't mandate a particular Key System; among current desktop and mobile browsers, Chrome supports Widevine and IE11 supports PlayReady.</p>
 
 <h2 id="getting-a-key-from-a-license-server">Getting a key from a license server</h2>
 
@@ -162,14 +164,14 @@ function selectKeySystem() {
 
 function handleKeyNeeded(event) {
   var video = event.target;
-  if (!video.keys) {
+  if (!video.mediaKeys) { // was video.keys
     selectKeySystem();
     video.setMediaKeys(new MediaKeys(keySystem));
   }
   if (!video.keys) {
     throw "Could not create MediaKeys";
   }
-  var keySession = video.keys.createSession(event.type, event.initData);
+  var keySession = video.keys.createSession( event.contentType, event.initData);
   if (!keySession) {
     throw "Could not create key session";
   }
@@ -209,9 +211,9 @@ function licenseRequestReady(event) {
 
 <h2 id="clear-key-encryption">Clear Key encryption</h2>
 
-<p>Although EME does not define DRM functionality, the spec currently mandates that all browsers supporting EME must implement simple Clear Key encryption. Using this system, media can be encrypted with a key (which works like a password) and then played back simply by providing that key. Clear Key can be built into the browser: it does not require the use of a separate decryption module.</p>
+<p>Although EME does not define DRM functionality, the spec currently mandates that all browsers supporting EME must implement simple Clear Key encryption. Using this system, media can be encrypted with a key and then played back simply by providing that key. Clear Key can be built into the browser: it does not require the use of a separate decryption module.</p>
 
-<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple example of Clear Key encryption at <a href="http://simpl.info/clearkey">simpl.info/clearkey</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
+<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/clearkey">simpl.info/clearkey</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">a prefixed version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
 
 <pre class="prettyprint">
 // Define a key: hardcoded in this example – this corresponds to the key used for encryption
@@ -243,7 +245,7 @@ function onKeyMessage(e) {
 }
 </pre>
 
-<p>To test this code, you'd need a Clear-Key-encrypted video to play. Encrypting a video for use with Clear Key can be done for WebM as per the <a href="https://docs.google.com/document/d/17d6_KX5jX0gY1ygYbjqOEdVzuUGkPO53wL8t40dMGeQ/edit?usp=sharing">webm_crypt instructions</a>. Commercial services are also available (for ISO BMFF/MP4 at least) and other solutions are being developed.</p>
+<p>To test this code, you need an encrypted video to play. Encrypting a video for use with Clear Key can be done for WebM as per the <a href="https://docs.google.com/document/d/17d6_KX5jX0gY1ygYbjqOEdVzuUGkPO53wL8t40dMGeQ/edit?usp=sharing">webm_crypt instructions</a>. Commercial services are also available (for ISO BMFF/MP4 at least) and other solutions are being developed.</p>
 
 <div class="h2">Related technology #1:</div>
 
@@ -259,7 +261,7 @@ function onKeyMessage(e) {
 
 <p>The Media Source API is an extension to HTMLMediaElement enabling more fine-grained control over the source of media, by allowing JavaScript to build streams for playback from 'chunks' of video. This in turn enables techniques such as adaptive streaming and time shifting.</p>
 
-<p>Why is MSE important to EME? Because commercial content providers can only distribute protected content, but must also be able to adapt content delivery to network conditions and other requirements: <code>src</code> is not enough. Netflix, for example, dynamically changes stream bitrate as network conditions change. EME works with playback of media streams provided by an MSE implementation, just as it would with media provided via <code>src</code> attribute.</p>
+<p>Why is MSE important to EME? Because commercial content providers can only distribute protected content <em>and</em> must be able to adapt content delivery to network conditions and other requirements: <code>src</code> is not enough. Netflix, for example, dynamically changes stream bitrate as network conditions change. EME works with playback of media streams provided by an MSE implementation, just as it would with media provided via a <code>src</code> attribute.</p>
 
 <p>How to chunk and play back media encoded at different bitrates? See the <a href="#related-technology-2" title="Dynamic Adaptive Streaming over HTTP">DASH section below</a>.</p>
 
@@ -294,7 +296,7 @@ reader.onload = function (e) {
 
 <p>Multi-device, multi-platform, mobile &mdash; whatever you call it, the web is often experienced under conditions of changeable connectivity. Dynamic, adaptive delivery is crucial for coping with bandwidth constraints and variability in the multi-device world.</p>
 
-<p>DASH (aka MPEG-DASH) is designed to enable the best possible media delivery in a flakey world, for both streaming and download. Several other technologies do something similar &mdash; such as Apple's <a href="https://en.wikipedia.org/wiki/HTTP_Live_Streaming">HTTP Live Streaming</a> (HLS) and Microsoft's <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming">Smooth Streaming</a> &mdash; but DASH is the only method of adaptive bitrate streaming via HTTP that is based on an open standard. DASH is already in use by sites such as YouTube.</p>
+<p>DASH (aka MPEG-DASH) is designed to enable the best possible media delivery in a flaky world, for both streaming and download. Several other technologies do something similar &mdash; such as Apple's <a href="https://en.wikipedia.org/wiki/HTTP_Live_Streaming">HTTP Live Streaming</a> (HLS) and Microsoft's <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming">Smooth Streaming</a> &mdash; but DASH is the only method of adaptive bitrate streaming via HTTP that is based on an open standard. DASH is already in use by sites such as YouTube.</p>
 
 <p>What does this have to do with EME and MSE? MSE-based DASH implementations can parse a manifest, download segments of video at an appropriate bitrate, and feed them to a video element when it gets hungry &mdash; using existing HTTP infrastructure.</p>
 
@@ -351,20 +353,13 @@ type="static"&gt;
 
 <p>(This XML is taken from <a href="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">the .mpd file</a> used for the <a href="http://dash-mse-test.appspot.com/dash-player.html?url=http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">YouTube DASH demo player</a>.)</p>
 
-<p>According to the DASH spec, an MPD file could in theory be used as the <code>src</code> for a video like this:</p>
-
-<pre class="prettyprint">
-  &lt;video src='foo.mpd'&gt;&lt;/video&gt;
-</pre>
-
-<p>However, to give more flexibility to web developers, browser vendors have chosen instead to leave DASH support up to JavaScript libraries using MSE such as <a href="http://www-itec.uni-klu.ac.at/dash/?p=792">dash.js</a>. Implementing DASH in JavaScript allows the adaptation algorithm to evolve without requiring browser updates. Using MSE also allows experimentation with alternative manifest formats and delivery mechanisms without requiring browser changes.</p>
+<p>According to the DASH spec, an MPD file could in theory be used as the <code>src</code> for a video. However, to give more flexibility to web developers, browser vendors have chosen instead to leave DASH support up to JavaScript libraries using MSE such as <a href="http://www-itec.uni-klu.ac.at/dash/?p=792">dash.js</a>. Implementing DASH in JavaScript allows the adaptation algorithm to evolve without requiring browser updates. Using MSE also allows experimentation with alternative manifest formats and delivery mechanisms without requiring browser changes.</p>
 
 
 <p><a href="https://developer.mozilla.org/en-US/docs/DASH_Adaptive_Streaming_for_HTML_5_Video" title="MDN: DASH Adaptive Streaming for HTML 5 Video">Mozilla Developer Network has instructions</a> on how to use WebM tools and FFmpeg to segment video and build an MPD.</p>
 
 <h2 id="conclusion">Conclusion</h2>
-Use of the web to deliver paid-for video and audio is growing at a huge rate. It seems that every new device, whether it's a tablet, game console, connected TV, or set-top box, is able to stream media from the major content providers over HTTP. <a href="http://longtailvideo.com/html5">Over 85%</a> of mobile and desktop browsers now support
-&lt;video&gt; and &lt;audio&gt;, and Cisco estimate that <a href="http://www.cisco.com/en/US/solutions/collateral/ns341/ns525/ns537/ns705/ns827/white_paper_c11-481360_ns827_Networking_Solutions_White_Paper.html">video will be 80 to 90 percent of global consumer internet traffic</a> by 2017.  In this context, browser support for protected content distribution is likely to be become increasingly significant, as <a href="https://blog.mozilla.org/security/2013/01/29/putting-users-in-control-of-plugins/" title="Mozilla Security Blog: Putting Users in Control of Plugins">browser vendors</a> <a href="https://sites.google.com/a/chromium.org/dev/developers/npapi-deprecation" title="Chromium NPAPI deprecation: developer guide">curtail support</a> for APIs that most media plugins rely on.</p>
+<p>Use of the web to deliver paid-for video and audio is growing at a huge rate. It seems that every new device, whether it's a tablet, game console, connected TV, or set-top box, is able to stream media from the major content providers over HTTP. <a href="http://longtailvideo.com/html5">Over 85%</a> of mobile and desktop browsers now support &lt;video&gt; and &lt;audio&gt;, and Cisco estimates that <a href="http://www.cisco.com/en/US/solutions/collateral/ns341/ns525/ns537/ns705/ns827/white_paper_c11-481360_ns827_Networking_Solutions_White_Paper.html">video will be 80 to 90 percent of global consumer internet traffic</a> by 2017.  In this context, browser support for protected content distribution is likely to be become increasingly significant, as <a href="https://blog.mozilla.org/security/2013/01/29/putting-users-in-control-of-plugins/" title="Mozilla Security Blog: Putting Users in Control of Plugins">browser vendors</a> <a href="https://sites.google.com/a/chromium.org/dev/developers/npapi-deprecation" title="Chromium NPAPI deprecation: developer guide">curtail support</a> for APIs that most media plugins rely on.</p>
 
 <h2 id="find-out-more">Further reading</h2>
 
@@ -373,25 +368,19 @@ Use of the web to deliver paid-for video and audio is growing at a huge rate. It
 
 <ul>
   <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html">EME spec</a>: latest Editor's Draft</li>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">EME spec</a>: version 0.1b of the Editor's Draft, as currently implemented by Chrome</li>
-  <li><a href="http://www.w3.org/TR/WebCryptoAPI/">Web Cryptography API</a></li>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as currently implemented by Chrome</li>
   <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">Common Encryption (CENC)</a></li>
   <li><a href="http://www.w3.org/TR/media-source/">Media Source Extensions</a></li>
   <li><a href="http://standards.iso.org/ittf/licence.html">DASH standard</a> (yes, it's a PDF)</li>
+  <li><a href="http://dashif.org/mpeg-dash/" title="Overview of MPEG-DASH Standard from DASH Industry Forum">Overview of the DASH standard</a></li>
 </ul>
 
 <h3 id="articles">Articles</h3>
 <ul>
   <li><a href="http://updates.html5rocks.com/2011/11/Stream-video-using-the-MediaSource-API">HTML5 Rocks Media Source Extensions article</a></li>
   <li><a href="http://vimeo.com/62269279">DTG Webinar</a> (partially obsolete)</li>
-  <li><a href="http://techblog.netflix.com/2013/04/html5-video-at-netflix.html?utm_source=html5weekly&amp;utm_medium=email">Netflix EME overview</a></li>
   <li><a href="https://hsivonen.fi/eme/" title="Article by member of HTML Working Group of the W3C">What is EME?</a>, by Henri Sivonen</li>
   <li>MPEG-DASH Test Streams: <a href="http://bbc.co.uk/rd/blog/2013/09/mpeg-dash-test-streams">BBC R&amp;D blog post</a></li>
-</ul>
-
-<h3 id="book">Book</h3>
-<ul>
-  <li><a href="http://www.cl.cam.ac.uk/~rja14/book.html">Security Engineering</a>, by Ross Anderson</li>
 </ul>
 
 <h2 id="demos">Demos</h2>
