@@ -4,7 +4,7 @@
 
 <h2 id="toc-intro">소개</h2>
 
-탁 터넣고 살펴보도록 하죠. 스타일이 입혀지지 않은 마크없은 전혀 섹시하지 않습니다. 우리에게는 다행스럽게도 [웹컴포넌트의 뒤에 있는 훌륭한 사람들](http://w3c.github.io/webcomponents/explainer/#acknowledgements)이 이를 예견하고 우리를 이에 매달리게 두지 않습니다. 섀도 트리에서 스타일이 적용된 컨텐츠를 보여줄 때 우리에게는 많은 선택지가 있습니다.
+터놓고 살펴보도록 하죠. 스타일이 입혀지지 않은 마크없은 전혀 섹시하지 않습니다. 다행스럽게도 [웹컴포넌트의 뒤에 있는 훌륭한 사람들](http://w3c.github.io/webcomponents/explainer/#acknowledgements)이 이를 예견하고 우리를 이에 매달리게 두지 않았습니다. 섀도 트리에서 스타일이 적용된 컨텐츠를 보여줄 때 우리에게는 많은 선택지가 있습니다.
 
 <p class="tip notice">크롬의 경우, 이 글에서 다루는 모든 기능의 실험을 위해 about:flags의 "Enable experimental Web Platform features"을 켜야 합니다. (<b>역주</b>: 한글 버전의 경우 "실험용 웹 플랫폼 기능 사용"으로 표시되어 있을 것입니다.)</p>
 
