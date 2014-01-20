@@ -279,7 +279,7 @@ jqDeferred.then(function(response, statusText, xhrObj) {
 <h2 id="toc-chaining">Chaining</h2>
 <p>"then" isn't the end of the story, you can chain "then"s together to transform values or run additional async actions one after another.</p>
 
-<h3 id="toc-transforming-values">Transforming values</h2>
+<h3 id="toc-transforming-values">Transforming values</h3>
 <p>You can transform values simply by returning the new value:</p>
 
 <pre class="prettyprint">var promise = new Promise(function(resolve, reject) {
@@ -321,7 +321,7 @@ promise.then(function(val) {
 
 <p><code>getJSON</code> still returns a promise, one that fetches a url then parses the response as JSON.</p>
 
-<h3 id="toc-promises-queues">Queuing asynchronous actions</h2>
+<h3 id="toc-promises-queues">Queuing asynchronous actions</h3>
 <p>You can also chain "then"s to run async actions in sequence.</p>
 <p>When you return something from a "then" callback, it's a bit magic. If you return a value, the next "then" is called with that value. However, if you return something promise-like, the next "then" waits on it, and is only called when that promise settles (succeeds/fails). For example:</p>
 
@@ -767,7 +767,7 @@ adder.next(50).value; // 65</pre>
   <p class="notice"><b>Note:</b> Chrome incorrectly calls this <code>Promise.rejected</code></p>
   <dt>
   <dt><code>Promise.all(array);</code></dt>
-  <dd>Make a promise that fulfills when every item in the array fulfills, and rejects if (and when) any item rejects. Eadd array item is passed to Promise.cast, so the array can be a mixture of promise-like objects and other objects. The fulfillment value is an array (in order) of fulfillment values. The rejection value is the first rejection value.
+  <dd>Make a promise that fulfills when every item in the array fulfills, and rejects if (and when) any item rejects. Each array item is passed to Promise.cast, so the array can be a mixture of promise-like objects and other objects. The fulfillment value is an array (in order) of fulfillment values. The rejection value is the first rejection value.
   <p class="notice"><b>Note:</b> Only implemented in Chrome so far</p></dd>
   <dt><code>Promise.race(array);</code></dt>
   <dd>Make a Promise that fulfills when any item fulfills, and rejects if any item rejects.
@@ -838,10 +838,6 @@ adder.next(50).value; // 65</pre>
   });
 
   document.querySelector('.get-example a').addEventListener('click', function(event) {
-    if (event.button !== 0) {
-      return;
-    }
-
     get(this.href).then(
       console.log.bind(console, "Success!"),
       console.error.bind(console, "Failure!")
@@ -850,10 +846,6 @@ adder.next(50).value; // 65</pre>
   });
 
   document.querySelector('.json-example a').addEventListener('click', function(event) {
-    if (event.button !== 0) {
-      return;
-    }
-
     get(this.href).then(JSON.parse).then(
       console.log.bind(console, "Success!"),
       console.error.bind(console, "Failure!")

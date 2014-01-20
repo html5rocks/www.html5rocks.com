@@ -3,8 +3,10 @@ from google.appengine.ext import db
 #from google.appengine.ext.db import djangoforms
 from django import forms
 
+import logging
 import settings
 import urllib2
+
 
 def get_profiles(update_cache=False):
   profiles = memcache.get('%s|profiles' % (settings.MEMCACHE_KEY_PREFIX))
@@ -150,22 +152,26 @@ class Resource(DictModel):
       # Append the updates to the results
       for u in updates:
 
-        publication_date = re.sub(r"\.\d*$", "", u['published'])
-        updated_date = re.sub(r"\.\d*$", "", u['updated'])
+        # Prevent bad updates data from causing site errors.
+        try:
+          publication_date = re.sub(r"\.\d*$", "", u['published'])
+          updated_date = re.sub(r"\.\d*$", "", u['updated'])
 
-        publication_time = time.strptime(publication_date, "%Y-%m-%d %H:%M:%S")
+          publication_time = time.strptime(publication_date, "%Y-%m-%d %H:%M:%S")
 
-        update = Resource(title=u['title'])
-        update.author = Author.get_by_key_name(u['author_id'])
-        update.url = 'http://updates.html5rocks.com%s' % (u['path'])
-        update.publication_date = date.fromtimestamp(mktime(publication_time))
-        update.description = u['description']
+          update = Resource(title=u['title'])
+          update.author = Author.get_by_key_name(u['author_id'])
+          update.url = 'http://updates.html5rocks.com%s' % (u['path'])
+          update.publication_date = date.fromtimestamp(mktime(publication_time))
+          update.description = u['description']
 
-        if updated_date != "None":
-          updated_time = time.strptime(updated_date, "%Y-%m-%d %H:%M:%S")
-          update.update_date = date.fromtimestamp(mktime(updated_time))
+          if updated_date != "None":
+            updated_time = time.strptime(updated_date, "%Y-%m-%d %H:%M:%S")
+            update.update_date = date.fromtimestamp(mktime(updated_time))
 
-        results.append(update)
+          results.append(update)
+        except db.BadValueError, e:
+          logging.error(str(e))
 
       # Now sort them by date
       results.sort(key=lambda update:update.publication_date, reverse=True)
