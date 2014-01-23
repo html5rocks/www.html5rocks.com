@@ -3,12 +3,19 @@
 
 {% block head %}
   <style>
+    .talkinghead:before {
+      background-image: url(/static/images/profiles/75/agektmr.75.png);
+      background-position: 0px -4px !important;
+    }
     table {
       font-size: 90%;
     }
     th, td {
       border: solid 1px #ccc;
       padding: 0 5px;
+    }
+    tr > td:first-child {
+      font-weight: bold;
     }
   </style>
 {% endblock %}
@@ -17,50 +24,27 @@
 
 <h2 id="toc-introduction">Introduction</h2>
 
-<p>One of the biggest evolutions happening around HTML5 today is the availability 
-of persistent storage on browsers. Before HTML5, we had no choice other than 
-using cookies to store some kind of data on client side. With HTML5, you have 
-several choices for storing your data, depending on what you want to store.</p>
+<p>One of the biggest evolutions happening around HTML5 today is the availability of persistent storage on browsers. Before HTML5, we had no choice other than using cookies to store some kind of data on client side. With HTML5, you have several choices for storing your data, depending on what you want to store.</p>
 
-<p>The most broadly used technology is called <strong>WebStorage</strong>, an API for persistent 
-key-value data storage which most major browsers have supported for a while. 
-WebStorage has persistent storage called <strong>LocalStorage</strong>, and temporary storage 
-called <strong>SessionStorage</strong> which will be cleared after a session.</p>
+<p>The most broadly used technology is called <strong>WebStorage</strong>, an API for persistent key-value data storage which most major browsers have supported for a while. WebStorage has persistent storage called <strong>LocalStorage</strong>, and temporary storage called <strong>SessionStorage</strong> which will be cleared after a session.</p>
 
-<p><strong>WebSQL Database</strong> is a relational database solution for browsers. Even though 
-it is essentially deprecated and the W3C no longer maintains the specification, 
-meaning browsers may or may not continue to support it, people still use it 
-because it is the only common answer for structured data storage on mobile browsers.</p>
+<p><strong>WebSQL Database</strong> is a relational database solution for browsers. Even though it is essentially deprecated and the W3C no longer maintains the specification, meaning browsers may or may not continue to support it, people still use it because it is the only common answer for structured data storage on mobile browsers.</p>
 
-<p><strong>Indexed Database</strong> is an object store. Since it's considered to be the final 
-solution for storing structured data on browsers, its support and usage is 
-gradually expanding.</p>
+<p><strong>Indexed Database</strong> is an object store. Since it's considered to be the final solution for storing structured data on browsers, its support and usage is gradually expanding.</p>
 
-<p><strong>FileSystem API</strong> is a file system solution for the web. Developers can store 
-large objects in a sandboxed part of the user's file system and directly link to 
-them via URL. Although Chrome and Opera are the only browsers that currently 
-implement the feature, its standardization is ongoing.</p>
+<p><strong>FileSystem API</strong> is a file system solution for the web. Developers can store large objects in a sandboxed part of the user's file system and directly link to them via URL. Although Chrome and Opera are the only browsers that currently implement the feature, its standardization is ongoing.</p>
 
-<p>As web apps get richer and richer, more and more developers are using 
-browser-side storage. However, there hasn't been a major study comparing the 
-limitations of the various storage mechanisms. It is time consuming for 
-developers to research each method and browser. So in this article, I'm going to 
-show you the results of my research on the upper limit of each browser's storage 
-implementation, as well as how you can inspect them.</p>
+<p>As web apps get richer and richer, more and more developers are using browser-side storage. However, there hasn't been a major study comparing the limitations of the various storage mechanisms. It is time consuming for developers to research each method and browser. So in this article, I'm going to show you the results of my research on the upper limit of each browser's storage implementation, as well as how you can inspect them.</p>
 
 <h2 id="toc-overview">Overview</h2>
 
-<p>To do this research, I have built a tool called <a href="http://demo.agektmr.com/storage/">Browser Storage 
-Abuser</a> to minimize the manual work. You can 
-store as much data as possible to see the limit of each storage on your browser.</p>
+<p>To do this research, I have built a tool called <a href="http://demo.agektmr.com/storage/">Browser Storage Abuser</a> to minimize the manual work. You can store as much data as possible to see the limit of each storage on your browser.</p>
 
 <figure><img src="bsa-screenshot.png" /></figure>
 
 <p>Following is a quick summary of results from this research using the tool.</p>
 
-<p>* Opera is not listed here because it uses Blink, the same browser engine that 
-Chrome users, and so my research results using Opera were very similar to my 
-results with Chrome.</p>
+<p class="notice"><b>Note</b>: Opera is not listed here because it uses Blink, the same browser engine that Chrome uses, and so my research results using Opera were very similar to my results with Chrome.</p>
 
 <h3 id="toc-mobile">Mobile</h3>
 
@@ -136,21 +120,18 @@ results with Chrome.</p>
 <th>Safari</th>
 <th>IE</th>
 <th>IE</th>
-<th>IE</th>
 </tr>
 <tr>
 <td>Version</td>
 <td>33</td>
 <td>26</td>
-<td>6</td>
+<td>6, 7</td>
 <td>9</td>
-<td>10</td>
-<td>11</td>
+<td>10, 11</td>
 </tr>
 <tr>
 <td>FileSystem</td>
 <td>up to quota</td>
-<td>N/A</td>
 <td>N/A</td>
 <td>N/A</td>
 <td>N/A</td>
@@ -163,17 +144,13 @@ results with Chrome.</p>
 Unlimited</td>
 <td>N/A</td>
 <td>N/A</td>
-<td>10MB, 250MB
-(999MB)</td>
-<td>10MB, 250MB
-(999MB)</td>
+<td>10MB, 250MB (999MB)</td>
 </tr>
 <tr>
 <td>WebSQL</td>
 <td>up to quota</td>
 <td>N/A</td>
 <td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB, ...</td>
-<td>N/A</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
@@ -184,7 +161,6 @@ Unlimited</td>
 <td>5MB</td>
 <td>10MB</td>
 <td>10MB</td>
-<td>10MB</td>
 </tr>
 <tr>
 <td>SessionStorage</td>
@@ -193,15 +169,12 @@ Unlimited</td>
 <td>Unlimited</td>
 <td>10MB</td>
 <td>10MB</td>
-<td>10MB</td>
 </tr>
 </table>
 
 <h2 id="toc-working_with_real_world_browsers">Details: Working with real world browsers</h2>
 
-<p>OK, now you have a summary of storage limitations. Let's dive into the details 
-of each browser's implementation and see how you can inspect and debug each 
-storage.</p>
+<p>OK, now you have a summary of storage limitations. Let's dive into the details of each browser's implementation and see how you can inspect and debug each storage.</p>
 
 <h2 id="toc-chrome">Chrome / Chrome for Android</h2>
 
@@ -234,57 +207,41 @@ storage.</p>
 </tr>
 </table>
 
-<p>Chrome can use all of the types of storage listed here including FileSystem API, 
-IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage 
-mechanisms except LocalStorage and SessionStorage, which use asynchronous input 
-and output, are under managed by <strong>Quota Management API;</strong> their limitation 
-varies depending on the amount of storage the device has left. </p>
+<p>Chrome can use all of the types of storage listed here including FileSystem API, IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage mechanisms except LocalStorage and SessionStorage, which use asynchronous input and output, are under managed by <strong>Quota Management API;</strong> their limitation varies depending on the amount of storage the device has left. </p>
 
 <p>Current quota rule is as follows:</p>
 
 <ul>
-<li>On Temporary Storage (Default), you can use up to 10% of remaining disk space 
-per domain. Browser evicts storage per domain from oldest one upon quota 
-excess.</li>
-<li>On Persistent Storage, you can request arbitrary size if the user permits. 
-Going over quota will cause an error. Keep in mind that on Chrome's (and 
-Opera's) implementation, this only applies to FileSystem API as of version 33. 
-All other storage mechanisms will still use Temporary Storage as its storage.</li>
+<li>On Temporary Storage (Default), you can use up to 10% of remaining disk space per domain. If you exceed quota, the browser starts clearing out your storage, starting with the oldest domain.</li>
+<li>On Persistent Storage, you can request arbitrary size if the user permits. Going over quota will cause an error. Keep in mind that on Chrome's (and Opera's) implementation, this only applies to FileSystem API as of version 33. All other storage mechanisms will still use Temporary Storage as its storage.</li>
 </ul>
 
 <p>Please refer to <a href="http://updates.html5rocks.com/2011/11/Quota-Management-API-Fast-Facts">this 
-page</a> for 
-further information regarding Quota Management API (as of January 2014). The 
-Quota Management API specification is under active discussion and subject to 
-change in the future.</p>
+page</a> for further information regarding Quota Management API (as of January 2014). The Quota Management API specification is under active discussion and subject to change in the future.</p>
 
 <figure><img src="chrome-inspect.png" /></figure>
 
 <h3 id="toc-chrome_inspect">How to inspect</h3>
 
-<p>You can inspect details of LocalStorage, SessionStorage, IndexedDB and WebSQL if 
-you open DevTools' Resources panel. <br />
+<p>You can inspect details of LocalStorage, SessionStorage, IndexedDB and WebSQL if you open DevTools' Resources panel. <br />
 For inspecting FileSystem API, you need to</p>
 
 <ol>
 <li>Turn on "Enable Developer Tools experiments" flag at about:flags page.</li>
 <li>Restart Chrome and open DevTools and the Settings panel.</li>
-<li>Select "Experiments" in the Settings panel and check the box next to 
-"FileSystem inspection".</li>
+<li>Select "Experiments" in the Settings panel and check the box next to "FileSystem inspection".</li>
 <li>Reopen DevTools.</li>
 </ol>
 
 <p>You should now see "FileSystem" item the Resources panel.</p>
 
-<p>For clearing and initializing storage content including cookies, follow 
-instructions below. <br />
+<p>For clearing and initializing storage content including cookies, follow instructions below. <br />
 Desktop:</p>
 
 <ol>
 <li>Open chrome://settings/cookies</li>
 <li>Select the domain you want to clear</li>
-<li>Click on which cookie or storage resource you want to delete, and click the 
-"Remove" button</li>
+<li>Click on which cookie or storage resource you want to delete, and click the "Remove" button</li>
 </ol>
 
 <p>Or</p>
@@ -303,10 +260,7 @@ Desktop:</p>
 <li>Tap on "Clear stored data"</li>
 </ol>
 
-<p>On Chrome for Android, you can inspect storage types by following the same 
-procedure as desktop version described above. Refer to "<a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Remote 
-debugging</a>" 
-article to learn how to debug Chrome for Android.</p>
+<p>On Chrome for Android, you can inspect storage types by following the same procedure as desktop version described above. Refer to "<a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Remote debugging</a>" article to learn how to debug Chrome for Android.</p>
 
 <h2 id="toc-firefox">Firefox / Firefox for Android</h2>
 
@@ -337,40 +291,30 @@ article to learn how to debug Chrome for Android.</p>
 </tr>
 </table>
 
-<p>Firefox can use IndexedDB, LocalStorage and SessionStorage. LocalStorage and 
-SessionStorage can use up to 10MB of storage but the number is actually the sum 
-of both. <br />
-For IndexedDB, you can use up to 50MB for free. However, the user can allow the 
-limit to be removed by granting permission.</p>
+<p>Firefox can use IndexedDB, LocalStorage and SessionStorage. LocalStorage and SessionStorage can use up to 10MB of storage but the number is actually the sum of both. <br />
+For IndexedDB, you can use up to 50MB for free. However, the user can allow the limit to be removed by granting permission.</p>
 
 <figure><img src="ff-premission.png" /></figure>
 
 <figure><img src="ff-android-permission.png" /></figure>
 
-<p>Keep in mind that Firefox actually stores the data as a BLOB in sqlite, so the 
-size of original object won't be reflected as is (for IndexedDB. LocalStorage 
-and SessionStorage size are the same.)</p>
+<p>Keep in mind that Firefox actually stores the data as a BLOB in sqlite, so the size of original object won't be reflected as is (for IndexedDB. LocalStorage and SessionStorage size are the same.)</p>
 
 <h3 id="toc-firefox_inspect">How to inspect</h3>
 
-<p>You can inspect actual consumption by using an Add-on called <a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Tahoe Data 
-Manager</a> 
-on desktop, but it doesn't seem to work on Firefox 26. You can actually use 
-<a href="http://www.sqlite.org/">sqlite</a> command to inspect content of the database. The 
-sqlite files are located under idb folder under profile directory of respective 
-OSes.</p>
+<p>You can inspect actual consumption by using an Add-on called <a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Tahoe Data Manager</a>
+on desktop, but it doesn't seem to work on Firefox 26. You can actually use <a href="http://www.sqlite.org/">sqlite</a> command to inspect content of the database. The sqlite files are located under idb folder under profile directory of respective OSes.</p>
 
 <p><strong>Windows:</strong> %AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default <br />
 <strong>Mac:</strong> ~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</p>
 
 <p>Add-on called <a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> might be a 
-good choice for inspecting using a GUI. <br />
+good choice for inspection using a GUI. <br />
 <img src="sqlite-manager.png" /></p>
 
 <p>If you want to remove permissions per domain, go to the about:permissions page.</p>
 
-<p>For Android version, I couldn't find any way to inspect or delete stored data 
-per domain.</p>
+<p>For Android version, I couldn't find any way to inspect or delete stored data per domain.</p>
 
 <h2 id="toc-android">Android Browser</h2>
 
@@ -396,27 +340,17 @@ per domain.</p>
 </table>
 
 <p>Android Browser can use WebSQL, LocalStorage and SessionStorage. <br />
-Compared to the other browsers, Android Browser only has 2MB for LocalStorage. 
-SessionStorage is unlimited since it stores data on memory instead of disks. <br />
-It is tough to examine WebSQL on Android Browser. Storing around 500KB data in 
-one transaction returns a quota error, but dividing it into multiple 
-transactions seemed to work ok. I could store up to around 200MB without 
-permission, before it crashed.</p>
+Compared to the other browsers, Android Browser only has 2MB for LocalStorage. SessionStorage is unlimited since it stores data on memory instead of disks. <br />
+It is tough to examine WebSQL on Android Browser. Storing around 500KB data in one transaction returns a quota error, but dividing it into multiple transactions seemed to work ok. I could store up to around 200MB without permission, before it crashed.</p>
 
 <h3 id="toc-android_inspect">How to inspect</h3>
 
-<p>You can inspect stored data on WebSQL, LocalStorage and SessionStorage by using 
-an open source tool called 
-<a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a>, which can 
-interact with the browser remotely using <a href="https://developers.google.com/chrome-developer-tools/docs/debugger-protocol">the DevTools 
-protocol</a>. <br />
+<p>You can inspect stored data on WebSQL, LocalStorage and SessionStorage by using an open source tool called <a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a>, which can interact with the browser remotely using <a href="https://developers.google.com/chrome-developer-tools/docs/debugger-protocol">the DevTools protocol</a>. <br />
 <img src="weinre.png" /> <br />
-You can delete those data individually on weinre. If you don't have weinre 
-installed, you need to follow the instructions below to delete them. Note that 
-you can't delete per domain. <br />
+You can delete those data individually on weinre. If you don't have weinre installed, you need to follow the instructions below to delete them. Note that you can't delete per domain. <br />
 - Open system's "Settings" > "Apps" > "Browser" and tap "Clear data"</p>
 
-<h2 id="toc-safari">Safari</h2>
+<h2 id="toc-safari">Safari / Safari for iOS</h2>
 
 <!-- TODO: Fix formatting of cells -->
 
@@ -457,23 +391,19 @@ you can't delete per domain. <br />
 </table>
 
 <p>Safari can use WebSQL, LocalStorage and SessionStorage. <br />
-For desktop, you can use up to 5MB for LocalStorage. Similar to Android Browser, 
-SessionStorage is unlimited since it stores data on memory instead of disks. <br />
-WebSQL's quota policy is a bit unique here. Safari asks a user for permissions 
-in multiple size points as described above. I didn't examine beyond the 700MB 
-size point but I assume it asks for permission per 100MB after that.</p>
+For desktop, you can use up to 5MB for LocalStorage. Similar to Android Browser, SessionStorage is unlimited since it stores data on memory instead of disks. <br />
+WebSQL's quota policy is a bit unique here. Safari asks a user for permissions in multiple size points as described above. But if <code>openDatabase</code> is called with more than 5MB of size on database creation, Safari will ask the user for a permission of the closest upper limit. If granted, it won't ask user another permission until actual data size exceeds that number.</p>
 
 <p>For mobile, the rule is similar but the upper limits are different. <br />
-LocalStorage has 5MB limit. Same for SessionStorage. On WebSQL, it asks a user 
-for permissions but you can't store data any more than 50MB.</p>
+SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a user for permissions but you can't store data any more than 50MB.</p>
 
-<p>On iOS WebView, WebSQL's upper limit is also 50MB but it won't ask for 
-permission.</p>
+<blockquote class="commentary talkinghead"><b>Note</b>: Safari after iOS 7 has <a href="http://www.mobilexweb.com/blog/safari-ios7-html5-problems-apis-review" target="_blank">a bug that throws an exception when more than 5MB is requested on database creation</a>. This is not fixed as of iOS 7.0.4. Work around is to request less than 5MB and let Safari ask for a permission. This is annoying for users, but no way around.</blockquote>
+
+<p>On iOS WebView, WebSQL's upper limit is also 50MB but it won't ask for permission.</p>
 
 <h3 id="toc-safari_inspect">How to inspect</h3>
 
-<p>On desktop, you can use Web Inspector to inspect LocalStorage, SessionStorage 
-and WebSQL.</p>
+<p>On desktop, you can use Web Inspector to inspect LocalStorage, SessionStorage and WebSQL.</p>
 
 <figure><img src="safari-inspector.png" /></figure>
 <p>On mobile, you can only inspect LocalStorage and SessionStorage.</p>
@@ -492,7 +422,7 @@ and WebSQL.</p>
 <th>SessionStorage</th>
 </tr>
 <tr>
-<td>Internet Explorer 9</td>
+<td>IE 9</td>
 <td>N/A</td>
 <td>N/A</td>
 <td>N/A</td>
@@ -500,36 +430,24 @@ and WebSQL.</p>
 <td>10MB</td>
 </tr>
 <tr>
-<td>Internet Explorer 10</td>
+<td>IE 10, 11</td>
 <td>N/A</td>
-<td>10MB, 250MB</td>
-<td>N/A</td>
-<td>10MB</td>
-<td>10MB</td>
-</tr>
-<tr>
-<td>Internet Explorer 11</td>
-<td>N/A</td>
-<td>10MB, 250MB</td>
+<td>10MB, 250MB (999MB)</td>
 <td>N/A</td>
 <td>10MB</td>
 <td>10MB</td>
 </tr>
 </table>
 
-<p>Internet Explorer supports LocalStorage and SessionStorage after version 9. 
-Version 10 started to support IndexedDB as well. <br />
+<p>Internet Explorer supports LocalStorage and SessionStorage after version 9. Version 10 started to support IndexedDB as well. <br />
 On LocalStorage and SessionStorage, users can store up to 10MB each. <br />
-On IndexedDB, the browser asks users for permission at 10MB, then allows up to 
-250MB by default. It can store up to 999MB without permission but requires 
-user's action to change setting.</p>
+On IndexedDB, the browser asks users for permission at 10MB, then allows up to 250MB by default. It can store up to 999MB without permission but requires the user to change their settings to allow it; a developer cannot change this setting.</p>
 
 <figure><img src="ie-settings.png" /></figure>
 
 <h3 id="toc-ie_inspect">How to inspect</h3>
 
-<p>Unfortunately, there's no good way to inspect LocalStorage, SessionStorage or 
-IndexedDB on Internet Explorer yet. <br />
+<p>Unfortunately, there's no good way to inspect LocalStorage, SessionStorage or IndexedDB on Internet Explorer yet. <br />
 You can still delete stored data per domain by</p>
 
 <ol>
@@ -537,9 +455,9 @@ You can still delete stored data per domain by</p>
 <li>Click on "Settings" under "Browsing history" in "General" tab.</li>
 </ol>
 
-<h2 id="toc-how_to_handle_when_quota_exceeds">How to handle when quota exceeds?</h2>
+<h2 id="toc-how_to_handle_going_over_quota">How to handle going over quota?</h2>
 
-<p>What should you do when quota actually exceed? It's up to app's design what to do, but I would like to share some sample code since there's not much existing examples on internet.</p>
+<p>What should you do when your app is over quota? It's up to app's design what to do, but I would like to share some sample code since there's not much existing examples on internet.</p>
 
 <h3 id="toc-filesystem">FileSystem API</h3>
 
@@ -648,13 +566,7 @@ function onTransactionSuccess() {
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
-<p>As you can see above, each browser has unique characteristics when it comes to 
-storage, quota, and limits. It is important to make sure your app won't fail on 
-exceeding quota and gracefully fall back to a meaningful result. Also, check out 
-the <a href="http://www.youtube.com/watch?v=Z7sRMg0f5Hk">ServiceWorker</a> and the <a href="http://www.w3.org/TR/quota-api/">new 
-Quota Management API</a> which specifications are 
-under discussion. They will drastically change the way you will interact with 
-the limitations this article described when implemented.</p>
+<p>As you can see above, each browser has unique characteristics when it comes to storage, quota, and limits. It is important to make sure your app won't fail on exceeding quota and gracefully fall back to a meaningful result. Also, check out the <a href="http://www.youtube.com/watch?v=Z7sRMg0f5Hk">ServiceWorker</a> and the <a href="http://www.w3.org/TR/quota-api/">new Quota Management API</a> which specifications are under discussion. They will drastically change the way you will interact with the limitations this article described when implemented.</p>
 
 <p>Lastly, please feel free to send us a Pull Request if you find any correction or updates in this article.</p>
 
