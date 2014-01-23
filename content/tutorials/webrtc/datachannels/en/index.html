@@ -57,7 +57,7 @@ a[rel='external']
 {% block content %}
 
 
-<p>Sending data between two browsers for communication, gaming, or file transfer is a rather involved process. It requires setting up a server to act as the middle man to relay data, which in turn means paying for hosting of a web service to transfer the data, and scaling this to multiple data centers. In this scenario there is potential for high latency, and it's difficult to keep data private.</p>
+<p>Sending data between two browsers for communication, gaming, or file transfer can be a rather involved process. It requires setting up and paying for a server to relay data, and perhaps scaling this to multiple data centers. In this scenario there is potential for high latency, and it's difficult to keep data private.</p>
 
 <p>These problems can be alleviated by using WebRTC's RTCDataChannel API to transfer data directly from one peer to another. In this article we will cover the basics of how to set up and use data channels, as well as the common use cases on the web today.</p>
 
@@ -130,7 +130,7 @@ a[rel='external']
 
 <p>We show below how to configure RTCDataChannel to use reliable or unreliable mode.</p>
 
-<h2 id="just-show-me-the-action">Just show me the action!</h2>
+<h2 id="just-show-me-the-action">Configuring data channels</h2>
 
 
 <p>There are several simple demos of RTCDataChannel online:</p>
@@ -217,7 +217,7 @@ var dataChannelOptions = {
 
 <ul>
   <li><strong>File size:</strong> if file size is reasonably small and can be stored and loaded as one Blob, you can load into memory using the File API and then send the file over a reliable channel as is (though bear in mind that browsers impose limits on maximum transfer size). As file size get larger, things get trickier. A chunking mechanism is required: file chunks are loaded and sent to another peer, accompanied with chunkId metadata so the peer can recognize them. Note that in this case you will also need to save the chunks first to offline storage (for example, using the FileSystem API) and only when you have the file in its entirety save it to the user's disk.</li>
-  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport are better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself &mdash; even if you're good &mdash; it won't be much faster than using reliable transport. Reliable and unordered should provide the best of both worlds, but results may vary when considering multi-party (mesh) file transfer.</li>
+  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport is better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself and &mdash; even if you're good &mdash; it may not be much faster than using reliable transport. Reliable and unordered should provide the best of both worlds, but results may vary when considering multi-party (mesh) file transfer.</li>
   <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. Chunking is required, since there is currently a send size limit (though this will be fixed in a future version of data channels). The current recommendation for maximum chunk size is 16KB.</li>
 </ul>
 
@@ -254,8 +254,16 @@ function saveFile(blob) {
 
 <h2 id="find-out-more">Find out more</h2>
 
-
-<p><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting started with WebRTC</a><br/> <a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC in the real world: STUN, TURN and signaling</a><br/> <a href="http://bit.ly/webrtcwebaudio">WebRTC resources</a><br/> <a href="http://www.w3.org/TR/webrtc/#peer-to-peer-data-api">W3C Working Draft</a><br/> <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04">IETF WebRTC Data Channel Protocol Draft</a><br/> <a href="http://bloggeek.me/send-file-webrtc-data-api/">How to send a File Using WebRTC Data API</a></p>
+<ul>
+  <li><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting started with WebRTC</a></li>
+  <li><a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC in the real world: STUN, TURN and signaling</a></li>
+  <li><a href="http://bit.ly/webrtcwebaudio">WebRTC resources</a></li>
+  <li><a href="http://www.w3.org/TR/webrtc/#peer-to-peer-data-api">W3C Working Draft</a></li>
+  <li><a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04">IETF WebRTC Data Channel Protocol Draft</a></li>
+  <li><a href="http://bloggeek.me/send-file-webrtc-data-api/">How to send a File Using WebRTC Data API</a></li>
+  <li><a href="http://bloggeek.me/webrtc-data-channel-uses/" title="bloggeek.me blog post by Tsahi Levent-Levi">7 Creative Uses of WebRTC’s Data Channel</a></li>
+  <li><a href="https://developer.mozilla.org/en/demos/detail/bananabread" title="Banana Breat game">Banana Bread</a> 3D first person shooter game compiled to JS+WebGL, using WebRTC data channels in multiplayer mode</li>
+</ul>
 
 <p><strong>Thanks to Hadar Weiss and Shachar Zohar for their help in preparing this article.</strong></p>
 
