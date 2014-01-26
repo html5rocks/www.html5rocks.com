@@ -56,16 +56,16 @@
 <th>Chrome</th>
 <th>Android Browser</th>
 <th>Firefox</th>
-<th>iOS WebView</th>
 <th>Safari</th>
+<th>iOS WebView</th>
 </tr>
 <tr>
-<td>Version</td>
-<td>33</td>
-<td>4.3</td>
-<td>26</td>
-<td>6, 7</td>
-<td>6, 7</td>
+<th>Version</th>
+<th>33</th>
+<th>4.3</th>
+<th>26</th>
+<th>6, 7</th>
+<th>6, 7</th>
 </tr>
 <tr>
 <td>FileSystem</td>
@@ -79,7 +79,7 @@
 <td>IndexedDB</td>
 <td>up to quota</td>
 <td>N/A</td>
-<td>50MB?</td>
+<td>5MB, Unlimited</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
@@ -88,8 +88,8 @@
 <td>up to quota</td>
 <td>200MB~</td>
 <td>N/A</td>
-<td>50MB</td>
 <td>5MB, 10MB, 25MB, 50MB</td>
+<td>50MB</td>
 </tr>
 <tr>
 <td>LocalStorage</td>
@@ -122,12 +122,12 @@
 <th>IE</th>
 </tr>
 <tr>
-<td>Version</td>
-<td>33</td>
-<td>26</td>
-<td>6, 7</td>
-<td>9</td>
-<td>10, 11</td>
+<th>Version</th>
+<th>33</th>
+<th>26</th>
+<th>6, 7</th>
+<th>9</th>
+<th>10, 11</th>
 </tr>
 <tr>
 <td>FileSystem</td>
@@ -144,13 +144,13 @@
 Unlimited</td>
 <td>N/A</td>
 <td>N/A</td>
-<td>10MB, 250MB (999MB)</td>
+<td>10MB, 250MB (~999MB)</td>
 </tr>
 <tr>
 <td>WebSQL</td>
 <td>up to quota</td>
 <td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB, ...</td>
+<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
@@ -207,7 +207,7 @@ Unlimited</td>
 </tr>
 </table>
 
-<p>Chrome can use all of the types of storage listed here including FileSystem API, IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage mechanisms except LocalStorage and SessionStorage, which use asynchronous input and output, are under managed by <strong>Quota Management API;</strong> their limitation varies depending on the amount of storage the device has left. </p>
+<p>Chrome can use all of the types of storage listed here including FileSystem API, IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage mechanisms except LocalStorage and SessionStorage, which use asynchronous input and output, are under managed by <strong>Quota Management API</strong>; their limitation varies depending on the amount of storage the device has left. </p>
 
 <p>Current quota rule is as follows:</p>
 
@@ -218,8 +218,6 @@ Unlimited</td>
 
 <p>Please refer to <a href="http://updates.html5rocks.com/2011/11/Quota-Management-API-Fast-Facts">this 
 page</a> for further information regarding Quota Management API (as of January 2014). The Quota Management API specification is under active discussion and subject to change in the future.</p>
-
-<figure><img src="chrome-inspect.png" /></figure>
 
 <h3 id="toc-chrome_inspect">How to inspect</h3>
 
@@ -234,6 +232,8 @@ For inspecting FileSystem API, you need to</p>
 </ol>
 
 <p>You should now see "FileSystem" item the Resources panel.</p>
+
+<figure><img src="chrome-inspect.png" /></figure>
 
 <p>For clearing and initializing storage content including cookies, follow instructions below. <br />
 Desktop:</p>
@@ -285,36 +285,36 @@ Desktop:</p>
 <tr>
 <td>Firefox for Android 26</td>
 <td>N/A</td>
-<td>50MB~</td>
+<td>5MB, Unlimited</td>
 <td>N/A</td>
 <td colspan="2">10MB</td>
 </tr>
 </table>
 
 <p>Firefox can use IndexedDB, LocalStorage and SessionStorage. LocalStorage and SessionStorage can use up to 10MB of storage but the number is actually the sum of both. <br />
-For IndexedDB, you can use up to 50MB for free. However, the user can allow the limit to be removed by granting permission.</p>
+For IndexedDB, you can use up to 50MB on desktop, 5MB on mobile for free. However, the user can allow the limit to be removed by granting permission. A user can also change the warning quota by changing <code>about:config</code>'s <code>dom.indexedDB.warningQuota</code></p>
 
 <figure><img src="ff-premission.png" /></figure>
 
 <figure><img src="ff-android-permission.png" /></figure>
 
-<p>Keep in mind that Firefox actually stores the data as a BLOB in sqlite, so the size of original object won't be reflected as is (for IndexedDB. LocalStorage and SessionStorage size are the same.)</p>
+<blockquote class="commentary talkinghead"><b>Note</b>: Firefox actually stores the IndexedDB data as a compressed BLOB in sqlite, so the size of original object won't be reflected as is)</blockquote>
 
 <h3 id="toc-firefox_inspect">How to inspect</h3>
 
 <p>You can inspect actual consumption by using an Add-on called <a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Tahoe Data Manager</a>
-on desktop, but it doesn't seem to work on Firefox 26. You can actually use <a href="http://www.sqlite.org/">sqlite</a> command to inspect content of the database. The sqlite files are located under idb folder under profile directory of respective OSes.</p>
+on desktop, but the Storage tab doesn't seem to work on Firefox 26. You can actually use <a href="http://www.sqlite.org/">sqlite</a> command to inspect content of the database. The sqlite files are located under idb folder under profile directory of respective OSes.</p>
 
-<p><strong>Windows:</strong> %AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default <br />
-<strong>Mac:</strong> ~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</p>
+<p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default</code><br />
+<strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</code></p>
 
 <p>Add-on called <a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> might be a good choice for inspection using a GUI. </p>
 
 <figure><img src="sqlite-manager.png" /></figure>
 
-<p>If you want to remove permissions per domain, go to the about:permissions page.</p>
+<p>If you want to remove permissions per domain, go to the <code>about:permissions</code> page.</p>
 
-<p>For Android version, I couldn't find any way to inspect or delete stored data per domain.</p>
+<p>For Android version, I couldn't find any way to inspect or delete stored data per domain. To learn more about debugging mobile Firefox, see <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android">this document</a>.</p>
 
 <h2 id="toc-android">Android Browser</h2>
 
@@ -409,7 +409,7 @@ SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a use
 <p>On desktop, you can use Web Inspector to inspect LocalStorage, SessionStorage and WebSQL.</p>
 
 <figure><img src="safari-inspector.png" /></figure>
-<p>On mobile, you can only inspect LocalStorage and SessionStorage.</p>
+<p>On mobile, you can only inspect LocalStorage and SessionStorage. To learn more about debugging mobile Safari, see <a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Conceptual/Safari_Developer_Guide/GettingStarted/GettingStarted.html#//apple_ref/doc/uid/TP40007874-CH2-SW8">this document</a>.</p>
 
 <h2 id="toc-ie">Internet Explorer</h2>
 
@@ -435,7 +435,7 @@ SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a use
 <tr>
 <td>IE 10, 11</td>
 <td>N/A</td>
-<td>10MB, 250MB (999MB)</td>
+<td>10MB, 250MB (~999MB)</td>
 <td>N/A</td>
 <td>10MB</td>
 <td>10MB</td>
