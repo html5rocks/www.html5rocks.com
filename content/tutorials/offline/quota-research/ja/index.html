@@ -22,21 +22,22 @@
 
 {% block content %}
 
-<h2 id="toc-introduction">Introduction</h2>
+<h2 id="toc-introduction">はじめに</h2>
 
 <p>HTML5 という言葉が聞かれるようになって最も大きな変化の一つがブラウザでのストレージ環境の充実です。従来であれば Cookie (もしくはプラグインで利用可能になった保存領域) 以外になかったストレージに、豊富な選択肢が用意されるようになりました。</p>
 
-<p>最もポピュラーなのは WebStorage と呼ばれるキーバリュー型のストレージで、全てのメジャーブラウザの割と古いバージョンから実装されているため、既に広く利用されています。WebStorage には永久に保存される LocalStorage と、セッション中のみ保存される SessionStorage の 2 種類があります。 <br />
-WebSQL Database はリレーショナル・データベースで、既に標準化作業が停止されているにも関わらず、スマートフォンブラウザの多くに搭載されている唯一の構造型データベースであるため、未だに重宝されています。 <br />
-Indexed Database はオブジェクト型ストレージで、次世代ブラウザデータベースの本命として多くのブラウザに実装され、徐々に利用が広がっています。今後最も利用されるデータベースになるでしょう。 <br />
-FileSystem API はブラウザ上に実現されるファイルシステムで、既に Chrome, Opera に実装されています。今のところ他のブラウザには実装されていませんが、慎重に仕様の議論が進められています。</p>
+<p>最もポピュラーなのは <strong>WebStorage</strong> と呼ばれるキーバリュー型のストレージで、全てのメジャーブラウザの割と古いバージョンから実装されているため、既に広く利用されています。WebStorage には永久に保存される <strong>LocalStorage</strong> と、セッション中のみ保存される <strong>SessionStorage</strong> の 2 種類があります。 </p>
+
+<p><strong>WebSQL Database</strong> はリレーショナル・データベースで、既に標準化作業が停止されているにも関わらず、スマートフォンブラウザの多くに搭載されている唯一の構造型データベースであるため、未だに重宝されています。 </p>
+<p><strong>Indexed Database</strong> はオブジェクト型ストレージで、次世代ブラウザデータベースの本命として多くのブラウザに実装され、徐々に利用が広がっています。今後最も利用されるデータベースになるでしょう。 </p>
+<p><strong>FileSystem API</strong> はブラウザ上に実現されるファイルシステムで、既に Chrome, Opera に実装されています。今のところ他のブラウザには実装されていませんが、慎重に仕様の議論が進められています。</p>
 
 <p>今後ウェブアプリケーションがリッチ化するにつれ、さらにこれらブラウザ上のストレージの利用が拡大していくことが予想されます。</p>
 
 <p>非常に便利なブラウザストレージですが、いずれも端末の保存領域を使うことから、自ずとその限界は存在するのですが、今まであまり語られることはありませんでした。 <br />
 また、各利用者がひとつひとつのブラウザについて、何の前知識もなく調査を行うのは無駄の多い作業となります。この記事では各ブラウザにおけるストレージの実装状況について調査を行い、検証方法とその結果を紹介していきます。</p>
 
-<h2 id="toc-overview">Overview</h2>
+<h2 id="toc-overview">概要</h2>
 
 <p>この調査を行うに当たり、手間を最小限に抑えるためのツールとして <a href="http://demo.agektmr.com/storage/">Browser Storage Abuser</a> を制作しました。このページを表示しているブラウザ上で各ストレージにどのくらいのデータを保存することができるのかを限界まで試すことができます。</p>
 
@@ -46,7 +47,7 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 
 <p class="notice"><b>Note</b>: Opera ブラウザについては Chromium ベースとなり Chrome と同等の結果が得られたため、省略しております。</p>
 
-<h3 id="toc-mobile">Mobile</h3>
+<h3 id="toc-mobile">モバイル</h3>
 
 <table>
 <tr>
@@ -54,16 +55,16 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 <th>Chrome</th>
 <th>Android Browser</th>
 <th>Firefox</th>
-<th>iOS WebView</th>
 <th>Safari</th>
+<th>iOS WebView</th>
 </tr>
 <tr>
-<td>Version</td>
-<td>33</td>
-<td>4.3</td>
-<td>26</td>
-<td>6, 7</td>
-<td>6, 7</td>
+<th>Version</th>
+<th>33</th>
+<th>4.3</th>
+<th>26</th>
+<th>6, 7</th>
+<th>6, 7</th>
 </tr>
 <tr>
 <td>FileSystem</td>
@@ -77,7 +78,7 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 <td>IndexedDB</td>
 <td>up to quota</td>
 <td>N/A</td>
-<td>50MB?</td>
+<td>5MB, Unlimited</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
@@ -86,8 +87,8 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 <td>up to quota</td>
 <td>200MB~</td>
 <td>N/A</td>
-<td>50MB</td>
 <td>5MB, 10MB, 25MB, 50MB</td>
+<td>50MB</td>
 </tr>
 <tr>
 <td>LocalStorage</td>
@@ -106,7 +107,7 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 </tr>
 </table>
 
-<h3 id="toc-desktop">Desktop</h3>
+<h3 id="toc-desktop">デスクトップ</h3>
 
 <table>
 <tr>
@@ -118,12 +119,12 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 <th>IE</th>
 </tr>
 <tr>
-<td>Version</td>
-<td>33</td>
-<td>26</td>
-<td>6, 7</td>
-<td>9</td>
-<td>10, 11</td>
+<th>Version</th>
+<th>33</th>
+<th>26</th>
+<th>6, 7</th>
+<th>9</th>
+<th>10, 11</th>
 </tr>
 <tr>
 <td>FileSystem</td>
@@ -140,13 +141,13 @@ FileSystem API はブラウザ上に実現されるファイルシステムで�
 Unlimited</td>
 <td>N/A</td>
 <td>N/A</td>
-<td>10MB, 250MB (999MB)</td>
+<td>10MB, 250MB (~999MB)</td>
 </tr>
 <tr>
 <td>WebSQL</td>
 <td>up to quota</td>
 <td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB, ...</td>
+<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
@@ -168,7 +169,7 @@ Unlimited</td>
 </tr>
 </table>
 
-<h2 id="toc-working_with_real_world_browsers">Details: Working with real world browsers</h2>
+<h2 id="toc-working_with_real_world_browsers">詳細：実際のブラウザにおける実装</h2>
 
 <p>全体的な雰囲気がわかったところで各ブラウザごとの詳細と、デバッグ時の注意点などをご紹介していきましょう。</p>
 
@@ -201,45 +202,54 @@ Unlimited</td>
 </tr>
 </table>
 
-<p>Chrome はここで挙げられている FileSystem API, IndexeDB, WebSQL, LocalStorage, SessionStorage 全てのストレージが利用できます。また、LocalStorage、SessionStorage を除く全てのストレージが Quota Management API で管理されるクオータに従うため、デバイスの残り容量に従って保存領域が変わってきます。残りの利用可能容量は Quota Management API を使ってプログラム上で取得することができます。なお、LocalStorage と SessionStorage にクオータが適用されないのは、非同期入出力ができないため、少量データでの利用が前提とされているためです。 <br />
-現行の Quota のルールはこうです：</p>
+<p>Chrome はここで挙げられている FileSystem API, IndexeDB, WebSQL, LocalStorage, SessionStorage 全てのストレージが利用できます。また、LocalStorage、SessionStorage を除く全てのストレージが Quota Management API で管理されるクオータに従うため、デバイスの残り容量に従って保存領域が変わってきます。残りの利用可能容量は <strong>Quota Management API</strong> を使ってプログラム上で取得することができます。なお、LocalStorage と SessionStorage にクオータが適用されないのは、非同期入出力ができないため、少量データでの利用が前提とされているためです。 </p>
+
+<p>現行の Quota のルールはこうです：</p>
 
 <ul>
-<li>Temporary Storage (デフォルト)の場合、全てのストレージの合計でディスクの残り容量のうち 10% が利用可能です。クオータを超えた保存を行おうとした場合、古いウェブサイトのものから削除されます。</li>
-<li>Persistent Storage を使った場合、任意のクオータをリクエストすることができます。ただし、現在の実装 (バージョン33) では、これが適用されるのは FileSystem API のみであり、クオータを超えた保存を行おうとした場合、エラーが発生します。他のストレージに関しては全て Temporary Storage の領域に保存されます。</li>
+<li>Temporary Storage (デフォルト) の場合、全てのストレージの合計でディスクの残り容量のうち 10% が利用可能です。クオータを超えた保存を行おうとした場合、古いオリジンのものから削除されます。</li>
+<li>Persistent Storage を使った場合、任意のクオータをリクエストすることができます。ただし、現在の実装 (バージョン33) では、これが適用されるのは FileSystem API のみであり、他のストレージに関しては全て Temporary Storage の領域に保存されます。クオータを超えた保存を行おうとした場合は、エラーが発生します。</li>
 </ul>
 
-<p>Quota Management API の 2013 年 12 月現在の実装については<a href="http://updates.html5rocks.com/2011/11/Quota-Management-API-Fast-Facts">こちらの記事</a>を参考にして下さい。Quota Management API は標準化が進められており、今後この実装は変更される予定です。</p>
+<p>Quota Management API の 2014 年 1 月現在の実装については<a href="http://updates.html5rocks.com/2011/11/Quota-Management-API-Fast-Facts">こちらの記事</a>を参考にして下さい。Quota Management API は標準化が進められており、今後この実装は変更される予定です。</p>
+
+<h3 id="toc-chrome_inspect">インスペクト方法</h3>
+
+<p>Chrome DevTools の Resources パネルをご覧頂ければ、LocalStorage、SessionStorage、IndexedDB、WebSQLについて、それぞれデータ内容まで含めてインスペクトすることができます。FileSystem API について調査したい場合は：</p>
+
+<ol>
+  <li><strong>about:flags</strong> で "Enable Developer Tools experiments." をオン</li>
+  <li>Chrome を再起動した上で DevTools の設定を開く</li>
+  <li>Experiments パネルを開き、"FileSystem inspection" をチェック</li>
+  <li>DevTools を開き直す</li></li>
+</ol>
+
+<p>これで Resources パネルに他のストレージ同様 FileSystem の項目が見えるようになるはずです。</p>
 
 <figure><img src="chrome-inspect.png" /></figure>
 
-<h3 id="toc-chrome_inspect">How to inspect</h3>
+<p>デスクトップ版のストレージは下記の方法で初期化することができます。</p>
 
-<p>Chrome DevTools の Resources 
-パネルをご覧頂ければ、LocalStorage、SessionStorage、IndexedDB、WebSQLについて、それぞれデータ内容まで含めてインスペクトすることができます。 <br />
-FileSystem API について調査したい場合は、about:flags で "Enable Developer Tools experiments." をオンにし、Chrome を再起動した上で DevTools の設定で Experiments パネルを開き、"FileSystem inspection" をチェック、DevTools を開き直してください。Resources パネルに他のストレージ同様 FileSystem の項目が見えるようになるはずです。</p>
-
-<p>ストレージを初期化する手順は下記の通りです： <br />
-デスクトップ版のストレージは下記の方法で初期化することができます。</p>
-
-<ul>
-<li><code>chrome://settings/cookies</code> を開き、ドメインを指定して削除</li>
-</ul>
+<ol>
+  <li><code>chrome://settings/cookies</code> を開く</li>
+  <li>ドメインを指定</li>
+  <li>削除する</li>
+</ol>
 
 <p>もしくは</p>
 
 <ul>
-<li>DevTools の Resources パネル上で削除</li>
+  <li>DevTools の Resources パネル上で削除</li>
 </ul>
 
 <p>Android 版のストレージは下記の方法で初期化することができます。</p>
 
 <ol>
-<li>"設定" を開く</li>
-<li>"コンテンツの設定" を開く</li>
-<li>"ウェブサイト設定" を開く</li>
-<li>該当ドメインをタップ</li>
-<li>"保存したデータの消去" をタップ</li>
+  <li>"設定" を開く</li>
+  <li>"コンテンツの設定" を開く</li>
+  <li>"ウェブサイト設定" を開く</li>
+  <li>該当ドメインをタップ</li>
+  <li>"保存したデータの消去" をタップ</li>
 </ol>
 
 <p>なお、Chrome for Android でも DevTools を使ってデスクトップ版と同様の方法でインスペクトや削除を行うことができます。Chrome for Android でのデバッグ方法については<a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging">こちらの記事</a>が参考になります。</p>
@@ -265,7 +275,7 @@ FileSystem API について調査したい場合は、about:flags で "Enable De
 <tr>
 <td>Firefox for Android 26</td>
 <td>N/A</td>
-<td>50MB~</td>
+<td>5MB, Unlimited</td>
 <td>N/A</td>
 <td colspan="2">10MB</td>
 </tr>
@@ -273,29 +283,29 @@ FileSystem API について調査したい場合は、about:flags で "Enable De
 
 <p>Firefox では IndexedDB、LocalStorage、SessionStorage が利用可能です。 <br />
 LocalStorage と SessionStorage はそれぞれ 10MB が利用可能と記載していますが、実際は合計の容量の上限が 10MB となります。 <br />
-IndexedDB は 50MB が一時的な上限となり、ユーザーの許可が得られれば、その後の保存領域は無制限となります。</p>
+IndexedDB は デスクトップ版が 50MB、モバイル版が 5MB が一時的な上限となり、ユーザーの許可が得られれば、その後の保存領域は無制限となります。なお、<code>about:config</code> ページの <code>dom.indexedDB.warningQuota</code> を変更することで、上限拡大の許可を求める容量は、ユーザー自身の手で変更することができます。</p>
 
 <figure><img src="ff-premission.png" /></figure>
 
 <figure><img src="ff-android-permission.png" /></figure>
 
-<p>なお、実際はデータを圧縮して BLOB として sqlite に保存されるため、元のデータのサイズがそのままのクオータを消費するわけではないことに注意して下さい (LocalStorage、SessionStorage はそのままのサイズ)。</p>
+<blockquote class="commentary talkinghead"><b>Note</b>: IndexedDB の データは圧縮して BLOB として sqlite に保存されるため、元のデータのサイズがそのままのクオータを消費するわけではないことに注意して下さい。</blockquote>
 
-<h3 id="toc-firefox_inspect">How to inspect</h3>
+<h3 id="toc-firefox_inspect">インスペクト方法</h3>
 
-<p>実際に使われている容量は、デスクトップ版では <a href="https://addons.mozilla.org/en-US/firefox/addon/data-manager/">Tahoe Data Manager</a> を使ってインスペクトできますが、調査時の最新版 26 では利用できなくなっているようです。 <br />
+<p>実際に使われている容量は、デスクトップ版では <a href="https://addons.mozilla.org/en-US/firefox/addon/data-manager/">Tahoe Data Manager</a> を使ってインスペクトできますが、調査時の最新版 26 では Storage タブが利用できなくなっているようです。 <br />
 データは sqlite に保存されるため、一般的なツールを使って中身を調査することもできます。sqlite ファイルは各 OS のプロファイルが収められているフォルダの idb 内に存在します。</p>
 
-<p><strong>Windows:</strong> %AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default <br />
-<strong>Mac:</strong> ~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</p>
+<p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default</code><br />
+<strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</code></p>
 
 <p><a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> という Add-on を使えばインスペクトがやりやすくなるかもしれません。 <p>
 
 <figure><img src="sqlite-manager.png" /></figure>
 
-<p>また、サイトごとにクオータの上限を外す許可は about:permissions で設定可能です。</p>
+<p>また、サイトごとに与えたクオータの上限を外す許可は <code>about:permissions</code> で初期化可能です。</p>
 
-<p>Android 版については、残念ながら現時点でインスペクトやサイトごとのデータ削除を行う方法はないようです。</p>
+<p>Android 版については、残念ながら現時点でインスペクトやサイトごとのデータ削除を行う方法はないようです。デバッグ方法については<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android" target="_blank">このドキュメント</a>が参考になります。</p>
 
 <h2 id="toc-android">Android Browser</h2>
 
@@ -322,7 +332,7 @@ IndexedDB は 50MB が一時的な上限となり、ユーザーの許可が得�
 LocalStorage は他と比較して若干少なく、上限は 2MB となっています。SessionStorage はメモリ上に保存するため、上限なく保存できるようです。 <br />
 WebSQL は一度の transaction で保存しようとする容量が 500KB 前後で Quota エラーが発生しますが、transaction を分ければ追加保存が可能なようです。200MB 程度まで試しましたが、残念ながら Browser 自体がクラッシュしてしまいました。</p>
 
-<h3 id="toc-android_inspect">How to inspect</h3>
+<h3 id="toc-android_inspect">インスペクト方法</h3>
 
 <p>Android Browser に保存されたデータは <a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a> というオープンソースのツールを使うことでWebSQL、LocalStorage、SessionStorage の全てをインスペクトすることができます。 </p>
 
@@ -372,7 +382,7 @@ WebSQL は一度の transaction で保存しようとする容量が 500KB 前�
 
 <p>デスクトップ版 Safari では WebSQL、LocalStorage、SessionStorage が利用可能です。 <br />
 LocalStorage は 5MB と標準的な容量が利用可能ですが、SessionStorage はメモリ上に保存するため、上限なく保存できるようです。 <br />
-WebSQL に関しては一定の容量に達するごとにユーザーに許可を求める方式を採用しており、500MB 以上は 100MB 消費するごとに許可を求めます。ただし openDatabase の実行時に予め 5MB を超える容量を要求すると、最初にデータベースを構築する時点で、要求された容量に最も近い上限値での許可をユーザーに求め、それを超えた場合のみさらに許可を求める仕様になっています。</p>
+WebSQL に関しては一定の容量に達するごとにユーザーに許可を求める方式を採用しており、500MB 以上は 100MB 消費するごとに許可を求めます。ただし <code>openDatabase</code> の実行時に予め 5MB を超える容量を要求すると、最初にデータベースを構築する時点で、要求された容量に最も近い上限値での許可をユーザーに求め、それを超えた場合のみさらに許可を求める仕様になっています。</p>
 
 <p>モバイル版 Safari もルールは似ていますが、上限が異なります。LocalStorage の上限が 5MB であるのと同様、SessionStorage の上限も 5MB になっています。また、WebSQL の場合、5MB, 10MB, 50MB とユーザーに許可を求めますが、50MB 以上に増やすことはできません。</p>
 
@@ -380,13 +390,13 @@ WebSQL に関しては一定の容量に達するごとにユーザーに許可�
 
 <p>iOS では WebView と呼ばれるネイティブコンポーネントの中で利用可能なブラウザが存在しますが、その場合は WebSQL で 50MB が固定の上限になっており、ユーザーに許可を求めることはありません。</p>
 
-<h3 id="toc-safari_inspect">How to inspect</h3>
+<h3 id="toc-safari_inspect">インスペクト方法</h3>
 
 <p>デスクトップ版 Safari では Web Inspector を使うことで LocalStorage, SessionStorage, WebSQL のインスペクトを行うことができます。</p>
 
 <figure><img src="safari-inspector.png" /></figure>
 
-<p>モバイル版 Safari では残念ながら WebSQL のインスペクトを行うことはできませんが、LocalStorage、SessionStorage のインスペクトは可能です。</p>
+<p>モバイル版 Safari では残念ながら WebSQL のインスペクトを行うことはできませんが、LocalStorage、SessionStorage のインスペクトは可能です。モバイル版 Safari のデバッグ方法については<a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Conceptual/Safari_Developer_Guide/GettingStarted/GettingStarted.html#//apple_ref/doc/uid/TP40007874-CH2-SW8" target="_blank">こちら</a>をご覧下さい。</p>
 
 <h2 id="toc-ie">Internet Explorer</h2>
 
@@ -410,25 +420,25 @@ WebSQL に関しては一定の容量に達するごとにユーザーに許可�
 <tr>
 <td>IE 10, 11</td>
 <td>N/A</td>
-<td>10MB, 250MB (999MB)</td>
+<td>10MB, 250MB (~999MB)</td>
 <td>N/A</td>
 <td>10MB</td>
 <td>10MB</td>
 </tr>
 </table>
 
-<p>Internet Explorer 9 以降は LocalStorage、SessionStorage が利用可能です。また、10 以降では IndexedDB も利用可能になっています。 <br />
+<p>Internet Explorer では、9 以降は LocalStorage、SessionStorage が、10 以降では IndexedDB も合わせて利用可能になっています。 <br />
 LocalStorage, SessionStorage ではそれぞれ 10MB まで保存が可能です。 <br />
 IndexedDB は、デフォルトでは 10MB に達した時点でユーザーに許可を求め、ドメインごとに 250MB まで利用可能になっていますが、下記の方法でユーザーが設定を変更すれば、最大 999MB まで保存することができます。</p>
 
 <figure><img src="ie-settings.png" /></figure>
 
-<h3 id="toc-ie_inspect">How to inspect</h3>
+<h3 id="toc-ie_inspect">インスペクト方法</h3>
 
 <p>残念ながら Internet Explorer では IndexedDB をインスペクトする方法は提供されていないようです。 <br />
 ただし、Internet Options の General タブにある Browsing history から Settings をクリックし、Caches and databases タブを選択することで、ドメインごとにデータを削除することができます。</p>
 
-<h2 id="toc-how_to_handle_going_over_quota">How to handle going over quota?</h2>
+<h2 id="toc-how_to_handle_going_over_quota">クオータがオーバーした場合の対処方法</h2>
 
 <p>それでは、実際にクオータがオーバーしてしまった場合、どうすればよいのでしょうか？もちろんどういう動作を期待するかはアプリケーションの仕様によりますので、一概に決めることはできません。しかし、コードレベルで何が起きるかを知る機会はなかなかないと思いますので、ここではサンプルコードを示しながら各ストレージごとの挙動を示します。</p>
 
@@ -538,7 +548,7 @@ function onTransactionSuccess() {
   }
 }</code></pre>
 
-<h2 id="toc-conclusion">Conclusion</h2>
+<h2 id="toc-conclusion">最後に</h2>
 
 <p>以上のように、ブラウザ上のストレージの上限は、各ブラウザごとにそれぞれ特有のルールが適用されています。クオータが上限に達してもエラーにならず、うまくフォールバックするロジックを予め組み込んでおくことが重要です。<br />
 また、現在仕様の議論が行われている <a href="http://www.youtube.com/watch?v=Z7sRMg0f5Hk">ServiceWorker</a> や <a href="http://www.w3.org/TR/quota-api/">新しい Quota Management API</a> についても調査をおすすめします。これらは、この記事に書かれた制限に劇的な変化をもたらす可能性があります。</p>
