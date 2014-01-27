@@ -8,14 +8,28 @@
       background-position: 0px -4px !important;
     }
     table {
-      font-size: 90%;
+      width: 100%;
+      font-size: 80%;
+      table-layout: fixed;
     }
     th, td {
+      background-color: #fff;
       border: solid 1px #ccc;
       padding: 0 5px;
     }
+    th {
+      background-color: #eee;
+    }
     tr > td:first-child {
       font-weight: bold;
+      background-color: #DA421C;
+      color: white;
+    }
+    .empty {
+      background-color: #ccc;
+    }
+    .mb {
+      font-size: 70%;
     }
   </style>
 {% endblock %}
@@ -29,8 +43,12 @@
 <p>最もポピュラーなのは <strong>WebStorage</strong> と呼ばれるキーバリュー型のストレージで、全てのメジャーブラウザの割と古いバージョンから実装されているため、既に広く利用されています。WebStorage には永久に保存される <strong>LocalStorage</strong> と、セッション中のみ保存される <strong>SessionStorage</strong> の 2 種類があります。 </p>
 
 <p><strong>WebSQL Database</strong> はリレーショナル・データベースで、既に標準化作業が停止されているにも関わらず、スマートフォンブラウザの多くに搭載されている唯一の構造型データベースであるため、未だに重宝されています。 </p>
+
 <p><strong>Indexed Database</strong> はオブジェクト型ストレージで、次世代ブラウザデータベースの本命として多くのブラウザに実装され、徐々に利用が広がっています。今後最も利用されるデータベースになるでしょう。 </p>
+
 <p><strong>FileSystem API</strong> はブラウザ上に実現されるファイルシステムで、既に Chrome, Opera に実装されています。今のところ他のブラウザには実装されていませんが、慎重に仕様の議論が進められています。</p>
+
+<p><strong>Application Cache</strong> はシンプルページアプリケーションを想定した強力なキャッシュ機構です。いくつかの問題点が指摘され、現在 ServiceWorker と呼ばれる代替手段が検討されていますが、現在のところこれを超えるオフラインソリューションは存在しません。</p>
 
 <p>今後ウェブアプリケーションがリッチ化するにつれ、さらにこれらブラウザ上のストレージの利用が拡大していくことが予想されます。</p>
 
@@ -50,123 +68,143 @@
 <h3 id="toc-mobile">モバイル</h3>
 
 <table>
-<tr>
-<th>Browser</th>
-<th>Chrome</th>
-<th>Android Browser</th>
-<th>Firefox</th>
-<th>Safari</th>
-<th>iOS WebView</th>
-</tr>
-<tr>
-<th>Version</th>
-<th>33</th>
-<th>4.3</th>
-<th>26</th>
-<th>6, 7</th>
-<th>6, 7</th>
-</tr>
-<tr>
-<td>FileSystem</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>IndexedDB</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>5MB, Unlimited</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>WebSQL</td>
-<td>up to quota</td>
-<td>200MB~</td>
-<td>N/A</td>
-<td>5MB, 10MB, 25MB, 50MB</td>
-<td>50MB</td>
-</tr>
-<tr>
-<td>LocalStorage</td>
-<td>10MB</td>
-<td>2MB</td>
-<td rowspan="2">10MB</td>
-<td>5MB</td>
-<td>5MB</td>
-</tr>
-<tr>
-<td>SessionStorage</td>
-<td>10MB</td>
-<td>Unlimited</td>
-<td>5MB</td>
-<td>5MB</td>
-</tr>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Android Browser</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>iOS WebView</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>4.3</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>6, 7</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>up to quota</td>
+      <td>Unlimited?</td>
+      <td>5<span class="mb">MB</span>, Unlimited</td>
+      <td>300<span class="mb">MB</span>?</td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, Unlimited</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>up to quota</td>
+      <td>200<span class="mb">MB</span>~</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+      <td>50<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>2<span class="mb">MB</span></td>
+      <td rowspan="2">10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>Unlimited</td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
 </table>
+
 
 <h3 id="toc-desktop">デスクトップ</h3>
 
 <table>
-<tr>
-<th>Browser</th>
-<th>Chrome</th>
-<th>Firefox</th>
-<th>Safari</th>
-<th>IE</th>
-<th>IE</th>
-</tr>
-<tr>
-<th>Version</th>
-<th>33</th>
-<th>26</th>
-<th>6, 7</th>
-<th>9</th>
-<th>10, 11</th>
-</tr>
-<tr>
-<td>FileSystem</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>IndexedDB</td>
-<td>up to quota</td>
-<td>50MB,
-Unlimited</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>10MB, 250MB (~999MB)</td>
-</tr>
-<tr>
-<td>WebSQL</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>LocalStorage</td>
-<td>10MB</td>
-<td>10MB</td>
-<td>5MB</td>
-<td>10MB</td>
-<td>10MB</td>
-</tr>
-<tr>
-<td>SessionStorage</td>
-<td>10MB</td>
-<td>10MB</td>
-<td>Unlimited</td>
-<td>10MB</td>
-<td>10MB</td>
-</tr>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>IE</th>
+      <th>IE</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>9</th>
+      <th>10, 11</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>up to quota</td>
+      <td>500<span class="mb">MB</span>, Unlimited</td>
+      <td>Unlimited?</td>
+      <td class="empty"></td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>up to quota</td>
+      <td>50<span class="mb">MB</span>, Unlimited</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>Unlimited</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
 </table>
 
 <h2 id="toc-working_with_real_world_browsers">詳細：実際のブラウザにおける実装</h2>
@@ -178,6 +216,7 @@ Unlimited</td>
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -189,20 +228,22 @@ Unlimited</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>up to quota</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>Chrome for Android 33</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>up to quota</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Chrome はここで挙げられている FileSystem API, IndexeDB, WebSQL, LocalStorage, SessionStorage 全てのストレージが利用できます。また、LocalStorage、SessionStorage を除く全てのストレージが Quota Management API で管理されるクオータに従うため、デバイスの残り容量に従って保存領域が変わってきます。残りの利用可能容量は <strong>Quota Management API</strong> を使ってプログラム上で取得することができます。なお、LocalStorage と SessionStorage にクオータが適用されないのは、非同期入出力ができないため、少量データでの利用が前提とされているためです。 </p>
+<p>Chrome はここで挙げられている Application Cache、FileSystem API、IndexeDB、WebSQL、LocalStorage、SessionStorage 全てのストレージが利用できます。また、LocalStorage、SessionStorage を除く全てのストレージが Quota Management API で管理されるクオータに従うため、デバイスの残り容量に従って保存領域が変わってきます。残りの利用可能容量は <strong>Quota Management API</strong> を使ってプログラム上で取得することができます。なお、LocalStorage と SessionStorage にクオータが適用されないのは、非同期入出力ができないため、少量データでの利用が前提とされているためです。 </p>
 
 <p>現行の Quota のルールはこうです：</p>
 
@@ -259,6 +300,7 @@ Unlimited</td>
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -267,23 +309,28 @@ Unlimited</td>
 </tr>
 <tr>
 <td>Firefox 26</td>
-<td>N/A</td>
-<td>50MB, Unlimited</td>
-<td>N/A</td>
-<td colspan="2">10MB</td>
+<td>500<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>Firefox for Android 26</td>
-<td>N/A</td>
-<td>5MB, Unlimited</td>
-<td>N/A</td>
-<td colspan="2">10MB</td>
+<td>5<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Firefox では IndexedDB、LocalStorage、SessionStorage が利用可能です。 <br />
+<p>Firefox では Application Cache、IndexedDB、LocalStorage、SessionStorage が利用可能です。 <br />
 LocalStorage と SessionStorage はそれぞれ 10MB が利用可能と記載していますが、実際は合計の容量の上限が 10MB となります。 <br />
-IndexedDB は デスクトップ版が 50MB、モバイル版が 5MB が一時的な上限となり、ユーザーの許可が得られれば、その後の保存領域は無制限となります。なお、<code>about:config</code> ページの <code>dom.indexedDB.warningQuota</code> を変更することで、上限拡大の許可を求める容量は、ユーザー自身の手で変更することができます。</p>
+IndexedDB は デスクトップ版が 50MB、モバイル版が 5MB が一時的な上限となり、ユーザーの許可が得られれば、その後の保存領域は無制限となります。<br />
+Application Cache はデスクトップ版が 500MB、モバイル版が 5MB が一時的な上限となり、こちらもユーザーの許可が得られれば、その後の保存領域は無制限となります。</p>
+
+<p>なお、<code>about:config</code> ページの <code>dom.indexedDB.warningQuota</code> を変更することで IndexedDB の、<code>browser.cache.offline.capacity</code> を変更することで Application Cache の上限拡大の許可を求める容量は、それぞれユーザー自身の手で変更することができます。</p>
 
 <figure><img src="ff-premission.png" /></figure>
 
@@ -312,6 +359,7 @@ IndexedDB は デスクトップ版が 50MB、モバイル版が 5MB が一時�
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -320,21 +368,23 @@ IndexedDB は デスクトップ版が 50MB、モバイル版が 5MB が一時�
 </tr>
 <tr>
 <td>Android Browser</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>200MB~?</td>
-<td>2MB</td>
+<td>Unlimited?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>200<span class="mb">MB</span>~?</td>
+<td>2<span class="mb">MB</span></td>
 <td>Unlimited</td>
 </tr>
 </table>
 
-<p>Android の Browser では WebSQL、LocalStorage、SessionStorage が利用可能です。 <br />
+<p>Android の Browser では Application Cache、WebSQL、LocalStorage、SessionStorage が利用可能です。 <br />
 LocalStorage は他と比較して若干少なく、上限は 2MB となっています。SessionStorage はメモリ上に保存するため、上限なく保存できるようです。 <br />
-WebSQL は一度の transaction で保存しようとする容量が 500KB 前後で Quota エラーが発生しますが、transaction を分ければ追加保存が可能なようです。200MB 程度まで試しましたが、残念ながら Browser 自体がクラッシュしてしまいました。</p>
+WebSQL は一度の transaction で保存しようとする容量が 500KB 前後で Quota エラーが発生しますが、transaction を分ければ追加保存が可能なようです。200MB 程度まで試しましたが、残念ながら Browser 自体がクラッシュしてしまいました。<br />
+また未確認ですが、Application Cache では無制限にデータを保存できると言われています。</p>
 
 <h3 id="toc-android_inspect">インスペクト方法</h3>
 
-<p>Android Browser に保存されたデータは <a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a> というオープンソースのツールを使うことでWebSQL、LocalStorage、SessionStorage の全てをインスペクトすることができます。 </p>
+<p>Android Browser に保存されたデータは <a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a> というオープンソースのツールを使うことでWebSQL、LocalStorage、SessionStorage をインスペクトすることができます。 </p>
 
 <figure><img src="weinre.png" /></figure>
 
@@ -347,6 +397,7 @@ WebSQL は一度の transaction で保存しようとする容量が 500KB 前�
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -355,36 +406,38 @@ WebSQL は一度の transaction で保存しようとする容量が 500KB 前�
 </tr>
 <tr>
 <td>Safari 6, 7</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
-<td>5MB</td>
+<td>Unlimited?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+<td>5<span class="mb">MB</span></td>
 <td>Unlimited</td>
 </tr>
 <tr>
 <td>Mobile Safari 6, 7</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>5MB, 10MB,
-25MB, 50MB</td>
-<td>5MB</td>
-<td>5MB</td>
+<td>300<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>iOS WebView</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>50MB</td>
-<td>5MB</td>
-<td>5MB</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>デスクトップ版 Safari では WebSQL、LocalStorage、SessionStorage が利用可能です。 <br />
+<p>デスクトップ版 Safari では Application Cache、WebSQL、LocalStorage、SessionStorage が利用可能です。 <br />
 LocalStorage は 5MB と標準的な容量が利用可能ですが、SessionStorage はメモリ上に保存するため、上限なく保存できるようです。 <br />
 WebSQL に関しては一定の容量に達するごとにユーザーに許可を求める方式を採用しており、500MB 以上は 100MB 消費するごとに許可を求めます。ただし <code>openDatabase</code> の実行時に予め 5MB を超える容量を要求すると、最初にデータベースを構築する時点で、要求された容量に最も近い上限値での許可をユーザーに求め、それを超えた場合のみさらに許可を求める仕様になっています。</p>
 
-<p>モバイル版 Safari もルールは似ていますが、上限が異なります。LocalStorage の上限が 5MB であるのと同様、SessionStorage の上限も 5MB になっています。また、WebSQL の場合、5MB, 10MB, 50MB とユーザーに許可を求めますが、50MB 以上に増やすことはできません。</p>
+<p>モバイル版 Safari もルールは似ていますが、上限が異なります。LocalStorage の上限が 5MB であるのと同様、SessionStorage の上限も 5MB になっています。また、WebSQL の場合、5MB, 10MB, 50MB とユーザーに許可を求めますが、50MB 以上に増やすことはできません。Application Cache では 10MB という情報を見つけましたが、筆者が試したところ、300MB 程度は問題なく保存することができました。</p>
 
 <blockquote class="commentary talkinghead"><b>Note</b>: iOS 7 〜 7.0.4 の Safari では、<a href="http://www.mobilexweb.com/blog/safari-ios7-html5-problems-apis-review" target="_blank">データベース作成時に 5MB 以上をリクエストすると例外が発生するというバグ</a>があります。これを回避するには、データベース作成時に 5MB 以下をリクエストし、容量の追加はブラウザに任せ、ユーザーの許可を得る他ありません。ユーザーにとっては迷惑な話ですが、現状これ以外の回避方法はないようです。</blockquote>
 
@@ -403,6 +456,7 @@ WebSQL に関しては一定の容量に達するごとにユーザーに許可�
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -411,36 +465,50 @@ WebSQL に関しては一定の容量に達するごとにユーザーに許可�
 </tr>
 <tr>
 <td>IE 9</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>10MB</td>
-<td>10MB</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>IE 10, 11</td>
-<td>N/A</td>
-<td>10MB, 250MB (~999MB)</td>
-<td>N/A</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Internet Explorer では、9 以降は LocalStorage、SessionStorage が、10 以降では IndexedDB も合わせて利用可能になっています。 <br />
+
+<p>Internet Explorer では、9 以降は LocalStorage、SessionStorage が、10 以降では Application Cache と IndexedDB も合わせて利用可能になっています。 <br />
 LocalStorage, SessionStorage ではそれぞれ 10MB まで保存が可能です。 <br />
-IndexedDB は、デフォルトでは 10MB に達した時点でユーザーに許可を求め、ドメインごとに 250MB まで利用可能になっていますが、下記の方法でユーザーが設定を変更すれば、最大 999MB まで保存することができます。</p>
+IndexedDB は、デフォルトでは 10MB に達した時点でユーザーに許可を求め、ドメインごとに 250MB まで利用可能になっていますが、下記の方法でユーザーが設定を変更すれば、最大 999MB まで保存することができます。<br />
+Application Cache では 100MB を超えた辺りでエラーが発生しましたが、これがクオータによるものかどうかははっきりしませんでした。</p>
 
 <figure><img src="ie-settings.png" /></figure>
 
 <h3 id="toc-ie_inspect">インスペクト方法</h3>
 
-<p>残念ながら Internet Explorer では IndexedDB をインスペクトする方法は提供されていないようです。 <br />
+<p>残念ながら Internet Explorer ではどのストレージもインスペクトする方法は提供されていないようです。 <br />
 ただし、Internet Options の General タブにある Browsing history から Settings をクリックし、Caches and databases タブを選択することで、ドメインごとにデータを削除することができます。</p>
 
 <h2 id="toc-how_to_handle_going_over_quota">クオータがオーバーした場合の対処方法</h2>
 
 <p>それでは、実際にクオータがオーバーしてしまった場合、どうすればよいのでしょうか？もちろんどういう動作を期待するかはアプリケーションの仕様によりますので、一概に決めることはできません。しかし、コードレベルで何が起きるかを知る機会はなかなかないと思いますので、ここではサンプルコードを示しながら各ストレージごとの挙動を示します。</p>
+
+<h3 id="toc-appcache">Application Cache</h3>
+
+<p>最もデバッグが難しいのが Application Cache です。いくつかのブラウザではエラーの理由をコンソールに表示してくれますが、エラーイベントに <code>DOMError</code> オブジェクトが紐付けられていないため、プログラム上で理由を知る方法はありません。
+</p>
+
+<pre class="prettyprint"><code>var appCache = window.applicationCache;
+appCache.addEventListener('error', function(e) {
+  // It's diffulct to tell cause of this error since there's no DOMError object associated with callback argument.
+});</code></pre>
 
 <h3 id="toc-filesystem">FileSystem API</h3>
 
