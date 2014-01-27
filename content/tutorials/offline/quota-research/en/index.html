@@ -8,14 +8,28 @@
       background-position: 0px -4px !important;
     }
     table {
-      font-size: 90%;
+      width: 100%;
+      font-size: 80%;
+      table-layout: fixed;
     }
     th, td {
+      background-color: #fff;
       border: solid 1px #ccc;
       padding: 0 5px;
     }
+    th {
+      background-color: #eee;
+    }
     tr > td:first-child {
       font-weight: bold;
+      background-color: #DA421C;
+      color: white;
+    }
+    .empty {
+      background-color: #ccc;
+    }
+    .mb {
+      font-size: 70%;
     }
   </style>
 {% endblock %}
@@ -34,6 +48,8 @@
 
 <p><strong>FileSystem API</strong> is a file system solution for the web. Developers can store large objects in a sandboxed part of the user's file system and directly link to them via URL. Although Chrome and Opera are the only browsers that currently implement the feature, its standardization is ongoing.</p>
 
+<p><strong>Application Cache</strong> is a powerful cache mechanism targeting single page applications on browsers. Although there were number of complaints about this spec and an alternative spec called ServiceWorker is being proposed, there is no real offline webapp solutions other than this as of January 2014.</p>
+
 <p>As web apps get richer and richer, more and more developers are using browser-side storage. However, there hasn't been a major study comparing the limitations of the various storage mechanisms. It is time consuming for developers to research each method and browser. So in this article, I'm going to show you the results of my research on the upper limit of each browser's storage implementation, as well as how you can inspect them.</p>
 
 <h2 id="toc-overview">Overview</h2>
@@ -48,128 +64,143 @@
 
 <h3 id="toc-mobile">Mobile</h3>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
-<tr>
-<th>Browser</th>
-<th>Chrome</th>
-<th>Android Browser</th>
-<th>Firefox</th>
-<th>Safari</th>
-<th>iOS WebView</th>
-</tr>
-<tr>
-<th>Version</th>
-<th>33</th>
-<th>4.3</th>
-<th>26</th>
-<th>6, 7</th>
-<th>6, 7</th>
-</tr>
-<tr>
-<td>FileSystem</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>IndexedDB</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>5MB, Unlimited</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>WebSQL</td>
-<td>up to quota</td>
-<td>200MB~</td>
-<td>N/A</td>
-<td>5MB, 10MB, 25MB, 50MB</td>
-<td>50MB</td>
-</tr>
-<tr>
-<td>LocalStorage</td>
-<td>10MB</td>
-<td>2MB</td>
-<td rowspan="2">10MB</td>
-<td>5MB</td>
-<td>5MB</td>
-</tr>
-<tr>
-<td>SessionStorage</td>
-<td>10MB</td>
-<td>Unlimited</td>
-<td>5MB</td>
-<td>5MB</td>
-</tr>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Android Browser</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>iOS WebView</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>4.3</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>6, 7</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>up to quota</td>
+      <td>Unlimited?</td>
+      <td>5<span class="mb">MB</span>, Unlimited</td>
+      <td>300<span class="mb">MB</span>?</td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, Unlimited</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>up to quota</td>
+      <td>200<span class="mb">MB</span>~</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+      <td>50<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>2<span class="mb">MB</span></td>
+      <td rowspan="2">10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>Unlimited</td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
 </table>
 
 <h3 id="toc-desktop">Desktop</h3>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
-<tr>
-<th>Browser</th>
-<th>Chrome</th>
-<th>Firefox</th>
-<th>Safari</th>
-<th>IE</th>
-<th>IE</th>
-</tr>
-<tr>
-<th>Version</th>
-<th>33</th>
-<th>26</th>
-<th>6, 7</th>
-<th>9</th>
-<th>10, 11</th>
-</tr>
-<tr>
-<td>FileSystem</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>IndexedDB</td>
-<td>up to quota</td>
-<td>50MB,
-Unlimited</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>10MB, 250MB (~999MB)</td>
-</tr>
-<tr>
-<td>WebSQL</td>
-<td>up to quota</td>
-<td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
-<td>N/A</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>LocalStorage</td>
-<td>10MB</td>
-<td>10MB</td>
-<td>5MB</td>
-<td>10MB</td>
-<td>10MB</td>
-</tr>
-<tr>
-<td>SessionStorage</td>
-<td>10MB</td>
-<td>10MB</td>
-<td>Unlimited</td>
-<td>10MB</td>
-<td>10MB</td>
-</tr>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>IE</th>
+      <th>IE</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>9</th>
+      <th>10, 11</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>up to quota</td>
+      <td>500<span class="mb">MB</span>, Unlimited</td>
+      <td>Unlimited?</td>
+      <td class="empty"></td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>up to quota</td>
+      <td>50<span class="mb">MB</span>, Unlimited</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>up to quota</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>Unlimited</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
 </table>
 
 <h2 id="toc-working_with_real_world_browsers">Details: Working with real world browsers</h2>
@@ -178,11 +209,10 @@ Unlimited</td>
 
 <h2 id="toc-chrome">Chrome / Chrome for Android</h2>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -194,20 +224,22 @@ Unlimited</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>up to quota</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>Chrome for Android 33</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>up to quota</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Chrome can use all of the types of storage listed here including FileSystem API, IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage mechanisms except LocalStorage and SessionStorage, which use asynchronous input and output, are under managed by <strong>Quota Management API</strong>; their limitation varies depending on the amount of storage the device has left. </p>
+<p>Chrome can use all of the types of storage listed here including Application Cache, FileSystem API, IndexedDB, WebSQL, LocalStorage and SessionStorage. All of the storage mechanisms except LocalStorage and SessionStorage, which use asynchronous input and output, are under managed by <strong>Quota Management API</strong>; their limitation varies depending on the amount of storage the device has left. </p>
 
 <p>Current quota rule is as follows:</p>
 
@@ -231,7 +263,7 @@ For inspecting FileSystem API, you need to</p>
 <li>Reopen DevTools.</li>
 </ol>
 
-<p>You should now see "FileSystem" item the Resources panel.</p>
+<p>You should now see "FileSystem" in the Resources panel.</p>
 
 <figure><img src="chrome-inspect.png" /></figure>
 
@@ -264,11 +296,10 @@ Desktop:</p>
 
 <h2 id="toc-firefox">Firefox / Firefox for Android</h2>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -277,22 +308,27 @@ Desktop:</p>
 </tr>
 <tr>
 <td>Firefox 26</td>
-<td>N/A</td>
-<td>50MB, Unlimited</td>
-<td>N/A</td>
-<td colspan="2">10MB</td>
+<td>500<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>Firefox for Android 26</td>
-<td>N/A</td>
-<td>5MB, Unlimited</td>
-<td>N/A</td>
-<td colspan="2">10MB</td>
+<td>5<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, Unlimited</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 </table>
 
 <p>Firefox can use IndexedDB, LocalStorage and SessionStorage. LocalStorage and SessionStorage can use up to 10MB of storage but the number is actually the sum of both. <br />
-For IndexedDB, you can use up to 50MB on desktop, 5MB on mobile for free. However, the user can allow the limit to be removed by granting permission. A user can also change the warning quota by changing <code>about:config</code>'s <code>dom.indexedDB.warningQuota</code></p>
+For IndexedDB, you can use up to 50MB on desktop, 5MB on mobile for free. However, the user can allow the limit to be removed by granting permission.</p>
+
+<p>For Application Cache, you can use up to 500MB on desktop, 5MB on mobile for free. Same for user permission.
+A user can also change the warning quota by changing <code>about:config</code>'s <code>dom.indexedDB.warningQuota</code> for IndexedDB, <code>browser.cache.offline.capacity</code> for Application Cache.</p>
 
 <figure><img src="ff-premission.png" /></figure>
 
@@ -318,11 +354,10 @@ on desktop, but the Storage tab doesn't seem to work on Firefox 26. You can actu
 
 <h2 id="toc-android">Android Browser</h2>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -331,17 +366,19 @@ on desktop, but the Storage tab doesn't seem to work on Firefox 26. You can actu
 </tr>
 <tr>
 <td>Android Browser</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>200MB~?</td>
-<td>2MB</td>
+<td>Unlimited?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>200<span class="mb">MB</span>~?</td>
+<td>2<span class="mb">MB</span></td>
 <td>Unlimited</td>
 </tr>
 </table>
 
-<p>Android Browser can use WebSQL, LocalStorage and SessionStorage. <br />
+<p>Android Browser can use Application Cache, WebSQL, LocalStorage and SessionStorage. <br />
 Compared to the other browsers, Android Browser only has 2MB for LocalStorage. SessionStorage is unlimited since it stores data on memory instead of disks. <br />
-It is tough to examine WebSQL on Android Browser. Storing around 500KB data in one transaction returns a quota error, but dividing it into multiple transactions seemed to work ok. I could store up to around 200MB without permission, before it crashed.</p>
+It is tough to examine WebSQL on Android Browser. Storing around 500KB data in one transaction returns a quota error, but dividing it into multiple transactions seemed to work ok. I could store up to around 200MB without permission, before it crashed.<br />
+Though unconfirmed, Application Cache is said to have no limit on storing data.</p>
 
 <h3 id="toc-android_inspect">How to inspect</h3>
 
@@ -355,11 +392,10 @@ It is tough to examine WebSQL on Android Browser. Storing around 500KB data in o
 
 <h2 id="toc-safari">Safari / Safari for iOS</h2>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -368,37 +404,41 @@ It is tough to examine WebSQL on Android Browser. Storing around 500KB data in o
 </tr>
 <tr>
 <td>Safari 6, 7</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>5MB, 10MB, 50MB, 100MB, 500MB, 600MB, 700MB...</td>
-<td>5MB</td>
+<td>Unlimited?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+<td>5<span class="mb">MB</span></td>
 <td>Unlimited</td>
 </tr>
 <tr>
 <td>Mobile Safari 6, 7</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>5MB, 10MB,
-25MB, 50MB</td>
-<td>5MB</td>
-<td>5MB</td>
+<td>300<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>iOS WebView</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>50MB</td>
-<td>5MB</td>
-<td>5MB</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Safari can use WebSQL, LocalStorage and SessionStorage. <br />
+<p>Safari can use Application Cache, WebSQL, LocalStorage and SessionStorage. <br />
 For desktop, you can use up to 5MB for LocalStorage. Similar to Android Browser, SessionStorage is unlimited since it stores data on memory instead of disks. <br />
-WebSQL's quota policy is a bit unique here. Safari asks a user for permissions in multiple size points as described above. But if <code>openDatabase</code> is called with more than 5MB of size on database creation, Safari will ask the user for a permission of the closest upper limit. If granted, it won't ask user another permission until actual data size exceeds that number.</p>
+WebSQL's quota policy is a bit unique here. Safari asks a user for permissions in multiple size points as described above. But if <code>openDatabase</code> is called with more than 5MB of size on database creation, Safari will ask the user for a permission of the closest upper limit. If granted, it won't ask user another permission until actual data size exceeds that number.<br />
+Though unconfirmed, Application Cache on Safari is said to have no limit on storing data.</p>
 
 <p>For mobile, the rule is similar but the upper limits are different. <br />
-SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a user for permissions but you can't store data any more than 50MB.</p>
+SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a user for permissions but you can't store data any more than 50MB.<br/>
+I've found an information that Application Cache's upper limit is 10MB. However, I could successfully store up to 300MB at least.</p>
 
 <blockquote class="commentary talkinghead"><b>Note</b>: Safari after iOS 7 has <a href="http://www.mobilexweb.com/blog/safari-ios7-html5-problems-apis-review" target="_blank">a bug that throws an exception when more than 5MB is requested on database creation</a>. This is not fixed as of iOS 7.0.4. Work around is to request less than 5MB and let Safari ask for a permission. This is annoying for users, but no way around.</blockquote>
 
@@ -413,11 +453,10 @@ SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a use
 
 <h2 id="toc-ie">Internet Explorer</h2>
 
-<!-- TODO: Fix formatting of cells -->
-
 <table>
 <tr>
 <th></th>
+<th>AppCache</th>
 <th>FileSystem</th>
 <th>IndexedDB</th>
 <th>WebSQL</th>
@@ -426,31 +465,34 @@ SessionStorage's limit is 5MB as it is on LocalStorage. On WebSQL, it asks a use
 </tr>
 <tr>
 <td>IE 9</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>N/A</td>
-<td>10MB</td>
-<td>10MB</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
 <td>IE 10, 11</td>
-<td>N/A</td>
-<td>10MB, 250MB (~999MB)</td>
-<td>N/A</td>
-<td>10MB</td>
-<td>10MB</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
 </tr>
 </table>
 
-<p>Internet Explorer supports LocalStorage and SessionStorage after version 9. Version 10 started to support IndexedDB as well. <br />
+<p>Internet Explorer supports LocalStorage and SessionStorage after version 9. Version 10 started to support Application Cache and IndexedDB as well. <br />
 On LocalStorage and SessionStorage, users can store up to 10MB each. <br />
-On IndexedDB, the browser asks users for permission at 10MB, then allows up to 250MB by default. It can store up to 999MB without permission but requires the user to change their settings to allow it; a developer cannot change this setting.</p>
+On IndexedDB, the browser asks users for permission at 10MB, then allows up to 250MB by default. It can store up to 999MB without permission but requires the user to change their settings to allow it; a developer cannot change this setting.<br />
+On Application Cache, I got an error when storing around 100MB but it's difficult to tell that it was caused by over quota.</p>
 
 <figure><img src="ie-settings.png" /></figure>
 
 <h3 id="toc-ie_inspect">How to inspect</h3>
 
-<p>Unfortunately, there's no good way to inspect LocalStorage, SessionStorage or IndexedDB on Internet Explorer yet. <br />
+<p>Unfortunately, there's no good way to inspect any of supported storage on Internet Explorer yet. <br />
 You can still delete stored data per domain by</p>
 
 <ol>
@@ -461,6 +503,15 @@ You can still delete stored data per domain by</p>
 <h2 id="toc-how_to_handle_going_over_quota">How to handle going over quota?</h2>
 
 <p>What should you do when your app is over quota? It's up to app's design what to do, but I would like to share some sample code since there's not much existing examples on internet.</p>
+
+<h3 id="toc-appcache">Application Cache</h3>
+
+<p>The most tough storage to debug on is Application Cache. Some browsers kindly tells a reason of the error in console, but since there's no <code>DOMError</code> object associated with the error event, there's no way to obtain it programmatically.</p>
+
+<pre class="prettyprint"><code>var appCache = window.applicationCache;
+appCache.addEventListener('error', function(e) {
+  // It's diffulct to tell cause of this error since there's no DOMError object associated with callback argument.
+});</code></pre>
 
 <h3 id="toc-filesystem">FileSystem API</h3>
 
