@@ -52,9 +52,7 @@ far as rendering is concerned. Examining the DevTools verifies this behavior.
 starting with the most recent first. The last one added is the one that renders.</p>
 
 <blockquote class="commentary talkinghead" id="youngest-tree">
-The most recently added tree is called the <b>younger tree</b>, while the more
-recent one is called the <b>older tree</b>. In this example, <code>root2</code>
-is the younger tree and  <code>root1</code> is the older tree.
+The most recently added tree is called the <b>younger tree</b>. Previous trees are called <b>older trees</b>. In this example, <code>root2</code> is the younger tree and  <code>root1</code> is the older tree.
 </blockquote>
 
 So what's the point of using multiple shadows if only the last is invited to the
