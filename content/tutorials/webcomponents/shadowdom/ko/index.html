@@ -57,58 +57,37 @@ span.unchanged * {
 
 <p>{% include "warning.html" %}</p>
 
-<h2 id="toc-introduction">Introduction</h2>
+<h2 id="toc-introduction">소개</h2>
 
 <p>
-Web Components is a set of cutting edge standards that:
+    웹 컴포넌트는 다음과 같은 최신 표준의 집합입니다.
 </p>
 
 <ol>
-<li>Make it possible to build widgets</li>
-<li>…which can be reused reliably</li>
-<li>
-…and which won’t break pages if the next version of the component
-changes internal implementation details.
-</li>
+    <li>위젯 구축을 가능하게 만들고…</li>
+    <li>신뢰성있게 재사용할 수 있으며…</li>
+    <li>컴포넌트의 차기버전이 내부의 세부적인 구현을 변경되어도 페이지를 깨뜨리지 않는…</li>
 </ol>
 
 <p>
-Does this mean you have to decide when to use HTML/JavaScript, and
-when to use Web Components? No! HTML and JavaScript can make
-interactive visual stuff. Widgets are interactive visual stuff. It
-makes sense to leverage your HTML and JavaScript skills when
-developing a widget. The Web Components standards are designed to help
-you do that.
+이것이 HTML/자바스크립트를 사용하는 때와 웹 컴포넌트를 사용하는 때를 결정하여야 하는 것을 의미할까요? 아닙니다! HTML과 자바스크립트가 인터랙티브한 시각 요소들을 만들 수 있습니다. 위젯을 개발할 때 HTML과 자바스크립트 기술을 지탱하는 것으로 이해하는 것이 쉽습니다. 웹 컴포넌트 표준은 여러분이 이러한 일들을 하는데 도움을 주도록 디자인되었습니다.
+    
 </p>
 
 <blockquote class="commentary talkinghead">
-It doesn’t make sense to have to switch to a different technology to
-build a widget. For example, I’m definitely not a fan of making your
-widget out of a <code>&lt;canvas&gt;</code>. It is reliable — pages
-won’t break if you change what it paints — but it’s hostile to
-accessibility, indexing, composition, and resolution independence.
+위젯을 구축하기 위해 다른 기술로 전환하여야만 한다는 것은 아닙니다. 예를 들어 저는 <code>&lt;canvas&gt;</code> 위젯 제작의 완전한 팬은 아닙니다. 이는 — 만약 페인팅할 것을 변경할 때 페이지들이 깨지지 않는다는 점에서 — 신뢰할만 합니다만 접근성, 인덱싱, 컴포지션 그리고 해상도 독립성에는 적대적입니다.
 </blockquote>
 
 <p>
-But there is a fundamental problem that makes widgets built out of
-HTML and JavaScript hard to use: The DOM tree inside a widget isn’t
-encapsulated from the rest of the page. This lack of encapsulation
-means your document stylesheet might accidentally apply to parts
-inside the widget; your JavaScript might accidentally modify parts
-inside the widget; your IDs might overlap with IDs inside the widget;
-and so on.
+그러나 여기에는 HTML과 자바스크립트로 만든 위젯을 사용하기 힘들게 만드는 다음과 같은 더 심각한 문제들이 있습니다. 위젯 내부의 DOM 트리는 페이지의 나머지로부터 캡슐화되지 않습니다. 이 불충분한 캡슐화는 문서의 스타일시트가 갑자기 위젯 내 일부에 적용되거나 자바스크립트가 위젯 내 일부를 갑자기 수정하거나 ID들이 위젯 내의 ID들과 겹칠 수 있는 것 등을 의미합니다.
 </p>
 
 <blockquote class="commentary">
-A particularly pernicious aspect of the lack of encapsulation is that
-if you upgrade the library and the internal details of the widget’s
-DOM changes, your styles and scripts might break in unpredictable
-ways.
+특히 불충분한 캡슐화의 치명적인 면은 바로 라이브러리를 업그레이드하거나 위젯 DOM의 내부 구현을 변경하면 스타일과 스크립트가 예측하지 못한 방향으로 깨진다는 것입니다.
 </blockquote>
 
 <p>
-Web Components is comprised of four
-parts:
+웹 컴포넌트는 다음과 같이 4개의 부분으로 구성되어 있습니다.
 </p>
 
 <ol>
@@ -120,31 +99,26 @@ Elements</a></li>
 <li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#external-custom-elements-and-decorators">Packaging</a></li>
 </ol>
 
+<p class="notice tip">
+    <b>역주:</b> 최근 웹 컴포넌트를 지탱하는 규격은 Shadow DOM, Templates, Custom Elements, HTML Imports으로 인식되고 있습니다. Shadow DOM이 컴포넌트를 구성하는 DOM을 감추는 역할(encapsulation)을 하고 HTML Template가 DOM의 복제 및 재 사용성을 제공하며 Custom Element는 웹 문서에서 사용할 엘리먼트를 모듈에서 직접 등록할 수 있도록 하는 기능을 제공하여 컴포넌트의 명시적인 alias를 선언하는 역할을 한다면 HTML Imports는 웹 문서 내에 외부 리소스를 포함(Import)하기 위한 기능을 제공합니다.
+</p>
+
 <p>
-<b>Shadow DOM</b> addresses the DOM tree encapsulation problem. The
-four parts of Web Components are designed to work together, but you
-can also pick and choose which parts of Web Components to use. This
-tutorial shows you how to use Shadow DOM.
+<b>Shadow DOM</b>은 DOM 트리 캡슐화 문제를 다루고 있습니다. 웹 컴포넌트의 4가지 부분은 함께 동작하도록 디자인되었으나 웹 컴포넌트 중 사용하고 싶은 부분을 선택적으로 사용하는 것 또한 가능합니다. 이 튜토리얼은 Shadow DOM을 어떻게 사용하는지를 알려드릴 것입니다.
 </p>
 
 <p class="notice">
-<b>Note:</b> Shadow DOM is available in Chrome 25+ prefixed with <code>webkit</code>. In newer
-versions of Chrome, a newer, unprefixed version can be enabled in <code>about:flags</code>
-under the "Experimental Web Platform features" flag.
+<b>Note:</b> Shadow DOM은 크롬 25 버전 이상에서 <code>webkit</code> 접두어를 붙여 사용할 수 있습니다. 크롬의 신규 버전들에서 더 최신의 접두어가 없는 버전은 <code>about:flags</code>의 "Experimental Web Platform features" 플래그 아래에서 활성화할 수 있습니다. (<b>역주:</b> 한글 버전의 경우 "실험용 웹 플랫폼 기능 사용"으로 표시되어 있을 것입니다.)
 </p>
 
 <h2 id="toc-hello-world">Hello, Shadow World</h2>
 
 <p>
-With Shadow DOM, elements can get a new kind of node associated with
-them. This new kind of node is called a <b>shadow root.</b> An element
-that has a shadow root associated with it is called a <b>shadow
-host.</b> The content of a shadow host isn’t rendered; the content of
-the shadow root is rendered instead.
+Shadow DOM을 이용하여 엘리먼트들은 그들과 관련된 새로운 종류의 노드를 가질 수 있습니다. 이 새로운 종류의 노드는 <b>섀도 루트(shadow root)</b>라고 불립니다. 섀도 루트를 가진 엘리먼트는 <b>섀도 호스트(Shadow host)</b>라고 불립니다. 섀도 호스트의 컨텐츠는 렌더링되지 않으며 섀도 루트의 컨텐츠가 대신 렌더링됩니다.
 </p>
 
 <p>
-For example, if you had markup like this:
+예를 들어 다음과 같이 이에 대한 마크업을 가지고 있다고 생각해보도록 하겠습니다.
 </p>
 
 <pre class="prettyprint">
@@ -156,7 +130,7 @@ root.textContent = 'こんにちは、影の世界!';
 &lt;/script&gt;
 </pre>
 
-<p>then instead of</p>
+<p>페이지는 아래와 같은 결과 대신</p>
 
 <button id="ex1a">Hello, world!</button>
 <script>
@@ -172,7 +146,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 }
 </script>
 
-<p>your page looks like</p>
+<p>아래와 같은 결과를 보여줍니다.</p>
 
 <button id="ex1b">Hello, world!</button>
 <script>
@@ -189,31 +163,21 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 </script>
 
 <p>
-Not only that, if JavaScript on the page asks what the button’s
-<span class="property">textContent</span> is, it isn’t going to get
-“こんにちは、影の世界!”, but “Hello, world!” because the DOM subtree
-under the shadow root is encapsulated.
+이뿐만이 아니라 만약 페이지의 자바스크립트가 버튼의 <span class="property">textContent</span>가 무엇인지 질의하다면, 섀도 루트 및의 DOM 서브트리는 캡슐화되어 있기 때문에 이는 “こんにちは、影の世界!”가 아니라 "Hello, world!"를 가져올 것입니다.
 </p>
 
 <p>
-One rule of thumb, which is possibly being violated here, is that you
-shouldn’t put <em>content</em> in Shadow DOM. Content must be in the
-document to be accessible to screen readers, search engines,
-extensions and so on. Shadow DOM is for all of the semantically
-meaningless markup you need to create an attractive, usable
-widget. But the content should stay in the page.
+여기서 이를 위반할 수 있는 경험적인 방법 중 하나는 바로 Shadow DOM에 <em>컨텐츠</em>를 넣지 않는 것일 겁니다. 컨텐츠는 스크린 리더, 검색엔진, 확장들 등에 접근이 가능하도록 문서 내에 있어야 합니다. Shadow DOM은 멋지고 사용성 있는 위젯을 만드는데 필요한 구문상 의미없는 모든 마크업을 위한 것입니다만 컨텐츠는 페이지 내에 있어야 합니다.
 </p>
 
 <blockquote class="commentary talkinghead">
-Of course, we don’t enforce this; this is the web and you can do more
-or less what you like. Just don’t overdo it, people.
+물론 이를 강제할 수는 없습니다. 이것은 웹이고 여러분이 원하는대로 더하거나 덜 할 수 있습니다. 너무 많이 쓰지만 마시길.
 </blockquote>
 
-<h2 id="toc-separation">Separating Content from Presentation</h2>
+<h2 id="toc-separation">표현으로부터의 내용 분리</h2>
 
 <p>
-Now we'll look at using Shadow DOM to separate content from
-presentation. Let's say we have this name tag:
+이제 우리는 표현으로부터 내용을 분리하기 위한 Shadow DOM 사용을 살펴볼 것입니다. 다름과 같은 이름 태그를 가지고 있다고 해보죠.
 </p>
 
 <style>
@@ -249,8 +213,7 @@ presentation. Let's say we have this name tag:
 </div>
 
 <p>
-Here is the markup. This is what you’d write today. It doesn’t
-use Shadow DOM:
+이와 같은 마크업이 있습니다. 여러분이 오늘 작성해야 할 것이 이것입니다. 이는 다음과 같이 Shadow DOM을 사용하지 않습니다.
 </p>
 
 <pre class="prettyprint">
@@ -288,27 +251,24 @@ use Shadow DOM:
 </pre>
 
 <p>
-Because the DOM tree lacks encapsulation, the entire structure of the
-name tag is exposed to the document. If other elements on the page
-accidentally use the same class names for styling or scripting, we're
-gonna have a bad time.
+DOM 트리는 불충분한 캡슐화를 가지고 있으므로 이름 태그의 전체 구조는 문서를 표현합니다. 만약 페이지의 다른 엘리먼트들이 같은 클래스 이름을 스타일이나 스크립트를 위해 사용한다면 곤란해질 것입니다.
 </p>
 
-<p>We can avoid having a bad time.</p>
+<p>곤란함을 피하기 위해 다음과 같이 할 수 있습니다.</p>
 
-<h3 id="toc-separation-hide">Step 1: Hide Presentation Details</h3>
+<h3 id="toc-separation-hide">단계 1: 상세한 표현 감추기</h3>
 
 <p>
-Semantically we probably only care that:
+의미상 아마 아래와 같은 것들만을 다룰 것입니다.
 </p>
 
 <ul>
-<li>It is a name tag.</li>
-<li>The name is “Bob”.</li>
+<li>이는 이름 태그(Name tag)입니다.</li>
+<li>이름은 “Bob”입니다.</li>
 </ul>
 
 <p>
-First, we write markup that is closer to the true semantics we want:
+첫번째로, 다음과 같이 우리가 진정한 의미에 더 가까운 마크업을 작성합니다.
 </p>
 
 <pre class="prettyprint">
@@ -316,8 +276,7 @@ First, we write markup that is closer to the true semantics we want:
 </pre>
 
 <p>
-Then we put all of the styles and divs used for presentation into
-a <code>&lt;template&gt;</code> element:
+그 후에 다음과 같이 표현을 위해 사용하는 모든 스타일들과 div 태그들을 <code>&lt;template&gt;</code> 엘리먼트 내에 넣습니다.
 </p>
 
 <pre class="prettyprint">
@@ -342,11 +301,7 @@ a <code>&lt;template&gt;</code> element:
 </pre>
 
 <p>
-At this point ‘Bob’ is the only thing that is rendered. Because we
-moved the presentational DOM elements inside
-a <code>&lt;template&gt;</code> element, they aren’t rendered, but
-they <em>can</em> be accessed from JavaScript. We do that now to
-populate the shadow root:
+이 지점에서 ‘Bob’은 렌더링되는 유일한 것입니다. 표현과 관련된 DOM 엘리먼트를 <code>&lt;template&gt;</code> 엘리먼트 내부에 이동하였기 때문에 렌더링되지 않지만 자바스크립트로 액세스<em>할 수</em> 있습니다. 이제 다음과 같이 섀도 루트를 덧붙이기 위해 실행합니다.
 </p>
 
 <pre class="prettyprint">
@@ -359,20 +314,11 @@ template.remove();
 </pre>
 
 <blockquote class="commentary talkinghead">
-Templates, like Shadow DOM, are an emerging
-standard. The <code>&lt;template&gt;</code> element is available in
-Chrome Canary. You can also populate a shadow root using familiar
-properties and methods
-like <span class="property">innerHTML</span>, <span class="method">appendChild</span>, <span class="method">getElementById</span>,
-and so on. This article is focused on Shadow DOM, so we won’t go
-further into how the template element works here. If you want to learn
-more about <code>&lt;template&gt;</code>, see <a href="/tutorials/webcomponents/template/">HTML's New Template Tag</a>.
+Shadow DOM과 마찬가지로 Template는 최근의 표준입니다. <code>&lt;template&gt;</code> 엘리먼트는 크롬 카나리에서 사용할 수 있습니다. 또한 <span class="property">innerHTML</span>, <span class="method">appendChild</span>, <span class="method">getElementById</span>와 같은 친숙한 속성들과 메소들을 이용하여 섀도 루트를 덧붙일 수 있습니다. 이 글은 Shadow DOM에 촛점을 맞추고 있으므로 템플릿 엘리먼트가 여기서 어떻게 동작하는지에 대해 더 깊이 들어가지는 않을 것입니다. 만약 <code>&lt;template&gt;</code>에 대해 배우고 싶다면 <a href="/tutorials/webcomponents/template/">HTML의 새로운 Template 태그</a>를 보시기 바랍니다.
 </blockquote>
 
 <p>
-Now that we have set up a shadow root, the name tag is rendered
-again. If you were to right-click on the name tag and inspect the
-element you see that it is sweet, semantic markup:
+이제 섀도 루트가 설정되었으며, 네임 태그가 다시 렌더링되었습니다. 만약 네임 태그 상에서 오른쪽 버튼을 클릭하고 '요소 검사'를 선택하면 보기좋은 시멘틱 마크업을 다음과 같이 볼 수 있습니다.
 </p>
 
 <pre class="prettyprint">
@@ -380,41 +326,27 @@ element you see that it is sweet, semantic markup:
 </pre>
 
 <p>
-This demonstrates that, by using Shadow DOM, we have hidden the
-presentation details of the name tag from the document. The
-presentation details are encapsulated in the Shadow DOM.
+이는 Shadow DOM을 이용하여 문서로부터 네임 태그의 상세한 표현을 감추는 것을 시연할 것입니다. 상세한 표현은 Shadow DOM에서 캡슐화됩니다.
 </p>
 
 <h3 id="toc-separation-separate">
-Step 2: Separate Content from Presentation
+단계 2: 표현으로부터 내용 분리하기
 </h3>
 
 <p>
-Our name tag now hides presentation details from the page, but it
-doesn’t actually separate presentation from content, because although
-the content (the name “Bob”) is in the page, the name that is rendered
-is the one we copied into the shadow root. If we want to change the
-name on the name tag, we’d need to do it in two places, and they might
-get out of sync.
+이제 우리의 네임 태그는 페이지에서 상세한 표현을 감췄습니다만 실제로는 내용으로부터 표현이 분리된 것은 아닙니다. 왜냐하면 컨텐츠(이름 “Bob”)는 페이지 내에 있음에도 불구하고 렌더링된 명칭은 우리가 섀도 루트 내로 복사한 것이기 때문입니다. 만약 네임 태그 상의 이름을 변경하고 싶다면 이를 2가지 장소 내에서 이를 할 필요가 있을 것이며 동기화는 버려지게 될 것입니다.
 </p>
 
 <p>
-HTML elements are compositional — you can put a button inside a table,
-for example. Composition is what we need here: The name tag must be a
-composition of the red background, the “Hi!” text, and the content
-that is on the name tag.
+HTML 엘리먼트는 조합될 수 있습니다. — 예를 들자면 여러분은 버튼을 테이블 내에 넣을 수 있습니다. 조합은 여기서 네임 태그가 반드시 붉은 색 배경, “Hi!” 텍스트 그리고 네임 태그 상의 내용으로 조합되어야 하는 것처럼 우리가 필요로 하는 것입니다. 
 </p>
 
 <p>
-You, the component author, define how composition works with your
-widget using a new element called <code>&lt;content&gt;</code>. This
-creates an insertion point in the presentation of the widget, and the
-insertion point cherry-picks content from the shadow host to present
-at that point.
+여러분이 컴포넌트 저작자라면 <code>&lt;content&gt;</code>를 호출하는 새로운 엘리먼트를 사용하여 여러분의 위젯이 어떻게 조합되어 동작하는지를 정의할 수 있습니다. 이는 위젯의 표현에서 삽입 지점을 생성하며 삽입 지점은 섀도 호스트로부터 이 지점에 표현할 컨텐츠를 체리픽(Cherry-pick)합니다. (<span><b>역주:</b> Cherry-pick이란, 여러개 중에서 가장 중요하거나 필요한 것만을 가져온다는 의미입니다.</span>)
 </p>
 
 <p>
-If we change the markup in the Shadow DOM to this:
+만약 이처럼 Shadow DOM 내의 마크업을 변경한다면 다음과 같습니다.
 </p>
 
 <pre class="prettyprint">
@@ -434,15 +366,11 @@ If we change the markup in the Shadow DOM to this:
 </pre>
 
 <p>
-When the name tag is rendered, the content of the shadow host is
-projected into the spot that the <code>&lt;content&gt;</code> element
-appears.
+네임 태그가 렌더링될 때 섀도 호스트의 컨텐츠는 <code>&lt;content&gt;</code> 엘리먼트가 나타난 지점으로 투영됩니다.
 </p>
 
 <p>
-Now the structure of the document is simpler because the name is only
-in one place — the document. If your page ever needs to update the
-user’s name, you just write:
+이제 문서의 구조는 더 단순해졌습니다. 이름은 한 곳(즉, 문서)에만 존재합니다. 만약 페이지가 사용자의 이름을 갱신할 필요가 있을 때에도 다음과 같이 작성하기만 하면 됩니다.
 </p>
 
 <pre class="prettyprint">
@@ -450,21 +378,19 @@ document.querySelector('#nameTag').textContent = 'Shellie';
 </pre>
 
 <p>
-and that is it. The rendering of the name tag is automatically updated
-by the browser, because we're <b>projecting</b> the content of the
-name tag into place with <code>&lt;content&gt;</code>.
+그리고 이것으로 끝입니다. 네임 태그의 컨텐츠를 <code>&lt;content&gt;</code>의 위치 내로 <b>투영하고</b> 있으므로 네임 태그의 렌더링은 브라우저에 의해 자동으로 갱신됩니다.
 </p>
 
 <div id="ex2b">
 
-<p>Here is a live example using Shadow DOM:</p>
+<p>아래는 Shadow DOM을 사용하는 라이브 예제입니다.</p>
 
 <div id="ex2bNameTag">Bob</div>
 
 <p>
-<label for="ex2bNewName">New name:</label>
+<label for="ex2bNewName">새 이름:</label>
 <input name="ex2bNewName" value="Shellie">
-<button onclick="updateClicked('#ex2bNameTag', 'input[name=ex2bNewName]');">Update</button>
+<button onclick="updateClicked('#ex2bNameTag', 'input[name=ex2bNewName]');">업데이트</button>
 </p>
 
 <script>
@@ -529,29 +455,21 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 
 
 <p>
-Now we have achieved separation of content and presentation. <b>The
-content is in the document; the presentation is in the Shadow DOM.</b>
-They are automatically kept in sync by the browser when it comes time
-to render something.
+이제 컨텐츠와 표현의 분리에 도달했습니다. <b>컨텐츠는 문서 내에 있고, 표현은 Shadow DOM 내에 존재합니다.</b> 무언가를 렌더링해야 할 때마다 브라우저에 의해 자동으로 동기화되어 유지됩니다.
 </p>
 
-<h3 id="toc-separation-profit">Step 3: Profit</h3>
+<h3 id="toc-separation-profit">단계 3: 이점 취하기</h3>
 
 <p>
-By separating content and presentation, we can simplify the
-code that manipulates the content — in the name tag example, that
-code only needs to deal with a simple structure containing
-one <code>&lt;div&gt;</code> instead of several.
+컨텐츠와 표현의 분리에 의해 컨텐츠를 관리하는 코드를 단순화할 수 있습니다. 네임 태그 예제에서 이 코드는 오로지 여러개의 <code>&lt;div&gt;</code> 대신 하나의 <code>&lt;div&gt;</code>를 포함한 단순한 구조로 처리하기 위해서만 필요합니다.
 </p>
 
 <p>
-Now if we change our presentation, we don't need to change any of the
-code!
+이제 표현이 변경될 때 그 어떤 코드도 수정할 필요가 없습니다!
 </p>
 
 <p>
-For example, say we want to localize our name tag. It is still a name
-tag, so the semantic content in the document doesn’t change:
+예를 들어 우리의 네임 태그의 지역화를 원한다라고 말해보겠습니다. 이는 여전히 네임 태그이므로 문서 내의 시멘틱 컨텐츠는 다음과 같이 변경되지 않습니다.
 </p>
 
 <pre class="prettyprint">
@@ -559,8 +477,7 @@ tag, so the semantic content in the document doesn’t change:
 </pre>
 
 <p>
-The shadow root setup code stays the same. Just what gets put in the
-shadow root changes:
+섀도 루트 설정 코드는 똑같이 유지됩니다. 다음과 같이 변경하고 싶은 것만 섀도 루트 내에 넣으면 됩니다.
 </p>
 
 <pre class="prettyprint">
@@ -594,7 +511,7 @@ shadow root changes:
 </pre>
 
 <p>
-Now we've got a Japanese name tag:
+이제 우리는 아래와 같은 일본식 네임 태그를 가지게 되었습니다.
 </p>
 
 <div id="ex3a">
@@ -602,9 +519,9 @@ Now we've got a Japanese name tag:
 <div id="ex3aNameTag">Bob</div>
 
 <p>
-<label for="ex3aNewName">New name:</label>
+<label for="ex3aNewName">새 이름:</label>
 <input name="ex3aNewName" value="基子">
-<button onclick="updateClicked('#ex3aNameTag', 'input[name=ex3aNewName]');">Update</button>
+<button onclick="updateClicked('#ex3aNameTag', 'input[name=ex3aNewName]');">업데이트</button>
 </p>
 
 <template id="ex3aNameTagTemplate">
@@ -653,33 +570,22 @@ Now we've got a Japanese name tag:
 </script>
 
 <p class="small-notice">
-<a href="http://www.flickr.com/photos/mikedowman/5621169045/">Background image by Mike Dowman,</a> reused under Creative Commons license.
+<a href="http://www.flickr.com/photos/mikedowman/5621169045/">Mike Dowman의 배경 이미지</a>는 크리에이티브 커먼즈 라이센스 하에서 재사용되었습니다.
 </p>
 
 <p>
-This is a big improvement over the situation on the web today, because
-your name update code can depend on the structure of the
-<em>component</em> which is simple and consistent. <strong>Your name
-update code doesn’t need to know the structure used for
-rendering.</strong> If we consider what is rendered, the name appears
-second in English (after “Hi! My name is”), but first in Japanese
-(before “と申します”). That distinction is semantically meaningless
-from the point of view of updating the name that is being displayed,
-so the name update code doesn’t have to know about that detail.
+이는 여러분의 네임 갱신 코드가 단순하고 일관적인 <em>컴포넌트</em>의 구조에 의존할 수 있기 때문에 오늘날의 웹에서 환경을 크게 개선한 것입니다. <strong>여러분의 네임 갱신 코드는 렌더링을 위해 사용되는 구조를 알 필요가 없습니다.</strong> 만약 우리가 무엇을 렌더링할 것인지를 고려한다면 이름은 (“Hi! My name is” 뒤) 두번째에 영어로 나타나지만 첫번째는 (“と申します” 앞에) 일본어로 나타납니다. 이 차이점은 표시된 이름의 갱신한다는 관점에서의 의미로는 무의미하므로 이름 갱신 코드는 자세한 사항을 알 필요가 없습니다.
+
 </p>
 
-<h2 id="toc-projection">Extra Credit: Advanced Projection</h2>
+<h2 id="toc-projection">추가 크레딧: 개선된 투영</h2>
 
 <p>
-In the above example, the <code>&lt;content&gt;</code> element
-cherry-picks all of the content from the shadow host. By using the
-<span class="attribute">select</span> attribute, you can control what
-a content element projects. You can also use multiple content
-elements.
+위 예제에서 <code>&lt;content&gt;</code> 엘리먼트는 섀도 호스트로부터 컨텐츠의 모든 것을 체리픽(Cherry-pick)합니다. <span class="attribute">select</span> 속성의 사용에 의해 content 엘리먼트가 무엇을 투영할지를 조작할 수 있습니다. 또한 다중의 content 엘리먼트들을 사용할 수도 있습니다.
 </p>
 
 <p>
-For example, if you have a document which contains this:
+예를 들어 이를 포함하는 문서를 가지고 있다면 다음과 같습니다.
 </p>
 
 <pre class="prettyprint">
@@ -691,7 +597,7 @@ For example, if you have a document which contains this:
 </pre>
 
 <p>
-and a shadow root which uses CSS selectors to select specific content:
+그리고 다음과 같이 특정한 컨텐츠를 선택하기 위해 CSS 셀렉터를 사용하는 섀도 루트는 다음과 같습니다.
 </p>
 
 <pre class="prettyprint">
@@ -708,15 +614,12 @@ and a shadow root which uses CSS selectors to select specific content:
 &lt;/div&gt;
 </pre>
 
-<p class="notice"><b>Note:</b> <span class="attribute">select</span> can only
-select elements which are immediate children of the host node. That is, you
-cannot select descendants (e.g.<code>select="table tr"</code>).</p>
+<p class="notice">
+<b>노트:</b> <span class="attribute">select</span>는 호스트 노드의 직접적인 자식들인 엘리먼트들만 선택할 수 있습니다. 즉, 여러분은 파생된 노드들을 선택할 수는 없습니다. (<code>select="table tr"</code>가 그 예입니다.)
+</p>
 
 <p>
-The <code>&lt;div class="email"&gt;</code> element is matched by both
-the <code>&lt;content select="div"&gt;</code> and <code>&lt;content
-select=".email"&gt;</code> elements. How many times does Bob’s email
-address appear, and in what colors?
+<code>&lt;div class="email"&gt;</code> 엘리먼트는 <code>&lt;content select="div"&gt;</code>와 <code>&lt;content select=".email"&gt;</code> 엘리먼트 둘 다와 매치됩니다. Bob의 이메일 주소가 얼마나 많이 그리고 어떤 색상들로 나타날까요?
 </p>
 
 <div id="ex4a">
@@ -758,49 +661,24 @@ address appear, and in what colors?
 </script>
 
 <p>
-The answer is that Bob’s email address appears once, and it is yellow.
+답은 Bob의 이메일 주소가 노란색으로 한번 나타나는 겁니다.
 </p>
 
 <p>
-The reason is that, as people who hack on Shadow DOM know,
-constructing the tree of what is actually rendered on screen is like a
-huge party. <strong>The content element is the invitation that lets
-content from the document into the backstage Shadow DOM rendering
-party.</strong> These invitations are delivered in order; who gets an
-invitation depends on to whom it is addressed (that is,
-the <span class="attribute">select</span> attribute.) Content, once
-invited, always accepts the invitation (who wouldn’t?!) and off it
-goes. If a subsequent invitation is sent to that address again, well,
-nobody is home, and it doesn’t come to your party.
+이유는 Shadow DOM을 잘 알고 수정해서 사용하는 사람들 같이 거대한 부분처럼 스크린 상에 실제로 무엇을 렌더링할지를 결정하는 트리를 구성하는 것입니다.
+<strong>content 엘리먼트는 문서로부터 백스테이지 Shadow DOM 렌더링 영역 내로 내용을 넣는 것을 허용하는 초대장과도 같습니다.</strong> 이 초대장들은 이것이 가르키고 있는 (즉, <span class="attribute">select</span> 속성이 가르키고 있는) 누가 초대를 받는지에 의존적인 형태로 순서대로 전달됩니다. 컨텐츠가 한번 초대되고 나면 항상 초대는 받아들여집니다. (누구인들 그렇기 않을까요?) 그리고 바로 파티로 출발하게 됩니다. 만약 다음 초대가 그 주소로 다시 보내진다면...자, 집에 아무도 없으므로 아무도 여러분의 파티에 오지 않습니다.
 </p>
 
 <p>
-In the above example, <code>&lt;div class="email"&gt;</code> matches
-both the <code>div</code> selector and the <code>.email</code>
-selector, but because the content element with the <code>div</code>
-selector comes earlier in the document,
-<code>&lt;div class="email"&gt;</code> goes to the yellow party, and
-nobody is available to come to the blue party. (That might
-be <em>why</em> it is so blue, although misery loves company, so you
-never know.)
+위의 예제에서 <code>&lt;div class="email"&gt;</code>는 <code>div</code> 셀렉터와 <code>.email</code> 셀렉터 둘 다와 매치됩니다만 <code>div</code> 셀렉터를 사용한 content 엘리먼트는 문서에서 보다 앞에 위치하므로 <code>&lt;div class="email"&gt;</code>는 노란 부분으로 가고 파란 부분으로 갈 수 있는 것은 없습니다. (불행은 항상 함께하는 것을 좋아하기는 하지만 이로 인해 여러분은 <em>왜</em> 그것이 파란 부분이어야 하는지 알 수 없을 것입니다.)
 </p>
 
 <p>
-If something is invited to <em>no</em> parties, then it doesn’t get
-rendered at all. That is what happened to the “Hello, world” text in
-the very first example. This is useful when you want to achieve a
-radically different rendering: Write the semantic model in the
-document, which is what is accessible to scripts in the page, but hide
-it for rendering purposes and connect it to a really different
-rendering model in Shadow DOM using JavaScript.
+만약 무언가가 초대되는 부분이 <em>없다면</em> 이는 전부 렌더링되지 않을 것입니다. 이는 가장 처음의 예제에서 "Hello, world" 텍스트에서 일어났던 것입니다. 이는 여러분이 근본적으로 다른 렌더링을 하고 싶을 때, 즉 문서에서 페이지 내의 스크립트로 액세스할 수 있는 시멘틱 모델을 작성하지만 렌더링으로부터는 수믹고 자바스크립트를 이용하여 Shadow DOM 내의 완전히 다른 렌더링 모델에 연결하고 싶을 때 유용합니다. 
 </p>
 
 <p>
-For example, HTML has a nice date picker. If you write <code>&lt;input
-type="date"&gt;</code> you get a neat pop-up calendar. But what if you
-want to let the user pick a range of dates for their <i>dessert</i>
-island vacation (you know… with hammocks made out of Red Vines.) You
-set up your document this way:
+예를 들어, HTML이 훌륭한 데이트 피커(Date picker)를 가지고 있다고 해보죠. 만약 <code>&lt;input type="date"&gt;</code>를 작성하면 여러분은 멋진 팝업 캘린더를 사용할 수 있습니다. 그러나 만약 (알다시피…포도덩쿨로 만든 해먹과 함께 하는) <i>사막</i> 섬 휴가를 위한 기간을 사용자가 선택할 수 있도록 하고 싶다면 어떨까요? 문서를 이 방법으로 다음과 같이 설정할 수 있습니다.
 </p>
 
 <pre class="prettyprint">
@@ -814,18 +692,12 @@ set up your document this way:
 </pre>
 
 <p>
-but create Shadow DOM that uses a table to create a slick calendar
-which highlights the range of dates and so on. When the user clicks on
-the days in the calendar, the component updates the state in the
-startDate and endDate inputs; when the user submits the form, the
-values from those input elements get submitted.
+그러나 기간을 강조하는 등의 번드르르한 캘린더를 만들기 위해 테이블을 사용하는 Shadow DOM을 생성해야합니다. 사용자가 캘린더에서 날짜들을 클릭할 때 컴포넌트는 startDate와 endDate 입력에서 상태를 갱신하고 사용자가 폼을 제출(submit)하면 이러한 input 엘리먼트들로부터 값들이 제출하게 됩니다.
+
 </p>
 
 <p>
-Why did I include labels in the document if they’re not going to be
-rendered? The reason is that if a user views the form with a browser
-that doesn’t support Shadow DOM, the form is still usable, just not as
-pretty. The user sees something like:
+레이블들이 렌더링되지 않는다면 왜 제가 문서 내에 포함시켰을까요? 이유는 사용자는 Shadow DOM을 지원하지 않는 브라우저를 사용하여 폼을 보았을 때 폼은 예쁘지만 않을 뿐 여전히 사용가능하기 때문입니다. 사용자는 다음과 같은 무언가를 보게 될 것입니다.
 </p>
 
 <div class="dateRangePicker">
@@ -836,30 +708,18 @@ pretty. The user sees something like:
   <input type="date" name="endDate" id="end">
 </div>
 
-<h2 id="toc-conclusion">You Pass Shadow DOM 101</h2>
+<h2 id="toc-conclusion">이제 Shadow DOM 101을 패스했습니다.</h2>
 
 <p>
-Those are the basics of Shadow DOM — you pass Shadow DOM 101! You can
-do more with Shadow DOM, for example, you can use multiple shadow on
-one shadow host, or nested shadows for encapsulation, or architect
-your page using Model-Driven Views (MDV) and Shadow DOM. And Web
-Components are more than just Shadow DOM. For example, using another
-part of Web Components called Custom Elements, you can set up Shadow
-DOM for widgets declaratively instead of having to write script to do
-it.
+이것이 Shadow DOM의 기초이며 여러분께서는 Shadow DOM 101을 마쳤습니다! Shadow DOM을 이용해 여러분들은 다른 것들을 할 수 있습니다. 예를 들어 하나의 섀도 루트 상에 여러개의 섀도를 사용할 수 있으며 캡슐화를 위한 내재된 섀도(Nested Shadow) 혹은 모델-드리븐 뷰(MDV, Model-Driven Views)와 Shadow DOM을 사용하여 페이지를 구성할 수도 있습니다. 그리고 Shadow DOM뿐만이 아니라 더 나아가서 웹 컴포넌트도 말이죠. 예를 들어, Custom Elements로 불리는 웹 컴포넌트의 또다룬 부분을 사용하여 위젯을 위한 스크립트를 작성해야 하는 것 대신 선언적인 형태의 위젯을 위해 Shadow DOM을 사용할 수 있습니다.
 </p>
 
 <p>
-We explain those in later posts. Now,
-follow <a href="https://plus.google.com/103330502635338602217/posts">Web
-Components on Google+.</a>
+이에 대한 것은 다음 포스트들에서 설명하도록 하겠습니다. 이제 <a href="https://plus.google.com/103330502635338602217/posts">Web Components on Google+</a>를 팔로우하세요.
 </p>
 
 <p class="small-notice">
-Thanks to <a href="/profiles/#ericbidelman">Eric Bidelman,</a> Darin
-Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell,
-and <a href="/profiles/#paulirish">Paul Irish</a> for comments on
-earlier versions of this tutorial.
+이 튜토리얼의 초기 버전들에 대해 코멘트를 해준 <a href="/profiles/#ericbidelman">Eric Bidelman,</a> Darin Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell 그리고 <a href="/profiles/#paulirish">Paul Irish</a>에게 고마움을 표합니다.
 </p>
 
 <script>
