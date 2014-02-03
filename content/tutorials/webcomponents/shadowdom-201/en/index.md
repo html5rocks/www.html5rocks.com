@@ -369,7 +369,7 @@ by providing styling and DOM encapsulation. The concepts here pertain to styling
 
 <h2 id="toc-style-inheriting">Resetting styles</h2>
 
-Inheritable styles like fonts, colors, and line-heights continue to effect elements
+Inheritable styles like fonts, colors, and line-heights continue to affect elements
 in the Shadow DOM. However for maximum flexibility, Shadow DOM gives us the
 `resetStyleInheritance` property to control what happens at the shadow boundary.
 Think of it as a way to start fresh when creating a new component.
@@ -421,7 +421,7 @@ document.querySelector('#demo-resetStyleInheritance').addEventListener('click', 
 <img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="height:215px;border:1px solid #ccc;float:right;margin-left:10px;">
 
 Understanding `.resetStyleInheritance` is a bit trickier, primarily because it
-only has an effect on CSS properties which are inheritable. It says: when
+only has an affect on CSS properties which are inheritable. It says: when
 you're looking for a property to inherit, at the boundary between the page and
 the ShadowRoot, don't inherit values from the host but use the `initial`
 value instead (per the CSS spec).
@@ -430,7 +430,7 @@ If you're unsure about which properties inherit in CSS, check out [this handy li
 
 <h2 id="toc-style-disbtributed-nodes">Styling distributed nodes</h2>
 
-`.resetStyleInheritance` is strictly for effecting the
+`.resetStyleInheritance` is strictly for affecting the
 styling behavior of the nodes defined **in** the Shadow DOM. 
 
 Distributed nodes are a different beast. `<content>` elements allow you to select nodes from the Light DOM and render them at predefined locations in your Shadow DOM. They're not logically in the
