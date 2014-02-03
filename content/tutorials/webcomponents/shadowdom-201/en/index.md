@@ -367,44 +367,30 @@ I've already mentioned <a href="/tutorials/webcomponents/customelements/">Custom
 by providing styling and DOM encapsulation. The concepts here pertain to styling Custom Elements.
 </blockquote>
 
-<h2 id="toc-style-inheriting">Inheriting and resetting styles</h2>
+<h2 id="toc-style-inheriting">Resetting styles</h2>
 
-In some cases, you may want to let foreign styles into your shadow tree.
-A prime example is a commenting widget. Most authors embedding that widget
-probably want the thing to look like it belongs on their page. I know I would.
-Thus, we need a way to adopt the look and feel of the embedding page; by
-inheriting fonts, colors, line-heights, etc.
+Inheritable styles like fonts, colors, and line-heights continue to affect elements
+in the Shadow DOM. However for maximum flexibility, Shadow DOM gives us the
+`resetStyleInheritance` property to control what happens at the shadow boundary.
+Think of it as a way to start fresh when creating a new component.
 
-For flexibility, Shadow DOM allows us to poke more holes in its style shield.
-There are two properties to control the what bleeds in:
+**resetStyleInheritance**
 
-- **.resetStyleInheritance**
-    - `false` - Default. [inheritable CSS properties](http://www.impressivewebs.com/inherit-value-css/) continue to inherit.
-    - `true` - resets inheritable properties to `initial` at the boundary.
-- **.applyAuthorStyles**
-    - `true` - styles defined in the author's document are applied. Think of this
-    as allowing styles to "bleed" across the boundary.
-    - `false` - Default. Author styles are not applied to the shadow tree.
+- `false` - Default. [inheritable CSS properties](http://www.impressivewebs.com/inherit-value-css/) continue to inherit.
+- `true` - resets inheritable properties to `initial` at the boundary.
 
-Below is a demo for seeing how a shadow tree is affected by changing these two properties.
+Below is a demo that shows how the shadow tree is affected by changing `resetStyleInheritance`:
 
 <pre class="prettyprint">
-&lt;style>
-  .border {
-    border: 1px solid black;
-  }
-&lt;/style>
-
 &lt;div>
-  &lt;h3 class="border">Light DOM&lt;/h3>
+  &lt;h3>Light DOM&lt;/h3>
 &lt;/div>
 
 &lt;script>
 var root = document.querySelector('div').createShadowRoot();
-root.applyAuthorStyles = <span id="code-applyAuthorStyles">true</span>;
 root.resetStyleInheritance = <span id="code-resetStyleInheritance">false</span>;
 root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' + 
-                 '&lt;h3 class="border">Shadow DOM&lt;/h3>' + 
+                 '&lt;h3>Shadow DOM&lt;/h3>' + 
                  '&lt;content select="h3">&lt;/content>';
 &lt;/script>
 </pre>
@@ -413,28 +399,16 @@ root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' +
   <div id="style-ex-inheritance"><h3 class="border">Light DOM</h3></div>
 </div>
 <div id="inherit-buttons">
-  <button id="demo-applyAuthorStyles">applyAuthorStyles=true</button>
   <button id="demo-resetStyleInheritance">resetStyleInheritance=false</button>
 </div>
 
-<style>
-  .border {
-    border: 1px solid black;
-  }
-</style>
 <script>
 (function() {
 var container = document.querySelector('#style-ex-inheritance');
 var root = container.createShadowRoot();
-root.applyAuthorStyles = true;
 //root.resetStyleInheritance = false;
-root.innerHTML = '<style>h3{ color: red; }</style><h3 class="border">Shadow DOM</h3><content select="h3"></content>';
+root.innerHTML = '<style>h3{ color: red; }</style><h3>Shadow DOM</h3><content select="h3"></content>';
 
-document.querySelector('#demo-applyAuthorStyles').addEventListener('click', function(e) {
-  root.applyAuthorStyles = !root.applyAuthorStyles;
-  e.target.textContent = 'applyAuthorStyles=' + root.applyAuthorStyles;
-  document.querySelector('#code-applyAuthorStyles').textContent = root.applyAuthorStyles;
-});
 document.querySelector('#demo-resetStyleInheritance').addEventListener('click', function(e) {
   root.resetStyleInheritance = !root.resetStyleInheritance;
   e.target.textContent = 'resetStyleInheritance=' + root.resetStyleInheritance;
@@ -444,42 +418,19 @@ document.querySelector('#demo-resetStyleInheritance').addEventListener('click', 
 })();
 </script>
 
-It's easy to see how `.applyAuthorStyles` works. It makes the author's `.border` class
-also apply to elements with that same class in the Shadow DOM (e.g "applying the page author's styles").
-
-<p class="notice fact">Even with the <code>apply-author-styles</code> attribute set,
-CSS selectors defined in the document do not cross the shadow boundary.
-<b>Style rules only match when they're entirely inside or outside of the shadow tree.</b> If you need something more powerful, see the <a href="#toc-style-cat-hat">Cat (^^) and Hat (^) combinators</a></p>
-
 <img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="height:215px;border:1px solid #ccc;float:right;margin-left:10px;">
 
 Understanding `.resetStyleInheritance` is a bit trickier, primarily because it
-only has an effect on CSS properties which are inheritable. It says: when
+only has an affect on CSS properties which are inheritable. It says: when
 you're looking for a property to inherit, at the boundary between the page and
 the ShadowRoot, don't inherit values from the host but use the `initial`
 value instead (per the CSS spec).
 
 If you're unsure about which properties inherit in CSS, check out [this handy list](http://www.impressivewebs.com/inherit-value-css/) or toggle the "Show inherited" checkbox in the Element panel.
 
-<h3 id="style-inherit-cheetsheet">Scenario cheatsheet</h3>
-
-To better understand when you might use these properties, below is a decision matrix to help.
-Carry this around in your pocket. It's gold!
-
-<table>
-  <tr><th>Scenario</th><th>applyAuthorStyles</th><th>resetStyleInheritance</th></tr>
-  <tr><td>"I have my own appearance, but want to match basic properties like text color."<br>
-    <em>basically, you're creating a widget</em></td><td>false</td><td>false</td></tr>
-  <tr><td>"Forget the page! I have my own theme"<br>
-    <em>you'll still need a "component reset stylesheet" because distributed content gets the styles it had in the page.</em></td><td>false</td><td>true</td></tr>
-  <tr><td>"I'm a component designed to get my theme from styles in the page"</td><td>true</td><td>true</td></tr>
-  <tr><td>"I want to blend in with the page as much as possible."<br>
-    <em>remember selectors don't cross the shadow boundary</em>.</td><td>true</td><td>false</td></tr>
-</table>
-
 <h2 id="toc-style-disbtributed-nodes">Styling distributed nodes</h2>
 
-`.applyAuthorStyles`/`.resetStyleInheritance` are strictly for effecting the
+`.resetStyleInheritance` is strictly for affecting the
 styling behavior of the nodes defined **in** the Shadow DOM. 
 
 Distributed nodes are a different beast. `<content>` elements allow you to select nodes from the Light DOM and render them at predefined locations in your Shadow DOM. They're not logically in the
