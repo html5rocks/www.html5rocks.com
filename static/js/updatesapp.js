@@ -148,7 +148,9 @@ window.tuts = {
 
     // hello DOM
     $(entries).appendTo('#index');
-    initPage();
+
+    if (initPage)
+      initPage();
   }
 }; // eo tuts{}
 
