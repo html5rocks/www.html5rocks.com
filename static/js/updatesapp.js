@@ -149,7 +149,7 @@ window.tuts = {
     // hello DOM
     $(entries).appendTo('#index');
 
-    if (initPage)
+    if (typeof initPage === 'function')
       initPage();
   }
 }; // eo tuts{}
