@@ -94,7 +94,7 @@ You will notice that in the prefixed versions there is a lot of inconsitency bet
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
-      document.body.requestFullScreen();
+      document.body.requestFullscreen();
    }, false);
 &lt;/script></pre>
 
@@ -110,10 +110,10 @@ Damn you vendor prefixes!
   var doc = window.document;
   var docEl = doc.documentElement;
 
-  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen;
-  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen;
+  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.webkitExitFullscreen;
 
-  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement) {
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
     requestFullScreen.call(docEl);
   }
   else {
@@ -180,7 +180,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 
 <p>To fix this, use the document element instead of the body element:</p>
 
-<pre class="prettyprint">document.documentElement.requestFullScreen();</pre>
+<pre class="prettyprint">document.documentElement.requestFullscreen();</pre>
 
 <figure>
 <img src="/static/images/mobile/fullscreen/document.png" style="width:300px;" class="bordered">
@@ -188,14 +188,14 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 </figure>
 
 <h3 id="toc-videofullscreen">Making a video element fullscreen</h3>
-<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullScreen</pre> method on the video element.</p>
+<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullscreen</pre> method on the video element.</p>
 <pre class="prettyprint">&lt;video id=videoElement>&lt;/video>
 &lt;button id="goFS">Go Fullscreen&lt;/button>
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
       var videoElement = document.getElementById("videoElement");
-      videoElement.requestFullScreen();
+      videoElement.requestFullscreen();
    }, false);
 &lt;/script></pre>
 
@@ -213,20 +213,23 @@ If you want to have an "installed app" feel, the "install" API's are the methods
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
       var container = document.getElementById("container");
-      container.requestFullScreen();
+      container.requestFullscreen();
    }, false);
 &lt;script></pre>
 
 <p>This gives you a lot more flexibility because you can combine the container object with the CSS pseudo selector (for example to hide the "goFS" button.)</p>
 
 <pre class="prettyprint">&lt;style>
-#goFS:full-screen #goFS {
-  display: none;
-}
 #goFS:-webkit-full-screen #goFS {
   display: none;
 }
 #goFS:-moz-full-screen #goFS {
+  display: none;
+}
+#goFS:-ms-fullscreen #goFS {
+  display: none;
+}
+#goFS:fullscreen #goFS {
   display: none;
 }
 &lt;style></pre>
@@ -310,7 +313,7 @@ selector {
 <h3 id="toc-letuserchoose">Let the user choose when to go fullscreen</h3>
 <p>There is nothing more annoying to the user than a web site doing something unexpected.  When a user navigates to your site don't try and trick them into fullscreen.</p>
 
-<p>Don't intercept the first touch event and issue a requestFullScreen.</p>
+<p>Don't intercept the first touch event and issue a requestFullscreen.</p>
 <ol>
   <li>it is annoying</li>
   <li>Browsers may decided to prompt the user at some point in the future about allowing the app to take up the fullscreen.</li>
