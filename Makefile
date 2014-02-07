@@ -2,8 +2,8 @@
 #	`make messages`
 #
 LANGUAGES=en de fr ja pt ru zh es ko
-MAC_DJANGO_ROOT=/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django_1_2
-LINUX_DJANGO_ROOT=/usr/local/google/google_appengine/lib/django_1_2
+MAC_DJANGO_ROOT=/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/django-1.2
+LINUX_DJANGO_ROOT=/usr/local/google/google_appengine/lib/django-1.2
 IMPORT_ROOT=~/git/html5/google3/blaze-genfiles/devrel/html5rocks/po_files/server/tc_dump
 ifeq "$(shell uname)" "Darwin"
 	DJANGO_ROOT=$(MAC_DJANGO_ROOT)
