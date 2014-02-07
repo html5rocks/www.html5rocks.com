@@ -73,14 +73,14 @@ I am telling you this as a friend.  It exists, it is a thing, but it is a hack. 
 
 <h3 id="toc-request">Request the browser to go fullscreen in response to a user gesture</h3>
 
-<p><a href="http://caniuse.com/#feat=fullscreen">Not all platforms are equal</a>. iOS Safari doesn't have a fullscreen API, but we do on Chrome on Android and Firefox.</p>
+<p><a href="http://caniuse.com/#feat=fullscreen">Not all platforms are equal</a>. iOS Safari doesn't have a fullscreen API, but we do on Chrome on Android, Firefox, and IE 11+.</p>
 <p>Most applications you build will use a combination of the JS API and the CSS selectors provided by the fullscreen specification.</p>
 <p>The main JS API's that you need to care about when building a fullscreen experience are:</p>
 
 <ul>
-  <li><pre class="inline"><i>element</i>.requestFullscreen()</pre> (currently prefixed for both Chrome and Firefox) displays the element in fullscreen mode.</li>
-  <li><pre class="inline">document.cancelFullscreen()</pre> (currently prefixed for both Chrome and Firefox) cancels fullscreen mode.</li>
-  <li><pre class="inline">document.fullscreenElement</pre> (currently prefixed for both Chrome and Firefox) returns true if any of the elements are in fullscreen mode.
+  <li><pre class="inline"><i>element</i>.requestFullscreen()</pre> (currently prefixed in Chrome, Firefox, and IE) displays the element in fullscreen mode.</li>
+  <li><pre class="inline">document.exitFullscreen()</pre> (currently prefixed in Chrome, Firefox and IE. Firefox uses <pre class="inline">cancelFullScreen()</pre> instead) cancels fullscreen mode.</li>
+  <li><pre class="inline">document.fullscreenElement</pre> (currently prefixed in Chrome, Firefox, and IE) returns true if any of the elements are in fullscreen mode.
   </li>
 </ul>
 
@@ -94,7 +94,7 @@ You will notice that in the prefixed versions there is a lot of inconsitency bet
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
-      document.body.requestFullScreen();
+      document.body.requestFullscreen();
    }, false);
 &lt;/script></pre>
 
@@ -110,10 +110,10 @@ Damn you vendor prefixes!
   var doc = window.document;
   var docEl = doc.documentElement;
 
-  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen;
-  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen;
+  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
 
-  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement) {
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
     requestFullScreen.call(docEl);
   }
   else {
@@ -180,7 +180,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 
 <p>To fix this, use the document element instead of the body element:</p>
 
-<pre class="prettyprint">document.documentElement.requestFullScreen();</pre>
+<pre class="prettyprint">document.documentElement.requestFullscreen();</pre>
 
 <figure>
 <img src="/static/images/mobile/fullscreen/document.png" style="width:300px;" class="bordered">
@@ -188,14 +188,14 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 </figure>
 
 <h3 id="toc-videofullscreen">Making a video element fullscreen</h3>
-<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullScreen</pre> method on the video element.</p>
+<p>To make a video element fullscreen it is exactly the same as making any other element fullscreen.  You call the <pre class="inline">requestFullscreen</pre> method on the video element.</p>
 <pre class="prettyprint">&lt;video id=videoElement>&lt;/video>
 &lt;button id="goFS">Go Fullscreen&lt;/button>
 &lt;script>
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
       var videoElement = document.getElementById("videoElement");
-      videoElement.requestFullScreen();
+      videoElement.requestFullscreen();
    }, false);
 &lt;/script></pre>
 
@@ -213,20 +213,23 @@ If you want to have an "installed app" feel, the "install" API's are the methods
    var goFS = document.getElementById("goFS");
    goFS.addEventListener("click", function() {
       var container = document.getElementById("container");
-      container.requestFullScreen();
+      container.requestFullscreen();
    }, false);
 &lt;script></pre>
 
 <p>This gives you a lot more flexibility because you can combine the container object with the CSS pseudo selector (for example to hide the "goFS" button.)</p>
 
 <pre class="prettyprint">&lt;style>
-#goFS:full-screen #goFS {
-  display: none;
-}
 #goFS:-webkit-full-screen #goFS {
   display: none;
 }
 #goFS:-moz-full-screen #goFS {
+  display: none;
+}
+#goFS:-ms-fullscreen #goFS {
+  display: none;
+}
+#goFS:fullscreen #goFS {
   display: none;
 }
 &lt;style></pre>
@@ -251,7 +254,7 @@ If you want to have an "installed app" feel, the "install" API's are the methods
 }</pre>
 
 <h4>Chrome for Android</h4>
-<p>When launching as an installed app, Chrome is not running in true fullscreen experience so <pre class="inline">document.fullscreenElement</pre> returns null and the CSS selectors don't work.  Chrome also does not an API comparable to iOS's navigator.standalone property.</p>
+<p>When launching as an installed app, Chrome is not running in true fullscreen experience so <pre class="inline">document.fullscreenElement</pre> returns null and the CSS selectors don't work.  Chrome also does not have an API comparable to iOS's navigator.standalone property.</p>
 
 <p>When the user requests fullscreen via a gesture on your site, the standard fullscreen API's are available including the CSS pseudo selector that lets you adapt your UI to react to the fullscreen state like the following</p>
 
@@ -274,9 +277,19 @@ selector {
   display: none; // hides the element when not in fullscreen mode
 }</pre>
 
+<h4>Internet Explorer</h4>
+<p>In IE the CSS pseudo class lacks a hyphen, but otherwise works similarly to Chrome and Firefox.</p>
+
+<pre class="prettyprint">selector:-ms-fullscreen {
+  display: block;
+}
+
+selector {
+  display: none; // hides the element when not in fullscreen mode
+}</pre>
+
 <h4>Specification</h4>
-<p>The spelling in the specification differs slightly from the implementations in Chrome and Firefox, but the functionality is the same.
-</p>
+<p>The spelling in the specification matches the syntax used by IE.</p>
 
 <pre class="prettyprint">selector:fullscreen {
   display: block;
@@ -310,7 +323,7 @@ selector {
 <h3 id="toc-letuserchoose">Let the user choose when to go fullscreen</h3>
 <p>There is nothing more annoying to the user than a web site doing something unexpected.  When a user navigates to your site don't try and trick them into fullscreen.</p>
 
-<p>Don't intercept the first touch event and issue a requestFullScreen.</p>
+<p>Don't intercept the first touch event and issue a requestFullscreen.</p>
 <ol>
   <li>it is annoying</li>
   <li>Browsers may decided to prompt the user at some point in the future about allowing the app to take up the fullscreen.</li>
