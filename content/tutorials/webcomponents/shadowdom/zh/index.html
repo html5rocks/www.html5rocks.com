@@ -36,7 +36,7 @@ span.unchanged * {
 {% endblock %}
 
 {% block iscompatible %}
-  return window.HTMLTemplateElement && HTMLElement.prototype.webkitCreateShadowRoot ? true : false;
+  return window.HTMLTemplateElement && HTMLElement.prototype.createShadowRoot ? true : false;
 {% endblock %}
 
 {% block html5badge %}
@@ -73,15 +73,15 @@ Web 组件是一系列前沿规范，它：
 
 <p>
 这是否意味着你得决定什么时候用 HTML/JavaScript，什么时候用 Web 组件？不！HTML 和 JavaScript 可以制作交互式可视化内容，
-部件也是交互式可视化内容。在开发部件的过程中自然而然的就会提高你的 HTML 和 JavaScript 技巧。Web 组件标准就是以此为目的而设计的。
+部件也是交互式可视化内容。在开发部件的过程中自然而然的就会利用你的 HTML 和 JavaScript 技巧。Web 组件标准就是以此为目的而设计的。
 </p>
 
 <blockquote class="commentary talkinghead">
-若是使用别的技术来构建部件却也说不通。比如，我就肯定不会推荐你用 <code>&lt;canvas&gt;</code> 来写部件。它确实可靠——如果你修改绘制的内容也不会破坏页面——但它对可访问性(accessibility)，索引(indexing)，组合(composition)都不友好，此外它还是与分辨率无关的(resolution independence)。
+若是使用别的技术来构建部件却也说不通。比如，我就肯定不会推荐你用 <code>&lt;canvas&gt;</code> 来写部件。它确实可靠——如果你修改绘制的内容也不会破坏页面——但它对可访问性(accessibility)，索引(indexing)，组合(composition)，分辨率无关(resolution independence)都不友好。
 </blockquote>
 
 <p>
-但是有一个根本问题，造成使用 HTML 和 JavaScript 构建出来的部件难以应用：部件中的 DOM 树并没有封装起来。
+但有个根本问题，导致 HTML 和 JavaScript 构建出来的部件难以使用：部件中的 DOM 树并没有封装起来。
 封装的缺乏意味着文档中的样式表会无意中影响部件中的某些部分；
 JavaScript 可能在无意中修改部件中的某些部分；你书写的 ID 也可能会把部件内部的 ID 覆盖。
 </p>
@@ -107,8 +107,8 @@ Elements</a></li>
 <b>Shadow DOM</b> 解决了 DOM 树的封装问题。Web 组件的四部分被设计成配合工作，但你也可以选择 Web 组件中的某个部分来使用。该教程将教会你如何使用 Shadow DOM。
 </p>
 
-<p>
-目前只有 Chrome 25 支持 Shadow DOM，因此 API 需要 <code>webkit</code> 前缀。
+<p class="notice">
+<b>注意：</b> Chrome 25+ 支持 Shadow DOM，但 API 需要加 <code>webkit</code> 前缀。 在 Chrome 的最新版本中增加了无前缀的 API，可以通过开启 <code>about:flags</code> 下的 "实验性网络平台功能"来使用。
 </p>
 
 <h2 id="toc-hello-world">Hello, Shadow World</h2>
@@ -125,7 +125,7 @@ Elements</a></li>
 &lt;button&gt;Hello, world!&lt;/button&gt;
 &lt;script&gt;
 var host = document.querySelector('button');
-<b>var root = host.webkitCreateShadowRoot();</b>
+<b>var root = host.createShadowRoot();</b>
 root.textContent = 'こんにちは、影の世界!';
 &lt;/script&gt;
 </pre>
@@ -167,7 +167,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 </p>
 
 <p>
-介绍一个(经常不被遵守的)经验法则，
+介绍一个(可能不被遵守的)经验法则，
 你不应该把<em>内容</em>放到 Shadow DOM 中。内容必须放入文档内以便屏幕阅读器，搜索引擎，扩展等类似程序可以访问到。
 在创建一个吸引人的，可重用的部件时，那些无意义的标记要放进 Shadow DOM 中，可内容还得留在页面里。
 </p>
@@ -179,7 +179,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 <h2 id="toc-separation">从展现中分离内容</h2>
 
 <p>
-现在我们来看看如何使用 Shadow DOM 来将内容从展现中分离出来。假设我们拥有如下名称标签：
+现在我们来看看如何使用 Shadow DOM 来将内容从展现中分离出来。假设我们拥有如下姓名卡：
 </p>
 
 <style>
@@ -253,7 +253,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 </pre>
 
 <p>
-因为 DOM 树缺乏封装，整个名称标签的结构都暴露给了文档。若是页面里其他的元素不经意间使用了同样的类名来设置样式或操作脚本，那么我们可就有苦日子过了。
+因为 DOM 树缺乏封装，整个姓名卡的结构都暴露给了文档。若是页面里其他的元素不经意间使用了同样的类名来设置样式或操作脚本，那么我们可就有苦日子过了。
 </p>
 
 <p>我们完全可以避免这样的情况发生</p>
@@ -265,7 +265,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 </p>
 
 <ul>
-<li>这是一个名称标签。</li>
+<li>这是一个姓名卡。</li>
 <li>名称是 “Bob”。</li>
 </ul>
 
@@ -308,7 +308,7 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 
 <pre class="prettyprint">
 &lt;script&gt;
-var shadow = document.querySelector('#nameTag').webkitCreateShadowRoot();
+var shadow = document.querySelector('#nameTag').createShadowRoot();
 var template = document.querySelector('#nameTagTemplate');
 shadow.appendChild(template.content);
 template.remove();
@@ -320,7 +320,7 @@ Templates，和 Shadow DOM 一样，也是一个完善中的规范。Chrome Cana
 </blockquote>
 
 <p>
-我们建立了一个 shadow root，名称标签被再次渲染。如果你右键点击标签，选择检查元素，你将看到漂亮并富于语义的标记：
+我们建立了一个 shadow root，姓名卡被再次渲染。如果你右键点击标签，选择检查元素，你将看到漂亮并富于语义的标记：
 </p>
 
 <pre class="prettyprint">
@@ -328,7 +328,7 @@ Templates，和 Shadow DOM 一样，也是一个完善中的规范。Chrome Cana
 </pre>
 
 <p>
-这便印证了，通过使用 Shadow DOM，我们可以将展现细节隐藏在同样的标签中。展现细节被封装在了 Shadow DOM 中。
+这便印证了，通过使用 Shadow DOM，我们可以将展现细节隐藏在姓名卡中。展现细节被封装在了 Shadow DOM 中。
 </p>
 
 <h3 id="toc-separation-separate">
@@ -336,14 +336,14 @@ Templates，和 Shadow DOM 一样，也是一个完善中的规范。Chrome Cana
 </h3>
 
 <p>
-现在我们的名称标签可以从页面中隐藏展现细节了，但展现和内容却没有分离，
-因为虽然内容(就是名称“Bob”)显示在了页面里，但这个名称是从 shadow root 中复制过来的。
-如果我们想修改名称标签的名称，就得修改两个地方，这就可能造成它们不同步。
+现在我们的姓名卡可以从页面中隐藏展现细节了，但展现和内容却没有分离，
+因为虽然内容(就是姓名“Bob”)显示在了页面里，但这个姓名是从 shadow root 中复制过来的。
+如果我们想修改姓名卡的姓名，就得修改两个地方，这就可能造成它们不同步。
 </p>
 
 <p>
 HTML 元素是可组合的 — 比如说你可以把一个按钮放进一个表格里。
-在这儿我们就需要使用组合：名称标签必须将红色背景，“Hi!”文本，和标签内容组合在一起。
+在这儿我们就需要使用组合：姓名卡必须将红色背景，“Hi!”文本，和标签内容组合在一起。
 </p>
 
 <p>
@@ -372,7 +372,7 @@ HTML 元素是可组合的 — 比如说你可以把一个按钮放进一个表�
 </pre>
 
 <p>
-当名称标签渲染后，shadow host 的内容便投射(projected)到 <code>&lt;content&gt;</code> 元素出现的地方。
+当姓名卡渲染后，shadow host 的内容便投射(projected)到 <code>&lt;content&gt;</code> 元素出现的地方。
 </p>
 
 <p>
@@ -384,7 +384,7 @@ document.querySelector('#nameTag').textContent = 'Shellie';
 </pre>
 
 <p>
-这就足够了。浏览器会自动更新渲染的名称标签，因为我们把名称标签的内容<b>投射</b>到了 <code>&lt;content&gt;</code> 元素内。
+这就足够了。浏览器会自动更新渲染的姓名卡，因为我们把姓名卡的内容<b>投射</b>到了 <code>&lt;content&gt;</code> 元素内。
 </p>
 
 <div id="ex2b">
@@ -468,7 +468,7 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 <h3 id="toc-separation-profit">第三步：福利</h3>
 
 <p>
-通过分离内容和展现，我们可以简化操作内容的代码——在名称标签的例子中，代码只需要和包含一个 <code>&lt;div&gt;</code> 标签的简单结构打交道，而不必操作多个标签。
+通过分离内容和展现，我们可以简化操作内容的代码——在姓名卡的例子中，代码只需要和包含一个 <code>&lt;div&gt;</code> 标签的简单结构打交道，而不必操作多个标签。
 </p>
 
 <p>
@@ -476,7 +476,7 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 </p>
 
 <p>
-比方说，我们想将名称标签本地化。因为它仍然是一个名称标签，所以它在文档中的语义内容没有改变：
+比方说，我们想将姓名卡本地化。因为它仍然是一个姓名卡，所以它在文档中的语义内容没有改变：
 </p>
 
 <pre class="prettyprint">
@@ -518,7 +518,7 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 </pre>
 
 <p>
-现在我们有了一个日文的名称标签：
+现在我们有了一个日文的姓名卡：
 </p>
 
 <div id="ex3a">
