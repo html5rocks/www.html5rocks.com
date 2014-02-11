@@ -104,22 +104,22 @@ label.sortof::after {
 <p>{% include "warning.html" %}</p>
 <h2 id="toc-intro">介绍</h2>
 
-<p>在 web 开发中，模板这个概念并不新鲜。实际上，服务端的
-<a href="http://en.wikipedia.org/wiki/Template_engine_(web)">模板语言/引擎</a> 比如 Django (Python)，ERB/Haml (Ruby)，和 Smarty (PHP) 已经长期被使用了。在最近几年，我们目睹了众多 MVC 框架的萌芽发展。这些框架各有特色，但绝大多数在展现层(即：视图层)都使用同样的渲染机制：模板。</p>
-<p>模板是个好东西，不信你就问问周围人。连它的<a href="http://www.thefreedictionary.com/template">定义</a>都让人感到温暖怡人:</p>
+<p>在 web 开发领域中，模板这个概念并不新鲜。实际上，服务端的
+<a href="http://en.wikipedia.org/wiki/Template_engine_(web)">模板语言/引擎</a>，比如 Django (Python)，ERB/Haml (Ruby)，和 Smarty (PHP) 早已应用多时。近些年来，众多 MVC 框架蓬勃涌现。这些框架各有特色，但绝大多数在展现层(即：视图层)都使用同样的渲染机制：模板。</p>
+<p>模板是个好东西，不信你就问问周围人。连它的<a href="http://www.thefreedictionary.com/template">定义</a>都让人感到温暖舒适：</p>
 <blockquote>
-<p><strong>模板</strong> (n) - 一个拥有预制格式的文档或文件，用于一个特别应用的起点，这样就不必在每次使用样式的时候都重新创建一遍。</p>
+<p><strong>模板</strong> (n) - 一个拥有预制格式的文档或文件，可作为特定应用的出发点，这样就避免在每次使用格式的时候都重复创建。</p>
 </blockquote>
-<p>"...不必在每次....重新创建...."不知道你是怎么想的，但我喜欢避免重复工作。可为什么 web 平台却缺少原生支持这个开发者明确需要的技术呢？</p>
-<p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML 模板规范</a>便是答案。它定义了一个新的 <code>&lt;template&gt;</code> 元素，该元素描述一个标准的以 DOM 为基础的方案来实现客户端模板。该模板允许你定义一段可以被转为 HTML 的标记，在页面加载时不生效，但可以在后续进行动态实例化。引用 <a href="https://plus.google.com/111386188573471152118/posts">Rafael Weinstein</a> (规范作者)的话：</p>
+<p>"...避免在每次....重复创建"不知道你是怎么想的，但我喜欢避免重复工作。可为什么对这个开发者明确需要的技术，web 平台没有提供原生支持呢？</p>
+<p><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C HTML 模板规范</a>便是答案。它定义了一个新的 <code>&lt;template&gt;</code> 元素，用于描述一个标准的以 DOM 为基础的方案来实现客户端模板。该模板允许你定义一段可以被转为 HTML 的标记，在页面加载时不生效，但可以在后续进行动态实例化。引用 <a href="https://plus.google.com/111386188573471152118/posts">Rafael Weinstein</a>(规范作者)的话：</p>
 <blockquote>
-  They're a place to put a big wad of HTML that you don't want the browser to mess with at all...for any reason.
+  它们是用来放置一大团 HTML 的地方，就是那些你不想让浏览器弄乱的标记...不管它是出于什么理由。
   <cite>Rafael Weinstein (规范作者)</cite>
 </blockquote>
 
 <h3 id="toc-detect">特性检测</h3>
 
-<p>欲特性检测 <code>&lt;template&gt;</code>，创建一个 DOM 元素并检查它是否拥有 <code>.content</code> 属性：</p>
+<p>欲特性检测 <code>&lt;template&gt;</code>，需要创建一个 DOM 元素并检查它是否拥有 <code>.content</code> 属性：</p>
 <pre class="prettyprint"><code>function supportsTemplate() {
   return 'content' in document.createElement('template');
 }
@@ -133,8 +133,8 @@ if (supportsTemplate()) {
 <h2 id="toc-started">声明模板内容</h2>
 
 <p>HTML <code>&lt;template&gt;</code> 元素代表标记中的一个模板。它包含"模板内容"；本质上是<strong>一大块的惰性可复制 DOM</strong>。
-可以把模板想象成一个脚手架的零件，在应用的整个声明周期中你都可以使用(和重用)它。</p>
-<p>若要创建模板的内容，需要声明一些标记并用 <code>&lt;template&gt;</code> 元素将它们包裹起来：</p>
+可以把模板想象成一个脚手架的零件，在应用的整个生命周期中你都可以使用(和重用)它。</p>
+<p>要创建模板的内容，需要声明一些标记并用 <code>&lt;template&gt;</code> 元素将它们包裹起来：</p>
 <pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
   &lt;img src="" alt="great image"&gt;
   &lt;div class="comment"&gt;&lt;/div&gt;
@@ -144,7 +144,7 @@ if (supportsTemplate()) {
 细心的读者可能会注意到那个空图片。这是故意留空的。因为页面加载时不会请求图片，因此就不会产生 404 或控制台错误。我们可以随后动态生成图片的 URL。参见<a href="#toc-pillars">the pillars</a>.
 </blockquote>
 
-<h2 id="toc-pillars">The pillars</h2>
+<h2 id="toc-pillars">支柱(The pillars)</h2>
 
 <p>用 <code>&lt;template&gt;</code> 来包裹内容为我们提供了几个重要属性。</p>
 <ol>
@@ -155,12 +155,10 @@ if (supportsTemplate()) {
 <p>处于模板中的内容不会有副作用。<strong>脚本不会运行，图片不会加载，音频不会播放</strong>，...直到模板被使用。</p>
 </li>
 <li>
-<p><strong>内容不在文档中</strong>。在主页面使用 <code>document.getElementById()</code> 或 <code>querySelector()</code> 不会反回模板的任何子节点。</p>
+<p><strong>内容不在文档中</strong>。在主页面使用 <code>document.getElementById()</code> 或 <code>querySelector()</code> 不会返回模板的子节点。</p>
 </li>
 <li>
-<p>模板<strong>能够</strong>被放置在任何位置，包括 <code>&lt;head&gt;</code>，<code>&lt;body&gt;</code>，或 <code>&lt;frameset&gt;</code>，并且任何能够出现在以上元素内的内容都能被包含到模板中。 注意，and can
-contain any type of content which is allowed in those elements. Note that "任何位置"意味着 <code>&lt;template&gt;</code> 能够出现在 HTML 解析器不允许出现的位置...all
-but <a href="http://www.w3.org/TR/html5-diff/#content-model">content model</a> children. 它也可以作为 <code>&lt;table&gt;</code> 或 <code>&lt;select&gt;</code> 的子元素：</p>
+<p>模板<strong>能够</strong>被放置在任何位置，包括 <code>&lt;head&gt;</code>，<code>&lt;body&gt;</code>，或 <code>&lt;frameset&gt;</code>，并且任何能够出现在以上元素中的内容都可以放到模板中。 注意，"任何位置"意味着 <code>&lt;template&gt;</code> 能够安全的出现在 HTML 解析器不允许出现的位置...几乎可以作为任何<a href="http://www.w3.org/TR/html5-diff/#content-model">内容模型</a>的子节点。 它也可以作为 <code>&lt;table&gt;</code> 或 <code>&lt;select&gt;</code> 的子元素：</p>
 <pre class="prettyprint"><code>&lt;table&gt;
 &lt;tr&gt;
   &lt;template id="cells-to-repeat"&gt;
@@ -181,7 +179,7 @@ but <a href="http://www.w3.org/TR/html5-diff/#content-model">content model</a> c
 t.content.querySelector('img').src = 'logo.png';
 document.body.appendChild(t.content.cloneNode(true));
 </code></pre>
-<p>After stamping out a template, its content "goes live". 在这个例子中，内容被拷贝，发出了图片请求，最终的标记得以渲染。</p>
+<p>在对模板进行冲压(stamping out)后，它的内容开始"启用"。 在本例中，内容被拷贝，发出图片请求，最终的标记得以渲染。</p>
 <h2 id="toc-using">Demos</h2>
 
 <h3 id="toc-demo-insert">例子：惰性脚本</h3>
@@ -231,8 +229,8 @@ document.body.appendChild(t.content.cloneNode(true));
   shadow.innerHTML = '&lt;span&gt;Host node&lt;/span&gt;';
 &lt;/script&gt;
 </code></pre>
-<p>该做法的弊端在于，你的 Shadow DOM 越复杂，就需要更多的字符串拼接操作。这不利于扩展，事情很快开始变糟，然后你就会茫然失措。此外该做法还可能引起 XSS 威胁！不过别怕，<code>&lt;template&gt;</code> 前来帮助。</p>
-<p>合理的操作是直接操作 DOM：将模板内容附加到 shadow root 上：</p>
+<p>该做法的弊端在于，你的 Shadow DOM 越复杂，就需要越多的字符串拼接操作。这不利于扩展，用不了多久你就该傻眼了。此外该做法最容易滋生 XSS！不过别怕，<code>&lt;template&gt;</code> 前来帮助。</p>
+<p>合理的做法是直接操作 DOM，将模板内容附加到 shadow root 上：</p>
 <pre class="prettyprint"><code>&lt;template&gt;
 &lt;style&gt;
   @host {
@@ -244,7 +242,7 @@ document.body.appendChild(t.content.cloneNode(true));
       border-radius: 5px;
       width: 450px;
       max-width: 100%;
-    } 
+    }
     *:hover {
       background: #ccc;
     }
@@ -304,7 +302,7 @@ document.body.appendChild(t.content.cloneNode(true));
       border-radius: 5px;
       width: 450px;
       max-width: 100%;
-    } 
+    }
     *:hover {
       background: #ccc;
     }
@@ -403,9 +401,8 @@ document.body.appendChild(t.content.cloneNode(true));
 <h3 id="toc-overloadingscript">方法 2:重载脚本</h3>
 
 <p>另一个技巧是重载 <code>&lt;script&gt;</code> 并将它的内容作为字符串来操作。
-John Resig was probably the first to show this back in 2008 with
-他的<a href="http://ejohn.org/blog/javascript-micro-templating/">微型模板实用工具</a>。
-Now there are many others, including some new kids on the block like <a href="http://handlebarsjs.com/">handlebars.js</a>.</p>
+John Resig 可能是第一个展示该技巧的人——在 2008 年他的<a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a>中。
+目前又出现了许多新的工具，例如 <a href="http://handlebarsjs.com/">handlebars.js</a>。</p>
 <p>例如：</p>
 <pre class="prettyprint"><code>&lt;script id="mytemplate" type="text/x-handlebars-template"&gt;
   &lt;img src="logo.png"&gt;
@@ -425,14 +422,13 @@ Now there are many others, including some new kids on the block like <a href="ht
 由于一个库推广了使用 CSS 选择器来获取 DOM 的方法从而使得它被规范采纳。这并不是常有的事，但我<em>喜欢</em>看到这样的事情发生。</p>
 <p>我觉得 <code>&lt;template&gt;</code> 也是类似的案例。它将客户端模板进行了标准化，更为重要的是，它使我们
 不再需要<a href="#toc-old">疯狂的 2008 hacks</a>。
-Making the entire web authoring process more sane, more maintainable, and more
-full featured is always a good thing in my book.</p>
+促使整个 web 开发过程更健全，更容易维护，功能更多，在我看来，始终都是个好事情。</p>
 <h2 id="toc-resources">额外资源</h2>
 
 <ul>
 <li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">W3C 规范</a></li>
 <li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section">Web 组件入门</a></li>
-<li><a href="http://html5-demos.appspot.com/static/webcomponents/index.html">&lt;web&gt;components&lt;/web&gt;</a> (<a href="http://www.youtube.com/watch?v=eJZx9c6YL8k">视频</a>) - a fantastically comprehensive presentation by yours truly.</li>
+<li><a href="http://html5-demos.appspot.com/static/webcomponents/index.html">&lt;web&gt;components&lt;/web&gt;</a> (<a href="http://www.youtube.com/watch?v=eJZx9c6YL8k">视频</a>) - 真诚的为您献上一份精彩详实的介绍。</li>
 </ul><script>
 document.addEventListener('DOMContentLoaded', function(e) {
   if (!isCompatible()) {
