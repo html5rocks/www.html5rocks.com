@@ -11,7 +11,7 @@
 
 "...避免在每次....重复创建"不知道你是怎么想的，但我喜欢避免重复工作。可为什么对这个开发者明确需要的技术，web 平台没有提供原生支持呢？
 
-[W3C HTML 模板规范][spec-link]便是答案。它定义了一个新的 `<template>` 元素，用于描述一个标准的以 DOM 为基础的方案来实现客户端模板。该模板允许你定义一段可以被转为 HTML 的标记，在页面加载时不生效，但可以在后续进行动态实例化。引用 [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts)(规范作者)的话：
+[WhatWG HTML 模板规范][spec-link]便是答案。它定义了一个新的 `<template>` 元素，用于描述一个标准的以 DOM 为基础的方案来实现客户端模板。该模板允许你定义一段可以被转为 HTML 的标记，在页面加载时不生效，但可以在后续进行动态实例化。引用 [Rafael Weinstein](https://plus.google.com/111386188573471152118/posts)(规范作者)的话：
 
 <blockquote>
   它们是用来放置一大团 HTML 的地方，就是那些你不想让浏览器弄乱的标记...不管它是出于什么理由。
@@ -71,13 +71,15 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
 <h2 id="toc-using">激活一个模板</h2>
 
 要使用模板，你得先激活它。否则它的内容将永远无法渲染。
-激活模板最简单的方法就是使用 `cloneNode()` 对模板的 `.content` 进行深拷贝。
+激活模板最简单的方法就是使用 `document.importNode()` 对模板的 `.content` 进行深拷贝。
 `.content` 为只读属性，关联一个包含模板内容的 `DocumentFragment`。
 
     var t = document.querySelector('#mytemplate');
     // 在运行时填充 src。
     t.content.querySelector('img').src = 'logo.png';
-    document.body.appendChild(t.content.cloneNode(true));
+
+    var clone = document.importNode(t.content, true);
+    document.body.appendChild(clone);
 
 在对模板进行冲压(stamping out)后，它的内容开始"启用"。 在本例中，内容被拷贝，发出图片请求，最终的标记得以渲染。
 
@@ -96,7 +98,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
         var span = content.querySelector('span');
         span.textContent = parseInt(span.textContent) + 1;
         document.querySelector('#container').appendChild(
-            content.cloneNode(true));
+            document.importNode(content, true));
       }
     </script>
 
@@ -106,7 +108,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
     </template>
 
 <div class="demoarea">
-<button onclick="useIt()">使用我</button>
+<button onclick="useIt()">Use me</button>
 <div id="container"></div>
 <template id="inert-demo">
   <div>Template used <span>0</span></div>
@@ -117,7 +119,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
     var content = document.querySelector('#inert-demo').content;
     var span = content.querySelector('span');
     span.textContent = parseInt(span.textContent) + 1;
-    document.querySelector('#container').appendChild(content.cloneNode(true));
+    document.querySelector('#container').appendChild(document.importNode(content, true));
   }
 </script>
 </div>
@@ -128,7 +130,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
 
     <div id="host"></div>
     <script>
-      var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+      var shadow = document.querySelector('#host').createShadowRoot();
       shadow.innerHTML = '<span>Host node</span>';
     </script>
 
@@ -138,19 +140,17 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
 
     <template>
     <style>
-      @host {
-        * {
-          background: #f8f8f8;
-          padding: 10px;
-          -webkit-transition: all 400ms ease-in-out;
-          box-sizing: border-box;
-          border-radius: 5px;
-          width: 450px;
-          max-width: 100%;
-        }
-        *:hover {
-          background: #ccc;
-        }
+      :host {
+        background: #f8f8f8;
+        padding: 10px;
+        transition: all 400ms ease-in-out;
+        box-sizing: border-box;
+        border-radius: 5px;
+        width: 450px;
+        max-width: 100%;
+      }
+      :host:hover {
+        background: #ccc;
       }
       div {
         position: relative;
@@ -192,25 +192,23 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
     </div>
 
     <script>
-      var shadow = document.querySelector('#host').webkitCreateShadowRoot();
+      var shadow = document.querySelector('#host').createShadowRoot();
       shadow.appendChild(document.querySelector('template').content);
     </script>
 
 <template id="demo-sd-template">
 <style>
-  @host {
-    * {
-      background: #f8f8f8;
-      padding: 10px;
-      -webkit-transition: all 400ms ease-in-out;
-      box-sizing: border-box;
-      border-radius: 5px;
-      width: 450px;
-      max-width: 100%;
-    }
-    *:hover {
-      background: #ccc;
-    }
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  }
+  :host:hover {
+    background: #ccc;
   }
   #unsupportedbrowsersneedscoping {
     position: relative;
@@ -257,7 +255,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
   var compat = HTMLElement.prototype.webkitCreateShadowRoot ||
                HTMLElement.prototype.createShadowRoot ? true : false;
   if (compat && 'HTMLTemplateElement' in window) {
-    var shadow = host.webkitCreateShadowRoot();
+    var shadow = host.createShadowRoot();
     shadow.applyAuthorStyles = true;
     shadow.appendChild(document.querySelector('#demo-sd-template').content);
   } else {
@@ -340,4 +338,4 @@ John Resig 可能是第一个展示该技巧的人——在 2008 年他的[Micro
 - [Web 组件入门](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#template-section)
 - [&lt;web>components&lt;/web>](http://html5-demos.appspot.com/static/webcomponents/index.html) ([视频](http://www.youtube.com/watch?v=eJZx9c6YL8k)) - 真诚的为您献上一份精彩详实的介绍。
 
-[spec-link]: https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html
+[spec-link]: http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element
