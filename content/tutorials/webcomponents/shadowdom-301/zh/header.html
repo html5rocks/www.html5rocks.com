@@ -1,0 +1,338 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+figure img {
+  border: 1px solid #ccc;
+}
+.tutorial section {
+  overflow: visible;
+}
+.tutorial section iframe {
+  width: 100%;
+  border: none;
+}
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+.tutorial table td,
+.tutorial table th {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.tutorial table th {
+  background: #444;
+  color: white;
+  padding: 10px;
+  font-weight: normal;
+}
+.tutorial table em {
+  margin-left: 15px;
+}
+.tutorial table tr {
+  background: #fff;
+}
+.tutorial table tr:nth-child(odd) {
+  background: #eee;
+}
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea, .demodevtools {
+  margin-top: 20px;
+}
+.demodevtools {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-right: 1em;
+}
+.demodevtools:before {
+  content: 'DevTools view:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.featuresupported.no {
+  display: none !important;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+#example4-log {
+  width: 100%;
+  box-sizing: border-box;
+}
+#example4-log:before {
+  content: 'Output:';
+}
+#example4-log textarea {
+  outline:none;
+  border:none;
+  width:100%;
+  height:70px;
+  resize:none;
+}
+#inherit-buttons {
+  margin-left: 15px;
+  margin-top: 20px;
+  display: inline-block;
+  vertical-align: top;
+}
+#inherit-buttons button {
+  display: block;
+  margin-bottom: 10px;
+}
+.small-notice {
+  font-size: 85%;
+}
+#example5.demoarea {
+  display: block;
+  margin-top: 30px;
+}
+#example5 [data-host]:before {
+  top: 3px;
+  left: 3px;
+  position: absolute;
+  content: '<div data-host>';
+  color: #888;
+}
+#example5 [data-host] {
+  padding: 25px;
+  border: 3px solid black;
+  display: inline-block;
+  background: #eee;
+  text-align: center;
+  position: relative;
+  float: left;
+}
+#example5 div {
+  padding: 5px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+#example5 .blue {
+  background: steelblue;
+  color: white;
+  display: inline-block;
+}
+#example5 .buttons {
+  margin-left: 10px;
+  float: left;
+}
+#example5 output {
+  background: #eee;
+  height: 150px;
+  overflow: auto;
+  padding: 10px;
+  display: block;
+  clear: both;
+}
+#example5 output span {
+  font-style: italic;
+  font-size: small;
+  display: inline-block;
+}
+#example5 button {
+  vertical-align: bottom;
+  margin-bottom: 5px;
+}
+#example5.playing {
+  /*cursor: none;*/
+}
+#example5 .cursor {
+  /* Icon by Laurent Patain - http://thenounproject.com/____Lo */
+  background-image: url(cursor.svg);
+  width: 36px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+#example5.playing .cursor {
+
+}
+
+@-webkit-keyframes animation1 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation2 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation3 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+}
+
+
+
+@keyframes animation1 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, -40px, 0);
+    transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, 280px, 0);
+    transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(70px, 280px, 0);
+    transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@keyframes animation2 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 280px, 0);
+    transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(240px, 280px, 0);
+    transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@keyframes animation3 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+    transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0) rotateX(30deg);
+    transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+    transform: translate3d(240px, 128px, 0);
+  }
+}
+
+#example5.playing.animation1 .cursor {
+  -webkit-animation: animation1 5s;
+  animation: animation1 5s;
+}
+#example5.playing.animation2 .cursor {
+  -webkit-animation: animation2 5s;
+  animation: animation2 5s;
+}
+#example5.playing.animation3 .cursor {
+  -webkit-animation: animation3 5s;
+  animation: animation3 5s;
+  -webkit-transform-origin: 50% 100%;
+  -moz-transform-origin: 50% 100%;
+  -ms-transform-origin: 50% 100%;
+  -o-transform-origin: 50% 100%;
+  transform-origin: 50% 100%;
+}
+</style>
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot ||
+                                         HTMLElement.prototype.webkitCreateShadowRoot;
+</script>
+{% endblock %}
+
+{% block iscompatible %}
+  return HTMLElement.prototype.webkitCreateShadowRoot || HTMLElement.prototype.createShadowRoot ? true : false;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
