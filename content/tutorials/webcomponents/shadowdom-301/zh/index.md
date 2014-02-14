@@ -5,7 +5,7 @@
 
 <p class="tip notice">在 Chrome 中，开启 about:flags 页面中的"Enable experimental Web Platform features"就可以体验本文介绍的所有内容。</p>
 
-<h2 id="toc-shadow-multiple">使用多个 shadow root Using multiple shadow roots</h2>
+<h2 id="toc-shadow-multiple">使用多个 shadow root</h2>
 
 假如你举办了一场聚会，要是把所有人都聚集在同一间屋子里会显得拥挤不堪。你希望能将人们按组分散到不同的房间内。托管 Shadow DOM 的元素也具有这样的能力，也就是说，宿主元素能够在同一时间内托管多个 shadow root。
 
@@ -45,10 +45,10 @@ root2.innerHTML = '<div>Root 2 FTW</div>';
 <p class="notice fact">添加进宿主元素中的 shadow 树按照它们的添加顺序而堆叠起来，从最先加入的 shadow 树开始。最终渲染的是最后加入的 shadow 树。</p>
 
 <blockquote class="commentary talkinghead" id="youngest-tree">
-最近添加的树称为 <b>younger tree</b>。前面的树称为 <b>older tree</b>。在本例中，<code>root2</code> 是 younger tree，<code>root1</code> 是 older tree。
+最近添加的树称为 <b>younger tree</b>。之前添加的树称为 <b>older tree</b>。在本例中，<code>root2</code> 是 younger tree，<code>root1</code> 是 older tree。
 </blockquote>
 
-如果只有最后被邀请的人才能加入渲染舞会，那么使用多个 shadow 的意义何在？别着急，让我们来认识下 shadow 插入点(insertion points)。
+如果只有最后加入的 shadow 树才能被渲染，那么使用多个 shadow 的意义何在？别着急，让我们来认识下 shadow 插入点(insertion points)。
 
 <h3 id="toc-shadow-insertion">Shadow 插入点</h3>
 
@@ -110,7 +110,7 @@ console.log(host.shadowRoot === root); // true
 console.log(document.body.shadowRoot); // null
 </pre>
 
-如果不想别人进入你的 shadow，那就将 `.shadowRoot` 重定义为 null：
+如果不想别人乱动你的 shadow，那就将 `.shadowRoot` 重定义为 null：
 
 <pre class="prettyprint">
 Object.defineProperty(host, 'shadowRoot', {
@@ -331,7 +331,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 
 <h2 id="toc-shadow-visualizder">工具：Shadow DOM Visualizer</h2>
 
-要了解 Shadow DOM 背后的黑魔法很困难。我还记得第一次理解它的情形。
+要了解 Shadow DOM 背后的黑魔法很困难。我还记得第一次尝试理解它的情形。
 
 为了使 Shadow DOM 的渲染过程更加形象化，我用 [d3.js](http://d3js.org/) 写了一个工具。左边框中的标记都是可编辑的。你可以把自己的代码粘贴进去，然后观察它们是如何工作的，插入点是如何将宿主节的子节点混入 shadow 树中。
 
@@ -348,11 +348,11 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 
 <h2 id="toc-events">事件模型</h2>
 
-有些事件会越过 shadow 边界，有些不会。在越过 shadow 边界的情况中，事件目标会因为维护由 shadow root 上边界提供的封装而调整。也就是说，**事件会被重定向，使它看起来是从宿主元素中发出，而并非是 Shadow DOM 的内部元素**。
+有些事件会越过 shadow 边界，有些不会。在越过 shadow 边界的情况中，事件目标会因为维护由 shadow root 上边界提供的封装而进行调整。也就是说，**事件会被重定向，使它看起来是从宿主元素中发出，而并非是 Shadow DOM 的内部元素**。
 
 <p class="tip notice">访问 <code>event.path</code> 来查看调整后的事件路径。</p>
 
-如果你的浏览器支持 Shadow DOM (它<span class="featuresupported no">不</span>支持)，你应该能在下方看到一个用于可视化事件的 play area。<span style="color:#ffcc00">黄色</span>的元素属于 Shadow DOM 中的标记。<span style="color:steelblue">蓝色</span>的元素属于宿主元素。环绕在 "I'm a node in the host" 的<span style="color:#ffcc00">黄色</span>边框表明了它是一个分布式节点，通过 shadow 的 `<content>` 插入点混入在 Shadow DOM 中。
+如果你的浏览器支持 Shadow DOM (它<span class="featuresupported no">不</span>支持)，你应该能在下方看到一个用于可视化事件的测试区。<span style="color:#ffcc00">黄色</span>的元素属于 Shadow DOM 中的标记。<span style="color:steelblue">蓝色</span>的元素属于宿主元素。环绕在 "I'm a node in the host" 的<span style="color:#ffcc00">黄色</span>边框表明了它是一个分布式节点，通过 shadow 的 `<content>` 插入点混入在 Shadow DOM 中。
 
 "Play Action" 按钮表示可以进行多种尝试。你可以点击它们来观察 `mouseout` 和 `focusin` 事件是如何冒泡到主页面的。
 
@@ -484,15 +484,15 @@ document.querySelector('#example5 .buttons').addEventListener('click', function(
 **Play Action 1**
 
 - 这个很有意思。你会看到一个 `mouseout` 事件从宿主元素 (`<div data-host>`)
-到 <span style="color:steelblue">蓝色</span>的节点。即便它是个分布式节点，但它始终处于宿主中，而不是在 Shadow DOM 里。随后继续移动鼠标至<span style="color:#ffcc00">黄色</span>区域内，再次导致<span style="color:steelblue">蓝色</span>的节点触发 `mouseout` 事件。
+传递到<span style="color:steelblue">蓝色</span>的节点。即便它是个分布式节点，但它始终处于宿主中，而不是在 Shadow DOM 里。随后继续移动鼠标至<span style="color:#ffcc00">黄色</span>区域内，再次导致<span style="color:steelblue">蓝色</span>的节点触发 `mouseout` 事件。
 
 **Play Action 2**
 
-- 这是发生在宿主元素(发生的非常晚)上的一次 `mouseout` 事件。通常你会看到 `mouseout` 事件会在所有的<span style="color:#ffcc00">黄色</span>块上触发。但是这一次不同，这些元素都是 Shadow DOM 的内部元素，事件的冒泡不会超出它的上边界。
+- 这是发生在宿主元素(发生的非常晚)上的一次 `mouseout` 事件。通常你会看到 `mouseout` 事件会在所有的<span style="color:#ffcc00">黄色</span>块上触发。但是这一次不同，这些元素都在 Shadow DOM 的内部，事件的冒泡不会超出它的上边界。
 
 **Play Action 3**
 
-- 注意当你点击输入框时，`focusin` 并没有发生在输入框上，而是在宿主节点自身上。事件被重定向了。 
+- 注意当你点击输入框时，`focusin` 并没有发生在输入框上，而是在宿主节点自身上。事件被重定向了！ 
 
 <h3 id="toc-events-stopped">始终停止的事件</h3>
 
@@ -510,9 +510,9 @@ document.querySelector('#example5 .buttons').addEventListener('click', function(
 
 <h2 id="toc-conclusion">总结</h2>
 
-我希望你能同意 **Shadow DOM 令人难以置信的强大**。这是有史以来第一次，我们有了合适的封装，不必再使用问题重重的 `<iframe>` 或其他古老的技巧。
+我希望你能认同 **Shadow DOM 的功能令人难以置信的强大**。这是有史以来第一次，我们有了合适的封装，不必再使用问题重重的 `<iframe>` 或其他古老的技巧。
 
-Shadow DOM 是个难以驯服的猛兽，但是它却值得被加入到 web 平台中。花点时间去了解它，学习它，然后提问。
+Shadow DOM 是个难以驯服的猛兽，但是它却值得被加入到 web 平台中。花点时间去了解它，学习它，提出问题。
 
 如果你想学习更多内容，看看 Dominic 的入门文章 [Shadow DOM 101](/tutorials/webcomponents/shadowdom/) 和我的 [Shadow DOM 201: CSS &amp; Styling](/tutorials/webcomponents/shadowdom-201/)。
 
