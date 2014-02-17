@@ -333,7 +333,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 
 要了解 Shadow DOM 背后的黑魔法很困难。我还记得第一次尝试理解它的情形。
 
-为了使 Shadow DOM 的渲染过程更加形象化，我用 [d3.js](http://d3js.org/) 写了一个工具。左边框中的标记都是可编辑的。你可以把自己的代码粘贴进去，然后观察它们是如何工作的，插入点是如何将宿主节的子节点混入 shadow 树中。
+为了使 Shadow DOM 的渲染过程更加形象化，我用 [d3.js](http://d3js.org/) 写了一个工具。左边框中的标记都是可编辑的。你可以把自己的代码粘贴进去，然后观察它们是如何工作的，插入点是如何将宿主的子节点混入 shadow 树中。
 
 <figure>
 <a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html"><img src="visualizer.png" title="Shadow DOM Visualizer" alt="Shadow DOM Visualizer"></a>
@@ -348,7 +348,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 
 <h2 id="toc-events">事件模型</h2>
 
-有些事件会越过 shadow 边界，有些不会。在越过 shadow 边界的情况中，事件目标会因为维护由 shadow root 上边界提供的封装而进行调整。也就是说，**事件会被重定向，使它看起来是从宿主元素中发出，而并非是 Shadow DOM 的内部元素**。
+有些事件会越过 shadow 边界，有些不会。在越过 shadow 边界的情况中，事件目标会因为维护由 shadow root 上边界提供的封装而进行调整。也就是说，**事件会被重定向，使它看起来是从宿主元素上发出，而并非是 Shadow DOM 的内部元素**。
 
 <p class="tip notice">访问 <code>event.path</code> 来查看调整后的事件路径。</p>
 
@@ -492,7 +492,8 @@ document.querySelector('#example5 .buttons').addEventListener('click', function(
 
 **Play Action 3**
 
-- 注意当你点击输入框时，`focusin` 并没有发生在输入框上，而是在宿主节点自身上。事件被重定向了！ 
+- 注意当你点击输入框时，`focusin` 并没有发生在输入框上，而是在
+- 点自身上。事件被重定向了！ 
 
 <h3 id="toc-events-stopped">始终停止的事件</h3>
 
