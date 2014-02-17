@@ -1,0 +1,432 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+/*blockquote {
+  background: rgb(238, 238, 238);
+  padding: 1px 10px;
+}*/
+label.bad, label.good, label.sortof {
+  padding: 4px;
+  line-height: 1.7;
+  border-radius: 50%;
+  color: white;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  -webkit-transform: rotateZ(90deg);
+  -moz-transform: rotateZ(90deg);
+  -ms-transform: rotateZ(90deg);
+  -o-transform: rotateZ(90deg);
+  transform: rotateZ(90deg);
+  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+}
+label.good::after,
+label.bad::after,
+label.sortof::after {
+  position: relative;
+  left: 2px;
+  top: -5px;
+}
+label.bad {
+  background-color: red;
+}
+label.bad::after {
+  content: ':(';
+}
+label.good {
+  background-color: green;
+}
+label.good::after {
+  content: ':)';
+}
+label.sortof {
+  background-color: rgb(230, 190, 32);
+  line-height: 1.8;
+}
+label.sortof::after {
+  content: ':|';
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea {
+  margin-top: 1em;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+</style>
+
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot;
+</script>
+
+{% endblock %}
+
+{% block iscompatible %}
+  return 'HTMLTemplateElement' in window;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+    <strong>Translator:</strong> <a href="http://www.cwdoh.com">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-intro">소개</h2>
+
+<p>템플릿의 개념은 웹 개발에 있어 새로운 것은 아닙니다. 사실, Django(Python), ERB/Haml(Ruby) 그리고 Smarty(PHP)같은 서버 사이드 <a href="http://en.wikipedia.org/wiki/Template_engine_(web)">템플릿 언어/엔진들</a>들이 오래동안 있어왔습니다. 그러나 지난 몇년동안 MVC 프레임워크의 폭팔적인 성장을 보았습니다. 그들 모두는 조금씩 다르지만 아직 ('뷰'라고도 하는) 표현 계층(Presentational layer)를 위한 공통의 동작 원리를 '템플릿'이라는 형태로 공유하고 있습니다.</p>
+<p>직접 살펴봅시다. 템플릿은 환상적입니다. 가서 둘러보세요. 그 자체의 <a href="http://www.thefreedictionary.com/template">정의</a>조차도 다음과 같이 여러분을 따듯하고 편안하게 만들어줄 것입니다.</p>
+<blockquote>
+<p><strong>템플릿</strong> (명사) - 특별한 어플리케이션을 위한 시작점으로 사용되는 미리 작성된 형식을 가진 문서나 파일입니다. 즉, 형식(Format)은 사용될 때마다 매번 재생성하지 않아도 됩니다.</p>
+</blockquote>
+<p>"...사용될 때마다 매번 재생성하지 않아도 됩니다...." 여러분은 어떠실지 모르겠지만 전 추가작업을 피하는 것을 사랑합니다. 왜 웹플랫폼은 개발자가 명확하게 관리해야 하는 무언가에 대한 네이티브 지원이 부족할까요?</p>
+<p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">WhatWG HTML Templates 표준규격</a>이 그 답입니다. 이는 템플릿을 위한 표준적인 DOM 기반의 접근 방법을 기술하는 새로운 엘리먼트인 <code>&lt;template&gt;</code>를 정의합니다. 템플릿은 여러분이 HTML처럼 파싱되는 마크업의 조각을 선언할 수 있도록 하며, 페이지 로딩 시에는 사용되지 않도록 하지만 런타임에는 인스턴스화할 수 있습니다. 아래에 <a href="https://plus.google.com/111386188573471152118/posts">Rafael Weinstein</a>의 포스트를 인용하도록 하겠습니다.</p>
+<blockquote>
+  이는 여러분이 브라우저를 완전히 망치고 싶지 않을 때 HTML의 커다란 뭉치를 넣을 수 있는 곳입니다...어떠한 이유로든 말이죠.
+  <cite>Rafael Weinstein (규격 저자)</cite>
+</blockquote>
+
+<h3 id="toc-detect">기능의 검출</h3>
+
+<p><code>&lt;template&gt;</code> 기능을 검출하기 위해 DOM 엘리먼트를 생성하고 <code>.content</code> 속성이 존재하는지를 다음과 같이 검사합니다.</p>
+<pre class="prettyprint"><code>function supportsTemplate() {
+  return 'content' in document.createElement('template');
+}
+
+if (supportsTemplate()) {
+  // Good to go!
+} else {
+  // Use old templating techniques or libraries.
+}
+</code></pre>
+<h2 id="toc-started">템플릿 컨텐츠 선언하기</h2>
+
+<p>HTML <code>&lt;template&gt;</code> 엘리먼트는 여러분의 마크업에서 템플릿을 표현합니다. 이는 "템플릿 컨텐츠"를 포함하며, 근본적으로 <strong>비활성화된 복제가능한 DOM의 덩어리(Chunk)</strong>입니다. 템플릿을 여러분 앱의 전체 실행시간 동안 사용할 수 있는 (그리고 재사용할 수 있는) 스캐폴딩의 조각으로 생각해보세요.</p>
+<p>템플릿화된 컨텐츠를 생성하기 위해 약간의 마크업을 선언하고 이를 <code>&lt;template&gt;</code> 엘리먼트로 다음과 같이 감싸도록 합니다.</p>
+<pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
+  &lt;img src="" alt="great image"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<blockquote class="commentary talkinghead">
+주의깊은 독자들은 아마 비어있는 이미지들에 주목할 것입니다. 이는 정말로 괜찮고 의도된 것입니다. 페이지의 로딩 시에 불러와지지 않을 것이므로 깨진 이미지는 404가 되거나 콘솔 에러를 생성하지 않습니다. 우리는 나중에 소스 URL을 동적으로 생성할 수 있습니다. <a href="#toc-pillars">기본적인 특징들</a>을 보세요.
+</blockquote>
+
+<h2 id="toc-pillars">기본적인 특징들</h2>
+
+<p><code>&lt;template&gt;</code> 내에서 컨텐츠를 감싸는 것은 우리에게 몇가지 중요한 속성들을 제공합니다.</p>
+<ol>
+<li>
+<p>이것의 <strong>컨텐츠는 활성화가 될 때까지 효과적으로 비활성화됩니다</strong>. 기본적으로 여러분의 마크업 숨겨진 DOM이며 렌더링되지 않습니다.</p>
+</li>
+<li>
+<p>템플릿 안의 어떠한 컨텐츠라도 부작용을 가지지 않습니다. 템플릿이 사용될 때까지 <strong>스크립트는 실행되지 않으며 이미지는 로딩되지 않고 오디오는 재생되지 않는 등</strong></p>
+</li>
+<li>
+<p><strong>컨텐츠는 문서 내에 있지 않도록 고려되어야 합니다</strong>. 메인 페이지에서 <code>document.getElementById()</code>나 <code>querySelector()</code>의 사용은 템플릿의 자식 노드들을 반환하지 않을 것입니다.</p>
+</li>
+<li>
+<p>템플릿은 <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code> 혹은 <code>&lt;frameset&gt;</code> 내의 어느 곳에도 위치<strong>할 수 있습니다</strong>. "어느 곳에서도"는 <code>&lt;template&gt;</code>가 <a href="http://www.w3.org/TR/html5-diff/#content-model">content model</a>의 자식들을 제외한...HTML 파서가 허가하지 않는 모든 위치에서도 안전하게 사용될 수 있다는 것을 의미한다는데 주의하시기 바랍니다. 또한 아래에서 보시다시피 <code>&lt;table&gt;</code>이나 <code>&lt;select&gt;</code>의 자식처럼 둘 수도 있습니다.</p>
+<pre class="prettyprint"><code>&lt;table&gt;
+&lt;tr&gt;
+  &lt;template id="cells-to-repeat"&gt;
+    &lt;td&gt;some content&lt;/td&gt;
+  &lt;/template&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+</code></pre>
+</li>
+</ol>
+<h2 id="toc-using">템플릿 활성화하기</h2>
+
+<p>템플릿을 사용하기 위해 이를 활성화할 필요가 있습니다. 그렇지않으면 템플릿의 컨텐츠는 절대로 렌더링되지 않을 것입니다. 이를 위한 가장 쉬운 방법은 <code>document.importNode()</code>를 사용하여 템플릿의 <code>.content</code>의 완전한 복사본(deep copy) 생성하는 것입니다. <code>.content</code> 속성은 템플릿의 내부를 포함하는 읽기 전용의 <code>DocumentFragment</code>입니다.</p>
+<pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
+// 런타임에 src를 지정합니다.
+t.content.querySelector('img').src = 'logo.png';
+
+var clone = document.importNode(t.content, true);
+document.body.appendChild(clone);
+</code></pre>
+<p>템플릿을 찍어낸 뒤, 컨텐츠는 "가동 준비가 됩니다". 이 특이한 예제에서 컨텐츠는 복제되고 이미지의 요청이 만들어지며 최종적인 마크업이 렌더링됩니다.</p>
+<h2 id="toc-using">데모들</h2>
+
+<h3 id="toc-demo-insert">예제: 비활성 스크립트</h3>
+
+<p>이 예제는 템플릿 컨텐츠의 비활성화를 보여줍니다. <code>&lt;script&gt;</code>는 버튼이 눌렸을 때만 동작하며 템플릿을 찍어냅니다.</p>
+<pre class="prettyprint"><code>&lt;button onclick="useIt()"&gt;Use me&lt;/button&gt;
+&lt;div id="container"&gt;&lt;/div&gt;
+&lt;script&gt;
+  function useIt() {
+    var content = document.querySelector('template').content;
+    // 템플릿 DOM에서 뭔가를 갱신합니다.
+    var span = content.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(
+        document.importNode(content, true));
+  }
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div&gt;Template used: &lt;span&gt;0&lt;/span&gt;&lt;/div&gt;
+  &lt;script&gt;alert('Thanks!')&lt;/script&gt;
+&lt;/template&gt;
+</code></pre>
+<div class="demoarea">
+<button onclick="useIt()">사용해보세요</button>
+<div id="container"></div>
+<template id="inert-demo">
+  <div>템플릿이 <span>0</span>번 사용되었습니다.</div>
+  <script>if ('HTMLTemplateElement' in window) {alert('Thanks!')}</script>
+</template>
+<script>
+  function useIt() {
+    var content = document.querySelector('#inert-demo').content;
+    var span = content.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(document.importNode(content, true));
+  }
+</script>
+</div>
+
+<h3 id="toc-demo-sd">예제: 템플릿으로부터 Shadow DOM 생성하기</h3>
+
+<p>아래와 같이 대부분의 사람들은  <code>.innerHTML</code>로 마크업 문자열을 설정하는 것으로 <a href="/webcomponents/shadowdom/">Shadow DOM</a>을 호스트에 붙입니다.</p>
+<pre class="prettyprint"><code>&lt;div id="host"&gt;&lt;/div&gt;
+&lt;script&gt;
+  var shadow = document.querySelector('#host').createShadowRoot();
+  shadow.innerHTML = '&lt;span&gt;Host node&lt;/span&gt;';
+&lt;/script&gt;
+</code></pre>
+<p>이 방식의 문제점은 여러분의 Shadow DOM이 더 복잡해질 수록 더 많은 스트링 접합(Concatenation)을 해야한다는 것입니다. 이는 확장성이 없으며 더 빠르게 지저분해지고 더 정신없도록 만듭니다. 또한 이 방식은 왜 XSS가 첫번째 위치에서 만들어져야 할까요! <code>&lt;template&gt;</code>이 구해줄 것입니다.</p>
+<p>아래는 템플릿 컨텐츠를 Shadow Root 추가를 통해 직접적으로 DOM과 동작하는 더 괜찮은 예제입니다.</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+&lt;style&gt;
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  } 
+  :host:hover {
+    background: #ccc;
+  }
+  div {
+    position: relative;
+  }
+  header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  h3 {
+    margin: 0 !important;
+  }
+  textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+&lt;/style&gt;
+&lt;div&gt;
+  &lt;header&gt;
+    &lt;h3&gt;댓글을 추가하세요.&lt;/h3&gt;
+  &lt;/header&gt;
+  &lt;content select="p"&gt;&lt;/content&gt;
+  &lt;textarea&gt;&lt;/textarea&gt;
+  &lt;footer&gt;
+    &lt;button&gt;Post&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;div id="host"&gt;
+  &lt;p&gt;설명은 여기에 위치합니다.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var shadow = document.querySelector('#host').createShadowRoot();
+  shadow.appendChild(document.querySelector('template').content);
+&lt;/script&gt;
+</code></pre>
+<p><template id="demo-sd-template">
+<style>
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  } 
+  :host:hover {
+    background: #ccc;
+  }
+  #unsupportedbrowsersneedscoping {
+    position: relative;
+  }
+  #unsupportedbrowsersneedscoping header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  #unsupportedbrowsersneedscoping h3 {
+    margin: 0 !important;
+  }
+  #unsupportedbrowsersneedscoping textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  #unsupportedbrowsersneedscoping footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+</style>
+<div id="unsupportedbrowsersneedscoping">
+  <header>
+    <h3>댓글을 추가하세요.</h3>
+  </header>
+  <content select="p"></content>
+  <textarea></textarea>
+  <footer>
+    <button>Post</button>
+  </footer>
+</div>
+</template></p>
+<div id="demo-sd-host">
+  <p>설명은 여기에 위치합니다.</p>
+</div>
+
+<script>
+(function() {
+  var host = document.querySelector('#demo-sd-host');
+  var compat = HTMLElement.prototype.webkitCreateShadowRoot ||
+               HTMLElement.prototype.createShadowRoot ? true : false;
+  if (compat && 'HTMLTemplateElement' in window) {
+    var shadow = host.createShadowRoot();
+    shadow.applyAuthorStyles = true;
+    shadow.appendChild(document.querySelector('#demo-sd-template').content);
+  } else {
+    document.querySelector('#unsupportedbrowsersneedscoping').style.display = 'none';
+    host.style.display = 'none';
+  }
+})();
+</script>
+
+<h2 id="toc-gotcha">좋습니다!</h2>
+
+<p>야생에서 <code>&lt;template&gt;</code>를 사용할 때 우연히 발견한 몇가지 사실들은 다음과 같습니다.</p>
+<ul>
+<li>만약 <a href="http://code.google.com/p/modpagespeed/">modpagespeed</a>를 사용하신다면 이 <a href="http://code.google.com/p/modpagespeed/issues/detail?id=625">버그</a>에 주의하시기 바랍니다. 템플릿들은 <code>&lt;style scoped&gt;</code> 인라인으로 정의되었으며 PageSpeed의 CSS 재작성 규칙에 의해 많은 것들이 head로 이동합니다.</li>
+<li>템플릿을 "미리 렌더링"하기 위한 방법은 없다는 것은 애셋(Asset)들을 미리 로딩하거나 JS를 처리하거나 초기 CSS를 다운로드하는 등의 작업을 할 수 없다는 뜻입니다. 이는 서버와 클라이언트 모두에 해당됩니다. 템플릿은 가동 상태로 갈 때만 렌더링됩니다.</li>
+<li>
+<p>중첩된(Nested) 템플릿들에 주의해야 합니다. 이들은 여러분이 기대하는 것처럼 동작하지 않습니다. 예를 들면 다음과 같습니다.</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+  &lt;ul&gt;
+    &lt;template&gt;
+      &lt;li&gt;Stuff&lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+</code></pre>
+<p>바깥 템플릿의 활성화는 내부 템플릿을 활성화하지 않습니다. 즉, 중첩된 템플릿들은 그들의 자식들 또한 수동으로 활성화하여야 합니다.</p>
+</li>
+</ul>
+<h2 id="toc-old">표준화로의 길</h2>
+
+<p>우리가 어디 출신인지는 잊어버리도록 합시다. 표준 기반의 HTML 템플릿으로의 여정은 아주 멉니다. 몇년이 넘도록 우리는 재사용이 가능한 템플릿을 생성하기 위한 몇가지 꽤 똑똑한 트릭들을 찾아냈습니다. 제가 발견한 2가지 일반적인 것들을 아래에 적어 두었습니다. 비교를 위해 이 글에 이들을 포함했습니다.</p>
+<h3 id="toc-offscreen">방법 1: 오프스크린 DOM</h3>
+
+<p>사람들이 오랫동안 사용해온 방법 한가지는 "오프스크린" DOM의 생성과  <code>hidden</code> 속성이나 <code>display:none</code>을 사용하여 뷰로부터 이를 감추는 것입니다.</p>
+<pre class="prettyprint"><code>&lt;div id="mytemplate" hidden&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>이 기법이 동작할 때 몇가지 불리한 점이 있습니다. 이 기법의 설명은 아래와 같습니다.</p>
+<ul>
+<li><label class="good"></label> <em>DOM 사용</em> -브라우저는 이미 DOM을 알고 있으며 여기에 익숙합니다. 우리는 이를 쉽게 복제할 수 있습니다.</li>
+<li><label class="good"></label> <em>아무것도 렌더링되지 않습니다</em> - <code>hidden</code>의 추가는 보여질 때 블록되는 것을 방지합니다.</li>
+<li><label class="bad"></label> <em>비활성화</em> - 컨텐츠가 감춰져 있더라도 이미지에 대한 네트워크 요청은 여전히 발생합니다.</li>
+<li><label class="bad"></label> <em>고통스러운 스타일링과 테마 적용</em> - 내장 페이지는 템플릿의 범위를 한정하기 위해 반드시 모든 CSS 규칙 전부에 대해 <code>#mytemplate</code>을 이용한 접두사를 붙여야합니다. 이는 깨지기 쉬우며 앞으로의 명칭 충돌에 부닥히지 않을 것이라는 보장을 할 수 없습니다. 예를 들어 내장 페이지가 이미 id를 가진 엘리먼트를 가지고 있다면 이를 제거해야합니다.</li>
+</ul>
+<h3 id="toc-overloadingscript">방법 2: 스크립트의 오버로딩</h3>
+
+<p>다른 기법은 <code>&lt;script&gt;</code>를 오버로딩하고 <code>&lt;script&gt;</code>의 컨텐츠를 문자열로 처리하는 것입니다. John Resig이 아마도 2008년에 그의 <a href="http://ejohn.org/blog/javascript-micro-templating/">초소형 템플릿 유틸리티</a>로 이를 처음 보여주었을 것입니다. 이제 <a href="http://handlebarsjs.com/">handlebars.js</a>와 같은 몇몇 신참들을 포함한 많은 다른 라이브러리들이 존재합니다.</p>
+<p>이에 대한 예는 아래와 같습니다.</p>
+<pre class="prettyprint"><code>&lt;script id="mytemplate" type="text/x-handlebars-template"&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+<p>이 기법의 설명은 다음과 같습니다.</p>
+<ul>
+<li><label class="good"></label> <em>아무것도 렌더링되지 않습니다</em> - 기본적으로 <code>&lt;script&gt;</code>가 <code>display:none</code>이므로 브라우저는 이를 렌더링하지 않습니다.</li>
+<li><label class="good"></label> <em>비활성화</em> - 타입이 "text/javascript"가 아닌 다른 것으로 설정되어 있으므로 브라우저는 스크립트 컨텐츠를 JS로 파싱하지 않습니다.</li>
+<li><label class="bad"></label> <em>보안 문제</em> - <code>.innerHTML</code>의 사용을 조장합니다. 사용자-공급 데이터의 런타임 문자열 파싱은 손쉽게 XSS 취약성을 만들어 냅니다.</li>
+</ul>
+<h2 id="toc-conclusion">결론</h2>
+
+<p>jQuery가 DOM과 동작하는 것을 손쉽게 했을 때를 기억하시나요? 결과는 플랫폼에 <code>querySelector()</code>/<code>querySelectorAll()</code>가 추가되는 것이었습니다. 명백한 승리였죠, 그렇지 않습니까? 라이브러리는 CSS 셀렉터들을 이용하여 DOM을 불러오는 것과 나중에 이를 적용하는 표준을 대중화하였습니다. 항상 이렇게 처리되지는 않습니다면 전 이런 것을 <em>사랑</em>합니다.</p>
+<p>전 <code>&lt;template</code>가 비슷한 경우라고 생각합니다. 이는 우리가 클라이언트측에서 템플릿을 하는 방법을 표준화하지만 더 중요한 것은 <a href="#toc-old">우리가 사용하는 말도 안되는 2008 해킹 코드들</a>에 대한 필요성을 제거하는 것입니다.</p>
+<p>제 판단으로는 전체 웹 저작 프로세스를 보다 온전하고 보다 나은 유지보수성을 가지며 보다 완전한 기능을 가지도록 만드는 것은 언제나 좋은 일입니다.</p>
+<h2 id="toc-resources">추가 리소스들</h2>
+
+<ul>
+<li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">WhatWG 규격</a></li>
+<li><a href="http://w3c.github.io/webcomponents/explainer/#template-section">웹컴포넌트의 소개</a></li>
+<li><a href="http://html5-demos.appspot.com/static/webcomponents/index.html">&lt;web&gt;components&lt;/web&gt;</a> (<a href="http://www.youtube.com/watch?v=eJZx9c6YL8k">video</a>) - 정말 환상적이고 포괄적인 프리젠테이션.</li>
+</ul><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+  }
+});
+</script>
+{% endblock %}
