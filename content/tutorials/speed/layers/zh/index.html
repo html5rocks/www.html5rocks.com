@@ -31,7 +31,7 @@
 -->
 <h2 id="toc-introduction">介绍</h2>
 
-<p>对于大多数 web 开发者来说，页面中最基础的模型是 DOM，而对将页面展现处理为屏幕画面这一过程却不甚了了。近些年来，现代浏览器借助于显卡的优势改变了渲染操作：统称被笼统的称为“硬件加速(hardware acceleration)”。当我们谈起一个普通的页面(不是 Canvas2D 或 WebGL)时，这个名词代表着什么意思呢？本文将介绍在 Chrome 中，为 web 内容提供硬件加速的基本模型。</p>
+<p>对于大多数 web 开发者来说，页面中最基础的模型是 DOM，而对将页面展现处理为屏幕画面这一过程却不甚了了。近些年来，现代浏览器借助于显卡的优势改变了渲染操作：通常被笼统的称为“硬件加速(hardware acceleration)”。当我们谈起一个普通的页面(不是 Canvas2D 或 WebGL)时，这个名词代表着什么意思呢？本文将介绍在 Chrome 中，为 web 内容提供硬件加速的基本模型。</p>
 
 <h3 id="toc-caveats">严重警告</h3>
 
@@ -39,19 +39,19 @@
 
 <p>还有需要注意的是，这篇文章讨论的是 Chrome 的渲染架构部分(变动十分频繁)，文章试着只去讨论那些看上去不太会改变的内容， 但也没法保证这些内容对于未来还会适用。</p>
 
-<p>你得知道， Chrome 拥有两套不同的渲染路径(rendering path)：硬件加速路径和旧软件路径(older software path)。在本文完成时，Windows，ChromeOS，Chrome for Android 上的所有页面用的都是硬件加速路径。在 Mac 和 Linux 上，只有那些需要混合(compositing)自身内容的页面用的是硬件加速路径。但是过不了多久，所有页面也都会使用硬件加速路径。</p>
+<p>你得知道， Chrome 拥有两套不同的渲染路径(rendering path)：硬件加速路径和旧软件路径(older software path)。在本文完成时，Windows，ChromeOS，Chrome for Android 上的所有页面用的都是硬件加速路径。在 Mac 和 Linux 上，只有那些需要复合(compositing)自身内容的页面用的是硬件加速路径。但是过不了多久，所有页面也都会使用硬件加速路径。</p>
 
-<p>终于，我们要掀起渲染引擎的神秘面纱，窥视那些对性能产生严重影响的特性。了解层模型(layer model)对于提高网站的性能十分有益，但也可能适得其反：虽然层是有用的，但创建过多的层会为整个绘制层叠(graphics stack)增加额外的开销。时刻记得提醒自己！</p>
+<p>终于，我们要掀起渲染引擎的神秘面纱，窥视那些对性能产生严重影响的特性。了解层模型(layer model)对于提高网站的性能十分有益，但也可能适得其反：虽然层是有用的，但创建过多的层会为整个图形堆栈(graphics stack)增加额外的开销。时刻记得提醒自己！</p>
 
 <h2 id="toc-domtoscreen">从 DOM 到屏幕</h2>
 
-<h3 id="toc-introducinglayers">简介：层</h3>
+<h3 id="toc-introducinglayers">了解层</h3>
 
 <p>当页面加载并解析完毕后，它在浏览器内代表了一个大家十分熟悉的结构：DOM。在浏览器渲染一个页面时，它使用了许多没有暴露给开发者的中间表现形式。其中最重要的结构便是层(layer)。</p>
 
 <p>Chrome 中有不同类型的层： RenderLayer(负责 DOM 子树)，GraphicsLayer(负责 RenderLayer 的子树)。我们感兴趣的是后者，因为只有 GraphicsLayer 是作为纹理(texture)上传给 GPU 的。后面我将只用「层」来代表 GraphicsLayer。</p>
 
-<p>简单介绍一下 GPU 术语：什么是纹理？可以把它想象成一个从主存储器(例如 RAM)移动到图像存储器(例如 GPU 中的 VRAM)的位图图像(bitmap image)。一旦它被移动到 GPU 中，你可以将它匹配成一个网格几何体(mesh geometry) —— 在视频游戏或 CAD 程序中，该技术通常是为骨骼的 3D 模型(skeletal 3D models)赋予“皮肤(skin)”。Chrome 使用纹理来从 GPU 上获得大块的页面内容。通过将纹理应用到一个非常简单的矩形网格就能匹配不同的位置(position)和变形(transformation)。这也就是 3D CSS 的工作原理，它对于快速滚动也十分有效 —— 后面会详细讲。</p>
+<p>简单介绍一下 GPU 术语：什么是纹理？可以把它想象成一个从主存储器(例如 RAM)移动到图像存储器(例如 GPU 中的 VRAM)的位图图像(bitmap image)。一旦它被移动到 GPU 中，你可以将它匹配成一个网格几何体(mesh geometry) —— 在视频游戏或 CAD 程序中，该技术通常是为骨骼的 3D 模型(skeletal 3D models)赋予“皮肤(skin)”。Chrome 使用纹理来从 GPU 上获得大块的页面内容。通过将纹理应用到一个非常简单的矩形网格就能很容易匹配不同的位置(position)和变形(transformation)。这也就是 3D CSS 的工作原理，它对于快速滚动也十分有效 —— 后面会详细讲。</p>
 
 <p>让我们用几个例子来阐述下层的概念。</p>
 
@@ -67,7 +67,7 @@
 &lt;/html&gt;
 </pre>
 
-<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>截图：页面基础层上的混合层渲染边框</figcaption></figure>
+<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>截图：页面基础层上的复合层渲染边框</figcaption></figure>
 
 <p>这个页面只有一个层。蓝色网格表示瓦片(tile)，你可以把它们当作是层的单元，Chrome 可以将它们作为一个大层的部分上传给 GPU。它们在这里并不重要。</p>
 
@@ -90,8 +90,7 @@
 
 <h3 id="toc-layercreation">层创建标准</h3>
 
-<p>什么情况下能使元素获得自己的层？虽然 Chrome 的启发式方法(heuristic)随着时间在不断发展进步，但是从目前来说，满足以下任意情况的便会创建层：
-Chrome’s heuristics here have evolved over time and continue to</p>
+<p>什么情况下能使元素获得自己的层？虽然 Chrome 的启发式方法(heuristic)随着时间在不断发展进步，但是从目前来说，满足以下任意情况便会创建层：</p>
 
 <ul>
 <li>3D 或透视变换(perspective transform) CSS 属性</li>
@@ -100,8 +99,8 @@ Chrome’s heuristics here have evolved over time and continue to</p>
 <li>混合插件(如 Flash)</li>
 <li>对自己的 opacity 做 CSS 动画或使用一个动画 webkit 变换的元素</li>
 <li>拥有加速 CSS 过滤器的元素</li>
-<li>元素有一个包含混合层的后代节点(换句话说，就是一个元素拥有一个子元素，该子元素在自己的层里)</li>
-<li>元素有一个 z-index 较低且包含一个混合层的兄弟元素(换句话说就是该元素在混合层上面渲染)</li>
+<li>元素有一个包含复合层的后代节点(换句话说，就是一个元素拥有一个子元素，该子元素在自己的层里)</li>
+<li>元素有一个 z-index 较低且包含一个复合层的兄弟元素(换句话说就是该元素在复合层上面渲染)</li>
 </ul>
 
 <h3 id="toc-animation">实际意义：动画</h3>
@@ -201,11 +200,11 @@ Chrome’s heuristics here have evolved over time and continue to</p>
 <figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></a>
 <figcaption>截图： 重绘一个层的开发者工具时间轴</figcaption></figure>
 
-<p>注意 Chrome 并不会始终重绘整个层，它会尝试智能的去重绘 DOM 中失效的部分。在本例中，我们修改的 DOM 元素和整个层同样大小。但是在其他众多例子中，一个层内会存在许多个 DOM 元素。</p>
+<p>注意 Chrome 并不会始终重绘整个层，它会尝试智能的去重绘 DOM 中失效的部分。在本例中，我们修改的 DOM 元素和整个层同样大小。但是在其他众多例子中，一个层内会存在多个 DOM 元素。</p>
 
-<p>你很容易想到下一个问题：是什么原因导致失效(invalidation)进而强制重绘的呢？这个问题很难详尽回答，因为存在大量导致失效的边界情况。最常见的情况就是通过操作 CSS 样式来修改 DOM 或导致重排。Tony Gentilcore 写了一篇<a href="http://gent.ilcore.com/2011/03/how-not-to-trigger-layout-in-webkit.html">出色的文章来介绍什么会引发重排</a>，Stoyan Stefanov 也写过一篇<a href="http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/">文章介绍有关绘制的详细信息</a>(但是它只介绍了绘制，并不是这里介绍的有关混合的内容)。</p>
+<p>你很容易想到下一个问题：是什么原因导致失效(invalidation)进而强制重绘的呢？这个问题很难详尽回答，因为存在大量导致失效的边界情况。最常见的情况就是通过操作 CSS 样式来修改 DOM 或导致重排。Tony Gentilcore 写了一篇<a href="http://gent.ilcore.com/2011/03/how-not-to-trigger-layout-in-webkit.html">出色的文章来介绍什么会引发重排</a>，Stoyan Stefanov 也写过一篇<a href="http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/">文章介绍有关绘制的详细信息</a>(但是它只介绍了绘制，并不是这里介绍的有关复合的内容)。</p>
 
-<p>查找引发重绘和重排根源的最好办法就是使用开发者工具的时间轴和 Show Paint Rects 工具，然后试着找出恰好在重绘/重排前修改了 DOM 的地方。如果绘制无法避免，但却毫无必要的耗费太长时间，可以查看 <a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode">Eberhard Gräther 的有关开发者工具中连续绘制模型的文章</a>。</p>
+<p>查找引发重绘和重排根源的最好办法就是使用开发者工具的时间轴和 Show Paint Rects 工具，然后试着找出恰好在重绘/重排前修改了 DOM 的地方。如果无法避免绘制，但想减少耗费的时间，可以查看 <a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode">Eberhard Gräther 的有关开发者工具中连续绘制模型的文章</a>。</p>
 
 <h3 id="toc-puttingittogether">放在一起： 从 DOM 到屏幕</h3>
 
@@ -215,17 +214,17 @@ Chrome’s heuristics here have evolved over time and continue to</p>
 <li>获取 DOM 并将其分割为多个层</li>
 <li>将每个层独立的绘制进位图中</li>
 <li>将层作为纹理上传至 GPU</li>
-<li>混合多个层来生成最终的屏幕图像。</li>
+<li>复合多个层来生成最终的屏幕图像。</li>
 </ol>
 
 <p>当 Chrome 首次为一个 web 页面创建一个帧(frame)时，以上步骤都需要执行。但对于以后出现的帧可以走些捷径：</p>
 
 <ul>
-<li>如果某些特定 CSS 属性变化，并不需要发生重绘。Chrome 可以使用早已作为纹理而存在于 GPU 中的层来重新混合，但会使用不同的混合属性(例如，出现在不同的位置，拥有不同的透明度等等)。</li>
-<li>如果层的部分失效，它会被重绘并且重新上传。如果它的内容保持不变但是混合属性发生变化(例如，层被转化或透明度发生变化)，Chrome 可以让层保留在 GPU 中，并通过重新混合来生成一个新的帧。</li>
+<li>如果某些特定 CSS 属性变化，并不需要发生重绘。Chrome 可以使用早已作为纹理而存在于 GPU 中的层来重新复合，但会使用不同的复合属性(例如，出现在不同的位置，拥有不同的透明度等等)。</li>
+<li>如果层的部分失效，它会被重绘并且重新上传。如果它的内容保持不变但是复合属性发生变化(例如，层被转化或透明度发生变化)，Chrome 可以让层保留在 GPU 中，并通过重新复合来生成一个新的帧。</li>
 </ul>
 
-<p>现在你应该清楚了，以层为基础的混合模型对渲染性能有着深远的影响。当不需要绘制时，混合操作的开销可以忽略不计，因此在试着调试渲染性能问题时，首要目标就是要避免层的重绘。精明的程序员可能在看上面介绍的混合触发列表时意识到可以轻而易举的控制层的创建。但要注意不要盲目的创建层，因为它们并不是毫无开销：层会占用系统 RAM 与 GPU(在移动设备上尤其有限)的内存，并且拥有大量的层会因为记录哪些是可见的而引入额外的开销。许多层还会因为过大与许多内容重叠而导致“过度绘制(overdraw)”的情况发生，从而增加栅格化的时间。所以，谨慎的利用你所学到的知识！</p>
+<p>现在你应该清楚了，以层为基础的复合模型对渲染性能有着深远的影响。当不需要绘制时，复合操作的开销可以忽略不计，因此在试着调试渲染性能问题时，首要目标就是要避免层的重绘。精明的程序员可能在看上面介绍的复合触发列表时意识到可以轻而易举的控制层的创建。但要注意不要盲目的创建层，因为它们并不是毫无开销：层会占用系统 RAM 与 GPU(在移动设备上尤其有限)的内存，并且拥有大量的层会因为记录哪些是可见的而引入额外的开销。许多层还会因为过大与许多内容重叠而导致“过度绘制(overdraw)”的情况发生，从而增加栅格化的时间。所以，谨慎的利用你所学到的知识！</p>
 
 <p>以上就是文章的全部内容。敬请期待更多有关层模型实际意义的文章。</p>
 
