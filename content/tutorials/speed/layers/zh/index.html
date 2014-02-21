@@ -1,0 +1,240 @@
+
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https:/github.com/sunnylost">sunnylost</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+<h2 id="toc-introduction">介绍</h2>
+
+<p>对于大多数 web 开发者来说，页面中最基础的模型是 DOM，而对将页面展现处理为屏幕画面这一过程却不甚了了。近些年来，现代浏览器借助于显卡的优势改变了渲染操作：通常被笼统的称为“硬件加速(hardware acceleration)”。当我们谈起一个普通的页面(不是 Canvas2D 或 WebGL)时，这个名词代表着什么意思呢？本文将介绍在 Chrome 中，为 web 内容提供硬件加速的基本模型。</p>
+
+<h3 id="toc-caveats">严重警告</h3>
+
+<p>我们即将讨论 WebKit，更准确的说，是讨论 WebKit 的 Chromium 分支。本文描述的是 Chrome 的实现细节，而并非是 web 平台的功能。web 平台和标准不会对这种层面的实现细节制定规则，因此文中介绍的内容不一定适用于其他浏览器，但是了解内部实现对于高级调试和性能优化有着不小的帮助。</p>
+
+<p>还有需要注意的是，这篇文章讨论的是 Chrome 的渲染架构部分(变动十分频繁)，文章试着只去讨论那些看上去不太会改变的内容， 但也没法保证这些内容对于未来还会适用。</p>
+
+<p>你得知道， Chrome 拥有两套不同的渲染路径(rendering path)：硬件加速路径和旧软件路径(older software path)。在本文完成时，Windows，ChromeOS，Chrome for Android 上的所有页面用的都是硬件加速路径。在 Mac 和 Linux 上，只有那些需要复合(compositing)自身内容的页面用的是硬件加速路径。但是过不了多久，所有页面也都会使用硬件加速路径。</p>
+
+<p>终于，我们要掀起渲染引擎的神秘面纱，窥视那些对性能产生严重影响的特性。了解层模型(layer model)对于提高网站的性能十分有益，但也可能适得其反：虽然层是有用的，但创建过多的层会为整个图形堆栈(graphics stack)增加额外的开销。时刻记得提醒自己！</p>
+
+<h2 id="toc-domtoscreen">从 DOM 到屏幕</h2>
+
+<h3 id="toc-introducinglayers">了解层</h3>
+
+<p>当页面加载并解析完毕后，它在浏览器内代表了一个大家十分熟悉的结构：DOM。在浏览器渲染一个页面时，它使用了许多没有暴露给开发者的中间表现形式。其中最重要的结构便是层(layer)。</p>
+
+<p>Chrome 中有不同类型的层： RenderLayer(负责 DOM 子树)，GraphicsLayer(负责 RenderLayer 的子树)。我们感兴趣的是后者，因为只有 GraphicsLayer 是作为纹理(texture)上传给 GPU 的。后面我将只用「层」来代表 GraphicsLayer。</p>
+
+<p>简单介绍一下 GPU 术语：什么是纹理？可以把它想象成一个从主存储器(例如 RAM)移动到图像存储器(例如 GPU 中的 VRAM)的位图图像(bitmap image)。一旦它被移动到 GPU 中，你可以将它匹配成一个网格几何体(mesh geometry) —— 在视频游戏或 CAD 程序中，该技术通常是为骨骼的 3D 模型(skeletal 3D models)赋予“皮肤(skin)”。Chrome 使用纹理来从 GPU 上获得大块的页面内容。通过将纹理应用到一个非常简单的矩形网格就能很容易匹配不同的位置(position)和变形(transformation)。这也就是 3D CSS 的工作原理，它对于快速滚动也十分有效 —— 后面会详细讲。</p>
+
+<p>让我们用几个例子来阐述下层的概念。</p>
+
+<p>Chrome 中用来学习层的有效工具是开发者工具设置面板(图标是个小齿轮)中的 “show composited layer borders” 标记(在 “rendering” 标题下)，它会高亮屏幕上的层。让我们开启它。以下的截图和例子都来自于最新的 Chrome Canary，在本文写作时为 Chrome 27。</p>
+
+<h4>图 1： 单层页面。(<a href="basic.html" target="_blank">打开独立页面</a>)</h4>
+
+<pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div&gt;I am a strange root.&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>截图：页面基础层上的复合层渲染边框</figcaption></figure>
+
+<p>这个页面只有一个层。蓝色网格表示瓦片(tile)，你可以把它们当作是层的单元，Chrome 可以将它们作为一个大层的部分上传给 GPU。它们在这里并不重要。</p>
+
+<h4>图 2： 在自己层内的一个元素(<a href="onelayer.html" target="_blank">打开独立页面</a>)</h4>
+
+<pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div style="-webkit-transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
+      I am a strange root.
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></a>
+<figcaption>截图：旋转层的渲染边框</figcaption></figure>
+
+<p>通过在 &lt;div&gt; 上设置一个 3D CSS 属性来旋转它，我们就能看到当元素拥有自己的层时是什么样子：注意橘黄色的边框，它画出了该视图中层的轮廓。</p>
+
+<h3 id="toc-layercreation">层创建标准</h3>
+
+<p>什么情况下能使元素获得自己的层？虽然 Chrome 的启发式方法(heuristic)随着时间在不断发展进步，但是从目前来说，满足以下任意情况便会创建层：</p>
+
+<ul>
+<li>3D 或透视变换(perspective transform) CSS 属性</li>
+<li>使用加速视频解码的 &lt;video&gt; 元素</li>
+<li>拥有 3D (WebGL) 上下文或加速的 2D 上下文的 &lt;canvas&gt; 元素</li>
+<li>混合插件(如 Flash)</li>
+<li>对自己的 opacity 做 CSS 动画或使用一个动画 webkit 变换的元素</li>
+<li>拥有加速 CSS 过滤器的元素</li>
+<li>元素有一个包含复合层的后代节点(换句话说，就是一个元素拥有一个子元素，该子元素在自己的层里)</li>
+<li>元素有一个 z-index 较低且包含一个复合层的兄弟元素(换句话说就是该元素在复合层上面渲染)</li>
+</ul>
+
+<h3 id="toc-animation">实际意义：动画</h3>
+
+<p>我们可以移动层，这就使它们对于动画非常有用。</p>
+
+<h4>图 3：动画层(<a href="animatedlayer.html" target="_blank">打开独立页面</a>)</h4>
+
+<pre class="prettyprint">
+&lt;html&gt;
+&lt;head&gt;
+    &lt;style type="text/css"&gt;
+    div {
+        -webkit-animation-duration: 5s;
+        -webkit-animation-name: slide;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-direction: alternate;
+        width: 200px;
+        height: 200px;
+        margin: 100px;
+        background-color: gray;
+    }
+    @-webkit-keyframes slide {
+        from {
+            -webkit-transform: rotate(0deg);
+        }
+        to {
+            -webkit-transform: rotate(120deg);
+        }
+    }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div&gt;I am a strange root.&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>正如前面提到的，层对于移动静态 web 内容十分有效。通常，Chrome 会将一个层的内容在作为纹理上传到 GPU 前先绘制(paint)进一个位图中。如果内容不会改变，那么就没有必要重绘(repaint)。这样处理很好：花在重绘上的时间可以用来做别的事情，例如运行 JavaScript，如果绘制的时间很长，还会造成动画的故障与延迟。</p>
+
+<p>看下开发者工具中的时间轴：层在反复旋转的过程中没有发生绘制操作。</p>
+
+<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></a>
+<figcaption>截图：动画过程中的时间轴</figcaption></figure>
+
+<h3 id="toc-invalidrepainting">无效！重绘</h3>
+
+<p>可如果层的内容发生改变，那就需要重绘了。</p>
+
+<h4>图 4：重绘层(<a href="animatedinvalidation.html" target="_blank">打开独立页面</a>)</h4>
+
+<pre class="prettyprint">
+&lt;html&gt;
+&lt;head&gt;
+  &lt;style type="text/css"&gt;
+  div {
+      -webkit-animation-duration: 5s;
+      -webkit-animation-name: slide;
+      -webkit-animation-iteration-count: infinite;
+      -webkit-animation-direction: alternate;
+      width: 200px;
+      height: 200px;
+      margin: 100px;
+      background-color: gray;
+  }
+  @-webkit-keyframes slide {
+      from {
+          -webkit-transform: rotate(0deg);
+      }
+      to {
+          -webkit-transform: rotate(120deg);
+      }
+  }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="foo"&gt;I am a strange root.&lt;/div&gt;
+  &lt;input id="paint" type="button" onclick="" value=”repaint”&gt;
+  &lt;script&gt;
+    var w = 200;
+    document.getElementById('paint').onclick = function() {
+      document.getElementById('foo').style.width = (w++) + 'px';
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>每点一次按钮，旋转元素加宽 1px。这会引发整个元素(在本例中就是整个层)的重排(relayout)与重绘。</p>
+
+<p>若要查看哪些内容被绘制，可以开启开发者工具 “rendering” 标题下的 “show paint rects”。开启后你会看到，当点击按钮后，按钮和旋转元素都会闪现红色。</p>
+
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></a><figcaption>截图：show paint rects 的复选框</figcaption></figure>
+
+<p>开发者工具的时间轴中显示了绘制事件。眼尖的读者会注意到这里出现了两个绘制事件：一个属于层，另一个属于按钮本身(当它进入/离开按下状态时发生重绘)。</p>
+
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></a>
+<figcaption>截图： 重绘一个层的开发者工具时间轴</figcaption></figure>
+
+<p>注意 Chrome 并不会始终重绘整个层，它会尝试智能的去重绘 DOM 中失效的部分。在本例中，我们修改的 DOM 元素和整个层同样大小。但是在其他众多例子中，一个层内会存在多个 DOM 元素。</p>
+
+<p>你很容易想到下一个问题：是什么原因导致失效(invalidation)进而强制重绘的呢？这个问题很难详尽回答，因为存在大量导致失效的边界情况。最常见的情况就是通过操作 CSS 样式来修改 DOM 或导致重排。Tony Gentilcore 写了一篇<a href="http://gent.ilcore.com/2011/03/how-not-to-trigger-layout-in-webkit.html">出色的文章来介绍什么会引发重排</a>，Stoyan Stefanov 也写过一篇<a href="http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/">文章介绍有关绘制的详细信息</a>(但是它只介绍了绘制，并不是这里介绍的有关复合的内容)。</p>
+
+<p>查找引发重绘和重排根源的最好办法就是使用开发者工具的时间轴和 Show Paint Rects 工具，然后试着找出恰好在重绘/重排前修改了 DOM 的地方。如果无法避免绘制，但想减少耗费的时间，可以查看 <a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode">Eberhard Gräther 的有关开发者工具中连续绘制模型的文章</a>。</p>
+
+<h3 id="toc-puttingittogether">放在一起： 从 DOM 到屏幕</h3>
+
+<p>那么 Chrome 是如何将 DOM 转变成一个屏幕图像的呢？从概念上讲，它：</p>
+
+<ol>
+<li>获取 DOM 并将其分割为多个层</li>
+<li>将每个层独立的绘制进位图中</li>
+<li>将层作为纹理上传至 GPU</li>
+<li>复合多个层来生成最终的屏幕图像。</li>
+</ol>
+
+<p>当 Chrome 首次为一个 web 页面创建一个帧(frame)时，以上步骤都需要执行。但对于以后出现的帧可以走些捷径：</p>
+
+<ul>
+<li>如果某些特定 CSS 属性变化，并不需要发生重绘。Chrome 可以使用早已作为纹理而存在于 GPU 中的层来重新复合，但会使用不同的复合属性(例如，出现在不同的位置，拥有不同的透明度等等)。</li>
+<li>如果层的部分失效，它会被重绘并且重新上传。如果它的内容保持不变但是复合属性发生变化(例如，层被转化或透明度发生变化)，Chrome 可以让层保留在 GPU 中，并通过重新复合来生成一个新的帧。</li>
+</ul>
+
+<p>现在你应该清楚了，以层为基础的复合模型对渲染性能有着深远的影响。当不需要绘制时，复合操作的开销可以忽略不计，因此在试着调试渲染性能问题时，首要目标就是要避免层的重绘。精明的程序员可能在看上面介绍的复合触发列表时意识到可以轻而易举的控制层的创建。但要注意不要盲目的创建层，因为它们并不是毫无开销：层会占用系统 RAM 与 GPU(在移动设备上尤其有限)的内存，并且拥有大量的层会因为记录哪些是可见的而引入额外的开销。许多层还会因为过大与许多内容重叠而导致“过度绘制(overdraw)”的情况发生，从而增加栅格化的时间。所以，谨慎的利用你所学到的知识！</p>
+
+<p>以上就是文章的全部内容。敬请期待更多有关层模型实际意义的文章。</p>
+
+<h2 id="toc-resources">其他资源</h2>
+
+<ol>
+<li><a href="http://www.html5rocks.com/en/tutorials/speed/scrolling/">Scrolling Performance</a></li>
+<li><a href="http://updates.html5rocks.com/2013/02/Profiling-Long-Paint-Times-with-DevTools-Continuous-Painting-Mode">Profiling Long Paint Times with DevTools' Continuous Painting Mode</a></li>
+<li><a href="http://jankfree.com">http://jankfree.com</a></li>
+<li><a href="http://aerotwist.com/blog/on-translate3d-and-layer-creation-hacks/">http://aerotwist.com/blog/on-translate3d-and-layer-creation-hacks/</a></li>
+</ol>
+
+{% endblock %}
