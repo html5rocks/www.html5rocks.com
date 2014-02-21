@@ -39,14 +39,14 @@ root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM</h3>';
 从这个示例中能观察到两个有趣的结果：
 
 - 页面中有
-<a href="javascript:alert('There are ' + document.querySelectorAll('h3').length + ' &#60;h3&#62; on this page.')">额外的 h3 元素</a>，但被 h3 选择器所匹配并且样式为红色的只有在 ShadowRoot 的那个元素。再重申一遍，Shadow DOM 中的样式默认是有范围的。
+<a href="javascript:alert('There are ' + document.querySelectorAll('h3').length + ' &#60;h3&#62; on this page.')">额外的 h3 元素</a>，但被 h3 选择器所匹配并且样式为红色的只有在 ShadowRoot 的那个元素。再重申一遍，Shadow DOM 中的样式默认是有作用域的。
 - 页面中定义的其他关于 h3 的样式并没有影响我们的内容。原因在于**选择器无法越过 shadow 边界**。
 
 这里包含的寓意是什么？我们将样式从外部世界中封装了起来。感谢 Shadow DOM！
 
 <h2 id="toc-style-host">样式化宿主元素(host element)</h2>
 
-<p class="notice"><b>注意：</b> Shadow DOM 规范使用 <code>:host()</code> 取代了旧的 <code>:host</code>。</p>
+<p class="notice"><b>注意：</b> Shadow DOM 规范使用 <code>:host()</code> 取代了旧的 <code>@host</code>。</p>
 
 `:host` 允许你选择并样式化 shadow 树所寄宿的元素：
 
@@ -74,8 +74,8 @@ root.innerHTML = '<style>' +
 })();
 </script>
 
-在这里需要注意的是：父页面定义的样式规则的特异性要高于元素中定义的 `:host` 规则，但低于宿主元素上 `style` 特性定义的规则。
-`:host` 仅在 ShadowRoot 的范围内生效，无法用它来影响 Shadow DOM 外的元素。
+在这里需要注意的是：父页面定义的样式规则的特异性要高于元素中定义的 `:host` 规则，但低于宿主元素上 `style` 属性定义的规则。
+`:host` 仅在 ShadowRoot 的范围内生效，不能在 Shadow DOM 外使用它。
 
 <h3 id="toc-style-states">对用户状态的反馈</h3>
 
@@ -121,7 +121,7 @@ root.innerHTML = '<style>\
 
 `:host` 的另一个使用场景是主题化。`:host(<selector>)` 接受一个选择器参数，当宿主元素或它的任意祖先元素和该选择器匹配，那么宿主元素就会匹配。
 
-**例子** - 大多数人在主题化时会为 `<html>` 或 `<body>` 应用一个类:
+**例子** - 大多数人在主题化时会为 `<html>` 或 `<body>` 应用一个 class：
 
     <body class="different">
       <x-foo></x-foo>
@@ -162,7 +162,7 @@ root.innerHTML = '<style>\
 
 <h3 id="toc-style-hat">^ 连接符</h3>
 
-`^` 连接符等价于后代选择器(例如 `div p {...}`)，只不过**它能跨越一个 shadow 边界**。这可以使你便捷的从 shadow 树中选择一个元素：
+`^` 连接符等价于后代选择器(例如 `div p {...}`)，不过**它只能跨越一个 shadow 边界**。这可以使你便捷的从 shadow 树中选择一个元素：
 
     <style>
       #host ^ span {
@@ -249,7 +249,7 @@ shadow 树支持 DOM 遍历，连接符使 shadow 树支持选择器遍历。相
 
 <h3 id="toc-custom-pseduo">使用 ^ 和 ^^</h3>
 
-There's a lot of power behind `^^` 的威力巨大。它为组件作者提供了一条途径：为指定的单个元素设置样式，或为多个元素修改主题。
+`^^` 的威力巨大。它为组件作者提供了一条途径：为指定的单个元素设置样式，或为多个元素修改主题。
 
 **例子** - 为所有拥有 `.library-theme` 类的元素设置样式，忽略所有 shadow 树：
 
@@ -272,7 +272,7 @@ There's a lot of power behind `^^` 的威力巨大。它为组件作者提供了
 
 与浏览器为内部元素提供样式化钩子类似，Shadow DOM 内容的作者也可以指定某个元素可以被外部样式化。这是通过[自定义伪元素](http://www.w3.org/TR/shadow-dom/#custom-pseudo-elements)来完成的。
 
-你可以使用 `pseudo` 特性来指定一个元素为自定义伪元素。该特性的值，或者说名字，需要以 "x-" 为前缀。如此操作后，名字就和 Shadow 树中的该元素关联起来，同时为外部指定了一条跨越 shadow 边界的通道。
+你可以使用 `pseudo` 属性来指定一个元素为自定义伪元素。该属性的值，或者说名字，需要以 "x-" 为前缀。如此操作后，名字就和 Shadow 树中的该元素关联起来，同时为外部指定了一条跨越 shadow 边界的通道。
 
 下面这个例子生成了一个滑动条部件，并且允许别人将它的滑块样式设置为<span style="color:blue">蓝色</span>：
 
@@ -468,15 +468,15 @@ root.innerHTML = '\
 })();
 </script>
 
-你会在下方看到 "<span style="color:red">Shadow DOM</span>" 和
+你会看到 "<span style="color:red">Shadow DOM</span>" 和它下面的
 "<span style="color:green">Light DOM</span>"。要注意的是
-"Light DOM" 仍然会保留从该页面中获得的样式(例如 margins)。
+"Light DOM" 仍然会保留从该页面中获得的样式(例如 margin)。
 
 <h3 id="toc-shadow-resetstyles">在插入点重置样式</h3>
 
 当创建一个 ShadowRoot 后，你便可以选择重置继承的样式。
 `<content>` 和 `<shadow>` 插入点同样可以选择。当使用这些元素时，要么在 JS 中设置 `.resetStyleInheritance`，
-或是在元素上设置 `reset-style-inheritance` boolean 特性。
+或是在元素上设置 `reset-style-inheritance` boolean 属性。
 
 - 对于一个 ShadowRoot 或 `<shadow>` 插入点：`reset-style-inheritance`
 意味着可继承的 CSS 属性在宿主元素处被设置为 `initial`，此时这些属性还没有对 shadow 中的内容生效。**该位置称为上边界(upper boundary)**。
@@ -485,7 +485,7 @@ root.innerHTML = '\
 CSS 属性设置为 `initial`。**该位置称为下边界(lower boundary)**。
 
 <blockquote class="commentary talkinghead">
-牢记：在 host 所在文档中定义的样式依然会对它们指定的节点生效，即使这些节点被分发"进" Shadow DOM 中。
+牢记：在宿主所在的文档中定义的样式依然会对它们指定的节点生效，即使这些节点被分发"进" Shadow DOM 中。
 进入一个插入点并不会改变那些已经生效的属性。
 </blockquote>
 

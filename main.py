@@ -430,7 +430,8 @@ class ContentHandler(webapp2.RequestHandler):
           'ko': '한국어',
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
-          'zh': '中文 (简体)'
+          'zh': '中文 (简体)',
+          'fa': 'فارسی'
         }
         loc_list = []
         for d in glob.glob(os.path.join(dir, '*', 'index.html')):

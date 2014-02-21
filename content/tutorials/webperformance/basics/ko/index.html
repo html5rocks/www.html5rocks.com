@@ -1,0 +1,417 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Sam Dutton{% endblock %}
+
+
+{% block headtitle %}Navigation Timing으로 페이지 로딩 속도 측정하기{% endblock %}
+{% block pagetitle %}Navigation Timing으로 페이지 로딩 속도 측정하기{% endblock %}
+{% block pagebreadcrumb %}Navigation Timing으로 페이지 로딩 속도 측정하기{% endblock %}
+{% block date %}August 31, 2011{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie supported"><span class="browser_name">Internet Explorer</span><span class="support">supported</span></span>
+<span class="browser safari"><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+ <img src="/static/images/identity/html5-badge-h-solo.png" width="63" height="64" alt="HTML5 Powered" title="HTML5 Powered" style="margin-right:17px" />
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>번역:</strong> <a href="mailto:outsideris@gmail.com">변정훈 (Jeonghoon Byun)</a>
+</div>
+{% endblock %}
+
+{% block iscompatible %}
+  return typeof(window.performance) !== "undefined" &&
+         typeof(window.performance.timing) !== "undefined";
+{% endblock %}
+
+{% block head %}
+<style>
+.dynamicExample {
+  background: none repeat scroll 0 0 #FFEBEB;
+  border: 1px solid #FFCCCC;
+  border-radius: 8px;
+  font-family: monospace;
+  padding: 7px;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+writeDynamicElements();
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Navigation Timing으로 페이지 로딩 속도 측정하기</h2>
+
+
+<p>사람들은 빨리 뜨는 웹페이지를 좋아한다. 구글은 <a href="http://googleresearch.blogspot.com/2009/06/speed-matters.html" title="Google Official Research Blog: Speed Matters" target="_blank">실험</a>을 통해 백 밀리 초 정도의 작은 지연도 부정적인 영향을 끼칠 수 있다는 점을 보여주었다. 하지만 웹페이지의 로딩 속도는 어떻게 측정해야 하는가? 그리고 여기서 얘기하는 "페이지 로딩"의 의미는 정확히 무엇인가?</p>
+
+<p><a href="http://www.w3.org/TR/navigation-timing/" title="W3C Navigation Timing Recommendation">Navigation Timing</a>은 웹의 성능을 정확하게 측정하는 자바스크립트 API이다. Navigation Timing API는 페이지 탐색과 로드 이벤트와 관련한 정확한 타이밍을 자세하게 얻을 방법을 제공한다. 현재 이 API는 <a href="http://msdn.microsoft.com/en-us/library/ie/hh673552(v=vs.85).aspx" title="MSDN performance Object documentation" target="_blank">Internet Explorer 9</a>, <a href="http://www.google.com/chrome" title="Google Chrome home page">Google Chrome</a>, <a href="http://www.mozilla.org/en-US/firefox/" title="Firefox downloads">Firefox</a>에서 사용할 수 있다.</p>
+
+<p>이 글에서는 이 API를 사용해서 타이밍 데이터를 사용하는 방법을 설명한다.</p>
+
+<h2 id="how">어떻게 사용하는가?</h2>
+
+<p>Navigation Timing API는 <code>window.performance</code> 객체의 프로퍼티로 접근한다.</p>
+
+<ul>
+    <li>navigation: 사용자가 어떻게 페이지를 탐색했는가</li>
+    <li>timing: 탐색과 페이지 로드 이벤트에 관한 데이터.</li>
+</ul>
+
+<p>크롬은 자바스크립트 메모리 사용에 대한 데이터를 볼 수 있는 <code>perfomance.memory</code> 프로퍼티도 제공한다.</p>
+
+<p>이 API를 사용해보는 가장 쉬운 방법은 브라우저의 자바스크립트 콘솔에서 <code>window.performance</code>를 살펴보는 것이다.</p>
+
+<p>구글 크롬에서 아무 페이지나 열고</p>
+<ol>
+  <li>크롬창에서 오른쪽 위의 "크롬 맞춤설정 및 제어" 메뉴에서 <strong>도구 > 자바스크립트 콘솔</strong>을 선택한다.(아니면 윈도우나 리눅스에서는 <strong>Ctrl-Shift-J</strong>로 맥에서는 <strong> Command-Option-J</strong>로 접근할 수 있다.)</li>
+  <li>창 하단의 <strong>></strong> 프롬프트에 <em>performance</em>라고 입력하고 엔터를 누른다.</li>
+  <li>객체의 프로퍼티(memory, navigation, timing)를 보려면 <strong>Performance</strong>를 클릭한다.</li>
+  <li>세부 속성을 보려면 <strong>timing</strong> 왼쪽의 화살표를 클릭한다.</li>
+</ol>
+
+<p>다음과 같은 내용을 볼 수 있을 것이다. 이 부분은 이 페이지에서 동적으로 생성한 것이다.</p>
+
+<!-- filled dynamically by the writeDynamicElements() function -->
+<pre class="prettyprint" id="atts">이 부분은 현재 브라우저에서는 지원하지 않는다.</pre>
+
+<p>Internet Explorer에서 이 API를 사용해보려면 먼저 브라우저가 올바른 모드로 동작하는지 확인해 봐라.</p>
+<ul>
+    <li>웹페이지의 문서가 <a href="http://msdn.microsoft.com/en-us/library/cc288325" title="MSDN: Defining Document Compatibility">표준 모드</a>로 보이도록 <code>&lt;!doctype html&gt;</code> 디렉티브를 사용해라.</li>
+    <li>개발자 도구 콘솔에서 브라우저나 문서 모드를 조정해야 할 수도 있다.</li>
+</ul>
+
+<h2 id="date">자바스크립트 Date보다 더 좋은 방법</h2>
+
+<p>예전에는 웹 개발자가 타이밍 매트릭스를 구하려고 자바스크립트 Date 객체를 사용했다. 다음과 같은 코드를 웹페이지 최상단에 두고 간단한 속도 측정을 했을 것이다.</p>
+
+<pre class="prettyprint">
+var start = Date.now();
+</pre>
+
+<p>그리고 페이지 하단에는 다음과 같은 코드를 둔다.</p>
+
+<pre class="prettyprint">
+console.log("Page load took " + (Date.now() - start) + "milliseconds");
+</pre>
+
+<p>이런 식으로 인라인 자바스크립트를 사용해서 측정한 성능은 다음과 같은 이유로 한계가 있고 신뢰할만하지도 않다.</p>
+
+<ul>
+  <li>타이밍관련 코드가 페이지에 있으므로 이 코드가 페이지 로딩에 영향을 주고 시간을 잡아먹는다. (Navigation Timing API는 페이지 로딩 과정에는 영향을 전혀 주지 않고 페이지 로딩이 완료된 후에 타이밍 데이터를 사용할 수 있다.)</li>
+  <li>JavaScript time is <a href="http://ejohn.org/blog/accuracy-of-javascript-time/" title="John Resig: Accuracy of JavaScript Time" target="_blank">not accurate</a>.</li>
+  <li>자바스크립트의 시간은 <a href="http://ejohn.org/blog/accuracy-of-javascript-time/" title="John Resig: Accuracy of JavaScript Time" target="_blank">정확하지 않다</a>.</li>
+  <li>페이지에 타이밍을 측정하는 코드를 두어도 좋은 상황이 아니라면 사용자가 경험하는 페이지 로딩 속도를 측정할 수 없다.</li>
+  <li>가장 최악인 것은 Date 객체로는 페이지 로딩을 시작하기 전의 네트워크 지연을 측정할 수 없다는 부분이다.</li>
+</ul>
+
+<p>즉, 페이지에 인라인 코드를 사용하는 방법은 사용자가 "페이지를 열었을 때"(링크를 클릭하거나 브라우저의 주소창에 URL을 입력하던가) 경험하는 전체 지연시간을 측정할 수 없다. 왜냐하면, 페이지 콘텐츠(자바스크립트 타이밍 코드가 포함된)를 로드하기 전에 일어나는 DNS 처리 과정이나 리다이렉트, 서버 응답 같은 과정이 지연시간에 포함되기 때문이다. 하나의 페이지가 언로드되고 다음 페이지가 로드되는 사이의 시간을 측정하려고 쿠키를 사용할 수도 있지만 쿠키는 두 페이지가 같은 호스트일 때만 사용할 수 있다. 쿠키를 이용한 방법은 사용자가 웹사이트에서 가장 먼저 접속하는 페이지(아마 가장 중요하게 성능을 측정해야 할)에서는 동작하지 않고 네트워크 지연에 대한 전체 수치만 알 수 있고 다양한 종류의 지연에 대한 정보를 얻으려면 데이터를 깨뜨릴 수밖에 없다.</p>
+
+<h2 id="events">이 값은 모두 무엇을 의미하는가?</h2>
+
+<p>각 performance.timing 속성은 탐색(navigation) 이벤트(페이지를 요청한 경우 등)의 시간이나 페이지 로드 이벤트(DOM 로딩이 시작된 경우 등)의 시간을 UTC로 1970년 1월 1일 자정부터 측정한 밀리 초 단위로 보여준다. 값이 0이면 해당 이벤트(<code>secureConnectionStart</code>나 <code>redirectStart</code>같은)가 발생하지 않았다는 것을 의미한다.</p>
+
+<p>각 이벤트는 Microsoft의 <a href="http://msdn.microsoft.com/en-us/library/ff975075" title="MSDN: peformanceTiming members table" target="_blank">performance.timing 문서나</a> 좀 더 공식적인 <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" title="W3C PerformanceTiming interface documentation" target="_blank">W3C 권고안</a>에 의미가 설명되어 있다. Internet Explorer 9는 <code>secureConnectionStart</code>를 제외하고 API 드래프트 문서에 나온 모든 속성을 지원하고 추가로 <code>loadEventEnd</code> 이후 문서가 표시되기 시작할 때 발생하는 <a href="http://msdn.microsoft.com/en-us/library/ff974719" title="MSDN: msFirstPaint Property documentation" target="_blank"><code>msFirstPaint</code></a> 이벤트를 제공한다.</p>
+
+<p>performance.timing 이벤트의 순서는 <a href="http://www.w3.org/TR/navigation-timing/#processing-model" title="Navigation Timing Processing Model">Navigation Timing 권고안</a>에서 가져온 아래 그림에 나와 있다.</p>
+
+<div><a href="http://www.w3.org/TR/navigation-timing/#processing-model#processing-model" title="Navigation Timing Processing Model"><img src="http://www.w3.org/TR/navigation-timing/timing-overview.png" title="Navigation timing overview" style="width: 100%" /></a></div>
+
+<p>현재 페이지를 탐색하고 콘텐츠를 로딩할 때 발생한 모든 performance.timing 이벤트의 시간을 0부터 시작하게 조정해서 동적으로 만든 타임라인이 아래에 나와 있다.</p>
+
+<p>정확한 이벤트 시간을 보려면 각 아이템에 커서를 올리면 된다.</p>
+
+<div class="dynamicExample" id="timeline">이 부분은 현재 브라우저에서는 지원하지 않는다.</div>
+
+<p>이 경우 타임라인을 렌더링 할 때 페이지가 계속 로딩중이므로 <code>loadEventEnd</code> 이벤트는 발생하지 않았다.</p>
+
+<p><code>loadEventEnd</code>를 보고 싶다면 다음 예제처럼 load 이벤트가 종료된 뒤에 값을 가져오면 된다.</p>
+
+<pre class="prettyprint">
+window.onload = function(){
+  setTimeout(function(){
+    var t = performance.timing;
+    console.log(t.loadEventEnd - t.responseEnd);
+  }, 0);
+}
+</pre>
+
+<h2 id="using">활용 방법</h2>
+
+<p>이 API의 데이터는 여러 이벤트를 조합해서 사용해야 실제적인 의미를 가진다.</p>
+<ul>
+  <li>네트워크 지연시간 (<span id="networkLatency"></span>): <code>responseEnd</code>-<code>fetchStart</code></li>
+  <li>서버에서 페이지를 받고 페이지를 로드하는데 걸린 시간: <code>loadEventEnd</code>-<code>responseEnd</code></li>
+  <li>탐색과 페이지 로드의 전체 과정: <code>loadEventEnd</code>-<code>navigationStart</code>.</li>
+</ul>
+
+<p>특정 문제를 정확히 짚어내기 위해 이러한 방법으로 데이터를 조합할 수도 있다. 예를 들어 <code>redirectEnd</code>-<code>redirectStart</code>로 리다이렉트에 걸린 시간을 측정할 수 있다.</p>
+
+<h2 id="navigation">이 페이지에 어떻게 접근했는가?</h2>
+
+<p>물론 "페이지를 여는" 여러 가지 방법이 있는데 여기서 <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-info-interface" title="W3C PerformanceNavigation interface documentation" target="_blank">performance.navigation</a>가 쓸모 있는데 이 API는 딱 두 개의 속성을 가진다.</p>
+<ul>
+  <li><strong>redirectCount</strong>: 문서 요청이 리다이렉트된 횟수</li>
+  <li><strong>type</strong>: 페이지를 로딩한 탐색의 종류
+    </li>
+</ul>
+
+<p>위에서 type은 다음 세 값 중 하나다.</p>
+<ul>
+    <li>0: 링크를 클릭하거나 브라우저 주소창에 URL을 입력하는 등 사용자가 액션을 수행한 경우</li>
+    <li>1: 페이지를 리로딩한 경우</li>
+    <li>2: 히스토리 뒤로 가기나 앞으로 가기로 탐색한 경우</li>
+</ul>
+
+<p>아래는 당신이 이 페이지에 접근한 방법이다.</p>
+
+<p class="dynamicExample" id="howIGotHere">이 부분은 현재 브라우저에서는 지원하지 않는다.</p>
+
+<h2 id="wild">현실에서</h2>
+
+<p>Date 객체를 사용해서 타이밍을 측정하는 방법과는 달리 Navigation Timing API는 페이지 로딩에 전혀 영향을 주지 않고 사용할 수 있다. 그러므로 사내 네트워크에서 개발용 컴퓨터를 사용해서 개발자가 직접 테스트하는 대신 실제 사용자가 겪는 "현실"의 페이지 로딩 지연시간을 측정하는 데 유용하게 사용할 수 있다.</p>
+
+<p>예를 들면 페이지를 로딩(언로딩도 마찬가지)할 때마다 <a href="http://www.w3schools.com/ajax/ajax_xmlhttprequest_create.asp" title="w3schools XHR tutorial">XHR</a>로 호스트 서버에 performance.timing 데이터를 보낼 수 있다. 이 방법으로 실시간 통계를 구할 수는 있지만, 효율적인 방법은 아니므로 페이지별, 사용자별로 <a href="http://diveintohtml5.info/storage.html" title="Dive Into HTML5: Local Storage">로컬 스토리지</a>에 타이밍 데이터를 기록해두고 정기적으로 서버에 보낼 수도 있다. Navigation Timing API는 페이지 성능에 대해 시간에 따른 데이터를 구성할 수 있는 간단한 방법을 제공한다. </p>
+
+<h2 id="future">Navigation Timing의 미래</h2>
+
+<p>Navigation Timing은 개발자가 성능을 이해하고 최적화하도록 유용한 도구를 제공하지만 가장 유용한 경우는 웹 통계에서 사용하는 것이며 풍부하고 정확한 데이터로 비침투적인 정보를 제공할 수 있다.</p>
+
+<p>더 나은 정보는 페이지 로드 지연을 이해하는 데 유용하고 이로써 더 효율적인 웹사이트와 인프라, 더 빠른 웹 애플리케이션과 웹을 만들 수 있고 좋은 사용자 경험을 제공할 수 있다.</p>
+
+<p>API를 사용하는 방법을 잘 이해하고 싶다면 구글 크롬의 <a href="https://chrome.google.com/webstore/detail/lgmnmdkkghdeagbghognjbjijpnckcid/publish-accepted" title="Navigation Timing extension page">Page Speed Test</a> 확장을 사용해 봐라.(이 글의 작성자가 개발했다.) Page Speed Test의 차트는 어떤 페이지에서든 방문했을 때의 탐색과 페이지 로딩의 성능을 보여준다.</p>
+
+<hr>
+
+<h2 id="addendum">부록</h2>
+
+2012.03.01: Kasia는 데이터를 화려하게 볼 수 있는 <a href="http://66.7percentangel.com/2011/12/breaking-down-onload-event-performance-bookmarklet/">북마클릿</a>을 작성했다.
+
+<a href="http://66.7percentangel.com/2011/12/breaking-down-onload-event-performance-bookmarklet/"><img src="http://66.7percentangel.com/wp-content/uploads/2011/12/blah1-600x304.jpg"></a>
+
+
+<script>
+// Timeline class used for div#timeline chart.
+// The Google Charts API does not (yet) support simple timelines.
+// Constructor arguments:
+// - timelineElement is the DOM element where the timeline will be displayed
+// - events is an array of objects that each have a time and eventName property
+function Timeline(timelineElement, events) {
+  this.events = events;
+  this.timelineElement = timelineElement;
+  // get the minimum and maximum time values
+  this.minTime = Number.MAX_VALUE;
+  this.maxTime = Number.MIN_VALUE;
+  for (var i = 0; i != events.length; ++i) {
+    var time = events[i].time;
+    if (time > this.maxTime) {
+      this.maxTime = time;
+    }
+    if (time < this.minTime) {
+      this.minTime = time;
+    }
+  }
+
+  // defaults for timeline
+  // easily refactored to make values customisable
+    this.backgroundColor = "rgba(255, 0, 0, 0.05)";
+    this.border = "1px solid rgba(255, 0, 0, 0.2)";
+    this.borderRadius = "8px 8px 8px 8px";
+    this.fontFamily = "monospace";
+  this.numTicks = 5; // number of ticks on x-axis
+  this.padding = 20;
+  this.width = 708;
+
+  // defaults for event name display
+    this.eventBorderLeftColor = "rgba(255, 0, 0, 0.2)";
+    this.eventBorderLeftStyle = "solid";
+    this.eventBorderLeftWidth = 2;
+    this.eventColor = "#000";
+    this.eventMargin = 5;
+    this.eventPadding = 5;
+    this.eventWidth = 220; // hack: large enough to fit longest event name...
+
+    // flag: to combine events with the same time in the same div
+    this.combineEvents = true;
+
+  $(timelineElement).css({
+    "background-color": this.backgroundColor,
+    "border": this.border,
+    "border-radius": this.borderRadius,
+    "font-family": this.fontFamily,
+        "padding": this.padding + "px",
+    "width": this.width + "px"
+    });
+ }
+
+Timeline.prototype = {
+  draw: function() {
+    var i;
+    // draw event divs
+    for (i = 0; i != this.events.length; ++i) {
+      var event = this.events[i];
+      var eventDiv = $("<div />");
+      eventDiv.append(event.eventName);
+      // get the offset for the event div
+      var left = (event.time / this.maxTime) * (this.width -
+          this.eventWidth - this.eventPadding - this.eventBorderLeftWidth);
+            eventDiv.css({
+                "border-left-color": this.eventBorderLeftColor,
+                "border-left-style": this.eventBorderLeftStyle,
+                "border-left-width": this.eventBorderLeftWidth + "px",
+                "color": this.eventColor,
+                "cursor": "pointer",
+                "left": left,
+                "margin-bottom": this.eventMargin + "px",
+                "padding-left": this.eventPadding + "px",
+                "position": "relative",
+                "width": this.eventWidth + "px"
+            });
+            eventDiv.attr({"title": event.time + "ms"});
+      $(this.timelineElement).append(eventDiv);
+    };
+    // draw timeline x-axis ticks and labels
+    var xAxisDiv = $("<div />");
+    xAxisDiv.css({
+      "border-top": "1px solid #ccc" // the actual x-axis
+    });
+    $(this.timeElement).append(xAxisDiv);
+
+
+  }
+}; // Timeline class
+
+
+function writeTimeline() {
+  // events is an array of objects, each with a time and an event name
+  // -- note that there may be more than one event for each time
+  var events = [];
+
+  // names of possible events that did not occur
+  var nonEvents = [];
+
+  // minTime will be used to normalise event times so they start from zero
+  var minTime = Number.MAX_VALUE;
+
+  // get the time value for each attribute in performance.timing
+  // each attribute is the name of a navigation or page load event
+  // not all of which may have occurred, for example secureConnectionStart or redirectStart
+  // -- performance.timing properties aren't enumerable in IE 9.0 so Object.keys() won't work
+  for (eventName in performance.timing) {
+    var time = parseInt(performance.timing[eventName]);
+    // events that did not occur have zero time
+    if (time === 0) {
+      nonEvents.push(eventName);
+        // hack! but IE 9.0 doesn't seem to support
+        // performance.timing.hasOwnProperty correctly
+    } else if (eventName !== "toJSON") {
+      events.push({"eventName": eventName, "time": time});
+      if (time < minTime) {
+        minTime = time;
+      }
+    }
+  }
+
+  // normalise times so they start from zero
+  for (var i = 0; i != events.length; ++i) {
+    events[i].time -= minTime;
+  }
+
+  // sort events by time, since object key enumeration does not guarantee this
+  // -- and if events have the same time, order them so the event names are displayed
+  // in a sensible order, e.g. unloadEventStart before unloadEventEnd
+  var orderedEventNames = [
+      "navigationStart", "unloadEventStart", "unloadEventEnd", "redirectStart",
+      "redirectEnd", "fetchStart", "domainLookupStart", "domainLookupEnd",
+      "connectStart", "connectEnd", "secureConnectionStart", "requestStart",
+      "responseStart", "responseEnd", "domLoading", "domInteractive",
+      "domContentLoadedEventStart", "domContentLoadedEventEnd", "domComplete",
+      "loadEventStart", "loadEventEnd"];
+  events.sort(function(a, b){
+    // if times are different, sort by time
+    if (a.time !== b.time) {
+      return a.time - b.time;
+    // if times are the same, sort by position in orderedEventNames
+    } else {
+      // indexOf is available in IE9 and Chrome
+      return orderedEventNames.indexOf(a.eventName) - orderedEventNames.indexOf(b.eventName);
+    }
+  });
+
+
+  // draw timeline events
+  var timelineElement = document.querySelector("#timeline");
+  $(timelineElement).empty(); // in case of warning messages, etc.
+  var timelineObject = new Timeline(timelineElement, events);
+  timelineObject.draw();
+
+  // draw basic timeline x-axis ticks and labels
+  var xAxisDiv = $("<div />");
+    xAxisDiv.css({
+    "border-top": "1px solid rgba(255, 0, 0, 0.4)", // the actual x-axis
+    "height": "40px",
+    "margin": "10px 0 20px 0",
+    "position": "relative"
+  });
+
+  // add ticks to the x-axis: for zero and for the maximum time, timelineObject.maxTime
+  var tickDivWidth = 100;
+  var tickDivCss = {
+    "color": "rgba(255, 0, 0, 0.4)",
+    "position": "absolute",
+    "text-align": "center",
+    "top": "-3px",
+    "width": tickDivWidth + "px"
+    };
+  // this is hacky and ugly but it works
+  var zeroTickDiv = $("<div>|<br />0</div>").css(tickDivCss).css({"left": -tickDivWidth / 2}); // 50 = half width
+  // get the css left value for the max tick
+  var maxTickDivLeft = timelineObject.width - timelineObject.eventWidth -
+    timelineObject.eventPadding - timelineObject.eventBorderLeftWidth - (tickDivWidth / 2) + 1;
+  var maxTickDiv = $("<div>|<br />" + timelineObject.maxTime + "ms</div>").css(tickDivCss).
+    css({"left": maxTickDivLeft});
+  xAxisDiv.append(zeroTickDiv).append(maxTickDiv);
+
+  $(timelineElement).append(xAxisDiv);
+
+  $(timelineElement).append("<div id='nonEvents'>The following events did not occur:<br/>- " +
+    nonEvents.join("<br />- ") + "</div>");
+
+
+} // writeTimeline;
+
+
+// used for the #atts div and the 'ways to use this information' spans
+function writeDynamicElements() {
+    var atts = [];
+    if (!isCompatible()) {
+      return;
+    }
+    var t = performance.timing;
+    for (var prop in t) {
+      //if (performance.timing.hasOwnProperty(prop)) { // doesn't work in IE9
+        atts.push(prop + ": " + t[prop]);
+      //}
+    }
+    atts.sort(); // in the console attributes are displayed in alphabetical order
+    $("#atts").html('').append(atts.join("<br />"));
+
+    $("#networkLatency").html("for this page, " + (t.responseEnd - t.fetchStart) + "ms");
+
+    var navigationTypes = ["링크를 클릭하거나 URL을 입력해서", "리로드로", "히스토리를 탐색해서"];
+    var howIGotHere = navigationTypes[performance.navigation.type];
+    $("#howIGotHere").html(howIGotHere + " 이 페이지에 접근했다..");
+
+    writeTimeline();
+}
+</script>
+{% endblock %}
