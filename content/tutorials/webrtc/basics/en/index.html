@@ -29,10 +29,10 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>Imagine a world where your phone, TV and computer could all communicate on a common platform. Imagine it was easy to add video chat and peer-to-peer data sharing to your web application. That's the vision of WebRTC.</p>
 
-<p>Want to try it out? WebRTC is available now in Google Chrome and Firefox. A good place to start is the simple video chat application at <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>:</p>
+<p>Want to try it out? WebRTC is available now in Google Chrome, Opera and Firefox. A good place to start is the simple video chat application at <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>:</p>
 
 <ol>
-	<li>Open <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a> in Chrome or Firefox.</li>
+	<li>Open <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a> in Chrome, Opera or Firefox.</li>
 	<li>Click the Allow button to let the app use your web cam.</li>
 	<li>Open the URL displayed at the bottom of the page in a new tab or, better still, on a different computer.</li>
 </ol>
@@ -84,9 +84,9 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p><code><strong>getUserMedia</strong></code> is available in Chrome, Opera and Firefox. Take a look at the cross-browser demo at <a href="http://www.simpl.info/gum" title="Simple cross-platform getUserMedia demo">simpl.info/gum</a> and Chris Wilson's <a href="http://webaudiodemos.appspot.com/" title="">amazing examples</a> using <code>getUserMedia</code> as input for Web Audio.</p>
 
-<p><code><strong>RTCPeerConnection</strong></code> is in Chrome (on desktop and for Android) and in Firefox. A word of explanation about the name: after several iterations, <code>RTCPeerConnection</code> is currently implemented by Chrome as <code>webkitRTCPeerConnection</code> and by Firefox as <code>mozRTCPeerConnection</code>. Other names and implementations have been deprecated. When the standards process has stabilized, the prefixes will be removed. There's an ultra-simple demo of Chrome's RTCPeerConnection implementation at <a href="http://www.simpl.info/peerconnection" title="Simple cross-platform getUserMedia demo">simpl.info/pc</a> and a great video chat application at <a href="http://apprtc.appspot.com" title="Video chat demo">apprtc.appspot.com</a>. This app uses <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>, a JavaScript shim, maintained Google, that abstracts away browser differences and spec changes.</p>
+<p><code><strong>RTCPeerConnection</strong></code> is in Chrome (on desktop and for Android), Opera (on desktop and in the latest Android Beta) and in Firefox. A word of explanation about the name: after several iterations, <code>RTCPeerConnection</code> is currently implemented by Chrome and Opera as <code>webkitRTCPeerConnection</code> and by Firefox as <code>mozRTCPeerConnection</code>. Other names and implementations have been deprecated. When the standards process has stabilized, the prefixes will be removed. There's an ultra-simple demo of Chromium's RTCPeerConnection implementation at <a href="http://www.simpl.info/peerconnection" title="Simple cross-platform getUserMedia demo">simpl.info/pc</a> and a great video chat application at <a href="http://apprtc.appspot.com" title="Video chat demo">apprtc.appspot.com</a>. This app uses <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>, a JavaScript shim, maintained Google, that abstracts away browser differences and spec changes.</p>
 
-<p><strong><code>RTCDataChannel</code></strong> is supported by Chrome 25 and Firefox 22 and above.</p>
+<p><strong><code>RTCDataChannel</code></strong> is supported by Chrome 25, Opera 18 and Firefox 22 and above.</p>
 
 <p>WebRTC functionality is available in Internet Explorer <a href="https://groups.google.com/forum/#!topic/discuss-webrtc/tKoh1wrI8ig" title="How to enable WebRTC functionality in Internet Explorer via Chrome Frame">via Chrome Frame</a>, and Skype (acquired by Microsoft in 2011) is reputedly <a href="http://gigaom.com/2012/06/26/skype-webrtc-web-client/" title="GigaOM blog post about Skype and WebRTC">planning to use WebRTC</a>. WebRTC has also been integrated with <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-conversational-voice-and-video-implemented-webkit-gtk" title="Ericsson article about WebKitGTK+">WebKitGTK+</a> and <a href="http://www.youtube.com/watch?v=Vm5ebKWKNE8" title="basysKom showcasing WebRTC based video chat in QML application">Qt</a> native apps.</p>
 
@@ -122,7 +122,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 <p>Probably the easiest way to understand MediaStream is to look at it in the wild:</p>
 
 <ol>
-  <li>In Chrome, open the demo at <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a>.</li>
+  <li>In Chrome or Opera, open the demo at <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a>.</li>
   <li>Open the console.</li>
   <li>Inspect the <code>stream</code> variable, which is in global scope.</li>
 </ol>
@@ -141,7 +141,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>For the <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a> example, <code>stream.getAudioTracks()</code> returns an empty array (because there's no audio) and, assuming a working webcam is connected, <code>stream.getVideoTracks()</code> returns an array of one MediaStreamTrack representing the stream from the webcam. Each MediaStreamTrack has a kind ('video' or 'audio'), and a label (something like 'FaceTime HD Camera (Built-in)'), and represents one or more channels of either audio or video. In this case, there is only one video track and no audio, but it is easy to imagine use cases where there are more: for example, a chat application that gets streams from the front camera, rear camera, microphone, and a 'screenshared' application.</p>
 
-<p>In Chrome, the <code>URL.createObjectURL()</code> method converts a MediaStream to a <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: Blob URLs">Blob URL</a> which can be set as the <code>src</code> of a video element. (In Firefox and Opera, the <code>src</code> of the video can be set from the stream itself.) Since version 25, Chrome allows audio data from <code>getUserMedia</code> to be passed to an audio or video element (but note that by default the media element will be muted in this case.<p>
+<p>In Chrome or Opera, the <code>URL.createObjectURL()</code> method converts a MediaStream to a <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: Blob URLs">Blob URL</a> which can be set as the <code>src</code> of a video element. (In Firefox and Opera, the <code>src</code> of the video can be set from the stream itself.) Since version 25, Chromium-based browsers (Chrome and Opera) allow audio data from <code>getUserMedia</code> to be passed to an audio or video element (but note that by default the media element will be muted in this case.<p>
 
 <p><code>getUserMedia</code> can also be used <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled" title="HTML5 Rocks update from Chris Wilson: live Web Audio input enabled!">as an input node for the Web Audio API</a>:</p>
 
@@ -161,7 +161,7 @@ function gotStream(stream) {
 navigator.getUserMedia({audio:true}, gotStream);
 </pre>
 
-<p>Chrome apps and extensions can also incorporate <code>getUserMedia</code>. Adding <code>audioCapture</code> and/or <code>videoCapture</code> <a href="https://developer.chrome.com/extensions/manifest.html#permissions" title="Chrome app/extension permissions documentation">permissions</a> to the manifest enables permission to be requested and granted only once, on installation. Thereafter the user is not asked for permission for camera or microphone access.</p>
+<p>Chromium-based apps and extensions can also incorporate <code>getUserMedia</code>. Adding <code>audioCapture</code> and/or <code>videoCapture</code> <a href="https://developer.chrome.com/extensions/manifest.html#permissions" title="Chrome app/extension permissions documentation">permissions</a> to the manifest enables permission to be requested and granted only once, on installation. Thereafter the user is not asked for permission for camera or microphone access.</p>
 
 <p>Likewise on pages using HTTPS: permission only has to be granted once for for <code>getUserMedia()</code> (in Chrome at least). First time around, an Always Allow button is displayed in the browser's <a href="http://dev.chromium.org/user-experience/infobars" title="Chromium information about the browser infobar">infobar</a>.</p>
 
@@ -184,7 +184,7 @@ navigator.getUserMedia({audio:true}, gotStream);
 
 <h3 id="toc-constraints">Constraints</h3>
 
-<p><a href="http://tools.ietf.org/html/draft-alvestrand-constraints-resolution-00#page-4" title="IETF Resolution Constraints draft specification">Constraints</a> have been implemented in Chrome 24 and above. These can be used to set values for video resolution for <code>getUserMedia()</code> and RTCPeerConnection <code>addStream()</code> calls. The intention is to implement <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#the-model-sources-sinks-constraints-and-states" title="W3C getUserMedia Editor's Draft - The model: sources, sinks, constraints, and states">support for other constraints</a> such as aspect ratio, facing mode (front or back camera), frame rate, height and width, along with an <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-1" title="applyConstraints() API proposal in W3C getUserMedia Editor's Draft"><code>applyConstraints()</code> method</a>. </p>
+<p><a href="http://tools.ietf.org/html/draft-alvestrand-constraints-resolution-00#page-4" title="IETF Resolution Constraints draft specification">Constraints</a> have been implemented since Chrome 24 and Opera 18. These can be used to set values for video resolution for <code>getUserMedia()</code> and RTCPeerConnection <code>addStream()</code> calls. The intention is to implement <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#the-model-sources-sinks-constraints-and-states" title="W3C getUserMedia Editor's Draft - The model: sources, sinks, constraints, and states">support for other constraints</a> such as aspect ratio, facing mode (front or back camera), frame rate, height and width, along with an <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-1" title="applyConstraints() API proposal in W3C getUserMedia Editor's Draft"><code>applyConstraints()</code> method</a>. </p>
 
 <p>There's an example at <a href="http://simpl.info/getusermedia/constraints/index.html" title="Resolution Constraints example on simpl.info">simpl.info/getusermedia/constraints</a>.</p>
 
@@ -195,9 +195,9 @@ NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</pre>
 
 <h4>Screen and tab capture</h4>
 
-<p>It's also possible to use screen capture as a MediaStream source. This is currently implemented in Chrome using the experimental chromeMediaSource constraint, as in <a href="https://html5-demos.appspot.com/static/getusermedia/screenshare.html" title="Screenshare demo">this demo</a>. Note that screen capture requires HTTPS.</p>
+<p>It's also possible to use screen capture as a MediaStream source. This is currently implemented in Chrome using the experimental chromeMediaSource constraint, as in <a href="https://html5-demos.appspot.com/static/getusermedia/screenshare.html" title="Screenshare demo">this demo</a>. This feature is not yet available in Opera. Note that screen capture requires HTTPS.</p>
 
-<p>Chrome apps also now make it possible to share a live 'video' of a single browser tab via the experimental <a href="http://developer.chrome.com/dev/extensions/tabCapture.html" title="chrome.tabCapture API documentation">chrome.tabCapture</a> API. For a screencast, code and more information, see the HTML5 Rocks update: <a href="http://updates.html5rocks.com/2012/12/Screensharing-with-WebRTC" title="HTML5 Rocks update article: Screensharing with WebRTC">Screensharing with WebRTC</a>.</p>
+<p>Chrome apps also now make it possible to share a live 'video' of a single browser tab via the experimental <a href="http://developer.chrome.com/dev/extensions/tabCapture.html" title="chrome.tabCapture API documentation">chrome.tabCapture</a> API. For a screencast, code and more information, see the HTML5 Rocks update: <a href="http://updates.html5rocks.com/2012/12/Screensharing-with-WebRTC" title="HTML5 Rocks update article: Screensharing with WebRTC">Screensharing with WebRTC</a>. This feature is not yet available in Opera.</p>
 
 <h2 id="toc-signaling">Signaling: session control, network and media information</h2>
 
@@ -214,7 +214,7 @@ NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</pre>
 
 <p>The exchange of information via signaling must have completed successfully before peer-to-peer streaming can begin.</p>
 
-<p>For example, imagine Alice wants to communicate with Bob. Here's a code sample from the <a href="http://www.w3.org/TR/webrtc/#simple-example" title="WebRTC 1.0: Real-time Communication Between Browsers"> WebRTC W3C Working Draft</a>, which shows the signaling process in action. The code assumes the existence of some signaling mechanism, created in the <code>createSignalingChannel()</code> method. Also note that on Chrome, RTCPeerConnection is currently prefixed.</p>
+<p>For example, imagine Alice wants to communicate with Bob. Here's a code sample from the <a href="http://www.w3.org/TR/webrtc/#simple-example" title="WebRTC 1.0: Real-time Communication Between Browsers"> WebRTC W3C Working Draft</a>, which shows the signaling process in action. The code assumes the existence of some signaling mechanism, created in the <code>createSignalingChannel()</code> method. Also note that on Chrome and Opera, RTCPeerConnection is currently prefixed.</p>
 
 <a id="simpleRTCPeerConnectionExample"></a>
 
@@ -741,7 +741,7 @@ document.querySelector("button#send").onclick = function (){
 
 <p>Communication occurs directly between browsers, so RTCDataChannel can be much faster than WebSocket even if a relay (TURN) server is required when 'hole punching' to cope with firewalls and NATs fails.</p>
 
-<p>RTCDataChannel is available in Chrome and Firefox. The magnificent <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> game uses the API to communicate game state: play a friend or play the bear! <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> enables file sharing via RTCDataChannel, and <a href="https://peercdn.com/" title="peerCDN site">peerCDN</a> offers a glimpse of how WebRTC could enable peer-to-peer content distribution.</p>
+<p>RTCDataChannel is available in Chrome, Opera and Firefox. The magnificent <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> game uses the API to communicate game state: play a friend or play the bear! <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> enables file sharing via RTCDataChannel, and <a href="https://peercdn.com/" title="peerCDN site">peerCDN</a> offers a glimpse of how WebRTC could enable peer-to-peer content distribution.</p>
 
 <p>For more information about RTCDataChannel, take a look at the IETF's <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-00" title="IETF Data Channel draft specification">draft protocol spec</a>.</p>
 
@@ -777,7 +777,7 @@ document.querySelector("button#send").onclick = function (){
 <h2 id="toc-tools">Developer tools</h2>
 
 <ul>
-  <li style="margin-bottom: 1.5em;">The <strong>chrome://webrtc-internals</strong> page provides detailed stats and charts when a WebRTC session is in progress:
+  <li style="margin-bottom: 1.5em;">The <strong>chrome://webrtc-internals</strong> page in Chrome (or the <strong><strong>opera://webrtc-internals</strong> page in Opera) provides detailed stats and charts when a WebRTC session is in progress:
     <figure>
       <img src="internals.png" alt="chrome://webrtc-internals page" />
       <figcaption>chrome://webrtc-internals screenshot</figcaption>
@@ -787,7 +787,7 @@ document.querySelector("button#send").onclick = function (){
   <li><a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> is a JavaScript shim for WebRTC, maintained by Google, that abstracts vendor prefixes, browser differences and spec changes</li>
   <li>To learn more about WebRTC signaling processes, check the <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat demo">apprtc.appspot.com</a> log output to the console</li>
   <li>If it's all too much, you may prefer to use a <a href="http://io13webrtc.appspot.com/#69" title="WebRTC frameworks">WebRTC framework</a> or even a complete <a href="http://io13webrtc.appspot.com/#72" title="WebRTC service providers">WebRTC&nbsp;service</a></li>
-  <li>Bug reports and feature requests are always appreciated: <a href="http://www.crbug.com/new" title="Report Chrome bugs and feature requests">crbug.com/new</a> for Chrome bugs, <a href="https://bugzilla.mozilla.org/" title="File a Firefox bug">bugzilla.mozilla.org</a> for Firefox</li>
+  <li>Bug reports and feature requests are always appreciated: <a href="http://www.crbug.com/new" title="Report Chrome bugs and feature requests">crbug.com/new</a> for Chrome bugs, <a href="https://bugs.opera.com/wizard/" title="Report Opera bugs and feature requests">bugs.opera.com/wizard/</a> for Opera, <a href="https://bugzilla.mozilla.org/" title="File a Firefox bug">bugzilla.mozilla.org</a> for Firefox</li>
 </ul>
 
 <h2 id="toc-more">Learn more</h2>
@@ -822,19 +822,22 @@ document.querySelector("button#send").onclick = function (){
 <h3>MediaStream and getUserMedia</h3>
 <ul>
 	<li>Chrome desktop 18.0.1008+; Chrome for Android 29+</li>
-	<li>Opera, Opera Mobile 12</li>
+	<li>Opera 18+; Opera for Android 20+</li>
+	<li>Opera 12, Opera Mobile 12 (based on the Presto engine)</li>
 	<li>Firefox 17+</li>
 </ul>
 
 <h3>RTCPeerConnection</h3>
 <ul>
 	<li>Chrome desktop 20+ (now 'flagless', i.e. no need to set about:flags); Chrome for Android 29+ (flagless)</li>
+	<li>Opera 18+ (on by default); Opera for Android 20+ (on by default)</li>
 	<li>Firefox 22+ (on by default)</li>
 </ul>
 
 <h3>RTCDataChannel</h3>
 <ul>
 	<li>Experimental version in Chrome 25, more stable (and with Firefox interoperability) in Chrome 26+; Chrome for Android 29+</li>
+	<li>Stable version (and with Firefox interoperability) in Opera 18+; Opera for Android 20+</li>
   <li>Firefox 22+ (on by default)</li>
 </ul>
 
