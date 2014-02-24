@@ -33,7 +33,7 @@ What if the markup for GMail wasn't atrocious? What if it was beautiful:
     </hangout-module>
 
 <p class="centered">
-  <button><a href="https://html5-demos.appspot.com/hangouts">Try the demo!</a></button>
+  <button><a href="http://html5-demos.appspot.com/hangouts">Try the demo!</a></button>
 </p>
 
 How refreshing! This app totally makes sense too. It's **meaningful**, **easy to understand**,
