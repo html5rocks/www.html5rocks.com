@@ -1,0 +1,170 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/paullewis.75.png);
+  background-position: -14px -9px !important;
+}
+
+article.tutorial section {
+  overflow: visible;
+}
+
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+<h2 id="toc-introduction">引言</h2>
+
+<p>將一個網站或是網頁應用程式的元件畫出來是相當昂貴的，而且也有可能在程式執行時對效能產生負面的連鎖效應。在這篇文章當中很快的說明什麼會讓瀏覽器產生畫圖(painting)的行為，並且讓你知道如何預防不必要的畫圖行為。 </p>
+
+<h2 id="toc-painting">畫圖行為: 讓我們快速的介紹一下</h2>
+
+<p>瀏覽器主要的工作之一，就是將你的DOM和CSS轉換成螢幕上的像素(pixel)，而達成這項工作需要經過相當複雜的處理。 一開始是這樣的，瀏覽器讀取標記語言(markup)，然後建立DOM樹。 接下來建立CSSOM，做的事情和建立DOM樹差不多。 接著將DOM和CSSOM組合在一起，最後，我們就得到一個可以來畫像素的結構。</p>
+
+<blockquote class="commentary talkinghead" id="how-works">
+  如果你想要更深入一點知道瀏覽器是怎麼運作的，這裡有篇文章 <a href="http://www.html5rocks.com/en/tutorials/internals/howbrowserswork/">in-depth article here on HTML5 Rocks</a> 你應該看一看!
+</blockquote>
+
+<p>畫圖行為的處理本身是很有趣的。 在Chrome中，組合好的DOM和CSS樹，會使用一個軟體叫做<a href="https://code.google.com/p/skia/">Skia</a>來點陣化。 如果你曾經玩過<code>canvas</code>元件，Skia的API會讓你感到非常熟悉，這個API有很多<code>moveTo</code>-和<code>lineTo</code>-形式和一堆更加進階的函式。實際上，所有需要被畫出來的元件會被提取到Skia可以執行的的集合當中，然後產出一堆點陣(bitmaps)。這些點陣會被上傳到GPU，GPU再合成這些點陣成為螢幕上顯示的圖。</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/domtopixels.jpg" />
+</figure>
+
+<p>要注意的是，Skia的工作負載跟你怎麼使用你的元件有直接相關。如果你使用了繁重的演算法，Skia會需要做更多的工作。 <a href="http://www.google.com/+ColtMcAnlis">Colt McAnlis</a>寫了篇文章<a href="http://www.html5rocks.com/en/tutorials/speed/css-paint-times/">article on how CSS affects page render weight</a>，你應該看看。</p>
+
+<p>就像先前說的，畫圖行為需要時間，如果我們不想辦法減少處理時間，而讓它執行超過我們的幀預算，約是16毫秒，使用者就會發現畫圖會掉幀，這會讓這個APP的使用者經驗非常的差，而且覺得這個東西很沒用。我們絕對不想要這樣，所以我們要來看看什麼事情所造成的畫圖行為是不必要的，然後看看我們能夠怎麼辦。</p>
+
+<h2 id="toc-scrolling">卷軸(Scrolling)</h2>
+
+<p>每次你將卷軸捲上捲下的時候，瀏覽器就需要重畫它即將要顯示在螢幕上的內容。如果重畫的區域很小當然很好，但即使在這樣的情況下，元件也有可能是以很複雜的方式被提交給瀏覽器的。所以需要畫圖的區域很小不代表它可以被畫得很快。</p>
+
+<p>你可以用Chrome的DevTools裡面的"Show Paint Rectangles"功能(按一下右下角的齒輪圖案)來看看那些區域被重畫了。當DevTools開啟的狀態下，簡單的跟網頁做些互動，你就會看見閃亮的矩形出現在頁面被重畫的地方。</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/showpaintrects.jpg" />
+  <figcaption>在Chrome DevTools中的Show Paint Rectangles功能</figcaption>
+</figure>
+
+<p>卷軸的效能跟你網站的成功與否很有關係，使用者的的確確會發現你的網站或是網頁應用程式捲頁捲得不好，而且他們很不喜歡這樣。 所以我們有興趣的是讓捲動卷軸時，讓畫圖行為保持輕量，讓使用者不會看到奇怪的地方。</p>
+
+<p>我之前寫了一篇文章，<a href="http://www.html5rocks.com/en/tutorials/speed/scrolling/">article on scrolling performance</a>，如果你想知道關於卷軸效能的更多細節你可以去拿來看看。</p>
+
+<h2 id="toc-interactions">互動(Interactions)</h2>
+
+<p>互動是另一個會導致畫圖行為的原因，比如: hover行為、點按行為、拖拉行為。當使用者執行以上其中一個行為，比如說hover行為好了，Chrome就必須去重畫收到影響的元件。而且就像卷軸事件，如果要執行大量又複雜的畫圖行為，也會導致掉幀。</p>
+
+<p>每個人都想要很棒的、平滑的、互動的動畫效果，所以再一次的我們需要看看這些動畫而產生的改變會不會花掉太多的時間。</p>
+
+<h2 id="toc-combination">一個不好的組合範例</h2>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/demo.jpg" />
+  <figcaption>一個昂貴的畫圖行為範例</figcaption>
+</figure>
+
+<p>如果我同時捲動卷軸又滑動滑鼠會發生什麼事？對我來說非常有可能<em>不經意</em>的跟某個我捲過它的元件"互動"了，然後觸發了一次昂貴的畫圖行為。反過來說，這樣會導致我用掉幀預算約16.7毫秒(需要每秒要畫60幀用掉的時間)。 我<a href="https://dl.dropboxusercontent.com/u/2272348/codez/expensivescroll/demo.html">做了一個範例</a>，來讓你知道我到底是什麼意思。 希望你在捲動卷軸跟滑動滑鼠的時候會看到hover的影響，但先讓我們來看看這在Chrome DevTools中所表現的樣子：</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/devtools.png" />
+  <figcaption>Chrome's DevTools擷取出來的那些耗費昂貴資源的幀</figcaption>
+</figure>
+
+<p>你可以看上面這張圖，當我hover過某一個區塊時，DevTools暫存了畫圖的工作。 我故意讓它執行了一些超級繁重的處理，好強調我想表達的，所以有些時候超過了幀預算。最後我想要的是讓畫圖行為不必要的發生，特別是執行捲動卷軸的時候！</p>
+
+<p>那麼我們到底要怎麼停止這樣昂貴的畫圖行為呢？其實很簡單實作，技巧在於連接一個<code>scroll</code>的處理函式，會關閉hover的影響，然後設定一個計時器，時間到了再把hover打開。意思是我們保證當你在捲動卷軸時不用去執行昂貴的互動事件的重畫。當你停止動作一段足夠的時間後，我們再將互動事件啟動。</p>
+
+<p class="notice fact">
+  實作這個技巧是會影響到你的應用程式的使用者經驗的，所以要靈活運用。只有你和你的團隊有權力決定要停止多久再重新啟動hover事件的影響。
+</p>
+
+<p>這邊是程式碼:</p>
+
+<pre class="prettyprint"><code>// 用來追蹤hover行為的啟動情形
+var enableTimer = 0;
+
+/*
+ * 監聽卷軸並移除可能的hover
+ */
+window.addEventListener('scroll', function() {
+  clearTimeout(enableTimer);
+  removeHoverClass();
+
+  // 在一秒後重新啟動hover，這裡你自己決定你要的等待多久！
+  enableTimer = setTimeout(addHoverClass, 1000);
+}, false);
+
+/**
+ * 從body移除hover的class
+ */
+function removeHoverClass() {
+  document.body.classList.remove('hover');
+}
+
+/**
+ * 把hover行為需要的class加回去
+ */
+function addHoverClass() {
+  document.body.classList.add('hover');
+}
+</code></pre>
+
+<p>你可以看到我們放了一個class在body上，去追蹤hover現在是否是被允許的。相關的style如下:</p>
+
+<pre class="prettyprint"><code>/* 在執行任何hover事件之前要把這個class加上去 */
+.hover .block:hover {
+ …
+}
+</code></pre>
+
+<p>這就是全部了！</p>
+
+<h2 id="toc-conclusion">結論</h2>
+
+<p>瀏覽器的Rendering效能對於使用者使用你的應用程式是很關鍵的，你應該要一直注意並確保你的畫圖行為的工作量小於16ms。 而且你應該在<em>開發階段</em>使用DevTools來幫助你確認並修復你的程式的瓶頸。</p>
+
+<p>一些不經意的互動行為，特別是跟那些會產生昂貴畫圖行為的元件互動時，可能會非常的耗費Redering效能。 但也如你所見，我們可以用一小段程式碼來修復這樣的情形。</p>
+
+<p>再多看看你的網站和應用程式吧，看看是不是能為它的畫圖行為再多做一點保護。</p>
+
+{% endblock %}
