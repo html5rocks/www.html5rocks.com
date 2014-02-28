@@ -431,6 +431,7 @@ class ContentHandler(webapp2.RequestHandler):
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
           'zh': '中文 (简体)',
+          'zh-TW': '中文（繁體）',
           'fa': 'فارسی'
         }
         loc_list = []
