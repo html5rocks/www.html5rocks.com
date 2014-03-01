@@ -22,11 +22,11 @@
 <p ><span>CPU 사이클은</span><span>&nbsp;하나의 제로-썸 게임입니다. </span><span>여러분 시스템의 일부가 더 적게 사용하도록 만드는 것은 여러분이 또다른 시스템에서 더 사용할 수 있게 하거나 혹은 전반적으로 더 부드럽게 구동하게 해줍니다. 빠르게 동작하는 것과 좀더 일하는 것은 흔히 상충되는 목표입니다. 사용자들은 새로운 기능들을 요구하는 한편 여러분의 어플리케이션이 부드럽게 동작하는 것 또한 기대합니다. 자바스크립트 가상 머신은 계속 빨라지고 있지만, 그것은 자신들의 웹 어플리케이션 안에 이미 알고 있는 성능 문제를 다루고 있는 많은 개발자들 처럼 여러분이 오늘 고칠 수 있는 성능 문제들을 무시하는 것에 대한 이유는 아닙니다. 실시간, 높은 프레임 속도의 어플리케이션에서 jank 프리가 되어야 한다는 부담은 무엇 보다 중요합니다. </span><span ><a  href="http://www.insomniacgames.com/">Insomniac Games</a></span><span>&nbsp;는 끊임 없이 일관된 프레임 속도는 한 게임의 성공에 매우 중요하다는 것을 보여 준 한 </span><span ><a  href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">연구</a></span><span>&nbsp;: &ldquo;</span><span >끊임 없는 프레임 속도는 여전히 전문적이고 잘 만든 제품의 표식이다(A solid frame-rate is still a sign of professional, well-made product).&rdquo; 를 제작했습니다.</span><span>웹 개발자분들은 주목해 주세요.</span></p>
 <h2 id="toc-solving-performance-problems" >성능 문제 해결하기</h2>
 <p ><span></span></p>
-<p ><span>Solving a performance problem is like solving a crime. You need to carefully examine the evidence, check suspected causes, and experiment with different solutions. All along the way you must document your measurements so that you can be sure you&rsquo;ve actually fixed the problem. There is very little difference between this method and how criminal detectives crack a case. Detectives examine evidence, interrogate suspects, and run experiments hoping to find the smoking gun.</span></p>
+<p ><span>성능 문제를 해결하는 것은 범죄를 해결하는 것과 유사합니다. 여러분은 조심스럽게 증거를 조사하고 의심되는 원인들을 확인하고 다른 해결책들을 실험하는 것이 필요합니다. 이러한 과정 내내 여러분은 문제를 실제로 수정 했는 지 확인할 수 있도록 반드시 여러분의 측정을 문서화 해야 합니다. 이 방법과 어떻게 범죄 수사관들이 사건을 해결하는 지 사이에는 아주 작은 차이점이 있습니다. 수사관들은 증거를 조사하고 용의자를 심문하고 명백한 증거를 찾기를 희망하며 실험을 실시합니다.</span></p>
 <p ><span></span></p>
-<h2 id="toc-v8-csi" >V8 CSI: Oz</h2>
+<h2 id="toc-v8-csi" >V8 CSI: 오즈</h2>
 <p ><span></span></p>
-<p ><span>The amazing wizards building <a href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a> approached the V8 team with a performance problem they couldn&rsquo;t solve on their own. Occasionally Oz would freeze, causing jank. The Oz developers had done some initial investigation using the </span><span ><a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">Timeline Panel</a></span><span>&nbsp;in </span><span ><a  href="https://developers.google.com/chrome-developer-tools/">Chrome DevTools</a></span><span>. Looking at memory usage they encountered the dreaded </span><span ><a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">saw tooth</a></span><span>&nbsp;graph. </span><span>Once per second the garbage collector was collecting 10MB of garbage</span><span>&nbsp;and the garbage collection pauses corresponded with the jank. Similar to the following screenshot from the Timeline in Chrome Devtools:</span></p>
+<p ><span>놀라운 마법사 빌딩 <a href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a> 는 그들 스스로 해결할 수 없는 성능 문제를 가지고 V8팀에 다가왔습니다. 가끔 오즈는 멈추거나 jank가 일어납니다. 오즈 개발자들은 <a  href="https://developers.google.com/chrome-developer-tools/">Chrome DevTools</a>의 <a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">Timeline Panel</a>을 이용해 몇 가지 초기 검사를 완료했습니다.</span><span>. 메모리 사용량을 관찰해 보면 그들은 두려운 </span><span ><a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">톱날</a></span><span>&nbsp;그래프에 맞닥뜨렸습니다. </span><span>초당 한번 가비지 컬렉터는 가비지 10MB를 수집하고 있었고 가비지 컬렉션은 jank에 상응하여 정지했습니다. 다음 Chrome Devtools의 Timeline 스크린샷과 유사합니다:</span></p>
 
 <p>
 <figure>
@@ -34,28 +34,28 @@
 </figure>
 </p>
 
-<p ><span>The V8 detectives, Jakob and Yang took up the case. What took place was a long back and forth between Jakob and Yang from the V</span><span>8</span><span>&nbsp;team and the Oz team. I&rsquo;ve distilled this conversation down to the important events that helped track down this problem.</span></p>
+<p ><span>V8 수사관 제이콥과 양은 이 사건을 맡았습니다. 발생 일은 V8 팀과 오즈 팀으로 부터 제이콥과 양 사이의 긴 논쟁이었습니다. 저는 이 대화를 이 문제를 찾는 것을 도운 중요한 사건들로 정제했습니다.</span></p>
 
-<h2 id="toc-evidence" >Evidence</h2>
+<h2 id="toc-evidence" >증거</h2>
 
-<p ><span>The first step is to collect and study the initial evidence. </span></p>
+<p ><span>첫 단계는 초기 증거를 수집하고 연구하는 것입니다. </span></p>
 <p ><span></span></p>
-<h3 id="toc-application-type" >What type of application are we looking at?</h3>
+<h3 id="toc-application-type" >우리가 보고있는 것은 어떤 종류의 어플리케이션 일까요?</h3>
 <p ><span></span></p>
-<p ><span>The Oz demo is an interactive 3D application. &nbsp;Because of this, it is very sensitive to pauses caused by garbage collections. Remember, an interactive application running at <a href="http://www.html5rocks.com/en/tutorials/speed/rendering/">60fps has 16ms to do all JavaScript work and must leave some of that time for Chrome to process the graphics calls and draw the screen</a>.</span></p>
+<p ><span>오즈 데모는 인터렉티브 3D 어플리케이션입니다. &nbsp;그렇게 때문에 가비지 컬렉션에 의해 발생하는 멈춤에 매우 민감합니다. 기억하세요, 60fps로 동작하는 인터렉티브 어플리케이션은 <a href="http://www.html5rocks.com/en/tutorials/speed/rendering/">모든 자바스크립트 작업을 수행하는 데 16ms를 쓰고 반드시 그 시간 중 일부를 크롬이 그래픽 호출을 처리하고 화면에 그리기 위해 남겨두어야 합니다.</a>.</span></p>
 <p ><span></span></p>
-<p ><span>Oz performs a lot of arithmetic computation on double values and makes frequent calls to WebAudio and WebGL.</span></p>
-<h3 id="toc-performance-problem" ><span>What kind of performance problem are we seeing?</span></h3>
+<p ><span>오즈는 double 값으로 수 많은 연산을 수행하고 WebAudio와 WebGL을 빈번히 호출합니다.</span></p>
+<h3 id="toc-performance-problem" ><span>우리가 보고 있는 것은 어떤 종류의 성능 문제일까요?</span></h3>
 <p ><span></span></p>
-<p ><span>We are seeing pauses aka frame drops aka </span><span>jank</span><span>. These pauses correlate with garbage collection runs.</span></p>
-<h3 id="toc-best-practices" ><span>Are the developers following best practices?</span></h3>
+<p ><span>우리는 jank라고도 알려지고 프레임 감소라고도 알려진 멈춤을 보고있습니다</span><span>. 이러한 멈춤들은 가비지 컬렉션 실행과 상관관계를 가집니다.</span></p>
+<h3 id="toc-best-practices" ><span>그 개발자들은 좋은 관행을 따르고 있습니까?</span></h3>
 <p ><span></span></p>
-<p ><span>Yes, the Oz developers are well versed in JavaScript VM performance and optimization techniques. It&rsquo;s worth noting that the Oz developers were using </span><span ><a  href="http://coffeescript.org/">CoffeeScript</a></span><span>&nbsp;as their source language and producing JavaScript code via the </span><span>CoffeeScript</span><span>&nbsp;compiler. This made some of the investigation trickier because of the </span><span>disconnect</span><span>&nbsp;between the code being written by the Oz developers and the code being consumed by V8. Chrome DevTools now supports </span><span ><a  href="http://net.tutsplus.com/tutorials/tools-and-tips/source-maps-101/">source maps</a></span><span>&nbsp;which would have made this easier.</span></p>
-<h3 id="toc-why-does-gc-run" ><span>Why does the garbage collector run?</span></h3>
+<p ><span>그렇습니다, 오즈 개발자들은 자바스크립트 VM 성능과 최적화 테크닉에 잘 숙달되어있습니다. 오즈 개발자들이 그들의 소스 언어로 </span><span ><a  href="http://coffeescript.org/">CoffeeScript</a></span><span>&nbsp;를 사용했던 것과 </span><span>CoffeeScript</span><span>&nbsp;컴파일러로 자바스크립트를 생성했던 것은 아무런 가치가 없습니다. 오즈 개발자들에 의해 쓰여졌던 코드와 V8에 의해 소비 되는 코드 사이의 단절로 인해 이것은 일부 검사를 더 까다롭게 만듭니다.</span><span>이제 크롬 DevTools은 이것을 쉽게 해주는 <a  href="http://net.tutsplus.com/tutorials/tools-and-tips/source-maps-101/">source maps</a></span><span>&nbsp;을 지원합니다.</span></p>
+<h3 id="toc-why-does-gc-run" ><span>가비지 컬렉터는 왜 실핼할까요?</span></h3>
 <p ><span></span></p>
-<p ><span>Memory in JavaScript is automatically managed for the developer by the VM. V8 uses a </span><span>common garbage collection system where memory is divided into two (or more) </span><span ><a  href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)#Generational_GC_.28ephemeral_GC.29">generations</a></span><span>.</span><span>&nbsp;The </span><span >young</span><span>&nbsp;generation holds objects that have recently been allocated. If an object survives long enough it is moved to the </span><span >old</span><span>&nbsp;generation.</span></p>
+<p ><span>자바스크립트 안에서 메모리는 개발자들을 위해 VM으로 자동 관리됩니다. V8은 메모리가 둘(또는 그 이상)의 <a  href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)#Generational_GC_.28ephemeral_GC.29">세대</a>로 나뉘어 지는 곳에 공통적인 가비지 컬렉션 시스템을 사용합니다.</span><span>.</span><span>&nbsp;젊은 세대는 최근 할당된 객체를 들고 있습니다. 만약 한 객체가 충분히 오래 살아있다면, 이것은 늙은 세대로 옮겨집니다.</span></p>
 <p ><span></span></p>
-<p ><span>The </span><span >young</span><span>&nbsp;generation is collected at a much higher frequency than the </span><span >old</span><span>&nbsp;generation is collected. This is by design, as </span><span >young</span><span>&nbsp;generation collection is much cheaper. It is often safe to assume that frequent GC pauses are caused by </span><span >young</span><span>&nbsp;generation </span><span>collection.</span></p>
+<p ><span>젊은 세대는 늙은 세대가 수집되는 것 보다 더 높은 빈도로 수집됩니다.</span><span > 이것은 계획적인 것이고, 젊은 세대 수집은 좀 더 비용이 적게 듭니다. 빈번한 GC 멈춤이 젊은 세대 수집에 의해 발생된다고 추정하는 보통 안전합니다.</span></p>
 <p ><span></span></p>
 <p ><span>In V8 the </span><span >young</span><span>&nbsp;memory space is divided into two equally sized contiguous blocks of memory. Only one of these two blocks of memory is in use at any given time and it is called the </span><span >to space</span><span>. While there is remaining memory in the </span><span >to space</span><span>, allocating a new object is cheap. A cursor in the </span><span >to space</span><span>&nbsp;is moved forward the number of bytes needed for the new object. This continues until the </span><span >to space</span><span>&nbsp;is exhausted. At this point the program is stopped and collection begins.</span></p>
 <p >
