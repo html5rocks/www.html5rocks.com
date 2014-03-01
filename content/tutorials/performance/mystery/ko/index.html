@@ -1,7 +1,7 @@
 {% extends "tutorial.html" %}
 
-{% block headtitle %}Use forensics and detective work to solve JavaScript performance mysteries{% endblock %}
-{% block pagetitle %}Use forensics and detective work to solve JavaScript performance mysteries{% endblock %}
+{% block headtitle %}자바스크립트 성능 미스터리를 해결하기위해 과학수사 및 탐정수사를 사용하세요{% endblock %}
+{% block pagetitle %}자바스크립트 성능 미스터리를 해결하기위해 과학수사 및 탐정수사를 사용하세요{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -9,18 +9,18 @@
 {% block content %}
 <h2 id="toc-introduction" >서문</h2>
 <p ><span></span></p>
-<p ><span>최근 몇 년 동안, 웹 어플리케이션들은 상당히 속도를 내어 왔습니다. 이제 많은 어플리케이션들은 제가 몇몇 개발 자들이 &ldquo;이 웹은 충분히 빠른가요?&rdquo;라고 큰소리로 걱정하는 것을 들을 만큼 충분히 빠르게 동작합니다. 일부 어플리케이션들에 대해서는 그럴 수 있지만, 고성능 어플리케이션을 작업 중인 개발자들에 대해 우리는 이것이 충분히 빠르지 않다는 것을 알고 있습니다. 자바스크립트 가상 머신 기술의 놀라운 진보에도 불구하고&nbsp;</span><span ><a  href="https://docs.google.com/a/google.com/document/d/1k8d4SsYJoCfmw6Te8Ijf3WEyotNHp6YMy1PEgn_o5Yg/edit">최근 한 연구</a></span><span>는 Google 어플리케이션들이 그들의 시간 중 50~80%를 </span><span ><a  href="https://code.google.com/p/v8/">V8</a></span>에서 보내고 있음을 증명 하였습니다<span>. Your application has a finite amount of time, shaving cycles off of one system means another system can do more. Remember, </span><span>applications running at 60fps only have 16ms</span><span>&nbsp;per frame or else&mdash; <a href="http://jankfree.org">jank</a>. Read on, to learn about optimizing JavaScript and profile JavaScript applications, in a from the trenches story of the performance detectives on the V8 team tracking down an obscure performance problem in </span><span ><a  href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a></span><span>.</span></p>
+<p ><span>최근 몇 년 동안, 웹 어플리케이션들은 상당히 속도를 내어 왔습니다. 제가 몇몇 개발 자들이 &ldquo;이 웹은 충분히 빠른가요?&rdquo;라고 큰소리로 걱정하는 것을 들을 만큼 이제 많은 어플리케이션은 충분히 빠르게 동작합니다. 일부 어플리케이션에 대해서는 그럴 수 있지만, 고성능 어플리케이션을 작업 중인 개발자들에 대해 우리는 이것이 충분히 빠르지 않다는 것을 알고 있습니다. 자바스크립트 가상 머신 기술의 놀라운 진보에도 불구하고&nbsp;</span><span ><a  href="https://docs.google.com/a/google.com/document/d/1k8d4SsYJoCfmw6Te8Ijf3WEyotNHp6YMy1PEgn_o5Yg/edit">최근 한 연구</a></span><span>는 Google 어플리케이션이 그들의 시간 중 50~80%를 </span><span ><a  href="https://code.google.com/p/v8/">V8</a></span>에서 보내고 있음을 증명 하였습니다<span>. 여러분의 어플리케이션은 한정된 시간의 양을 가지고 있고, 한 시스템의 사이클을 줄이는 것은 또 다른 시스템이 더 일할 수 있음을 뜻합니다. 기억하세요, </span><span>60fps로 구동되는 어플리케이션은 프레임 당 16ms를 가지거나 그렇지 않으면 &mdash; <a href="http://jankfree.org">jank</a>를 가집니다.</span><span>&nbsp;<a  href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a></span><span>&nbsp;사이트의 모호한 성능 문제를 찾아내는 V8 팀 소속 성능 탐정들의 참호 이야기에서 자바스크립트를 최적화하는 것에 대해 배우고 자바스크립트 어플리케이션을 프로파일링 하기 위해 계속 읽어 보세요.</span></p>
 <p ><span></span></p>
 <h2 id="toc-watch-the-movie">Google I/O 2013 Session</h2>
 
-<p>I presented this material at Google I/O 2013. Check out the video below:</p>
+<p>저는 이 소재를 Google I/O 2013 에서 발표했습니다. 아래 비디오를 확인해 보세요:</p>
 
 <iframe width="560" height="315" src="http://www.youtube.com/embed/VhpdsjBUS3g" frameborder="0" allowfullscreen></iframe>
 
-<h2 id="toc-why-performance-matters" >Why does performance matter?</h2>
+<h2 id="toc-why-performance-matters" >왜 성능이 중요할까요?</h2>
 
-<p ><span>CPU cycles are</span><span>&nbsp;a zero sum game. </span><span>Making one part of your system use fewer allows you to use more in another or run smoother overall. Running faster and doing more are often competing goals. Users demand new features while also expecting your application to run </span><span>smoother</span><span>. JavaScript virtual machines keep getting faster but that is not a reason for ignoring performance problems that you can fix today, as the many developers, dealing with performance problems in their web applications already know. In real-time, high frame rate, applications the pressure to be jank free is paramount. </span><span ><a  href="http://www.insomniacgames.com/">Insomniac Games</a></span><span>&nbsp;produced a </span><span ><a  href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">study</a></span><span>&nbsp;which showed that a solid, sustained frame rate is important to the success of a game: &ldquo;</span><span >A solid frame-rate is still a sign of professional, well-made product.&rdquo; </span><span>Web developers take note.</span></p>
-<h2 id="toc-solving-performance-problems" >Solving Performance Problems</h2>
+<p ><span>CPU 사이클은</span><span>&nbsp;하나의 제로-썸 게임입니다. </span><span>여러분 시스템의 일부가 더 적게 사용하도록 만드는 것은 여러분이 또다른 시스템에서 더 사용할 수 있게 하거나 혹은 전반적으로 더 부드럽게 구동하게 해줍니다. 빠르게 동작하는 것과 좀더 일하는 것은 흔히 상충되는 목표입니다. 사용자들은 새로운 기능들을 요구하는 한편 여러분의 어플리케이션이 부드럽게 동작하는 것 또한 기대합니다. 자바스크립트 가상 머신은 계속 빨라지고 있지만, 그것은 자신들의 웹 어플리케이션 안에 이미 알고 있는 성능 문제를 다루고 있는 많은 개발자들 처럼 여러분이 오늘 고칠 수 있는 성능 문제들을 무시하는 것에 대한 이유는 아닙니다. 실시간, 높은 프레임 속도의 어플리케이션에서 jank 프리가 되어야 한다는 부담은 무엇 보다 중요합니다. </span><span ><a  href="http://www.insomniacgames.com/">Insomniac Games</a></span><span>&nbsp;는 끊임 없이 일관된 프레임 속도는 한 게임의 성공에 매우 중요하다는 것을 보여 준 한 </span><span ><a  href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">연구</a></span><span>&nbsp;: &ldquo;</span><span >끊임 없는 프레임 속도는 여전히 전문적이고 잘 만든 제품의 표식이다(A solid frame-rate is still a sign of professional, well-made product).&rdquo; 를 제작했습니다.</span><span>웹 개발자분들은 주목해 주세요.</span></p>
+<h2 id="toc-solving-performance-problems" >성능 문제 해결하기</h2>
 <p ><span></span></p>
 <p ><span>Solving a performance problem is like solving a crime. You need to carefully examine the evidence, check suspected causes, and experiment with different solutions. All along the way you must document your measurements so that you can be sure you&rsquo;ve actually fixed the problem. There is very little difference between this method and how criminal detectives crack a case. Detectives examine evidence, interrogate suspects, and run experiments hoping to find the smoking gun.</span></p>
 <p ><span></span></p>
