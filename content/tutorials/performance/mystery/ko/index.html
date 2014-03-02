@@ -51,7 +51,7 @@
 <h3 id="toc-best-practices" ><span>그 개발자들은 좋은 관행을 따르고 있습니까?</span></h3>
 <p ><span></span></p>
 <p ><span>그렇습니다, 오즈 개발자들은 자바스크립트 VM 성능과 최적화 테크닉에 잘 숙달되어있습니다. 오즈 개발자들이 그들의 소스 언어로 <a  href="http://coffeescript.org/">CoffeeScript</a>를 사용했던 것과 CoffeeScript 컴파일러로 자바스크립트를 생성했던 것은 아무런 가치가 없습니다. 오즈 개발자들에 의해 쓰여졌던 코드와 V8에 의해 소비 되는 코드 사이의 단절로 인해 이것은 일부 검사를 더 까다롭게 만듭니다. 이제 크롬 DevTools은 이것을 쉽게 해주는 <a  href="http://net.tutsplus.com/tutorials/tools-and-tips/source-maps-101/">source maps</a>을 지원합니다.</span></p>
-<h3 id="toc-why-does-gc-run" ><span>가비지 컬렉터는 왜 실핼할까요?</span></h3>
+<h3 id="toc-why-does-gc-run" ><span>가비지 컬렉터는 왜 실행 할까요?</span></h3>
 <p ><span></span></p>
 <p ><span>자바스크립트 안에서 메모리는 개발자들을 위해 VM으로 자동 관리됩니다. V8은 메모리가 둘(또는 그 이상)의 <a  href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)#Generational_GC_.28ephemeral_GC.29">세대</a>로 나뉘어 지는 곳에 공통적인 가비지 컬렉션 시스템을 사용합니다. 젊은 세대는 최근 할당된 객체를 들고 있습니다. 만약 한 객체가 충분히 오래 살아있다면, 이것은 늙은 세대로 옮겨집니다.</span></p>
 <p ><span></span></p>
@@ -77,11 +77,11 @@
 <p ><span>프레임에 new를 호출을 하는 것. 할당 된 각 객체는 여러분을 GC 멈춤으로 가장 가깝게 이동시킨다는 것을 기억하세요. 특히 높은 프레임 속도로 동작 중인 어플리케이션은 프레임 당 할당 제로를 위해 노력해야 합니다. 보통 이것은 어플리케이션 특정적인 어플리케이션 객체 재사용 시스템을 조심스레 심사숙고하는 것을 필요로합니다. V8 수사관들은 오즈 팀과 함께 점검했고 그들은 new를 호출하고 있지 않았습니다. 사실 오즈 팀은 이미 이것의 필요성을 잘 인지하고 있었고 &ldquo;그건 당황스러운 것 같네요&rdquo;라고 말했습니다. 이 용의자는 리스트에서 지우세요.</span></p>
 <h3 id="toc-suspect-2" ><span>용의자 #2</span></h3>
 <p ><span></span></p>
-<p ><span>Modifying the &ldquo;shape&rdquo; of an object outside of the constructor. This happens whenever a new property is added to an object outside of the constructor. &nbsp;This creates a new </span><span ><a  href="https://developers.google.com/v8/design">hidden class</a></span><span>&nbsp;for the object. When optimized code sees this new hidden class a deopt will be triggered, unoptimized code will execute until the code is classified as hot and optimized again. This de-optimization,re-optimization churn will result in jank but does not strictly correlate with excessive garbage creation. After a careful audit of the code, it was confirmed that object shapes were static, thus suspect #2 was ruled out.</span></p>
+<p ><span>생성자 밖에서 객체의 &ldquo;형태&rdquo;를 변경하는 것. 이것은 생성자 밖에서 객체에 새로운 속성이 추가될 때마다 발생합니다. 이것은 개체에 대한 새로운 <a  href="https://developers.google.com/v8/design">은닉 클래스</a>를 생성합니다. 최적화된 코드가 이 새로운 은닉 클래스를 보면 역최적화(deopt)가 작동될 것이고 최적화 되지 않은 코드는 그 코드가 다시 새롭고 최적화 된 것으로 분류 될 때 까지 실행될 것입니다. 이 역-최적화, 재-최적화 뒤섞임은 jank를 야기 시킬 것이지만 절대적으로 과도한 가비지 생성과는 연관성이 없습니다. 주의 깊은 코드 감사 후, 객체 형태는 정적(static)으로 확인되었고 따라서 용의자 #2는 배제되었습니다.</span></p>
 <p ><span></span></p>
-<h3 id="toc-suspect-3" ><span>Suspect #3</span></h3>
+<h3 id="toc-suspect-3" ><span>용의자 #3</span></h3>
 <p ><span></span></p>
-<p ><span>Arithmetic in unoptimized code. In unoptimized code all computation results in actual objects being allocated. For example, this snippet:</span></p>
+<p ><span>최적화되지 않은 코드 내의 연산. 최적화되지 않은 코드 내에서 모든 연산은 메모리가 할당되는 실제 객체를 낳습니다. 예를 들면, 이 코드 조각은:</span></p>
 <p ><span></span></p>
 <pre class="prettyprint">
 var a = p * d;
@@ -89,47 +89,46 @@ var b = c + 3;
 var c = 3.3 * dt;
 point.x = a * b * c;
 </pre>
-<p ><span>Results in 5 HeapNumber objects being created. The first three are for the variables, a, b, and c. The 4th is for the anonymous value (a * b) and the 5th is from #4 * c; The 5th is ultimately assigned to point.x.</span></p>
+<p ><span>5개의 힙넘버 객체가 생성되는 결과를 가져옵니다. 처음 3개는 변수 a, b, c에 대한 것입니다. 4번째는 익명의 값 (a * b) 그리고 5번째는 결국 point.x에 할당됩니다.</span></p>
 <p ><span></span></p>
-<p ><span>Oz does thousands of these operations per frame. If any of these computations </span><span>occur</span><span>&nbsp;in functions which are never optimized, they could be the cause of the garbage.</span> Because computations in unoptimized allocate
-memory even for temporary results.</p>
-<h3 id="toc-suspect-4" ><span>Suspect #4</span></h3>
+<p ><span>오즈는 프레임 당 이러한 작업을 수 천 번 수행합니다. 이러한 연산들 중 어떤 것이라도 전혀 최적화 되지 않은 함수 안에서 발생하면, 그들은 가비지의 원인이 될 수 있습니다. 왜냐하면 최적화되지 않은 연산들은 심지어 임시적인 결과를 위해서도 메모리를 할당하기 때문입니다.</span></p>
+<h3 id="toc-suspect-4" ><span>용의자 #4</span></h3>
 <p ><span></span></p>
-<p ><span>Storing a double precision number to a property. A HeapNumber object must be created to store the number and the property altered to point at this new object. Altering the property to point at the HeapNumber will not produce garbage. However, it is possible that there are many double precision numbers being stored as object properties. The code is full of statements like the following:</span></p>
+<p ><span>속성에 배정밀도수(double)를 저장하는 것. 힙넘버 객체는 새로운 객체를 가리키기 위해 변경된 숫자와 속성을 저장하기 위해 반드시 생성되어야 합니다. 힙넘버를 가리키기 위해 속성을 변경하는 것은 가비지를 생성하지 않을 것입니다. 하지만, 객체 속성으로 저장 되어질 많은 배정밀도수가 있을 수 있습니다. 이 코드는 다음과 같은 구문들이 가득합니다:</span></p>
 <pre class="prettyprint">
     sprite.position.x += 0.5 * (dt);
 </pre>
-<p ><span>In optimized code, every time </span><span>x is </span><span>assigned a freshly computed value, a seemingly innocuous statement, a new HeapNumber object is implicitly allocated, bringing us closer to a garbage collection pause. </span></p>
+<p ><span>최적화된 코드에서 x가 새롭게 계산된 값으로 할당되어 질 때 마다, 외관상으로 무해한 구문, 새로운 힙넘버 객체가 암시적으로 할당되었을 때, 우리를 컬렉션 멈춤으로 가까이 데려갑니다.</span></p>
 <p ><span></span></p>
-<p ><span>Note that by using a </span><span ><a  href="http://www.khronos.org/registry/typedarray/specs/latest/">typed array</a></span><span>&nbsp;(or a regular array which only has held doubles)</span><span>&nbsp;you can avoid this specific problem entirely as the storage for the double precision number is allocated only once and repeatedly changing the value does not require new storage to be allocated.</span></p>
+<p ><span><a  href="http://www.khronos.org/registry/typedarray/specs/latest/">형식화된 배열</a>(또는 오직 double 만 들고 있는 정규 배열)을 사용하는 것으로 여러분은 이런 특정 유형 문제를 완전히 회피할 수 있습니다. 왜냐하면 배정밀도수에 대한 저장소가 오직 한번 할당되고 반복적으로 값을 변경하는 것은 할당되어질 새로운 저장소를 필요로 하지 않기 때문입니다..</span></p>
 <p ><span></span></p>
-<p ><span>Suspect #4 is a possibility. </span></p>
+<p ><span>용의자 #4는 가능성이 있습니다.</span></p>
 <p ><span></span></p>
-<h2 id="toc-forensics" >Forensics</h2>
+<h2 id="toc-forensics" >과학수사</h2>
 <p ><span></span></p>
-<p ><span>At this point the detectives have two possible suspects: storing heap numbers as object properties and arithmetic computation happening inside unoptimized functions. It was time to head to the lab and determine definitively which suspect was guilty. NOTE: In this section I will be using a reproduction of the problem found in the actual Oz source code. This reproduction is orders of magnitude smaller than the original code, thus easier to reason about.</span></p>
-<h3 id="toc-experiment-1" ><span>Experiment #1</span></h3>
+<p ><span>이 시점에서 수사관들은 두 개의 가능성있는 용의자를 가졌습니다: 객체 속성으로 힙 넘버들을 저장하는 것과 최적화되지 않은 함수들 내에서 일어나는 산술연산입니다. 연구실로 고개를 돌리고 어떤 용의자가 유죄인지 분명히 결정할 시간이었습니다. 주의: 이번 섹션에서 저는 실제 오즈 소스 코드 내에서 발견한 문제를 재현할 것입니다. 이 재현은 원래 코드 보다 더 적은 자리수 이고 따라서 이해하기 쉽습니다.</span></p>
+<h3 id="toc-experiment-1" ><span>실험 #1</span></h3>
 <p ><span></span></p>
-<p ><span>Checking for suspect #3 (arithmetic computation inside unoptimized functions). The V8 JavaScript engine has a logging system builtin which can provide great insight into what is happening under the hood.</span></p>
+<p ><span>용의자 #3 (최적화되지않은 함수 내의 산술 연산) 점검하기. V8 자바스크립트 엔진은 자동차 보닛 안에서 일어나고 있는 일에 대해 뛰어난 통찰력을 제공할 수 있는 내장된 로깅 시스템을 가지고 있습니다.</span></p>
 <p ><span></span></p>
-<p ><span>Starting with Chrome not running at all, launching Chrome with the flags:
+<p ><span>전혀 동작하지 않는 크롬으로 시작하고, 플래그와 함께 크롬 실행하기:
 <pre class="prettyprint">
 --no-sandbox --js-flags="--prof --noprof-lazy --log-timer-events"
 </pre>
-and then fully quitting Chrome will result in a </span><span >v8.log</span><span>&nbsp;file in the current directory.</span></p>
+그런 다음 크롬을 완전히 나가는 것은 현재 디렉터리 안에 v8.log 파일을 만들 것입니다.</span></p>
 <p ><span></span></p>
-<p ><span>In order to interpret the contents of </span><span >v8.log</span><span>, you must </span><span ><a  href="https://code.google.com/p/v8/wiki/Source">download</a></span><span>&nbsp;the same version of v8 that your Chrome is using (check </span><span >about:version</span><span>), and </span><span ><a  href="https://developers.google.com/v8/build">build it</a></span><span>.</span></p>
+<p ><span>v8.log의 내용을 해석하기 위해, 여러분은 반드시 여러분이 사용중인 v8과 동일한 버전을 <a  href="https://code.google.com/p/v8/wiki/Source">다운로드</a> 해야 합니다(버전을 체크하세요), 그리고 그것을 <a  href="https://developers.google.com/v8/build">빌드</a>하세요</span>.</p>
 <p ><span></span></p>
-<p ><span>After successfully building v8, you can process the log using the tick processor:</span></p>
+<p ><span>성공적인 v8 빌드 후, 여러분은 tick processor를 사용해 log를 처리할 수 있습니다:</span></p>
 <p ><span></span></p>
 <pre class="prettyprint">
 $ tools/linux-tick-processor /path/to/v8.log
 </pre>
 <p ><span></span></p>
-<p ><span>(Substitute mac or windows for linux depending on your platform.)</span></p>
-<p ><span>(This tool must be run from the top level source directory in v8.)</span></p>
+<p ><span>(여러분의 플래폼에 따라 리눅스를 맥이나 윈도우로 대체하세요.)</span></p>
+<p ><span>(이 툴은 반드시 v8 내 최상위 소스 디렉터리에서 실행 되어야 합니다.)</span></p>
 <p ><span></span></p>
-<p ><span>The tick processor displays a text based table of JavaScript functions which had the most ticks:</span></p>
+<p ><span>tick processor는 가장 많은 tick을 가진 자바스크립트 함수들의 텍스트 기반 테이블을 표시합니다:</span></p>
 <p ><span></span></p>
 <pre class="prettyprint">
 [JavaScript]:</span></p>
@@ -145,13 +144,13 @@ ticks  total  nonlib   name
   1    0.4%    0.4%  LazyCompile: ~main demo.js:30
 </pre>
 <p ><span></span></p>
-<p ><span>You can see demo.js had three functions: opt, unopt, and main. Optimized functions have an asterisk (*) next to their names. Observe that the function opt is optimized and unopt is unoptimized. </span></p>
+<p ><span>여러분은 opt, unopt 그리고 main 3개 함수를 가진 demo.js를 볼 수 있습니다. 최적화된 함수들은 그들 이름 옆에 애스터리크(*)를 가집니다. opt 함수는 최적화 되었고 unopt는 최적화 되지 않은 것을 관찰해 보세요.</span></p>
 <p ><span></span></p>
-<p ><span>Another important tool in the V8 detective&rsquo;s tool bag is plot-timer-event. It can be executed like so:</span></p>
+<p ><span>V8 수사관의 도구 가방 안의 또다른 중요한 도구는 plot-timer-event 입니다. 이것은 다음과 같이 실행될 수 있습니다:</span></p>
 <pre class="prettyprint">
 $ tools/plot-timer-event /path/to/v8.log
 </pre>
-<p ><span>After being run, a png file called timer-events.png is in the current directory. Opening it up you should see something that looks like this:</span></p>
+<p ><span>실행 후, timer-events.png 라 불리는 png 파일은 현재 디렉터리에 있습니다. 이 처럼 생긴 것을 보기 위해 파일을 여세요:</span></p>
 <p ><span></span></p>
 <p >
 <figure>
@@ -159,7 +158,7 @@ $ tools/plot-timer-event /path/to/v8.log
 </figure>
 </p>
 <p ><span></span></p>
-<p ><span>Aside from the graph along the bottom, data is displayed in rows. The X axis is time (ms). The left hand side includes labels for each row:</span></p>
+<p ><span>아랫 단을 따라 표시된 그래프 외에 데이터는 열로 표시됩니다. X 축은 시간(ms)입니다. 왼쪽 편은 각 열에 대한 라벨을 포함합니다:</span></p>
 <p ><span></span></p>
 <p >
 <figure>
@@ -167,9 +166,9 @@ $ tools/plot-timer-event /path/to/v8.log
 </figure>
 </p>
 <p ><span></span></p>
-<p ><span>The V8.Execute row has black vertical line drawn on it at each profile tick where V8 was executing JavaScript code. V8.GCScavenger has a blue vertical line drawn on it at each profile tick where V8 was performing a </span><span >new</span><span>&nbsp;generation collection. Similarly for the rest of the V8 states.</span></p>
+<p ><span>V8.Execute 열은 V8이 자바스크립트 코드를 실행하고 있었던 각 프로필 tick 위에 그려진 검은색 수직 선을 가집니다. V8.GCScavenger는 V8이 새로운 세대 수집을 수행하고 있었던 각 프로필 위에 그려진 파란색 수직선을 가집니다.</span></p>
 <p ><span></span></p>
-<p ><span>One of the most important rows is the &ldquo;code kind being executed&rdquo;. It will be green whenever optimized code is executing and mix of red and blue when unoptimized code is being executed. The following screenshot shows the transition from optimized to unoptimized and then back to optimized code:</span></p>
+<p ><span>가장 중요한 열 중의 하나는 실행되는 코드 유형입니다. 최적화된 코드가 실행될 때면 녹색이 되고 최적화 되지 않은 코드가 실행될 때는 빨강과 파랑의 혼합이 될 것입니다. 다음 스크린샷은 최적화된 것에서 최적화되지 않은 것으로 변화나는 것을 보여주고 그런 다음 최적화된 코드로 돌아갑니다:</span></p>
 <p ><span></span></p>
 <p >
 <figure>
