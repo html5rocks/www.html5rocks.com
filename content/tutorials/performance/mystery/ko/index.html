@@ -1,0 +1,242 @@
+{% extends "tutorial.html" %}
+
+{% block headtitle %}자바스크립트 성능 미스터리를 해결하기위해 과학수사 및 탐정수사를 사용하세요{% endblock %}
+{% block pagetitle %}자바스크립트 성능 미스터리를 해결하기위해 과학수사 및 탐정수사를 사용하세요{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="URL">김재훈 (Jaehoon Kim)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h2 id="toc-introduction" >서문</h2>
+<p ><span></span></p>
+<p ><span>최근 몇 년 동안, 웹 어플리케이션은 상당히 속도를 내어 왔습니다. 제가 몇몇 개발 자들이 &ldquo;이 웹은 충분히 빠른가요?&rdquo;라고 큰소리로 걱정하는 것을 들을 만큼 이제 많은 어플리케이션은 충분히 빠르게 동작합니다. 일부 어플리케이션에 대해서는 그럴 수 있지만, 고성능 어플리케이션을 작업 중인 개발자들에 대해 우리는 이것이 충분히 빠르지 않다는 것을 알고 있습니다. 자바스크립트 가상 머신 기술의 놀라운 진보에도 불구하고, <a  href="https://docs.google.com/a/google.com/document/d/1k8d4SsYJoCfmw6Te8Ijf3WEyotNHp6YMy1PEgn_o5Yg/edit">최근 한 연구</a>는 Google 어플리케이션이 그들의 시간 중 50~80%를 <a  href="https://code.google.com/p/v8/">V8</a>에서 보내고 있음을 증명 하였습니다. 여러분의 어플리케이션은 한정된 시간의 양을 가지고 있고, 한 시스템의 사이클을 줄이는 것은 또 다른 시스템이 더 일할 수 있음을 뜻합니다. 기억하세요, 60fps로 구동되는 어플리케이션은 프레임 당 16ms를 가지거나 그렇지 않으면 &mdash; <a href="http://jankfree.org">jank</a>를 가집니다.&nbsp;<a  href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a>&nbsp;사이트의 모호한 성능 문제를 찾아내는 V8 팀 소속 성능 수사관들의 참호 이야기에서 자바스크립트를 최적화하는 것에 대해 배우고 자바스크립트 어플리케이션을 프로파일링 하기 위해 계속 읽어 보세요.</span></p>
+<p ><span></span></p>
+<h2 id="toc-watch-the-movie">Google I/O 2013 Session</h2>
+
+<p>저는 이 소재를 Google I/O 2013 에서 발표했습니다. 아래 비디오를 확인해 보세요:</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/VhpdsjBUS3g" frameborder="0" allowfullscreen></iframe>
+
+<h2 id="toc-why-performance-matters" >왜 성능이 중요할까요?</h2>
+
+<p ><span>CPU 사이클은 하나의 제로-썸 게임입니다. 여러분 시스템의 일부를 더 적게 사용하도록 하는 것은 여러분이 또 다른 시스템에서 더 사용할 수 있게 하거나 혹은 전반적으로 더 부드럽게 구동하게 해줍니다. 빠르게 동작하는 것과 좀 더 일하는 것은 흔히 상충되는 목표입니다. 사용자들은 새로운 기능들을 요구하는 한편 여러분의 어플리케이션이 부드럽게 동작하는 것 또한 기대합니다. 자바스크립트 가상 머신은 계속 빨라지고 있지만, 그것은 자신들의 웹 어플리케이션 안에 이미 알고 있는 성능 문제를 다루고 있는 많은 개발자들 처럼 여러분이 오늘 고칠 수 있는 성능 문제들을 무시하는 것에 대한 이유는 아닙니다. 실시간, 높은 프레임 속도의 어플리케이션에서 jank가 없어야 한다는 부담은 무엇 보다 중요합니다. <a  href="http://www.insomniacgames.com/">Insomniac Games</a>는 끊임 없이 일관된 프레임 속도가 한 게임의 성공에 매우 중요하다는 것을 보여 준 한 <a  href="http://www.eurogamer.net/articles/insomniac-60fps-no-more">연구</a>: &ldquo;끊임 없는 프레임 속도는 여전히 전문적이고 잘 만든 제품의 표식이다(A solid frame-rate is still a sign of professional, well-made product).&rdquo; 를 제작했습니다. 웹 개발자분들은 주목해 주세요.</span></p>
+<h2 id="toc-solving-performance-problems" >성능 문제 해결하기</h2>
+<p ><span></span></p>
+<p ><span>성능 문제를 해결하는 것은 범죄를 해결하는 것과 유사합니다. 여러분은 조심스럽게 증거를 조사하고 의심되는 원인들을 확인하고 다른 해결책들을 실험하는 것이 필요합니다. 이러한 과정 내내 여러분은 문제를 실제로 고쳤는 지 확인할 수 있도록 반드시 여러분의 측정을 문서화 해야 합니다. 이 방법과 어떻게 범죄 수사관들이 사건을 해결하는 지 사이에는 아주 작은 차이점이 존재합니다. 수사관들은 증거를 조사하고 용의자를 심문하고 명백한 증거를 찾기를 희망하며 실험을 실시합니다.</span></p>
+<p ><span></span></p>
+<h2 id="toc-v8-csi" >V8 CSI: 오즈</h2>
+<p ><span></span></p>
+<p ><span><a href="http://www.findyourwaytooz.com/">Find Your Way to Oz</a>를 만들어 낸 그 놀라운 마법사들은 그들 스스로 해결할 수 없는 성능 문제를 가지고 V8팀에 다가갔습니다. 가끔 오즈는 멈추거나 jank가 일어날 것입니다. 오즈 개발자들은 <a  href="https://developers.google.com/chrome-developer-tools/">Chrome DevTools</a>의 <a  href="https://developers.google.com/chrome-developer-tools/docs/timeline">Timeline Panel</a>을 이용해 몇 가지 초기 검사를 완료했습니다. 메모리 사용량을 보며 그들은 두려운 <a  href="http://en.wikipedia.org/wiki/Sawtooth_wave">톱날</a> 그래프를 맞닥뜨렸습니다. 초당 한 번 가비지 컬렉터는 가비지 10MB를 수집하고 있었고 가비지 수집 정지는 jank에 상응하여 나타났습니다. Chrome Devtools의 다음 Timeline 스크린샷과 유사합니다:</span></p>
+
+<p>
+<figure>
+<img height="81" src="images/image01.png">
+</figure>
+</p>
+
+<p ><span>V8 수사관 제이콥과 양은 이 사건을 맡았습니다. 발생한 일은 V8 팀의 제이콥과 양 사이 그리고 오즈 팀 사이에 길게 오가는 논쟁이었습니다. 저는 이 대화를 문제를 찾는 데 도움이 된 중요한 사건들로 정제했습니다.</span></p>
+
+<h2 id="toc-evidence" >증거</h2>
+
+<p ><span>첫 단계는 초기 증거를 수집하고 연구하는 것입니다. </span></p>
+<p ><span></span></p>
+<h3 id="toc-application-type" >우리가 보고있는 것은 어떤 종류의 어플리케이션 일까요?</h3>
+<p ><span></span></p>
+<p ><span>오즈 데모는 인터렉티브 3D 어플리케이션입니다. &nbsp;그렇게 때문에 가비지 컬렉션에 의해 발생하는 멈춤에 매우 민감합니다. 기억하세요, 60fps로 동작하는 인터렉티브 어플리케이션은 <a href="http://www.html5rocks.com/en/tutorials/speed/rendering/">모든 자바스크립트 작업을 수행하는 데 16ms를 쓰고 반드시 그 시간 중 일부를 크롬이 그래픽 호출을 처리하고 화면에 그리기 위해 남겨두어야 합니다.</a>.</span></p>
+<p ><span></span></p>
+<p ><span>오즈는 double 값으로 수 많은 연산을 수행하고 WebAudio와 WebGL을 빈번히 호출합니다.</span></p>
+<h3 id="toc-performance-problem" ><span>우리가 보고 있는 것은 어떤 종류의 성능 문제일까요?</span></h3>
+<p ><span></span></p>
+<p ><span>우리는 jank라고도 알려지고 프레임 감소라고도 알려진 멈춤을 보고있습니다. 이러한 멈춤들은 가비지 컬렉션 실행과 상관관계를 가집니다.</span></p>
+<h3 id="toc-best-practices" ><span>그 개발자들은 좋은 관행을 따르고 있습니까?</span></h3>
+<p ><span></span></p>
+<p ><span>그렇습니다, 오즈 개발자들은 자바스크립트 VM 성능과 최적화 테크닉에 잘 숙달되어있습니다. 오즈 개발자들이 그들의 소스 언어로 <a  href="http://coffeescript.org/">CoffeeScript</a>를 사용하고 있었던 것과 CoffeeScript 컴파일러로 자바스크립트를 생성했던 것은 아무런 가치가 없습니다. 이것은 일부 검사를 더 까다롭게 만들었습니다. 오즈 개발자들에 의해 쓰여지는 코드와 V8에 의해 소비 되는 코드 사이의 단절 때문입니다. 현재 Chrome DevTools는 이것을 쉽게 해주는 <a  href="http://net.tutsplus.com/tutorials/tools-and-tips/source-maps-101/">source maps</a>을 지원합니다.</span></p>
+<h3 id="toc-why-does-gc-run" ><span>가비지 컬렉터는 왜 실행 할까요?</span></h3>
+<p ><span></span></p>
+<p ><span>자바스크립트 안에서 메모리는 개발자들을 위해 VM으로 자동 관리됩니다. V8은 메모리가 둘(또는 그 이상)의 <a  href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)#Generational_GC_.28ephemeral_GC.29">세대</a>로 나뉘어 지는 곳에 공통적인 가비지 컬렉션 시스템을 사용합니다. 젊은 세대는 최근 할당된 객체를 들고 있습니다. 만약 한 객체가 충분히 오래 살아있다면, 이것은 늙은 세대로 옮겨집니다.</span></p>
+<p ><span></span></p>
+<p ><span>젊은 세대는 늙은 세대가 수집되는 것 보다 더 높은 빈도로 수집됩니다. 이것은 계획적인 것이고, 때문에 젊은 세대 수집은 좀 더 비용이 적게 듭니다. 빈번한 GC 멈춤이 젊은 세대 수집에 의해 발생된다고 추정하는 보통 안전합니다.</span></p>
+<p ><span></span></p>
+<p ><span>V8에서 젊은 메모리 공간은 두 개의 크기가 동일한 연속적인 메모리 블럭으로 나뉘어 집니다. 이 두 개의 메모리 블럭 중 오직 하나만 어떤 주어진 시간에 사용되고 이는 도착 공간(the to space)이라고 불립니다. 이 공간에 메모리가 남아 있는 동안 새로운 객체를 할당하는 것은 적은 비용이 듭니다. 이 공간에서의 커서는 새 객체를 위해 필요한 바이트 수 만큼 앞으로 옮겨집니다. 이것은 공간이 고갈 될 때 까지 계속됩니다. 이 시점에서 프로그램은 멈추고 수집은 시작합니다.</span></p>
+<p >
+<figure>
+<img height="290" src="images/image05.png">
+</figure>
+</p>
+<p ><span>이 시점에서 출발 공간(from space)과 도착 공간(to space)이 스왑됩니다. 도착 공간이었던 것 그리고 이제 출발 공간인 것, 시작부터 끝까지 스캔된 것과 여전히 살아있는 모든 객체들은 도착 공간으로 복사되거나 또는 늙은 세대 힙으로 진급됩니다. 더 상세히 알고 싶으시면 <a  href="http://en.wikipedia.org/wiki/Cheney&#39;s_algorithm">체니의 알고리즘</a>에 대해 읽어 볼 것을 추천합니다.</span></p>
+<p ><span></span></p>
+<p ><span>직관적으로 여러분은 객체가 암시적이거나 또는 명시적으로(new, [] 또는 {}를 호출하는 것에 의해) 할당 될 때 마다 여러분의 어플리케이션이 가비지 수집과 두려운 어플리케이션 멈춤에 점점 더 다가가는 것을 알아야 합니다.</span></p>
+<h3 id="toc-is-this-normal" ><span>이 어플리케이션에 대해 초 당 10MB의 가비지가 예상되나요?</span></h3>
+<p ><span></span></p>
+<p ><span>요컨대, 아닙니다. 이 개발자는 초 당 10MB의 가비지를 예상하기 위한 그 어떤 것도 하고 있지 않습니다.</span></p>
+<h2 id="toc-suspects" >용의자들</h2>
+<p ><span></span></p>
+<p ><span>조사의 다음 단계는 잠재적 용의자들을 결정하고 그들을 줄이는 것입니다.</span></p>
+<h3 id="toc-suspect-1" ><span>용의자 #1</span></h3>
+<p ><span></span></p>
+<p ><span>프레임 내내 new를 호출 하기. 할당 된 각 객체는 여러분을 GC 멈춤으로 가장 가깝게 이동시킨다는 것을 기억하세요. 높은 프레임 속도로 동작 중인 어플리케이션은 특히 프레임 당 할당 제로를 위해 노력해야 합니다. 보통 이것은 어플리케이션 특정적인 객체 재사용 시스템을 조심스레 심사숙고하는 것이 필요합니다. V8 수사관들은 오즈 팀과 함께 점검했고 그들은 new를 호출하고 있지 않았습니다. 사실 오즈 팀은 이미 이것의 필요성을 잘 인지하고 있었고 &ldquo;그건 당황스러운 것 같네요&rdquo;라고 말했습니다. 이 용의자는 리스트에서 지우세요.</span></p>
+<h3 id="toc-suspect-2" ><span>용의자 #2</span></h3>
+<p ><span></span></p>
+<p ><span>생성자 밖에서 객체의 &ldquo;형태&rdquo;를 변경하기. 이것은 새로운 속성이 생성자 밖에서 객체에 추가될 때마다 발생합니다. 이것은 그 객체에 대한 새로운 <a  href="https://developers.google.com/v8/design">은닉 클래스</a>를 생성합니다. 최적화된 코드가 이 새 은닉 클래스를 보면 역최적화(deopt)가 작동될 것이고, 최적화 되지 않은 코드는 그 코드가 다시 새롭고 최적화 된 것으로 분류 될 때 까지 실행할 것입니다. 이 역-최적화, 재-최적화 뒤섞임은 jank를 야기 시키도 하지만 과도한 가비지 생성과 절대적으로 연관되지는 않습니다. 주의 깊은 코드 감사 후, 객체 형태는 정적(static)으로 확인되었고, 따라서 용의자 #2는 배제되었습니다.</span></p>
+<p ><span></span></p>
+<h3 id="toc-suspect-3" ><span>용의자 #3</span></h3>
+<p ><span></span></p>
+<p ><span>최적화되지 않은 코드 내의 연산. 최적화되지 않은 코드 내에서 모든 연산은 메모리가 할당되는 실제 객체를 낳습니다. 예를 들면, 이 코드 조각은:</span></p>
+<p ><span></span></p>
+<pre class="prettyprint">
+var a = p * d;
+var b = c + 3;
+var c = 3.3 * dt;
+point.x = a * b * c;
+</pre>
+<p ><span>5개의 HeapNumber 객체가 생성되는 결과를 가져옵니다. 처음 3개는 변수 a, b, c에 대한 것입니다. 4번째는 익명의 값 (a * b) 그리고 5번째는 결국 point.x에 할당됩니다.</span></p>
+<p ><span></span></p>
+<p ><span>오즈는 프레임 당 이러한 작업을 수 천 번 수행합니다. 이러한 연산들 중 어떤 것이라도 전혀 최적화 되지 않은 함수 안에서 발생하면, 그들은 가비지의 원인이 될 수 있습니다. 왜냐하면 최적화되지 않은 연산들은 심지어 임시적인 결과를 위해서도 메모리를 할당하기 때문입니다.</span></p>
+<h3 id="toc-suspect-4" ><span>용의자 #4</span></h3>
+<p ><span></span></p>
+<p ><span>속성에 배정밀도수(double)를 저장하기. HeapNumber 객체는 새로운 객체를 가리키기 위해 변경된 숫자와 속성을 저장하기 위해 반드시 생성되어야 합니다. HeapNumber를 가리키기 위해 속성을 변경하는 것은 가비지를 생성하지 않을 것입니다. 하지만, 객체 속성으로 저장 되어질 많은 배정밀도수가 존재할 가능성이 있습니다. 해당 코드는 다음과 같은 구문들로 가득합니다:</span></p>
+<pre class="prettyprint">
+    sprite.position.x += 0.5 * (dt);
+</pre>
+<p ><span>최적화된 코드에서 x가 새롭게 계산된 값, 외관상으로 무해한 구문으로 할당 될 때 마다, HeapNumber 객체는 암시적으로 할당되고 우리를 가비지 수집 멈춤으로 가까이 데려갑니다.</span></p>
+<p ><span></span></p>
+<p ><span>배정밀도수에 대한 저장소가 오직 한번 할당되고 반복적으로 값을 변경하는 것은 할당되어질 새로운 저장소를 필요로 하지 않기 때문에 <a  href="http://www.khronos.org/registry/typedarray/specs/latest/">형식화된 배열</a>(또는 오직 double 만 들고 있는 정규 배열)을 사용하는 것으로 여러분이 이런 특정 유형 문제를 완전히 회피할 수 있다는 것에 주목하세요.</span></p>
+<p ><span></span></p>
+<p ><span>용의자 #4는 가능성이 있습니다.</span></p>
+<p ><span></span></p>
+<h2 id="toc-forensics" >과학수사</h2>
+<p ><span></span></p>
+<p ><span>이 시점에서 수사관들은 두 개의 가능성있는 용의자를 가지고 있습니다: 객체 속성으로 힙 넘버들을 저장하는 것과 최적화되지 않은 함수들 내에서 일어나는 산술연산입니다. 연구실로 고개를 돌리고 어떤 용의자가 유죄인지 분명히 결정할 시간이었습니다. 주의: 이번 섹션에서 저는 실제 오즈 소스 코드 내에서 발견한 문제를 복제할 것입니다. 이 복제는 원래 코드 보다 더 적은 자리수 이고 따라서 이해하기 쉽습니다.</span></p>
+<h3 id="toc-experiment-1" ><span>실험 #1</span></h3>
+<p ><span></span></p>
+<p ><span>용의자 #3 (최적화되지않은 함수 내의 산술 연산) 점검하기. V8 자바스크립트 엔진은 자동차 보닛 안에서 일어나고 있는 일에 대해 뛰어난 통찰력을 제공할 수 있는 내장된 로깅 시스템을 가지고 있습니다.</span></p>
+<p ><span></span></p>
+<p ><span>전혀 구동되고 있지 않은 크롬으로 시작하고, 플래그와 함께 크롬 실행하기:
+<pre class="prettyprint">
+--no-sandbox --js-flags="--prof --noprof-lazy --log-timer-events"
+</pre>
+그런 다음 크롬을 완전히 나가는 것은 현재 디렉터리 안에 v8.log 파일을 만들 것입니다.</span></p>
+<p ><span></span></p>
+<p ><span>v8.log의 내용을 해석하기 위해, 여러분은 반드시 여러분이 사용중인 v8과 동일한 버전을 <a  href="https://code.google.com/p/v8/wiki/Source">다운로드</a> 해야 합니다(버전을 체크하세요), 그리고 그것을 <a  href="https://developers.google.com/v8/build">빌드</a>하세요</span>.</p>
+<p ><span></span></p>
+<p ><span>성공적인 v8 빌드 후, 여러분은 tick processor를 사용해 log를 처리할 수 있습니다:</span></p>
+<p ><span></span></p>
+<pre class="prettyprint">
+$ tools/linux-tick-processor /path/to/v8.log
+</pre>
+<p ><span></span></p>
+<p ><span>(여러분의 플래폼에 따라 리눅스를 맥이나 윈도우로 대체하세요.)</span></p>
+<p ><span>(이 툴은 반드시 v8 내 최상위 소스 디렉터리에서 실행 되어야 합니다.)</span></p>
+<p ><span></span></p>
+<p ><span>tick processor는 가장 많은 tick을 가진 자바스크립트 함수들의 텍스트 기반 테이블을 표시합니다:</span></p>
+<p ><span></span></p>
+<pre class="prettyprint">
+[JavaScript]:</span></p>
+ticks  total  nonlib   name
+167   61.2%   61.2%  LazyCompile: *opt demo.js:12
+ 40   14.7%   14.7%  LazyCompile: unopt demo.js:20
+ 15    5.5%    5.5%  Stub: KeyedLoadElementStub
+ 13    4.8%    4.8%  Stub: BinaryOpStub_MUL_Alloc_Number+Smi
+  6    2.2%    2.2%  Stub: BinaryOpStub_ADD_OverwriteRight_Number+Number
+  4    1.5%    1.5%  Stub: KeyedStoreElementStub
+  4    1.5%    1.5%  KeyedLoadIC:  {12}
+  2    0.7%    0.7%  KeyedStoreIC:  {13}
+  1    0.4%    0.4%  LazyCompile: ~main demo.js:30
+</pre>
+<p ><span></span></p>
+<p ><span>여러분은 3개의 함수: opt, unopt 그리고 main을 가진 demo.js를 보실 수 있습니다. 최적화된 함수들은 그들 이름 옆에 애스터리크(*)를 가집니다. opt 함수는 최적화 되었고 unopt는 최적화 되지 않은 것을 주시 하세요.</span></p>
+<p ><span></span></p>
+<p ><span>V8 수사관의 도구 가방 안의 또다른 중요한 도구는 plot-timer-event 입니다. 이것은 다음과 같이 실행될 수 있습니다:</span></p>
+<pre class="prettyprint">
+$ tools/plot-timer-event /path/to/v8.log
+</pre>
+<p ><span>실행 된 후, timer-events.png 라 불리는 png 파일은 현재 디렉터리에 있습니다. 이 파일을 여는 것으로 여러분은 이 처럼 생긴 어떤것을 보셔야 합니다:</span></p>
+<p ><span></span></p>
+<p >
+<figure>
+<img height="260" src="images/image04.png">
+</figure>
+</p>
+<p ><span></span></p>
+<p ><span>아랫 단을 따라 표시된 그래프 이외에, 데이터는 열로 표시됩니다. X 축은 시간(ms)입니다. 왼쪽 편은 각 열에 대한 라벨을 포함합니다:</span></p>
+<p ><span></span></p>
+<p >
+<figure>
+<img height="309" src="images/image02.png">
+</figure>
+</p>
+<p ><span></span></p>
+<p ><span>V8.Execute 열은 V8이 자바스크립트 코드를 실행하고 있었던 각 프로필 tick에서 그 위에 그린 검은색 수직 선을 가집니다. V8.GCScavenger는 V8이 새로운 세대 수집을 수행하고 있었던 각 프로필 tick에서 그 위에 그린 파란색 수직선을 가집니다.</span></p>
+<p ><span></span></p>
+<p ><span>가장 중요한 열 중의 하나는 &ldquo;code kind being executed(실행되는 코드 유형)&rdquo;입니다. 최적화된 코드가 실행될 때면 녹색일 것이고, 최적화 되지 않은 코드가 실행될 때는 빨강과 파랑의 혼합일 것입니다. 다음 스크린샷은 최적화된 것에서 최적화되지 않은 것으로의 전환을 보여주고 그런 다음 최적화된 코드로 돌아갑니다:</span></p>
+<p ><span></span></p>
+<p >
+<figure>
+<img height="43" src="images/image03.png">
+</figure>
+</p>
+<p ><span></span></p>
+<p ><span>이상적으로, 하지만 결코 즉각적이지는 않게, 이 선은 순수한 녹색이 될 것입니다. 여러분의 프로그램이 최적화된 지속적인 상태로 전환되었음을 의미합니다. 최적화되지 않은  코드는 항상 최적화된 코드 보다 느리게 동작할 것입니다.</span></p>
+<p ><span></span></p>
+<p ><span>여러분이 이 시간에 도달했다면, 이것을 v8 디버그 쉘에서 실행할 수 있도록 여러분이 여러분의 어플리케이션을 리팩토링 하는 것으로 좀 더 빠르게 작업 할 수 있는 것은 가치가 없습니다. d8을 사용하는 것은 tick-processor 와 plot-timer-event 툴을 사용해 여러분에게 빠른 반복(iteration) 시간을 제공할 것입니다. d8을 사용하는 것의 또 다른 영향은 데이터 내에 존재하는 노이즈의 양을 줄여 실제 문제가 분리시키기 쉽게 되는 것입니다.</span></p>
+<p ><span></span></p>
+<p ><span>오즈 소스 코드로부터 타이머 이벤트 플롯을 관찰하는 것은 최적화 된 코드로 부터 최적화되지 않은 코드로의 전환을 보여주고, 최적화 되지 않은 코드를 실행하는 동안 다음 스크린 샷(시간이 중간에서 삭제된 것에 주의하세요)과 유사한 많은 새로운 세대 컬렉션이 발생되었습니다:</span></p>
+<p ><span></span></p>
+<p >
+<figure>
+<img height="325" src="images/image00.png">
+</figure>
+</p>
+<p ><span></span></p>
+<p ><span>자세히 보면 여러분은 언제 V8이 자바스크립트 코드를 실행하고 있는지 가리키는 검은 선들이 새로운 새대 수집(파란 선들)과 마찬가지로 정확히 동일한 프로필 tick 시간에서 없어진 것을 보실 수 있습니다. 이것은 가비지가 수집되고 있는 동안 이 스크립트가 정지된 것을 명백하게 입증합니다.</span></p>
+<p ><span></span></p>
+<p ><span>오즈 소스 코드로 부터 tick processor 결과를 보시면, 이 상위 함수(updateSprites)는 최적화 되지 않았습니다. 다시 말해, 프로그램이 대부분의 시간을 보낸 이 함수 또한 최적화 되지 않았습니다. 이것은 강력하게 용의자 #3이 범인이라고 지목합니다. updateSprites에 대한 소스코드는 이처럼 생긴 루프들를 포함하고 있었습니다:</span></p>
+<pre class="prettyprint">
+function updateSprites(dt) {
+    for (var sprite in sprites) {
+        sprite.position.x += 0.5 * dt;
+        // 20 more lines of arithmetic computation.
+    }
+}
+</pre>
+<p ><span>그들이 수행하는 것 뿐만 아니라 V8을 깨닫게 되며, 그들은 for-i-in 루프 생성자가 때때로 V8에 의해 최적화 되지 않음을 즉시 인식했습니다. 다시 말해, 함수가 for-i-in 루프 생성자를 포함하면, 이것은 아마도 최적화 되지 않은 것입니다. 이것은 오늘의 특별한 경우이고 미래에는 바뀔 수 있습니다. 즉, V8은 어쩌면 이 루프 생성자를 일일 최적화하는 것일 겁니다. 우리는 V8 수사관이 아니고 V8을 자세히 알지 못하므로, 왜 updateSprites가 최적화 되지 않았는 지 어떻게 우리가 결정할 수 있을 까요?</span></p>
+<h3 id="toc-experiment-2" ><span>실험 #2</span></h3>
+<p ><span></span></p>
+<p ><span>크롬을 이 플래그를 이용해 실행하는 것은:
+<pre class="prettyprint">
+--js-flags="--trace-deopt --trace-opt-verbose"
+</pre>
+최적화와 역-최적화 데이터의 상세 로그를 표시합니다. updateSrpites에 대한 데이터를 면밀히 조사하는 것으로 우리는 이것을 찾아냈습니다:</span></p>
+<p ><span></span></p>
+<p ><span>[updateSprites에 대해 최적화 사용할 수 없음, 원인: ForInStatement가 빠른 경우 아님]</span></p>
+<p ><span></span></p>
+<p ><span>딱 수사관들이 가설을 세웠던 것 처럼, for-i-in 루프 생성자가 원인이었습니다.</span></p>
+<h2 id="toc-cased-closed">사건 종료</h2>
+<p ><span></span></p>
+<p ><span>updateSprites가 최적화 되지 않은 원인을 알아내는 것 이후, 수정은 간단했고, 그저 연산을 함수 자신 안으로 옮깁니다, 즉:</span></p>
+<pre class="prettyprint">
+function updateSprite(sprite, dt) {
+    sprite.position.x += 0.5 * dt;
+    // 20 more lines of arithmetic computation.
+}
+
+function updateSprites(dt) {
+    for (var sprite in sprites) {
+        updateSprite(sprite, dt);
+    }
+}
+</pre>
+<p ><span>updateSprite는 최적화 될 것이고, 훨씬 적은 수의 HeapNumber 객체가 초래될 것이며, 덜 빈번한 GC 멈춤이 야기 될 것입니다. 새 코드로 동일한 실험을 수행하여 이것을 확인하는 것은 더 여러분에게 쉬울 것입니다. 주의 깊은 독자는 double 숫자들이 여전히 속성으로 저장되고 있음을 알아 차릴 것입니다. 만약 프로파일링이 이것을 가치 있는 것으로 표시하면, double 배열 또는 형식 데이터 배열이 될 수 있는 위치를 변경하는 것은 생성되는 객체의 수를 더 감소 시킬 것입니다.</span></p>
+<h2 id="toc-epilogue" >에필로그</h2>
+<p ><span></span></p>
+<p ><span>오즈 개발자들은 거기서 멈추지 않았습니다. V8 수사관들에 의해 그들과 공유되는 툴과 테크닉으로 무장한 그들은 역-최적화 지옥에 갇힌 소수의 다른 함수들을 찾을 수 있었고, 연산 코드를 최적화되고 더 낳은 성능을 내는 leaf 함수(역주: 다른 함수를 호출하지 않는 함수)로 분해했습니다.</span></p>
+<p ><span></span></p>
+<p ><span>그곳에 가서 어떤 성능 범죄 해결을 시작하세요!</span></p>
+
+{% endblock %}
