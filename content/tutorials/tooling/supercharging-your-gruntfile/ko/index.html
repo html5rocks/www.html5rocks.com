@@ -1,0 +1,290 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="http://www.cwdoh.com">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">소개</h2>
+
+<p>여러분이 만약 Grunt 세상에 처음오셨다면, Chris Coyier가 작성한 훌륭한 글 “<a href="http://24ways.org/2013/grunt-is-not-weird-and-hard/">Grunt가 이상하고 어렵다고 생각하는 사람들을 위한 Grunt(Grunt for People Who Think Things Like Grunt are Weird and Hard)</a>”이 시작하기에 이상적인 위치가 될것입니다. Chris의 소개를 읽고 난 뒤 여러분은 자신만의 Grunt 프로젝트를 설정하고 Grunt가 제공하는 강력함을 맛볼 것입니다.</p>
+
+<p>이 글에서 우리는 실제 프로젝트 코드에서 사용하는 엄청나게 많은 Grunt 플러그인들이 아닌 다음과 같은 Grunt의 빌드 프로세스 자체에 집중할 것입니다.</p>
+
+<ul>
+  <li>어떻게 여러분의 Gruntfile을 산뜻하고 깔끔하게 유지할 수 있는가,</li>
+  <li>어떻게 빌드 시간을 극적으로 개선할 수 있는가,</li>
+  <li>그리고 빌드 시 발생한 이벤트들을 어떻게 전달받을 수 있는가.</li>
+</ul>
+
+<p>신속하게 포기성명을 해야 할 시간이군요. Grunt는 여러분의 작업을 달성하기 위해 사용할 수 있는 수많은 도구들 중 하나일뿐입니다. 만약 Gulp가 더 여러분의 스타일이라면, 그것도 훌륭합니다! 만약 그곳에서 옵션들에 대한 조사 후에 여전히 여러분만의 툴체인으로 빌드하고 싶다면 그것 역시 좋습니다! 우리는 이 글에서는 Grunt의 강력한 생태계와 오래된 사용자 기반에 의한 Grunt에 집중할 것입니다.</p>
+
+<h2 id="toc-organizing">Gruntfile 체계화하기</h2>
+
+<p>여러분이 Gruntfile 내에 수많은 Grunt 플러그인을 포함하고 있거나 수많은 수동 작업을 작성해야 하던지 간에 이는 빠르게 매우 다루기 힘들고 유지하기 어려워질 수 있습니다. 다행스럽게도  정확히 이 문제에 집중하여 Gruntfile을 다시 산뜻하고 깔끔하게 만들어주는 몇가지 플러그인들이 있습니다. 
+</p>
+
+<h3>최적화 전의 Gruntfile</h3>
+
+<p>우리가 어떠한 최적화 하지 않은 것으로 보이는 Grunt 파일은 아래와 같습니다.</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+
+  grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+    concat: {
+      dist: {
+        src: ['src/js/jquery.js','src/js/intro.js', 'src/js/main.js', 'src/js/outro.js'],
+        dest: 'dist/build.js',
+      }
+    },
+    uglify: {
+      dist: {
+        files: {
+          'dist/build.min.js': ['dist/build.js']
+        }
+      }
+    },
+    imagemin: {
+      options: {
+        cache: false
+      },
+
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['**/*.{png,jpg,gif}'],
+          dest: 'dist/'
+        }]
+      }
+    }
+  });
+
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-imagemin');
+
+  grunt.registerTask('default', ['concat', 'uglify', 'imagemin']);
+
+};</pre>
+
+<p>만약 지금 여러분이 “이봐요! 저는 좀 더 나쁜 예제를 바랬어요! 이건 실제로는 유지보수할만 하잖아요!”라고 말하신다면 아마 그 말이 맞을 것입니다. 문제의 단순화를 위해 많은 커스터마이징 없이 3개의 플러그인만을 포함하였습니다. 적정한 크기의 프로젝트를 빌드하는 실제 Gruntfile의 작성을 사용하는 것은 이 글에서 무한 스크롤을 필요로 할 것입니다. 따라서, 우리가 할 수 있는 것을 보도록 하죠!</p>
+
+<h3>Grunt 플러그인의 자동로딩</h3>
+
+<p class="notice tip">힌트: load-grunt-config는 load-grunt-tasks를 포함하고 있으므로 만약 이것이 무엇을 하는지에 대해 자세하게 배우고 싶지 않고 문단을 건너 뛰고 싶다고 해도 저는 상처받지 않을 것입니다.</p>
+
+<p>프로젝트에서 사용하고 싶은 새로운 Grunt 플러그인의 추가 시 NPM 의존성(npm dependency)으로써 <em>package.json</em>과 이 후의 로딩을 위해 Gruntfile 내에 이를 추가해야 할 것입니다. “<em>grunt-contrib-concat</em>” 플러그인의 경우 아마 다음과 같이 보일 것입니다.</p>
+
+<pre class="prettyprint">// Grunt에게 이 플러그인을 로딩하라고 전달
+grunt.loadNpmTasks('grunt-contrib-concat');</pre>
+
+<p>만약 npm을 통해 플러그인을 이제 제거하고 package.json을 갱신하였을 때 Gruntfile을 갱신하는 것을 잊어버렸다면 여러분의 빌드는 깨질 것입니다. 여기 재치있는 <a href="https://npmjs.org/package/load-grunt-tasks">load-grunt-tasks</a> 플러그인이 도움을 위해 와있습니다.</p>
+
+<p>이전에는 다음과 같이 우리가 수동으로 Grunt 플러그인들을 로딩해야 했습니다.</p>
+
+<pre class="prettyprint">grunt.loadNpmTasks('grunt-contrib-concat');
+grunt.loadNpmTasks('grunt-contrib-uglify');
+grunt.loadNpmTasks('grunt-contrib-imagemin');</pre>
+
+<p>load-grunt-tasks를 사용하여 이를 다음과 같은 한줄로 줄일 수 있게 되었습니다.</p>
+
+<pre class="prettyprint">require('load-grunt-tasks')(grunt);</pre>
+
+<p>플러그인 요청 후 이는 여러분의 package.json 파일을 분석할 것이며 어떠한 Grunt 플러그인들에 대한 의존성들을 가지는지 결정하고 이들 모두를 자동으로 로딩할 것입니다.</p>
+
+<h3>Grunt 설정을 여러개의 다른 파일들로 분리하기</h3>
+
+<p><em>load-grunt-tasks</em>는 코드와 복잡도를 약간 줄여주어 Gruntfile을 작게 만들어주지만 여러분이 커다한 어플리케이션을 설정한다면 이는 여전히 매우 큰 파일이 될 것입니다. 여기가 <a href="https://npmjs.org/package/load-grunt-config">load-grunt-config</a>이 놀이에 뛰어들 곳입니다. <em>load-grunt-config</em>은 여러분의 Gruntfile 설정을 작업(Task) 단위로 분해하도록 합니다. 게다가 <em>load-grunt-tasks</em>와 이의 기능들을 캡슐화해줍니다!</p>
+
+<p>그러나 중요한 점은 Gruntfile의 분리는 모든 상황에서 항상 동작하지는 않는다는 것입니다. 만약 (예를 들어 많은 양의 Grunt 템플릿의 사용과 같은) 태스크들 간에 공유되는 설정이 많이 존재한다면 약간은 주의하셔야 할 것입니다.</p>
+
+<p><em>load-grunt-config</em>를 사용하면 Gruntfile.js은 이와 같이 보일 것입니다.</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+  require('load-grunt-config')(grunt);
+};</pre>
+
+<p>예, 실제로도 이러하며, 이것이 전체 파일입니다! 그럼 이제 태스크 설정은 어디에 존재해야 할까요?</p>
+
+<p>Gruntfile이 있는 디렉토리에 <em>grunt/</em>라는 폴더를 생성해보세요. 기본적으로 플러그인은 여러분이 사용하기를 원하는 작업의 이름과 매칭되는 폴더 내에 파일들을 포함합니다. 우리의 디렉토리 구조는 다음과 같을 것입니다.</p>
+
+<pre class="prettyprint">- myproject/
+-- Gruntfile.js
+-- grunt/
+--- concat.js
+--- uglify.js
+--- imagemin.js</pre>
+
+<p>이제 다음과 같이 각 작업에 대한 작업 설정들을 각각의 파일들 내에 넣어보도록 하겠습니다. (대부분 원본 Gruntfile을 복사하여 새 구조에 붙여넣는 것만으로도 이들을 볼 수 있을 것입니다.)</p>
+
+<p><strong>grunt/concat.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  dist: {
+    src: ['src/js/jquery.js', 'src/js/intro.js', 'src/js/main.js', 'src/js/outro.js'],
+    dest: 'dist/build.js',
+  }
+};</pre>
+
+<p><strong>grunt/uglify.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  dist: {
+    files: {
+      'dist/build.min.js': ['dist/build.js']
+    }
+  }
+};</pre>
+
+<p><strong>grunt/imagemin.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  options: {
+    cache: false
+  },
+
+  dist: {
+    files: [{
+      expand: true,
+      cwd: 'src/',
+      src: ['**/*.{png,jpg,gif}'],
+      dest: 'dist/'
+    }]
+  }
+};</pre>
+
+<p>만약 자바스크립트 설정 블록들이 정말 여러분의 것이 아니라면 대신 <em>load-grunt-tasks</em>은 YAML or CoffeeScript 구문 또한 사용할 수 있도록 할 것입니다. YAML 내에 최종적으로 필요한 파일–“<em>aliases</em>” 파일-을 작성해보겠습니다.
+
+    이는 작업의 별칭(alias)을 등록하는 특별한 파일이며 이전에 <code>registerTask</code> 함수를 통해 무언가를 Gruntfile의 일부로써 동작하도록 해야 했던 것입니다. 여기 예제를 살펴보도록 하겠습니다.</p>
+
+<p><strong>grunt/aliases.yaml</strong></p>
+
+<pre class="prettyprint">default:
+  - 'concat'
+  - 'uglify'
+  - 'imagemin'</pre>
+
+<p>그리고 이것이 전부입니다! 터미널에서 다음 명령을 실행하여 보시기 바랍니다.</p>
+
+<pre class="prettyprint">$ grunt</pre>
+
+<p>만약 모든 것이 동작한다면, 이는 "default" 태스크를 바라볼 것이며 모든 것은 순서대로 동작할 것입니다. 이제 주 Gruntfile을 모든 태스크 설정에서 건드리거나 확인할 필요가 절대로 없을 3줄의 코드로 벗겨내 보았습니다. 그러나 여러분! 이는 만들어진 완전한 것을 얻는 것은 여전히 꽤 느립니다. 우리가 이를 어떻게 개선할 수 있을지를 보도록 하겠습니다.</p>
+
+<h2 id="toc-buildtime">빌드 시간 최소화하기</h2>
+
+<p>웹 앱의 런타임과 로딩 타임 성능이 빌드를 실행하는데 요구되는 시간보다 훨씬 더 사업적으로 중요하긴 하지만 느린 빌드는 여전히 문제가 있습니다. 이는 Git 커밋이 충분히 빠르게 실행된 뒤에도 <a href="https://github.com/gruntjs/grunt-contrib-watch">grunt-contrib-watch</a>와 같은 플러그인을 사용하여 자동으로 빌드를 수행하는 것이 어렵게 만들 것이며 -더 빠른 빌드시간과 더 애자일한 작업 흐름에 대한- 실제 빌드 실행의 “페널티”를 소개할 것입니다. 만약 여러분의 제품 빌드가 실행에 10분 이상이 걸린다면 절대적으로 빌드가 필요할 경우에만 빌드를 하고자할 것이며 빌드가 실행되는 동안에는 커피를 마시며 이곳저곳을 헤매이게 될 것입니다.</p>
+
+<h3>실제로 변경된 파일들만 빌드하기: grunt-newer</h3>
+
+<p>사이트의 초기 빌드 후는 여러분이 다시 빌드가 필요할 때 프로젝트 내의 몇가지 파일만 건드리면 될 것 같습니다. 우리 예제에서 이를 얘기해보자면 <em>src/img/</em> 디렉토리 내의 이미지를 변경합니다. - 이미지들을 다시 최적화하기 위한 imagemin 실행이라 보면 타당할 것 같습니다만, 이 예제에서는 단지 하나의 파일만 건드리는 것일뿐입니다. - 그리고 물론 <em>concat</em>과 <em>uglify</em>의 재실행은 귀중한 CPU 사이클의 낭비일 뿐입니다.</p>
+
+<p>물론 직접 선택한 태스크만을 실행하기 위해 <code>$ grunt</code> 대신 <code>$ grunt imagemin</code>를 터미널에서 항상 실행할 수도 있습니다만 더 깔끔한 방법이 존재합니다. <a href="https://npmjs.org/package/grunt-newer">grunt-newer</a>이라 불리는 것이 바로 그것입니다.</p>
+
+<p>Grunt-newer는 어떠한 파일들이 실제로 변경되었지에 대한 정보를 저장하는 로컬 캐시를 가지고 있으며 수행되어야 하는, 실제로는 변경된 파일들에 대해서만 여러분의 태스크를 실행합니다. 어떻게 이를 활성화하는지에 대해 살펴보도록 하겠습니다.</p>
+
+<p>우리의 <em>aliases.yaml</em> 파일을 기억하십니까? 이를 다음과 같이 바꿔보겠습니다.</p>
+
+<pre class="prettyprint">default:
+  - 'concat'
+  - 'uglify'
+  - 'imagemin'</pre>
+
+<p>를 다음처럼 변경합니다.</p>
+
+<pre class="prettyprint">default:
+  - 'newer:concat'
+  - 'newer:uglify'
+  - 'newer:imagemin'</pre>
+
+<p>단순하게 여러분의 태스크 중 어떠한 것이라도 “newer:”를 앞에 덧붙임으로써 태스크들이 <strong>원본과 목적 파일들이 grunt-newer 플러그인으로 먼저 전달되고 그 뒤에 만약 태스크가 실행되어야 하는 어떤 파일이 있는지를 결정합니다.</strong></p>
+
+<h3>다중 태스크를 병렬로 실행하기: grunt-concurrent</h3>
+
+<p><a href="https://npmjs.org/package/grunt-concurrent">grunt-concurrent</a>는 여러분이 서로에 대해 독립적이며 큰 실행 시간을 필요로 하는 다량의 태스크들을 가지고 있을 때 정말로 유용하게 되는 플러그인입니다. 이는 여러분의 디바이스 내의 여러 CPU들을 사용하며 동시에 여러개의 태스크를 실행합니다.</p>
+
+<p>무엇보다 설정이 엄청나게 단순합니다. 여러분이 load-grunt-config를 사용하며 다음과 같은 새로운 파일을 생성한다고 가정해보겠습니다.</p>
+
+<p><strong>grunt/concurrent.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  first: ['concat'],
+  second: ['uglify', 'imagemin']
+};</pre>
+
+<p>우리는 단지 병렬 실행 트랙들을 “<em>first</em>”와 “<em>second</em>” 명칭을 사용하여 설정했을 뿐입니다. <em>concat</em> 태스크는 처음에 실행되어야 하며 우리 예제에서 그동안 실행되는 다른 것은 없습니다. 두번째(second) 트랙에서 <em>uglify</em>와 <em>imagemin</em>는 서로에게 독립적이며 둘 다 상당한 시간을 차지하기 때문에 이를 둘 다 넣었습니다.</p>
+
+<p>이 자체로는 아직 아무것도 할 수 없습니다. 우리는 하나의 직접 실행 대신 병렬 작업을 지칭하는 <em>default</em> 태스크 별칭(alias)을 변경해야 합니다. <em>grunt/aliases.yaml</em>의 새로운 내용은 다음과 같습니다.</p>
+
+<pre class="prettyprint">default:
+  - 'concurrent:first'
+  - 'concurrent:second'</pre>
+
+<p>만약 Grunt 빌드를 이제 다시 실행한다면 concurrent 플러그인은 concat 태스크를 먼저 실행하고나서 imagemin과 uglify를 병렬로 실행하기 위해 2개의 다른 CPU 코어 상에 스레드를 생성(spawn)할 것입니다. 야호!</p>
+
+<p>충고를 한마디 드리자면, 우리의 기본 예제에서 확률 상, grunt-concurrent는 여러분의 빌드를 확연하게 빠르게 만들어주지는 않습니다. 각기 다른 스레드에서 각각의 Grunt 인스턴스 생성(Spawning)으로 발생하는 오버헤드가 그 이유입니다. 제 경우는 생성(Spawn)을 위해 최소한 300ms 이상의 오버헤드가 발생하였습니다.</p>
+
+<h3>얼마나 시간이 소요되나? time-grunt</h3>
+
+<p>이제 우리는 태스트의 각각을 최적화할 것이며 각각의 태스크가 실행에 얼마나 많은 시간을 요구하는지를 이해하는 것은 정말로 큰 도움이 될 것입니다. 다행스럽게도 이를 위한 <a href="https://npmjs.org/package/time-grunt">time-grunt</a> 플러그인도 존재합니다.</p>
+
+<p>time-grunt는 npm 태스크처럼 로딩하는 전통적인 Grunt 플러그인은 아니라 load-grunt-config처럼 여러분이 직접 로딩해야 하는 플러그인입니다. 우리는 load-grunt-config에서 한 것처럼 Gruntfile에 time-grunt에 대한 요구사항을 추가할 것입니다. Gruntfile은 이제 다음과 같이 보여질 것입니다.</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+
+  // 각 태스크가 얼마나 시간을 사용하는지 측정합니다.
+  require('time-grunt')(grunt);
+
+  // Grunt 설정을 로딩합니다.
+  require('load-grunt-config')(grunt);
+
+};</pre>
+
+<p>또 실망시켜드려서 죄송합니다만 이게 전부입니다. - 터미널에서 Grunt와 각 태스크 (그리고 추가적으로 전체 빌드)를 재실행하면 실행 시간 위에서 다음과 같이 잘 정돈된 정보 패널을 볼 수 있을 것입니다.</p>
+
+<figure>
+  <img src="time_grunt.png">
+</figure>
+
+<h2 id="toc-notify">자동화된 시스템 알림</h2>
+
+<p>이제 여러분은 신속하게 실행되도록 굉장하게 최적화된 Grunt 빌드를 가지게 되었으므로 뭔가 자동화된 빌드를 (즉, grunt-contrib-watch를 사용하여 파일을 관찰하거나 커밋 뒤에) 제공하게 되었으며 만약 새로운 빌드를 실행할 준비가 되었다거나 뭔가 잘못된 것이 발생했을 때 시스템이 여러분에게 이를 알려줄 수 있다면 굉장하지 않을까요? <a href="https://npmjs.org/package/grunt-notify">grunt-notify</a>를 만나봅시다.</p>
+
+<p>기본적으로 grunt-notify는 OS X나 Windows의 Growl, 마운틴라이언이나 매버릭스의 알림 센터( Notification Center) 그리고 Notify-send와 같이 여러분의 OS에서 가능한 모든 알림 시스템을 이용하여  Grunt 에러와 경고 전부에 대해 자동화된 알림을 제공합니다. 놀랍게도, 이 기능을 사용하기 위해 여러분에게 필요한 모든 것은 NPM에서 <a href="https://npmjs.org/package/grunt-notify">플러그인</a>을 설치하고 Gruntfile에서 이를 로딩하는 것입니다. (기억하세요, 위에서 말한 grunt-load-config를 사용 중이라면 이 과정도 자동화됩니다!)</p>
+
+<p>운영체제에 따라 어떻게 보이는지는 다음과 같습니다.</p>
+
+<figure>
+  <img src="notify.png">
+</figure>
+
+<p>에러나 경고에 추가하여 마지막 태스크의 실행이 종료된 후 알림이 동작하도록 설정해보겠습니다. 태스크를 파일 간에 나누기 위해 grunt-load-config를 사용하고 있다고 가정해보면 우리가 필요할 파일은 다음과 같습니다.</p>
+
+<p><strong>grunt/notify.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  imagemin: {
+    options: {
+      title: 'Build complete',  // optional
+        message: '<%= pkg.name %> build finished successfully.' //required
+      }
+    }
+  }
+}</pre>
+
+<p>설정 객체의 첫번째 수준에서 키는 우리가 연결하고자 하는 태스크의 이름과 일치합니다. 이 예제에서 메세지는 우리의 빌드 체인에서 마지막인 <em>imagemin</em> 태스크가 실행된 뒤에 바로 나타납니다.</p>
+
+<h2="toc-wrap">전체적인 정리</h2>
+
+<p>처음부터 쭉 따라오셨다면 여러분은 이제 엄청나게 산뜩하고 잘 정리되었으며 병렬성에 의해 불타오르듯이 빠르고 선택적인 처리 그리고 무언가가 잘못되었을 때 알림을 발생하는 빌드 프로세스의 자랑스러운 주인이 되셨습니다.</p>
+
+<p>만약 Grunt와 Grunt의 플러그인들을 더욱 더 개선할 수 있는 다른 보석들을 발견하셨다면 알려주세요! 그때까지 행복한 Grunt하시길!</p>
+
+<p><strong>업데이트 (2014년 2월 14일): 완전하고 잘 동작하는 Grunt 프로젝트 예제를 모아두었습니다. <a href="https://github.com/html5rocks/www.html5rocks.com/tree/master/content/tutorials/tooling/supercharging-your-gruntfile/static/sample">여기를 클릭하세요</a>.</strong></p>
+
+{% endblock %}
