@@ -1,0 +1,130 @@
+
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https:/github.com/sunnylost">sunnylost</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+
+<h2 id="toc-introduction">介绍</h2>
+
+<p>滚动乍看起来和性能毫无关系。毕竟，你的内容都有了样式，静态资源也已开始加载或已经加载完毕，那我们为什么会突然对滚动感兴趣了呢？原因很简单，一旦开始滚动，浏览器就需要把你的网站或应用绘制到屏幕上。这就意味着，我们可以最小化浏览器的绘制工作，将页面性能最大化。</p>
+
+<p>当用户使用你的应用时，拥有平滑滚动经常是被忽视但却是用户体验中至关重要的部分。当滚动表现正常时，用户就会感觉应用十分流畅，令人愉悦，而不是笨重不自然。</p>
+
+<h2 id="toc-specifics">滚动的细节</h2>
+
+<p>让我们来瞧瞧在滚动时到底发生了什么。在理解这个问题之前，我们先简要的介绍下浏览器是如何向屏幕绘制内容的。这一切都是从 DOM 树(本质上就是页面中的所有元素)开始的。浏览器先检查拥有了样式的 DOM，然后找到那些它认为在滚动时不会改变的元素，然后将这些元素分组并对它们拍照(就是层)。这些层都需要绘制并栅格化为一个纹理，然后混合在一起成为你在屏幕上看到的图像。</p>
+
+<p>如果你对 Chrome 的渲染细节感兴趣，不妨看看这篇<a href="http://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome">总结文章</a>。</p>
+
+<p>当滚动页面时，浏览器很可能需要在这些层(有时称为复合层，即 compositor layers)上绘制一些像素点。通过将内容分组为层后，当某个特定的层内发生改变，我们只需更新该层的纹理，并且只绘制和栅格化渲染层的纹理中被损坏的部分，而不必绘制所有内容。很显然，如果你在滚动过程中移动了某些内容，就像视差网站那样，你就可能损坏一大片区域，很大程度上会涉及多个层，结果就是会造成耗费严重的绘制工作。</p>
+
+<p>简而言之，<strong>越少绘制越好</strong>。</p>
+
+<h2 id="toc-diagnosing">诊断你的绘制</h2>
+
+<p>理论知识讲了一箩筐，还是看下实际应用吧。这是一个<a href="/static/demos/scrolling/demo.html">演示页面</a>，你可以启动 Chrome 的开发者工具来观察它。如果你打开时间轴面板，设置成 frame 模式，点击记录(record)按钮并开始滚动页面，你将会看到一堆绿柱。我录制了一段视频，演示了如何操作和应该看到的结果：</p>
+
+<iframe width="640" height="360" src="http://www.youtube.com/embed/KCtOt9OXvAM?rel=0" frameborder="0" allowfullscreen=""></iframe>
+
+<p>在时间轴下的列表中，你会看到全部绘制堆的记录。它们就是 Chrome 在为页面的混合层绘制与栅格化纹理。(在绘制工作结束后，你可能会看到一些复合层的记录，它们就是更新后的层，为显示在屏幕上做好了复合的准备。)</p>
+
+<figure>
+  <img src="/static/demos/scrolling/devtoolspaint.png" alt="Chrome DevTools: Paint Records" />
+  <figcaption>Chrome 开发者工具中的绘制记录</figcaption>
+</figure>
+
+<p>紧挨着绘制记录的是绘制的区域，你把鼠标放到上面，Chrome 会高亮页面中重绘的区域。另一种查看重绘区域的方法是在 Chrome 开发者工具的设置页面(点击工具右上角的小齿轮进入)开启 “Show paint rectangles”。这是用来了解滚动时页面表现的第一个指示器。提示：<strong>你应该尽可能的使绘制区域最小化。</strong></p>
+
+<p>当侧边栏显示时，你会看到绘制的区域就是整个屏幕，导致性能很差。造成这种情况的原因是 Chrome 对受损区域做了并集。本例中，在内容区上方，宽度为 100% 的带状区域进入视野中，而高度为 100% 的侧边栏也被绘制进了同样的复合层内，这些区域合并在一起就成了一个<strong> 100% 宽和 100% 高</strong>的区域。如果你用页面上方的复选框来禁用侧边栏，再次滚动你会发现重绘的仅仅是顶部的带状区域，响应速度更快了。</p>
+
+<p>如果你想看个真实例子，就打开 <a href="https://plus.google.com/">Google+</a>，将侧导航栏从 <code>position: fixed</code> 修改为 <code>position: absolute</code>。当然了，这就改变了网站的行为，但要点在于，你能看到一个通过切换样式来达到性能提升的真实例子。可能当你看到这之后的第一反应就是决定以后再也不用 <code>position:fixed</code> 了，但这与所在环境和需求有关。任何东西都有它适用的地方，重要的是能够测量并理解你的决定所造成的影响。</p>
+
+<h2 id="toc-resizing">改变图片尺寸</h2>
+
+<p>除了能看到基本的绘制记录，实际上我们还能得到额外的一些信息，特别是和图片相关的。如果你在记录过程中上下调整页面大小，就会看到有些绘制记录允许你打开它来获得更多细节，然后你就应该看到改变图片尺寸的记录。也就是说：浏览器将调整图片尺寸作为渲染工作的一部分。</p>
+
+<figure>
+  <img src="/static/demos/scrolling/resize.png" alt="Chrome DevTools: Resize Records" />
+  <figcaption>Chrome 开发者工具中的改变图片尺寸记录</figcaption>
+</figure>
+
+<p>如果你向一个设备发送了大图片，然后用 CSS 或图片的宽高属性使之缩小，那么你就会看到类似上面的记录。需要浏览器重新调整尺寸的图片个数和触发的频率会影响页面的性能，因为它们发生在主浏览器线程，会阻碍其他操作。</p>
+
+<p>当然了，不改变图片尺寸的例子也有很多，但是在某些情况下是无法避免缩放操作的，尤其是在移动端，用户只要用双指捏拉就可以实现缩放。这些时候你是没有什么办法的，但知道它会发生总归是好事。不过话又说回来，浏览器的性能始终在提升，尤其是渲染这个热门话题，因此你可以寄希望于技术提升所带来的性能优化。</p>
+
+<p>除了上面提到的内容，以下这些也会影响到滚动性能：</p>
+
+<ul>
+<li>耗性能样式(Expensive Styles)</li>
+<li>重排(reflow)与重绘(repaint)</li>
+<li>反跳滚动事件失败</li>
+</ul>
+
+<p>接下来深入探讨下这些问题。</p>
+
+<h2 id="toc-expensivestyles">耗性能样式</h2>
+
+<p>首先要说明的是，不同样式在消耗性能方面是不同的，有些效果(如经常被人提起的 box-shadow)从渲染角度来讲十分耗性能，原因就是与其他样式相比，它们的绘制代码执行时间过长。这就是说，如果一个耗性能严重的样式经常需要重绘，那么你就会遇到性能问题。其次你要知道，没有不变的事情，在今天性能很差的样式，可能明天就被优化，并且浏览器之间也存在差异。因此关键在于，你要借助开发工具来分辨出性能瓶颈所在，然后设法减少浏览器的工作量。</p>
+
+<p>在 <a href="https://developers.google.com/events/io/">Google I/O 2012</a> 上，Nat Duca 和 Tom Wiltzius 对如何在 Chrome 中避免渲染卡顿做了出色的演讲，并且给出了许多实用技巧，包括耗费昂贵的样式与如何计算它们造成的影响。</p>
+
+<iframe width="640" height="360" src="http://www.youtube.com/embed/hAzhayTnhEI?rel=0" frameborder="0" allowfullscreen=""></iframe>
+
+<h2 id="toc-reflowrepaint">重排与重绘</h2>
+
+<p>无论何时你在 JavaScript 中获取元素的 <code>offsetTop</code> 属性，就相当于立即为浏览器布置了大量任务，它必须马上布局页面来为你返回正确答案。这个过程就称为重排。当我们基于 <code>offsetTop</code> 的值来改变元素的其他属性，那么元素(还有它的复合层)就需要重绘。它还会带来一个连锁反应，即由于重绘而导致 <code>offsetTop</code> 的值失效，因为对浏览器来说，页面发生了变化。</p>
+
+<p>当你对多个元素做上述操作时就可能引发严重问题。如果我们为每个元素计算位置然后重绘它，就会使浏览器进入耗能高且浪费的重排-重绘周期中。在这种情况下，我们应该通过两个步骤来减少周期：首先，收集元素的 <code>offsetTop</code> 值，然后，完成视觉更新。通过这样的方式，我们就避免了重复计算元素的位置，假设我们使用 <code>requestAnimationFrame</code>，那么就可以让视觉更新按照浏览器的最优时间来安排计划。</p>
+
+<p>值得一提的是，<a href="http://gent.ilcore.com/2011/03/how-not-to-trigger-layout-in-webkit.html">除了 offsetTop 之外的其他操作</a>也会引起重排，最好了解一下这些内容来提高警惕。</p>
+
+<h2 id="toc-debouncing">反跳滚动事件(Debouncing Scroll Events)</h2>
+
+<p>假设你正开发一个视差滚动网站。你很自然的想到在获得滚动事件时对视觉进行更新。主要的问题在于滚动事件和浏览器的视觉更新并不合拍，比如说在 <code>requestAnimationFrame</code> 的回调函数中，就会出现在一个渲染帧内多次更新的风险。如果更新操作耗费很高，视差滚动网站通常都会如此(大量被破坏的区域，很多重绘与组合操作)，那么这些重复操作就很浪费。要解决这一问题，你需要反跳滚动事件。当滚动事件触发时你就把上一次滚动的值保持在变量中，然后在 <code>requestAnimationFrame</code> 中执行视觉更新，使用最后已知的那个值。如此一来，浏览器可以在正确的时间里来安排视觉更新，而我们在每一帧中都只做必要的工作。</p>
+
+<p>我们在之前一篇文章中介绍过<a href="http://www.html5rocks.com/en/tutorials/speed/animations/">重排/重绘周期</a>，如果想了解更多内容不放看看这篇文章。</p>
+
+<h2 id="toc-conclusion">总结</h2>
+
+<p>现在你应该明白如何通过 Chrome 开发者工具的时间线来评估你的应用在滚动中的性能表现。你还要时常重复这样的工作，因为性能特性无时无刻不在变化，有些特性在今天比别的特性慢，但过不了多久可能就会反过来，它们随着时间的变化而不同，关键在于如何解读你看到的数据，并以此来调整优化的手段。</p>
+
+<p>你应当始终检查在开发者工具中的<strong>真实</strong>性能数据。用眼睛观察是很简单，但问题不一定那么明显。所以别靠猜，靠测试。</p>
+
+<h2 id="toc-morereading">更多内容</h2>
+
+<p>如果你对浏览器内部实现或避免渲染性能瓶颈感兴趣，请阅读下面这些内容。</p>
+
+<ol>
+  <li><a href="http://www.html5rocks.com/en/tutorials/internals/howbrowserswork/">Tali Garsiel &amp; Paul Irish on how browsers work</a></li>
+  <li><a href="http://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome">A summary of hardware compositing in Chrome</a></li>
+  <li><a href="http://www.html5rocks.com/en/tutorials/speed/animations/">Paul Lewis on debouncing scroll events and reflow / repaint cycles</a></li>
+  <li><a href="http://www.html5rocks.com/en/tutorials/speed/rendering/">Tom Wiltzius on jank busting for better rendering performance</a></li>
+</ol>
+
+{% endblock %}
