@@ -11,11 +11,11 @@ For all of these, we're pretty open to accepting contributions. If you see somet
 
 Most of the static text you see on the site (text that's not directly related to an article) has been localized via the stock [Django internationalization mechanisms](https://docs.djangoproject.com/en/dev/topics/i18n/). There's not really much to add to that documentation, so let's just call out a few relevant details:
 
-* Strings inside all the page templates should be wrapped in `{% trans "[STRING]"}` or `{% blocktrans %}[LONGER, MULTILINE STRING]{% endblocktrans %}` as appropriate. See [/templates/tutorial.html](../blob/master/templates/tutorial.html) for examples.
-* Strings inside Python code should be wrapped in `_("[STRING]")`. See [main.py](../blob/master/main.py) for examples.
+* Strings inside all the page templates should be wrapped in `{% trans "[STRING]"}` or `{% blocktrans %}[LONGER, MULTILINE STRING]{% endblocktrans %}` as appropriate. See [/templates/tutorial.html](../master/templates/tutorial.html) for examples.
+* Strings inside Python code should be wrapped in `_("[STRING]")`. See [main.py](../master/main.py) for examples.
 * Strings inside JavaScript are, at the moment, not localized. Avoid content inside JavaScript in favor of content inside HTML.
 
-These strings are gathered up, and packaged into so-called "message files" by running `make messages` the base repo directory. One message file is written out per supported locale, and each lives at `conf/locale/[LOCALE]/LC_MESSAGES/django.po`. The English message file, for instance, is [conf/locale/en/LC_MESSAGES/django.po](../blob/master/conf/locale/en/LC_MESSAGES/django.po). You can edit these files by hand, or you can use any of a number of programs specially designed for editing PO files. [Poedit](http://www.poedit.net/), for example, is free, and widely used.
+These strings are gathered up, and packaged into so-called "message files" by running `make messages` the base repo directory. One message file is written out per supported locale, and each lives at `conf/locale/[LOCALE]/LC_MESSAGES/django.po`. The English message file, for instance, is [conf/locale/en/LC_MESSAGES/django.po](../master/conf/locale/en/LC_MESSAGES/django.po). You can edit these files by hand, or you can use any of a number of programs specially designed for editing PO files. [Poedit](http://www.poedit.net/), for example, is free, and widely used.
 
 After changing PO files, you have to recompile them into the corresponding MO binary files: call `make compile` in the main repo directory. The Makefile makes assumptions about where your Google AppEngine/Django is installed - if it doesn't work, open Makefile and check the `DJANGO_ROOT` variable.
 
@@ -27,6 +27,6 @@ Localizing an article, then, is simply a matter of copying the English version o
 
 ### Article Metadata
 
-For historical reasons, article metadata (title, description, and so on) are not contained with the articles themselves, but live in the site's database. The information from the database is replicated into [database/tutorials.yaml](../blob/master/database/tutorials.yaml) for backup purposes. This file must be kept up to date as new articles are added to the site.
+For historical reasons, article metadata (title, description, and so on) are not contained with the articles themselves, but live in the site's database. The information from the database is replicated into [database/tutorials.yaml](../master/database/tutorials.yaml) for backup purposes. This file must be kept up to date as new articles are added to the site.
 
 As part of the message file generation process, article titles and descriptions are extracted from this YAML file, and placed into the message files for translation. They can be edited in the same way as UI strings.

@@ -255,24 +255,43 @@ if you don't want to use the constructor.</p>
 <p class="notice tip">If it's undesirable that the constructor ends up on the global <code>window</code>
 object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) or drop it on the floor.</p>
 
-<h3 id="extending">Extending native elements</h3>
+<h3 id="extendingelements">Extending elements</h3>
+
+<p>Custom elements allows you to extend existing (native) HTML elements as well as other
+custom elements. To extend an element, you need to pass <code>registerElement()</code> the name
+and <code>prototype</code> of the element to inherit from.</p>
+<h4 id="typeextension">Extending native elements</h4>
 
 <p>Say you aren't happy with Regular Joe&#8482; <code>&lt;button&gt;</code>. You'd like to
 supercharge its capabilities to be a "Mega Button". To extend the <code>&lt;button&gt;</code> element,
-create a new element that inherits the <code>prototype</code> of <code>HTMLButtonElement</code>:</p>
+create a new element that inherits the <code>prototype</code> of <code>HTMLButtonElement</code> and <code>extends</code>
+the name of the element. In this case, "button":</p>
 <pre class="prettyprint"><code>var MegaButton = document.registerElement('mega-button', {
-  prototype: Object.create(HTMLButtonElement.prototype)
+  prototype: Object.create(HTMLButtonElement.prototype),
+  extends: 'button'
 });
 </code></pre>
-<p class="notice fact">
-To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
+<p class="notice fact">To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
 must inherit the <code>prototype</code> of <b>element B</b>.</p>
 
-<p>Custom elements like this are called <em>type extension custom elements</em>.
+<p>Custom elements that inherit from native elements are called <em>type extension custom elements</em>.
 They inherit from a specialized version of <code>HTMLElement</code> as a way to say, "element X is a Y".</p>
 <p>Example:</p>
 <pre class="prettyprint"><code>&lt;button is="mega-button"&gt;
 </code></pre>
+<h4 id="extendcustomeel">Extending a custom element</h4>
+
+<p>To create an <code>&lt;x-foo-extended&gt;</code> element that extends the <code>&lt;x-foo&gt;</code> custom element, simply inherit its prototype
+and say what tag you're inheriting from:</p>
+<pre class="prettyprint"><code>var XFooProto = Object.create(HTMLElement.prototype);
+...
+
+var XFooExtended = document.registerElement('x-foo-extended', {
+  prototype: XFooProto,
+  extends: 'x-foo'
+});
+</code></pre>
+<p>See <a href="#publicapi">Adding JS properties and methods</a> below for more information on creating element prototypes.</p>
 <h3 id="upgrades">How elements are upgraded</h3>
 
 <p>Have you ever wondered why the HTML parser doesn't throw a fit on non-standard tags?

@@ -83,26 +83,48 @@ if you don't want to use the constructor.
 <p class="notice tip">If it's undesirable that the constructor ends up on the global <code>window</code>
 object, put it in a namespace (<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) or drop it on the floor.</p>
 
-<h3 id="extending">Extending native elements</h3>
+<h3 id="extendingelements">Extending elements</h3>
+
+Custom elements allows you to extend existing (native) HTML elements as well as other
+custom elements. To extend an element, you need to pass `registerElement()` the name
+and `prototype` of the element to inherit from.
+
+<h4 id="typeextension">Extending native elements</h4>
 
 Say you aren't happy with Regular Joe&#8482; `<button>`. You'd like to
 supercharge its capabilities to be a "Mega Button". To extend the `<button>` element,
-create a new element that inherits the `prototype` of `HTMLButtonElement`:
+create a new element that inherits the `prototype` of `HTMLButtonElement` and `extends`
+the name of the element. In this case, "button":
 
     var MegaButton = document.registerElement('mega-button', {
-      prototype: Object.create(HTMLButtonElement.prototype)
+      prototype: Object.create(HTMLButtonElement.prototype),
+      extends: 'button'
     });
 
-<p class="notice fact">
-To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
+<p class="notice fact">To create <b>element A</b> that extends <b>element B</b>, <b>element A</b>
 must inherit the <code>prototype</code> of <b>element B</b>.</p>
 
-Custom elements like this are called _type extension custom elements_.
+Custom elements that inherit from native elements are called _type extension custom elements_.
 They inherit from a specialized version of `HTMLElement` as a way to say, "element X is a Y".
 
 Example:
 
     <button is="mega-button">
+
+<h4 id="extendcustomeel">Extending a custom element</h4>
+
+To create an `<x-foo-extended>` element that extends the `<x-foo>` custom element, simply inherit its prototype
+and say what tag you're inheriting from:
+
+    var XFooProto = Object.create(HTMLElement.prototype);
+    ...
+
+    var XFooExtended = document.registerElement('x-foo-extended', {
+      prototype: XFooProto,
+      extends: 'x-foo'
+    });
+
+See [Adding JS properties and methods](#publicapi) below for more information on creating element prototypes.
 
 <h3 id="upgrades">How elements are upgraded</h3>
 
