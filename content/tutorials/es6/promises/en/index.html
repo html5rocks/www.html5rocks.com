@@ -189,12 +189,12 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 <p>To bring browsers that lack a complete promises implementation up to spec compliance, or add promises to other browsers and Node.js, check out <a href="https://github.com/jakearchibald/ES6-Promises#readme">the polyfill</a> (2k gzipped).</p>
 
 <h2 id="toc-lib-compatibility">Compatibility with other libraries</h2>
-<p>The JavaScript promises API will treat anything with a <code>then</code> method as promise-like (or <em>thenable</em> in promise-speak <em>*sigh*</em>), and with the exception of <code>Promise.cast</code> there's no distinction made between JavaScript promise instances and things that are promise-like. So if you use a library that returns a Q promise, that's fine, it'll play nice with the new JavaScript promises.</p>
+<p>The JavaScript promises API will treat anything with a <code>then</code> method as promise-like (or <em>thenable</em> in promise-speak <em>*sigh*</em>), so if you use a library that returns a Q promise, that's fine, it'll play nice with the new JavaScript promises.</p>
 <p>Although, as I mentioned, jQuery's Deferreds are a bit… unhelpful. Thankfully you can cast them to standard promises, which is worth doing as soon as possible:</p>
 
-<pre class="prettyprint">var jsPromise = Promise.cast($.ajax('/whatever.json'));</pre>
+<pre class="prettyprint">var jsPromise = Promise.resolve($.ajax('/whatever.json'));</pre>
 
-<p>Here, jQuery's <code>$.ajax</code> returns a Deferred. Since it has a "then" method, <code>Promise.cast</code> can turn it into a JavaScript promise. However, sometimes deferreds pass multiple arguments to their callbacks, eg:</p>
+<p>Here, jQuery's <code>$.ajax</code> returns a Deferred. Since it has a "then" method, <code>Promise.resolve</code> can turn it into a JavaScript promise. However, sometimes deferreds pass multiple arguments to their callbacks, eg:</p>
 
 <pre class="prettyprint">var jqDeferred = $.ajax('/whatever.json');
 
@@ -541,7 +541,7 @@ story.chapterUrls.forEach(function(chapterUrl) {
   });
 });</pre>
 
-<p>This is the first time we've seen <code>Promise.resolve</code>, which creates a promise that resolves to whatever value you give it. If you pass it something promise-like (has a 'then' method), it creates a new promise that fulfills/rejects in the same way, effectively a clone. If you pass in any other value, eg <code>Promise.resolve('Hello')</code>, it creates a promise that fulfills with that value. If you call it with no value, as above, it fulfills with "undefined".</p>
+<p>This is the first time we've seen <code>Promise.resolve</code>, which creates a promise that resolves to whatever value you give it. If you pass it an instance of <code>Promise</code> it'll simply return it (<strong>note:</strong> this is a change to the spec that some implementations don't yet follow). If you pass it something promise-like (has a 'then' method), it creates a genuine <code>Promise</code> that fulfills/rejects in the same way. If you pass in any other value, eg <code>Promise.resolve('Hello')</code>, it creates a promise that fulfills with that value. If you call it with no value, as above, it fulfills with "undefined".</p>
 
 <p>There's also <code>Promise.reject(val)</code>, which creates a promise that rejects with the value you give it (or undefined).</p>
 <p>We can tidy up the above code using <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">array.reduce</a></code>:</p>
@@ -700,7 +700,7 @@ adder.next(50).value; // 65</pre>
     if (result.done) {
       return result.value;
     } else {
-      return Promise.cast(result.value).then(onFulfilled, onRejected);
+      return Promise.resolve(result.value).then(onFulfilled, onRejected);
     }
   }
   var generator = generatorFunc();
@@ -748,21 +748,17 @@ adder.next(50).value; // 65</pre>
 
 <h3>Static Methods</h3>
 <dl>
-  <dt><code>Promise.cast(promise);</code></dt>
+  <dt><code>Promise.resolve(promise);</code></dt>
   <dd>Returns promise (only if <code>promise.constructor == Promise</code>)
-  <p class="notice"><b>Note:</b> Only implemented in Chrome and Opera so far</p></dd>
-  <dt><code>Promise.cast(obj);</code></dt>
-  <dd>Make a promise that fulfills to obj.
-  <p class="notice"><b>Note:</b> Only implemented in Chrome and Opera so far</p></dd>
   <dt><code>Promise.resolve(thenable);</code></dt>
-  <dd>Make a new promise from the thenable. A thenable is promise-like in as far as it has a "then" method. This also creates a new promise if you pass it a genuine JavaScript promise, making it less efficient for casting than <code>Promise.cast</code>.
+  <dd>Make a new promise from the thenable. A thenable is promise-like in as far as it has a "then" method.
   </dd>
   <dt><code>Promise.resolve(obj);</code></dt>
-  <dd>Make a promise that fulfills to <code>obj</code>. Same as <code>Promise.cast(obj)</code> in this situation.</dd>
+  <dd>Make a promise that fulfills to <code>obj</code>.</code> in this situation.</dd>
   <dt><code>Promise.reject(obj);</code></dt>
   <dd>Make a promise that rejects to <code>obj</code>. For consistency and debugging (e.g. stack traces), <code>obj</code> should be an <code>instanceof Error</code>.</dd>
   <dt><code>Promise.all(array);</code></dt>
-  <dd>Make a promise that fulfills when every item in the array fulfills, and rejects if (and when) any item rejects. Each array item is passed to <code>Promise.cast</code>, so the array can be a mixture of promise-like objects and other objects. The fulfillment value is an array (in order) of fulfillment values. The rejection value is the first rejection value.
+  <dd>Make a promise that fulfills when every item in the array fulfills, and rejects if (and when) any item rejects. Each array item is passed to <code>Promise.resolve</code>, so the array can be a mixture of promise-like objects and other objects. The fulfillment value is an array (in order) of fulfillment values. The rejection value is the first rejection value.
   <p class="notice"><b>Note:</b> Only implemented in Chrome and Opera so far</p></dd>
   <dt><code>Promise.race(array);</code></dt>
   <dd>Make a Promise that fulfills as soon as any item fulfills, or rejects as soon as any item rejects, whichever happens first.
