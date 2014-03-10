@@ -120,14 +120,26 @@ var tester = {
   /**
    * Update a given button on the screen.
    */
-  updateButton: function(value, gamepadId, id) {
+  updateButton: function(button, gamepadId, id) {
     var gamepadEl = document.querySelector('#gamepad-' + gamepadId);
 
-    // Update the button visually.
+    var value, pressed;
 
+    // Older version of the gamepad API provided buttons as a floating point
+    // value from 0 to 1. Newer implementations provide GamepadButton objects,
+    // which contain an analog value and a pressed boolean.
+    if (typeof(button) == 'object') {
+      value = button.value;
+      pressed = button.pressed;
+    } else {
+      value = button;
+      pressed = button > tester.ANALOGUE_BUTTON_THRESHOLD;
+    }
+
+    // Update the button visually.
     var buttonEl = gamepadEl.querySelector('[name="' + id + '"]');
     if (buttonEl) { // Extraneous buttons have just a label.
-      if (value > tester.ANALOGUE_BUTTON_THRESHOLD) {
+      if (pressed) {
         buttonEl.classList.add('pressed');
       } else {
         buttonEl.classList.remove('pressed');
@@ -135,7 +147,6 @@ var tester = {
     }
 
     // Update its label.
-
     var labelEl = gamepadEl.querySelector('label[for="' + id + '"]');
     if (typeof value == 'undefined') {
       labelEl.innerHTML = '?';
