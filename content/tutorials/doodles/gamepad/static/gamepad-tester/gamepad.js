@@ -46,36 +46,32 @@ var gamepadSupport = {
    * Initialize support for Gamepad API.
    */
   init: function() {
-    // As of writing, it seems impossible to detect Gamepad API support
-    // in Firefox, hence we need to hardcode it in the third clause.
-    // (The preceding two clauses are for Chrome.)
-    var gamepadSupportAvailable = !!navigator.webkitGetGamepads ||
-        !!navigator.webkitGamepads ||
-        (navigator.userAgent.indexOf('Firefox/') != -1);
+    var gamepadSupportAvailable = navigator.getGamepads ||
+        !!navigator.webkitGetGamepads ||
+        !!navigator.webkitGamepads;
 
     if (!gamepadSupportAvailable) {
       // It doesn’t seem Gamepad API is available – show a message telling
       // the visitor about it.
       tester.showNotSupported();
     } else {
-      // Firefox supports the connect/disconnect event, so we attach event
-      // handlers to those.
-      window.addEventListener('MozGamepadConnected',
+      // Check and see if gamepadconnected/gamepaddisconnected is supported.
+      // If so, listen for those events and don't start polling until a gamepad
+      // has been connected.
+      if ('ongamepadconnected' in window) {
+        window.addEventListener('gamepadconnected',
                               gamepadSupport.onGamepadConnect, false);
-      window.addEventListener('MozGamepadDisconnected',
-                              gamepadSupport.onGamepadDisconnect, false);
-
-      // Since Chrome only supports polling, we initiate polling loop straight
-      // away. For Firefox, we will only do it if we get a connect event.
-      if (!!navigator.webkitGamepads || !!navigator.webkitGetGamepads) {
+        window.addEventListener('gamepaddisconnected',
+                                gamepadSupport.onGamepadDisconnect, false);
+      } else {
+        // If connection events are not supported just start polling
         gamepadSupport.startPolling();
       }
     }
   },
 
   /**
-   * React to the gamepad being connected. Today, this will only be executed
-   * on Firefox.
+   * React to the gamepad being connected.
    */
   onGamepadConnect: function(event) {
     // Add the new gamepad on the list of gamepads to look after.
@@ -88,7 +84,9 @@ var gamepadSupport = {
     gamepadSupport.startPolling();
   },
 
-  // This will only be executed on Firefox.
+  /**
+   * React to the gamepad being disconnected.
+   */
   onGamepadDisconnect: function(event) {
     // Remove the gamepad from the list of gamepads to monitor.
     for (var i in gamepadSupport.gamepads) {
@@ -185,14 +183,13 @@ var gamepadSupport = {
   // connection/disconnection events, but requires you to monitor
   // an array for changes.
   pollGamepads: function() {
-
-    // Get the array of gamepads – the first method (function call)
-    // is the most modern one, the second is there for compatibility with
-    // slightly older versions of Chrome, but it shouldn’t be necessary
-    // for long.
+    // Get the array of gamepads – the first method (getGamepads)
+    // is the most modern one and is supported by Firefox 28+ and
+    // Chrome 35+. The second one (webkitGetGamepads) is a deprecated method
+    // used by older Chrome builds.
     var rawGamepads =
-        (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) ||
-        navigator.webkitGamepads;
+        (navigator.getGamepads && navigator.getGamepads()) ||
+        (navigator.webkitGetGamepads && navigator.webkitGetGamepads());
 
     if (rawGamepads) {
       // We don’t want to use rawGamepads coming straight from the browser,
