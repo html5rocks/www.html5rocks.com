@@ -1,0 +1,631 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block head %}
+  <style>
+    .talkinghead:before {
+      background-image: url(/static/images/profiles/75/agektmr.75.png);
+      background-position: 0px -4px !important;
+    }
+    table {
+      width: 100%;
+      font-size: 80%;
+      table-layout: fixed;
+    }
+    th, td {
+      background-color: #fff;
+      border: solid 1px #ccc;
+      padding: 0 5px;
+    }
+    th {
+      background-color: #eee;
+    }
+    tr > td:first-child {
+      font-weight: bold;
+      background-color: #DA421C;
+      color: white;
+    }
+    .empty {
+      background-color: #ccc;
+    }
+    .mb {
+      font-size: 70%;
+    }
+  </style>
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="http://www.cwdoh.com">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">소개</h2>
+
+<p>오늘날 HTML5에서 일어난 가장 큰 혁신 중의 하나는 브라우저 상에서 영구적인 저장소를 사용할 수 있게 되었다는 것입니다. HTML5 이전에, 클라이언트 측에서 몇가지 데이터를 저장하기 위해 쿠키를 사용하는 것 외에 다른 방법은 없었습니다. HTML5에서는 여러분이 무엇을 저장하고 싶은가에 따라 선택할 수 있는 몇가지 데이터 저장 방법들을 가지게 되었습니다.</p>
+
+<p>가장 널리 사용되는 기술은 대부분의 주요 브라우저들이 얼마간 지원했던 <strong>WebStorage</strong>라 불리는 영구적인 키-값 저장소(Key-Value stroage)입니다. WebStorage는 <strong>LocalStorage</strong>라 불리는 영구적인 저장소와 세션이 끝난 후 지워지는 <strong>SessionStorage</strong>라는 임시 저장소를 가지고 있습니다.</p>
+
+<p><strong>WebSQL Database</strong>는 브라우저를 위한 관계형 데이터베이스 소루션입니다. 이는 근본적으로 점차 사라지고 있으며 W3C에서 더 이상 규격을 관리하지 않아 브라우저들이 이에 대한 지원을 지속할지 그렇지 않을지도 모르지만 모바일 브라우저 상에서 구조화된 데이터 저장소로써 유일하고 일반적인 해답이기 대문에 사람들은 여전히 이를 사용하고 있습니다.</p>
+
+<p><strong>Indexed Database</strong>는 객체를 저장합니다. 이는 브라우저 상에서 구조화된 데이터를 저장하기 위한 최종적인 솔루션으로써 고려되었기 때문에 이에 대한 지원과 사용은 점차적으로 증가할 것입니다.</p>
+
+<p><strong>FileSystem API</strong>은 웹을 위한 파일 시스템 솔루션입니다. 개발자는 커다란 객체들을 샌드박싱된 사용자 파일 시스템의 일부에 저장할 수 있으며 이를 URL을 통해 직접 링크할 수 있습니다. 크롬과 오페라가 현재까지 이 기능을 지원하는 유일한 브라우저들이지만 표준화는 진행되고 있습니다.</p>
+
+<p><strong>Application Cache</strong>는 브라우저 상에서 단일 페이지 어플리케이션(SPA, Single Page Application)를 대상으로 하는 강력한 캐시 시스템입니다. 이 규격에 대해 존재하는 많은 제한점과 <a href="https://github.com/slightlyoff/ServiceWorker/blob/master/explainer.md" target="_blank">ServiceWorker</a>이라 불리는 대체 규격이 제안되고 있음에도 불구하고 2014년 1월 현재 이를 제외하고는 진정한 오프라인 웹앱 솔루션은 없습니다.</p>
+
+<p>웹 앱들이 점점 더 다채로워지고 있으며 더욱 더 많은 개발자들이 브라우저-측 저장소를 사용하고 있습니다. 그러나 지금까지 다양한 저장소 메커니즘의 제한점들을 비교하는 주요 연구가 없었습니다. 이는 개발자들이 각 메소드와 브라우저를 조사하는데 시간을 소모하게 하고 있습니다. 그래서 이 글에서 저는 여러분께 각 브라우저의 저장소 구현의 상한선에 대한 제 조사 결과와 더불어 이들을 어떻게 조사할 수 있는지에 대해 보여드리려 합니다.</p>
+
+<h2 id="toc-overview">개요</h2>
+
+<p>이 조사를 진행하기 위해 저는 수동 작업을 최소화하는 <a href="http://demo.agektmr.com/storage/" target="_blank">Browser Storage Abuser</a>라고 부르는 도구를 작성했습니다. 여러분은 브라우저에서 각 스토리지의 한계를 보기 위해 가능한한 최대의 데이터를 저장할 수 있습니다.</p>
+
+<figure><img src="bsa-screenshot.png" /></figure>
+
+<p>다음은 도구를 통한 이 조사의 결과를 짧게 요약한 것입니다.</p>
+
+<p class="notice"><b>주</b>: 오페라는 크롬이 사용하는 것과 같은 브라우저 엔진인 블링크를 사용하고 있으므로 이 리스트에 포함되지 않았으며 따라서 오페라를 사용한 제 조사결과는 크롬의 결과와 아주 유사할 것입니다.</p>
+
+<p class="notice tip"><b>역주</b>: 이제부터의 표에서 나타나는 '할당량까지'는 디바이스에서 허락하는 저장공간을 이야기하는 것입니다. 예를 들어 PC 상에서는 디스크 공간이 될 것이며 모바일의 경우 각 디바이스가 가지는 저장공간을 뜻할 것입니다.</p>
+
+<h3 id="toc-mobile">모바일</h3>
+
+<table>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Android Browser</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>iOS WebView</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>4.3</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>6, 7</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>할당량까지</td>
+      <td>무제한?</td>
+      <td>5<span class="mb">MB</span>, 무제한</td>
+      <td>300<span class="mb">MB</span>?</td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>할당량까지</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>할당량까지</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 무제한</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>할당량까지</td>
+      <td>200<span class="mb">MB</span>~</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+      <td>50<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>2<span class="mb">MB</span></td>
+      <td rowspan="2">10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>무제한</td>
+      <td>5<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="toc-desktop">데스크톱</h3>
+
+<table>
+  <tbody>
+    <tr>
+      <th></th>
+      <th>Chrome</th>
+      <th>Firefox</th>
+      <th>Safari</th>
+      <th>IE</th>
+      <th>IE</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>33</th>
+      <th>26</th>
+      <th>6, 7</th>
+      <th>9</th>
+      <th>10, 11</th>
+    </tr>
+    <tr>
+      <td>Application Cache</td>
+      <td>할당량까지</td>
+      <td>500<span class="mb">MB</span>, 무제한</td>
+      <td>무제한?</td>
+      <td class="empty"></td>
+      <td>100<span class="mb">MB</span>?</td>
+    </tr>
+    <tr>
+      <td>FileSystem</td>
+      <td>할당량까지</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>IndexedDB</td>
+      <td>할당량까지</td>
+      <td>50<span class="mb">MB</span>, 무제한</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+    </tr>
+    <tr>
+      <td>WebSQL</td>
+      <td>할당량까지</td>
+      <td class="empty"></td>
+      <td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+    <tr>
+      <td>LocalStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td rowspan="2">10<span class="mb">MB</span></td>
+      <td>5<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+    <tr>
+      <td>SessionStorage</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>무제한</td>
+      <td>10<span class="mb">MB</span></td>
+      <td>10<span class="mb">MB</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="toc-working_with_real_world_browsers">상세: 실제 브라우저와 작업하기</h2>
+
+<p>좋습니다. 이제 여러분은 저장소 한도에 대한 요약을 가지게 되었습니다. 지금부터는 각 브라우저의 구현을 상세하고 살펴보고 어떻게 각 저장소를 조사하고 디버깅할 수 있는지를 보도록 하겠습니다.</p>
+
+<h2 id="toc-chrome">크롬 / 안드로이드용 크롬</h2>
+
+<table>
+<tr>
+<th></th>
+<th>AppCache</th>
+<th>FileSystem</th>
+<th>IndexedDB</th>
+<th>WebSQL</th>
+<th>LocalStorage</th>
+<th>SessionStorage</th>
+</tr>
+<tr>
+<td>Chrome 33</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
+</tr>
+<tr>
+<td>Chrome for Android 33</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>할당량까지</td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
+</tr>
+</table>
+
+<p>크롬은 Application Cache, FileSystem API, IndexedDB, WebSQL, LocalStorage과 SessionStorage를 포함하여 여기에 기술된 모든 형태의 저장소를 사용합니다. LocalStorage와 SessionStorage를 제외한 저장소 메커니즘 전부가 비동기적인 입출력을 사용하고 <strong>Quota Management API</strong>의 관리 하에 있으며 이 한도들은 디바이스가 남겨둔 저장소의 크기에 의존적으로 달라집니다.</p>
+
+<p>현재의 할당량 규칙은 다음과 같습니다.</p>
+
+<ul>
+<li>(기본값인) 임시 저장소(Temporary Storage)는 도메인 당 디스크의 잔여 공간 10%까지를 사용할 수 있습니다. 만약 할당량을 초과하면 브라우저는 저장소에 대한 청소를 가장 (액세스한지) 오래된 도메인부터 시작할 것입니다.</li>
+<li>영구 저장소(Persistent Storage)는 사용자가 허락한다면 여러분이 임의의 크기를 요청할 수 있습니다. 할당량의 조사는 에러를 발생할 것입니다. 크롬의 (그리고 오페라의) 구현에서 이는 버전 33부터 파일시스템 API에 대해서만 적용되어있다는 것을 명심하시기 바랍니다. 모든 다른 저장소 메커니즘들은 여전히 그의 저장소로써 임시 저장소를 사용하고 있을 것입니다.</li>
+</ul>
+
+<p class="notice tip"><b>역주:</b> 정리하자면 영구 저장소(Persistent Storage)는 영구적으로 파일을 저장할 수 있으며 이는 브라우저에서 어떠한 이유로도 제거되지 않는 저장소입니다. 현재 <u>크롬(버전 33 이상)은 FileSystem API에 한정하여 영구 저장소를 사용</u>하고 있으므로 FileSystem API로 저장된 데이터는 영구적으로 안전합니다만 다른 저장소는 임시 저장소(Temporary Stroage)를 사용하고 있으므로 브라우저에서 데이터 공간을 확보하기 위해 지워질 수 있다는 뜻입니다. 주의하세요!</p>
+
+<p>(2014년 1월 현재) Quota Management API에 관련된 보다 자세한 정보는 <a href="http://updates.html5rocks.com/2011/11/Quota-Management-API-Fast-Facts">이 페이지</a>를 참조하시기 바랍니다. Quota Management API 규격은 적극적인 토론 중에 있으며 앞으로 변경되기 쉬운 상태입니다.</p>
+
+<h3 id="toc-chrome_inspect">어떻게 조사하는가</h3>
+
+<p>만약 개발자도구의 리소스(Resource) 패널을 열어둔다면 Application Cache, IndexedDB, WebSQL, LocalStorage 그리고 SessionStorage를 조사할 수 있습니다.<br /> FileSystem API의 조사를 위해서는 다음과 같은 과정이 필요합니다.</p>
+
+<ol>
+<li><cod3>about:flags</cod3> 페이지에서 "개발자 도구 실험을 사용합니다(Enable Developer Tools experiments)." 플래그를 켜둡니다.</li>
+<li>크롬을 재시작하고 개발자도구를 실행합니다.</li>
+<li>설정(Settings)에서 "Experiments"를 선택하고 "FileSystem inspection" 옆에 있는 박스를 체크합니다.</li>
+<li>개발자도구를 다시 실행합니다.</li>
+</ol>
+
+<p>이제 여러분은 리소스 패널에서 "FileSystem"을 볼 수 있을 것입니다.</p>
+
+<figure><img src="chrome-inspect.png" /></figure>
+
+<p>쿠키들을 포함한 저장소 컨텐츠의 제거 및 초기화를 위해 아래 설명을 따르시기 바랍니다. <br />
+데스크톱:</p>
+
+<ol>
+<li><code>chrome://settings/cookies</code>을 실행합니다.</li>
+<li>삭제를 하고 싶은 도메인을 선택합니다.</li>
+<li>쿠키나 삭제를 원하는 저장소 리소스를 클릭하고 "Remove"를 클릭합니다.</li>
+</ol>
+
+<p>혹은</p>
+
+<ol>
+<li>개발자도구의 리소스 패널에서 개별 항목들을 삭제할 수도 있습니다.</li>
+</ol>
+
+<p>안드로이드:</p>
+
+<ol>
+<li>"Settings"을 엽니다.</li>
+<li>"Content settings"를 엽니다.</li>
+<li>"Website settings"를 엽니다.</li>
+<li>도메인을 탭합니다.</li>
+<li>"Clear stored data"를 탭합니다.</li>
+</ol>
+
+<p>안드로이드용 크롬에서 위에서 기술한 데스크톱 버전과 동일한 절차들을 따라 저장소들을 조사할 수 있습니다. 안드로이드용 크롬을 어떻게 디버깅하는지 알고 싶으시다면 "<a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Remote debugging</a>" 글을 참조하시기 바랍니다.</p>
+
+<h2 id="toc-firefox">파이어폭스 / 안드로이드용 파이어폭스</h2>
+
+<table>
+<tr>
+<th></th>
+<th>AppCache</th>
+<th>FileSystem</th>
+<th>IndexedDB</th>
+<th>WebSQL</th>
+<th>LocalStorage</th>
+<th>SessionStorage</th>
+</tr>
+<tr>
+<td>Firefox 26</td>
+<td>500<span class="mb">MB</span>, 무제한</td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span>, 무제한</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
+</tr>
+<tr>
+<td>Firefox for Android 26</td>
+<td>5<span class="mb">MB</span>, 무제한</td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 무제한</td>
+<td class="empty"></td>
+<td colspan="2">10<span class="mb">MB</span></td>
+</tr>
+</table>
+
+<p>파이어폭스는 IndexedDB, LocalStorage과 SessionStorage를 사용할 수 있습니다. LocalStorage과 SessionStorage는 저장소에서 10MB까지 사용할 수 있으나 저 수치는 사실 양측(LocalStorage와 SessionStorage)의 합계입니다.<br />IndexedDB의 경우 데스크톱에서는 50MB까지, 모바일에서는 5MB까지 무료로 사용할 수 있습니다. 그러나 권한 허가 과정을 통해 사용자는 제한을 제거하기 할 수 있습니다.</p>
+<p>어플리케이션 캐시(Application Cache)의 경우 데스크톱에서는 500MB까지, 모바일에서는 5MB까지 무료로 사용할 수 있습니다. 사용자 권한에 대해서도 동일합니다. <code>about:config</code>에서 IndexedDB에 대해 <code>dom.indexedDB.warningQuota</code>와 어플리케이션 캐시에 대해 <code>browser.cache.offline.capacity</code>를 변경함으로써 제한에 대한 경고 역시 변경할 수 있습니다.</p>
+
+<figure><img src="ff-premission.png" /></figure>
+
+<figure><img src="ff-android-permission.png" /></figure>
+
+<blockquote class="commentary talkinghead"><b>주의</b>: 파이어폭스가 실제로는 sqlite 내의 IndexedDB 데이터를 압축된 BLOB처럼 저장하므로 원본 객체의 리플렉트(Reflect)되지 않을 것입니다.</blockquote>
+
+<h3 id="toc-firefox_inspect">어떻게 조사하는가</h3>
+
+<p>여러분은 실제 사용량을 데스크톱에서 <a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Tahoe Data Manager</a>라 불리는 애드온을 사용하여 조사할 수 있습니다만 그의 저장소 탭은 파이어폭스 26버전에서는 동작하는 것으로 보이지는 않습니다. sqlite 파일들은 각각의 OS들의 프로파일 디렉토리 밑의 idb 폴더에 존재합니다.</p>
+
+<p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default\storage\persistent</code><br />
+<strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default/storage/persistent</code></p>
+
+<p><a href="http://sqlite-manager.googlecode.com">SQLite Manager</a>라 불리는 애드온은 아마 GUI를 사용하여 조사를 하고자 할 때 좋은 선택지가 되어줄 것입니다.</p>
+
+<figure><img src="sqlite-manager.png" /></figure>
+
+<p>만약 도메인별로 권한을 제거하고 싶으시다면 <code>about:permissions</code> 페이지로 가시기 바랍니다.</p>
+
+<p>안드로이드 버전의 경우 도메인별로 저장된 데이터를 조사하거나 삭제하는 방법은 발견할 수 없었습니다. 모바일 파이어폭스의 디버깅에 대해 좀 더 알아보고 싶다면 <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android">이 문서</a>를 보시기 바랍니다.</p>
+
+<h2 id="toc-android">안드로이드 브라우저</h2>
+
+<table>
+<tr>
+<th></th>
+<th>AppCache</th>
+<th>FileSystem</th>
+<th>IndexedDB</th>
+<th>WebSQL</th>
+<th>LocalStorage</th>
+<th>SessionStorage</th>
+</tr>
+<tr>
+<td>Android Browser</td>
+<td>무제한?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>200<span class="mb">MB</span>~?</td>
+<td>2<span class="mb">MB</span></td>
+<td>무제한</td>
+</tr>
+</table>
+
+<p>안드로이드 브라우저는 Application Cache, WebSQL, LocalStorage 그리고 SessionStorage를 사용할 수 있습니다.<br />
+다른 브라우저들과 비교했을 때 안드로이드 브라우저는 오히려 2MB로 작은 LocalStorage를 가지고 있습니다. SessionStorage는 디스크 대신 메모리에 저장되므로 제한이 없습니다.<br />
+안드로이드 브라우저에서 WebSQL을 시험하는 것은 어렵습니다. 약 500KB 정도의 데이터를 하나의 트랜잭션에서 저장하는 것은 에러를 반환하지만 이를 여러개의 트랜잭션으로 나누는 것은 정상적으로 동작하는 것으로 보입니다. 저는 충돌이 발생하기 전까지 권한없이 약 200MB 정도를 저장할 수 있었습니다.<br />
+확인되지는 않았지만 Application Cache는 데이터를 저장하는데 별다른 제한이 없는 것으로 알려져 있습니다.</p>
+
+<h3 id="toc-android_inspect">어떻게 조사하는가</h3>
+
+<p>여러분은 <a href="https://developers.google.com/chrome-developer-tools/docs/debugger-protocol">개발자도구 프로토콜(DevTools protocol)</a>을 사용하여 원격으로 브라우저와 인터랙션을 할 수 있는 <a href="http://people.apache.org/~pmuellr/weinre/docs/latest/">weinre</a>를 이용하여 WebSQL, LocalStorage 그리고 SessionStroage 상에 저장된 데이터를 조사할 수 있습니다. </p>
+
+<figure><img src="weinre.png" /></figure>
+
+<p>weinre 상에서 이러한 데이터를 개별적으로 삭제할 수 있습니다. 만약 설치된 weinre가 없다면 다음 설명에 따라 삭제를 할 수 있습니다. 단, 도메인 단위로 삭제할 수 없다는 점에는 주의하시기 바랍니다.</p>
+
+<p>시스템의 "Settings" > "Apps" > "Browser"를 열고 "Clear data"를 선택하세요.</p>
+
+<h2 id="toc-safari">사파리 / iOS용 사파리</h2>
+
+<table>
+<tr>
+<th></th>
+<th>AppCache</th>
+<th>FileSystem</th>
+<th>IndexedDB</th>
+<th>WebSQL</th>
+<th>LocalStorage</th>
+<th>SessionStorage</th>
+</tr>
+<tr>
+<td>Safari 6, 7</td>
+<td>무제한?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 50<span class="mb">MB</span>, 100<span class="mb">MB</span>, 500<span class="mb">MB</span>, 600<span class="mb">MB</span>, 700<span class="mb">MB</span>...</td>
+<td>5<span class="mb">MB</span></td>
+<td>무제한</td>
+</tr>
+<tr>
+<td>Mobile Safari 6, 7</td>
+<td>300<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>5<span class="mb">MB</span>, 10<span class="mb">MB</span>, 25<span class="mb">MB</span>, 50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+</tr>
+<tr>
+<td>iOS WebView</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>50<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+<td>5<span class="mb">MB</span></td>
+</tr>
+</table>
+
+<p>사파리는 Application Cache, WebSQL, LocalStorage 그리고 SessionStorage를 사용할 수 있습니다. <br />
+데스크톱 상에서 LocalStorage를 5MB까지 사용할 수 있습니다. 안드로이드 브라우저와 비슷하게 SessionStorage는 디스크 대신 메모리에 데이터를 저장하므로 제한 없이 사용할 수 있습니다. <br />
+여기서 WebSQL의 할당 정책은 약간 특이합니다. 사파리는 사용자에게 위에서 기술한 여러개의 할당 크기 중 사용자의 허가를 요청합니다. 그러나 만약 <code>openDatabase</code>가 5MB 이상의 크기로 호출되면 사파리는 데이터베이스 생성 시 사용자에게 가장 근접한 상한선에 대한 권한을 요청할 것입니다. 만약 허가되면 사용자는 실제 데이터가 저 값을 초과할 무렵까지 다른 권한을 요청하지 않을 것입니다.<br />
+확인되지 않았지만 사파리에서 Application Cache 역시 데이터 저장에 대해 특별한 제한을 두고 있지 않은 것으로 알려져있습니다.</p>
+
+<p>모바일에서 규칙은 유사하지만 상한선이 다릅니다. <br />
+SessionStorage는 LocalStorage와 마찬가지로 5MB로 제한되어 있습니다. WebSQL은 사용자에게 권한을 요청하지만 50MB 이상의 데이터를 저장할 수 없습니다.<br />
+Application Cache의 상한선이 10MB라는 정보를 확인한 적은 없지만 제 경우 최소 300MB까지의 데이터를 성공적으로 저장할 수 있었습니다.
+</p>
+
+<blockquote class="commentary talkinghead"><b>주의</b>: iOS 7의 사파리는 <a href="http://www.mobilexweb.com/blog/safari-ios7-html5-problems-apis-review" target="_blank">데이터베이스 생성 시 5MB 이상의 데이터를 요청할 때 예외를 발생하는 버그가 있습니다</a>. 이는 현재 iOS 7.0.4에서 수정되지 않았습니다. 5MB 이하의 크기를 요청하고 사파리가 권한을 요청하는 것을 피해 작업하시기 바랍니다. 이는 사용자들이 짜증나게 만들수 있지만 다른 방법이 없습니다.</blockquote>
+
+<p>iOS 웹뷰에서 WebSQL 또한 50MB의 상한선을 가지고 있습니다만 권한을 요청하거나 에러를 발생하지는 않을 것입니다.
+</p>
+
+<h3 id="toc-safari_inspect">어떻게 조사하는가</h3>
+
+<p>데스크톱에서 LocalStorage, SessionStorage 및 WebSQL을 조사하기 위해 Web Inspector를 사용할 수 있습니다.</p>
+
+<figure><img src="safari-inspector.png" /></figure>
+<p>모바일에서는 LocalStorage와 SessionStorage를 조사할 수 있습니다. 모바일 사파리에서의 디버깅에 대해 더 알아보고 싶으시다면 <a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Conceptual/Safari_Developer_Guide/GettingStarted/GettingStarted.html#//apple_ref/doc/uid/TP40007874-CH2-SW8">이 문서</a>를 확인해보시기 바랍니다.</p>
+
+<h2 id="toc-ie">인터넷 익스플로러</h2>
+
+<table>
+<tr>
+<th></th>
+<th>AppCache</th>
+<th>FileSystem</th>
+<th>IndexedDB</th>
+<th>WebSQL</th>
+<th>LocalStorage</th>
+<th>SessionStorage</th>
+</tr>
+<tr>
+<td>IE 9</td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
+</tr>
+<tr>
+<td>IE 10, 11</td>
+<td>100<span class="mb">MB</span>?</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span>, 250<span class="mb">MB</span> (~999<span class="mb">MB</span>)</td>
+<td class="empty"></td>
+<td>10<span class="mb">MB</span></td>
+<td>10<span class="mb">MB</span></td>
+</tr>
+</table>
+
+<p>인터넷 익스플로러는 버전 9 이후부터 LocalStorage와 SessionStorage를 지원합니다. 버전 10부터는 Application Cache와 Indexed DB도 지원하기 시작했습니다. <br />
+LocalStorage와 Session Storage 상에서 사용자는 각각 10MB까지 데이터를 저장할 수 있습니다. <br />
+IndexedDB의 경우 기본적으로 브라우저가 10MB에서 사용자에게 권한을 요청하여 250MB까지 저장을 허용합니다. 권한없이 최대 999MB까지 저장할 수 있습니다만 사용자가 이를 허가하도록 설정을 바꾸어야 합니다. 개발자는 이 설정을 변경할 수 없습니다. <br />
+Application Cache의 경우 약 100MB정도의 저장에서 에러를 확인하였습니다만 할당량을 넘었기 때문인지는 확인하기 어렵습니다.</p>
+
+<figure><img src="ie-settings.png" /></figure>
+
+<h3 id="toc-ie_inspect">어떻게 조사하는가</h3>
+
+<p>불행하게도 인터넷 익스플로러 상에서 지원하는 저장소를 조사하기 위한 좋은 방법은 아직 없습니다. <br />
+다음 방법을 통해 여전히 도메인 단위로 저장된 데이터를 삭제할 수 있습니다.</p>
+
+<ol>
+<li>"인터넷 옵션(Internet Options)"을 엽니다.</li>
+<li>"일반(General)" 탭에서 "브라우징 이력(Browsing history)" 밑에 있는 "설정(Settings)"을 클릭합니다.</li>
+</ol>
+
+<h2 id="toc-how_to_handle_going_over_quota">어떻게 할당량을 초과하도록 조작할 수 있는가?</h2>
+
+<p>여러분의 앱이 할당량을 초과했을 때 무엇을 해야할까요? 물론 이는 앱의 디자인에 의존적이기는 합니다만 어떻게 API들이 반응하는지를 이해하는 것이 중요합니다. 인터넷 상에 예제가 많지 않기 때문에 몇가지 샘플 코드를 공유하고자 합니다.</p>
+
+<h3 id="toc-appcache">Application Cache</h3>
+
+<p>가장 디버깅하기 힘든 저장소는 바로 Application Cache입니다. 몇몇 브라우저는 콘솔에서 무언가 일어났을 때 에러의 이유를 친절하게 얘기해주지만 이벤트 핸들러와 연관된 <code>DOMError</code> 객체가 없기 때문에 프로그래밍을 통해 무엇이 일어나고 있는지를 알 방법은 없습니다.</p>
+
+<pre class="prettyprint"><code>var appCache = window.applicationCache;
+appCache.addEventListener('error', function(e) {
+  // 콜백 인자와 연관된 정보가 없기 때문에 이 에러의 원인이 무엇인지를 알기는 어렵습니다.
+});</code></pre>
+
+<h3 id="toc-filesystem">FileSystem API</h3>
+
+<p><a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">파일시스템</a>의 할당량 초과 에러를 생성하는데는 많은 경우가 존재합니다.</p>
+<p>code>FileEntry</code>나 <code>DirectoryEntry</code>의 <code>getFile()</code>, <code>copyTo()</code> 혹은 <code>moveTo</code> 함수들에서 할당량을 초과하였을 때 에러는 인자로써 <code>FileError</code>를 가지는 두번째 인자인 함수를 호출합니다.</p>
+<p><code>FileWriter</code>의 <code>write()</code> 함수에서 할당량을 초과하였을 때, 에러는 인자로써 <code>ProgressEvent</code>를 가지는 <code>onerror()</code> 함수를 호출합니다. <code>FileError</code> (<code>DOMError</code>로 변경될 예정입니다.)는 <code>ProgressEvent.target.error</code>로 덧붙여집니다.</p>
+<p>에러가 할당량 초과로 인해 발생한 것인지를 판별하기 위해서는 <code>FileError</code> 객체의 <code>name</code> 속성이 "<code>QuotaExceededError</code>"인지 아닌지를 확인해보면 됩니다.</p>
+
+<p>만약 여러분이 API의 동기화 버전(<a href="http://www.html5rocks.com/en/tutorials/file/filesystem-sync/">FileSystemSync</a>)을 사용하고 있다면 FileSystem은 <code>DOMException</code>을 발생한다는 점을 주의하시기 바랍니다.</p>
+
+<pre class="prettyprint"><code>filesystem.root.getDirectory(dirName, {create:true, exclusive:false},
+function getDirectorySuccess(dirEntry) {
+  dirEntry.getFile(fileName, {create:true, exclusive:false},
+  function getFileSuccess(fileEntry) {
+    fileEntry.createWriter(function(writer) {
+      writer.onwriteend = function() {
+        ...
+      };
+      writer.onerror = function(progressEvent) {
+        var fileError = progressEvent.target.error;
+        if (fileError.name === 'QuotaExceededError') {
+          // 예비 코드는 여기에 위치합니다.
+        }
+      };
+      writer.write(blob);
+    });
+  },
+  // 향후 인자는 DOMError가 될 것입니다.
+  function getFileError(fileError) {
+    if (fileError.name == 'QuotaExceededError') {
+      // 예비 코드는 여기에 위치합니다.
+    }
+  });
+},
+// 향후 인자는 DOMError가 될 것입니다.
+function getDirectoryError(fileError) {
+  if (fileError.name == 'QuotaExceededError') {
+    // 예비 코드는 여기에 위치합니다.
+  }
+});</code></pre>
+
+<h3 id="toc-indexeddb">IndexedDB API</h3>
+
+<p><a href="http://www.html5rocks.com/ko/tutorials/indexeddb/todo/">IndexedDB API</a>에서 만약 할당량이 초과했을 때, <code>Event</code>를 인자로 가지는 트랜잭션의 <code>onabort()</code> 함수가 호출됩니다. 에러가 할당량 초과로 인해 발생한 것인지를 판별하기 위해서는 <code>FileError</code> 객체의 <code>name</code> 속성이 "<code>QuotaExceededError</code>"인지 아닌지를 확인해보면 됩니다.</p>
+
+<p>브라우저가 저장소 크기를 확장하기 위해 사용자에게 권한을 요청할 때 모든 브라우저들은 사용자가 이를 허가하지 않을 때만 이 함수를 호출합니다. 그렇지 않으면 트랜잭션을 계속 진행합니다.</p>
+
+<pre class="prettyprint"><code>var transaction = idb.transaction(['entries'], 'readwrite');
+transaction.oncomplete = function(e) {
+  ...
+};
+transaction.onerror = function(e) {
+  ...
+};
+transaction.onabort = function(event) {
+  var error = event.target.error; // DOMError
+  if (error.name == 'QuotaExceededError') {
+    // 예비 코드는 여기에 위치합니다.
+  }
+};
+var req = transaction.objectStore('entries').put(data);
+req.onerror = function(e) {
+  // 할당 에러(Quota erro)는 이 함수를 호출하지 않습니다.
+};</code></pre>
+
+<h3 id="tos-websql">WebSQL 데이터베이스</h3>
+
+<p><a href="http://www.html5rocks.com/en/tutorials/webdatabase/todo/">WebSQL</a>은 약간 트릭이 필요합니다. WebSQL에서 할당량을 초과했을 때 에러는 <code>SQLError</code>를 인자로 하여 트랜잭션의 2번째 인자인 함수를 호출합니다. 할당량 초과로 인해 발생한 에러인지를 확인하기 위해서는 <code>SQLError</code> 객체의 <code>code</code> 속성이 <code>SQLError.QUOTA_ERR</code>인지 아닌지를 확인하면 됩니다.</p>
+
+<p>불행하게도 사파리는 이 함수를 사용자가 저장소 공간의 확장을 허가했던 안했던 호출합니다. 또한 개발자 입장에서 사용자가 정말 주어진 권한을 가지고 있는지 알 수 있는 방법도 없습니다.</p>
+
+<pre class="prettyprint"><code>db.transaction(function onTransaction(t) {
+  t.executeSql('INSERT INTO entries (name, size, date, payload) VALUES(?, ?, ?, ?)', data,
+  function onExecuteSqlCallback(t, results) {
+    ...
+  },
+  function onExecuteSqlError(t, e) {
+    // 롤백을 위해서는 true를 반환합니다. false는 트랜잭션을 지속합니다.
+    return false;
+  });
+},
+function onTransactionError(sqlError) {
+  // 사파리는 사용자가 더 많은 할당량을 허가했는지와 관계없이 이 함수를 호출합니다.
+  // 그리고 사용자의 행동을 개발자가 알 방법이 없습니다.
+  if (sqlError.code === sqlError.QUOTA_ERR) {
+    // 사용자가 이를 허가했는지 아닌지를 확인하기 위해 트랜잭션을 다시 시작합니다.
+  }
+},
+function onTransactionSuccess() {
+  ...
+});</code></pre>
+
+<h3 id="tos-localstorage">LocalStorage</h3>
+
+<p><a href="http://www.w3.org/TR/webstorage/">LocalStorage 혹은 SessionStorage</a>의 할당량이 초과했을 때 <code>try catch</code>를 사용하여 예외를 검출할 수 있습니다. 할당량의 초과로 인해 에러가 발생했는지를 확인하기 위해서는 <code>DOMException</code>의 <code>name</code> 속성이 "<code>QuotaExceededError</code>" 혹은 (파이어폭스에서는) "<code>NS_ERROR_DOM_QUOTA_REACHED</code>"인지를 확인하면 됩니다.</p>
+
+<pre class="prettyprint"><code>try {
+  localStorage.setItem(data.name, JSON.stringify(data));
+} catch(domException) {
+  if (domException.name === 'QuotaExceededError' ||
+      domException.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+    // 예비 코드는 여기에 위치합니다.
+  }
+}</code></pre>
+
+<h2 id="toc-conclusion">결론</h2>
+
+<p>위에서 보셨다시피 저장소, 할당량 그리고 제한에 대해 모든 브라우저는 자신만의 특성을 가지고 있습니다. 여러분의 앱이 할당량 초과와 의미있는 결과로 우아하게 되돌아가도록 확실히 하는 것은 중요합니다. 또한 논의 중인 규격들인 <a href="http://www.youtube.com/watch?v=Z7sRMg0f5Hk">ServiceWorker</a>와 <a href="http://www.w3.org/TR/quota-api/">새로운 Quota Management API</a>를 확인해보시기 바랍니다. 이들은 앞으로 여러분이 구현할 때 이 글에서 기술하고 있는 제한들과 소통하는 방법들을 철저하게 바꾸어줄 것입니다.</p>
+
+<p>마지막으로 이 글에서 어떠한 교정 사항이나 업데이트 사항을 발견하셨다면 편안한 마음으로 <a href="https://github.com/html5rocks/www.html5rocks.com/issues?state=open" target="_blank">Pull Requests</a>를 보내주시기 바랍니다.</p>
+
+{% endblock %}
