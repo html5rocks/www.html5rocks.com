@@ -55,7 +55,7 @@ class ContentHandler(webapp2.RequestHandler):
   FEATURE_PAGE_WHATS_NEW_LIMIT = 10
 
   def get_language(self):
-    lang_match = re.match("^/(\w{2,3})(?:/|$)", self.request.path)
+    lang_match = re.match("^/(.*?)(?:/|$)", self.request.path)
     return lang_match.group(1) if lang_match else None
 
   def activate_language(self, language_code):
@@ -431,7 +431,7 @@ class ContentHandler(webapp2.RequestHandler):
           'pt': 'Português (Brasil)',
           'ru': 'Pусский',
           'zh': '中文 (简体)',
-          'zh-TW': '中文（繁體）',
+          'tw': '中文（繁體）',
           'fa': 'فارسی'
         }
         loc_list = []
