@@ -147,9 +147,9 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
   <dt>rejected</dt>
   <dd>promise가 실패(failed)하였음과 관련된 액션</dd>
   <dt>pending</dt>
-  <dd>아직 완수되거나(fulfilled) 거부되지(rejected) 않은 상태</dd>
+  <dd>아직 완료되거나(fulfilled) 거부되지(rejected) 않은 상태</dd>
   <dt>settled</dt>
-  <dd>완수되거나(fulfilled) 거부된(rejected) 상태</dd>
+  <dd>완료되거나(fulfilled) 거부된(rejected) 상태</dd>
 </dl>
 
 <p>또한 규격에서는 객체를 promise처럼 기술하기 위해 <strong>thenable</strong> 용어를 사용하고, 이는 "then" 메소드를 가집니다. 이 용어는 제게 전 영국 축구 감독이었던 <a href="http://en.wikipedia.org/wiki/Terry_Venables">Terry Venables</a>를 떠올리게 하므로 가능한한 이를 적게 사용하도록 하겠습니다.</p>
@@ -200,12 +200,12 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 <p>저러한 브라우저들이 스펙을 준수하거나 다른 브라우저와 Node.js에 promises를 추가하기 위해서 <a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">대체 라이브러리(Polyfill)</a> (gzip으로 압축 시 2KB)를 확인해보시기 바랍니다.</p>
 
 <h2 id="toc-lib-compatibility">다른 라이브러리들과의 호환성</h2>
-<p>자바스크립트 Promise API는 promise와 유사한 "then" 메소드(혹은 <em>thenable</em>와 같은...promise가 <em>*한숨*</em>을 쉬는 소리가 들리는군요.)나 <code>Promise.cast</code>를 제외하고는 자바스크립트 Promise 인스턴스와 promise와 유사한 것들 사이의 차이가 없는 어떤 것이라도 취급할 수 있을 것입니다. 그러므로 Q promise를 반환하는 라이브러리를 사용하고 있다면 괜찮습니다. 그것은 새로운 자바스크립트 promise와도 잘 동작할 것입니다.</p>
+<p>자바스크립트 Promise API는 promise와 유사한 "then" 메소드(혹은 <em>thenable</em>와 같은...promise가 <em>*한숨*</em>을 쉬는 소리가 들리는군요.)로 어떤 것이라도 다룰 수 있습니다. 그러므로 Q promise를 반환하는 라이브러리를 사용하고 있다면 괜찮습니다. 그것은 새로운 자바스크립트 promise와도 잘 동작할 것입니다.</p>
 <p>이미 언급한 것처럼 비록 jQuery의 Deferred는 약간...쓸모가 없습니다. 고맙게도 그것들을 다음과 같이 표준 promise로 변환할 수 있으며 이는 가능한한 빠르게 해볼만한 가치가 있습니다.</p>
 
-<pre class="prettyprint">var jsPromise = Promise.cast($.ajax('/whatever.json'));</pre>
+<pre class="prettyprint">var jsPromise = Promise.resolve($.ajax('/whatever.json'));</pre>
 
-<p>여기 jQuery의 <code>$.ajax</code>는 Deffered를 반환합니다. 이것은 "then" 메소드를 가지고 있으므로 <code>Promise.cast</code>는 이를 자바스크립트 promise로 변환할 수 있습니다. 그러나 때로 Deffered들은 다음 예제와 같이 그들의 콜백으로 여러개의 인자들을 전달합니다.</p>
+<p>여기 jQuery의 <code>$.ajax</code>는 Deffered를 반환합니다. 이것은 "then" 메소드를 가지고 있으므로 <code>Promise.resolve</code>는 이를 자바스크립트 promise로 변환할 수 있습니다. 그러나 때로 Deffered들은 다음 예제와 같이 그들의 콜백으로 여러개의 인자들을 전달합니다.</p>
 
 <pre class="prettyprint">var jqDeferred = $.ajax('/whatever.json');
 
@@ -553,9 +553,9 @@ story.chapterUrls.forEach(function(chapterUrl) {
   });
 });</pre>
 
-<p>이것이 우리가 전달한 값에 대해 해결(resolve)하는 promise를 생성하는 <code>Promise.resolve</code>를 처음으로 보는 순간입니다. 만약 ('then' 메소드를 가져) promise스러운 무언가에 이를 전달한다면, 같은 방식으로 fulfills/rejects되는 새로운 promise를 효과적으로 복제하여 생성합니다. 만약 <code>Promise.resolve('Hello')</code> 같이 다른 값을 전달한다면 그 값으로 완수된(fulfill) promise를 생성할 것입니다. 만약 위와 같이 아무 값도 없이 이를 호출한다면 "undefined"가 완수된(fulfill) promise가 생성될 것입니다.</p>
+<p>이것이 우리가 전달한 값에 대해 해결(resolve)하는 promise를 생성하는 <code>Promise.resolve</code>를 처음으로 보는 순간입니다. 만약 <code>Promise</code>의 인스턴스를 전달하면 이는 단순히 이를 반환할 것입니다. (<strong>주의:</strong> 이는 몇몇 구현체에서는 아직 따르지않고 있는 규격 상의 변경 사항입니다.) 만약 ('then' 메소드를 가지고 있는) promise스러운 뭔가를 전달한다면 이는 같은 방식으로 완료/거절되는 진짜 <code>Promise</code>를 생성합니다. 만약 <code>Promise.resolve('Hello')</code>와 같이 전혀 다른 값을 전달한다면 이는 저 값으로 완료되는 promise를 생성할 것입니다. 그리고 위와 같이 아무 값도 없이 이를 호출한다면 이는 "undefined"로 완료될 것입니다.</p>
 
-<p>여기에는 또한 여러분이 준 값(혹은 undefined)를 거부하는 promise를 생성하는 code>Promise.reject(val)</code>도 있습니다.</p>
+<p>여기에는 또한 여러분이 준 값(혹은 undefined)를 거부하는 promise를 생성하는 <code>Promise.reject(val)</code>도 있습니다.</p>
 <p>위의 코드를 <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">array.reduce</a></code>를 사용하여 다음과 같이 깔끔하게 정리할 수 있습니다.</p>
 
 <pre class="prettyprint">// 챕터 url들에 대해 루프를 처리합니다.
@@ -607,7 +607,7 @@ story.chapterUrls.reduce(function(sequence, chapterUrl) {
   //...
 });</pre>
 
-<p><code>Promise.all</code>는 promise의 배열을 받아 모든 promise가 성공적으로 완료되었을 때 완수되는(fulfill) promise를 생성합니다. 여러분은 (promise에 완수된(fulfill) 무엇이던지 간에) 결과들의 배열을 넘겨준 promise와 동일한 순서대로 받을 수 있습니다.</p>
+<p><code>Promise.all</code>는 promise의 배열을 받아 모든 promise가 성공적으로 완료되었을 때 완료되는(fulfill) promise를 생성합니다. 여러분은 (promise에 완료된(fulfill) 무엇이던지 간에) 결과들의 배열을 넘겨준 promise와 동일한 순서대로 받을 수 있습니다.</p>
 
 <pre class="prettyprint">getJSON('story.json').then(function(story) {
   addHtmlToPage(story.heading);
@@ -710,7 +710,7 @@ adder.next(50).value; // 65</pre>
     if (result.done) {
       return result.value;
     } else {
-      return Promise.cast(result.value).then(onFulfilled, onRejected);
+      return Promise.resolve(result.value).then(onFulfilled, onRejected);
     }
   }
   var generator = generatorFunc();
@@ -757,28 +757,24 @@ adder.next(50).value; // 65</pre>
 
 <h3>정적 메소드(Static Methods)</h3>
 <dl>
-  <dt><code>Promise.cast(promise);</code></dt>
+  <dt><code>Promise.resolve(promise);</code></dt>
   <dd>promise를 반환합니다. (<code>promise.constructor == Promise</code>일 경우에만)
-  <p class="notice"><b>주의:</b> 당분간 크롬에서만 구현되어 있을 것입니다.</p></dd>
-  <dt><code>Promise.cast(obj);</code></dt>
-  <dd>obj로 완수될 promise를 생성합니다.
-  <p class="notice"><b>주의:</b> 당분간 크롬에서만 구현되어 있을 것입니다.</p></dd>
   <dt><code>Promise.resolve(thenable);</code></dt>
-  <dd>새로운 promise를 thenable로부터 생성합니다. thenable은 "then" 메소드를 가진 promise스러운 것입니다. 이는 진짜 자바스크립트 promise를 넘기면 새로운 promise를 생성하며 <code>Promise.cast</code>보다 비효율적으로 캐스팅되도록 만들어집니다..
+  <dd>새로운 promise를 thenable로부터 생성합니다. thenable은 "then" 메소드를 가지고 있는한 promise스러운 것입니다.
   <p class="notice"><b>주의:</b> 크롬에서는 다음과 같이 다르게 호출됩니다. <code>Promise.resolved</code></p>
   </dd>
   <dt><code>Promise.resolve(obj);</code></dt>
-  <dd>obj로 완수될 promise를 생성합니다. 이 경우에는 <code>Promise.cast(obj)</code>와 동일합니다.
+  <dd>이 경우 obj로 완료될 promise를 생성합니다.
     <p class="notice"><b>주의:</b> 크롬에서는 다음과 같이 다르게 호출됩니다. <code>Promise.resolved</code></p></dd>
   <dt><code>Promise.reject(obj);</code></dt>
   <dd>obj를 거부하는 promise를 생성합니다. 일관성과 디버깅(예를 들어 스택 추적)을 위해 obj는 <code>instanceof Error</code>가 성립되어야 합니다.
   <p class="notice"><b>주의:</b> 크롬에서는 다음과 같이 다르게 호출됩니다. <code>Promise.rejected</code></p>
   <dt>
   <dt><code>Promise.all(array);</code></dt>
-  <dd>배열 내의 모든 아이템이 완수되거나 그 중 어떤 아이템이라도 거부되는 경우(그리고 거부되었을 때) 거부되는 promise를 생성합니다. 추가된 배열 아이템은 Promise.cast로 전달되므로 배열은 promise스러운 객체들과 다른 객체들의 혼합일 수 있습니다. 완수된 값은 완수된 값들의 (순차적인) 배열입니다. 거부된 값은 첫번째로 거부된 값입니다.
+  <dd>배열 내의 모든 아이템이 완료되거나 그 중 어떤 아이템이라도 거부되는 경우(그리고 거부되었을 때) 거부되는 promise를 생성합니다. 추가된 배열 아이템은 Promise.resolve로 전달되므로 배열은 promise스러운 객체들과 다른 객체들의 혼합일 수 있습니다. 완료된 값은 완료된 값들의 (순차적인) 배열입니다. 거부된 값은 첫번째로 거부된 값입니다.
   <p class="notice"><b>주의:</b> 당분간 크롬에서만 구현되어 있을 것입니다.</p></dd>
   <dt><code>Promise.race(array);</code></dt>
-  <dd>어떤 아이템이라도 달성되면 함께 달성되고 반대로 어떤 아이템이라도 거부되면 함께 거부되는 promise를 생성합니다.
+  <dd>어떤 아이템이라도 완료되면 함께 완료되고 반대로 어떤 아이템이라도 거부되면 함께 거부되는 promise를 생성합니다.
   <p class="notice"><b>Note:</b> 크롬에서만 <code>Promise.one</code>로 구현되어 있습니다. 또한, 저는 이에 대한 유용성에 대하여 납득하지 못하고 있고 만약 모든 아이템이 거부되었을 때만 거부되는 <code>Promise.all</code>에 대한 정반대의 기능이 낫다고 생각합니다.</p></dd>
 </dl>
 
@@ -786,9 +782,9 @@ adder.next(50).value; // 65</pre>
 <pre class="prettyprint">new Promise(function(resolve, reject) {});</pre>
 <dl>
   <dt><code>resolve(thenable)</code></dt>
-  <dd>promise는 <code>thenable</code>에 의해 달성/거부(fulfilled/rejected)됩니다.</dd>
+  <dd>promise는 <code>thenable</code>에 의해 완료/거부(fulfilled/rejected)됩니다.</dd>
   <dt><code>resolve(obj)</code></dt>
-  <dd><code>obj</code>에 의해 달성됩니다.</dd>
+  <dd><code>obj</code>에 의해 완료됩니다.</dd>
   <dt><code>reject(obj)</code></dt>
   <dd><code>obj</code>에 의해 거부됩니다. 일관성과 디버깅(예를 들어 스택 추적)을 위해 obj는 <code>instanceof Error</code>가 성립되어야 합니다. 생성자 콜백에서 던져지는 어떠한 에러도 묵시적으로 <code>reject()</code>로 전달될 것입니다.</dd>
 </dl>
