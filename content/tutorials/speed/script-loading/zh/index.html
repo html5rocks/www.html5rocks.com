@@ -156,7 +156,7 @@ console.log('3');
 &lt;link rel="subresource" href="2.js"&gt;
 </pre>
 
-<p>这会告诉浏览器页面需要 1.js 和 2.js。 <code>link[rel=subresource]</code> 和 <code>link[rel=prefetch]</code> 类似，但有<a href="http://www.chromium.org/spdy/link-headers-and-server-hint/link-rel-subresource">不同的语义</a>。可惜的是，目前只有 Chrome 支持它，而且你需要声明哪些脚本需要加载两次，一次是通过 link 元素，另一次是在脚本中。</p>
+<p>这会告诉浏览器页面需要 1.js 和 2.js。 <code>link[rel=subresource]</code> 和 <code>link[rel=prefetch]</code> 类似，但有<a href="http://www.chromium.org/spdy/link-headers-and-server-hint/link-rel-subresource">不同的语义</a>。可惜的是，目前只有 Chrome 支持它，而且你需要两次声明哪些脚本需要加载，一次是通过 link 元素，另一次是在脚本中。</p>
 
 <p><strong>更正：</strong>我最开始说这些资源被预加载扫描器处理，实际上不是的，它们是被常规解析器处理。虽然预加载扫描器<em>能够</em>处理它们，它只是还没有这么做，不过通过执行代码而添加的脚本永远无法被预加载。感谢 <a href="https://twitter.com/yoavweiss">Yoav Weiss</a> 在留言中指正了我的错误。</p>
 
@@ -177,7 +177,7 @@ console.log('3');
 
 <p>每一个 enhancement 脚本都和一个页面组件相关，但都依赖 dependencies.js 中的工具函数。理想情况下，我们希望脚本全部异步加载，尽可能快的，按照任意顺序来执行 enhancement 脚本，但要在 dependencies.js 执行后。这就是渐进增强中的渐进增强啊！(It’s progressive progressive enhancement!)</p>
 
-<p style="background:red;color:white;">可惜的是目前不存在声明的方式来达到这一目标，除非修改脚本自身来跟踪 dependencies.js 的下载状态。即便是 async=false 也不能解决该问题，as execution of enhancement-10.js will block on 1-9. 实际上，只有一个浏览器能在不使用 hack 的情况下达到这一目的……</p>
+<p>可惜的是目前不存在声明的方式来达到这一目标，除非修改脚本自身来跟踪 dependencies.js 的下载状态。即便是 async=false 也不能解决该问题，这样一来 enhancement-10.js 的运行会被 1-9 这些文件阻塞。实际上，只有一个浏览器能在不使用 hack 的情况下达到这一目的……</p>
 
 <h2 id="toc-interesting-ie">IE 有个想法！</h2>
 
