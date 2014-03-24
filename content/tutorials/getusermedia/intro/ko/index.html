@@ -1,0 +1,652 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.videostream, #cssfilters-stream, #screenshot {
+  width: 307px;
+  height: 250px;
+}
+.videostream, #cssfilters-stream {
+  background: rgba(255,255,255,0.5);
+  border: 1px solid #ccc;
+}
+#screenshot {
+  vertical-align: top;
+}
+.blur {
+  -webkit-filter: blur(3px);
+  -moz-filter: blur(3px);
+  -o-filter: blur(3px);
+  -ms-filter: blur(3px);
+  filter: blur(3px);
+}
+.brightness {
+  -webkit-filter: brightness(5);
+  -moz-filter: brightness(5);
+  -o-filter: brightness(5);
+  -ms-filter: brightness(5);
+  filter: brightness(5);
+}
+.contrast {
+  -webkit-filter: contrast(8);
+  -moz-filter: contrast(8);
+  -o-filter: contrast(8);
+  -ms-filter: contrast(8);
+  filter: contrast(8);
+}
+.hue-rotate {
+  -webkit-filter: hue-rotate(90deg);
+  -moz-filter: hue-rotate(90deg);
+  -o-filter: hue-rotate(90deg);
+  -ms-filter: hue-rotate(90deg);
+  filter: hue-rotate(90deg);
+}
+.hue-rotate2 {
+  -webkit-filter: hue-rotate(180deg);
+  -moz-filter: hue-rotate(180deg);
+  -o-filter: hue-rotate(180deg);
+  -ms-filter: hue-rotate(180deg);
+  filter: hue-rotate(180deg);
+}
+.hue-rotate3 {
+  -webkit-filter: hue-rotate(270deg);
+  -moz-filter: hue-rotate(270deg);
+  -o-filter: hue-rotate(270deg);
+  -ms-filter: hue-rotate(270deg);
+  filter: hue-rotate(270deg);
+}
+.saturate {
+  -webkit-filter: saturate(10);
+  -moz-filter: saturate(10);
+  -o-filter: saturate(10);
+  -ms-filter: saturate(10);
+  filter: saturate(10);
+}
+.grayscale {
+  -webkit-filter: grayscale(1);
+  -moz-filter: grayscale(1);
+  -o-filter: grayscale(1);
+  -ms-filter: grayscale(1);
+  filter: grayscale(1);
+}
+.sepia {
+  -webkit-filter: sepia(1);
+  -moz-filter: sepia(1);
+  -o-filter: sepia(1);
+  -ms-filter: sepia(1);
+  filter: sepia(1);
+}
+.invert {
+  -webkit-filter: invert(1);
+  -moz-filter: invert(1)
+  -o-filter: invert(1)
+  -ms-filter: invert(1)
+  filter: invert(1)
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia || navigator.msGetUserMedia);
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+    <strong>Translator:</strong> <a href="https://plus.google.com/+nurinamu">Wonjae Lee</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-into">소개하는 글</h2>
+
+<p>오디오와 비디오 캡쳐는 오랜 기간동안, 웹 개발의 "성배" 같은 것이 었습니다.
+몇 년 동안 우리가 캡쳐를 위해서는 (<a href="http://www.kevinmusselman.com/2009/02/access-webcam-with-flash/">Flash</a> 또는
+<a href="http://www.silverlightshow.net/items/Capturing-the-Webcam-in-Silverlight-4.aspx">Silverlight</a> 같은)
+플러그인들을 사용할 수 밖에 없었습니다. <a href="http://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a></p>
+<p>HTML5는 구원자가 될 것입니다. 분명하지는 않지만 그래도 HTML5의 등장은 하드웨어 장치 접근에 대한 큰 파장을 가지고 왔습니다. <a href="/tutorials/geolocation/trip_meter/">위치정보</a> (GPS),
+<a href="/tutorials/device/orientation/">Orientation API</a> (가속도계), <a href="/tutorials/webgl/shaders/">WebGL</a> (GPU),
+<a href="/tutorials/webaudio/intro/">Web Audio API</a> (오디오 장비) 등이 완벽한 예시입니다. 이 기능들은 말도 안되게 강력하고, 시스템의 꼭대기에서 높은 수준의 JavaScript API로 노출되어 있습니다.</p>
+<p>이 튜토리얼에서는 사용자의 카메라와 마이크를 웹앱에서 접근할 수 있게 해주는 새로운 API, <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html"><code>navigator.getUserMedia()</code></a>, 를 소개합니다.</p>
+<h2 id="toc-history">getUserMedia()로 가는 길</h2>
+
+<p>만약 이 과거를 모른다면 , <code>getUserMedia()</code> API로 가는 길은 흥미로운 이야기가 될 것 입니다.</p>
+<p>지난 몇 년 동안 "Media Capture APIs"의 여러 변종들이 발달해왔습니다.
+많은 사람들이 웹에서 기본 하드웨어 장치에 접근해야 한다는 것을 깨달았지만, 그것이 새로운 사양에다 온갖 것을 다 집어 넣는 방향으로 이끌었습니다.
+모든 것들이 지저분해져서 결국 W3C가 워킹그룹을 만들기로 결정했습니다. 그들의 목적은?
+미쳐가는 것을 정리하는 것! <a href="http://www.w3.org/2009/dap/">Device APIs Policy (DAP) Working Group</a>
+은 엄청난 양의 제안들을 통합하고 정리하는 일을 시작합니다.</p>
+<p>2011년에 일어난 일들을 제가 정리해보겠습니다...</p>
+<h3 id="toc-round1">Round 1: HTML Media Capture</h3>
+
+<p><a href="http://dev.w3.org/2009/dap/camera/">HTML Media Capture</a>는 웹에서의 미디어 캡쳐 표준으로, DAP의 첫번째 목표 였습니다.
+<code>&lt;input type="file"&gt;</code>를 오버로딩하여 <code>accept</code>에 새로운 값을 추가하는 것으로 진행되었습니다.</p>
+<p>만약 웹캠으로 자신들을 찍으려면, <code>capture=camera</code>을 설정하면 됩니다:</p>
+<pre class="prettyprint"><code>&lt;input type="file" accept="image/*;capture=camera"&gt;
+</code></pre>
+<p>비디오 또는 오디오를 녹화하는 것도 비슷합니다:</p>
+<pre class="prettyprint"><code>&lt;input type="file" accept="video/*;capture=camcorder"&gt;
+&lt;input type="file" accept="audio/*;capture=microphone"&gt;
+</code></pre>
+<p>그럴싸 해 보이지 않습니까? 저는 특히 file 입력을 재사용하는 것이 마음에 들었습니다. 의미상 괜찮아 보입니다. 이 특별한 "API"는 실시간 효과를 처리하기에는 부족했습니다.
+(예를 들면, 실시간 웹캠데이터를 <code>&lt;canvas&gt;</code>에 그리는 것과 WebGL 필터들을 적용하는 것).
+HTML Media Capture는 단지 미디어 파일을 녹화하거나 그 순간 사진을 찍는 것만 가능합니다.</p>
+<p><strong>Support:</strong></p>
+<ul>
+<li><a href="http://developer.android.com/sdk/android-3.0.html">Android 3.0 browser</a> -
+첫번째 구현들 중 하나. <a href="http://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">this video</a>에서 실제 동작을 확인해보시기 바랍니다.</li>
+<li>Chrome for Android (0.16)</li>
+<li>Firefox Mobile 10.0</li>
+<li>iOS6 Safari and Chrome (부분적으로 지원)</li>
+</ul>
+<h3 id="toc-round2">Round 2: device element</h3>
+
+<p>HTML Media Capture에 대한 많은 의견들은 너무 제한적이었습니다, (향후에 나올) 어떤 장비들이 던 지원하기 위한 새로운 스팩이 등장합니다. 당연하게, <code>getUserMedia()</code>의 조상이 되는 <a href="http://dev.w3.org/html5/html-device/"><code>&lt;device&gt;</code> element</a>라는 형태로 만들어집니다.</p>
+<p>오페라는 <code>&lt;device&gt;</code>요소를 기반으로 비디오 캡쳐의 <a href="http://my.opera.com/core/blog/2011/03/14/web-meet-device">초기 구현</a>을 만든 첫번째 브라우저들 중 하나입니다.
+그이후 바로 (정확히 말하면 <a href="http://my.opera.com/core/blog/2011/03/23/webcam-orientation-preview">같은 날</a>),
+WhatWG는 새롭게 등장한 신인에 대한 찬성으로 <code>&lt;device&gt;</code> 태그를 폐기합니다, 이 JavaScript API를 <code>navigator.getUserMedia()</code>라고 부릅니다.
+일주일 뒤, Opera는 변경된 <code>getUserMedia()</code> 사양을 지원하는 새로운 빌드를 내놓습니다. 그해 말,
+Microsoft가 새로운 사양을 지원하는 <a href="http://blogs.msdn.com/b/ie/archive/2011/12/09/media-capture-api-helping-web-developers-directly-import-image-video-and-sound-data-into-web-apps.aspx">Lab for IE9</a>
+를 발표하면서 파티에 참여하게 됩니다.</p>
+<p><code>&lt;device&gt;</code>는 아래와 같은 형태 였습니다:</p>
+<pre class="prettyprint"><code>&lt;device type="media" onchange="update(this.data)"&gt;&lt;/device&gt;
+&lt;video autoplay&gt;&lt;/video&gt;
+&lt;script&gt;
+  function update(stream) {
+    document.querySelector('video').src = stream.url;
+  }
+&lt;/script&gt;
+</code></pre>
+<p><strong>Support:</strong></p>
+<p>불행히도, <code>&lt;device&gt;</code>를 포함한 브라우저가 없습니다.
+제 입장에서는 걱정거리 API 하나가 줄었습니다. :) <code>&lt;device&gt;</code>가 비록 없어졌지만 두 가지 위대한 일을 해냈습니다:
+1.) 시맨틱이었고,  2.) 단순 오디오/비디오 장비의 보다 많은 장비들을 지원하기 위해 쉽게 확장할 수 있었습니다.</p>
+<p>숨을 고르시기 바랍니다. 이제 빠르게 나갑니다!</p>
+<h3 id="toc-round3">Round 3: WebRTC</h3>
+
+<p><code>&lt;device&gt;</code>요소가 결국 멸종의 길로 가버렸습니다.</p>
+<p><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html">WebRTC</a> (Web Real Time Communications)의 큰 노력 덕분에 적절한 캡쳐 API를 찾는 속도는 가속이 붙었습니다. WebRTC 사양은 <a href="http://www.w3.org/2011/04/webrtc/">W3C WebRTC Working Group</a>에서 감독하고 Google, Opera, Mozilla와 <a href="http://webrtc.org">몇몇</a>에서 구현을 했습니다.</p>
+<p><code>getUserMedia()</code>는 WebRTC와 관련이 있습니다. 왜냐하면 WebRTC API로 가는 통로이기 때문입니다.
+사용자의 카메라와 마이크 스트림을 접근할 수 있는 수단을 제공합니다.</p>
+<p><strong>Support:</strong></p>
+<p><code>getUserMedia()</code>는 Chrome 21, Opera 18, Firefox 17 이후 버전에서 지원됩니다.</p>
+<h2 id="toc-gettingstarted">시작하기</h2>
+
+<p><code>navigator.getUserMedia()</code>를 사용하면, 드디어 플러그인 없이 웹캠과 마이크 입력을 건드릴 수 있습니다.
+카메라 접근은 이제 설치하는 것이 아니라 호출하면 됩니다. 그냥 브라우저 안에 포함되어 있습니다. 아직 와닿지 않으십니까?</p>
+<h3 id="toc-featuredecting">기능 지원 확인</h3>
+
+<p>기능 지원 확인은 단순히 <code>navigator.getUserMedia</code>이 존재하는지 확인하면 됩니다:</p>
+<pre class="prettyprint"><code>function hasGetUserMedia() {
+  return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia || navigator.msGetUserMedia);
+}
+
+if (hasGetUserMedia()) {
+  // Good to go!
+} else {
+  alert('getUserMedia() is not supported in your browser');
+}
+</code></pre>
+<p>또한 <code>getUserMedia</code>를 감지하기 위해 <a href="http://modernizr.com/">Modernizr</a>를 사용하면 벤더들의 prefix 차이 문제를 피할 수 있습니다:</p>
+<pre class="prettyprint"><code>if (Modernizr.getusermedia){
+  var gUM = Modernizr.prefixed('getUserMedia', navigator);
+  gUM({video: true}, function( //...
+  //...
+}
+</code></pre>
+<h3 id="toc-acccess">입력장치의 접근 권한 얻기</h3>
+
+<p>웹캠과 마이크에 접근하기 위해서는 권한을 요청해야 합니다.
+<code>getUserMedia()</code>의 첫번째 인자는 접근하려하는 미디어 별 상세와 요구사항들을 나타내는 객체입니다. 예를들어, 웹캠에 접근하려 한다면, 첫번째 파라미터는 반드시 <code>{video: true}</code>이어야 합니다. 마이크와 카메라 모두 사용하기 위해서는
+ <code>{video: true, audio: true}</code>를 전달합니다:</p>
+<pre class="prettyprint"><code>&lt;video autoplay&gt;&lt;/video&gt;
+
+&lt;script&gt;
+  var errorCallback = function(e) {
+    console.log('Reeeejected!', e);
+  };
+
+  // Not showing vendor prefixes.
+  navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
+    var video = document.querySelector('video');
+    video.src = window.URL.createObjectURL(localMediaStream);
+
+    // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
+    // See crbug.com/110938.
+    video.onloadedmetadata = function(e) {
+      // Ready to go. Do some stuff.
+    };
+  }, errorCallback);
+&lt;/script&gt;
+</code></pre>
+<p>자 여기서 어떤 일들이 벌어지고 있습니까? 미디어 캡쳐는 새로운 HTML5 API를 함께 사용해보는 완벽한 예제입니다. 예제는 우리의 다른 HTML5 친구들(<code>&lt;audio&gt;</code>,<code>&lt;video&gt;</code>)과 결합되어 동작합니다.
+여기에서 <code>&lt;video&gt;</code>요소에 <code>src</code> 속성을 설정하거나 <code>&lt;source&gt;</code> 요소들을 포함하고 있지 않는 것을 주목하시기 바랍니다. 미디어 파일의 비디오 URL을 삽입하는 대신에,
+웹캠의 <code>LocalMediaStream</code>에서 얻은 <a href="/tutorials/workers/basics/#toc-inlineworkers-bloburis">Blob URL</a>를 삽입합니다.</p>
+<p>그리고 <code>&lt;video&gt;</code>의 <code>autoplay</code>도 알아두셔야 합니다, 그렇지 않으면 첫번째 프레임에서 화면이 멈추게 될 것입니다.
+<code>제어판</code>을 추가하는 것도 여러분들이 원하는데로 동작할 것 입니다.</p>
+<p>크로스 브라우저 상에서 동작하는 것을 보고 싶으시다면, 이것을 따라 해보시기 바랍니다:</p>
+<pre class="prettyprint"><code>navigator.getUserMedia  = navigator.getUserMedia ||
+                          navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia ||
+                          navigator.msGetUserMedia;
+
+var video = document.querySelector('video');
+
+if (navigator.getUserMedia) {
+  navigator.getUserMedia({audio: true, video: true}, function(stream) {
+    video.src = window.URL.createObjectURL(stream);
+  }, errorCallback);
+} else {
+  video.src = 'somevideo.webm'; // fallback.
+}
+</code></pre>
+<h3 id="toc-constraints">미디어 제약조건 설정하기 (해상도, 높이, 너비)</h3>
+
+<p><code>getUserMedia()</code>의 첫번째 인자는 또한 얻게될 미디어 스트림에 대해 더 많은 요구사항들(또는 제약조건들)을 표시할 수 있습니다.
+예를 들어, 기본적인 비디오 접근 대신에 (즉 <code>{vide: true}</code>), HD 화질의 스트림을 추가적으로 요청할 수 있습니다:</p>
+<pre class="prettyprint"><code>var hdConstraints = {
+  video: {
+    mandatory: {
+      minWidth: 1280,
+      minHeight: 720
+    }
+  }
+};
+
+navigator.getUserMedia(hdConstraints, successCallback, errorCallback);
+
+...
+
+var vgaConstraints = {
+  video: {
+    mandatory: {
+      maxWidth: 640,
+      maxHeight: 360
+    }
+  }
+};
+
+navigator.getUserMedia(vgaConstraints, successCallback, errorCallback);
+</code></pre>
+<p>더 많은 설정들은 <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints">constraints API</a>에서 확인하시기 바랍니다.</p>
+<h3 id="toc-source">미디어 소스 선택하기</h3>
+
+<p>Chrome 30이후 버전에서, <code>getUserMedia()</code>는 비디오와 오디오 소스를 선택할 수 있는 <code>MediaStreamTrack.getSources()</code> API를 지원합니다.</p>
+<p>이 예제를 보면 마이크와 카매라 중 마지막으로 발견된 것이 미디어 스트림 소스로 선택됩니다:</p>
+<pre class="prettyprint"><code>MediaStreamTrack.getSources(function(sourceInfos) {
+  var audioSource = null;
+  var videoSource = null;
+
+  for (var i = 0; i != sourceInfos.length; ++i) {
+    var sourceInfo = sourceInfos[i];
+    if (sourceInfo.kind === 'audio') {
+      console.log(sourceInfo.id, sourceInfo.label || 'microphone');
+
+      audioSource = sourceInfo.id;
+    } else if (sourceInfo.kind === 'video') {
+      console.log(sourceInfo.id, sourceInfo.label || 'camera');
+
+      videoSource = sourceInfo.id;
+    } else {
+      console.log('Some other kind of source: ', sourceInfo);
+    }
+  }
+
+  sourceSelected(audioSource, videoSource);
+});
+
+function sourceSelected(audioSource, videoSource) {
+  var constraints = {
+    audio: {
+      optional: [{sourceId: audioSource}]
+    },
+    video: {
+      optional: [{sourceId: videoSource}]
+    }
+  };
+
+  navigator.getUserMedia(constraints, successCallback, errorCallback);
+}
+</code></pre>
+<p>어떻게 미디어 소스를 선택하는지에 대한 Sam Dutton의 <a href="https://simpl.info/getusermedia/sources/">훌륭한 데모</a>를 확인하시기 바랍니다.</p>
+<h3 id="toc-security">보안</h3>
+
+<p>일부 브라우저는 <code>getUserMedia()</code>를 호출시에 카메라와 마이크에 대한 접근을 허용 또는 거부할지에 대한 의견을 물어보는 상태바를 표시합니다.
+안타깝게도 사양상에서 보안에 대한 부분은 매우 적습니다. Chrome의 권한 요청 메세지 예 입니다:</p>
+<figure>
+<img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
+<figcaption>Permission dialog in Chrome</figcaption>
+</figure>
+
+<p>만약 앱이 SSL(<code>https://</code>) 상에서 동작중이라면, 권한은 지속됩니다.
+즉, 사용자가 매번 허용/거부를 할 필요가 없습니다.</p>
+<h3 id="toc-fallback">대체물 제공</h3>
+
+<p><code>getUserMedia()</code>가 지원되지 않는 사용자들을 위해, API가 지원되지 않을때 또는 특정한 이유로 호출이 실패하였을때 이미 저장된 비디오 파일로 대체하는 방법이 있습니다:</p>
+<pre class="prettyprint"><code>// Not showing vendor prefixes or code that works cross-browser:
+
+function fallback(e) {
+  video.src = 'fallbackvideo.webm';
+}
+
+function success(stream) {
+  video.src = window.URL.createObjectURL(stream);
+}
+
+if (!navigator.getUserMedia) {
+  fallback();
+} else {
+  navigator.getUserMedia({video: true}, success, fallback);
+}
+</code></pre>
+<h3 id="toc-basic-demo">Basic demo</h3>
+
+<div style="text-align:center;">
+  <video id="basic-stream" class="videostream" autoplay></video>
+  <p><button id="capture-button">Capture video</button> <button id="stop-button">Stop</button></p>
+</div>
+
+<h2 id="toc-screenshot">사진 찍기</h2>
+
+<p><code>&lt;canvas&gt;</code> API의 <code>ctx.drawImage(video, 0, 0)</code> 함수는 <code>&lt;video&gt;</code> 프레임들을 <code>&lt;canvas&gt;</code>로 쉽게 그려줍니다.
+우리는 <code>getUserMedia()</code>를 통해 비디오 입력을 가지고 있기 때문에,쉽게 실시간 포토부스 어플리케이션을 만들 수 있습니다:</p>
+<pre class="prettyprint"><code>&lt;video autoplay&gt;&lt;/video&gt;
+&lt;img src=""&gt;
+&lt;canvas style="display:none;"&gt;&lt;/canvas&gt;
+
+&lt;script&gt;
+  var video = document.querySelector('video');
+  var canvas = document.querySelector('canvas');
+  var ctx = canvas.getContext('2d');
+  var localMediaStream = null;
+
+  function snapshot() {
+    if (localMediaStream) {
+      ctx.drawImage(video, 0, 0);
+      // "image/webp" works in Chrome.
+      // Other browsers will fall back to image/png.
+      document.querySelector('img').src = canvas.toDataURL('image/webp');
+    }
+  }
+
+  video.addEventListener('click', snapshot, false);
+
+  // Not showing vendor prefixes or code that works cross-browser.
+  navigator.getUserMedia({video: true}, function(stream) {
+    video.src = window.URL.createObjectURL(stream);
+    localMediaStream = stream;
+  }, errorCallback);
+&lt;/script&gt;
+</code></pre>
+<div style="text-align:center;">
+  <video id="screenshot-stream" class="videostream" autoplay></video>
+  <img id="screenshot" src="">
+  <canvas id="screenshot-canvas" style="display:none;"></canvas>
+  <p><button id="screenshot-button">Capture</button> <button id="screenshot-stop-button">Stop</button></p>
+</div>
+
+<h2 id="toc-effects">Applying Effects</h2>
+
+<h3 id="toc-effects-css">CSS Filters</h3>
+
+<p><a href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/filters/index.html">CSS Filters</a>를 사용해서 <code>&lt;video&gt;</code>에 여러가지 재미있는 효과들을 적용할 수 있습니다:</p>
+<pre class="prettyprint"><code>&lt;style&gt;
+video {
+  width: 307px;
+  height: 250px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid #ccc;
+}
+.grayscale {
+  {% mixin filter: grayscale(1); %}
+}
+.sepia {
+  {% mixin filter: sepia(1); %}
+}
+.blur {
+  {% mixin filter: blur(3px); %}
+}
+...
+&lt;/style&gt;
+
+&lt;video autoplay&gt;&lt;/video&gt;
+
+&lt;script&gt;
+var idx = 0;
+var filters = ['grayscale', 'sepia', 'blur', 'brightness',
+               'contrast', 'hue-rotate', 'hue-rotate2',
+               'hue-rotate3', 'saturate', 'invert', ''];
+
+function changeFilter(e) {
+  var el = e.target;
+  el.className = '';
+  var effect = filters[idx++ % filters.length]; // loop through filters.
+  if (effect) {
+    el.classList.add(effect);
+  }
+}
+
+document.querySelector('video').addEventListener(
+    'click', changeFilter, false);
+&lt;/script&gt;
+</code></pre>
+<div style="text-align:center;">
+  <video id="cssfilters-stream" class="videostream" autoplay title="Click me to apply CSS Filters" alt="Click me to apply CSS Filters"></video>
+  <p>Click the video to cycle through CSS filters</p>
+  <p><button id="capture-button2">Capture video</button> <button id="stop-button2">Stop</button></p>
+</div>
+
+<h3 id="toc-effects-webgl">WebGL Textures</h3>
+
+<p>비디오 캡쳐의 놀라운 사용 예는 WebGL Texture로 실시간으로 입력그리는 것 입니다.
+(다른 사람들에게는 쉽겠지만) 저는 WebGL에 관해 전혀 모르기 떄문에, Jerome Etienne의 <a href="http://learningthreejs.com/blog/2012/02/07/live-video-in-webgl/">튜토리얼</a>
+과 <a href="http://learningthreejs.com/data/live-video-in-webgl/">데모</a>를 확인하는 것을 추천해드립니다.
+예제에서는 실시간 입력을 WebGL Texture로 그리기 위해 <code>getUserMedia()</code>와 <a href="/tutorials/three/intro/">Three.js</a>를 어떻게 사용하는지 알려줍니다.</p>
+<h2 id="toc-webaudio-api">Web Audio API와 함께 getUserMedia 사용하기</h2>
+
+<p>내 꿈들중 하나는 오픈 웹기술만으로 브라우저상의 AutoTune을 만드는 것 입니다! </p>
+<p>크롬은 <code>getUserMedia()</code>에서 실시간 효과들을 위한 <a href="/tutorials/webaudio/intro/">Web Audio API</a>로 실시간 마이크 입력을 지원합니다. 마이크 입력에서 Web Audio API로 연결하는 방법은 다음과 같습니다:</p>
+<pre class="prettyprint"><code>window.AudioContext = window.AudioContext ||
+                      window.webkitAudioContext;
+
+var context = new AudioContext();
+
+navigator.getUserMedia({audio: true}, function(stream) {
+  var microphone = context.createMediaStreamSource(stream);
+  var filter = context.createBiquadFilter();
+
+  // microphone -&gt; filter -&gt; destination.
+  microphone.connect(filter);
+  filter.connect(context.destination);
+}, errorCallback);
+</code></pre>
+<p>Demos:</p>
+<ul>
+<li><a href="http://webaudiodemos.appspot.com/input/index.html">Live Input Visualizer</a></li>
+<li><a href="http://webaudiodemos.appspot.com/AudioRecorder/index.html">Audio Recorder</a></li>
+<li><a href="http://webaudiodemos.appspot.com/pitchdetect/index.html">Pitch Detector</a></li>
+</ul>
+<p>더 많은 정보는 <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>에서 확인하시기 바랍니다.</p>
+<h2 id="toc-conclusion">결론</h2>
+
+<p>일반적으로, 웹에서 장치에 접근하는 것은 힘든 일이 었습니다. 많은
+<a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">사람들이 시도했고</a>,
+일부만이 성공했습니다. 대부분의 이전 아이디어들은 폐쇄적이거나 널리 적용되지 못하였습니다.</p>
+<p>실제 문제는 웹의 보안 모델과 현실세계의 보안 모델이 <em>매우</em> 다르다는 것입니다.
+예를 들어, 모든 Joe Shmoe web site가 내 비디오 카메라에 임의로 접근하는 것을 원하지 않을 것입니다. 그것을 허용하기란 정말 어려운 일입니다.</p>
+<p><a href="http://phonegap.com/">PhoneGap</a>같은 중계 프레임워크는 경계를 만든 것에 도움을 줄 것이지만,
+그건 임시방편일 뿐입니다. 웹앱이 데스크탑 앱과 경쟁하기 위해서는 기본장치로의 접근이 필요합니다.</p>
+<p><code>getUserMedia()</code>는 새로운 장치들에 접근하는 첫번째 파도일 뿐입니다. 저는 가까운 미래에 더 많은 것들을 계속 볼 수 있기를 기원합니다!</p>
+<h2 id="toc-resources">Additional resources</h2>
+
+<ul>
+<li><a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html">W3C specification</a></li>
+<li>Bruce Lawson's <a href="http://html5doctor.com/getusermedia/">HTML5Doctor article</a></li>
+<li>Bruce Lawson's <a href="http://dev.opera.com/articles/view/getusermedia-access-camera-privacy-ui/">dev.opera.com article</a></li>
+</ul>
+<h3 id="toc-demos">Demos</h3>
+
+<ul>
+<li><a href="http://html5-demos.appspot.com/static/getusermedia/photobooth.html">Live Photo booth</a></li>
+<li>Paul Neave's <a href="http://neave.com/webcam/html5/">WebGL Camera Effects</a></li>
+<li><a href="http://html5photobooth.com/">Snapster</a></li>
+<li><a href="http://learningthreejs.com/data/live-video-in-webgl/">Live video in WebGL</a></li>
+<li><a href="http://www.soundstep.com/blog/experiments/jsdetection/">Play Xylophone with your hands</a></li>
+</ul>
+<script>
+function errorCallback(e) {
+  if (e.code == 1) {
+    alert('User denied access to their camera');
+  } else {
+    alert('getUserMedia() not supported in your browser.');
+  }
+  //e.target.src = 'http://www.html5rocks.com/en/tutorials/video/basics/Chrome_ImF.ogv';
+}
+
+(function() {
+var video = document.querySelector('#basic-stream');
+var button = document.querySelector('#capture-button');
+var localMediaStream = null;
+
+button.addEventListener('click', function(e) {
+  if (navigator.getUserMedia) {
+    navigator.getUserMedia('video', function(stream) {
+      video.src = stream;
+      video.controls = true;
+      localMediaStream = stream;
+    }, errorCallback);
+  } else if (navigator.webkitGetUserMedia) {
+    navigator.webkitGetUserMedia({video: true}, function(stream) {
+      video.src = window.URL.createObjectURL(stream);
+      video.controls = true;
+      localMediaStream = stream;
+    }, errorCallback);
+  } else {
+    errorCallback({target: video});
+  }
+}, false);
+
+document.querySelector('#stop-button').addEventListener('click', function(e) {
+  video.pause();
+  localMediaStream.stop(); // Doesn't do anything in Chrome.
+}, false);
+})();
+
+(function() {
+var video = document.querySelector('#screenshot-stream');
+var button = document.querySelector('#screenshot-button');
+var canvas = document.querySelector('#screenshot-canvas');
+var img = document.querySelector('#screenshot');
+var ctx = canvas.getContext('2d');
+var localMediaStream = null;
+
+function sizeCanvas() {
+  // video.onloadedmetadata not firing in Chrome so we have to hack.
+  // See crbug.com/110938.
+  setTimeout(function() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    img.height = video.videoHeight;
+    img.width = video.videoWidth;
+  }, 100);
+}
+
+function snapshot() {
+  ctx.drawImage(video, 0, 0);
+  img.src = canvas.toDataURL('image/webp');
+}
+
+button.addEventListener('click', function(e) {
+  if (localMediaStream) {
+    snapshot();
+    return;
+  }
+
+  if (navigator.getUserMedia) {
+    navigator.getUserMedia('video', function(stream) {
+      video.src = stream;
+      localMediaStream = stream;
+      sizeCanvas();
+      button.textContent = 'Take Shot';
+    }, errorCallback);
+  } else if (navigator.webkitGetUserMedia) {
+    navigator.webkitGetUserMedia({video: true}, function(stream) {
+      video.src = window.URL.createObjectURL(stream);
+      localMediaStream = stream;
+      sizeCanvas();
+      button.textContent = 'Take Shot';
+    }, errorCallback);
+  } else {
+    errorCallback({target: video});
+  }
+}, false);
+
+video.addEventListener('click', snapshot, false);
+
+document.querySelector('#screenshot-stop-button').addEventListener('click', function(e) {
+  video.pause();
+  localMediaStream.stop(); // Doesn't do anything in Chrome.
+}, false);
+})();
+
+(function() {
+var video = document.querySelector('#cssfilters-stream');
+var button = document.querySelector('#capture-button2');
+var localMediaStream = null;
+
+var idx = 0;
+var filters = [
+  'grayscale',
+  'sepia',
+  'blur',
+  'brightness',
+  'contrast',
+  'hue-rotate', 'hue-rotate2', 'hue-rotate3',
+  'saturate',
+  'invert',
+  ''
+];
+
+function changeFilter(e) {
+  var el = e.target;
+  el.className = '';
+  var effect = filters[idx++ % filters.length];
+  if (effect) {
+    el.classList.add(effect);
+  }
+}
+
+button.addEventListener('click', function(e) {
+  if (navigator.getUserMedia) {
+    navigator.getUserMedia('video, audio', function(stream) {
+      video.src = stream;
+      localMediaStream = stream;
+    }, errorCallback);
+  } else if (navigator.webkitGetUserMedia) {
+    navigator.webkitGetUserMedia({video: true}, function(stream) {
+      video.src = window.URL.createObjectURL(stream);
+      localMediaStream = stream;
+    }, errorCallback);
+  } else {
+    errorCallback({target: video});
+  }
+}, false);
+
+document.querySelector('#stop-button2').addEventListener('click', function(e) {
+  video.pause();
+  localMediaStream.stop(); // Doesn't do anything in Chrome.
+}, false);
+
+video.addEventListener('click', changeFilter, false);
+})();
+</script>
+{% endblock %}
