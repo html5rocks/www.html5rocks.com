@@ -1,0 +1,379 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block head %}
+  {{ block.super }} 
+  <style>
+    figcaption p {
+      font-style: normal;
+      font-weight: normal;
+    }
+    figcaption em {
+      font-style: normal;
+    }
+    .comparision figcaption {
+      font-size: 13px;
+      width: 90%;
+    }
+    .comparision figcaption:first-child {
+      font-size: 15px;
+      margin-bottom: 0.8em;
+    }
+    @media screen and (min-width: 620px) {
+      .comparision.side-by-side figure:first-child {
+        margin-right: 2%;
+      }
+      .comparision.side-by-side figure {
+        float: left;
+        width: 49%;
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+  
+{% block content %}
+ 
+<h2 id="toc-introduction">Introduction</h2>
+ 
+<p>A powerful feature that makes JavaScript unique is its ability to work 
+asynchronously via callback functions. Assigning async callbacks let you write 
+event-driven code but it also makes tracking down bugs a hair pulling experience 
+since the JavaScript is not executing in a linear fashion.</p>
+
+<p>Luckily, now in Chrome Canary DevTools, 
+you can view the <strong>full</strong> call stack of 
+asynchronous JavaScript callbacks!</p>
+
+<figure> 
+  <img src="xhr-async.gif" width="572" alt="A quick teaser overview of async call stacks"/>
+  <figcaption>
+    A quick teaser overview of async call stacks.
+    <p>(We'll break down the flow of this demo soon.)</p>
+  </figcaption>
+</figure>
+
+<p>Once you enable the async call stack feature in DevTools, you will be able to 
+drill into the state of your web app at various points in time. Walk the full 
+stack trace for event listeners, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>, 
+promises, <code>requestAnimationFrame</code>, <code>MutationObservers</code>, and more.</p>
+
+<p>As you walk the stack trace, you can also analyze the value of any variable at 
+that particular point of runtime execution. It's like a time machine for your 
+watch expressions!</p>
+
+<p>Let's take a look at a few of these scenarios. If you want to follow along, jump 
+down to <a href="#toc-enable">Enable async debugging in Chrome Canary</a> first and then come back here.</p>
+
+<h2 id="toc-timer-xhr">Capture delayed timer events and XHR responses</h2>
+ 
+<p>You've probably seen this before in Gmail:</p>
+
+<figure>
+  <img src="gmail-retrying.png" width="551" alt="Gmail retrying to send an email"/>
+</figure>
+
+<p>If there is a problem sending the request (either the server is having problems 
+or there are network connectivity issues on the client side), Gmail will 
+automatically try re-sending the message after a short timeout.</p>
+
+<p>To see how async call stacks can help us analyze delayed timer events and XHR 
+responses, I've recreated that flow with a <a href="xhr/index.html" target="_blank">mock Gmail 
+example</a>. The full JavaScript code can 
+be found in the link above but the flow is as follows:</p>
+
+<figure>
+  <img src="xhr-async-flow.gif" width="660" alt="Flow chart of mock Gmail example"/>
+  <figcaption>
+    In the diagram above, the methods highlighted in blue are prime spots for this 
+    new DevTool feature to be the most beneficial since these methods work 
+    asynchronously.
+  </figcaption>
+</figure>
+
+<p>By solely looking at the Call Stack panel in previous versions of DevTools, a 
+breakpoint within <code>postOnFail()</code> would give you little information about where 
+<code>postOnFail()</code> was being called from. But look at the difference when turning on 
+async stacks:</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>Before</figcaption>
+    <img src="xhr-before.gif" width="320" alt="Breakpoint set in mock Gmail example without async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>without</em> async enabled.
+      <br />
+      <p>Here you can see that <code>postOnFail()</code> was initiated from an AJAX callback but no further info.</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>After</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Breakpoint set in mock Gmail example with async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>with</em> async enabled.
+      <br />
+      <p>Here you can see that the XHR was initiated from <code>submitHandler()</code>, which was initiated from a click handler bound from scripts.js. Nice!</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+<p>With async call stacks turned on, you can view the entire call stack to easily 
+see if the request was initiated from <code>submitHandler()</code> as it was above, or from
+<code>retrySubmit()</code> as it is below:</p>
+
+<figure>
+  <img src="xhr-after-retry-shortened.gif" width="287" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
+</figure>
+
+<p>From the Call Stack panel, you can also tell if the breakpoint event originated 
+earlier from an UI event like 'click', a <code>setTimeout()</code> delay, or any commonly 
+used async callback event.</p>
+
+<h2 id="toc-watch-expressions">Watch expressions asynchronously</h2>
+
+<p>When you walk the full call stack, your watched expressions will also update to 
+reflect the state that it was in at that time!</p>
+
+<figure>
+  <img src="watch-expressions.gif" width="368" alt="An example of using watch expressions with aysnc call stacks"/>
+</figure>
+
+<h2 id="toc-promises">Unravel chained promise resolutions</h2>
+
+<p>If you thought the previous example's flow was hard to unravel without the async 
+call stack feature enabled, can you imagine how much harder it would be with 
+more complex asynchronous flows like chained promises? Let's revisit the final 
+example of Jake Archibald's tutorial on 
+<a href="/tutorials/es6/promises/" target="_blank">JavaScript Promises</a>.</p>
+
+<figure>
+  <div style="max-width: 495px; margin: 10px auto">
+    <div style="position: relative; padding-top: 93%;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden" src="/tutorials/es6/promises/promise-flow.svg" frameborder="0" allowtransparency="true"></iframe>
+    </div>
+  </div>
+  <figcaption>
+    Flow diagram from <em>JavaScript Promises</em>.
+  </figcaption>
+</figure>
+
+<p>Here's a little animation of walking the call stacks in Jake's 
+<a href="/tutorials/es6/promises/async-best-example.html" target="_blank">async-best-example.html</a>
+example.</p>
+
+<div class="comparision stacked">
+
+  <figure>
+    <figcaption>Before</figcaption>
+    <img src="promises-before.gif" width="600" alt="Breakpoint set in promises example without async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>without</em> async enabled.
+      <br />
+      <p>Notice how the Call Stack panel is pretty short on info when trying to debug promises.</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>After</figcaption>
+    <img src="promises-after.gif" width="600" alt="Breakpoint set in promises example with async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>with</em> async enabled.
+      <br />
+      <p>Wow! Such promises. Much callbacks.</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-request-animation-frame">Get insights into your web animations</h2>
+
+<p>Let's go deeper into the HTML5Rocks archives. Remember Paul Lewis' 
+<em><a href="/tutorials/speed/animations/" target="_blank">Leaner, Meaner, Faster Animations with requestAnimationFrame</a></em>?</p>
+
+<p>Open up the 
+<a href="/tutorials/speed/animations/post.html" target="_blank">requestAnimationFrame 
+demo</a>
+and add a breakpoint at the beginning of the <code>update()</code> method (around line 874) of 
+post.html. With async call stacks we get a lot more insights into 
+<code>requestAnimationFrame</code>. And, much like the mock Gmail example, we get to walk all 
+the way back to the initiating event which was a 'scroll' event.</p>
+
+<div class="comparision side-by-side">
+
+  <figure style="width:65%;padding-right:10px;">
+    <figcaption>Before</figcaption>
+    <img src="requestAnimationFrame-before.gif" width="500" alt="Breakpoint set in requestAnimationFrame example without async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>without</em> async enabled.
+    </figcaption>
+  </figure>
+
+  <figure style="width:30%;padding-top:30.3%;">
+    <figcaption>After</figcaption>
+    <img src="requestAnimationFrame-after.gif" width="320" alt="Breakpoint set in requestAnimationFrame example with async call stacks"/>
+    <figcaption>
+      And <em>with</em> async enabled.
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-mutation-observer">Track down DOM updates when using MutationObserver</h2>
+
+<p><code>MutationObserver</code> allow us to observe changes in the DOM. In this 
+<a href="mutation-observers/index.html" target="_blank">simple example</a>,
+when you click on the button, a new DOM node is appended to <code style="white-space:nowrap;">
+&lt;div class="rows"&gt;&lt;/div&gt;</code>.</p>
+
+<p>Add a breakpoint within <code>nodeAdded()</code> (line 31) in index.html. With async call 
+stacks enabled, you can now walk the call stack back through <code>addNode()</code> to the 
+initial click event.</p>
+
+<div class="comparision side-by-side">
+
+  <figure style="width:65%;padding-right:10px;">
+    <figcaption>Before</figcaption>
+    <img src="mutationObserver-before.gif" width="721" alt="Breakpoint set in mutationObserver example without async call stacks"/>
+    <figcaption>
+      The Call Stack panel <em>without</em> async enabled.
+    </figcaption>
+  </figure>
+
+  <figure style="width:30%;padding-top:35.4%;">
+    <figcaption>After</figcaption>
+    <img src="mutationObserver-after.gif" width="320" alt="Breakpoint set in mutationObserver example with async call stacks"/>
+    <figcaption>
+      And <em>with</em> async enabled.
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-debugging-tips">Tips for debugging JavaScript in async call stacks</h2>
+
+<h3>Name your functions</h3>
+
+<p>If you tend to assign all of your callbacks as anonymous functions, you may wish 
+to instead give them a name to make viewing the call stack easier.</p>
+
+<p>For example, take an anonymous function like this:</p>
+
+<pre class="prettyprint">window.addEventListener('load', function(){
+  // do something
+});</pre>
+
+<p>And give it a name like <code>windowLoaded()</code>:</p>
+
+<pre class="prettyprint">window.addEventListener('load', function <strong>windowLoaded</strong>(){
+  // do something
+});</pre>
+
+<p>When the load event fires, it will show up in the DevTools stack trace with its 
+function name instead of the cryptic "<em>(anonymous function)</em>". This makes it 
+much easier to see at a glance what's happening in your stack trace.</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>Before</figcaption>
+    <img src="function-names-before.gif" width="320" alt="An anonymous function"/>
+    <!-- <figcaption>
+      An anonymous function.
+    </figcaption> -->
+  </figure>
+
+  <figure>
+    <figcaption>After</figcaption>
+    <img src="function-names-after.gif" width="320" alt="A named function"/>
+    <!-- <figcaption>
+      A named function.
+    </figcaption> -->
+  </figure>
+
+</div>
+
+<h2 id="toc-enable">Get started: Enable async debugging in Chrome Canary</h2>
+
+<p>Try out this new feature by enabling it in Chrome Canary.</p>
+
+<p>Open up the DevTools and click the settings cog
+<img src="settings-icon.gif" alt="settings cog icon"/>
+in the lower right corner. From 
+there you can go to <strong>Experiments</strong> and enable support for async stack traces.</p>
+
+<figure>
+  <img src="enable-async-experiments.gif" width="804" alt="Enable async call stacks in Experiments section"/>
+</figure>
+
+<p>Go to the <strong>Sources</strong> panel of Chrome Canary DevTools.</p>
+
+<p>Next to the <strong>Call Stack</strong> panel on the right hand side, there is a new checkbox 
+for "Async". Toggle the checkbox to turn async debugging on or off. (Although 
+once it's on, you may not ever want to turn it off.)</p>
+
+<figure>
+  <img src="enable-async-toggle.gif" width="658" alt="Toggle the async feature on or off"/>
+</figure>
+
+<h2 id="toc-explore-further">Explore further</h2>
+
+<p>To recap, these are all the asynchronous callbacks in which DevTools will 
+display the full call stack:</p>
+
+<ul>
+  <li>
+    <strong>Timers</strong>: 
+    Walk back to where setTimeout() or setInterval() was initialized.
+  </li>
+  <li>
+    <strong>XHRs</strong>: 
+    Walk back to where xhr.send() was called.
+  </li>
+  <li>
+    <strong>Promises</strong>: 
+    Walk back to where a promise has been resolved.
+  </li>
+  <li>
+    <strong>Animation frames</strong>: 
+    Walk back to where requestAnimationFrame was called.
+  </li>
+  <li>
+    <strong>Event listeners</strong>: 
+    Walk back to where the event was originally bound with addEventListener().
+  </li>
+  <li>
+    <strong>MutationObservers</strong>: 
+    Walk back to where the mutation observer event was fired.
+  </li>
+</ul>
+
+<p>Full call stacks will be coming soon for these experimental JavaScript APIs:</p>
+
+<ul>
+  <li>
+    <a href="http://updates.html5rocks.com/2012/11/Respond-to-change-with-Object-observe" target="_blank">Object.observe</a>
+  </li>
+  <li>
+    <a href="http://www.html5rocks.com/en/tutorials/webcomponents/customelements/#lifecycle" target="_blank">Custom Element lifecycle 
+  callbacks</a> 
+  </li>
+</ul>
+
+<p>Being able to see the full stack trace of your JavaScript callbacks should keep 
+those hairs on your head. This feature in DevTools will be especially helpful 
+when multiple async events happen in relation to each other, or if an uncaught 
+exception is thrown from within an async callback.</p>
+
+<p>Give it a try in Chrome Canary. 
+If you have feedback on this new feature, drop us a line on the 
+<a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">Chrome DevTools 
+Group</a>
+or 
+<a href="http://crbug.com/new" target="_blank">file a bug</a> in the Chrome DevTools bug tracker.</p>
+
+{% endblock %}
