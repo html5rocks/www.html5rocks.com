@@ -1,0 +1,347 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block iscompatible %}
+  return true;
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https:/github.com/sunnylost">sunnylost</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">介绍</h2>
+
+<p>在本文中，我将教会你如何在浏览器中加载 JavaScript 并执行。</p>
+
+<p>哎，等会，别走啊！听起来是挺小儿科，不过你可别忘了我们说的是浏览器啊，理论上来说简单的东西，到这儿就成了受到各种遗留因素影响的怪异黑洞。了解这些怪异之处，你就能使用最快速，破坏性最小的方式来加载脚本。如果你觉得空闲时间不多，可以直接去看<a href="#toc-quick-reference">快速参考</a>。</p>
+
+<p>首先，来看下<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#script">规范</a>中定义的各种下载并执行脚本的方法：</p>
+
+<figure>
+  <img src="script-loading.png" alt="" />
+  <figcaption>WHATWG 中有关脚本加载的内容</figcaption>
+</figure>
+
+<p>像 WHATWG 的其他规范一样，乍一看去好像是有人把炸弹扔进了拼字游戏工厂，不过等到你埋头苦读 5 遍后，你就会感到这其实挺有意思：</p>
+
+<h2 id="toc-first-script">第一次加载脚本</h2>
+
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js"&gt;&lt;/script&gt;
+&lt;script src="2.js"&gt;&lt;/script&gt;
+</pre>
+
+<p>
+哈，简洁之美。浏览器会并行加载这两个脚本，一旦下载完毕，会按照它们的顺序执行。在 "1.js" 执行完毕前(或执行失败) "2.js" 都不会执行，而 "1.js" 也不会执行直到在它前面的脚本或样式表执行完毕，依次类推。
+</p>
+
+<p>不幸的是，在这一切发生的过程中，浏览器会阻塞页面渲染。这么做的原因在于早期的 DOM API 允许向解析器正在处理的内容追加字符串，例如 <code>document.write</code>。现代浏览器会在后台继续扫描或解析文档，并下载它可能需要的额外资源(js，图片，css 等等)，但渲染始终会被阻塞。</p>
+
+<p>这也就是为什么推荐将脚本元素放置到文档底部，因为它会阻塞尽可能少的内容。不过它导致另外一个问题，那就是浏览器在将整个文档下载完毕前都不会发现脚本，而到那时，浏览器已经开始下载其他像 CSS，图片或 iframe 等资源了。现代浏览器会智能的为 JavaScript 提供比图片更高的优先级，但是我们可以做的更好。</p>
+
+<h2 id="toc-thanks-ie">感谢 IE！(别误会，我是真心的)</h2>
+
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js" defer&gt;&lt;/script&gt;
+&lt;script src="2.js" defer&gt;&lt;/script&gt;
+</pre>
+
+<p>微软意识到了这些性能问题，于是在 Internet Explorer 4 中引入了 “defer”。它的意思是“我保证不使用像 <code>document.write</code> 这样的功能来注入内容。要是我说谎，任你处罚。”该属性被<a href="http://www.w3.org/TR/html401/interact/scripts.html#h-18.2.1">采纳到 HTML4 里</a>并出现在了其他浏览器中。</p>
+
+<p>在上面的例子中，浏览器会并行下载两个脚本，并在 <code>DOMContentLoaded</code> 触发前(按顺序)执行它们。</p>
+
+<p>这回就像把炸弹扔到了羊圈里，“defer” 让事情变得一团糟。于是在 “src” 和 “defer” 属性，脚本标签和动态添加脚本之间，我们有了 6 种方式来添加一个脚本。结果很显然，浏览器们对于它们的执行顺序并没有达成一致。<a href="https://hacks.mozilla.org/2009/06/defer/">Mozilla 在 2009 年就发表了一篇文章来揭示这个问题。</a></p>
+
+<p>WHATWG 最终明确了该问题，“defer” 对于动态添加或是没有 “src” 属性的脚本不生效。否则，延迟的脚本会在文档解析完毕后，按照它们的添加顺序执行。</p>
+
+<h3>感谢 IE！(好吧，我在说反话)</h3>
+
+<p>常言道：有所得，必有所失。在 IE4-9 下存在一个讨厌的 bug 会<a href="https://github.com/h5bp/lazyweb-requests/issues/42">导致脚本不按照期望顺序执行</a>。请看下方代码：</p>
+
+<h4>1.js</h4>
+<pre class="prettyprint">
+console.log('1');
+document.getElementsByTagName('p')[0].innerHTML = 'Changing some content';
+console.log('2');
+</pre>
+
+<h4>2.js</h4>
+<pre class="prettyprint">
+console.log('3');
+</pre>
+
+<p>假设页面中有一个 p 元素，期望的日志顺序是 [1, 2, 3]，但在 IE9 中得到的却是 [1, 3, 2]。特定的 DOM 操作会导致 IE 暂停执行当前脚本，而在恢复执行前会去执行其他挂起的脚本。</p>
+
+<p>然而，即便是在那些没有问题的实现中，比如 IE10 和其他浏览器，脚本的执行会被延迟到全部文档下载完毕并解析之后。如果你原本就想等待 <code>DOMContentLoaded</code> 事件触发，那也没什么关系， 不过你要是对性能要求十分高，你想尽快的添加事件监听和执行引导程序...</p>
+
+<h2 id="toc-html5-rescue">HTML5 前来帮忙</h2>
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js" async&gt;&lt;/script&gt;
+&lt;script src="2.js" async&gt;&lt;/script&gt;
+</pre>
+
+<p>HTML5 提供了一个新属性，“async”，它会假设你并不准备使用 <code>document.write</code>，当也不需要等到文档解析完毕后才执行。浏览器会并行下载两个脚本并尽快执行它们。</p>
+
+<p>不过，因为它们会尽可能快的执行，“2.js” 就有可能先于 “1.js” 而执行。如果它们互不依赖倒还好，比如说 “1.js” 是一个用于记录访问的脚本，它不会影响 “2.js”。但要是 “1.js” 是 jQuery 的一个 CDN 拷贝，而 “2.js” 依赖于它，那你的页面就可能会被报错信息淹没，就像把炸弹扔进…我说不好是哪里…</p>
+
+<h2 id="toc-js-lib">我知道了，我们需要一个 JavaScript 库！</h2>
+
+<p>完美的场景就是多个脚本能立即下载，并且不会阻塞渲染，一旦下载完毕就会按照添加的顺序执行。不幸的是，HTML 不允许你这么做。</p>
+
+<p>JavaScript 解决了这个问题，并且有多个变种。有的需要你修改你的 JavaScript，将它们包裹在一个回调函数中，这样库就可以按照正确的顺序调用它们(比如 <a href="http://requirejs.org/">RequireJS</a>)。还有的使用 XHR 来并行下载然后按照顺序调用 <code>eval()</code>，这个方法不适用于跨域脚本，除非它们拥有 <a href="https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS">CORS 头</a>并且浏览器支持该设置。还有的解决方法使用了奇特的 hack，像 <a href="http://labjs.com/">LabJS</a>。</p>
+
+<p>所谓的 hack 包括让浏览器下载资源并在完成时触发事件，但不要执行内容。在 LabJS 中，脚本会使用一个错误的 mime 类型，比如 <code>&lt;script type="script/cache" src="..."&gt;</code>。一旦所有脚本加载完毕，它们会使用正确的类型重新添加一遍，希望浏览器能够使用缓存获取它们并立即按顺序执行。这一 hack 依赖于一个约定俗成却并非规范的浏览器行为，但是 HTML5 规定了浏览器不去下载错误类型的脚本，该 hack 便失效了。值得注意的是 LabJS 也随着进行了更改，它目前采用的方式是组合使用本文中介绍的方法。</p>
+
+<p>可是，脚本加载器自身就有性能问题，你必须要等到库的 JavaScript 下载并解析完毕后才能开始下载其他它管理的脚本。还有，我们如何去加载脚本加载器呢？告诉脚本加载器需要加载哪些内容的脚本又该如何引用？谁去监视守望者？我的衣服哪儿去了？这些都是难以回答的问题。</p>
+
+<p>从根本上来说，当你需要一个额外的脚本来处理其他脚本的加载时，在性能大战中你就已经输了。</p>
+
+<h2 id="toc-dom-rescue">DOM 伸出援手</h2>
+
+<p>答案就在 HTML5 规范中，虽然它藏在了脚本加载部分的最后面。</p>
+
+<blockquote>
+  <p>async IDL 属性控制元素是否异步执行。如果元素设置了 "force-async" 标志，那么获取 async IDL 属性必须返回 true，而在设置属性之前需要恢复 "force-async" 标志...</p>
+</blockquote>
+
+<p>我们来把它翻译成地球人能懂的语言：</p>
+
+<pre class="prettyprint">
+[
+  '//other-domain.com/1.js',
+  '2.js'
+].forEach(function(src) {
+  var script = document.createElement('script');
+  script.src = src;
+  document.head.appendChild(script);
+});
+</pre>
+
+<p><strong>动态创建并添加进文档中的脚本默认就是异步的</strong>，它们并不阻塞渲染，并且下载结束后会立即执行，这表示它们的执行顺序不固定。不过，我们可以将它们明确设置为非异步：</p>
+
+<pre class="prettyprint">
+[
+  '//other-domain.com/1.js',
+  '2.js'
+].forEach(function(src) {
+  var script = document.createElement('script');
+  script.src = src;
+  script.async = false;
+  document.head.appendChild(script);
+});
+</pre>
+
+<p>这个方法为我们的脚本赋予了普通 HTML 无法达到的混合行为。由于<em>明确</em>设置为非异步，脚本被加入一个执行队列中，也就是在第一个普通 HTML 例子中同样的队列。然而，因为脚本是动态创建的，它们会在文档解析过程中被执行，因此脚本的下载不会阻塞页面渲染(千万不要把非异步脚本加载和同步 XHR 混为一谈，后者从来都不是好做法)。</p>
+
+<p>上面那段代码需要以行内形式放到页面头部中，这样就可以在不干扰页面渲染的情况下快速下载脚本，并按照指定顺序执行。“2.js” 可能会在 “1.js” 前下载，但它并不会执行，直到 “1.js” 成功(或是失败)下载并执行。好啊！异步下载但是按顺序执行！</p>
+
+<p>这种加载脚本的方式被<a href="http://caniuse.com/#search=async">所有支持 async 属性的浏览器所支持</a>，除了 Safari 5.0 (5.1 没有问题)。此外，Firefox 和 Opera 的所有版本都支持该方法，对于不支持 async 属性的版本，它们对于动态添加的脚本会按照添加顺序来执行。</p>
+
+<h2 id="toc-js-has-problems">这就是加载脚本最快速的方式吗？是吗？</h2>
+
+<p>如果你需要动态决定加载哪些脚本，那么的确，这是最快的方式，否则的话就不一定了。在上面的例子中，浏览器需要解析并执行脚本来决定应该加载哪些脚本。这样一来，预加载扫描器(preload scanner)就不会发现它们。浏览器使用这些扫描器来发现即将要使用的资源，或是在解析器被其他资源阻塞时来发现新资源。</p>
+
+<p>我们可以通过将它们放到文档头部来使其能够被扫描到：</p>
+
+<pre class="prettyprint">
+&lt;link rel="subresource" href="//other-domain.com/1.js"&gt;
+&lt;link rel="subresource" href="2.js"&gt;
+</pre>
+
+<p>这会告诉浏览器页面需要 1.js 和 2.js。 <code>link[rel=subresource]</code> 和 <code>link[rel=prefetch]</code> 类似，但有<a href="http://www.chromium.org/spdy/link-headers-and-server-hint/link-rel-subresource">不同的语义</a>。可惜的是，目前只有 Chrome 支持它，而且你需要两次声明哪些脚本需要加载，一次是通过 link 元素，另一次是在脚本中。</p>
+
+<p><strong>更正：</strong>我最开始说这些资源被预加载扫描器处理，实际上不是的，它们是被常规解析器处理。虽然预加载扫描器<em>能够</em>处理它们，它只是还没有这么做，不过通过执行代码而添加的脚本永远无法被预加载。感谢 <a href="https://twitter.com/yoavweiss">Yoav Weiss</a> 在留言中指正了我的错误。</p>
+
+<h2 id="toc-depressing">我觉得这篇文章很压抑。</h2>
+
+<p>情况确实令人沮丧，你也应该感到压抑。目前还不存在一种不需要重复的声明方式来快速且异步的下载脚本并按顺序执行。</p>
+
+<p>借助于 HTTP2/SPDY，将脚本拆分成多个小的，可独立缓存的文件来减少请求的开销，这可能是最快的方式了。想象下：</p>
+
+<pre class="prettyprint">
+&lt;script src="dependencies.js"&gt;&lt;/script&gt;
+&lt;script src="enhancement-1.js"&gt;&lt;/script&gt;
+&lt;script src="enhancement-2.js"&gt;&lt;/script&gt;
+&lt;script src="enhancement-3.js"&gt;&lt;/script&gt;
+…
+&lt;script src="enhancement-10.js"&gt;&lt;/script&gt;
+</pre>
+
+<p>每一个 enhancement 脚本都和一个页面组件相关，但都依赖 dependencies.js 中的工具函数。理想情况下，我们希望脚本全部异步加载，尽可能快的，按照任意顺序来执行 enhancement 脚本，但要在 dependencies.js 执行后。这就是渐进增强中的渐进增强啊！(It’s progressive progressive enhancement!)</p>
+
+<p>可惜的是目前不存在声明的方式来达到这一目标，除非修改脚本自身来跟踪 dependencies.js 的下载状态。即便是 async=false 也不能解决该问题，这样一来 enhancement-10.js 的运行会被 1-9 这些文件阻塞。实际上，只有一个浏览器能在不使用 hack 的情况下达到这一目的……</p>
+
+<h2 id="toc-interesting-ie">IE 有个想法！</h2>
+
+<p>IE 加载脚本的方式与其他浏览器不同。</p>
+
+<pre class="prettyprint">
+var script = document.createElement('script');
+script.src = 'whatever.js';
+</pre>
+
+<p>IE 会立即下载 “whatever.js”，其他浏览器则要等到脚本被添加进文档中才进行下载。IE 拥有一个事件 “readystatechange” 与属性 “readystate” 可以获知加载的进度。它们都十分有用，因为我们可以分开控制脚本的加载与执行。</p>
+
+<pre class="prettyprint">
+var script = document.createElement('script');
+
+script.onreadystatechange = function() {
+  if (script.readyState == 'loaded') {
+    // 脚本下载完毕，但还没有执行。
+    // 在做如下操作前它不会执行：
+    document.body.appendChild(script);
+  }
+};
+
+script.src = 'whatever.js';
+</pre>
+
+<p>我们可以通过选择在不同时间向文档添加脚本来构建复杂的依赖模型。IE 从 6 开始便支持该模型。听起来很有趣，不过它和 <code>async=false</code> 一样，存在着预加载问题。</p>
+
+<h2 id="toc-enough">够了！我到底该怎么加载脚本？</h2>
+
+<p>好吧好吧。如果你想加载脚本时不阻塞渲染，不想重复声明，并且浏览器支持度要好，以下就是我的建议：</p>
+
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js"&gt;&lt;/script&gt;
+&lt;script src="2.js"&gt;&lt;/script&gt;
+</pre>
+
+<p>把它放到 body 元素底部。是的，作为 web 开发者就像成为了科林斯王(King Sisyphus，叮！希腊神话参考加 100 分！)。HTML 的限制与浏览器阻止我们做的更好。</p>
+
+<p>我希望 <a href="http://wiki.ecmascript.org/doku.php?id=harmony:modules">JavaScript 模块</a>能为我们提供一种声明式的非阻塞方法来加载脚本，并能操控执行顺序，及时需要我们将脚本改写成模块。</p>
+
+<h2 id="toc-aggressive-optimisation">呃，现在肯定有能用上的好东西吧？</h2>
+
+<p>如果你对性能要求十分高，并且不在乎一点复杂性与重复的话，你可以将上面介绍的几个技巧组合起来。</p>
+
+<p>首先，我们为实现预加载而增加子资源声明：</p>
+
+<pre class="prettyprint">
+&lt;link rel="subresource" href="//other-domain.com/1.js"&gt;
+&lt;link rel="subresource" href="2.js"&gt;
+</pre>
+
+<p>然后，在文档头部中使用行内 JavaScript 来加载脚本，使用 <code>async=false</code>，备选方案是基于 IE 的 readystate 脚本加载，或者选择延迟加载。</p>
+
+<pre class="prettyprint">
+var scripts = [
+  '1.js',
+  '2.js'
+];
+var src;
+var script;
+var pendingScripts = [];
+var firstScript = document.scripts[0];
+
+
+// 监视 IE 中的脚本加载
+function stateChange() {
+  // 尽可能多的按顺序执行脚本
+  var pendingScript;
+  while (pendingScripts[0] &amp;&amp; pendingScripts[0].readyState == 'loaded') {
+    pendingScript = pendingScripts.shift();
+    // 避免该脚本的加载事件再次触发(比如修改了 src 属性)
+    pendingScript.onreadystatechange = null;
+    // 不能使用 appendChild，在低版本 IE 中如果元素没有闭合会有 bug
+    firstScript.parentNode.insertBefore(pendingScript, firstScript);
+  }
+}
+
+// 循环脚本地址
+while (src = scripts.shift()) {
+  if ('async' in firstScript) { // 现代浏览器
+    script = document.createElement('script');
+    script.async = false;
+    script.src = src;
+    document.head.appendChild(script);
+  }
+  else if (firstScript.readyState) { // IE&lt;10
+    // 创建一个脚本并添加进待执行队列中
+    script = document.createElement('script');
+    pendingScripts.push(script);
+    // 监听状态改变
+    script.onreadystatechange = stateChange;
+    // 必须在添加 onreadystatechange 监听后设置 src
+    // 否则会错过缓存脚本的加载事件
+    script.src = src;
+  }
+  else { // 退化使用延迟加载
+    document.write('&lt;script src="' + src + '" defer&gt;&lt;/'+'script&gt;');
+  }
+}
+</pre>
+
+<p>几个小技巧，再加上压缩，一共 362 字节 + 脚本地址长度：</p>
+
+<pre class="prettyprint">
+!function(e,t,r){function n(){for(;d[0]&amp;&amp;"loaded"==d[0][f];)c=d.shift(),c[o]=!i.parentNode.insertBefore(c,i)}for(var s,a,c,d=[],i=e.scripts[0],o="onreadystatechange",f="readyState";s=r.shift();)a=e.createElement(t),"async"in i?(a.async=!1,e.head.appendChild(a)):i[f]?(d.push(a),a[o]=n):e.write("&lt;"+t+' src="'+s+'" defer&gt;&lt;/'+t+"&gt;"),a.src=s}(document,"script",[
+  "//other-domain.com/1.js",
+  "2.js"
+])
+</pre>
+
+<p>相比普通的加载方式，这么做是否值得？如果你已经使用 JavaScript 来有选择的加载脚本，<a href="http://responsivenews.co.uk/post/18948466399/cutting-the-mustard">就像 BBC 那样</a>，你会因为提前触发这些脚本的下载而得到好处。否则的话，还是把脚本放到 body 底部吧。</p>
+
+<p>呼，我现在终于明白为什么 WHATWG 脚本加载部分如此复杂了。我得去喝一杯。</p>
+
+<h2 id="toc-quick-reference">快速参考</h2>
+
+<h3>普通脚本元素</h3>
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js"&gt;&lt;/script&gt;
+&lt;script src="2.js"&gt;&lt;/script&gt;
+</pre>
+
+<p><strong>规范说：</strong>同时下载，在前面没有任何挂起的 CSS 后按顺序执行，在执行完毕前阻塞渲染。</p>
+<p><strong>浏览器说：</strong>好的先生！</p>
+
+<h3>延迟</h3>
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js" defer&gt;&lt;/script&gt;
+&lt;script src="2.js" defer&gt;&lt;/script&gt;
+</pre>
+
+<p><strong>规范说：</strong>同时下载，在 DOMContentLoaded 触发前按顺序执行。没有 “src” 属性的脚本忽略 “defer”。</p>
+<p><strong>IE &lt; 10 说：</strong>我可能会在执行 1.js 的过程中去执行 2.js。这是不是很好玩？？</p>
+<p><strong><a href="http://caniuse.com/#search=defer">显示为红色的浏览器</a>说：</strong>我不知道 “defer” 是什么意思，我会当作它们不存在来加载脚本。</p>
+<p><strong>其他浏览器说：</strong>好的，不过要是脚本没有 “src” 属性，我可能不会忽略 “defer”。</p>
+
+<h3>异步</h3>
+<pre class="prettyprint">
+&lt;script src="//other-domain.com/1.js" async&gt;&lt;/script&gt;
+&lt;script src="2.js" async&gt;&lt;/script&gt;
+</pre>
+
+<p><strong>规范说：</strong>同时下载，谁先下载完就执行谁。</p>
+<p><strong><a href="http://caniuse.com/#search=async">显示为红色的浏览器</a>说：</strong> ‘async’ 是个什么玩意儿？我就当它不存在好了。</p>
+<p><strong>其他浏览器说：</strong>好的，没问题。</p>
+
+<h3>异步 false</h3>
+<pre class="prettyprint">
+[
+  '1.js',
+  '2.js'
+].forEach(function(src) {
+  var script = document.createElement('script');
+  script.src = src;
+  script.async = false;
+  document.head.appendChild(script);
+});
+</pre>
+
+<p><strong>规范说：</strong>同时下载，全部下载后按顺序执行。</p>
+<p><strong>Firefox &lt; 3.6，Opera 说：</strong>我不知道这个 “async” 是什么意思，不过很巧的是，我会对通过 JS 添加的脚本按照它们添加的顺序来执行。</p>
+<p><strong>Safari 5.0 说：</strong>我理解 “async”，但不明白把它设置为 “false” 的含义。我会以任意顺序执行加载的脚本。</p>
+<p><strong>IE &lt; 10 说：</strong>不认识 “async”，但是<a href="#interesting-ie">我有一个解决方案</a>，那就是用 “onreadystatechange”。</p>
+<p><strong>其他<a href="http://caniuse.com/#search=async">显示为红色的浏览器</a>说：</strong>我不认识这个 “async”，脚本加载完毕后我就会执行，不管考虑顺序问题。</p>
+<p><strong>除以上这些之外的浏览器说：</strong>我是你的朋友，我会按老规矩处理。</p>
+{% endblock %}
