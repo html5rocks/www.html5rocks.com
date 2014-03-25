@@ -287,7 +287,7 @@ class ContentHandler(webapp2.RequestHandler):
 
     # Get the locale: if it's "None", redirect to English
     locale = self.get_language()
-    if not locale:
+    if locale not in settings.LANGS.keys():
       return self.redirect("/en/%s" % relpath, permanent=True)
 
     # If there is a locale specified but it has no leading slash, redirect
@@ -314,7 +314,7 @@ class ContentHandler(webapp2.RequestHandler):
     # English version (assuming it exists), with a `redirect_from_locale` GET
     # param.
     redirect_from_locale = self.request.get('redirect_from_locale', '')
-    if not re.match('[a-zA-Z]{2,3}$', redirect_from_locale):
+    if redirect_from_locale not in settings.LANGS.keys():
       redirect_from_locale = False
     else:
       translation.activate(redirect_from_locale)
@@ -420,26 +420,12 @@ class ContentHandler(webapp2.RequestHandler):
         # stripping out the current locale and 'static'. Once we have a list,
         # convert it to a series of dictionaries containing the localization's
         # path and name:
-        langs = {
-          'de': 'Deutsch',
-          'en': 'English',
-          'fr': 'Français',
-          'es': 'Español',
-          'it': 'Italiano',
-          'ja': '日本語',
-          'ko': '한국어',
-          'pt': 'Português (Brasil)',
-          'ru': 'Pусский',
-          'zh': '中文 (简体)',
-          'tw': '中文（繁體）',
-          'fa': 'فارسی'
-        }
         loc_list = []
         for d in glob.glob(os.path.join(dir, '*', 'index.html')):
           loc = os.path.basename(os.path.dirname(d))
           if loc not in [locale, 'static']:
             loc_list.append({'path': '/%s/%s' % (loc, relpath),
-                             'lang': langs[loc],
+                             'lang': settings.LANGS[loc],
                              'loc': loc})
 
         data = {
