@@ -33,7 +33,7 @@
 
 <p>데스크탑 크롬 사용자들을 위한 재밌는 실험인 Build with Chrome은 <a href="http://google-au.blogspot.com/2012/06/build-bringing-lego-bricks-to-chrome.html">원래 오스트레일리아에서 런칭되었으며</a>, 2014년 THE LEGO® MOVIE™와 맞추어 전세계를 대상으로 서비스가 가능하도록 다시 릴리즈되었고 모바일 디바이스들을 지원하는 기능이 새로 추가되었습니다. 이 글에서 프로젝트로부터 배우게 된 몇가지를 특히 데스크탑 전용의 경험을 마우스와 터치 입력을 지원하는 멀티 스크린으로 이동하는 것에 관하여 공유하고자 합니다.</p>
 
-<h2 id = "history">Build with Chrome의 이력</h2>
+<h2 id = "history">Build with Chrome의 역사</h2>
 
 <p>Build with Chrome의 첫번째 버전은 2012년 오스트레일리아에서 런칭되었습니다. 우리는 완전히 새로운 방식으로 웹의 강력함을 보여주고 크롬을 완전히 새로운 관객들에게 데려가고 싶었습니다.</p>
 
@@ -135,9 +135,9 @@
 
 <pre class="prettyprint">
 if( window.innerWidth > window.innerHeight ){
-  //landscape
+  // 가로모드(landscape)
 } else {
-  //portrait
+  // 세로모드(portrait)
 }
 </pre>
 
@@ -158,7 +158,7 @@ function onTouchStart(event) {
   event.preventDefault();
   if( event.touches.length === 1){
     handleDragStart(event.touches[0].clientX , event.touches[0].clientY);
-    //start listening to all needed touchevents to implement the dragging
+    // 드래그를 구현하기 위해 필요한 모든 터치 이벤트에 대한 리스닝을 시작합니다.
     document.addEventListener('touchmove', onTouchMove);
     document.addEventListener('touchend', onTouchEnd);
     document.addEventListener('touchcancel', onTouchEnd);
@@ -176,10 +176,10 @@ function onTouchEnd(event) {
   event.preventDefault();
   if( event.touches.length === 0){
     handleDragStop();
-    //remove all eventlisteners but touchstart to minimize number of eventlisteners
+    // 이벤트리스너의 갯수를 최소화하기 위해 touchstart를 제외하고 모든 이벤트리스너를 제거합니다.
     document.removeEventListener('touchmove', onTouchMove);
     document.removeEventListener('touchend', onTouchEnd);
-    //also listen to touchcancel event to avoid unexpected behavior when switching tabs and some other situations
+    // 또한 탭들을 전환하거나 몇몇 다른 상황들에서의 예상치못한 동작을 피하기 위해 touchcancel 이벤트를 리스닝합니다.
     document.removeEventListener('touchcancel', onTouchEnd);
   }
 }
@@ -218,19 +218,19 @@ function handleDragStop(){
 function onAnimationFrame() {
   requestAnimationFrame( onAnimationFrame );
 
-  //execute animation based on input.dragDX, input.dragDY, input.dragX or input.dragY
+  // input.dragDX, input.dragDY, input.dragX 혹은 input.dragY에 기반하여 애니메이션을 실행합니다.
  /*
   /
   */
 
-  //because touchmove is only fired when finger is actually moving we need to reset the delta values each frame
+  // 실제 손가락이 이동할 때만 touchmove가 발생하므로 각 프레임마다 델타(Delta)값을 초기화할 필요가 있습니다.
   input.dragDX=0;
   input.dragDY=0;
 }
 </pre>
 
 <p><strong>첨부된 예제:</strong></p>
-<p>터치 이벤트를 이용하여 객체를 드래그하세요. 다음과 같이 Build with Chrome에서 3D 맵 탐색을 위해 드래그를할 때와 비슷한 구현입니다. <a href ="http://cdpn.io/qDxvo">http://cdpn.io/qDxvo</a></p>
+<p>터치 이벤트를 이용하여 객체를 드래그하세요. 다음과 같이 Build with Chrome에서 <a href ="http://cdpn.io/qDxvo">3D 맵 탐색을 위해 드래그를 구현할 때와 비슷한 구현입니다.</a></p>
 
 <h3 id ="multi-touch">멀티터치 제스쳐</h3>
 <p>이에 대해서는 멀티터치 제스쳐의 관리를 단순화하여 처리하는 <a href ="http://eightmedia.github.io/hammer.js/">Hammer</a>나 <a href ="http://quojs.tapquo.com/">QuoJS</a>와 같은 프레임워크들 혹은 라이브러리들이 있지만 완전한 컨트롤을 가지고 여러개의 제스쳐를 결합하기를 원한다면 때로는 가려운 곳을 긁는 것으로 시작하는 것이 최선입니다.</p>
@@ -238,7 +238,7 @@ function onAnimationFrame() {
 <p>핀치(Pinch)와 회전 제스쳐를 관리하기 위해 두번째 손가락이 화면에 얹어질 때마다 두손가락 사이의 거리와 각도를 저장했습니다.</p>
 
 <pre class="prettyprint">
-//variables representing the actual scale/rotation of the object we are affecting
+// 우리가 영향을 미치는 실제 객체의 스케일과/회전을 표현하는 변수
 var currentScale = 1;
 var currentRotation = 0;
 
@@ -253,12 +253,14 @@ function onTouchStart(event) {
 
 function handleGestureStart(x1, y1, x2, y2){
   input.isGesture = true;
-  //calculate distance and angle between fingers
+  // 손가락 사이의 거리와 각도를 계산합니다.
   var dx = x2 - x1;
   var dy = y2 - y1;
   input.touchStartDistance=Math.sqrt(dx*dx+dy*dy);
   input.touchStartAngle=Math.atan2(dy,dx);
-  //we also store the current scale and rotation of the actual object we are affecting. This is needed to support incremental rotation/scaling. We can't assume that an object is always the same scale when gesture starts. 
+  // 또한 우리가 영향을 미치는 실제 객체의 현재 스케일과 회전값을 저장합니다.
+  // 이는 점진적인 회전/스케일링을 지원하기 위해 필요합니다.
+  // 제스쳐가 시작될 때 객체가 항상 동일한 스케일이라고 추정할 수는 없을 것입니다.
   input.startScale=currentScale;
   input.startAngle=currentRotation;
 }
@@ -278,18 +280,18 @@ function onTouchMove(event) {
 
 function handleGesture(x1, y1, x2, y2){
   if(input.isGesture){
-    //calculate distance and angle between fingers
+    // 손가락 사이의 거리와 각도를 계산합니다.
     var dx = x2 - x1;
     var dy = y2 - y1;
     var touchDistance = Math.sqrt(dx*dx+dy*dy);
     var touchAngle = Math.atan2(dy,dx);
-    //calculate the difference between current touch values and the start values
+    // 현재 터치값과 시작값 사이의 거리를 계산합니다.
     var scalePixelChange = touchDistance - input.touchStartDistance;
     var angleChange = touchAngle - input.touchStartAngle;
-    //calculate how much this should affect the actual object
+    // 실제 객체에 얼마나 영향을 미칠지를 계산합니다.
     currentScale = input.startScale + scalePixelChange*0.01;
     currentRotation = input.startAngle+(angleChange*180/Math.PI);
-    //upper and lower limit of scaling
+    // 스케일의 상한선과 하한선
     if(currentScale<0.5) currentScale = 0.5;
     if(currentScale>3) currentScale = 3;
   }
@@ -301,12 +303,12 @@ function handleGesture(x1, y1, x2, y2){
 <pre class="prettyprint">
 function onAnimationFrame() {
   requestAnimationFrame( onAnimationFrame );
-  //execute transform based on currentScale and currentRotation
+  // currentScale과 currentRotation에 기반하여 변환(Transform)을 수행합니다.
   /*
   /
   */
 
-  //because touchmove is only fired when finger is actually moving we need to reset the delta values each frame
+  // 손가락이 실제로 이동 시에만 touchmove가 발생하므로 매 프레임마다 델타(Delta)값을 초기화합니다.
   input.dragDX=0;
   input.dragDY=0;
 }
@@ -365,30 +367,30 @@ function onKeyUp( event ) {
   input.shiftKey = event.shiftKey;
 }
 
-//this needs to be called every frame before animation is executed
+// 이는 애니메이션이 실행되기 전의 매 프레임마다 호출되어야 합니다.
 function handleKeyInput(){
   if(input.keyCodes.k37){
-    input.dragDX = -5; //37 arrow left
+    input.dragDX = -5; // 37: 왼쪽 화살표키
   } else if(input.keyCodes.k39){
-    input.dragDX = 5; //39 arrow right
+    input.dragDX = 5; //39: 오른쪽 화살표키
   } 
   if(input.keyCodes.k38){
-    input.dragDY = -5; //38 arrow up
+    input.dragDY = -5; //38: 위쪽 화살표키
   } else if(input.keyCodes.k40){
-    input.dragDY = 5; //40 arrow down
+    input.dragDY = 5; //40: 아래쪽 화살표키
   }
 }
 
 function onAnimationFrame() {
   requestAnimationFrame( onAnimationFrame );
-  //because keydown events are not fired every frame we need to process the keyboard state first   
+  // keydown 이벤트가 매 프레임마다 발생하지 않으므로 키보드 상태를 먼저 처리할 필요가 있습니다.
   handleKeyInput();
-  //implement animations based on what is stored in input
+  // 입력으로 무엇이 저장되었는지에 따라 애니메이션이 구현됩니다.
    /*
   /
   */
 
-  //because touchmove is only fired when finger is actually moving we need to reset the delta values each frame
+  //  실제 손가락이 이동할 때만 touchmove가 발생하므로 각 프레임마다 델타(Delta)값을 초기화할 필요가 있습니다.
   input.dragDX = 0;
   input.dragDY = 0;
 }
