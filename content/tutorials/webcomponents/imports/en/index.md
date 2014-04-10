@@ -44,12 +44,7 @@ To detect support, check if `.import` exists on the `<link>` element:
       // Use other libraries/require systems to load files.
     }
 
-Browser support is still in the early days. Chrome 31 is the first browser to have an implementation. You can enable the flag by turning on **Enable HTML Imports** in `about:flags`. For other browsers, [Polymer's polyfill](http://www.polymer-project.org/platform/html-imports.html) works great until things are widely supported.
-
-<figure>
-  <img src="aboutflag.png">
-  <figcaption><b>Enable HTML Imports</b> in <code>about:flags</code>.</figcpation>
-</figure>
+Browser support is still in the early days. Chrome 31 was the first browser to see an implementation. Since then, Chrome 36 was update with the latest spec. You can enable the flag by turning on **Enable experimental Web Platform features** in `about:flags` in Chrome Canary. For other browsers, [Polymer's polyfill](http://www.polymer-project.org/platform/html-imports.html) works great until things are widely supported.
 
 <p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
 
