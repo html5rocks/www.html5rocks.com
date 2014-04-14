@@ -68,22 +68,41 @@ Custom element는 `document.registerElement()`를 사용하여 만듭니다.:
 
 <p class="notice tip">생성자가 전역 <code>window</code> 객체 끝에 위치하는 것을 원하지 않는다면 namespace 안에 넣거나(<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) 특정 영역에 놓습니다.</p>
 
+<h3 id="extendingelements">elements 확장</h3>
+ Custom elements는 여러분이 이미 존재하는 (native) HTML elements 뿐만 아니라 다른 custom elements를 확장하는 것을 허용합니다. element를 확장하려면 상속받으려는 element의 이름과 `prototype`을 `registerElement()`로 전달해야 합니다.
+
+
 <h3 id="extending">native element의 확장</h3>
 
-여러분은 일반적인 Joe&#8482; `<button>`에 만족하지 못합니다. 여러분은 그 기능을 "Mega Button"으로 확장하고 싶습니다. `<button>` element를 확장하기 위해서는 `HTMLButtonElement` 의 `prototype`으로부터 상속받는 새로운 element를 만들어야 합니다.:
+여러분은 일반적인 Joe&#8482; `<button>`에 만족하지 못합니다. 여러분은 그 기능을 "Mega Button"으로 확장하고 싶습니다. `<button>` element를 확장하기 위해서는 `HTMLButtonElement` 의 `prototype`으로부터 상속받는 새로운 element를 만들어야 하며 element의 이름을 `extends`해야 합니다. 아래의 경우 "button"입니다.:
 
     var MegaButton = document.registerElement('mega-button', {
-      prototype: Object.create(HTMLButtonElement.prototype)
+      prototype: Object.create(HTMLButtonElement.prototype),
+      extends: 'button'
     });
 
-<p class="notice fact">
-<b>element B</b>로부터 확장하여 <b>element A</b>를 만들기 위해서  <b>element A</b>는 반드시 <b>element B</b>의 <code>prototype</code>으로부터 상속 받아야 합니다.</p>
+<p class="notice fact"><b>element B</b>로부터 확장하여 <b>element A</b>를 만들기 위해서  <b>element A</b>는 반드시 <b>element B</b>의 <code>prototype</code>으로부터 상속 받아야 합니다.</p>
 
-이와 같은 custom element는 _타입 확장 custom elements_이라 부릅니다. "element X is a Y"와 같은 방법으로 `HTMLElement`의 특별화된 버전으로부터 상속 받을 수 있습니다.
+native elements로부터 상속받은 custom element는 _타입 확장 custom elements_이라 부릅니다. "element X is a Y"와 같은 방법으로 `HTMLElement`의 특별화된 버전으로부터 상속 받을 수 있습니다.
 
 예:
 
     <button is="mega-button">
+
+
+<h4 id="extendcustomeel">custom element 확장하기</h4>
+ 
+`<x-foo>` custom element를 확장한 `<x-foo-extended>` element를 만들기 위해서는 단순히 prototype을 상속받으면 되며 여러분이 무엇으로부터 상속받았는지 `extends`에 이름을 넣으면 됩니다.:
+
+    var XFooProto = Object.create(HTMLElement.prototype);
+    ...
+ 
+    var XFooExtended = document.registerElement('x-foo-extended', {
+      prototype: XFooProto,
+      extends: 'x-foo'
+    });
+
+element prototype을 만들기 위한 더 많은 정보는 아래의 <a href="#publicapi">JS 프로퍼티 및 메서드 추가</a>를 보세요.
 
 <h3 id="upgrades">elements를 업그레이드 하는 방법</h3>
 
