@@ -153,15 +153,20 @@ table.code {
 <h2 id="toc-composite-properties">Animating Composite Properties</h2>
 
 <p>There is one CSS property, however, that you might expect to cause paints that sometimes does not: opacity. Changes to opacity can be handled by the GPU during compositing by simply painting the element texture with a lower alpha value. For that to work, however, the element must be the <strong>only one in the layer</strong>. If it has been grouped with other elements then changing the opacity at the GPU would (incorrectly) fade them too.</p>
+<p>描画を誘発すると思いきや、行わないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティングの間GPUがハンドルされます。そして、テクスチャは同一レイヤに合成されないと動作しません。もしそれらが異なるレイヤにグルーピングされると、GPUレイヤに含まれるopacityに変化があった要素も外のは誤ってフェードされてしまうでしょう。</p>
 
 <p>In Blink and WebKit browsers a new layer is created for any element which has a CSS transition or animation on opacity, but many developers use <code>translateZ(0)</code> or <code>translate3d(0,0,0)</code> to manually force layer creation. Forcing layers to be created ensures both that the layer is painted and ready-to-go as soon as the animation starts (creating and painting a layer is a non-trivial operation and can delay the start of your animation), and that there's no sudden change in appearance due to antialiasing changes. Promoting layers should done sparingly, though; you can overdo it and having <a href="http://wesleyhales.com/blog/2013/10/26/Jank-Busting-Apples-Home-Page/">too many layers can cause jank</a>.</p>
+<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤが作成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にそれを行います。レイヤの生成を強制的に行うと、アニメーション開始時（レイヤの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
 
 <blockquote class="commentary talkinghead talkinghead-lewis">In Chrome, non-root, non-opaque layers use <a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">grayscale antialiasing rather than subpixel antialiasing</a>, which can be very noticeable, especially if the antialiasing method changes suddenly. If you are going to promote an element don’t wait until the animation starts, do it ahead of time.</blockquote>
+<blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
 
 <p>Changing the transform of an element boils down to changes to its position, rotation or scale. Often, position is animated by setting the <code>left</code> and <code>top</code> properties. The problem is, as shown above, <code>left</code> and <code>top</code> both trigger layout operations, and that's expensive. The better solution is to use a <code>translate</code> on the element, which does not trigger layout.</p>
+<p>要素のトランスフォームを変えることは、つまるところ位置、回転、縮尺を変えることです。しばし、位置はleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、それが非常に高価であることです。よりよい方法としてはtranslateを使うことであり、それは再レイアウトを発生しません。</p>
 
 <blockquote class="commentary talkinghead talkinghead-irish">In Chrome Canary and Safari you can also animate filters, as these are handled off the main thread, are accelerated and generally perform very well. But since filters are not yet supported in Internet Explorer or Firefox you should proceed with caution.</blockquote>
-
+<blockquote class="commentary talkinghead talkinghead-irish">Chrome CanaryとSafariにおいては、メインスレッドでは使われないアニメーションフィルタを使うことが可能であり、アクセラレートされ一般的にパフォーマンスが良いです。しかしInternet ExplorerやFirefoxではサポートされておらず、問題を起こしてしまうでしょう。</blockquote>
+    
 <h2 id="toc-imperative-declarative">Imperative vs Declarative Animations</h2>
 <h2>命令的アニメーション vs 宣言的アニメーション</h2>
 
