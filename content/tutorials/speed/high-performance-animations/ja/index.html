@@ -81,26 +81,26 @@ table.code {
 <p>ブラウザが行うプロセスはとてもシンプルです。要素に適用するスタイルを計算します(Recalulate Style)、それぞれの要素のジオメトリと位置を生成します(Layout)、<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">レイヤー</a>へそれぞれの要素のピクセルを埋めます(Paint Setup と Paint)、そしてスクリーンに対してそれらを描画します(Composite Layers)。</p>
 
 <p>To achieve silky smooth animations you need to avoid work, and the best way to do that is to only change properties that affect compositing -- transform and opacity. <strong>The <em>higher up</em> you start on the timeline waterfall the <em>more work</em> the browser has to do to get pixels on to the screen</strong>.</p>
-<p>スムーズなアニメーションを実現するため必要なのは処理をさせないことです。そのための一番いい方法は、 trasnform と opacity のプロパティだけを変更することです。タイムラインのウォーターフォールの上にあればあるほど、ブラウザの処理する量が多くなります。</p>
+<p>スムーズなアニメーションを実現するのに必要なのは処理をさせないことです。そのための一番いい方法は、 transform と opacity のプロパティだけを変更することです。タイムラインのウォーターフォールの上にあればあるほど、ブラウザの処理する量が多くなります。</p>
 
 <blockquote class="commentary talkinghead talkinghead-irish">This advice is broadly cross-browser compatible. Chrome, Firefox, Safari and Opera all hardware accelerate transforms and opacity. Unfortunately it is not clear what criteria Internet Explorer 10+ uses to determine if hardware acceleration is suitable, but hopefully that will become clearer when the F12 tools in IE11 are shipped.</blockquote>
-<blockquote class="commentary talkinghead talkinghead-irish">このアドバイスはだいたいのブラウザに当てはまります。 Chrome、 Firefox、Safari、そしてOperaは transforms と opacity の全てにハードウェアアクセラレーションを適用します。残念ながら Internet Explorer 10 以上でハードウェアアクセラレーションが適用される条件は明らかになっていません。しかしInternet Explorer 11 の F12開発者ツール がリリースされれば、この条件が分かるかもしれません。</blockquote>
+<blockquote class="commentary talkinghead talkinghead-irish">このアドバイスはだいたいのブラウザに当てはまります。 Chrome、 Firefox、Safari、そしてOperaは transform と opacity の全てにハードウェアアクセラレーションを適用します。残念ながら Internet Explorer 10 以上でハードウェアアクセラレーションが適用される条件は明らかになっていません。しかしInternet Explorer 11 の F12開発者ツール がリリースされれば、この条件が分かるかもしれません。</blockquote>
 
 <h2 id="toc-animating-layout-properties">Animating Layout Properties</h2>
 <h2>レイアウト変更を伴うプロパティのアニメーション</h2>
-    
+
 <p>When you change elements, the browser may need to do a layout, which involves calculating the geometry (position and size) of all the elements affected by the change. If you change one element, the geometry of other elements may need to be recalculated. For example, if you change the width of the <code>&lt;html&gt;</code> element any of its children may be affected. Due to the way elements overflow and affect one another, changes further down the tree can sometimes result in layout calculations all the way back up to the top.</p>
-<p>要素に変更を加えると、ブラウザーはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
-    
+<p>要素に変更を加えると、ブラウザーはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
+
 <p>The larger the tree of visible elements, the longer it takes to perform layout calculations, so you must take pains to avoid animating properties that trigger layout.</p>
-<p>可視要素のツリーが大きい程レイアウト計算量も多くなるため、それを誘発するようなアニメーションするプロパティを回避するのに腐心しなければなりません。</p>
-    
+<p>可視要素のツリーが大きい程レイアウト計算量も多くなるため、レイアウト再計算を誘発するようなプロパティをアニメーションすることを回避するのに腐心しなければなりません。</p>
+
 <blockquote class="commentary talkinghead talkinghead-lewis">Are you storing app state in the <html> or <body> elements with classes? When these elements are changed, the browser may have to redo style calculations and layout. Watch out for inadvertent layout triggers in your apps; they may not animate but they can be very expensive!</blockquote>
 <blockquote class="commentary talkinghead talkinghead-lewis">要素のクラスでアプリの状態を管理しようとしていますか？ その要素の変更の際、ブラウザはスタイルとレイアウトの計算をやり直す必要があります。想定外のレイアウト再計算発生に気を付けてください。アニメーションがないものでも、負荷が高い場合がありますよ！</blockquote>
 
 <p>Here are the <a href="http://goo.gl/lPVJY6">most popular CSS properties</a> that, when changed, trigger layout:</p>
-<p>以下の<a href="http://goo.gl/lPVJY6">著名なCSSプロパティ</a>は、変更時にレイアウト更新を伴います。:</p>
-    
+<p>以下の<a href="http://goo.gl/lPVJY6">よく使われているCSSプロパティ</a>は、変更時にレイアウト更新を伴います。:</p>
+
 <p><strong>Styles that affect layout</strong></p>
 <p><strong>レイアウトに影響を及ぼすプロパティ</strong></p>
 
@@ -125,7 +125,7 @@ table.code {
 
 <p>Changing an element may also trigger painting, and the majority of painting in modern browsers is done in software rasterizers. Depending on how the elements in your app are grouped into layers, other elements <em>besides</em> the one that changed may also need to be painted.</p>
 <p>要素を変更することにより描画が引き起こされることがあります。モダンブラウザでは描画の大部分がソフトウェアのラスタライザーにより行われます。あなたのアプリ上で要素がどのレイヤーに分類されるかによって、変更された要素以外の<em>他の要素にも</em>描画が引き起こされる可能性があります。</p>
-    
+
 <blockquote class="commentary talkinghead talkinghead-irish">If you’re new to the concept of layers you should read Tom Wiltzius’s <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">introduction to the topic</a>.</blockquote>
 
 <p>There are many properties that will trigger a paint, but here are the most popular:</p>
@@ -153,20 +153,20 @@ table.code {
 <h2 id="toc-composite-properties">Animating Composite Properties</h2>
 
 <p>There is one CSS property, however, that you might expect to cause paints that sometimes does not: opacity. Changes to opacity can be handled by the GPU during compositing by simply painting the element texture with a lower alpha value. For that to work, however, the element must be the <strong>only one in the layer</strong>. If it has been grouped with other elements then changing the opacity at the GPU would (incorrectly) fade them too.</p>
-<p>描画を誘発すると思いきや、行わないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティングの間GPUがハンドルされます。そして、テクスチャは同一レイヤに合成されないと動作しません。もしそれらが異なるレイヤにグルーピングされると、GPUレイヤに含まれるopacityに変化があった要素も外のは誤ってフェードされてしまうでしょう。</p>
+<p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤに合成されないと動作しません。もしそれらが異なるレイヤにグルーピングされると、GPUレイヤに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
 
 <p>In Blink and WebKit browsers a new layer is created for any element which has a CSS transition or animation on opacity, but many developers use <code>translateZ(0)</code> or <code>translate3d(0,0,0)</code> to manually force layer creation. Forcing layers to be created ensures both that the layer is painted and ready-to-go as soon as the animation starts (creating and painting a layer is a non-trivial operation and can delay the start of your animation), and that there's no sudden change in appearance due to antialiasing changes. Promoting layers should done sparingly, though; you can overdo it and having <a href="http://wesleyhales.com/blog/2013/10/26/Jank-Busting-Apples-Home-Page/">too many layers can cause jank</a>.</p>
-<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤが作成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にそれを行います。レイヤの生成を強制的に行うと、アニメーション開始時（レイヤの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
+<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤが生成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にGPUレイヤの生成を行います。レイヤの生成を強制的に行うと、アニメーション開始時（レイヤの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
 
 <blockquote class="commentary talkinghead talkinghead-lewis">In Chrome, non-root, non-opaque layers use <a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">grayscale antialiasing rather than subpixel antialiasing</a>, which can be very noticeable, especially if the antialiasing method changes suddenly. If you are going to promote an element don’t wait until the animation starts, do it ahead of time.</blockquote>
 <blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
 
 <p>Changing the transform of an element boils down to changes to its position, rotation or scale. Often, position is animated by setting the <code>left</code> and <code>top</code> properties. The problem is, as shown above, <code>left</code> and <code>top</code> both trigger layout operations, and that's expensive. The better solution is to use a <code>translate</code> on the element, which does not trigger layout.</p>
-<p>要素のトランスフォームを変えることは、つまるところ位置、回転、縮尺を変えることです。しばし、位置はleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、それが非常に高価であることです。よりよい方法としてはtranslateを使うことであり、それは再レイアウトを発生しません。</p>
+<p>要素のtransformを変えることは、つまるところ位置、回転、縮尺を変えることです。多くの場合、positionはleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、非常にコストがかかることです。よりよい方法としてはtranslateを使うことであり、translateは再レイアウトを引き起こしません。</p>
 
 <blockquote class="commentary talkinghead talkinghead-irish">In Chrome Canary and Safari you can also animate filters, as these are handled off the main thread, are accelerated and generally perform very well. But since filters are not yet supported in Internet Explorer or Firefox you should proceed with caution.</blockquote>
 <blockquote class="commentary talkinghead talkinghead-irish">Chrome CanaryとSafariにおいては、メインスレッドでは使われないアニメーションフィルタを使うことが可能であり、アクセラレートされ一般的にパフォーマンスが良いです。しかしInternet ExplorerやFirefoxではサポートされておらず、問題を起こしてしまうでしょう。</blockquote>
-    
+
 <h2 id="toc-imperative-declarative">Imperative vs Declarative Animations</h2>
 <h2>命令的アニメーション vs 宣言的アニメーション</h2>
 
@@ -177,7 +177,7 @@ table.code {
 <h3>命令的</h3>
 
 <p>The main pro of imperative animations happens to also be its main con: it’s running in JavaScript on the browser’s main thread. The main thread is already busy with other JavaScript, style calculations, layout and painting. Often there is thread contention. This substantially increases the chance of missing animation frames, which is the very last thing you want.</p>
-<p>命令的なアニメーションのいちばんのメリットは、同時に、いちばんのデメリットを引き起こすこともありえます。アニメーションはブラウザのメインスレッド上のJavaScriptで実行されています。メインスレッドはすでに別のJavaScript（スタイル計算、レイアウトや描画）でいっぱいいっぱいです。よくスレッドの競合が起こります。これは、アニメーションフレームのコマ落ちの可能性がかなり高くなります。</p>
+<p>命令的なアニメーションのいちばんのメリットは、同時に、いちばんのデメリットを引き起こすこともありえます。アニメーションはブラウザのメインスレッド上のJavaScriptで実行されています。メインスレッドはすでに別のJavaScript（スタイル計算、レイアウトや描画）でいっぱいいっぱいです。スレッドの競合がよく起こります。これは、アニメーションのフレームがコマ落ちする可能性がかなり高くなります。</p>
 
 <p>Animating in JavaScript does give you a lot of control: starting, pausing, reversing, interrupting and cancelling are trivial. Some effects, like <a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">parallax</a> scrolling, can only be achieved in JavaScript.</p>
 <p>JavaScriptでのアニメーションは、ほんとうに多くの制御ができます。再生、一時停止、逆再生、中止やキャンセルも、お手のものです。<a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">パララックススクローリング</a>のように、JavaScriptでしか実現できない効果もいくつかあります。</p>
@@ -186,15 +186,15 @@ table.code {
 <h3>宣言的</h3>
 
 <p>The alternative approach is to write your transitions and animations in CSS. The primary advantage is that the browser can optimize the animation. It can create layers if necessary, and run some operations off the main thread which, as you have seen, is a good thing. The major con of CSS animations for many is that they lack the expressive power of JavaScript animations. It is very difficult to combine animations in a meaningful way, which means authoring animations gets complex and error-prone.</p>
-<p>宣言的アプローチとは、transitionやanimationをCSSの中に記述することです。いちばんのメリットは、ブラウザがアニメーションを最適化できることです。必要であればレイヤーも作れますし、前述したようにメインスレッドでの操作の実行をやめることもできます。これは、よい点です。多くの人にとって、CSSの主なデメリットは、JavaScriptの表現力がないことです。有意義な方法でアニメーションを組み合わせることは、非常に難しいです。つまり、アニメーションをオーサリングすることは、複雑でエラーが出やすくなるのです。</p>
+<p>宣言的アプローチとは、transitionやanimationをCSSの中に記述することです。いちばんのメリットは、ブラウザがアニメーションを最適化できることです。必要であればレイヤーも作れますし、前述したようにメインスレッドでの操作の実行をやめることもできます。これは、よい点です。多くの人にとって、CSSの主なデメリットは、JavaScriptの表現力がないことです。有意義な方法でアニメーションを組み合わせることは、非常に難しいです。つまり、CSSのアニメーションを組み合わせることは複雑で、エラーが出やすくなるのです。</p>
 
 <h2 id="toc-looking-to-the-future">Looking to the future</h2>
 
 <p>As web standards evolve, some of the limitations around animation will go away. There is a proposal by Google’s Ian Vollick that investigates the concept of allowing <a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">JavaScript animations via workers</a>, providing the animation does not trigger layout or style recalculations.</p>
-<p>Web標準が発達するにつれて、 アニメーション周りの制約の一部はなくなるでしょう。<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">workerを用いたJavaScriptアニメーションの実行</a>というコンセプトを研究しようというイアン・ヴォリック（Google）による提案があります。これは、レイアウトまたはスタイルの再計算を発生させません。</p>
+<p>Web標準が発達するにつれて、 アニメーション周りの制約の一部はなくなるでしょう。<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">workerを用いたJavaScriptアニメーションの実行</a>というコンセプトを研究しようというIan Vollick（Google）による提案があります。これは、レイアウトまたはスタイルの再計算を引き起こしません。</p>
 
 <p>For those interested in a more declarative approach to animation there is the <a href="http://dev.w3.org/fxtf/web-animations/">Web Animations specification</a>, which <a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">Jake Archibald has written about extensively</a>.</p>
-<p>アニメーションの宣言方法についてさらに興味がある人のために、<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">ジェイク・アーチボルドがWebアニメーションについて長々と書いた</a><a href="http://dev.w3.org/fxtf/web-animations/">仕様書</a>があります。</p>
+<p>アニメーションの宣言方法についてさらに興味がある人のために、<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/"> Jake ArchibaldがWebアニメーションについて長々と書いた</a><a href="http://dev.w3.org/fxtf/web-animations/">仕様書</a>があります。</p>
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
