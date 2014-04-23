@@ -67,6 +67,7 @@ table.code {
 <p>一方はtransformが終わっていますが、もう一方は終わっていません。どのような違いがあるかわかったところで、なぜこのような違いがあるのか考えてみましょう。</p>
 
 <h2 id="toc-dom-to-pixels">From DOM to Pixels in DevTools</h2>
+<h2 id="toc-dom-to-pixels">DevToolsにおけるDOMツリーの描画</h2>
 
 <p>When you use the Chrome DevTools timeline you should see a pattern similar to this:</p>
 <p>あなたが Chrome DevTools の Timeline を使うとき、これと似たパターンを見るはずです。:</p>
@@ -87,7 +88,7 @@ table.code {
 <blockquote class="commentary talkinghead talkinghead-irish">このアドバイスはだいたいのブラウザに当てはまります。 Chrome、 Firefox、Safari、そしてOperaは transform と opacity の全てにハードウェアアクセラレーションを適用します。残念ながら Internet Explorer 10 以上でハードウェアアクセラレーションが適用される条件は明らかになっていません。しかしInternet Explorer 11 の F12開発者ツール がリリースされれば、この条件が分かるかもしれません。</blockquote>
 
 <h2 id="toc-animating-layout-properties">Animating Layout Properties</h2>
-<h2>レイアウト変更を伴うプロパティのアニメーション</h2>
+<h2 id="toc-animating-layout-properties">レイアウト変更を伴うプロパティのアニメーション</h2>
 
 <p>When you change elements, the browser may need to do a layout, which involves calculating the geometry (position and size) of all the elements affected by the change. If you change one element, the geometry of other elements may need to be recalculated. For example, if you change the width of the <code>&lt;html&gt;</code> element any of its children may be affected. Due to the way elements overflow and affect one another, changes further down the tree can sometimes result in layout calculations all the way back up to the top.</p>
 <p>要素に変更を加えると、ブラウザーはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
@@ -122,6 +123,7 @@ table.code {
 <p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
 
 <h2 id="toc-">Animating Paint Properties</h2>
+<h2 id="toc-">ペイントを伴うアニメーションのプロパティ</h2>
 
 <p>Changing an element may also trigger painting, and the majority of painting in modern browsers is done in software rasterizers. Depending on how the elements in your app are grouped into layers, other elements <em>besides</em> the one that changed may also need to be painted.</p>
 <p>要素を変更することにより描画が引き起こされることがあります。モダンブラウザでは描画の大部分がソフトウェアのラスタライザーにより行われます。あなたのアプリ上で要素がどのレイヤーに分類されるかによって、変更された要素以外の<em>他の要素にも</em>描画が引き起こされる可能性があります。</p>
@@ -151,6 +153,7 @@ table.code {
 <p>上記のプロパティで要素をアニメーションさせた場合、再描画に影響を与えます。レイヤーの更新はGPUに属しています。携帯端末では特に影響を与えます。なぜなら、CPUがデスクトップよりも性能が大きく劣り、それは描画処理に時間がかかることを意味します。また、CPUとGPUの処理能力を超えた場合、更新にさらに時間がかかります。</p>
 
 <h2 id="toc-composite-properties">Animating Composite Properties</h2>
+<h2 id="toc-composite-properties">コンポジションを伴うアニメーションプロパティ</h2>
 
 <p>There is one CSS property, however, that you might expect to cause paints that sometimes does not: opacity. Changes to opacity can be handled by the GPU during compositing by simply painting the element texture with a lower alpha value. For that to work, however, the element must be the <strong>only one in the layer</strong>. If it has been grouped with other elements then changing the opacity at the GPU would (incorrectly) fade them too.</p>
 <p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤに合成されないと動作しません。もしそれらが異なるレイヤにグルーピングされると、GPUレイヤに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
@@ -168,7 +171,7 @@ table.code {
 <blockquote class="commentary talkinghead talkinghead-irish">Chrome CanaryとSafariにおいては、メインスレッドでは使われないアニメーションフィルタを使うことが可能であり、アクセラレートされ一般的にパフォーマンスが良いです。しかしInternet ExplorerやFirefoxではサポートされておらず、問題を起こしてしまうでしょう。</blockquote>
 
 <h2 id="toc-imperative-declarative">Imperative vs Declarative Animations</h2>
-<h2>命令的アニメーション vs 宣言的アニメーション</h2>
+<h2 id="toc-imperative-declarative">命令的アニメーション vs 宣言的アニメーション</h2>
 
 <p>Developers often have to decide if they will animate with JavaScript (imperative) or CSS (declarative). There are pros and cons to each, so let’s take a look:</p>
 <p>開発者はアニメーションをJavaScript（命令的：imperative）で行うか、CSS（宣言的：declarative）で行うか決めなければならないことがあります。</p>
@@ -189,6 +192,7 @@ table.code {
 <p>宣言的アプローチとは、transitionやanimationをCSSの中に記述することです。いちばんのメリットは、ブラウザがアニメーションを最適化できることです。必要であればレイヤーも作れますし、前述したようにメインスレッドでの操作の実行をやめることもできます。これは、よい点です。多くの人にとって、CSSの主なデメリットは、JavaScriptの表現力がないことです。有意義な方法でアニメーションを組み合わせることは、非常に難しいです。つまり、CSSのアニメーションを組み合わせることは複雑で、エラーが出やすくなるのです。</p>
 
 <h2 id="toc-looking-to-the-future">Looking to the future</h2>
+<h2 id="toc-looking-to-the-future">展望</h2>
 
 <p>As web standards evolve, some of the limitations around animation will go away. There is a proposal by Google’s Ian Vollick that investigates the concept of allowing <a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">JavaScript animations via workers</a>, providing the animation does not trigger layout or style recalculations.</p>
 <p>Web標準が発達するにつれて、 アニメーション周りの制約の一部はなくなるでしょう。<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">workerを用いたJavaScriptアニメーションの実行</a>というコンセプトを研究しようというIan Vollick（Google）による提案があります。これは、レイアウトまたはスタイルの再計算を引き起こしません。</p>
@@ -197,6 +201,7 @@ table.code {
 <p>アニメーションの宣言方法についてさらに興味がある人のために、<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/"> Jake ArchibaldがWebアニメーションについて長々と書いた</a><a href="http://dev.w3.org/fxtf/web-animations/">仕様書</a>があります。</p>
 
 <h2 id="toc-conclusion">Conclusion</h2>
+<h2 id="toc-conclusion">まとめ</h2>
 
 <p>Animating well is core to a great web experience. You should always look to avoid animating properties that will trigger layout or paints, both of which are expensive and may lead to skipped frames. Declarative animations are preferable to imperative since the browser has the opportunity to optimize ahead of time.</p>
 <p>なめらかなアニメーションは素晴らしいウェブを体験させる根幹です。レイアウトや描画を引き起こすプロパティをアニメーションさせるのは避けるべきです。レイアウトと描画はどちらも処理が重く、フレーム落ちを起こす可能性があるからです。宣言的なアニメーションは事前にブラウザに最適化することができるので、命令的なアニメーションより良いとされています。</p>
