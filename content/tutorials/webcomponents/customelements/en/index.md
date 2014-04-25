@@ -576,10 +576,7 @@ true support for the updated spec.
 
 <p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experimental Web Platform features" in <code>about:flags</code>.</p>
 
-Until browser support is stellar, there are a couple of great polyfills:
-
-- Google's [Polymer](http://polymer-project.org) has a [polyfill](http://www.polymer-project.org/platform/custom-elements.html)
-- Mozilla's [x-tags](http://www.x-tags.org/)
+Until browser support is stellar, there's a [polyfill](http://www.polymer-project.org/platform/custom-elements.html) which is used by Google's [Polymer](http://polymer-project.org) and Mozilla's [X-Tag](http://www.x-tags.org/).
 
 <h3 id="elementel">What happened to HTMLElementElement?</h3>
 
