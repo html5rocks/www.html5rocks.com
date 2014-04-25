@@ -16,7 +16,7 @@
 
 <h3 id="meaningful">もっとセクシーなマークアップを！</h3>
 
-HTML はドキュメントを構成するツールとしてはこの上ないものです。しかしそのボキャブラリーは [HTML standard](http://www.whatwg.org/specs/web-apps/current-work/multipage/) が定義する要素に限定されてます。
+HTML はドキュメントを構成するツールとしてはこの上ないものです。しかしそのボキャブラリーは [HTML 標準](http://www.whatwg.org/specs/web-apps/current-work/multipage/) が定義する要素に限定されてます。
 
 Gmail のマークアップが仮にこんな感じだったらどうでしょう？：
 
@@ -38,7 +38,7 @@ Gmail のマークアップが仮にこんな感じだったらどうでしょ�
 </p>
 
 素晴らしいでしょう？このアプリはもちろん意味を持っています。**意味を持っている**し、**理解しやすい** はずです。
-そして何よりも、**メンテナンスが容易** なのです。将来的には、宣言的な仕組みを調査するだけで、何をしているか理解できるのです。
+そして何よりも、**メンテナンスが容易** なのです。将来的には、宣言的な仕組みを調査するだけで、何をしているか理解できるようになるでしょう。
 
 <h2 id="gettingstarted">Getting started</h2>
 
@@ -73,7 +73,7 @@ Custom Element は `document.registerElement()` を使って作ることがで�
 
 <h3 id="extending">ネイティブ要素を拡張する</h3>
 
-Regular Joe&#8482; `<button>` に不満があったとしましょう。そしてそれを "Mega Button" に拡張したいとします。`<button>` 要素を拡張するには、`HTMLButtonElement` の `prototype` を継承した新しい要素を作ります：
+ごく普通の `<button>` に不満があったとしましょう。そしてそれを "Mega Button" に拡張したいとします。`<button>` 要素を拡張するには、`HTMLButtonElement` の `prototype` を継承した新しい要素を作ります：
 
     var MegaButton = document.registerElement('mega-button', {
       prototype: Object.create(HTMLButtonElement.prototype)
@@ -263,7 +263,7 @@ Custom Elements では絶妙なタイミングで特別なメソッドを呼び�
       });
     };
 
-<blockquote class="commentary talkinghead">遅い要素では使ってもらえません。ライフサイクルコールバックを使って最適化を進めましょう！</blockquote>
+<blockquote class="commentary talkinghead">遅い要素は使ってもらえません。ライフサイクルコールバックを使って最適化を進めましょう！</blockquote>
 
 <h2 id="addingmarkup">マークアップを追加する</h2>
 
