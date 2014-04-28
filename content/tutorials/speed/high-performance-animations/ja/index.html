@@ -81,7 +81,7 @@ table.code {
 <figure>
   <img src="devtools-waterfall.jpg" alt="DevTools waterfall" />
   <figcaption>Chrome DevTools frame mode. The higher up the waterfall you start, the more work the browser does.</figcaption>
-  <figcaption>Chrome DevToolsのFramesモード。ウォーターフォールの上にあればあるほど、ブラウザーの処理する量が多い。</figcaption>
+  <figcaption>Chrome DevToolsのFramesモード。ウォーターフォールの上にあればあるほど、ブラウザの処理する量が多い。</figcaption>
 </figure>
 
 <p>The process that the browser goes through is pretty simple: calculate the styles that apply to the elements (Recalculate Style), generate the geometry and position for each element (Layout), fill out the pixels for each element into <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">layers</a> (Paint Setup and Paint) and draw the layers out to screen (Composite Layers).</p>
@@ -97,7 +97,7 @@ table.code {
 <h2 id="toc-animating-layout-properties">レイアウト変更を伴うプロパティのアニメーション</h2>
 
 <p>When you change elements, the browser may need to do a layout, which involves calculating the geometry (position and size) of all the elements affected by the change. If you change one element, the geometry of other elements may need to be recalculated. For example, if you change the width of the <code>&lt;html&gt;</code> element any of its children may be affected. Due to the way elements overflow and affect one another, changes further down the tree can sometimes result in layout calculations all the way back up to the top.</p>
-<p>要素に変更を加えると、ブラウザーはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
+<p>要素に変更を加えると、ブラウザはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
 
 <p>The larger the tree of visible elements, the longer it takes to perform layout calculations, so you must take pains to avoid animating properties that trigger layout.</p>
 <p>可視要素のツリーが大きい程レイアウト計算量も多くなるため、レイアウト再計算を誘発するようなプロパティをアニメーションすることを回避するのに腐心しなければなりません。</p>
@@ -162,13 +162,13 @@ table.code {
 <h2 id="toc-composite-properties">コンポジションを伴うアニメーションプロパティ</h2>
 
 <p>There is one CSS property, however, that you might expect to cause paints that sometimes does not: opacity. Changes to opacity can be handled by the GPU during compositing by simply painting the element texture with a lower alpha value. For that to work, however, the element must be the <strong>only one in the layer</strong>. If it has been grouped with other elements then changing the opacity at the GPU would (incorrectly) fade them too.</p>
-<p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤに合成されないと動作しません。もしそれらが異なるレイヤにグルーピングされると、GPUレイヤに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
+<p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤーに合成されないと動作しません。もしそれらが異なるレイヤーにグルーピングされると、GPUレイヤーに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
 
 <p>In Blink and WebKit browsers a new layer is created for any element which has a CSS transition or animation on opacity, but many developers use <code>translateZ(0)</code> or <code>translate3d(0,0,0)</code> to manually force layer creation. Forcing layers to be created ensures both that the layer is painted and ready-to-go as soon as the animation starts (creating and painting a layer is a non-trivial operation and can delay the start of your animation), and that there's no sudden change in appearance due to antialiasing changes. Promoting layers should done sparingly, though; you can overdo it and having <a href="http://wesleyhales.com/blog/2013/10/26/Jank-Busting-Apples-Home-Page/">too many layers can cause jank</a>.</p>
-<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤが生成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にGPUレイヤの生成を行います。レイヤの生成を強制的に行うと、アニメーション開始時（レイヤの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
+<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤーが生成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にGPUレイヤーの生成を行います。レイヤーの生成を強制的に行うと、アニメーション開始時（レイヤーの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤーのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤーが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
 
 <blockquote class="commentary talkinghead talkinghead-lewis">In Chrome, non-root, non-opaque layers use <a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">grayscale antialiasing rather than subpixel antialiasing</a>, which can be very noticeable, especially if the antialiasing method changes suddenly. If you are going to promote an element don’t wait until the animation starts, do it ahead of time.</blockquote>
-<blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
+<blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤーはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
 
 <p>Changing the transform of an element boils down to changes to its position, rotation or scale. Often, position is animated by setting the <code>left</code> and <code>top</code> properties. The problem is, as shown above, <code>left</code> and <code>top</code> both trigger layout operations, and that's expensive. The better solution is to use a <code>translate</code> on the element, which does not trigger layout.</p>
 <p>要素のtransformを変えることは、つまるところ位置、回転、縮尺を変えることです。多くの場合、positionはleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、非常にコストがかかることです。よりよい方法としてはtranslateを使うことであり、translateは再レイアウトを引き起こしません。</p>
