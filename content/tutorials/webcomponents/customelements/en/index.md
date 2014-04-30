@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 <h2 id="intro">Introduction</h2>
 
 The web severely lacks expression. To see what I mean, take a peek at a "modern" web app like GMail:
