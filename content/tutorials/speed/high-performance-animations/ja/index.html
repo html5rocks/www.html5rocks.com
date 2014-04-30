@@ -55,60 +55,45 @@ table.code {
 
 {% block content %}
 
-<p class="intro">We’re going to cut straight to the chase. Modern browsers can animate four things really cheaply: <strong>position</strong>, <strong>scale</strong>, <strong>rotation</strong> and <strong>opacity</strong>. If you animate anything else, it’s <em>at your own risk</em>, and the chances are you’re not going to hit a silky smooth 60fps.</p>
 <p class="intro">単刀直入に本題に入りましょう。モダンブラウザは4つの項目を手軽にアニメーションすることができます。<strong>位置（position）</strong>、<strong>大きさ（scale）</strong>、<strong>回転（rotation）</strong>、<strong>透明度（opacity）</strong>です。もし、それ以外のものをアニメーションするなら、それは<em>ご自分の頑張り次第</em>ですが、絹のようになめらかな60fpsの動画を実現できる可能性は少ないでしょう。</p>
 
 <figure>
   <img src="cheap-operations.jpg" alt="Cheap to animate" />
 </figure>
 
-<p>Take a look at this side-by-side slow motion video of the same animation:</p>
 <p>同じゆっくりとした動きのアニメーションが並んだ動画を見てみましょう。</p>
 
 <div style="position: relative; padding-top: 56.25%;">
   <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/-62uPWUxgcg?rel=0" frameborder="0" allowfullscreen=""></iframe>
 </div>
 
-<p>One is done with transforms, the other isn’t. You can see what a difference it makes, so let’s take look at why that is.</p>
 <p>一方はtransformが終わっていますが、もう一方は終わっていません。どのような違いがあるかわかったところで、なぜこのような違いがあるのか考えてみましょう。</p>
 
-<h2 id="toc-dom-to-pixels">From DOM to Pixels in DevTools</h2>
 <h2 id="toc-dom-to-pixels">DevToolsにおけるDOMツリーの描画</h2>
 
-<p>When you use the Chrome DevTools timeline you should see a pattern similar to this:</p>
 <p>あなたがChrome DevToolsのTimelineを使うとき、これと似たパターンを見るはずです。</p>
 
 <figure>
   <img src="devtools-waterfall.jpg" alt="DevTools waterfall" />
-  <figcaption>Chrome DevTools frame mode. The higher up the waterfall you start, the more work the browser does.</figcaption>
   <figcaption>Chrome DevToolsのFramesモード。ウォーターフォールの上にあればあるほど、ブラウザの処理する量が多い。</figcaption>
 </figure>
 
-<p>The process that the browser goes through is pretty simple: calculate the styles that apply to the elements (Recalculate Style), generate the geometry and position for each element (Layout), fill out the pixels for each element into <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">layers</a> (Paint Setup and Paint) and draw the layers out to screen (Composite Layers).</p>
 <p>ブラウザが行うプロセスはとてもシンプルです。要素に適用するスタイルを計算します(Recalulate Style)、それぞれの要素のジオメトリと位置を生成します(Layout)、<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">レイヤー</a>へそれぞれの要素のピクセルを埋めます(Paint Setup と Paint)、そしてスクリーンに対してそれらを描画します(Composite Layers)。</p>
 
-<p>To achieve silky smooth animations you need to avoid work, and the best way to do that is to only change properties that affect compositing -- transform and opacity. <strong>The <em>higher up</em> you start on the timeline waterfall the <em>more work</em> the browser has to do to get pixels on to the screen</strong>.</p>
 <p>スムーズなアニメーションを実現するのに必要なのは処理をさせないことです。そのための一番いい方法は、transformとopacityのプロパティだけを変更することです。タイムラインのウォーターフォールの上にあればあるほど、ブラウザの処理する量が多くなります。</p>
 
-<blockquote class="commentary talkinghead talkinghead-irish">This advice is broadly cross-browser compatible. Chrome, Firefox, Safari and Opera all hardware accelerate transforms and opacity. Unfortunately it is not clear what criteria Internet Explorer 10+ uses to determine if hardware acceleration is suitable, but hopefully that will become clearer when the F12 tools in IE11 are shipped.</blockquote>
 <blockquote class="commentary talkinghead talkinghead-irish">このアドバイスはだいたいのブラウザに当てはまります。Chrome、Firefox、Safari、そしてOperaはtransformとopacityの全てにハードウェアアクセラレーションを適用します。残念ながらInternet Explorer 10以上でハードウェアアクセラレーションが適用される条件は明らかになっていません。しかしInternet Explorer 11のF12開発者ツールがリリースされれば、この条件が分かるかもしれません。</blockquote>
 
-<h2 id="toc-animating-layout-properties">Animating Layout Properties</h2>
 <h2 id="toc-animating-layout-properties">レイアウト変更を伴うプロパティのアニメーション</h2>
 
-<p>When you change elements, the browser may need to do a layout, which involves calculating the geometry (position and size) of all the elements affected by the change. If you change one element, the geometry of other elements may need to be recalculated. For example, if you change the width of the <code>&lt;html&gt;</code> element any of its children may be affected. Due to the way elements overflow and affect one another, changes further down the tree can sometimes result in layout calculations all the way back up to the top.</p>
 <p>要素に変更を加えると、ブラウザはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
 
-<p>The larger the tree of visible elements, the longer it takes to perform layout calculations, so you must take pains to avoid animating properties that trigger layout.</p>
 <p>可視要素のツリーが大きい程レイアウト計算量も多くなるため、レイアウト再計算を誘発するようなプロパティをアニメーションすることを回避するのに腐心しなければなりません。</p>
 
-<blockquote class="commentary talkinghead talkinghead-lewis">Are you storing app state in the <html> or <body> elements with classes? When these elements are changed, the browser may have to redo style calculations and layout. Watch out for inadvertent layout triggers in your apps; they may not animate but they can be very expensive!</blockquote>
 <blockquote class="commentary talkinghead talkinghead-lewis"><code>&lt;html&gt;</code>要素、<code>&lt;body&gt;</code>要素のクラスでアプリの状態を管理しようとしていますか？ その要素の変更の際、ブラウザはスタイルとレイアウトの計算をやり直す必要があります。スタイル計算、レイアウトの想定しない再実行に気を付けてください。アニメーションがないものでも、負荷が高い場合がありますよ！</blockquote>
 
-<p>Here are the <a href="http://goo.gl/lPVJY6">most popular CSS properties</a> that, when changed, trigger layout:</p>
 <p>以下の<a href="http://goo.gl/lPVJY6">よく使われているCSSプロパティ</a>は、変更時にレイアウト更新を伴います。</p>
 
-<p><strong>Styles that affect layout</strong></p>
 <p><strong>レイアウトに影響を及ぼすプロパティ</strong></p>
 
 <table class="code">
@@ -128,18 +113,14 @@ table.code {
 
 <p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
 
-<h2 id="toc-">Animating Paint Properties</h2>
 <h2 id="toc-">描画をともなうアニメーションのプロパティ</h2>
 
-<p>Changing an element may also trigger painting, and the majority of painting in modern browsers is done in software rasterizers. Depending on how the elements in your app are grouped into layers, other elements <em>besides</em> the one that changed may also need to be painted.</p>
 <p>要素を変更することにより描画が引き起こされることがあります。モダンブラウザでは描画の大部分がソフトウェアのラスタライザーにより行われます。あなたのアプリ上で要素がどのレイヤーに分類されるかによって、変更された要素以外の<em>他の要素にも</em>描画が引き起こされる可能性があります。</p>
 
 <blockquote class="commentary talkinghead talkinghead-irish">If you’re new to the concept of layers you should read Tom Wiltzius’s <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">introduction to the topic</a>.</blockquote>
 
-<p>There are many properties that will trigger a paint, but here are the most popular:</p>
 <p>描画を引き起こす要素はたくさんありますが、そのうち有名なものを以下に列挙します。</p>
 
-<h3>Styles that affect paint</h3>
 <h3>描画に影響を与えるスタイル</h3>
 
 <table class="code">
@@ -155,64 +136,44 @@ table.code {
 
 <p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
 
-<p>If you animate any of the above properties the element(s) affected are repainted, and the layers they belong to are uploaded to the GPU. On mobile devices this is particularly expensive because CPUs are significantly less powerful than their desktop counterparts, meaning that the painting work takes longer; and the bandwidth between the CPU and GPU is limited, so texture uploads take a long time.</p>
 <p>上記のプロパティで要素をアニメーションさせた場合、再描画が発生し、それらの要素が属するレイヤーがGPUに転送されます。携帯端末においては、CPUがデスクトップPCのものより劣っているため、描画処理に特に時間がかかることを意味します。また、CPUとGPU間の転送量も限られているため、テクスチャの更新にも時間がかかります。</p>
 
-<h2 id="toc-composite-properties">Animating Composite Properties</h2>
 <h2 id="toc-composite-properties">コンポジションを伴うアニメーションプロパティ</h2>
 
-<p>There is one CSS property, however, that you might expect to cause paints that sometimes does not: opacity. Changes to opacity can be handled by the GPU during compositing by simply painting the element texture with a lower alpha value. For that to work, however, the element must be the <strong>only one in the layer</strong>. If it has been grouped with other elements then changing the opacity at the GPU would (incorrectly) fade them too.</p>
 <p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤーに合成されないと動作しません。もしそれらが異なるレイヤーにグルーピングされると、GPUレイヤーに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
 
-<p>In Blink and WebKit browsers a new layer is created for any element which has a CSS transition or animation on opacity, but many developers use <code>translateZ(0)</code> or <code>translate3d(0,0,0)</code> to manually force layer creation. Forcing layers to be created ensures both that the layer is painted and ready-to-go as soon as the animation starts (creating and painting a layer is a non-trivial operation and can delay the start of your animation), and that there's no sudden change in appearance due to antialiasing changes. Promoting layers should done sparingly, though; you can overdo it and having <a href="http://wesleyhales.com/blog/2013/10/26/Jank-Busting-Apples-Home-Page/">too many layers can cause jank</a>.</p>
 <p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤーが生成されますが、開発者は`translateZ(0)`や`translate3d(0,0,0)`を使って強制的にGPUレイヤーの生成を行います。レイヤーの生成を強制的に行うと、アニメーション開始時（レイヤーの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤーのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤーが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
 
-<blockquote class="commentary talkinghead talkinghead-lewis">In Chrome, non-root, non-opaque layers use <a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">grayscale antialiasing rather than subpixel antialiasing</a>, which can be very noticeable, especially if the antialiasing method changes suddenly. If you are going to promote an element don’t wait until the animation starts, do it ahead of time.</blockquote>
 <blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤーはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
 
-<p>Changing the transform of an element boils down to changes to its position, rotation or scale. Often, position is animated by setting the <code>left</code> and <code>top</code> properties. The problem is, as shown above, <code>left</code> and <code>top</code> both trigger layout operations, and that's expensive. The better solution is to use a <code>translate</code> on the element, which does not trigger layout.</p>
 <p>要素のtransformを変えることは、つまるところ位置、回転、縮尺を変えることです。多くの場合、positionはleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、非常にコストがかかることです。よりよい方法としてはtranslateを使うことであり、translateは再レイアウトを引き起こしません。</p>
 
-<blockquote class="commentary talkinghead talkinghead-irish">In Chrome Canary and Safari you can also animate filters, as these are handled off the main thread, are accelerated and generally perform very well. But since filters are not yet supported in Internet Explorer or Firefox you should proceed with caution.</blockquote>
 <blockquote class="commentary talkinghead talkinghead-irish">Chrome CanaryとSafariにおいては、メインスレッドでは使われないアニメーションフィルタを使うことが可能であり、アクセラレートされ一般的にパフォーマンスが良いです。しかしInternet ExplorerやFirefoxではサポートされておらず、問題を起こしてしまうでしょう。</blockquote>
 
-<h2 id="toc-imperative-declarative">Imperative vs Declarative Animations</h2>
 <h2 id="toc-imperative-declarative">命令的アニメーション vs 宣言的アニメーション</h2>
 
-<p>Developers often have to decide if they will animate with JavaScript (imperative) or CSS (declarative). There are pros and cons to each, so let’s take a look:</p>
 <p>開発者はアニメーションをJavaScript（命令的：imperative）で行うか、CSS（宣言的：declarative）で行うか決めなければならないことがあります。</p>
 
-<h3>Imperative</h3>
 <h3>命令的</h3>
 
-<p>The main pro of imperative animations happens to also be its main con: it’s running in JavaScript on the browser’s main thread. The main thread is already busy with other JavaScript, style calculations, layout and painting. Often there is thread contention. This substantially increases the chance of missing animation frames, which is the very last thing you want.</p>
 <p>命令的なアニメーションのいちばんのメリットは、同時に、いちばんのデメリットを引き起こすこともありえます。アニメーションはブラウザのメインスレッド上のJavaScriptで実行されています。メインスレッドはすでに別のJavaScript（スタイル計算、レイアウトや描画）でいっぱいいっぱいです。スレッドの競合がよく起こります。これは、アニメーションのフレームがコマ落ちする可能性がかなり高くなります。</p>
 
-<p>Animating in JavaScript does give you a lot of control: starting, pausing, reversing, interrupting and cancelling are trivial. Some effects, like <a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">parallax</a> scrolling, can only be achieved in JavaScript.</p>
 <p>JavaScriptでのアニメーションは、ほんとうに多くの制御ができます。再生、一時停止、逆再生、中止やキャンセルも、お手のものです。<a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">パララックススクローリング</a>のように、JavaScriptでしか実現できない効果もいくつかあります。</p>
 
-<h3>Declarative</h3>
 <h3>宣言的</h3>
 
-<p>The alternative approach is to write your transitions and animations in CSS. The primary advantage is that the browser can optimize the animation. It can create layers if necessary, and run some operations off the main thread which, as you have seen, is a good thing. The major con of CSS animations for many is that they lack the expressive power of JavaScript animations. It is very difficult to combine animations in a meaningful way, which means authoring animations gets complex and error-prone.</p>
 <p>宣言的アプローチとは、transitionやanimationをCSSで記述することです。いちばんのメリットは、ブラウザがアニメーションを最適化できることです。必要であればレイヤーも作れますし、前述したようにメインスレッドでの操作の実行をやめることもできます。これは、よい点です。多くの人にとって、CSSの主なデメリットは、JavaScriptの表現力がないことです。有意義な方法でアニメーションを組み合わせることは、非常に難しいです。つまり、アニメーションをオーサリングすることは、複雑でエラーが出やすくなるのです。</p>
 
-<h2 id="toc-looking-to-the-future">Looking to the future</h2>
 <h2 id="toc-looking-to-the-future">展望</h2>
 
-<p>As web standards evolve, some of the limitations around animation will go away. There is a proposal by Google’s Ian Vollick that investigates the concept of allowing <a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">JavaScript animations via workers</a>, providing the animation does not trigger layout or style recalculations.</p>
 <p>Web標準が発達するにつれて、 アニメーション周りの制約の一部はなくなるでしょう。<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">workerを用いたJavaScriptアニメーションの実行</a>というコンセプトを研究しようというIan Vollick（Google）による提案があります。これは、レイアウトまたはスタイルの再計算を引き起こしません。</p>
 
-<p>For those interested in a more declarative approach to animation there is the <a href="http://dev.w3.org/fxtf/web-animations/">Web Animations specification</a>, which <a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">Jake Archibald has written about extensively</a>.</p>
 <p>もっと宣言的なアニメーションの方法に、<a href="http://dev.w3.org/fxtf/web-animations/">Web Animations仕様</a>があります。<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">Jake Archibaldの長々とした紹介記事</a>もありますよ。</p>
 
-<h2 id="toc-conclusion">Conclusion</h2>
 <h2 id="toc-conclusion">まとめ</h2>
 
-<p>Animating well is core to a great web experience. You should always look to avoid animating properties that will trigger layout or paints, both of which are expensive and may lead to skipped frames. Declarative animations are preferable to imperative since the browser has the opportunity to optimize ahead of time.</p>
 <p>なめらかなアニメーションは素晴らしいウェブを体験させる根幹です。レイアウトや描画を引き起こすプロパティをアニメーションさせるのは避けるべきです。レイアウトと描画はどちらも処理が重く、フレーム落ちを起こす可能性があるからです。宣言的なアニメーションは事前にブラウザに最適化することができるので、命令的なアニメーションより良いとされています。</p>
 
-<p>Today transforms are the best properties to animate because the GPU can assist with the heavy lifting, so where you can limit your animations to these, do so.</p>
 <p>transformはGPUに処理を任せることが可能な、アニメーションに最も適したプロパティなので、それらだけで表現出来るのであれば、そうするべきでしょう。</p>
 
 <ul>
@@ -222,7 +183,6 @@ table.code {
 <li>scale</li>
 </ul>
 
-<p>In the future there may be new ways of animating that allow you to be as expressive as you can be with JavaScript, but without the associated main thread cost; or as optimized as CSS animations but without the restrictions, but until then plan your animations for a silky smooth experience.</p>
 <p>将来、スムーズなアニメーションをJavaScriptと同じくらいの表現で実装でき、重いコストを考えることなく制約もなしに、CSSアニメーションと同じくらい最適化されたアニメーションを実現するための新しい方法が出てくるでしょう。</p>
 <h2 id="toc-resources">Resources</h2>
 
