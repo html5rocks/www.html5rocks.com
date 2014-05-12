@@ -1,0 +1,842 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+figure img {
+  border: 1px solid #ccc;
+}
+.tutorial section {
+  overflow: visible;
+}
+.tutorial section iframe {
+  width: 100%;
+  border: none;
+}
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+.tutorial table td,
+.tutorial table th {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.tutorial table th {
+  background: #444;
+  color: white;
+  padding: 10px;
+  font-weight: normal;
+}
+.tutorial table em {
+  margin-left: 15px;
+}
+.tutorial table tr {
+  background: #fff;
+}
+.tutorial table tr:nth-child(odd) {
+  background: #eee;
+}
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea, .demodevtools {
+  margin-top: 20px;
+}
+.demodevtools {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-right: 1em;
+}
+.demodevtools:before {
+  content: 'DevTools view:';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.featuresupported.no {
+  display: none !important;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+#example4-log,
+#example5-getDestInsertinoPoints {
+  width: 100%;
+  box-sizing: border-box;
+}
+#example4-log:before,
+#example5-getDestInsertinoPoints:before {
+  content: 'Output:';
+}
+#example5-getDestInsertinoPoints textarea, 
+#example4-log textarea {
+  outline:none;
+  border:none;
+  width:100%;
+  height:70px;
+  resize:none;
+}
+#inherit-buttons {
+  margin-left: 15px;
+  margin-top: 20px;
+  display: inline-block;
+  vertical-align: top;
+}
+#inherit-buttons button {
+  display: block;
+  margin-bottom: 10px;
+}
+.small-notice {
+  font-size: 85%;
+}
+#example5.demoarea {
+  display: block;
+  margin-top: 30px;
+}
+#example5 [data-host]:before {
+  top: 3px;
+  left: 3px;
+  position: absolute;
+  content: '<div data-host>';
+  color: #888;
+}
+#example5 [data-host] {
+  padding: 25px;
+  border: 3px solid black;
+  display: inline-block;
+  background: #eee;
+  text-align: center;
+  position: relative;
+  float: left;
+}
+#example5 div {
+  padding: 5px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+#example5 .blue {
+  background: steelblue;
+  color: white;
+  display: inline-block;
+}
+#example5 .buttons {
+  margin-left: 10px;
+  float: left;
+}
+#example5 output {
+  background: #eee;
+  height: 150px;
+  overflow: auto;
+  padding: 10px;
+  display: block;
+  clear: both;
+}
+#example5 output span {
+  font-style: italic;
+  font-size: small;
+  display: inline-block;
+}
+#example5 button {
+  vertical-align: bottom;
+  margin-bottom: 5px;
+}
+#example5.playing {
+  /*cursor: none;*/
+}
+#example5 .cursor {
+  /* Icon by Laurent Patain - http://thenounproject.com/____Lo */
+  background-image: url(cursor.svg);
+  width: 36px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+#example5.playing .cursor {
+
+}
+
+@-webkit-keyframes animation1 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation2 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@-webkit-keyframes animation3 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+  }
+}
+
+
+
+@keyframes animation1 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, -40px, 0);
+    transform: translate3d(70px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(70px, 280px, 0);
+    transform: translate3d(70px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(70px, 280px, 0);
+    transform: translate3d(70px, 280px, 0);
+  }
+}
+
+@keyframes animation2 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 280px, 0);
+    transform: translate3d(240px, 280px, 0);
+  }
+  to {
+    -webkit-transform: translate3d(240px, 280px, 0);
+    transform: translate3d(240px, 280px, 0);
+  }
+}
+
+@keyframes animation3 {
+  from {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, -40px, 0);
+    transform: translate3d(240px, -40px, 0);
+  }
+  90% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+    transform: translate3d(240px, 128px, 0);
+  }
+  91% {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0) rotateX(30deg);
+    transform: translate3d(240px, 128px, 0) rotateX(30deg);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(240px, 128px, 0);
+    transform: translate3d(240px, 128px, 0);
+  }
+}
+
+#example5.playing.animation1 .cursor {
+  -webkit-animation: animation1 5s;
+  animation: animation1 5s;
+}
+#example5.playing.animation2 .cursor {
+  -webkit-animation: animation2 5s;
+  animation: animation2 5s;
+}
+#example5.playing.animation3 .cursor {
+  -webkit-animation: animation3 5s;
+  animation: animation3 5s;
+  -webkit-transform-origin: 50% 100%;
+  -moz-transform-origin: 50% 100%;
+  -ms-transform-origin: 50% 100%;
+  -o-transform-origin: 50% 100%;
+  transform-origin: 50% 100%;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return !!HTMLElement.prototype.createShadowRoot;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<p>この記事では Shadow DOM で可能になる、さらに素晴らしいことについて述べていきます。<a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a> および <a href="/tutorials/webcomponents/shadowdom-201/">Shadow DOM 201</a> で述べた知識が前提となりますので、もしまだ読まれていない方はぜひそちらをご覧下さい。</p>
+<p class="tip notice">Chrome であれば、<code>about:flags</code> ページにある "Enable experimental Web Platform features" フラグを有効にすることで、この記事に書かれているすべての機能を試すことができます。</p>
+
+<h2 id="toc-shadow-multiple">複数の Shadow Root を使う</h2>
+
+<p>もしあなたがパーティを主催するとして、参加者を全員同じ部屋に押し込めてしまったら、とても窮屈ですよね？ グループに分けて、複数の部屋に分散できたら、と思うことでしょう。Shadow DOM をホストする要素についても同様、要素はひとつ以上の Shadow Root をホストすることができます。</p>
+<p>複数の Shadow Root をホストに追加するとどうなるのか見てみましょう：</p>
+<pre class="prettyprint">
+&lt;div id="example1">Light DOM&lt;/div>
+&lt;script>
+var container = document.querySelector('#example1');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>';
+root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
+&lt;/script>
+</pre>
+
+<div class="demodevtools"> 
+<img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:250px;">
+</div>
+
+<div class="demoarea">
+  <div id="example1">Light DOM</div>
+</div>
+
+<script>
+(function() {
+var container = document.querySelector('#example1');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '<div>Root 1 FTW</div>';
+root2.innerHTML = '<div>Root 2 FTW</div>';
+})();
+</script>
+
+<p class="notice tip">ShadowRoot をインスペクト可能にするため、DevTools で "Show Shadow DOM" をオンにしてください。</p>
+
+<p>すでに Shadow Tree が追加されているにも関わらず、"Root 2 FTW" と表示されましたか？ これは最後にホストに追加された Shadow Tree が優先されるためです。少なくともレンダリングに関しては、LIFO (Last In First Out) スタックです。DevTools で調べてみればこの挙動が確認できるはずです。</p>
+<p class="notice fact">ホストに追加された Shadow Tree は、追加された順に、最近追加されたものが最初になるように積み上げられ、最後に追加されたものが表示されます。</p>
+
+<blockquote class="commentary talkinghead" id="youngest-tree">
+最も新しく追加された Tree は <b>Younger Tree</b> と呼ばれます。それより以前の Tree は <b>Older Tree</b>  と呼ばれます。この例では <code>root2</code> が Younger Tree で、 <code>root1</code> が Older Tree ということになります。
+</blockquote>
+
+<p>それでは、複数の Shadow を使うことにどんな意義があるのでしょうか？ Shadow 挿入ポイントを入れてみましょう。</p>
+<h3 id="toc-shadow-insertion">Shadow 挿入ポイント</h3>
+
+<p>"Shadow 挿入ポイント" (<code>&lt;shadow&gt;</code>) は、通常の <a href="/tutorials/webcomponents/shadowdom/#toc-separation-separate">挿入ポイント</a> (<code>&lt;content&gt;</code>) とプレースホルダーという意味では同一ですが、 <em>コンテンツ</em> の代わりに <em>Shadow Tree</em> をホストします。まさに Shadow DOM インセプションというわけです！</p>
+<p>ご想像の通り、うさぎの穴は掘れば掘るほど複雑になります。そのため、複数の <code>&lt;shadow&gt;</code> 要素を入れた場合の仕様は明確です：</p>
+<p class="notice fact">Shadow Tree に複数の <code>&lt;shadow></code> 挿入ポイントを設けた場合、最初のものだけが認識され、他のものは無視される。</p>
+
+<p>先ほどの例に戻ると、最初の Shadow である <code>root1</code> のみがリストに残ります。<code>&lt;shadow&gt;</code> 挿入ポイントの追加は、それを取り戻します：</p>
+<pre class="prettyprint">
+&lt;div id="example2">Light DOM&lt;/div>
+&lt;script>
+var container = document.querySelector('#example2');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
+<b>root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>&lt;shadow>&lt;/shadow>';</b>
+&lt;/script>
+</pre>
+
+<div class="demodevtools"> 
+<img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:250px;">
+</div>
+
+<div class="demoarea">
+  <div id="example2">Light DOM</div>
+</div>
+
+<script>
+(function() {
+var container = document.querySelector('#example2');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+root1.innerHTML = '<div>Root 1 FTW</div><content></content>';
+root2.innerHTML = '<div>Root 2 FTW</div><shadow></shadow>';
+})();
+</script>
+
+<p>この例で、いくつか面白いことが分かります：</p>
+<ol>
+<li>"Root 2 FTW" は "Root 1 FTW" の上に表示されます。これは <code>&lt;shadow&gt;</code> 挿入ポイントを配置した場所だからです。逆にしたければ、挿入ポイントを <code>root2.innerHTML = '&lt;shadow&gt;&lt;/shadow&gt;&lt;div&gt;Root 2 FTW&lt;/div&gt;';</code> 挿入ポイントに移動すればよいのです。</li>
+<li>今度は <code>root1</code> の位置に <code>&lt;content&gt;</code> があることに注意して下さい。これがテキストノード "Light DOM" が表示される理由です。</li>
+</ol>
+<p><b id="toc-shadow-older">&lt;shadow&gt; に何が表示されるのか？</b></p>
+<p><code>&lt;shadow&gt;</code> の位置に Older Tree が表示されることを知っていると便利な場合があります。<code>.olderShadowRoot</code> を使ってその Tree を参照することができます：</p>
+<pre class="prettyprint">
+<b>root2.olderShadowRoot</b> === root1 //true
+</pre>
+
+<h2 id="toc-get-shadowroot">ホストの Shadow Root を取得する</h2>
+
+<p>要素が Shadow DOM をホストしている場合、<code>.shadowRoot</code> を使って <a href="#youngest-tree">最も若い Shadow Root (Younguest Shadow Root)</a> にアクセスできます：</p>
+<pre class="prettyprint">
+var root = host.createShadowRoot();
+console.log(host.shadowRoot === root); // true
+console.log(document.body.shadowRoot); // null
+</pre>
+
+<p>あなたの Shadow に第三者を入り込ませたくない場合は、<code>.shadowRoot</code> を <code>null</code> にします：</p>
+<pre class="prettyprint">
+Object.defineProperty(host, 'shadowRoot', {
+  get: function() { return null; },
+  set: function(value) { }
+});</pre>
+
+<p>ちょっとしたハックですが、動きます。ただし、どんなに素晴らしくても、 <strong>Shadow DOM がセキュリティを重視したものではない</strong> ことは覚えておく必要があります。コンテンツ孤立化のソリューションという点で、完璧なものとして依存することは避けて下さい。</p>
+<h2 id="toc-creating-js">JavaScript で Shadow DOM を構築する</h2>
+
+<p>JavaScript で DOM を構築したければ、<code>HTMLContentElement</code> と <code>HTMLShadowElement</code> が必要なインターフェースを提供しています。</p>
+<pre class="prettyprint">
+&lt;div id="example3">
+  &lt;span>Light DOM&lt;/span>
+&lt;/div>
+&lt;script>
+var container = document.querySelector('#example3');
+var root1 = container.createShadowRoot();
+var root2 = container.createShadowRoot();
+
+var div = document.createElement('div');
+div.textContent = 'Root 1 FTW';
+root1.appendChild(div);
+
+ // HTMLContentElement
+<b>var content = document.createElement('content');
+content.select = 'span';</b> // selects any spans the host node contains
+root1.appendChild(content);
+
+var div = document.createElement('div');
+div.textContent = 'Root 2 FTW';
+root2.appendChild(div);
+
+// HTMLShadowElement
+<b>var shadow = document.createElement('shadow');</b>
+root2.appendChild(shadow);
+&lt;/script>
+</pre>
+
+<p>この例は、<a href="#toc-shadow-insertion">前の項</a> で示したものとほぼ同じですが、<code>select</code> を使って、新しく追加された <code>&lt;span&gt;</code> を引っ張っている点が異なります。</p>
+<h2 id="toc-distributed-nodes">挿入ポイント</h2>
+
+<p>ホスト要素の中から選択され、Shadow Tree に "分散された" ノードは、分散ノードと呼ばれます。これらは、挿入ポイントが受け付ければ、Shadow Boundary を越えることが許されます。</p>
+<p>挿入ポイントについて、コンセプト的につまづきやすいのは、物理的に DOM を動かさないという点です。ホストのノードは、実際には動きません。挿入ポイントは単なるホストから Shadow Tree にプロジェクションするためだけのものです。<s>"ノードをここに移動しろ"</s> "この位置にノードを表示しろ" という意思表示に他ならないのです。</p>
+<p class="notice fact">DOM を走査して <code>&lt;content></code> 内に入り込むことはできません。</p>
+
+<p>例えば：</p>
+<pre class="prettyprint">
+&lt;div>&lt;h2>Light DOM&lt;/h2>&lt;/div>
+&lt;script>
+var root = document.querySelector('div').createShadowRoot();
+root.innerHTML = '&lt;content select="h2">&lt;/content>';
+
+var h2 = document.querySelector('h2');
+console.log(root.querySelector('content[select="h2"] h2')); // null;
+console.log(root.querySelector('content').contains(h2)); // false
+&lt;/script>
+</pre>
+
+<p>この例で分かるように、<code>h2</code> は Shadow DOM の子要素でありません。このことから、次のことも分かります：</p>
+<blockquote class="commentary talkinghead">
+挿入ポイントは信じられないほどパワフルです。Shadow DOM における "宣言的 API" を作る手段と考えて下さい。ホスト要素は、この世に存在するすべてのマークアップを取り込むことができますが、挿入ポイントを使って Shadow DOM を持ち込まない限り、意味はありません。
+</blockquote>
+
+<h3 id="toc-getDistributedNodes">Element.getDistributedNodes()</h3>
+
+<p><code>&lt;content&gt;</code> 内まで走査することはできないと述べましたが、<code>.getDistributedNodes()</code> API を使って、挿入ポイントにある分散ノードをクエリーすることができます：</p>
+<pre class="prettyprint">
+&lt;div id="example4">
+  &lt;h2>Eric&lt;/h2>
+  &lt;h2>Bidelman&lt;/h2>
+  &lt;div>Digital Jedi&lt;/div>
+  &lt;h4>footer text&lt;/h4>
+&lt;/div>
+
+&lt;template id="sdom">
+  &lt;header>
+    &lt;content select="h2">&lt;/content>
+  &lt;/header>
+  &lt;section>
+    &lt;content select="div">&lt;/content>
+  &lt;/section>
+  &lt;footer>
+    &lt;content select="h4:first-of-type">&lt;/content>
+  &lt;/footer>
+&lt;/template>
+
+&lt;script>
+var container = document.querySelector('#example4');
+
+var root = container.createShadowRoot();
+
+var t = document.querySelector('#sdom');
+var clone = document.importNode(t.content, true);
+root.appendChild(clone);
+
+var html = [];
+[].forEach.call(root.querySelectorAll('content'), function(el) {
+  html.push(el.outerHTML + ': ');
+  var nodes = el.getDistributedNodes();
+  [].forEach.call(nodes, function(node) {
+    html.push(node.outerHTML);
+  });
+  html.push('\n');
+});
+&lt;/script>
+</pre>
+
+<div id="example4" style="display:none">
+  <h2>Eric</h2>
+  <h2>Bidelman</h2>
+  <div>Digital Jedi</div>
+  <h4>footer text</h4>
+</div>
+
+<p><template id="sdom">
+  <header>
+    <content select="h2"></content>
+  </header>
+  <section>
+    <content select="div"></content>
+  </section>
+  <footer>
+    <content select="h4:first-of-type"></content>
+  </footer>
+</template></p>
+<div id="example4-log" class="demoarea">
+ <textarea readonly></textarea>
+</div>
+
+<script>
+(function() {
+if ('HTMLTemplateElement' in window) {
+  var container = document.querySelector('#example4');
+
+  var root1 = container.createShadowRoot();
+  var t = document.querySelector('#sdom');
+  var clone = document.importNode(t.content, true);
+  root1.appendChild(clone);
+
+  var html = [];
+  [].forEach.call(root1.querySelectorAll('content'), function(el) {
+    html.push(el.outerHTML + ': ');
+    var nodes = el.getDistributedNodes();
+    [].forEach.call(nodes, function(node) {
+      html.push(node.outerHTML);
+    });
+    html.push('\n');
+  });
+
+  document.querySelector('#example4-log textarea').value = html.join('');
+}
+})();
+</script>
+
+<h3 id="toc-getDestinationInsertionPoints">Element.getDestinationInsertionPoints()</h3>
+
+<p><code>.getDistributedNodes()</code> 同様、<code>.getDestinationInsertionPoints()</code> を呼び出すことで、ノードが分散されている挿入ポイントを確認することができます：</p>
+<pre class="prettyprint"><code>&lt;div id="host"&gt;
+  &lt;h2&gt;Light DOM&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var host = document.querySelector('div');
+
+  var root1 = container.createShadowRoot();
+  var root2 = container.createShadowRoot();
+  root1.innerHTML = '&lt;content select="h2"&gt;&lt;/content&gt;';
+  root2.innerHTML = '&lt;shadow&gt;&lt;/shadow&gt;';
+
+  var h2 = document.querySelector('#host h2');
+  var insertionPoints = h2.getDestinationInsertionPoints();
+  [].forEach.call(insertionPoints, function(contentEl) {
+    console.log(contentEl);
+  });
+&lt;/script&gt;
+</code></pre>
+<div id="example5-gip" style="display:none">
+  <h2>Light DOM</h2>
+</div>
+
+<div id="example5-getDestInsertinoPoints" class="demoarea">
+ <textarea readonly></textarea>
+</div>
+
+<script>
+(function() {
+if (!!Element.prototype.getDestinationInsertionPoints) { 
+  var container = document.querySelector('#example5-gip');
+  var h2 = container.querySelector('h2');
+
+  var root1 = container.createShadowRoot();
+  var root2 = container.createShadowRoot();
+  root1.innerHTML = '<content select="h2"></content>';
+  root2.innerHTML = '<shadow></shadow>';
+
+  var html = [];
+  var insertionPoints = h2.getDestinationInsertionPoints();
+  [].forEach.call(insertionPoints, function(contentEl) {
+    html.push(contentEl.outerHTML);
+    html.push('\n');
+  });
+
+  document.querySelector('#example5-getDestInsertinoPoints textarea').value = html.join('');
+}
+})();
+</script>
+
+<h2 id="toc-shadow-visualizder">ツール：Shadow DOM Visualizer</h2>
+
+<p>Shadow DOM の黒魔術を理解するのは至難の業です。私自身、初めて見た時は混乱しました。</p>
+<p>Shadow DOM のレンダリングがどのように行われているのかをビジュアライズするのに、<a href="http://d3js.org/">d3.js</a> を使ってツールを作りました。左側にあるマークアップの枠は、どちらも編集可能です。ご自身のマークアップをペーストして、Shadow Tree がどのようにホストノードを挿入ポイントに埋めていくのか、ぜひ試してみてください。</p>
+<figure>
+<a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html"><img src="visualizer.png" title="Shadow DOM Visualizer" alt="Shadow DOM Visualizer"></a>
+<figcaption><a href="http://html5-demos.appspot.com/static/shadowdom-visualizer/index.html">Shadow DOM Visualizer を起動</a></figcaption>
+</figure>
+
+<p>
+<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+</p>
+
+<p>ぜひ試して、感想を聞かせて下さい！</p>
+<h2 id="toc-events">イベントモデル</h2>
+
+<p>Shadow DOM では、イベントによっては Shadow Boundary を越えますが、越えないものもあります。イベントが Boundary を越える場合、Shadow Root の Upper Boundary のカプセル化を維持するため、イベントターゲットは調整されます。別の言い方をするなら、 <strong>イベントは、Shadow DOM の内部の要素ではなく、ホスト要素から発生しているように見せるため、リターゲティングされます</strong> 。</p>
+<p class="tip notice"><code>event.path</code> を確認すれば、調整されたイベントパスが見れます</p>
+
+<p>あなたのブラウザが Shadow DOM をサポートしていれば、下にイベントのビジュアライゼーションが確認できるデモが表示されるはずです。<span style="color:#ffcc00">黄色い</span> 要素は Shadow DOM のマークアップの一部です。<span style="color:steelblue">青い</span> 要素は ホスト要素の一部です。"ホスト内の要素" を囲む <span style="color:#ffcc00">黄色い</span> 枠線は、Shadow の <code>&lt;content&gt;</code> 挿入ポイントを通した分散ノードであることを示しています。</p>
+<p>複数用意されている "Play Action" ボタンを押すことで、<code>mouseout</code> と <code>focusin</code> イベントがどのようにメインページにバブルアップされるかを見ることができます。</p>
+<div id="example5" class="demoarea">
+  <div data-host>
+    <div class="blue">ホスト内の要素</div>
+  </div>
+
+  <template style="display:none;"> <!-- display:none used for older browsers -->
+    <style>
+    .scopestyleforolderbrowsers * {
+      border: 4px solid #FC0;
+    }
+    .scopestyleforolderbrowsers input {
+      padding: 5px;
+    }
+    .scopestyleforolderbrowsers div {
+      background: #FC0;
+      padding: 5px;
+      border-radius: 3px;
+      margin: 5px 0;
+    }
+    content::-webkit-distributed(*) {
+      border: 4px solid #FC0;
+    }
+    ::content * {
+      border: 4px solid #FC0;
+    }
+    </style>
+    <section class="scopestyleforolderbrowsers">
+      <div>Shadow DOM 内の要素</div>
+      <div>Shadow DOM 内の要素</div>
+      <content></content>
+      <input type="text" placeholder="Shadow DOM の中">
+      <div>Shadow DOM 内の要素</div>
+      <div>Shadow DOM 内の要素</div>
+    </section>
+  </template>
+
+  <aside class="cursor"></aside>
+
+  <div class="buttons">
+    <button data-action="playAnimation" data-action-idx="1">Play Action 1</button><br>
+    <button data-action="playAnimation" data-action-idx="2">Play Action 2</button><br>
+    <button data-action="playAnimation" data-action-idx="3">Play Action 3</button><br>
+    <button data-action="clearLog">ログを消す</button>
+  </div>
+
+  <output></output>
+</div>
+
+<script>
+(function() {
+function stringify(node) {
+  return node.outerHTML.match(".*?>")[0].replace('<', '&lt;').replace('>', '&gt;');
+}
+
+var out = document.querySelector('#example5 output');
+var host = document.querySelector('#example5 [data-host]');
+var wrapper = document.querySelector('#example5');
+
+var root = host.createShadowRoot();
+root.innerHTML = document.querySelector('#example5 template').innerHTML;
+
+host.addEventListener('mouseout', function(e) {
+
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target) + ',',
+    'from', stringify(e.fromElement),
+    '&rarr;', stringify(e.toElement), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+document.addEventListener('focusin', function(e) {
+  out.innerHTML += [
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target), '<br>'].join(' ');
+  out.scrollTop = out.scrollHeight;
+});
+
+function clearLog() {
+  out.innerHTML = '';
+}
+
+function cleanUpAnimations(node) {
+  [].forEach.call(node.classList, function(c) {
+    if (c.indexOf('animation') == 0) {
+      node.classList.remove(c);
+    }
+  });
+}
+
+function playAnimation(idx) {
+  clearLog();
+  wrapper.classList.add('playing');
+  wrapper.classList.add('animation' + idx);
+}
+
+wrapper.addEventListener('webkitAnimationEnd', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+wrapper.addEventListener('animationend', function(e) {
+  this.classList.remove('playing');
+  cleanUpAnimations(this);
+});
+
+document.querySelector('#example5 .buttons').addEventListener('click', function(e) {
+  if (e.target.tagName == 'BUTTON') {
+    switch(e.target.dataset.action) {
+      case 'clearLog':
+        clearLog();
+        break;
+      case 'playAnimation':
+        cleanUpAnimations(wrapper);
+        playAnimation(parseInt(e.target.dataset.actionIdx));
+        break;
+      default:
+        break;
+    }
+  }
+});
+
+})();
+</script>
+
+<p><strong>Play Action 1</strong></p>
+<ul>
+<li>ホスト要素 (<code>&lt;div data-host&gt;</code>) から <span style="color:steelblue">青い</span> ノードに <code>mouseout</code> していくのが見て取れるはずです。分散ノードであるにも関わらず、Shadow DOM 内ではなく、ホスト内にあります。マウスをさらに下に動かし、<span style="color:#ffcc00">黄色い</span> ノードに移動することで、再度 <span style="color:steelblue">青い</span> ノードから <code>mouseout</code> します。</li>
+</ul>
+<p><strong>Play Action 2</strong></p>
+<ul>
+<li>ホストで、最後に一度だけ <code>mouseout</code> イベントが発生します。通常 <code>mouseout</code> はすべての <span style="color:#ffcc00">黄色い</span> ノードで発生すると思われるかもしれませんが、Shadow DOM の内部要素であるため、イベントは Upper Boundary を越えてバブリングしません。</li>
+</ul>
+<p><strong>Play Action 3</strong></p>
+<ul>
+<li><code>input</code> をクリックすると、<code>focusin</code> イベントが、<code>input</code> 要素ではなく、ホストノード上に現れることに注目して下さい。これがリターゲティングです。</li>
+</ul>
+<h3 id="toc-events-stopped">常に停止されるイベント</h3>
+
+<p>下記は Shadow Boundary を越えないイベントです：</p>
+<ul>
+<li>abort</li>
+<li>error</li>
+<li>select</li>
+<li>change</li>
+<li>load</li>
+<li>reset</li>
+<li>resize</li>
+<li>scroll</li>
+<li>selectstart</li>
+</ul>
+<h2 id="toc-conclusion">まとめ</h2>
+
+<p><strong>Shadow DOM が信じられないほどパワフル</strong> の意味が分かったでしょうか？ 我々はここに来て初めて、<code>&lt;iframe&gt;</code> やその他の古いテクニックを使わずに、まっとうなカプセル化の技術を手に入れたのです。</p>
+<p>Shadow DOM は確かに複雑怪奇ではありますが、ウェブプラットフォームに加えるだけの価値があるものです。ゆっくり時間をかけて身につけて下さい。</p>
+<p>さらに詳しく知りたい場合は、Dominic の <a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a> や、私の <a href="/tutorials/webcomponents/shadowdom-201/">Shadow DOM 201: CSS &amp; Styling</a> が参考になります。</p>
+<p class="small-notice">
+このチュートリアルの内容をレビューしてくれた <a href="/profiles/#dominiccooney">Dominic Cooney</a> と <a href="https://plus.google.com/111648463906387632236/posts">Dimitri Glazkov</a> に感謝します。
+</p><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+    $('.featuresupported').removeClass('no');
+  }
+});
+</script>
+{% endblock %}
