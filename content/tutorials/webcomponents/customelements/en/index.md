@@ -514,7 +514,7 @@ complete and the element has transformed into its definition.
     </style>
 
 Keep in mind that `:unresolved` only applies to [unresolved elements](#unresolvedels),
-not to elements that inherit from `HTMLUnkownElement` (see [How elements are upgraded](#upgrades)).
+not to elements that inherit from `HTMLUnknownElement` (see [How elements are upgraded](#upgrades)).
 
     <style>
       /* apply a dashed border to all unresolved elements */
