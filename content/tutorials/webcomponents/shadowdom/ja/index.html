@@ -36,7 +36,7 @@ span.unchanged * {
 {% endblock %}
 
 {% block iscompatible %}
-  return window.HTMLTemplateElement && HTMLElement.prototype.createShadowRoot ? true : false;
+  return window.HTMLTemplateElement && HTMLElement.prototype.createShadowRoot;
 {% endblock %}
 
 {% block html5badge %}
@@ -88,12 +88,11 @@ Web Components は 4 つのテクノロジーで構成されます：
 </p>
 
 <ol>
-<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html">Templates</a></li>
+<li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">Templates</a></li>
 <li><a href="http://www.w3.org/TR/shadow-dom/">Shadow
 DOM</a></li>
-<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html">Custom
-Elements</a></li>
-<li><a href="https://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html#external-custom-elements-and-decorators">Packaging</a></li>
+<li><a href="http://w3c.github.io/webcomponents/spec/custom/">Custom Elements</a></li>
+<li><a href="http://www.w3.org/TR/html-imports/">HTML Imports</a></li>
 </ol>
 
 <p>
@@ -131,7 +130,7 @@ function remove(selector) {
       function (node) { node.parentNode.removeChild(node); });
 }
 
-if (!HTMLElement.prototype.webkitCreateShadowRoot) {
+if (!HTMLElement.prototype.createShadowRoot) {
   remove('#ex1a');
   document.write('<img src="SS1.png" alt="Screenshot of a button with \'Hello, world!\' on it.">');
 }
@@ -142,13 +141,13 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 <button id="ex1b">Hello, world!</button>
 <script>
 (function () {
-  if (!HTMLElement.prototype.webkitCreateShadowRoot) {
+  if (!HTMLElement.prototype.createShadowRoot) {
     remove('#ex1b');
     document.write('<img src="SS2.png" alt="Screenshot of a button with \'Hello, shadow world!\' in Japanese on it.">');
     return;
   }
   var host = document.querySelector('#ex1b');
-  var root = host.webkitCreateShadowRoot();
+  var root = host.createShadowRoot();
   root.textContent = 'こんにちは、影の世界!';
 })();
 </script>
@@ -156,14 +155,6 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 <p>
 それだけではありません。JavaScript で <code>button</code> の <span class="property">.textContent</span> を調べてみると、"こんにちは、影の世界!" が見えます。これは Shadow Root の DOM サブツリーがカプセル化されているためです。
 </p>
-
-<p>
-ここで破られている可能性のあるひとつのルールは、Shadow DOM にコンテンツを書くべきではないという点です。コンテンツは、スクリーンリーダーやサーチエンジン、拡張機能などから見えるように、ドキュメントに書かれるべきです。Shadow DOM は魅力的かつ便利なウィジェットを作るのに必要な、セマンティック的にあまり意味のないマークアップを書くべき場所です。そのため、コンテンツそのものはページにあるべきなのです。
-</p>
-
-<blockquote class="commentary talkinghead">
-もちろん、これは絶対条件ではありません。ここはウェブなので、あなたの好きにして構いません。ただ、やり過ぎには注意しましょうね。
-</blockquote>
 
 <h2 id="toc-separation">コンテンツと見た目を分離する</h2>
 
@@ -277,7 +268,7 @@ DOM ツリーにはカプセル化の機能がありませんので、ネーム�
 .outer {
   border: 2px solid brown;
 
-  … same as above …
+  … 同上 …
 
 &lt;/style&gt;
 &lt;div class="outer"&gt;
@@ -299,14 +290,12 @@ DOM ツリーにはカプセル化の機能がありませんので、ネーム�
 &lt;script&gt;
 var shadow = document.querySelector('#nameTag').createShadowRoot();
 var template = document.querySelector('#nameTagTemplate');
-shadow.appendChild(template.content);
-template.remove();
+shadow.appendChild(template.content.cloneNode());
 &lt;/script&gt;
 </pre>
 
 <blockquote class="commentary talkinghead">
-Template は Shadow DOM 同様、新しく登場しようとしているオープンスタンダードで、Chrome 26+ で利用可能です。Shadow Root の内容は他にも 
-<span class="property">innerHTML</span> や <span class="method">appendChild</span>、<span class="method">getElementById</span> 等を使って埋めることができます。この記事では Shadow DOM について述べるため、template 要素については深く解説しません。詳しくは <a href="/tutorials/webcomponents/template/">HTML で利用可能になった Template タグ</a> をご覧ください。
+Template は Shadow DOM 同様、新しいオープンスタンダードで、<a href="http://caniuse.com/#search=template" target="_blank">すでに様々なブラウザで</a>利用可能です。Shadow Root の内容は他にも <span class="property">innerHTML</span> や <span class="method">appendChild</span>、<span class="method">getElementById</span> 等を使って埋めることができます。この記事では Shadow DOM について述べるため、template 要素については深く解説しません。詳しくは <a href="/tutorials/webcomponents/template/">HTML で利用可能になった Template タグ</a> をご覧ください。
 </blockquote>
 
 <p>
@@ -433,12 +422,12 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex2b');
     return;
   }
 
-  var shadow = document.querySelector('#ex2bNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex2bNameTag').createShadowRoot();
   var template = document.querySelector('#ex2bNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -550,12 +539,12 @@ Shadow Root をセットアップするコードにも変更はありません�
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex3a');
     document.write('<img src="SS4.png" alt="A name tag with a watercolor painting of cherry blossoms on it.">');
     return;
   }
-  var shadow = document.querySelector('#ex3aNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex3aNameTag').createShadowRoot();
   var template = document.querySelector('#ex3aNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -639,12 +628,12 @@ select=".email"&gt;</code> の両方と突合されます。Bob のメールア�
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex4a');
     document.write('<img src="SS5.png" alt="The rendered result. Bob’s email appears in yellow." id="ex4a">');
     return;
   }
-  var shadow = document.querySelector('#ex4aNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex4aNameTag').createShadowRoot();
   var template = document.querySelector('#ex4aNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -714,7 +703,7 @@ Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell, <a href="/profiles/#pauli
 </p>
 
 <script>
-HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot;
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.createShadowRoot;
 </script>
 
 {% endblock %}
