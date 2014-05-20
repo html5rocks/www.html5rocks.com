@@ -9,9 +9,9 @@
 
 <p>A revolution is coming. There’s a new addition to JavaScript that’s going to change <em>everything</em> you think you know about data-binding. It’s also going to change how many of your MVC libraries approach observing models for edits and updates. Are you ready for some sweet performance boosts to apps that care about property observation?</p>
 
-<p>Okay. Okay. Without further delay, I’m happy to announce <a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() </a> has just landed in <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> beta. <em>[WOOOO. THE CROWD GOES WILD]</em>.</p>
+<p>Okay. Okay. Without further delay, I’m happy to announce <a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() </a> is landing in <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> beta. <em>[WOOOO. THE CROWD GOES WILD]</em>.</p>
 
-<p><code>Object.observe()</code>, part of ECMAScript 7, is a method for asynchronously observing changes to JavaScript objects...without the need for a separate library. It allows an observer to receive a time-ordered sequence of change records which describe the set of changes which took place to the set of these objects.</p>
+<p><code>Object.observe()</code>, part of a future ECMAScript standard, is a method for asynchronously observing changes to JavaScript objects...without the need for a separate library. It allows an observer to receive a time-ordered sequence of change records which describe the set of changes which took place to the set of these objects.</p>
 
 <pre class="prettyprint">
 // Let's say we have a model with data
@@ -398,7 +398,7 @@ function Circle(r) {
  
   Object.defineProperty(this, 'area', {
     get: function() {
-      return Math.power(radius * Math.PI, 2);
+      return Math.pow(radius, 2) * Math.PI;
     },
     set: function(a) {
       r = Math.sqrt(a)/Math.PI;
@@ -629,7 +629,7 @@ model[1] = 'Channel your inner Paul Irish';
 
 <h2 id="toc-polyfills">Polyfilling Object.observe()</h2>
 
-<p>Great - so O.o() can now be used in Chrome beta, but what about using it in other browsers? We’ve got you covered. Polymer’s <a href="https://github.com/Polymer/observe-js">Observe-JS</a> is a polyfill for O.o() which will use the native implementation if it’s present, but otherwise polyfills it and includes some useful sugaring on top. It offers an aggregate view of the world that sums up changes and delivers a report of what has changed. Two really powerful things it exposes are:</p>
+<p>Great - so O.o() can be used in Chrome 36 beta, but what about using it in other browsers? We’ve got you covered. Polymer’s <a href="https://github.com/Polymer/observe-js">Observe-JS</a> is a polyfill for O.o() which will use the native implementation if it’s present, but otherwise polyfills it and includes some useful sugaring on top. It offers an aggregate view of the world that sums up changes and delivers a report of what has changed. Two really powerful things it exposes are:</p>
 
 <p>1) You can observe paths. This means you can say, I would like to observe "foo.bar.baz" from a given object and they’ll tell you when the value at that path changed. If the path is unreachable, it considers the value undefined.</p>
 
@@ -672,17 +672,17 @@ observer.open(function(splices) {
 
 <p>O.o() is a powerful addition to the web platform which you can go out and use today.</p>
 
-<p>We’re hopeful that in time the method will land in more browsers, allowing JavaScript frameworks to get performance boosts from access to native object observation capabilities. Those that are targeting Chrome should be able to use O.o() in the beta right away and the feature should be available in a future Opera release too.</p>
+<p>We’re hopeful that in time the method will land in more browsers, allowing JavaScript frameworks to get performance boosts from access to native object observation capabilities. Those targeting Chrome should be able to use O.o() in Chrome 36 beta (and above) and the feature should also be available in a future Opera release.</p>
 
 <p>So, go forth and talk to the authors of JavaScript frameworks about <code>Object.observe()</code> and how they’re planning on using it to improve the performance of data-binding in your apps. There are most definitely exciting times ahead!.</p>
 
 <h2 id="toc-resources">Resources</h2>
 
 <ul>
-<li><a href="[http://wiki.ecmascript.org/doku.php?id=harmony:observe](http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() on the Harmony wiki</a></li>
-<li><a href="[http://bocoup.com/weblog/javascript-object-observe/](http://bocoup.com/weblog/javascript-object-observe/">Databinding with Object.observe() by Rick Waldron</a></li>
-<li><a href="[http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/](http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/">Everything you wanted to know about Object.observe() - JSConf</a></li>
-<li><a href="[http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html](http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html">Why Object.observe() is the best ES7 feature</a></li>
+<li><a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() on the Harmony wiki</a></li>
+<li><a href="http://bocoup.com/weblog/javascript-object-observe/">Databinding with Object.observe() by Rick Waldron</a></li>
+<li><a href="http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/">Everything you wanted to know about Object.observe() - JSConf</a></li>
+<li><a href="http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html">Why Object.observe() is the best ES7 feature</a></li>
 </ul>
 
 <p><em>With thanks to Rafael Weinstein, Jake Archibald, Eric Bidelman, Paul Kinlan and Vivian Cromwell for their input and reviews.</em></p>
