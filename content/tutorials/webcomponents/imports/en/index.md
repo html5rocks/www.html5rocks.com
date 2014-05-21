@@ -188,6 +188,15 @@ Imports are not in the main document. They're satellite to it. However, your imp
 
     <link rel="stylesheet" href="http://www.example.com/styles.css">
     <link rel="stylesheet" href="http://www.example.com/styles2.css">
+
+    <style>
+      /* Note: <style> in an import apply to the main
+         document by default. That is, style tags don't need to be
+         explicitly added to the main document. */
+      #somecontainer {
+        color: blue;
+      }
+    </style>
     ...
 
     <script>
@@ -569,7 +578,7 @@ Alternatively, add the import near the end of the `<body>`:
 
 - Scripts in an import are processed in order, but do not block the main document parsing.
 
-- An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
+- An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly. Note, `<style>` don't need to be added explicitly. This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
 
 <h2 id="conclusion">Conclusion</h2>
 
