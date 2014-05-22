@@ -11,7 +11,7 @@
 
 <p>Okay. Okay. Without further delay, I’m happy to announce <a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() </a> is landing in <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> beta. <em>[WOOOO. THE CROWD GOES WILD]</em>.</p>
 
-<p><code>Object.observe()</code>, part of a future ECMAScript standard, is a method for asynchronously observing changes to JavaScript objects...without the need for a separate library. It allows an observer to receive a time-ordered sequence of change records which describe the set of changes which took place to the set of these objects.</p>
+<p><code>Object.observe()</code>, part of a future ECMAScript standard, is a method for asynchronously observing changes to JavaScript objects...without the need for a separate library. It allows an observer to receive a time-ordered sequence of change records which describe the set of changes which took place to a set of observed objects.</p>
 
 <pre class="prettyprint">
 // Let's say we have a model with data
@@ -20,7 +20,7 @@ var model = {};
 // Which we then observe
 Object.observe(model, function(changes){
 
-    // This asynchronous callback runs and aggregates changes
+    // This asynchronous callback runs
     changes.forEach(function(change) {
 
         // Letting us know what changed
@@ -36,7 +36,7 @@ Object.observe(model, function(changes){
 
 <p>With <code>Object.observe()</code> (I like to call it O.o() or Oooooooo), you can implement two-way data-binding <a href="http://bitworking.org/news/2014/05/zero_framework_manifesto">without the need for a framework</a>.</p>
 
-<p>That’s not to say you shouldn’t use one. For large projects with complicated business logic, opinionated frameworks are invaluable and you should continue to use them. They simplify the orientation of new developers, lead to you needing to maintaining less code and impose patterns on how to achieve common tasks. When you don’t need one, you can use smaller, more focused libraries like <a href="http://polymer-project.org">Polymer</a> (which already take advantage of O.o()).</p>
+<p>That’s not to say you shouldn’t use one. For large projects with complicated business logic, opinionated frameworks are invaluable and you should continue to use them. They simplify the orientation of new developers, require less code maintainance and impose patterns on how to achieve common tasks. When you don’t need one, you can use smaller, more focused libraries like <a href="http://polymer-project.org">Polymer</a> (which already take advantage of O.o()).</p>
 
 <p>Even if you find yourself heavily using a framework or MV* library, O.o() has the potential to provide them with some healthy performance improvements, with a faster, simpler implementation whilst keeping the same API. For example, last year Angular <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-September/024978.html">found </a>that in a benchmark where changes were being made to a model, dirty-checking took 40ms per update and O.o() took 1-2ms per update (an improvement of 20-40x faster).</p>
 
@@ -58,7 +58,7 @@ Object.observe(model, function(changes){
 
 <h2 id="toc-importance">The importance of data-binding</h2>
 
-<p>In short, Model-view control separation. HTML is a great declarative mechanism, but it’s completely static. Ideally, you just want to declare the relationship between your data and the DOM and keep the DOM up to date. This creates leverage and saves you a lot of time writing really repetitive code that just sends data to and from the DOM between your application’s internal state or the server.</p>
+<p>Data-binding starts to become important when you care about model-view control separation. HTML is a great declarative mechanism, but it’s completely static. Ideally, you just want to declare the relationship between your data and the DOM and keep the DOM up to date. This creates leverage and saves you a lot of time writing really repetitive code that just sends data to and from the DOM between your application’s internal state or the server.</p>
 
 <p>Data-binding is particularly useful when you have a complex user-interface where you need to wire up relationships between multiple properties in your data models with multiple elements in your views. This is pretty common in the single-page applications we’re building today.</p>
 
@@ -68,7 +68,7 @@ Object.observe(model, function(changes){
 
 <p><strong>Dirty-checking</strong></p>
 
-<p>Where have you seen data-binding before? Well, if you use a modern MV* library for building your webapps (e.g Angular) you’re probably used to binding model data to the DOM. As a refresher, here’s an example of a Phone list app where we’re binding the value of each phone in a <code>phones</code> array (defined in JavaScript) to a list item so that our data and UI are always in sync:</p>
+<p>Where have you seen data-binding before? Well, if you use a modern MV* library for building your webapps (e.g Angular, Knockout) you’re probably used to binding model data to the DOM. As a refresher, here’s an example of a Phone list app where we’re binding the value of each phone in a <code>phones</code> array (defined in JavaScript) to a list item so that our data and UI are always in sync:</p>
 
 <pre class="prettyprint">
 &lt;html ng-app&gt;
@@ -155,7 +155,7 @@ MyApp.country.get("presidentName");
 
 <p>Ideally what we want is the best of both worlds - a way to observe data with support for raw data objects (regular JavaScript objects) if we choose to AND without the need to dirty-check everything all the time. Something with good algorithmic behavior. Something that composes well and is baked into the platform. This is the beauty of what <code>Object.observe()</code> brings to the table.</p>
 
-<p>It allows us observe an object, mutate properties and see the change report of what is new, has been deleted or been reconfigured with ease. But enough about the theory, let’s look at some code!</p>
+<p>It allows us observe an object, mutate properties and see the change report of what has changed. But enough about the theory, let’s look at some code!</p>
 
 <img src="image_3.png"/>
 
@@ -184,7 +184,7 @@ function observer(changes){
 }
 </pre>
 
-<p>Note: As it's possible for there to be a stream of changes, the current value and the "new" value (the value after the change) are <em>not</em> the same thing.</p>
+<p>Note: When the observer callback is invoked, the observed objects may have been changed multiple times, so for each change, the new value (the value following each change) and the current value (the final value) aren't necessarily the same thing.</p>
 
 <p>We can then observe these changes using O.o(), passing in the object as our first argument and the callback as our second:</p>
 
@@ -228,7 +228,7 @@ delete todoModel.completed;
 Object.unobserve(todoModel, observer);
 </pre>
 
-<p>As we can see below, any mutations made to the object after this has been run no long result in a list of change records being returned.</p>
+<p>As we can see below, any mutations made to the object after this has been run no longer result in a list of change records being returned.</p>
 
 <p><img src="image_7.png"  /></p>
 
@@ -423,9 +423,9 @@ function observer(changes){
 
 <p>If you assign to an accessor JavaScript just invokes the function there and from its point of view nothing has changed. It just gave some code the opportunity to run.</p>
 
-<p>The problem is semantically we can look at our above assignment to the value - 5 to it. We ought to be able to know what happened here. This is actually an almost unsolvable problem. The example demonstrates why. There is really no way for any system to know what is meant by this because this can be arbitrary code. It can do whatever it wants in this case. It’s updating the value every time it is accessed and so asking when does it change doesn’t have a huge amount of meaning.</p>
+<p>The problem is semantically we can look at our above assignment to the value - 5 to it. We ought to be able to know what happened here. This is actually an unsolvable problem. The example demonstrates why. There is really no way for any system to know what is meant by this because this can be arbitrary code. It can do whatever it wants in this case. It’s updating the value every time it is accessed and so asking when does it change doesn’t have a huge amount of meaning.</p>
 
-<h2 id="toc-single-callback-observers">Single callback observers</h2>
+<h2 id="toc-single-callback-observers">Observing multiple objects with one callback</h2>
 
 <p>Another pattern possible with O.o() is the notion of a single callback observer. This allows a single callback to be used as an "observer" for lots of different objects. The callback will be delivered the full set of changes to all objects it observes at the “end of the microtask” (Note that the similarity to Mutation Observers).</p>
 
@@ -672,7 +672,7 @@ observer.open(function(splices) {
 
 <p>O.o() is a powerful addition to the web platform which you can go out and use today.</p>
 
-<p>We’re hopeful that in time the method will land in more browsers, allowing JavaScript frameworks to get performance boosts from access to native object observation capabilities. Those targeting Chrome should be able to use O.o() in Chrome 36 beta (and above) and the feature should also be available in a future Opera release.</p>
+<p>We’re hopeful that in time the feature will land in more browsers, allowing JavaScript frameworks to get performance boosts from access to native object observation capabilities. Those targeting Chrome should be able to use O.o() in Chrome 36 beta (and above) and the feature should also be available in a future Opera release.</p>
 
 <p>So, go forth and talk to the authors of JavaScript frameworks about <code>Object.observe()</code> and how they’re planning on using it to improve the performance of data-binding in your apps. There are most definitely exciting times ahead!.</p>
 
