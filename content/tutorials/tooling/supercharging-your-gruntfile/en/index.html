@@ -165,7 +165,7 @@ grunt.loadNpmTasks('grunt-contrib-imagemin');</pre>
 
 <pre class="prettyprint">$ grunt</pre>
 
-<p>If everything worked, this will now look at the “default” task and run everything it in in order. Now that we stripped down our main Gruntfile to three lines of code we never need to touch and externalized every task configuration, we’re done here. But man, it’s still pretty slow to get everything built. Let’s see what we can do to improve that.</p>
+<p>If everything worked, this will now look at the “default” task and run everything in order. Now that we stripped down our main Gruntfile to three lines of code we never need to touch and externalized every task configuration, we’re done here. But man, it’s still pretty slow to get everything built. Let’s see what we can do to improve that.</p>
 
 <h2 id="toc-buildtime">Minimizing your build time</h2>
 
@@ -217,7 +217,7 @@ grunt.loadNpmTasks('grunt-contrib-imagemin');</pre>
   - 'concurrent:first'
   - 'concurrent:second'</pre>
 
-<p>If you now rerun your grunt build, the concurrent plugin will run the concat task first, and then spawn to threads on two different CPU cores to run both imagemin and uglify in parallel. Yay!</p>
+<p>If you now rerun your grunt build, the concurrent plugin will run the concat task first, and then spawn two threads on two different CPU cores to run both imagemin and uglify in parallel. Yay!</p>
 
 <p>A word of advice though: Chances are that in our basic example, grunt-concurrent will not make your build significantly faster. The reason for this is the overhead created by spawning different instances of Grunt in different threads: In my case, at least +300ms pro spawn.</p>
 
@@ -271,7 +271,7 @@ grunt.loadNpmTasks('grunt-contrib-imagemin');</pre>
 
 <p>In the first level of our config object, the key has to match the name of the task we want to connect it to. This example will cause the message to appear right after the <em>imagemin</em> task has executed, which is the last one in our build chain.</p>
 
-<h2="toc-wrap">Wrapping it all up</h2>
+<h2 id="toc-wrap">Wrapping it all up</h2>
 
 <p>If you’ve followed from the top, you are now the proud owner of a build process that is super tidy and organized, is blazingly fast due to parallelization and selective processing and notifies you when anything goes wrong.</p>
 
