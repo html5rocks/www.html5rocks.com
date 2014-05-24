@@ -36,7 +36,7 @@ Object.observe(model, function(changes){
 
 <p>With <code>Object.observe()</code> (I like to call it O.o() or Oooooooo), you can implement two-way data-binding <a href="http://bitworking.org/news/2014/05/zero_framework_manifesto">without the need for a framework</a>.</p>
 
-<p>That’s not to say you shouldn’t use one. For large projects with complicated business logic, opinionated frameworks are invaluable and you should continue to use them. They simplify the orientation of new developers, require less code maintainance and impose patterns on how to achieve common tasks. When you don’t need one, you can use smaller, more focused libraries like <a href="http://polymer-project.org">Polymer</a> (which already take advantage of O.o()).</p>
+<p>That’s not to say you shouldn’t use one. For large projects with complicated business logic, opinionated frameworks are invaluable and you should continue to use them. They simplify the orientation of new developers, require less code maintenance and impose patterns on how to achieve common tasks. When you don’t need one, you can use smaller, more focused libraries like <a href="http://polymer-project.org">Polymer</a> (which already take advantage of O.o()).</p>
 
 <p>Even if you find yourself heavily using a framework or MV* library, O.o() has the potential to provide them with some healthy performance improvements, with a faster, simpler implementation whilst keeping the same API. For example, last year Angular <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-September/024978.html">found </a>that in a benchmark where changes were being made to a model, dirty-checking took 40ms per update and O.o() took 1-2ms per update (an improvement of 20-40x faster).</p>
 
@@ -130,7 +130,7 @@ phonecatApp.controller('PhoneListCtrl', function($scope) {
 <pre class="prettyprint">
 // Container objects
 MyApp.president = Ember.Object.create({
-  name: "Barak Obama"
+  name: "Barack Obama"
 });
  
 MyApp.country = Ember.Object.create({
@@ -155,7 +155,7 @@ MyApp.country.get("presidentName");
 
 <p>Ideally what we want is the best of both worlds - a way to observe data with support for raw data objects (regular JavaScript objects) if we choose to AND without the need to dirty-check everything all the time. Something with good algorithmic behavior. Something that composes well and is baked into the platform. This is the beauty of what <code>Object.observe()</code> brings to the table.</p>
 
-<p>It allows us observe an object, mutate properties and see the change report of what has changed. But enough about the theory, let’s look at some code!</p>
+<p>It allows us to observe an object, mutate properties and see the change report of what has changed. But enough about the theory, let’s look at some code!</p>
 
 <img src="image_3.png"/>
 
@@ -237,7 +237,7 @@ Object.unobserve(todoModel, observer);
 <p>So we’ve looked at the basics behind how to get back a list of changes to an observed object. What if you’re interested in only a subset of changes that were made to an object rather than all of them?. Everyone needs a spam filter. Well, observers can specify only those types of changes they wish to hear about through an accept list. This can be specified using the third argument to O.o() as follows:</p>
 
 <pre class="prettyprint">
-Object.observe(obj, callback, opt_acceptList)
+Object.observe(obj, callback, optAcceptList)
 </pre>
 
 <p>Let’s walk through an example of how this can be used:</p>
@@ -362,7 +362,7 @@ Object.observe(model.a, observer);
 
 <p>Again, webdevs should expect libraries to help make notifying and various approaches to computed properties easy (and reduce boilerplate).</p> 
 
-<p>Let’s setup the next example, which is a circle class. The idea here is that we have this circle and there’s a radius property. In this case the radius is an accessor and when its value changes its actually going to notify for itself that the value changed. This will be delivered with all other changes to this object or any other object. Essentially, if you’re implementing an object you want to have synthetic or computed properties or you have to pick a strategy for how this is going to work. Once you do, this will fit into your system as a whole.</p>
+<p>Let’s set up the next example, which is a circle class. The idea here is that we have this circle and there’s a radius property. In this case the radius is an accessor and when its value changes it’s actually going to notify for itself that the value changed. This will be delivered with all other changes to this object or any other object. Essentially, if you’re implementing an object you want to have synthetic or computed properties or you have to pick a strategy for how this is going to work. Once you do, this will fit into your system as a whole.</p>
 
 <p>Skip past the code to see this working in DevTools.
 
@@ -423,11 +423,11 @@ function observer(changes){
 
 <p>If you assign to an accessor JavaScript just invokes the function there and from its point of view nothing has changed. It just gave some code the opportunity to run.</p>
 
-<p>The problem is semantically we can look at our above assignment to the value - 5 to it. We ought to be able to know what happened here. This is actually an unsolvable problem. The example demonstrates why. There is really no way for any system to know what is meant by this because this can be arbitrary code. It can do whatever it wants in this case. It’s updating the value every time it is accessed and so asking when does it change doesn’t have a huge amount of meaning.</p>
+<p>The problem is semantically we can look at our above assignment to the value - 5 to it. We ought to be able to know what happened here. This is actually an unsolvable problem. The example demonstrates why. There is really no way for any system to know what is meant by this because this can be arbitrary code. It can do whatever it wants in this case. It’s updating the value every time it is accessed and so asking whether it changed doesn’t make much sense.</p>
 
 <h2 id="toc-single-callback-observers">Observing multiple objects with one callback</h2>
 
-<p>Another pattern possible with O.o() is the notion of a single callback observer. This allows a single callback to be used as an "observer" for lots of different objects. The callback will be delivered the full set of changes to all objects it observes at the “end of the microtask” (Note that the similarity to Mutation Observers).</p>
+<p>Another pattern possible with O.o() is the notion of a single callback observer. This allows a single callback to be used as an "observer" for lots of different objects. The callback will be delivered the full set of changes to all objects it observes at the “end of the microtask” (Note the similarity to Mutation Observers).</p>
 
 <img src="image_12.png"/>
 
@@ -534,7 +534,7 @@ observer2.callback = function(r){
 
 
 Thingy.observe = function(thingy, callback) {
-  // Object.observe(obj, callback, opt_acceptList)
+  // Object.observe(obj, callback, optAcceptList)
   Object.observe(thingy, callback, [Thingy.INCREMENT,
                                     Thingy.MULTIPLY,
                                     Thingy.INCREMENT_AND_MULTIPLY,
@@ -577,7 +577,7 @@ thingy.incrementAndMultiply(2, 2); // { a: 26, b: 36 }
 
 <h2 id="toc-observing-arrays">Observing arrays</h2>
 
-<p>We’ve talked for a while about observing changes to objects but what about arrays?! Great question. When someone tells me, "Great question." I never hear their answer because I'm busy congratulating myself for asking such a great question, but I digress. We have new methods for working with Arrays too!</p>
+<p>We’ve talked for a while about observing changes to objects but what about arrays?! Great question. When someone tells me, "Great question." I never hear their answer because I'm busy congratulating myself for asking such a great question, but I digress. We have new methods for working with arrays too!</p>
 
 <p><code>Array.observe()</code> is a method that treats large-scale changes to itself - for example - splice, unshift or anything which implicitly changes it length - as a "splice" change record. Internally it uses <code>notifier.performChange(“splice”,...)</code>.</p> 
 
