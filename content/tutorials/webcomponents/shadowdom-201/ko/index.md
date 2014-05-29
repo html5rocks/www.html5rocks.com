@@ -311,23 +311,23 @@ but loosened for custom pseudo element definitions.
 그들의 Shadow DOM 내의 변수 플레이스홀더(Variable placeholder)들을 만드는 커스텀 엘리먼트 저작자를 상상해보시기 바랍니다. 다음과 같이 하나는 내부 버튼의 폰트를 스타일링하기 위한 것이고 다른 하나는 그에 대한 색상을 위한 것입니다.
 
     button {
-      color: {% mixin var(button-text-color, pink) %} /* default color will be pink */
-      font: {% mixin var(button-font) %}
+      color: {% mixin var(--button-text-color, pink) %} /* default color will be pink */
+      font: {% mixin var(--button-font) %}
     }
 
 그리고나서, 엘리먼트의 내재자(embedder)는 연결을 위한 그 값들을 정의합니다. 아마도 그 자체 페이지에 대한 엄청나게 멋진 Comic Sans 테마와 매칭하기 위해 다음과 같이 할 것입니다.
 
     #host {
-      {% mixin var-button-text-color: green %}
-      {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+      {% mixin --button-text-color: green %}
+      {% mixin --button-font: "Comic Sans MS", "Comic Sans", cursive %}
     }
 
 CSS 변수들이 상속되는 방법으로 인해 모든 것이 아주 멋지고 이는 아주 잘 동작합니다! 전체적인 그림은 이와 같이 보일 것입니다.
 
     <style>
       #host {
-        {% mixin var-button-text-color: green %}
-        {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+        {% mixin --button-text-color: green %}
+        {% mixin --button-font: "Comic Sans MS", "Comic Sans", cursive %}
       }
     </style>
     <div id="host">Host node</div>
@@ -335,8 +335,8 @@ CSS 변수들이 상속되는 방법으로 인해 모든 것이 아주 멋지고
     var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<style>' + 
         'button {' + 
-          'color: {% mixin var(button-text-color, pink) %}' + 
-          'font: {% mixin var(button-font) %}' + 
+          'color: {% mixin var(--button-text-color, pink) %}' + 
+          'font: {% mixin var(--button-font) %}' + 
         '}' +
         '</style>' +
         '<content></content>';
