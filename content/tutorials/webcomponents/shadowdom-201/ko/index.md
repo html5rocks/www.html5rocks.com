@@ -312,7 +312,7 @@ but loosened for custom pseudo element definitions.
 
     button {
       color: var(--button-text-color, pink); /* default color will be pink */
-      font: var(--button-font);
+      font-family: var(--button-font);
     }
 
 그리고나서, 엘리먼트의 내재자(embedder)는 연결을 위한 그 값들을 정의합니다. 아마도 그 자체 페이지에 대한 엄청나게 멋진 Comic Sans 테마와 매칭하기 위해 다음과 같이 할 것입니다.
@@ -336,7 +336,7 @@ CSS 변수들이 상속되는 방법으로 인해 모든 것이 아주 멋지고
     root.innerHTML = '<style>' + 
         'button {' + 
           'color: var(--button-text-color, pink);' + 
-          'font: var(--button-font);' + 
+          'font-family: var(--button-font);' + 
         '}' +
         '</style>' +
         '<content></content>';

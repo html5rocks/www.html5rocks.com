@@ -302,7 +302,7 @@ Custom Element の作者が Shadow DOM に変数のプレースホルダーを�
 
     button {
       color: var(--button-text-color, pink); /* デフォルトの色はピンク */
-      font: var(--button-font);
+      font-family: var(--button-font);
     }
 
 そして、要素の利用者は好みに応じてその値を定義します。例えばページのテーマに合わせてカッコいい Comic Sans フォントを使うとか：
@@ -326,7 +326,7 @@ CSS Variables の継承に則って、全てが桃のように、美しくなり
     root.innerHTML = '<style>' + 
         'button {' + 
           'color: var(--button-text-color, pink);' + 
-          'font: var(--button-font);' + 
+          'font-family: var(--button-font);' + 
         '}' +
         '</style>' +
         '<content></content>';

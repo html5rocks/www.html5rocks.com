@@ -307,7 +307,7 @@ but loosened for custom pseudo element definitions.
 
     button {
       color: var(--button-text-color, pink); /* default color will be pink */
-      font: var(--button-font);
+      font-family: var(--button-font);
     }
 
 然后，元素的使用者按照自己的喜好定义了这些值。很可能是为了和他自己页面中非常酷的漫画字体主题(Comic Sans theme)相搭配： 
@@ -331,7 +331,7 @@ but loosened for custom pseudo element definitions.
     root.innerHTML = '<style>' +
         'button {' +
           'color: var(--button-text-color, pink);' +
-          'font: var(--button-font);' +
+          'font-family: var(--button-font);' +
         '}' +
         '</style>' +
         '<content></content>';

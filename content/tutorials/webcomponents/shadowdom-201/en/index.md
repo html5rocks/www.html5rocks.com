@@ -334,7 +334,7 @@ Imagine a custom element author who marks out variable placeholders in their Sha
 
     button {
       color: var(--button-text-color, pink); /* default color will be pink */
-      font: var(--button-font);
+      font-family: var(--button-font);
     }
 
 Then, the embedder of the element defines those values to their liking. Perhaps
@@ -360,7 +360,7 @@ works beautifully! The whole picture looks like this:
     root.innerHTML = '<style>' + 
         'button {' + 
           'color: var(--button-text-color, pink);' + 
-          'font: var(--button-font);' + 
+          'font-family: var(--button-font);' + 
         '}' +
         '</style>' +
         '<content></content>';
