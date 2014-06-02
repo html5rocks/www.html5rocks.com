@@ -30,14 +30,14 @@ The following snippet creates an `AudioContext`:
     window.addEventListener('load', init, false);
     function init() {
       try {
-        context = new webkitAudioContext();
+        context = new AudioContext();
       }
       catch(e) {
         alert('Web Audio API is not supported in this browser');
       }
     }
 
-For WebKit-based browsers, use the `webkit` prefix, as with
+For older WebKit-based browsers, use the `webkit` prefix, as with
 `webkitAudioContext`.
 
 Many of the interesting Web Audio API functionality such as creating
@@ -61,7 +61,7 @@ audio formats [varies][formats2].
 The following snippet demonstrates loading a sound sample:
 
     var dogBarkingBuffer = null;
-    var context = new webkitAudioContext();
+    var context = new AudioContext();
 
     function loadDogSound(url) {
       var request = new XMLHttpRequest();
@@ -103,7 +103,7 @@ sounds. Let's assume we've just loaded an `AudioBuffer` with the sound
 of a dog barking and that the loading has finished. Then we can play
 this buffer with a the following code.
 
-    var context = new webkitAudioContext();
+    var context = new AudioContext();
 
     function playSound(buffer) {
       var source = context.createBufferSource(); // creates a sound source
@@ -142,7 +142,7 @@ let's play them back at the same time.
     var bufferLoader;
 
     function init() {
-      context = new webkitAudioContext();
+      context = new AudioContext();
 
       bufferLoader = new BufferLoader(
         context,
