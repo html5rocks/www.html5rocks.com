@@ -301,23 +301,23 @@ root.innerHTML = '<span>Shadow DOM</span>' +
 Custom Element の作者が Shadow DOM に変数のプレースホルダーを用意した場合を想像してください。ひとつは内部のボタンに用いるフォント、もうひとつは色です：
 
     button {
-      color: {% mixin var(button-text-color, pink) %} /* デフォルトの色はピンク */
-      font: {% mixin var(button-font) %}
+      color: var(--button-text-color, pink); /* デフォルトの色はピンク */
+      font-family: var(--button-font);
     }
 
 そして、要素の利用者は好みに応じてその値を定義します。例えばページのテーマに合わせてカッコいい Comic Sans フォントを使うとか：
 
     #host {
-      {% mixin var-button-text-color: green %}
-      {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+      --button-text-color: green;
+      --button-font: "Comic Sans MS", "Comic Sans", cursive;
     }
 
 CSS Variables の継承に則って、全てが桃のように、美しくなりました！まとめるとこんな感じ：
 
     <style>
       #host {
-        {% mixin var-button-text-color: green %}
-        {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+        --button-text-color: green;
+        --button-font: "Comic Sans MS", "Comic Sans", cursive;
       }
     </style>
     <div id="host">Host node</div>
@@ -325,8 +325,8 @@ CSS Variables の継承に則って、全てが桃のように、美しくなり
     var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<style>' + 
         'button {' + 
-          'color: {% mixin var(button-text-color, pink) %}' + 
-          'font: {% mixin var(button-font) %}' + 
+          'color: var(--button-text-color, pink);' + 
+          'font-family: var(--button-font);' + 
         '}' +
         '</style>' +
         '<content></content>';
