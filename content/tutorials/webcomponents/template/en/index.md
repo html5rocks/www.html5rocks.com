@@ -171,7 +171,7 @@ content to a shadow root:
         width: 450px;
         max-width: 100%;
       } 
-      :host:hover {
+      :host(:hover) {
         background: #ccc;
       }
       div {
@@ -229,7 +229,7 @@ content to a shadow root:
     width: 450px;
     max-width: 100%;
   } 
-  :host:hover {
+  :host(:hover) {
     background: #ccc;
   }
   #unsupportedbrowsersneedscoping {

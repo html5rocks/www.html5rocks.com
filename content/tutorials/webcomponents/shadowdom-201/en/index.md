@@ -333,16 +333,16 @@ A powerful way to create theming hooks will be through [CSS Variables](http://de
 Imagine a custom element author who marks out variable placeholders in their Shadow DOM. One for styling an internal button's font and another for its color:
 
     button {
-      color: {% mixin var(button-text-color, pink) %} /* default color will be pink */
-      font: {% mixin var(button-font) %}
+      color: var(--button-text-color, pink); /* default color will be pink */
+      font-family: var(--button-font);
     }
 
 Then, the embedder of the element defines those values to their liking. Perhaps
 to match the super cool Comic Sans theme of their own page:
 
     #host {
-      {% mixin var-button-text-color: green %}
-      {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+      --button-text-color: green;
+      --button-font: "Comic Sans MS", "Comic Sans", cursive;
     }
 
 Due to the way CSS Variables inherit, everything is peachy and this
@@ -350,8 +350,8 @@ works beautifully! The whole picture looks like this:
 
     <style>
       #host {
-        {% mixin var-button-text-color: green %}
-        {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+        --button-text-color: green;
+        --button-font: "Comic Sans MS", "Comic Sans", cursive;
       }
     </style>
     <div id="host">Host node</div>
@@ -359,8 +359,8 @@ works beautifully! The whole picture looks like this:
     var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<style>' + 
         'button {' + 
-          'color: {% mixin var(button-text-color, pink) %}' + 
-          'font: {% mixin var(button-font) %}' + 
+          'color: var(--button-text-color, pink);' + 
+          'font-family: var(--button-font);' + 
         '}' +
         '</style>' +
         '<content></content>';
