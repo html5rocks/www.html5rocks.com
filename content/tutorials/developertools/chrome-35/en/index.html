@@ -1,0 +1,101 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block headauthor %}Umar Hansa{% endblock %}
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<style>
+.undo-multiple-occurrence-video {
+	width: 50%;
+}
+</style>
+
+<h2 id="devtools-digest-chrome-35-edition">DevTools Digest: Chrome 35 Edition</h2>
+
+<p>Hi all, in the <a href="http://www.html5rocks.com/en/tutorials/developertools/chrome-33/">last edition</a> of the DevTools Digest we got to check out the powerful Asynchronous call stacks and a few others. In this edition, we’ll see an improved Network Panel filtering (with autocomplete), edit abilities with Shadow DOM content, CodeMirror 4 updates and more.</p>
+
+<h3 id="network-panel-filtering">Network panel filtering</h3>
+
+<p>You can now filter resources by certain fields such as Domain. One filter format is this: <code>Domain:website.com</code>. In addition to filtering, you also get autocomplete suggestions for valid filter values which update in realtime as you type your query. You may find this useful when you need to find all resources served by a particular domain. [<a href="https://code.google.com/p/chromium/issues/detail?id=258421">crbubg.com/258421</a>]</p>
+
+<p><img src="network-panel-filtering.png" alt="Network panel filtering"></p>
+
+<h3 id="edit-shadow-dom-content">Edit Shadow DOM content</h3>
+
+<p>DevTools has always been able to edit regular HTML in the Elements panel, these capabilities now extend to elements part of a Shadow DOM. [<a href="https://code.google.com/p/chromium/issues/detail?id=348991">crbug.com/348991</a>]</p>
+
+<p><img src="edit-shadow-dom.png" alt="Edit Shadow DOM content"></p>
+
+<h3 id="upgrade-to-codemirror-40">Upgrade to CodeMirror 4.0</h3>
+
+<p>CodeMirror, the JavaScript based text editor being used as part of the Sources Panel has been upgraded to version 4. A bunch of new functionality has been added including a number of <a href="http://codemirror.net/demo/sublime.html">keyboard shortcuts</a>. [<a href="http://crbug.com/356878">crbug.com/356878</a>]</p>
+
+<video class="undo-multiple-occurrence-video" autoplay loop muted src="undo-multiple-occurrence.mp4"></video>
+
+<h3 id="quick-search-for-a-css-property">Quick search for a CSS-property</h3>
+
+<p>You can now search property names, values, or rule selectors from the new search box in the Styles pane. Results are highlighted in real-time as you type your query. [<a href="https://code.google.com/p/chromium/issues/detail?id=278852">crbug.com/278852</a>]</p>
+
+<p><img src="css-prop-quick-search.png" alt="Quick search for a CSS-property"></p>
+
+<h3 id="timestamps-next-to-console-messages">Timestamps next to console messages</h3>
+
+<p>When logging messages in a quick succession, it may be useful to see the exact time a message is logged. You can enable this via DevTools Experiments. [<a href="https://code.google.com/p/chromium/issues/detail?id=131714">crbug.com/131714</a>]</p>
+
+<p><img src="console-timestamp.png" alt="Timestamps next to console messages"></p>
+
+<h3 id="memory-statistics-breakdown-for-heap-snapshots">Memory Statistics breakdown for heap snapshots</h3>
+
+<p>When viewing a recorded heap snapshot, notice the stastics pie chart which gives a visual, color-coded overview as to what aspect of JavaScript is consuming the most memory. Currently an experimental feature, enable “Heap snapshot statistics” to try it out. [<a href="https://code.google.com/p/chromium/issues/detail?id=346335">crbug.com/346335</a>]</p>
+
+<p><img src="memory-heap-stats.png" alt="Memory Statistics breakdown for heap snapshots"></p>
+
+<h3 id="view-the-original-source-of-a-consolelog-not-the-wrapped-version">View the original source of a console.log, not the wrapped version</h3>
+
+<p>You probably have a console.log wrapper function, but unfortunately in console all your messages come from something like util.js:46. Now you can have DevTools resolve your original locations. Enter the file which wraps console log messages into the “Skip stepping through sources with particular names” input box to have DevTools blackbox it and then show the true source of a log statement. [<a href="https://code.google.com/p/chromium/issues/detail?id=231007">crbug.com/231007</a>]</p>
+
+<h3 id="a-few-more-small-but-powerful-additions">A few more small, but powerful additions:</h3>
+
+<ul>
+
+<li><p><strong>Refresh the Event Listeners pane</strong> in the Elements Panel, after dynamically adding or removing JavaScript event listeners. [<a href="https://code.google.com/p/chromium/issues/detail?id=341044">crbug.com/341044</a>]</p></li>
+
+<li><p>You can use <strong>Ctrl+` to gain focus on the Console input</strong>, you may find this useful for a keyboard only workflow in the DevTools. [<a href="http://crbug.com/144943">crbug.com/144943</a>]</p></li>
+
+<li><p><strong>border-style autocomplete suggestions</strong> for values (dotted, dashed, double, groove) have been updated to match the spec. [<a href="https://code.google.com/p/chromium/issues/detail?id=349998">crbug.com/349998</a>]</p></li>
+
+<li><p><strong>Restore defaults and reload</strong> button **has been added to the Settings panel which does exactly what it says on the tin. [<a href="https://code.google.com/p/chromium/issues/detail?id=135451">crbug.com/135451</a>]</p></li>
+
+<li><p>Currently an experimental feature, you can try out <strong>dock to left</strong> to discover its suitability for your workflow. The other layout modes are dock to main window (right or bottom) and undock into a separate window. [<a href="https://code.google.com/p/chromium/issues/detail?id=134282">crbug.com/134282</a>]</p></li>
+
+<li><p>"<a href="https://developer.mozilla.org/en-US/docs/Web/Reference/Events/wheel">wheel</a>" is now offered as an <strong>event listener breakpoint</strong>, this is in addition to the usual click, mousemove, mousedown etc. events. [<a href="https://code.google.com/p/chromium/issues/detail?id=347562">crbug.com/347562</a>]</p></li>
+
+</ul>
+
+<p>That’s all for now, thanks for reading!</p>
+
+{% endblock %}
