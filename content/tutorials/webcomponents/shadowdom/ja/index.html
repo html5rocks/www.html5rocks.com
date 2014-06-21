@@ -1,0 +1,709 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+#ex4a {
+  float: right;
+  margin: 1em;
+}
+
+ol, ul {
+  font-size: 14px;
+}
+
+.property, .method, .attribute {
+  font-style: italic;
+}
+
+.small-notice {
+  font-size: smaller;
+}
+
+span.unchanged {
+  color: gray;
+}
+
+span.unchanged * {
+  color: inherit;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/dominiccooney.75.png);
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return window.HTMLTemplateElement && HTMLElement.prototype.createShadowRoot;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">はじめに</h2>
+
+<p>
+Web Components は下記のような特徴を持つ最先端のオープンスタンダードです：
+</p>
+
+<ol>
+<li>ウィジェットが作成可能</li>
+<li>再利用が可能</li>
+<li>コンポーネントが実装を変更しても、ページを壊さない</li>
+</ol>
+
+<p>
+これは HTML/JavaScript と Web Components の両方が使えなければならないことを意味しているのかって？ いいえ。HTML と JavaScript は、インタラクティブなビジュアルを作るためのものです。ウィジェットはインタラクティブなビジュアルと言えます。ウィジェットを作るに当たって、あなたは得意な HTML と JavaScript のスキルを利用することができます。Web Components はそれを可能にするオープンスタンダードなのです。
+</p>
+
+<blockquote class="commentary talkinghead">
+ウィジェットを作るのに別のテクノロジーに乗り換えるなんてナンセンスです。ウィジェットを作るのに <code>&lt;canvas&gt;</code> を使わなければならないとしたら悲しいですよね。ペイント内容を変更してもページが壊れない等、信頼に足るものに間違いありませんが、アクセシビリティや検索エンジンへのインデキシング、構成、解像度の独立性は犠牲になってしまいます。
+</blockquote>
+
+<p>
+ただ、HTML や JavaScript を使ってウィジェットを作るには、根本的な問題があります：ウィジェット内の DOM ツリーが、ページの他の部分から切り離され (カプセル化され) ていない、という点です。そのため、ウィジェット内の一部にページのスタイルシートが誤って適用されてしまったり、id が被ってしまったりといった事態が発生します。
+</p>
+
+<blockquote class="commentary">
+カプセル化されていないことの弊害は、ライブラリをアップデートしたり、ウィジェットの DOM やスタイル、スクリプトを変更することが、予期しない問題を起こすことです。
+</blockquote>
+
+<p>
+Web Components は 4 つのテクノロジーで構成されます：
+</p>
+
+<ol>
+<li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">Templates</a></li>
+<li><a href="http://www.w3.org/TR/shadow-dom/">Shadow
+DOM</a></li>
+<li><a href="http://w3c.github.io/webcomponents/spec/custom/">Custom Elements</a></li>
+<li><a href="http://www.w3.org/TR/html-imports/">HTML Imports</a></li>
+</ol>
+
+<p>
+<b>Shadow DOM</b> は DOM ツリーのカプセル化問題を解決します。Web Components の 4 つのテクノロジーは組み合わさって役立つようにデザインされていますが、一部のみを用いることもできます。このチュートリアルでは、どうやって Shadow DOM を使うかを述べていきます。
+</p>
+
+<p class="notice">Shadow DOM は Chrome 35 以降で利用可能です。</p>
+
+<h2 id="toc-hello-world">Hello, Shadow World</h2>
+
+<p>
+Shadow DOM を使うことで、要素は、<b>Shadow Root</b> と呼ばれる、新しい種類のノードを関連付けることができます。Shadow Root が関連付けられた要素は、<b>Shadow Host</b> と呼ばれます。Shadow Host の内容は表示されません。その代わり、Shadow Root の内容が表示されます。
+</p>
+
+<p>
+例えば、下記のようなマークアップがあったとします：
+</p>
+
+<pre class="prettyprint">
+&lt;button&gt;Hello, world!&lt;/button&gt;
+&lt;script&gt;
+var host = document.querySelector('button');
+<b>var root = host.createShadowRoot();</b>
+root.textContent = 'こんにちは、影の世界!';
+&lt;/script&gt;
+</pre>
+
+<p>ここであなたのページは</p>
+
+<button id="ex1a">Hello, world!</button>
+<script>
+function remove(selector) {
+  Array.prototype.forEach.call(
+      document.querySelectorAll(selector),
+      function (node) { node.parentNode.removeChild(node); });
+}
+
+if (!HTMLElement.prototype.createShadowRoot) {
+  remove('#ex1a');
+  document.write('<img src="SS1.png" alt="Screenshot of a button with \'Hello, world!\' on it.">');
+}
+</script>
+
+<p> の代わりに、このように見えます </p>
+
+<button id="ex1b">Hello, world!</button>
+<script>
+(function () {
+  if (!HTMLElement.prototype.createShadowRoot) {
+    remove('#ex1b');
+    document.write('<img src="SS2.png" alt="Screenshot of a button with \'Hello, shadow world!\' in Japanese on it.">');
+    return;
+  }
+  var host = document.querySelector('#ex1b');
+  var root = host.createShadowRoot();
+  root.textContent = 'こんにちは、影の世界!';
+})();
+</script>
+
+<p>
+それだけではありません。JavaScript で <code>button</code> の <span class="property">.textContent</span> を調べてみると、"こんにちは、影の世界!" が見えます。これは Shadow Root の DOM サブツリーがカプセル化されているためです。
+</p>
+
+<h2 id="toc-separation">コンテンツと見た目を分離する</h2>
+
+<p>
+Shadow DOM を使って、コンテンツと見た目を分ける方法について見て行きましょう。下記のようなネームタグがあるとします：
+</p>
+
+<style>
+.ex2a.outer {
+  border: 2px solid brown;
+  border-radius: 1em;
+  background: red;
+  font-size: 20pt;
+  width: 12em;
+  height: 7em;
+  text-align: center;
+}
+.ex2a .boilerplate {
+  color: white;
+  font-family: sans-serif;
+  padding: 0.5em;
+}
+.ex2a .name {
+  color: black;
+  background: white;
+  font-family: "Marker Felt", cursive;
+  font-size: 45pt;
+  padding-top: 0.2em;
+}
+</style>
+<div class="ex2a outer">
+  <div class="boilerplate">
+    Hi! My name is
+  </div>
+  <div class="name">
+    Bob
+  </div>
+</div>
+
+<p>
+マークアップはこんな感じ。今ならこう書くと思います。これは、Shadow DOM を使っていません。
+</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+.outer {
+  border: 2px solid brown;
+  border-radius: 1em;
+  background: red;
+  font-size: 20pt;
+  width: 12em;
+  height: 7em;
+  text-align: center;
+}
+.boilerplate {
+  color: white;
+  font-family: sans-serif;
+  padding: 0.5em;
+}
+.name {
+  color: black;
+  background: white;
+  font-family: "Marker Felt", cursive;
+  font-size: 45pt;
+  padding-top: 0.2em;
+}
+&lt;/style&gt;
+&lt;div class="outer"&gt;
+  &lt;div class="boilerplate"&gt;
+    Hi! My name is
+  &lt;/div&gt;
+  &lt;div class="name"&gt;
+    Bob
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+DOM ツリーにはカプセル化の機能がありませんので、ネームタグの全機能はドキュメントにむき出しです。もし他の要素が誤って同じクラス名を使ってしまうと、面倒なことになります。
+</p>
+
+<p>これは避ける事ができる問題です。</p>
+
+<h3 id="toc-separation-hide">ステップ 1: 見た目の情報を隠す</h3>
+
+<p>
+セマンティック的に我々が気にすべきなのは下記のみです：
+</p>
+
+<ul>
+<li>これがネームタグであること</li>
+<li>名前が “Bob” であること</li>
+</ul>
+
+<p>
+本当に欲しいセマンティクスのみを使ってマークアップすると：
+</p>
+
+<pre class="prettyprint">
+&lt;div id="nameTag"&gt;Bob&lt;/div&gt;
+</pre>
+
+<p>
+次に、見た目上使われるスタイルと <code>div</code> タグを <code>&lt;template&gt;</code> 要素に入れると：
+</p>
+
+<pre class="prettyprint">
+&lt;div id="nameTag"&gt;Bob&lt;/div&gt;
+<b>&lt;template id="nameTagTemplate"&gt;</b>
+<span class="unchanged">&lt;style&gt;
+.outer {
+  border: 2px solid brown;
+
+  … 同上 …
+
+&lt;/style&gt;
+&lt;div class="outer"&gt;
+  &lt;div class="boilerplate"&gt;
+    Hi! My name is
+  &lt;/div&gt;
+  &lt;div class="name"&gt;
+    Bob
+  &lt;/div&gt;
+&lt;/div&gt;</span>
+<b>&lt;/template&gt;</b>
+</pre>
+
+<p>
+この時点では、"Bob" のみが表示されています。<code>&lt;template&gt;</code> 要素の中に見た目上必要な DOM要素を動かしたので、それが表示されない代わりに、JavaScript からアクセス可能になりました。ここで Shadow Root を埋めることができます：
+</p>
+
+<pre class="prettyprint">
+&lt;script&gt;
+var shadow = document.querySelector('#nameTag').createShadowRoot();
+var template = document.querySelector('#nameTagTemplate');
+shadow.appendChild(template.content.cloneNode());
+&lt;/script&gt;
+</pre>
+
+<blockquote class="commentary talkinghead">
+Template は Shadow DOM 同様、新しいオープンスタンダードで、<a href="http://caniuse.com/#search=template" target="_blank">すでに様々なブラウザで</a>利用可能です。Shadow Root の内容は他にも <span class="property">innerHTML</span> や <span class="method">appendChild</span>、<span class="method">getElementById</span> 等を使って埋めることができます。この記事では Shadow DOM について述べるため、template 要素については深く解説しません。詳しくは <a href="/tutorials/webcomponents/template/">HTML で利用可能になった Template タグ</a> をご覧ください。
+</blockquote>
+
+<p>
+Shadow Root が作れたら、ネームタグを再度表示してみましょう。右クリックしてインスペクトしてみると、セマンティックなマークアップが見えるはずです：
+</p>
+
+<pre class="prettyprint">
+&lt;div id="nameTag"&gt;Bob&lt;/div&gt;
+</pre>
+
+<p>
+Shadow DOM を使うことで、ドキュメントからネームタグの見た目だけを隠すことができたことがお分かりでしょうか？ 見た目は Shadow DOM にカプセル化された、ということです。
+</p>
+
+<h3 id="toc-separation-separate">
+ステップ 2: コンテンツと見た目を分離する
+</h3>
+
+<p>
+ネームタグの見た目をページから切り離すことに成功しましたが、コンテンツから切り離したとはまだ言えません。なぜなら、確かにページ内にコンテンツ ("Bob" という名前) は存在していますが、その名前は Shadow Root にコピーしたものだからです。ネームタグの名前を変更しようと思ったら、2 箇所を変更する必要があり、これは理想的ではありません。
+</p>
+
+<p>
+HTML 要素は構成可能なもの、例えば表の中にボタンを置いたりすることができるものです。この構成できる、ということがここでは必要とされます：ネームタグは赤い背景、"Hi!" というテキスト、そしてネームタグに乗るコンテンツでなければなりません。
+</p>
+
+<p>
+コンポーネント作者は、<code>&lt;content&gt;</code> という新しい要素を使って、ウィジェットがどう動くかを定義することができます。これはウィジェットの見た目に挿入ポイントを作り、その挿入ポイントが Shadow Host からコンテンツを引っ張ってきます。
+</p>
+
+<p>
+Shadow DOM のマークアップを下記のように変更してみましょう：
+</p>
+
+<pre class="prettyprint">
+<span class="unchanged">&lt;template id="nameTagTemplate"&gt;
+&lt;style&gt;
+  …
+&lt;/style&gt;</span>
+&lt;div class="outer"&gt;
+  &lt;div class="boilerplate"&gt;
+    Hi! My name is
+  &lt;/div&gt;
+  &lt;div class="name"&gt;
+    <b>&lt;content&gt;&lt;/content&gt;</b>
+  &lt;/div&gt;
+&lt;/div&gt;
+<span class="unchanged">&lt;/template&gt;</span>
+</pre>
+
+<p>
+ネームタグが表示されると、Shadow Host のコンテンツが 
+<code>&lt;content&gt;</code> 要素の位置にプロジェクトされます。
+</p>
+
+<p>
+名前が一箇所になったので、ドキュメントの構造はシンプルになりました。ユーザーの名前を変更したいと思ったら、下記のようにすればいいだけです：
+</p>
+
+<pre class="prettyprint">
+document.querySelector('#nameTag').textContent = 'Shellie';
+</pre>
+
+<p>
+たったこれだけ。ネームタグのコンテンツを <code>&lt;content&gt;</code> の位置にプロジェクトしているので、名前はブラウザによって自動的に更新されます。
+</p>
+
+<div id="ex2b">
+
+<p>実際の Shadow DOM を使った例です：</p>
+
+<div id="ex2bNameTag">Bob</div>
+
+<p>
+<label for="ex2bNewName">New name:</label>
+<input name="ex2bNewName" value="Shellie">
+<button onclick="updateClicked('#ex2bNameTag', 'input[name=ex2bNewName]');">Update</button>
+</p>
+
+<script>
+function updateClicked(nameTagSelector, textBoxSelector) {
+  var text = document.querySelector(textBoxSelector);
+  document.querySelector(nameTagSelector).textContent = text.value;
+  text.value = '';
+  text.focus();
+}
+</script>
+
+<template id="ex2bNameTagTemplate">
+<style>
+.outer {
+  border: 2px solid brown;
+  border-radius: 1em;
+  background: red;
+  font-size: 20pt;
+  width: 12em;
+  height: 7em;
+  text-align: center;
+}
+.boilerplate {
+  color: white;
+  font-family: sans-serif;
+  padding: 0.5em;
+}
+.name {
+  color: black;
+  background: white;
+  font-family: "Marker Felt", cursive;
+  font-size: 45pt;
+  padding-top: 0.2em;
+  height: 55pt;
+  overflow: hidden;
+}
+</style>
+<div class="outer">
+  <div class="boilerplate">
+    Hi! My name is
+  </div>
+  <div class="name">
+    &nbsp;<content></content>&nbsp;
+  </div>
+</div>
+</template>
+<script>
+(function () {
+  if (!window.HTMLTemplateElement ||
+      !HTMLElement.prototype.createShadowRoot) {
+    remove('#ex2b');
+    return;
+  }
+
+  var shadow = document.querySelector('#ex2bNameTag').createShadowRoot();
+  var template = document.querySelector('#ex2bNameTagTemplate');
+  shadow.appendChild(template.content);
+  template.remove();
+})();
+</script>
+</div>
+
+
+<p>
+これでコンテンツと見た目の分離はできました。<b>コンテンツはドキュメントに、見た目は Shadow DOM にあります。</b> 内容は、表示の際にブラウザが自動的に同期してくれます。
+</p>
+
+<h3 id="toc-separation-profit">ステップ 3: できあがり</h3>
+
+<p>
+コンテンツと見た目を分けることで、コンテンツを変更するコードは単純になりました。ネームタグの例で言うと、ひとつの <code>&lt;div&gt;</code> タグのみを相手にすれば良いことになります。
+</p>
+
+<p>
+見た目を変更する際、コードを変更する必要はありません！
+</p>
+
+<p>
+例えば、ネームタグをローカライズしたいとします。ネームタグには変わりないので、ドキュメント上のセマンティックなコンテンツに変更は不要です：
+</p>
+
+<pre class="prettyprint">
+&lt;div id="nameTag"&gt;Bob&lt;/div&gt;
+</pre>
+
+<p>
+Shadow Root をセットアップするコードにも変更はありません。Shadow Root に置かれるものだけを変更します：
+</p>
+
+<pre class="prettyprint">
+&lt;template id="nameTagTemplate"&gt;
+&lt;style&gt;
+.outer {
+  border: 2px solid pink;
+  border-radius: 1em;
+  background: url(sakura.jpg);
+  font-size: 20pt;
+  width: 12em;
+  height: 7em;
+  text-align: center;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+.name {
+  font-size: 45pt;
+  font-weight: normal;
+  margin-top: 0.8em;
+  padding-top: 0.2em;
+}
+&lt;/style&gt;
+&lt;div class="outer"&gt;
+  &lt;div class="name"&gt;
+    &lt;content&gt;&lt;/content&gt;
+  &lt;/div&gt;
+  と申します。
+&lt;/div&gt;
+&lt;/template&gt;
+</pre>
+
+<p>
+これで日本語のネームタグが完成しました：
+</p>
+
+<div id="ex3a">
+
+<div id="ex3aNameTag">Bob</div>
+
+<p>
+<label for="ex3aNewName">New name:</label>
+<input name="ex3aNewName" value="基子">
+<button onclick="updateClicked('#ex3aNameTag', 'input[name=ex3aNewName]');">Update</button>
+</p>
+
+<template id="ex3aNameTagTemplate">
+<style>
+.outer {
+  border: 2px solid pink;
+  border-radius: 1em;
+  background: url(sakura.jpg);
+  font-size: 20pt;
+  width: 12em;
+  height: 7em;
+  text-align: center;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+.name {
+  font-size: 45pt;
+  font-weight: normal;
+  margin-top: 0.8em;
+  padding-top: 0.2em;
+}
+</style>
+<div class="outer">
+  <div class="name">
+    <content></content>
+  </div>
+  と申します。
+</div>
+</template>
+
+</div>
+
+<script>
+(function () {
+  if (!window.HTMLTemplateElement ||
+      !HTMLElement.prototype.createShadowRoot) {
+    remove('#ex3a');
+    document.write('<img src="SS4.png" alt="A name tag with a watercolor painting of cherry blossoms on it.">');
+    return;
+  }
+  var shadow = document.querySelector('#ex3aNameTag').createShadowRoot();
+  var template = document.querySelector('#ex3aNameTagTemplate');
+  shadow.appendChild(template.content);
+  template.remove();
+})();
+</script>
+
+<p class="small-notice">
+<a href="http://www.flickr.com/photos/mikedowman/5621169045/">背景画像 by Mike Dowman,</a> Creative Commons license.
+</p>
+
+<p>
+これは今日のウェブにとって、大きな進化です。なぜなら、名前の変更が、シンプルで一貫した<b>コンポーネント</b>に依存できるからです。<strong>名前を変更するコードが、表示に用いられる構造を知る必要はありません。</strong> 何が表示されるか考えた場合、英語なら名前は 2 番目 ("Hi! My name is" の後) ですが、日本語なら最初 ("と申します" の前) に現れます。これらの違いは、表示される名前を変更する、という観点では、セマンティック上意味を持たないので、名前を変更するコードがこれらの詳細を知っている必要はないのです。
+</p>
+
+<h2 id="toc-projection">Extra Credit: 上級者向けプロジェクション</h2>
+
+<p>
+上記の例で、 <code>&lt;content&gt;</code> 要素は Shadow Host からコンテンツを引っ張ってきました。<span class="attribute">select</span> 属性を使うことで、content 要素の表示内容をコントロールすることができます。複数の content 要素を利用することもできます。
+</p>
+
+<p>
+例えば下記のようなドキュメントがあったとします：
+</p>
+
+<pre class="prettyprint">
+&lt;div id="nameTag"&gt;
+  &lt;div class="first"&gt;Bob&lt;/div&gt;
+  &lt;div&gt;B. Love&lt;/div&gt;
+  &lt;div class="email"&gt;bob@&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+Shadow Root は CSS セレクターを使って、特定のコンテンツを選択することができます：
+</p>
+
+<pre class="prettyprint">
+&lt;div style="background: purple; padding: 1em;"&gt;
+  &lt;div style="color: red;"&gt;
+    &lt;content <b>select=".first"</b>&gt;&lt;/content&gt;
+  &lt;/div&gt;
+  &lt;div style="color: yellow;"&gt;
+    &lt;content <b>select="div"</b>&gt;&lt;/content&gt;
+  &lt;/div&gt;
+  &lt;div style="color: blue;"&gt;
+    &lt;content <b>select=".email"&gt;</b>&lt;/content&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p class="notice"><b>注意：</b> <span class="attribute">select</span> はホストノードの直下にある要素しか選択することができません。言い換えると、2 番目以降の子孫 (例 <code>select="table tr"</code>) を選択することはできません。</p>
+
+<p>
+<code>&lt;div class="email"&gt;</code> 要素は <code>&lt;content select="div"&gt;</code> と <code>&lt;content
+select=".email"&gt;</code> の両方と突合されます。Bob のメールアドレスは何度表示され、何色になるでしょうか？
+</p>
+
+<div id="ex4a">
+
+<div id="ex4aNameTag">
+  <div class="first">Bob</div>
+  <div>B. Love</div>
+  <div class="email">bob@</div>
+</div>
+<template id="ex4aNameTagTemplate">
+<div style="background: purple; padding: 1em;">
+  <div style="color: red;">
+    <content select=".first"></content>
+  </div>
+  <div style="color: yellow;">
+    <content select="div"></content>
+  </div>
+  <div style="color: blue;">
+    <content select=".email"></content>
+  </div>
+</div>
+</template>
+
+</div>
+
+<script>
+(function () {
+  if (!window.HTMLTemplateElement ||
+      !HTMLElement.prototype.createShadowRoot) {
+    remove('#ex4a');
+    document.write('<img src="SS5.png" alt="The rendered result. Bob’s email appears in yellow." id="ex4a">');
+    return;
+  }
+  var shadow = document.querySelector('#ex4aNameTag').createShadowRoot();
+  var template = document.querySelector('#ex4aNameTagTemplate');
+  shadow.appendChild(template.content);
+  template.remove();
+})();
+</script>
+
+<p>
+答えは一度、そして黄色です。
+</p>
+
+<p>
+Shadow DOM をハックしたことのある方ならご存知の通り、スクリーンに実際に表示されるもののツリー構築は、パーティーのようなものです。<strong>content 要素は、ドキュメントから Shadow DOM レンダリングパーティーに送られた招待状のようなものです。</strong> 招待状は順番に、誰に送られたか (これが <span class="attribute">select</span> 属性) に応じて届けられます。一度招待されたコンテンツは、招待状を必ず受け取り (受け取らないなんてことあるでしょうか！) 会場に向かいます。同じ住所に再度招待状が送られたとしても、もう誰もいませんので、パーティーには誰も参加しません。
+</p>
+
+<p>
+上記の例では、<code>&lt;div class="email"&gt;</code> は <code>div</code> セレクターにも <code>.email</code> セレクターにも一致します。しかし、<code>div</code> セレクターの content 要素が先に来てしまい、<code>&lt;div class="email"&gt;</code> は黄色パーティーに参加するため、青色パーティーには誰も来ません。
+</p>
+
+<p>
+どのパーティーにも招待されなかった場合、表示されることはありません。これが最初の例でご覧頂いた "Hello, world" テキストに起こったことです。これはちょっと変わったレンダリングを行いたい場合に役立つかもしれません：ページ内のスクリプトからアクセス可能でありながら、実際は表示はされず、JavaScript を使って Shadow DOM 内の全く別のレンダリングモデルに接続したいドキュメントに、セマンティックモデルを記述した場合などです。
+</p>
+
+<p>
+例えば、HTML には素敵なカレンダー機能があります。<code>&lt;input type="date"&gt;</code> と書くと、かっこいいデートピッカーが表示されます。しかし、複数日を選択したい場合はどうでしょう？こういう風にしてみましょう：
+</p>
+
+<pre class="prettyprint">
+&lt;div class="dateRangePicker"&gt;
+  &lt;label for="start"&gt;Start:&lt;/label&gt;
+  &lt;input type="date" name="startDate" id="start"&gt;
+  &lt;br&gt;
+  &lt;label for="end"&gt;End:&lt;/label&gt;
+  &lt;input type="date" name="endDate" id="end"&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+Shadow DOM を使って、日付の範囲をハイライトしたかっこいいカレンダーを表示できるようにしましょう。
+ユーザーがカレンダー内のある日をクリックしたら、コンポーネントが <code>startDate</code> と <code>endDate</code> を更新するようにします。ユーザーがフォームを送ると、input 要素の値が送信されるようにします。
+</p>
+
+<p>
+表示されないにも関わらずドキュメントに label を入れたのはなぜでしょう？ それは、Shdow DOM をサポートしないブラウザでフォームを見た場合、見た目がそれほどかっこよくないだけで、フォームの利用には問題がないからです。ユーザーが目にするものはこんな感じ：
+</p>
+
+<div class="dateRangePicker">
+  <label for="start">Start:</label>
+  <input type="date" name="startDate" id="start">
+  <br>
+  <label for="end">End:</label>
+  <input type="date" name="endDate" id="end">
+</div>
+
+<h2 id="toc-conclusion">Shadow DOM 101 は免許皆伝！</h2>
+
+<p>
+これで Shadow DOM の基礎 — 101 は終了です。Shadow DOM を使って、ひとつの Shadow Host 上で複数の Shadow を使ったり、カプセル化された Shadow をネストさせたり、MDV (Model Driven View) と Shadow DOM を組み合わせてデザインするなど、さらに高度なことができるはずです。もちろん、Web Components の魅力は Shadow DOM だけではありません。
+</p>
+
+<p>
+これらについては、別のポストで解説していきます。ひとまず、Google+ の <a href="https://plus.google.com/103330502635338602217/posts">Web Components</a> をフォローして下さい。
+</p>
+
+<p class="small-notice">
+このチュートリアルの初期版にコメントをくれた <a href="/profiles/#ericbidelman">Eric Bidelman,</a> Darin
+Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell, <a href="/profiles/#paulirish">Paul Irish</a> に感謝します。
+</p>
+
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.createShadowRoot;
+</script>
+
+{% endblock %}

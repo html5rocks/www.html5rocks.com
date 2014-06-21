@@ -140,7 +140,6 @@ blockquote:not(.talkinghead):after {
 
 {% block content %}
 
-<p>{% include "warning.html" %}</p>
 <h2 id="why">Why imports?</h2>
 
 <p>Think about how you load different types of resources on the web. For JS, we have <code>&lt;script src&gt;</code>. For CSS, your go-to is probably <code>&lt;link rel="stylesheet"&gt;</code>. For images it's <code>&lt;img&gt;</code>. Video has <code>&lt;video&gt;</code>. Audio, <code>&lt;audio&gt;</code>.... Get to the point! The majority of the web's content has a simple and declarative way to load itself. Not so for HTML. Here's your options:</p>
@@ -180,12 +179,7 @@ if (supportsImports()) {
   // Use other libraries/require systems to load files.
 }
 </code></pre>
-<p>Browser support is still in the early days. Chrome 31 is the first browser to have an implementation. You can enable the flag by turning on <strong>Enable HTML Imports</strong> in <code>about:flags</code>. For other browsers, <a href="http://www.polymer-project.org/platform/html-imports.html">Polymer's polyfill</a> works great until things are widely supported.</p>
-<figure>
-  <img src="aboutflag.png">
-  <figcaption><b>Enable HTML Imports</b> in <code>about:flags</code>.</figcpation>
-</figure>
-
+<p>Browser support is still in the early days. Chrome 31 was the first browser to see an implementation. Since then, Chrome 36 was update with the latest spec. You can enable the flag by turning on <strong>Enable experimental Web Platform features</strong> in <code>about:flags</code> in Chrome Canary. For other browsers, <a href="http://www.polymer-project.org/platform/html-imports.html">Polymer's polyfill</a> works great until things are widely supported.</p>
 <p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
 
 <h3 id="bundling">Bundling resources</h3>
@@ -313,6 +307,15 @@ document.head.appendChild(link);
 <p><strong>Example</strong> - import.html that adds one of its stylesheets to the main page</p>
 <pre class="prettyprint"><code>&lt;link rel="stylesheet" href="http://www.example.com/styles.css"&gt;
 &lt;link rel="stylesheet" href="http://www.example.com/styles2.css"&gt;
+
+&lt;style&gt;
+  /* Note: &lt;style&gt; in an import apply to the main
+     document by default. That is, style tags don't need to be
+     explicitly added to the main document. */
+  #somecontainer {
+    color: blue;
+  }
+&lt;/style&gt;
 ...
 
 &lt;script&gt;
@@ -655,7 +658,7 @@ recommends putting the tracking code in the <code>&lt;head&gt;</code>, If you ca
 <p>Scripts in an import are processed in order, but do not block the main document parsing.</p>
 </li>
 <li>
-<p>An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly This is a major difference between HTML Imports and <code>&lt;iframe&gt;</code>, which says "load and render this content here".</p>
+<p>An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly. Note, <code>&lt;style&gt;</code> don't need to be added explicitly. This is a major difference between HTML Imports and <code>&lt;iframe&gt;</code>, which says "load and render this content here".</p>
 </li>
 </ul>
 <h2 id="conclusion">Conclusion</h2>

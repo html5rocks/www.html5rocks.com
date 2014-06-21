@@ -27,6 +27,19 @@
         float: left;
         width: 49%;
       }
+      .request-animation-frame figure:first-child,
+      .mutation-observer figure:first-child {
+        width: 65%;
+        padding-right: 10px;
+      }
+      .request-animation-frame figure:last-child {
+        width: 30%;
+        padding-top: 30.3%;
+      }
+      .mutation-observer figure:last-child {
+        width: 30%;
+        padding-top: 35.4%
+      }
     }
 
   </style>
@@ -64,8 +77,19 @@ promises, <code>requestAnimationFrame</code>, <code>MutationObservers</code>, an
 that particular point of runtime execution. It's like a time machine for your 
 watch expressions!</p>
 
-<p>Let's take a look at a few of these scenarios. If you want to follow along, jump 
-down to <a href="#toc-enable">Enable async debugging in Chrome Canary</a> first and then come back here.</p>
+<p>Let's enable this feature and take a look at a few of these scenarios.</p>
+
+<h2 id="toc-enable">Enable async debugging in Chrome Canary</h2>
+
+<p>Try out this new feature by enabling it in Chrome Canary (build 35 or higher). Go to the <strong>Sources</strong> panel of Chrome Canary DevTools.</p>
+
+<p>Next to the <strong>Call Stack</strong> panel on the right hand side, there is a new checkbox 
+for "Async". Toggle the checkbox to turn async debugging on or off. (Although 
+once it's on, you may not ever want to turn it off.)</p>
+
+<figure>
+  <img src="enable-async-toggle.gif" width="658" alt="Toggle the async feature on or off"/>
+</figure>
 
 <h2 id="toc-timer-xhr">Capture delayed timer events and XHR responses</h2>
  
@@ -80,7 +104,7 @@ or there are network connectivity issues on the client side), Gmail will
 automatically try re-sending the message after a short timeout.</p>
 
 <p>To see how async call stacks can help us analyze delayed timer events and XHR 
-responses, I've recreated that flow with a <a href="xhr/index.html" target="_blank">mock Gmail 
+responses, I've recreated that flow with a <a href="xhr/demo.html" target="_blank">mock Gmail 
 example</a>. The full JavaScript code can 
 be found in the link above but the flow is as follows:</p>
 
@@ -127,7 +151,7 @@ see if the request was initiated from <code>submitHandler()</code> as it was abo
 <code>retrySubmit()</code> as it is below:</p>
 
 <figure>
-  <img src="xhr-after-retry-shortened.gif" width="287" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
+  <img src="xhr-after-retry-shortened.gif" width="320" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
 </figure>
 
 <p>From the Call Stack panel, you can also tell if the breakpoint event originated 
@@ -143,9 +167,24 @@ reflect the state that it was in at that time!</p>
   <img src="watch-expressions.gif" width="368" alt="An example of using watch expressions with aysnc call stacks"/>
 </figure>
 
-<h2 id="toc-promises">Unravel chained promise resolutions</h2>
+<h2 id="toc-past-scopes">Evaluate code from past scopes</h2>
 
-<p>If you thought the previous example's flow was hard to unravel without the async 
+<p>In addition to simply <em>watching</em> expressions, you can interact with your code from previous scopes right in the DevTools JavaScript console panel.</p>
+
+<p>Imagine that you are Dr. Who and you need a little help comparing the clock from before you got into the Tardis to "now". From the DevTools console, you can easily evaluate, store, and do calculations on values from across different execution points.</p>
+
+<figure>
+  <img src="time-travel.gif" width="539" alt="An example of using the JavaScript console with aysnc call stacks"/>
+  <figcaption>
+    Use the JavaScript console in conjunction with async call stacks to debug your code. The above demo can be found <a href="past-scope/demo.html" target="_blank">here</a>.
+  </figcaption>
+</figure>
+
+<p>Staying within DevTools to manipulate your expressions will save you time from having to switch back to your source code, make edits, and refresh the browser.</p>
+
+<h2 id="toc-promises">Coming soon: Unravel chained promise resolutions</h2>
+
+<p>If you thought the previous mock Gmail flow was hard to unravel without the async 
 call stack feature enabled, can you imagine how much harder it would be with 
 more complex asynchronous flows like chained promises? Let's revisit the final 
 example of Jake Archibald's tutorial on 
@@ -190,6 +229,11 @@ example.</p>
 
 </div>
 
+<div class="notice tip">
+<p>Promise support for call stacks will be ready soon, as the promise implementation is switching from the version in Blink to the final one within V8.</p>
+<p>In the spirit of walking back in time, if you want to preview async call stacks for promises today, you can check it out in <a href="https://googledrive.com/host/0B8R1QvA3x5IbWll3M0hIYXVLZlk/" target="_blank">Chrome 33 or Chrome 34</a>. Go to <code>chrome://flags/#enable-devtools-experiments</code> and enable Developer Tools experiments . After you restart Canary, go to the DevTools settings and there will be an option to <a href="enable-async-experiments.gif" target="_blank">enable support for async stack traces</a>.</p>
+</div>
+
 <h2 id="toc-request-animation-frame">Get insights into your web animations</h2>
 
 <p>Let's go deeper into the HTML5Rocks archives. Remember Paul Lewis' 
@@ -203,9 +247,9 @@ post.html. With async call stacks we get a lot more insights into
 <code>requestAnimationFrame</code>. And, much like the mock Gmail example, we get to walk all 
 the way back to the initiating event which was a 'scroll' event.</p>
 
-<div class="comparision side-by-side">
+<div class="comparision side-by-side request-animation-frame">
 
-  <figure style="width:65%;padding-right:10px;">
+  <figure>
     <figcaption>Before</figcaption>
     <img src="requestAnimationFrame-before.gif" width="500" alt="Breakpoint set in requestAnimationFrame example without async call stacks"/>
     <figcaption>
@@ -213,7 +257,7 @@ the way back to the initiating event which was a 'scroll' event.</p>
     </figcaption>
   </figure>
 
-  <figure style="width:30%;padding-top:30.3%;">
+  <figure>
     <figcaption>After</figcaption>
     <img src="requestAnimationFrame-after.gif" width="320" alt="Breakpoint set in requestAnimationFrame example with async call stacks"/>
     <figcaption>
@@ -226,17 +270,17 @@ the way back to the initiating event which was a 'scroll' event.</p>
 <h2 id="toc-mutation-observer">Track down DOM updates when using MutationObserver</h2>
 
 <p><code>MutationObserver</code> allow us to observe changes in the DOM. In this 
-<a href="mutation-observers/index.html" target="_blank">simple example</a>,
+<a href="mutation-observers/demo.html" target="_blank">simple example</a>,
 when you click on the button, a new DOM node is appended to <code style="white-space:nowrap;">
 &lt;div class="rows"&gt;&lt;/div&gt;</code>.</p>
 
-<p>Add a breakpoint within <code>nodeAdded()</code> (line 31) in index.html. With async call 
+<p>Add a breakpoint within <code>nodeAdded()</code> (line 31) in demo.html. With async call 
 stacks enabled, you can now walk the call stack back through <code>addNode()</code> to the 
 initial click event.</p>
 
-<div class="comparision side-by-side">
+<div class="comparision side-by-side mutation-observer">
 
-  <figure style="width:65%;padding-right:10px;">
+  <figure>
     <figcaption>Before</figcaption>
     <img src="mutationObserver-before.gif" width="721" alt="Breakpoint set in mutationObserver example without async call stacks"/>
     <figcaption>
@@ -244,7 +288,7 @@ initial click event.</p>
     </figcaption>
   </figure>
 
-  <figure style="width:30%;padding-top:35.4%;">
+  <figure>
     <figcaption>After</figcaption>
     <img src="mutationObserver-after.gif" width="320" alt="Breakpoint set in mutationObserver example with async call stacks"/>
     <figcaption>
@@ -297,29 +341,6 @@ much easier to see at a glance what's happening in your stack trace.</p>
 
 </div>
 
-<h2 id="toc-enable">Get started: Enable async debugging in Chrome Canary</h2>
-
-<p>Try out this new feature by enabling it in Chrome Canary.</p>
-
-<p>Open up the DevTools and click the settings cog
-<img src="settings-icon.gif" alt="settings cog icon"/>
-in the lower right corner. From 
-there you can go to <strong>Experiments</strong> and enable support for async stack traces.</p>
-
-<figure>
-  <img src="enable-async-experiments.gif" width="804" alt="Enable async call stacks in Experiments section"/>
-</figure>
-
-<p>Go to the <strong>Sources</strong> panel of Chrome Canary DevTools.</p>
-
-<p>Next to the <strong>Call Stack</strong> panel on the right hand side, there is a new checkbox 
-for "Async". Toggle the checkbox to turn async debugging on or off. (Although 
-once it's on, you may not ever want to turn it off.)</p>
-
-<figure>
-  <img src="enable-async-toggle.gif" width="658" alt="Toggle the async feature on or off"/>
-</figure>
-
 <h2 id="toc-explore-further">Explore further</h2>
 
 <p>To recap, these are all the asynchronous callbacks in which DevTools will 
@@ -333,10 +354,6 @@ display the full call stack:</p>
   <li>
     <strong>XHRs</strong>: 
     Walk back to where xhr.send() was called.
-  </li>
-  <li>
-    <strong>Promises</strong>: 
-    Walk back to where a promise has been resolved.
   </li>
   <li>
     <strong>Animation frames</strong>: 
@@ -356,11 +373,12 @@ display the full call stack:</p>
 
 <ul>
   <li>
-    <a href="http://updates.html5rocks.com/2012/11/Respond-to-change-with-Object-observe" target="_blank">Object.observe</a>
+    <strong>Promises</strong>: 
+    Walk back to where a promise has been resolved.
   </li>
   <li>
-    <a href="http://www.html5rocks.com/en/tutorials/webcomponents/customelements/#lifecycle" target="_blank">Custom Element lifecycle 
-  callbacks</a> 
+    <strong>Object.observe</strong>:
+    Walk back to where the observer callback was originally bound.
   </li>
 </ul>
 

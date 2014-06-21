@@ -1,0 +1,512 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>
+  Se l'universo di Grunt ti &eacute; nuovo, un buon punto di inizio &eacute;
+  l'eccellente articolo
+  “<a href="http://24ways.org/2013/grunt-is-not-weird-and-hard/">Grunt for
+  People Who Think Things Like Grunt are Weird and Hard</a>” di Chris
+  Coyier. Dopo aver letto la sua introduzione, potrai aver impostato il tuo
+  progetto Grunt e avuto un assaggio delle potenzialit&aacute; offerte da
+  Grunt.
+</p>
+
+<p>
+  In questo articolo non ci concentreremo su quali tra i numerosi plugin di
+  Grunt applicare al tuo progetto, bens&iacute; proprio sul processo di build di
+  Grunt. Verranno forniti dei concetti pratici su:
+</p>
+
+<ul>
+  <li>come mantenere il Gruntfile pulito e in ordine,</li>
+  <li>come migliorare il tempo di buil in maniera considerevole,</li>
+  <li>come ricevere una notifica per ogni evento di build.</li>
+</ul>
+
+<p>
+  C'&eacute; per&oacute; bisogno di una piccola nota: Grunt &eacute; solo uno
+  dei tanti tool che posso essere usati per questo scopo. Se Gulp rispecchia
+  maggiormente il tuo stile, perfetto! Se dopo aver valutato tutte le
+  possibilit&aacute; a disposizione vuoi comunque crearti i tuoi strumenti
+  personali, ok! Noi abbiamo scelto di concentrarci su Grunt in questo articolo
+  per via del suo ecosistema robusto e del suo bacino di utenti di lunga data.
+</p>
+
+<h2 id="toc-organizing">Organizzare il Gruntfile</h2>
+
+<p>
+  Se il Gruntfile include tanti plugin Grunt o un gran numero di task
+  manuali, questo pu&oacute; diventare pesante e di difficile manutenzione. Per
+  fortuna, alcuni plugin si concentrano proprio su questo problema: far tornare
+  il Gruntfile pulito e ordinato.
+</p>
+
+<h3>Il Gruntfile, prima dell'ottimizzazione</h3>
+
+<p>
+  Ecco come appare il nostro Gruntfile prima di aver apportato su di esso alcuna
+  ottimizzazione:
+</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+
+  grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+    concat: {
+      dist: {
+        src: ['src/js/jquery.js','src/js/intro.js', 'src/js/main.js', 'src/js/outro.js'],
+        dest: 'dist/build.js',
+      }
+    },
+    uglify: {
+      dist: {
+        files: {
+          'dist/build.min.js': ['dist/build.js']
+        }
+      }
+    },
+    imagemin: {
+      options: {
+        cache: false
+      },
+
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['**/*.{png,jpg,gif}'],
+          dest: 'dist/'
+        }]
+      }
+    }
+  });
+
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-imagemin');
+
+  grunt.registerTask('default', ['concat', 'uglify', 'imagemin']);
+
+};</pre>
+
+<p>
+  Se stai pensando "Ehi! Mi aspettavo qualcosa di molto peggio! Questo file in
+  realt&aacute; sembra mantenibile!", forse hai ragione. Per ragioni di
+  semplicit&aacute;, abbiamo incluso solo tre plugin senza troppe
+  personalizzazioni. Un Gruntfile reale usato in produzione per un progetto di
+  dimensioni moderate avrebbe richiesto uno scroll infinito in questo
+  articolo. Vediamo quindi cosa si pu&oacute; fare!
+</p>
+
+<h3>Autoload dei plugin Grunt</h3>
+
+<p class="notice tip">
+  Suggerimento: load-grunt-config include load-grunt-tasks, quindi se non sei
+  interessato a imparare nel dettaglio quello che fa e vuoi saltare questo
+  paragrafo, non ferirai i miei sentimenti.
+</p>
+
+<p>
+  Quando aggiungi un nuovo plugin Grunt per utilizzarlo nel tuo progetto, devi
+  includerlo sia nel file <em>package.json</em> come dipendenza npm, sia nel
+  Gruntfile. Per il plugin <em>grunt-contrib-concat</em>, questa inclusione
+  sar&aacute; del tipo:
+</p>
+
+<pre class="prettyprint">// dici a Grunt di caricare il plugin
+grunt.loadNpmTasks('grunt-contrib-concat');</pre>
+
+<p>
+  Ora, se disinstalli il plugin tramite npm e aggiorni il <em>package.json</em>,
+  ma dimentichi di aggiornare il Gruntfile, il build verr&aacute;
+  interrotto. Ecco che in questa circostanza l'ingegnoso
+  plugin <a href="https://npmjs.org/package/load-grunt-tasks">load-grunt-tasks</a>
+  ci viene in aiuto.
+</p>
+
+<p>
+  Mentre prima dovevamo caricare manualmente i plugin Grunt, in questo modo:
+</p>
+
+<pre class="prettyprint">grunt.loadNpmTasks('grunt-contrib-concat');
+grunt.loadNpmTasks('grunt-contrib-uglify');
+grunt.loadNpmTasks('grunt-contrib-imagemin');</pre>
+
+<p>
+  con <em>load-grunt-tasks</em> questi comandi collassano in una singola riga:
+</p>
+
+<pre class="prettyprint">require('load-grunt-tasks')(grunt);</pre>
+
+<p>
+  Dopo aver richiesto il plugin, questo analizza il file <em>package.json<em> e
+  determina quali tra le dipendenze sono plugin Grunt per caricarli
+  automaticamente.
+</p>
+
+<h3>Dividere le configurazioni di Grunt in pi&uacute; file</h3>
+
+<p>
+  <em>load-grunt-tasks</em> riduce un poco la complessit&aacute; e il codice del
+  Gruntfile, ma se ti trovi a configurare un'applicazione grande, questo
+  sar&aacute; comunque un file molto esteso. Qui entra in
+  gioco <a href="https://npmjs.org/package/load-grunt-config">load-grunt-config</a>.
+  <em>load-grunt-config</em> consente di dividere le configurazioni del
+  Gruntfile per task. Inoltre, questo plugin incapsula <em>load-grunt-tasks</em>
+  e le sue funzionalit&aacute;!
+</p>
+
+<p>
+  Una cosa importante: dividere il Gruntfile non &eacute; sempre la cosa
+  migliore. Se lavori con tante configurazioni condivise tra diversi task (ad
+  esempio, se usi parecchio il templating Grunt), dovresti essere cauto nel
+  farlo.
+</p>
+
+<p>
+  Con <em>load-grunt-config</em>, il Gruntfile avr&aacute; questo aspetto:
+</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+  require('load-grunt-config')(grunt);
+};</pre>
+
+<p>
+  Esatto, proprio questo, l'intero file! Ma dove risiedono le nostre
+  configurazioni?
+</p>
+
+<p>
+  Crea una cartella chiamata <em>grunt/</em> nella cartella del Gruntfile. Di
+  default, il plugin ricerca in questa cartella i file di configurazione i cui
+  nomi corrispondono ai nomi dei task che si vogliono utilizzare. Nel nostro
+  caso, la struttura della cartella &eacute; di questo tipo:
+</p>
+
+<pre class="prettyprint">- myproject/
+-- Gruntfile.js
+-- grunt/
+--- concat.js
+--- uglify.js
+--- imagemin.js</pre>
+
+<p>
+  A questo punto inseriamo la configurazione di ciascun task nel file
+  corrispondente (si tratta essenzialmente di lavori di copia-incolla dal
+  Gruntfile originale in questa nuova struttura).
+</p>
+
+<p><strong>grunt/concat.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  dist: {
+    src: ['src/js/jquery.js', 'src/js/intro.js', 'src/js/main.js', 'src/js/outro.js'],
+    dest: 'dist/build.js',
+  }
+};</pre>
+
+<p><strong>grunt/uglify.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  dist: {
+    files: {
+      'dist/build.min.js': ['dist/build.js']
+    }
+  }
+};</pre>
+
+<p><strong>grunt/imagemin.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  options: {
+    cache: false
+  },
+
+  dist: {
+    files: [{
+      expand: true,
+      cwd: 'src/',
+      src: ['**/*.{png,jpg,gif}'],
+      dest: 'dist/'
+    }]
+  }
+};</pre>
+
+<p>
+  Se le configurazioni in JavaScript non sono proprio il tuo
+  forte, <em>load-grunt-tasks</em> consente addirittura di usare la sintassi
+  YAML o CoffeeScript. Il nostro ultimo file richiesto lo scriviamo in YAML - il
+  file <em>aliases</em>. Si tratta di un file speciale che registra gli alias
+  per i task, compito che avevamo assolto nel Gruntfile tramite la
+  funzione <code>registerTask</code>. Ecco il nostro:
+</p>
+
+<p><strong>grunt/aliases.yaml</strong></p>
+
+<pre class="prettyprint">default:
+  - 'concat'
+  - 'uglify'
+  - 'imagemin'</pre>
+
+<p>
+  E questo &eacute; tutto! Esegui questo comando nel terminale:
+</p>
+
+<pre class="prettyprint">$ grunt</pre>
+
+<p>
+  Se tutto funziona, questo cerca il task di “default” ed esegue tutto in
+  ordine. Ora che abbiamo ridotto il Gruntfile a tre linee di codice che non
+  toccheremo pi&uacute;, ed estratte le configurazioni di tutti i task. abbiamo
+  finito. Ma caspita, completare un build &eacute; ancora parecchio
+  lento. Vediamo cosa si pu&oacute; fare per migliorare. 
+</p>
+
+<h2 id="toc-buildtime">Minimizzare il tempo di build</h2>
+
+<p>
+  Anche se le performance di runtime e caricamento della tua applicazione web
+  sono molto pi&uacute; critiche in termini di business rispetto al tempo
+  richiesto per completare un build, avere un tempo di build troppo lento
+  &eacute; comunque un problema. Questo rende infatti difficile eseguire build
+  automatici sufficientemente veloci con plugin
+  come <a href="https://github.com/gruntjs/grunt-contrib-watch">grunt-contrib-watch</a>
+  o dopo un commit Git, e introduce una “penalit&aacute;” nell'esecuzione
+  effettiva del build - pi&uacute; veloce &eacute; il tempo di build, pi&uacute;
+  agile &eacute; il workflow. Se un build di produzione impiega pi&uacute; di 10
+  minuti per essere eseguito, lo farai solo quando devi per forza farlo, e nel
+  mentre ti allontanerai per un caff&eacute;. Tutto questo &eacute; estremamente
+  controproducente. Abbiamo bisogno di velocizzare le cose.
+</p>
+
+<h3>Build per i soli file effettivamente modificati: grunt-newer</h3>
+
+<p>
+  Dopo un primo build iniziale per il tuo sito, &eacute; probabile che ti
+  troverai a lanciare di nuovo un bild dopo aver modificato solo pochi file
+  all'interno del progetto. Diciamo, secondo il nostro esempio, che sia stata
+  modificata un'immagine nella cartella <em>src/img/</em> -
+  lanciare <em>imagemin</em> per ottimizzare di nuovo le immagini avrebbe senso,
+  ma non per una singola immagine - e ovviamente, un'altra esecuzione
+  di <em>concat</em> e <em>uglify</em> &eacute; solo una perdita di preziosi
+  cicli di CPU.
+</p>
+
+<p>
+  Certo, si pu&oacute; sempre eseguire da terminale <code>$ grunt
+  imagemin</code> invece di <code>$ grunt</code> per l'esecuzione selettiva di
+  un task, ma esiste una strada migliore. Si
+  chiama <a href="https://npmjs.org/package/grunt-newer">grunt-newer</a>.
+</p>
+
+<p>
+  Grunt-newer dispone di una cache locale nella quale mantiene informazioni su
+  quali file sono effettivamente cambiati, e solo per questi file esegue i task
+  opportuni. Vediamo come attivarlo.
+</p>
+
+<p>
+  Ricordi il file <em>aliases.yaml</em>? Modificalo da cos&iacute;:
+</p>
+
+<pre class="prettyprint">default:
+  - 'concat'
+  - 'uglify'
+  - 'imagemin'</pre>
+
+<p>
+  a cos&iacute;:
+</p>
+
+<pre class="prettyprint">default:
+  - 'newer:concat'
+  - 'newer:uglify'
+  - 'newer:imagemin'</pre>
+
+<p>
+  La semplice anteposizione di “newer:” per ciascuno dei task <strong>indirizza
+  i file sorgente e destinazione verso il plugin grunt-newer, il quale
+  determina per quali file, se ce ne sono, il task debba essere eseguito</strong>.
+</p>
+
+<h3>Eseguire pi&uacute; task in parallelo: grunt-concurrent</h3>
+
+<p>
+  <a href="https://npmjs.org/package/grunt-concurrent">grunt-concurrent</a>
+  &eacute; un plugin che torna molto utile quando si ha abbondanza di task
+  indipendenti l'uno dall'altro e dispendiosi in termini di tempo. Questo plugin
+  sfrutta il numero di CPU del tuo dispositivo ed esegue task multipli in parallelo.
+</p>
+
+<p>
+  La cosa pi&uacute; bella &eacute; che la configurazione di questo plugin
+  &eacute; estremamente semplice. Ipotizzando di stare
+  usando <em>load-grunt-config</em>, crea questo nuovo file:
+</p>
+
+<p><strong>grunt/concurrent.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  first: ['concat'],
+  second: ['uglify', 'imagemin']
+};</pre>
+
+<p>
+  Abbiamo cos&iacute; impostato per l'esecuzione parallela delle tracce con i
+  nomi “<em>first</em>” and “<em>second</em>”. Il task <em>concat</em> deve
+  essere eseguito per primo, e nel nostro esempio non c'&eacute; nient'altro che
+  debba essere eseguito nel frattempo. Nella seconda traccia abbiamo
+  unito <em>uglify</em> e <em>imagemin</em>, dal momento che questi due task
+  sono indipendenti tra di loro e richiedono entrambi un tempo di esecuzione
+  considerevole.
+</p>
+
+<p>
+  Questo file da solo non fa ancora nulla. Dobbiamo modificare l'alias per il
+  task <em>default</em> affinch&eacute; punti ai processi concorrenti piuttosto
+  che a quelli sequenziali. Ecco il nuovo contenuto
+  di <em>grunt/aliases.yaml</em>:
+</p>
+
+<pre class="prettyprint">default:
+  - 'concurrent:first'
+  - 'concurrent:second'</pre>
+
+<p>
+  Se si esegue di nuovo un build grunt, il plugin concorrente esegue per primo
+  il task concat, e dopo genera due thread su due core differenti della CPU per
+  eseguire in parallelo imagemin e uglify. Wow!
+</p>
+
+<p>
+  Un piccolo avvertimento: c'&eacute; il rischio che nel nostro esempio basilare
+  grunt-concurrent non renda il build significativamente pi&uacute;
+  veloce. Questo &eacute; dovuto all'overhead introdotto dalla creazione di
+  istanze multiple di Grunt per thread differenti: nel mio caso, almeno +300ms
+  per thread.
+</p>
+
+<h3>Quanto tempo ci ha messo? time-grunt</h3>
+
+<p>
+  Ora che abbiamo ottimizzato ognuno dei nostri task, sarebbe molto utile capire
+  quanto tempo ciascun task impiega per essere eseguito. Per fortuna, esiste un
+  plugin anche per
+  questo: <a href="https://npmjs.org/package/time-grunt">time-grunt</a>.
+</p>
+
+<p>
+  <em>time-grunt</em> non &eacute; uno dei classici plugin grunt da caricare
+  come task npm, ma piuttosto un plugin da includere direttamente,
+  come <em>load-grunt-config</em>. Aggiungiamo un require
+  per <em>time-grunt</em> nel Gruntfile, proprio come abbiamo fatto
+  con <em>load-grunt-config</em>. Il Gruntfile dovrebbe a questo punto essere cos&iacute;:
+</p>
+
+<pre class="prettyprint">module.exports = function(grunt) {
+
+  // misura il tempo di ciascun task
+  require('time-grunt')(grunt);
+
+  // carica le configurazioni di grunt
+  require('load-grunt-config')(grunt);
+
+};</pre>
+
+<p>
+  Mi dispiace deluderti, ma si tratta solo di questo - prova ad eseguire di
+  nuovo Grunt da terminale,  e per ciascun task (compreso l'intero processo di
+  build) dovresti vedere un pannello di controllo ben formattato contenente i
+  tempi di esecuzione:
+</p>
+
+<figure>
+  <img src="time_grunt.png">
+</figure>
+
+<h2 id="toc-notify">Notifiche di sistema automatiche</h2>
+
+<p>
+  Ora che abbiamo apportato pesanti ottimizzazioni al processo di build di
+  Grunt, velocizzando la sua esecuzione, nel caso in cui tu abbia automatizzato
+  tale processo (ad esempio, controllando i file con grunt-contrib-watch, o dopo
+  ciascun commit), non sarebbe grandioso se il tuo sistema potesse inviarti una
+  notifica quando un nuovo build &eacute; pronto per essere eseguito, o quando
+  succede qualcosa di brutto? Ecco a te
+  <a href="https://npmjs.org/package/grunt-notify">grunt-notify</a>.
+</p>
+
+<p>
+  Di default, <em>grunt-notify</em> fornisce notifiche automatiche per tutti gli
+  errori e i warning di Grunt, usando qualunque sistema di notifiche disponibile
+  sul tuo sistema operativo: Growl per OS X o Windows, il Centro Notifiche per
+  Mountain Lion e Mavericks, e Notify-send. Sorprendentemente, l'unica cosa da
+  fare per per ottenere questa funzionalit&aacute; &eacute;
+  installare <a href="https://npmjs.org/package/grunt-notify">il plugin</a> da
+  npm e caricarlo nel Gruntfile (ricordati che se stai
+  usando <em>grunt-load-config</em>, l'inclusione &eacute; automatica!).
+</p>
+
+<p>
+  Ecco come appare una notifica, a seconda del sistema operativo:
+</p>
+
+<figure>
+  <img src="notify.png">
+</figure>
+
+<p>
+  Configuriamo il plugin in modo tale che, assieme ad errori e warning, venga
+  eseguito al termine dell'esecuzione del nostro ultimo task. Assumendo di stare
+  usando <em>grunt-load-config</em> per suddividere i task tra diversi file,
+  questo &eacute; il file di cui abbiamo bisogno:
+</p>
+
+<p><strong>grunt/notify.js</strong></p>
+
+<pre class="prettyprint">module.exports = {
+  imagemin: {
+    options: {
+      title: 'Build complete',  // opzionale
+        message: '<%= pkg.name %> build finished successfully.' //richiesto
+      }
+    }
+  }
+  }</pre>
+
+<p>
+  Nel primo livello di questa configurazione, la chiave deve corrispondere al
+  nome del task cui ci vogliamo connettere. L'esempio mostrer&aacute; un
+  messaggio subito dopo l'esecuzione del task <em>imagemin</em>, l'ultimo della
+  nostra catena di build.
+</p>
+
+
+
+<h2 id="toc-wrap">Tiriamo le somme</h2>
+
+<p>
+  Se hai seguito tutto dall'inizio, sei adesso il fiero possessore di un
+  processo di build super ordinato e organizzato, estremamente veloce grazie al
+  parallelismo e ai task selettivi, e in grado di inviare notifiche ogni volta
+  che qualcosa va storto.
+</p>
+
+<p>
+  Se ti capita di scoprire qualche altra perla in grado di migliorare
+  ulteriormente Grunt e i suoi plugin, per favore faccelo sapere! Fino ad
+  allora, buon grunting!
+</p>
+
+<p>
+  <strong>Aggiornamento (14/2/2014): se vuoi ottenere una copia completa e
+  funzionante del progetto Grunt di
+  esempio, <a href="https://github.com/html5rocks/www.html5rocks.com/tree/master/content/tutorials/tooling/supercharging-your-gruntfile/static/sample">clicca
+  qui</a>.</strong>
+</p>
+
+{% endblock %}

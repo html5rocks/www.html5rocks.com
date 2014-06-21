@@ -1,0 +1,437 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+/*blockquote {
+  background: rgb(238, 238, 238);
+  padding: 1px 10px;
+}*/
+label.bad, label.good, label.sortof {
+  padding: 4px;
+  line-height: 1.7;
+  border-radius: 50%;
+  color: white;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  -webkit-transform: rotateZ(90deg);
+  -moz-transform: rotateZ(90deg);
+  -ms-transform: rotateZ(90deg);
+  -o-transform: rotateZ(90deg);
+  transform: rotateZ(90deg);
+  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+}
+label.good::after,
+label.bad::after,
+label.sortof::after {
+  position: relative;
+  left: 2px;
+  top: -5px;
+}
+label.bad {
+  background-color: red;
+}
+label.bad::after {
+  content: ':(';
+}
+label.good {
+  background-color: green;
+}
+label.good::after {
+  content: ':)';
+}
+label.sortof {
+  background-color: rgb(230, 190, 32);
+  line-height: 1.8;
+}
+label.sortof::after {
+  content: ':|';
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea {
+  margin-top: 1em;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+</style>
+
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.webkitCreateShadowRoot;
+</script>
+
+{% endblock %}
+
+{% block iscompatible %}
+  return 'HTMLTemplateElement' in window;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+
+
+{% block content %}
+
+<h2 id="toc-intro">はじめに</h2>
+
+<p>テンプレートというコンセプトはウェブ開発において真新しいものではありません。むしろ、Django (Python) や ERB/Haml (Ruby)、Smarty (PHP) といった <a href="http://en.wikipedia.org/wiki/Template_engine_(web)">サーバーサイトテンプレート言語／エンジン</a> は長きにわたって愛されてきました。しかしここ数年、MVC フレームワークが爆発的な盛り上がりを見せ、それぞれに微妙に異なってはいますが、プレゼンテーションレイヤーにテンプレートと呼ばれる共通のメカニズム (View) を持っていることをご存じの方は多いでしょう。</p>
+<p>そう、テンプレートは素晴らしいのです。周りの人にも聞いてみてください。その <a href="http://www.thefreedictionary.com/template">定義</a> すら愛おしくなってくるはずです：</p>
+<blockquote>
+<p><strong>template</strong> (名詞) - 毎回作り直す必要がないように、特定のアプリケーションの開始状態として利用される、予め決まった様式を持つドキュメントまたはファイル。</p>
+</blockquote>
+<p>「毎回作り直す必要がないように」あなたがどうかは知りませんが、私はできればサボりたいと思っています。ならウェブプラットフォームが開発者が欲しいと思っているネイティブ機能を持たない理由なんてあるでしょうか？</p>
+<p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">WatWG HTML Templates 仕様</a> こそがその答えなのです。この仕様では新しく <code>&lt;template&gt;</code> 要素を定義し、標準で DOM ベースのクライアントサイドテンプレートのアプローチについて記述しています。テンプレートにより、HTML にパースできるマークアップの切れ端を宣言し、ページロード時点では利用されないながらも、ランタイムにインスタンス化することが可能になります。<a href="https://plus.google.com/111386188573471152118/posts">Rafael Weinstein</a> を引用するならこうです：</p>
+<blockquote>
+  テンプレートは、何があってもブラウザにいじくりまわされたくない HTML の塊を置いておく場所なのです。
+  <cite>Rafael Weinstein (仕様編集者)</cite>
+</blockquote>
+
+<h3 id="toc-detect">機能検知</h3>
+
+<p><code>&lt;template&gt;</code> の機能を検知するには、DOM 要素を作り、<code>.content</code> プロパティがあるかどうかを調べます：</p>
+<pre class="prettyprint"><code>function supportsTemplate() {
+  return 'content' in document.createElement('template');
+}
+
+if (supportsTemplate()) {
+  // template が利用可能
+} else {
+  // 古いテンプレートテクニックかライブラリを使う
+}
+</code></pre>
+<h2 id="toc-started">テンプレートコンテンツを宣言する</h2>
+
+<p>HTML <code>&lt;template&gt;</code> 要素はあなたのマークアップ上のテンプレートを表します。中身は「テンプレートのコンテンツ」つまりクローン可能な、<strong>自律動作できない DOM</strong> です。
+テンプレートを、あなたのアプリケーションが終了するまで繰り返し使えるスキャフォールド (足場) と考えて下さい。</p>
+<p>テンプレートのコンテンツを作るには、マークアップを宣言して、<code>&lt;template&gt;</code> 要素でくるんで下さい：</p>
+<pre class="prettyprint"><code>&lt;template id="mytemplate"&gt;
+  &lt;img src="" alt="great image"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<blockquote class="commentary talkinghead">
+勘の鋭い皆さんならお気付きでしょうが、`src` が空であることにお気付きでしょう。しかしこれは意図されたものなのです。空の画像は 404 になりませんし、コンソールエラーも吐きません。なぜなら、ページロード時にコンテンツを取りに行かないからです。ソース URL は後から動的に生成することができます。以下をご覧下さい。
+</blockquote>
+
+<h2 id="toc-pillars">要点</h2>
+
+<p>コンテンツを <code>&lt;template&gt;</code> で囲むと、いくつかの重要なプロパティが得られます。</p>
+<ol>
+<li>
+<p><strong>コンテンツはアクティベートされるまで、自律動作しません。</strong> つまり、あなたのマークアップは隠れた DOM として存在するだけで、レンダリングされないのです。</p>
+</li>
+<li>
+<p>テンプレート内のどんなコンテンツも副作用を持ちません。 <strong>スクリプトは動作しませんし、画像はロードされません。オーディオも再生されません</strong> ...テンプレートが実際に利用されるまでは。</p>
+</li>
+<li>
+<p><strong>コンテンツはドキュメント内に存在しないものとして扱われます。</strong> メインページ内で行う <code>document.getElementById()</code> または <code>querySelector()</code> は template の子ノードを返しません。</p>
+</li>
+<li>
+<p>テンプレートは <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code> または <code>&lt;frameset&gt;</code> 内なら <strong>どこにでも置くことができ</strong> 、その中に置けるコンテンツなら、何を置いても構いません。なお、ここで言う「どこにでも」は <code>&lt;template&gt;</code> が通常 HTML パーサーが許可しないすべての場所 (...ただし<a href="http://www.w3.org/TR/html5-diff/#content-model">コンテンツモデル</a> の子要素を除く) でも安全に利用できることを意味します。<code>&lt;table&gt;</code> や <code>&lt;select&gt;</code> の子要素として置くことも可能です：</p>
+<pre class="prettyprint"><code>&lt;table&gt;
+&lt;tr&gt;
+  &lt;template id="cells-to-repeat"&gt;
+    &lt;td&gt;some content&lt;/td&gt;
+  &lt;/template&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+</code></pre>
+</li>
+</ol>
+<h2 id="toc-using">テンプレートをアクティベートする</h2>
+
+<p>テンプレートを使うには、アクティベート (有効化) する必要があります。アクティベートしなければ、コンテンツはレンダリングされません。
+最も簡単な方法は、<code>.content</code> を <code>document.importNode()</code> を使って再帰的にコピーすることです。<code>.content</code> プロパティはテンプレートの中身を持つ、読み込み専用の <code>DocumentFragment</code> です。</p>
+<pre class="prettyprint"><code>var t = document.querySelector('#mytemplate');
+// src をランタイムに埋める
+t.content.querySelector('img').src = 'logo.png';
+
+var clone = document.importNode(t.content, true);
+document.body.appendChild(clone);
+</code></pre>
+<p>テンプレートはスタンプを押すように複製されることで、はじめてアクティベートされます。この例では、コンテンツはコピーされ、画像がリクエストされ、最終的なマークアップがレンダリングされます。</p>
+<h2 id="toc-using">デモ</h2>
+
+<h3 id="toc-demo-insert">例：自律動作しないスクリプト</h3>
+
+<p>この例はテンプレートコンテンツが自律動作しないことを表すものです。<code>&lt;script&gt;</code> はボタンを押された場合のみテンプレートから複製され、動作します。</p>
+<pre class="prettyprint"><code>&lt;button onclick="useIt()"&gt;Use me&lt;/button&gt;
+&lt;div id="container"&gt;&lt;/div&gt;
+&lt;script&gt;
+  function useIt() {
+    var content = document.querySelector('template').content;
+    // Update something in the template DOM.
+    var span = content.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(
+        document.importNode(content, true));
+  }
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div&gt;Template used: &lt;span&gt;0&lt;/span&gt;&lt;/div&gt;
+  &lt;script&gt;alert('Thanks!')&lt;/script&gt;
+&lt;/template&gt;
+</code></pre>
+<div class="demoarea">
+<button onclick="useIt()">Use me</button>
+<div id="container"></div>
+<template id="inert-demo">
+  <div>Template used <span>0</span></div>
+  <script>if ('HTMLTemplateElement' in window) {alert('Thanks!')}</script>
+</template>
+<script>
+  function useIt() {
+    var content = document.querySelector('#inert-demo').content;
+    var span = content.querySelector('span');
+    span.textContent = parseInt(span.textContent) + 1;
+    document.querySelector('#container').appendChild(document.importNode(content, true));
+  }
+</script>
+</div>
+
+<h3 id="toc-demo-sd">例：テンプレートから Shadow DOM を作る</h3>
+
+<p>ほとんどの人が <a href="/webcomponents/shadowdom/">Shadow DOM</a> にホストを与える際、<code>.innerHTML</code> にマークアップの文字列をセットします：</p>
+<pre class="prettyprint"><code>&lt;div id="host"&gt;&lt;/div&gt;
+&lt;script&gt;
+  var shadow = document.querySelector('#host').createShadowRoot();
+  shadow.innerHTML = '&lt;span&gt;Host node&lt;/span&gt;';
+&lt;/script&gt;
+</code></pre>
+<p>このアプローチの問題は、Shadow DOM が複雑になればなるほど、文字列の連結が必要になることです。これではスケールしませんし、コードも汚くなってしまいます。このアプローチはそもそも、XSS が生まれた背景でもあったはずです。そこで登場するのが <code>&lt;template&gt;</code> です。</p>
+<p>より良い方法は、shadow root にテンプレートコンテンツを直接継ぎ足すことです。</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+&lt;style&gt;
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  } 
+  :host:hover {
+    background: #ccc;
+  }
+  div {
+    position: relative;
+  }
+  header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  h3 {
+    margin: 0 !important;
+  }
+  textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+&lt;/style&gt;
+&lt;div&gt;
+  &lt;header&gt;
+    &lt;h3&gt;Add a Comment&lt;/h3&gt;
+  &lt;/header&gt;
+  &lt;content select="p"&gt;&lt;/content&gt;
+  &lt;textarea&gt;&lt;/textarea&gt;
+  &lt;footer&gt;
+    &lt;button&gt;Post&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;div id="host"&gt;
+  &lt;p&gt;Instructions go here&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var shadow = document.querySelector('#host').createShadowRoot();
+  shadow.appendChild(document.querySelector('template').content);
+&lt;/script&gt;
+</code></pre>
+<p><template id="demo-sd-template">
+<style>
+  :host {
+    background: #f8f8f8;
+    padding: 10px;
+    transition: all 400ms ease-in-out;
+    box-sizing: border-box;
+    border-radius: 5px;
+    width: 450px;
+    max-width: 100%;
+  } 
+  :host:hover {
+    background: #ccc;
+  }
+  #unsupportedbrowsersneedscoping {
+    position: relative;
+  }
+  #unsupportedbrowsersneedscoping header {
+    padding: 5px;
+    border-bottom: 1px solid #aaa;
+  }
+  #unsupportedbrowsersneedscoping h3 {
+    margin: 0 !important;
+  }
+  #unsupportedbrowsersneedscoping textarea {
+    font-family: inherit;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+  }
+  #unsupportedbrowsersneedscoping footer {
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+  }
+</style>
+<div id="unsupportedbrowsersneedscoping">
+  <header>
+    <h3>Add a Comment</h3>
+  </header>
+  <content select="p"></content>
+  <textarea></textarea>
+  <footer>
+    <button>Post</button>
+  </footer>
+</div>
+</template></p>
+<div id="demo-sd-host">
+  <p>Instructions go here</p>
+</div>
+
+<script>
+(function() {
+  var host = document.querySelector('#demo-sd-host');
+  var compat = HTMLElement.prototype.webkitCreateShadowRoot ||
+               HTMLElement.prototype.createShadowRoot ? true : false;
+  if (compat && 'HTMLTemplateElement' in window) {
+    var shadow = host.createShadowRoot();
+    shadow.applyAuthorStyles = true;
+    shadow.appendChild(document.querySelector('#demo-sd-template').content);
+  } else {
+    document.querySelector('#unsupportedbrowsersneedscoping').style.display = 'none';
+    host.style.display = 'none';
+  }
+})();
+</script>
+
+<h2 id="toc-gotcha">私の得た「気付き」</h2>
+
+<p>以下は私が <code>&lt;template&gt;</code> を実際に使ってみた上で得られた気付きです：</p>
+<ul>
+<li>もし <a href="http://code.google.com/p/modpagespeed/">modpagespeed</a> をお使いなら、この <a href="http://code.google.com/p/modpagespeed/issues/detail?id=625">バグ</a> にお気を付け下さい。インラインで <code>&lt;style scoped&gt;</code> が定義されたテンプレートは、PageSpeed の CSS リライト機能によって <code>head</code> に移動される場合があります。</li>
+<li>テンプレートを「事前にレンダリング」つまり、アセットを事前に読み込んだり、JavaScript を実行したり、CSS を読み込んだりする方法はありません。それはサーバーとクライアントに任せることです。テンプレートがレンダリングされるのは、ページが読み込まれた後です。</li>
+<li>
+<p>ネストされたテンプレートにご注意下さい。おそらくあなたの期待通りには動きません。例えば：</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+  &lt;ul&gt;
+    &lt;template&gt;
+      &lt;li&gt;Stuff&lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+</code></pre>
+<p>外側の template をアクティベートしても、内側の template はアクティベートされません。これはつまり、ネストされたテンプレートは、内側の template も手動でアクティベートされている必要があるということを意味します。 </p>
+</li>
+</ul>
+<h2 id="toc-old">標準への道</h2>
+
+<p>ウェブ標準に準拠した HTML テンプレートへの道のりは長いものでした。我々は長年に渡り、再利用可能なテンプレートを作り出す方法を考え抜いてきました。下記 2 つは私が見つけたよくあるテンプレートの手法です。比較のために掲載しておきます。</p>
+<h3 id="toc-offscreen">方法 1：オフスクリーン DOM</h3>
+
+<p>長年使われてきたアプローチのひとつは、「オフスクリーン」な DOM を作り、<code>hidden</code> 属性や <code>display:none</code> を使って見えない場所に隠すというものです：</p>
+<pre class="prettyprint"><code>&lt;div id="mytemplate" hidden&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>このテクニックは有用なものですが、いくつかの欠点もあります：</p>
+<ul>
+<li><label class="good"></label> <em>DOM を使う</em> - ブラウザは DOM を知っています。簡単にコピーできます。</li>
+<li><label class="good"></label> <em>何もレンダリングされない</em> - <code>hidden</code> を使えば隠すことができます。</li>
+<li><label class="bad"></label> <em>自律動作してしまう</em> - コンテンツが隠されていても、画像ではネットワークリクエストが発生してしまいます</li>
+<li><label class="bad"></label> <em>スタイル・テーマ付けが面倒</em> - 埋め込まれるページは、テンプレートにスタイルを集約させるため、すべて CSS ルール <code>#mytemplate</code> で前置されなければなりません。これは非常にもろく、名前の衝突が起こらない保証もありません。埋め込まれるページが既に同じ id を持っている場合など、もう罠にハマってしまったようなものです。</li>
+</ul>
+<h3 id="toc-overloadingscript">方法 2: script をオーバーロードする</h3>
+
+<p>もうひとつの方法は <code>&lt;script&gt;</code> をオーバーロードし、その内容を文字列として操作する方法です。この方法は <a href="http://ejohn.org/blog/javascript-micro-templating/">Micro Templating utility</a> として 2008 年に John Resig がおそらく初めて提唱しました。
+現在では <a href="http://handlebarsjs.com/">handlebars.js</a> も含め、他にも多数存在しています。</p>
+<p>例えば：</p>
+<pre class="prettyprint"><code>&lt;script id="mytemplate" type="text/x-handlebars-template"&gt;
+  &lt;img src="logo.png"&gt;
+  &lt;div class="comment"&gt;&lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+<p>このテクニックを要約すると：</p>
+<ul>
+<li><label class="good"></label> <em>何もレンダリングされない</em> - ブラウザは <code>&lt;script&gt;</code> が元から <code>display:none</code> であるため、レンダリングしません。</li>
+<li><label class="good"></label> <em>自律動作しない</em> - ブラウザは <code>type</code> が <code>"text/javascript"</code> でない限り <code>script</code> の内容を JavaScript としてパースすることはありません。</li>
+<li><label class="bad"></label> <em>セキュリティ上の懸念</em> - <code>.innerHTML</code> の使用が推奨されているため、ユーザー入力のテンプレート埋め込みは容易に XSS 脆弱性に繋がります。</li>
+</ul>
+<h2 id="toc-conclusion">まとめ</h2>
+
+<p>jQuery が DOM 操作を劇的にシンプルに変化させた時のことを覚えていますか？その結果が <code>querySelector()</code> や <code>querySelectorAll()</code> など、プラットフォームへのネイティブ機能としての追加です。明らかな大成功だったでしょう？ライブラリが CSS セレクターを使って DOM を取得するという機能の人気を押し上げ、ウェブ標準がそれを追いかける。必ずしも成功するパターンではありませんが、私はこういうアプローチが <em>大好き</em> です。</p>
+<p>私はこれは、<code>&lt;template&gt;</code> にも当てはまるものと考えています。template は、クライアントサイドでのテンプレートの挙動を標準化するだけでなく、<a href="#toc-old">2008 年から使われてきたハック</a> を不要なものとします。
+私にとって、ウェブのオーサリングプロセスをよりまともで、メンテナンスしやすく、かつ必要十分な機能で満たすことは、いつも良いことなのです。</p>
+<h2 id="toc-resources">追加リソース</h2>
+
+<ul>
+<li><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">WhatWG 仕様</a></li>
+<li><a href="http://w3c.github.io/webcomponents/explainer/#template-section">はじめての Web Components</a></li>
+<li><a href="http://html5-demos.appspot.com/static/webcomponents/index.html">&lt;web&gt;components&lt;/web&gt;</a> (<a href="http://www.youtube.com/watch?v=eJZx9c6YL8k">video</a>) - 拙著の理解しやすいプレゼンテーションです</li>
+</ul><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+  }
+});
+</script>
+{% endblock %}

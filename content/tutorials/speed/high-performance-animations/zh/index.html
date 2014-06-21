@@ -1,0 +1,191 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block relatedreading %}
+<aside class="panel">
+  <h2>Related reading</h2>
+  <ul>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/unnecessary-paints/">Avoiding Unnecessary Paints</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/animated-gifs/">Avoiding Unnecessary Paints: Animated GIF Edition</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/scrolling/">Scrolling Performance</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">Parallaxin'</a></li>
+  </ul>
+</aside>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead-lewis:before {
+  background-image: url(/static/images/profiles/paullewis.png);
+}
+
+.talkinghead-irish:before {
+  background-image: url(/static/images/profiles/paulirish.png);
+}
+
+table {
+  width: 100%;
+}
+
+table tr:nth-child(2n) {
+  background: #f2f2f2;
+}
+
+table tr td {
+  padding: 10px;
+}
+
+table.code {
+  font-family: 'Source Code Pro'
+}
+
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block content %}
+
+<p class="intro">让我们直接进入主题。现代浏览器在完成以下四种属性的动画时，消耗成本较低： <strong>position</strong>（位置）， <strong>scale</strong>（比例缩放）, <strong>rotation</strong>（旋转） 和 <strong>opacity</strong>（透明度）。如果你对其他的属性设置动画，你就需要对你的<em>冒险</em>负责。而且你的动画将可能达不到流畅的60fps。</p>
+
+<figure>
+  <img src="cheap-operations.jpg" alt="Cheap to animate" />
+</figure>
+
+<p>一起来看看以下一组完成相同的动作的动画视频，它们在一起缓慢地移动。</p>
+
+<div style="position: relative; padding-top: 56.25%;">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/-62uPWUxgcg?rel=0" frameborder="0" allowfullscreen=""></iframe>
+</div>
+
+<p>它们一个以transform完成，另一个以其他的方式。 你可以清楚地看到它们的不同，现在我们来看看它们为什么会这样。</p>
+
+<h2 id="toc-dom-to-pixels">通过DevTools从文档对象模型到像素级别的观察</h1>
+
+<p>当你用 Chrome DevTools 的 timeline 来查看的话，你可以看到跟一下相似的模式：</p>
+
+<figure>
+  <img src="devtools-waterfall.jpg" alt="DevTools waterfall" />
+  <figcaption>Chrome DevTools 框架模式。 瀑布流越高，说明浏览器做的越多。</figcaption>
+</figure>
+
+<p>浏览器处理的过程很简单：计算元素的样式（重新计算样式），生成每个元素的几何形状和位置（布局），绘制<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">图层</a>中的每个像素（初始化绘图并且进行绘图）并且将图层绘制到屏幕上（图层的合成）。</p>
+
+<p>为了生成流畅的动画，你需要让浏览器尽可能少地工作，而最好的方式就是指改变影响合成的属性——transform 和 opacity。<strong>瀑布流<em>越高</em> ，浏览器为了计算每个像素，就<em>做的越多</em></strong>。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">这个建议是跨浏览器兼容的。 Chrome, Firefox, Safari 和 Opera 都对 transforms 和 opacity进行硬件加速。不幸的是，对于Internet Explorer 10+ 开启硬件加速的条件不是很明确，但值得庆幸的是当F12工具加入到IE11中的时候，这一点将变得清晰。</blockquote>
+
+<h2 id="toc-animating-layout-properties">对布局进行动画</h1>
+
+<p>当你改变一个元素的时候，浏览器可能需要计算布局（位置和大小），这将影响到所有被这项改变影响的元素。如果你改变了一个元素，那么其他元素的几何结构可能会需要重新计算。举个例子，如果你改变 <code>&lt;html&gt;</code>元素的width属性，那么它所有的子元素都将被影响。由于元素的溢出和相互之间的影响，改变可能导致文档树的布局自下而上地被重新计算。</p>
+
+<p>文档树越大，计算布局所花费的时间就越长。所以你应该尽力避免对那些影响布局的的属性设置动画。</p>
+
+<blockquote class="commentary talkinghead talkinghead-lewis">你是否用类来存储应用<html>或者<body> 元素的状态？当这些元素发生变化的时候，浏览器可能需要重新进行样式的计算和布局。在应用中，要注意那些可能忽略的会引起布局改变的变化；它们可能不会产生动画，当时它们将产生高昂的代价！</blockquote>
+
+<p>项目是一些常见的，会引起布局变化的属性<a href="http://goo.gl/lPVJY6">CSS属性</a>：</p>
+
+<p><strong>影响布局的样式</strong></p>
+
+<table class="code">
+  <tr><td>width</td><td>height</td></tr>
+  <tr><td>padding</td><td>margin</td></tr>
+  <tr><td>display</td><td>border-width</td></tr>
+  <tr><td>border</td><td>top</td></tr>
+  <tr><td>position</td><td>font-size</td></tr>
+  <tr><td>float</td><td>text-align</td></tr>
+  <tr><td>overflow-y</td><td>font-weight</td></tr>
+  <tr><td>overflow</td><td>left</td></tr>
+  <tr><td>font-family</td><td>line-height</td></tr>
+  <tr><td>vertical-align</td><td>right</td></tr>
+  <tr><td>clear</td><td>white-space</td></tr>
+  <tr><td>bottom</td><td>min-height</td></tr>
+</table>
+
+<p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
+
+<h2 id="toc-">绘图属性的动画</h1>
+
+<p>对一个元素的改变也可能引起绘图，而在现代浏览器中，主要的绘制工作会在软件光栅化中进行。这取决于元素在你的应用中如何分层。挨着被改变的元素<em>旁边</em>的其他元素也可能需要被重新绘制。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">如果你对布局和图层的概念不了解，推荐你阅读Tom Wiltzius的 <a href="http://www.html5rocks.com/en/tutorials/speed/layers/">introduction to the topic</a>.</blockquote>
+
+<p>有很多属性会引起元素的绘制，但以下这些是最常见的属性：</p>
+
+<h3>影响绘制的样式</h3>
+
+<table class="code">
+  <tr><td>color</td><td>border-style</td></tr>
+  <tr><td>visibility</td><td>background</td></tr>
+  <tr><td>text-decoration</td><td>background-image</td></tr>
+  <tr><td>background-position</td><td>background-repeat</td></tr>
+  <tr><td>outline-color</td><td>outline</td></tr>
+  <tr><td>outline-style</td><td>border-radius</td></tr>
+  <tr><td>outline-width</td><td>box-shadow</td></tr>
+  <tr><td>background-size</td><td></td></tr>
+</table>
+
+<p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
+
+<p>如果你在元素中对以上的属性设置动画，那么将会引起重绘，并且元素所属的图层将提交给GPU进行处理。对于移动端设备来说，这代价是非常昂贵的，因为它们的CPU的处理能力明显弱于桌面端。这意味着，任务将用更长的时间来完成；并且CPU和GPU之间的带宽是有限的，所以数据的上传需要花费很长的一段时间。</p>
+
+<h2 id="toc-composite-properties">合成属性的动画</h1>
+
+<p>有一个CSS属性，你可能认为它会引起重绘，但有时候并不会。就是：opacity. 当GPU在合成元素的纹理结构的时候，会以一个较低的alpha值去处理opacity的改变。它的条件是，元素必须是图层中<strong>唯一的一个元素</strong>。如果它和其它的元素组合在一起，那么对opacity的改变也会让GPU（错误地）淡化其它的元素。</p>
+
+<p>在Blink和WebKit内核的浏览器中，对于在CSS的transition或者animation中有opacity的改变的元素，将会为其创建一个图层。但也有很多开发者使用<code>translateZ(0)</code>或者<code>translate3d(0,0,0)</code>来人为地强制性地创建一个图层。 强制创建一个图层可以确保图层被绘制完毕并且可以在动画开始的时候，马上进入就绪状态。（创建并且绘制一个图层是一个不会有人反对的操作，并且它会延迟你的动画的开始），而且由于反锯齿的改变，动画中将不会出现唐突的变化。然而，需要有节制地增加图层；如果过分的增加图层，那么将会导致<a href="http://wesleyhales.com/blog/2013/10/26/Jank-Busting-Apples-Home-Page/">闪烁</a>。</p>
+
+<blockquote class="commentary talkinghead talkinghead-lewis">在Chrome浏览器中，没有根节点并且透明的图层中，使用<a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">灰度级平滑处理要胜于子像素抗锯齿</a>，这个方法的效果十分显著，特别是当抗锯齿的方法改变得很突然的时候。如果你想为一个元素增加图层，那么请在动画开始之前进行处理。</blockquote>
+
+<p>一个元素的变换，归结为改变它的位置，旋转角度和缩放。通常，位置的改变是使用<code>left</code>和<code>top</code>属性来改变的。问题是，如前面所述，<code>left</code>和<code>top</code>都会引起图层的变化，并且它的代价是昂贵的。更好的解决方案是使用不会引起图层变化的<code>translate</code>属性。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">在Chrome Canary和Safari中，你可以对filters设置动画，因为它们是用主进程来处理的所以它们会被加速完成，并且通常都会有良好的表现。但是目前filters不被Internet Explorer 或者 Firefox 支持，所以你需要谨慎地使用它。</blockquote>
+
+<h2 id="toc-imperative-declarative">命令式动画vs说明式动画</h1>
+
+<p>开发者常常需要决定它们的动画用JavaScript（命令式）来完成还是用CSS（说明式）来完成。它们各有优缺点，让我们一起来看看：</p>
+
+<h3>命令式</h3>
+
+<p>命令式动画主要的优点同时也是它主要的缺点的是：它在浏览器主进程的JavaScript中运行。主进程已经忙于运行其他的JavaScript，样式的计算，布局还有绘制。所以进程内存在这资源竞争。这实质上增加了掉帧的风险，可能这一帧是你认为最重要的帧。</p>
+
+<p>JavaScript中的动画可以为你提供更多的控制：开始，暂停，回放，中断和取消等细节。有一些特效如<a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">parallax</a> 的滚动只能用JavaScript来完成。</p>
+
+<h3>声明式</h3>
+
+<p>作为替代的方案，你可以用CSS来实现你的渐变和动画。最主要的好处就是，浏览器会对动画进行优化。如果有需要，它会创建图层。并且可以在主进程之外完成一些操作。它最主要的缺点就是CSS动画相对于Javascript动画而言，缺乏表现力。并且很难有意义地组织动画，这意味着创造动画会带来较高的复杂度和错误率。</p>
+
+<h2 id="toc-looking-to-the-future">展望未来</h1>
+
+<p>随着web标准的发展，一些关于动画的限制也将会被解决。来自Google的Ian Vollick有一个提案，就是允许<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">通过工作线程运行JavaScript动画</a>，并且不会引起布局的改变和样式的重新计算。</p>
+
+<p>对于动画规范的制定有兴趣的人，可以看一看<a href="http://dev.w3.org/fxtf/web-animations/">Web动画规范说明</a>，它正由<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">Jake Archibald广泛地征集意见</a>。</p>
+
+<h2 id="toc-conclusion">总结</h1>
+
+<p>更好地制作动画，对于优秀的web浏览体验来说是至关重要的。你需要一直注意避免使用那些会引起布局或者绘图改变的属性。他们都会都会产生高昂的代价和引起跳帧。由于浏览器有机会对动画进行优化，所以声明式的动画要优于命令式的动画。</p>
+
+<p>目前，transforms属性是用来制作动画最好的属性，因为GPU可以为繁重的计算工作提供协助。因此，如果你的动画能够限制为只使用下面这些属性来完成，那么就这么干吧。</p>
+
+<ul>
+<li>opacity</li>
+<li>translate</li>
+<li>rotate</li>
+<li>scale</li>
+</ul>
+
+<p>未来也许会有新的方法来制作动画，它可以让你像Javascript那样子表达但是不消耗主线程的资源；或者可以像CSS那样优化但是又没有那么多的限制。但是在那一天到来之前，好好地制作，让你的动画有流畅顺滑的体验。</p>
+
+<h2 id="toc-resources">资源</h1>
+
+<ul>
+<li><a href="http://www.chromestatus.com/metrics/css/animated">The current status of animated properties on the web</a>.</li>
+<li><a href="https://docs.google.com/a/google.com/presentation/d/19R_E5B__kdE55L1bTpS6IFKbYbHq-PQKKky4do5Yc6A/edit#slide=id.g105c64d69_170">Paul Irish’s deck on performance tooling</a>.</li>
+<li><a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">Antialiasing 101</a></li>
+<li><a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">We’re Gonna Need A Bigger API!</a></li>
+</ul>
+
+{% endblock %}

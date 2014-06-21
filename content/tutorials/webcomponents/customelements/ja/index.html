@@ -1,0 +1,710 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+/*blockquote:not(.talkinghead) {
+  background: rgb(238, 238, 238);
+  padding: 1px 15px;
+  position: relative;
+}
+blockquote:not(.talkinghead):before,
+blockquote:not(.talkinghead):after {
+  font-size: 75px;
+  position: absolute;
+  color: #ccc;
+}
+blockquote:not(.talkinghead):before {
+  content: '“';
+  top: -25px;
+  left: -15px;
+}
+blockquote:not(.talkinghead):after {
+  content: '”';
+  right: -5px;
+  bottom: -55px;
+}*/
+.talkinghead.singleline:before {
+  top: 5px !important;
+}
+button a {
+  color: inherit !important;
+}
+.centered {
+  text-align: center;
+}
+figure img {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+article.tutorial section {
+  overflow: visible;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+
+article.tutorial .notice.fact,
+article.tutorial .notice.tip {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before,
+article.tutorial .notice.tip:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+article.tutorial .notice.tip {
+  padding-left: 20px;
+}
+article.tutorial .notice.tip:before {
+  content: "Tip";
+  top: -5px;
+  left: -5px;
+}
+
+.tutorial table td,
+.tutorial table th {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.tutorial table th {
+  background: #222;
+  color: white;
+  padding: 10px;
+  font-weight: 600;
+}
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea {
+  margin-top: 20px;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Demos */
+app-panel {
+  display: flex;
+  display: -webkit-flex;
+}
+[is="x-item"] {
+  transition: opacity 400ms ease-in-out;
+  opacity: 0.3;
+  background: rgb(255, 0, 255);
+  color: white;
+  flex: 1;
+  -webkit-flex: 1;
+  text-align: center;
+  border-radius: 50%;
+}
+[is="x-item"]:hover {
+  opacity: 1.0;
+}
+app-panel > [is="x-item"] {
+  padding: 5px;
+  list-style: none;
+  margin: 0 7px;
+}
+
+/* apply a dashed border to all unresolved elements */
+x-panel:unresolved {
+  border: 1px dashed red;
+  display: inline-block;
+}
+/* x-panel's that are unresolved are red */
+x-panel:unresolved {
+  color: red;
+}
+/* once the definition of x-panel is registered, it becomes green */
+x-panel {
+  color: green;
+  display: block;
+  padding: 5px;
+}
+
+.kbd {
+  padding: 0.1em 0.6em;
+  border: 1px solid rgb(204, 204, 204);
+  font-size: 11px;
+  font-family: Arial,Helvetica,sans-serif;
+  background-color: rgb(247, 247, 247);
+  color: rgb(51, 51, 51);
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2),0 0 0 2px rgb(255, 255, 255) inset;
+  border-radius: 3px;
+  display: inline-block;
+  margin: 0 0.1em;
+  text-shadow: 0 1px 0 rgb(255, 255, 255);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return 'registerElement' in document;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<p class="notice warning" style="text-align:center">
+この記事では、まだ完全に標準化されていない API について述べています。実験的な API を利用する際は、十分ご注意下さい。
+</p>
+
+<h2 id="intro">はじめに</h2>
+
+<p>ウェブには表現力がもっと必要です。この意味を知るには、Gmail のような「モダンな」ウェブアプリを見てみればわかるでしょう：</p>
+<figure>
+  <a href="gmail.png"><img src="gmail.png" style="max-width:75%"></a>
+  <figcaption><code>&lt;div></code> だらけのモダンなウェブアプリ</figcpation>
+</figure>
+
+<p><code>&lt;div&gt;</code> だらけでモダンと言えるでしょうか？そして現状では、これが我々のウェブアプリの作り方なのです。悲しいですね。
+我々はウェブプラットフォームからの恩恵をもっと受けるべきだとは思いませんか？</p>
+<h3 id="meaningful">もっとセクシーなマークアップを！</h3>
+
+<p>HTML はドキュメントを構成するツールとしてはこの上ないものです。しかしそのボキャブラリーは <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/">HTML 標準</a> が定義する要素に限定されてます。</p>
+<p>Gmail のマークアップが仮にこんな感じだったらどうでしょう？：</p>
+<pre class="prettyprint"><code>&lt;hangout-module&gt;
+  &lt;hangout-chat from="Paul, Addy"&gt;
+    &lt;hangout-discussion&gt;
+      &lt;hangout-message from="Paul" profile="profile.png"
+          profile="118075919496626375791" datetime="2013-07-17T12:02"&gt;
+        &lt;p&gt;Feelin' this Web Components thing.&lt;/p&gt;
+        &lt;p&gt;Heard of it?&lt;/p&gt;
+      &lt;/hangout-message&gt;
+    &lt;/hangout-discussion&gt;
+  &lt;/hangout-chat&gt;
+  &lt;hangout-chat&gt;...&lt;/hangout-chat&gt;
+&lt;/hangout-module&gt;
+</code></pre>
+<p class="centered">
+  <button><a href="https://html5-demos.appspot.com/hangouts">デモを試す</a></button>
+</p>
+
+<p>素晴らしいでしょう？このアプリはもちろん意味を持っています。<strong>意味を持っている</strong>し、<strong>理解しやすい</strong> はずです。
+そして何よりも、<strong>メンテナンスが容易</strong> なのです。将来的には、宣言的な仕組みを調査するだけで、何をしているか理解できるようになるでしょう。</p>
+<h2 id="gettingstarted">Getting started</h2>
+
+<p><a href="http://w3c.github.io/webcomponents/spec/custom/">Custom Elements</a> によって、開発者は <strong>新しい型の HTML 要素を作る</strong> ことができるようになります。仕様は <a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> が提唱する一連の API 仕様のひとつですが、最も重要なものと言えます。Web Components は Custom Elements で利用可能になる機能なしには存在し得ないのです：</p>
+<ol>
+<li>新しい HTML/DOM 要素を定義する</li>
+<li>他の要素を継承した要素を作り出す</li>
+<li>論理的にひとつのタグにカスタマイズされた機能をバンドルする</li>
+<li>既存の DOM 要素の API を拡張する</li>
+</ol>
+<h3 id="registering">新しい要素を登録する</h3>
+
+<p>Custom Element は <code>document.registerElement()</code> を使って作ることができます：</p>
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo');
+document.body.appendChild(new XFoo());
+</code></pre>
+<p>最初の引数は要素のタグ名です。名前には <strong>ダッシュ (-) を含む必要があります</strong> 。例えば <code>&lt;x-tags&gt;</code>、<code>&lt;my-element&gt;</code>、<code>&lt;my-awesome-app&gt;</code> はすべて許可された名前ですが、<code>&lt;tabs&gt;</code> や <code>&lt;foo_bar&gt;</code> は許可されません。この制限により、パーサーは通常の要素と Custom Element を区別することができ、将来的に HTML に新しい要素が追加された際の互換性も保証してくれます。</p>
+<p>ふたつめの引数はオプションとなるオブジェクトで、要素の <code>prototype</code> を記述します。これはあなたの要素にカスタム機能 (プロパティやメソッド) を追加するための場所でもあります。詳しくは <a href="#publicapi">後ほど</a> 触れます。</p>
+<p>デフォルトでは、Custom Element は <code>HTMLElement</code> を継承します。そのため、先ほどの例は下記と同等になります：</p>
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
+  prototype: Object.create(HTMLElement.prototype)
+});
+</code></pre>
+<p><code>document.registerElement('x-foo')</code> を呼び出すと、ブラウザは新しい要素を認識し、<code>&lt;x-foo&gt;</code> のインスタンスを作ることができるコンストラクタを返します。
+コンストラクタを使いたくなければ、<a href="#instantiating">他の方法</a> を使って要素のインスタンス化することもできます。</p>
+<p class="notice tip">グローバルな <code>window</code> オブジェクトを汚染したくない場合は、名前空間 (<code>var myapp = {}; myapp.XFoo = document.registerElement('x-foo');</code>) を使って下さい。</p>
+
+<h3 id="extending">ネイティブ要素を拡張する</h3>
+
+<p>ごく普通の <code>&lt;button&gt;</code> に不満があったとしましょう。そしてそれを "Mega Button" に拡張したいとします。<code>&lt;button&gt;</code> 要素を拡張するには、<code>HTMLButtonElement</code> の <code>prototype</code> を継承した新しい要素を作ります：</p>
+<pre class="prettyprint"><code>var MegaButton = document.registerElement('mega-button', {
+  prototype: Object.create(HTMLButtonElement.prototype)
+});
+</code></pre>
+<p class="notice fact">
+<b>要素 A</b> を拡張した <b>要素 B</b> を作るには、<b>要素 A</b> は <b>要素 B</b> の <code>prototype</code> を継承しなければなりません。</p>
+
+<p>こういった Custom Elements は <em>型拡張 Custom Element</em> と呼ばれ、"要素 X は Y である" と宣言するため、<code>HTMLElement</code> の特別版を継承します。</p>
+<p>例：</p>
+<pre class="prettyprint"><code>&lt;button is="mega-button"&gt;
+</code></pre>
+<h3 id="upgrades">どのようにして要素はアップグレードされるのか</h3>
+
+<p>HTML パーサーがなぜ非標準のタグに対して例外を投げないか不思議に思ったことはありませんか？ <code>&lt;randomtag&gt;</code> というタグをページに埋め込んでも、特に文句は言われません。<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#htmlunknownelement">HTML 仕様</a> によると：</p>
+<blockquote>
+  この仕様で定義されていない HTML 要素に対しては <code>HTMLUnknownElement</code> インターフェースを使わなければならない。
+  <cite>HTML 仕様</cite>
+</blockquote>
+
+<p>ごめん、<code>&lt;randomtag&gt;</code>！君は標準じゃないので <code>HTMLUnknownElement</code> から継承されるんだ。</p>
+<p>Custom Elements について同じことは言えません。 <strong>正当な名前が与えられた Custom Elements は <code>HTMLElement</code> から継承されます。</strong> Console を使うことでこれを確認できます：<span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">J</span> (Mac の場合 <span class="kbd">Cmd</span>+<span class="kbd">Opt</span>+<span class="kbd">J</span>) をし、下記のコードをペーストすると、<code>true</code> を返します。</p>
+<pre class="prettyprint"><code>// "tabs" は正当な Custom Element 名ではありません
+document.createElement('tabs').__proto__ === HTMLUnknownElement.prototype
+
+// "x-tabs" は正当な Custom Element 名です
+document.createElement('x-tabs').__proto__ == HTMLElement.prototype
+</code></pre>
+<p class="notice fact"><code>document.registerElement()</code> をサポートしないブラウザでは、<code>&lt;x-tabs></code> は <code>HTMLUnknownElement</code> を返します。</p>
+
+<h4 id="unresolvedels">未解決の要素</h4>
+
+<p>Custom Elements はスクリプト <code>document.registerElement()</code> によって登録されるため、ブラウザによって <strong>定義が登録される前に宣言したり、生成したりすることができます。</strong> 例えば <code>&lt;x-tabs&gt;</code> を宣言したとしても、<code>document.registerElement('x-tabs')</code> を呼び出すのはずっと後でも構わないのです。</p>
+<p>要素は定義の通りにアップグレードされるまでの間、 <strong>未解決の要素</strong> と呼ばれます。これらの HTML 要素は正当な Custom Element 名を持ちますが、まだ登録されていないものです。</p>
+<p>一覧表にまとめてみましょう：</p>
+<table>
+  <thead><tr><th>名前</th><th>継承元</th><th>例</th></tr></thead>
+  <tr><td>未解決要素</td><td><code>HTMLElement</code></td><td><code>&lt;x-tabs></code>, <code>&lt;my-element></code>, <code>&lt;my-awesome-app></code></td></tr>
+  <tr><td>未知の要素</td><td><code>HTMLUnknownElement</code></td><td><code>&lt;tabs></code>, <code>&lt;foo_bar></code>
+</td></tr>
+</table>
+
+<blockquote class="commentary talkinghead">未解決の要素はどっちつかずの状態と思って下さい。ブラウザが後からアップグレードする候補です。「新しい要素になるための素質は十分ある。定義さえくれればアップグレードすると約束しよう。」とブラウザが言っているのです。</blockquote>
+
+<h2 id="instantiating">要素をインスタンス化する</h2>
+
+<p>要素を作る際のテクニックがそのまま Custom Element にも当てはまります。他の標準要素と同様、HTML で宣言したり、JavaScript を使って DOM として生成することもできます。</p>
+<h3 id="usecustomtag">カスタムタグをインスタンス化する</h3>
+
+<p><strong>宣言する</strong>：</p>
+<pre class="prettyprint"><code>&lt;x-foo&gt;&lt;/x-foo&gt;
+</code></pre>
+<p>JavaScript で <strong>DOM を生成する</strong>：</p>
+<pre class="prettyprint"><code>var xFoo = document.createElement('x-foo');
+xFoo.addEventListener('click', function(e) {
+  alert('Thanks!');
+});
+</code></pre>
+<p><strong><code>new</code> オペレーター</strong> を使う：</p>
+<pre class="prettyprint"><code>var xFoo = new XFoo();
+document.body.appendChild(xFoo);
+</code></pre>
+<h3 id="usetypeextension">型拡張要素をインスタンス化する</h3>
+
+<p>型拡張型の Custom Elements のインスタンス化は 通常の カスタムタグの場合にそっくりです。</p>
+<p><strong>宣言する</strong>：</p>
+<pre class="prettyprint"><code>&lt;!-- &lt;button&gt; "is a" mega button --&gt;
+&lt;button is="mega-button"&gt;
+</code></pre>
+<p>JavaScript で <strong>DOM を生成する</strong>：</p>
+<pre class="prettyprint"><code>var megaButton = document.createElement('button', 'mega-button');
+// megaButton instanceof MegaButton === true
+</code></pre>
+<p>見ての通り、<code>is=""</code> を第二引数に取る <code>document.createElement()</code> のオーバーロード版があります。</p>
+<p><strong><code>new</code> オペレーター</strong> を使う：</p>
+<pre class="prettyprint"><code>var megaButton = new MegaButton();
+document.body.appendChild(megaButton);
+</code></pre>
+<p>ここまでブラウザに新しいタグを教えるための <code>document.registerElement()</code> について説明してきましたが、まだできることはそれほど多くありません。プロパティとメソッドの追加方法についても見て行きましょう。</p>
+<h2 id="publicapi">JavaScript プロパティとメソッドの追加</h2>
+
+<p>Custom Elements のパワフルなところは、要素にプロパティやメソッドを定義することで、一連の機能を付加することができるところです。あなたの要素に公開 API が追加できると考えて下さい。</p>
+<p>例を挙げてみましょう：</p>
+<pre class="prettyprint"><code>var XFooProto = Object.create(HTMLElement.prototype);
+
+// 1.x-foo に foo() メソッドを追加
+XFooProto.foo = function() {
+  alert('foo() called');
+};
+
+// 2. 読み込み専用のプロパティ "bar" を定義
+Object.defineProperty(XFooProto, "bar", {value: 5});
+
+// 3. x-foo の定義を登録
+var XFoo = document.registerElement('x-foo', {prototype: XFooProto});
+
+// 4. x-foo をインスタンス化
+var xfoo = document.createElement('x-foo');
+
+// 5. ページに追加
+document.body.appendChild(xfoo);
+</code></pre>
+<p>もちろん <code>prototype</code> をコンストラクトするには無数の方法が存在します。こちらは同じことをもっと短いコードで実現しているサンプルです：</p>
+<pre class="prettyprint"><code>var XFoo = document.registerElement('x-foo', {
+  prototype: Object.create(HTMLElement.prototype, {
+    bar: {
+      get: function() { return 5; }
+    },
+    foo: {
+      value: function() {
+        alert('foo() called');
+      }
+    }
+  })
+});
+</code></pre>
+<p>最初のやり方は ES5 の <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty"><code>Object.defineProperty</code></a> を使っています。二番目のやり方は <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/get">get/set</a> を使っています。</p>
+<h3 id="lifecycle">ライフサイクルコールバックメソッド</h3>
+
+<p>Custom Elements では絶妙なタイミングで特別なメソッドを呼び出すことができます。これらのメソッドは <strong>ライフサイクルコールバック</strong> と呼ばれ、それぞれに特別な名前と目的があります：</p>
+<table class="table">
+  <thead>
+    <tr>
+      <th>コールバック名</th>
+      <th>呼び出されるタイミング</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>createdCallback</td>
+      <td>要素のインスタンスが作られた時</td>
+    </tr>
+    <tr>
+      <td>attachedCallback</td>
+      <td>インスタンスがドキュメントに追加された時</td>
+    </tr>
+    <tr>
+      <td>detachedCallback</td>
+      <td>インスタンスがドキュメントから取り除かれた時</td>
+    </tr>
+    <tr>
+      <td>attributeChangedCallback(attrName, oldVal, newVal)</td>
+      <td>属性が追加、削除、更新された時</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>例：</strong> <code>&lt;x-foo&gt;</code> の <code>createdCallback()</code> と <code>attachedCallback()</code> を定義する：</p>
+<pre class="prettyprint"><code>var proto = Object.create(HTMLElement.prototype);
+
+proto.createdCallback = function() {...};
+proto.attachedCallback = function() {...};
+
+var XFoo = document.registerElement('x-foo', {prototype: proto});
+</code></pre>
+<p><strong>ライフサイクルコールバックはすべてオプションです</strong> が、意味があると思ったら定義しましょう。例えば、あなたの要素が <code>createdCallback()</code> 内で IndexedDB に対してコネクションを張る場合が考えられます。DOM から取り除かれる直前に、<code>detachedCallback()</code> 内でクリーンアップ作業を行う必要もあります。<strong>注意：</strong> ユーザーがいきなりタブを閉じてしまうケースもあるので、これに頼りきってはいけません。あくまで最適化のひとつと考えて下さい。</p>
+<p>もうひとつ挙げられる例は、要素に対するイベントリスナーの設定です：</p>
+<pre class="prettyprint"><code>proto.createdCallback = function() {
+  this.addEventListener('click', function(e) {
+    alert('Thanks!');
+  });
+};
+</code></pre>
+<blockquote class="commentary talkinghead">遅い要素は使ってもらえません。ライフサイクルコールバックを使って最適化を進めましょう！</blockquote>
+
+<h2 id="addingmarkup">マークアップを追加する</h2>
+
+<p><code>&lt;x-foo&gt;</code> を作り、JavaScript API を追加しましたが、まだ要素は空です。中に HTML を追加してみましょう。</p>
+<p>ここで <a href="#lifecycle">ライフサイクルコールバック</a> が役立ちます。<code>createdCallback()</code> を使ってデフォルトとなる HTML を追加してみます。</p>
+<pre class="prettyprint"><code>var XFooProto = Object.create(HTMLElement.prototype);
+
+XFooProto.createdCallback = function() {
+  this.innerHTML = "&lt;b&gt;I'm an x-foo-with-markup!&lt;/b&gt;";
+};
+
+var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
+</code></pre>
+<div class="demoarea">
+  <x-foo-with-markup></x-foo-with-markup>
+</div>
+
+<p>このタグをインスタンス化し、DevTools (右クリックし、Inspect Element を選択) でインスペクトしてみると下記のようなものが見えるはずです：</p>
+<pre class="prettyprint"><code>▾&lt;x-foo-with-markup&gt;
+   &lt;b&gt;I'm an x-foo-with-markup!&lt;/b&gt;
+ &lt;/x-foo-with-markup&gt;
+</code></pre>
+<h3 id="shadowdom">内部を Shadow DOM でカプセル化する</h3>
+
+<p><a href="/tutorials/webcomponents/shadowdom/">Shadow DOM</a> はそれ自体、カプセル化を行うためのパワフルなツールです。Custom Element と組み合わせて使うことで、魔法のような力を発揮することができます！</p>
+<p>Shadow DOM と合わせて使うことで Custom Elements は：</p>
+<ol>
+<li>内部構造を隠蔽し、複雑な実装を見せなくすることができます。</li>
+<li><a href="/tutorials/webcomponents/shadowdom-201/">Style のカプセル化</a> を手軽に実現できます。</li>
+</ol>
+<p>Shadow DOM から要素を作り出すのは、基本的なマークアップをレンダリングするのに似ています。違いは <code>createdCallback()</code> にあります：</p>
+<pre class="prettyprint"><code>var XFooProto = Object.create(HTMLElement.prototype);
+
+XFooProto.createdCallback = function() {
+  // 1. shadow root を要素に追加
+  var shadow = this.createShadowRoot();
+
+  // 2. それをマークアップで埋める
+  shadow.innerHTML = "&lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;";
+};
+
+var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
+</code></pre>
+<div class="demoarea">
+  <x-foo-shadowdom></x-foo-shadowdom>
+</div>
+
+<p>要素の <code>innerHTML</code> を設定する代わりに、Shadow Root を作り、それをマークアップで埋めました。
+DevTools の "Show Shadow DOM" 設定を enabled にすることで、<code>#shadow-root</code> を展開して見ることができます：</p>
+<pre class="prettyprint"><code>▾&lt;x-foo-shadowdom&gt;
+   ▾#shadow-root
+     &lt;b&gt;I'm in the element's Shadow DOM!&lt;/b&gt;
+ &lt;/x-foo-shadowdom&gt;
+</code></pre>
+<p>これが Shadow Root です！</p>
+<h3 id="fromtemplate">テンプレートから要素を作る</h3>
+
+<p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#the-template-element">HTML Templates</a> は Custom Elements の世界にぴったりの、もうひとつの新しい API です。</p>
+<p><a href="/tutorials/webcomponents/template/"><code>&lt;template&gt;</code> 要素</a> はパースされ、ページロードと同時に有効になり、ランタイム中にインスタンス化される DOM フラグメントを宣言することができます。Custom Element の構造を宣言するのにぴったりのプレースホルダーだと思いませんか？</p>
+<p><strong>例：</strong> <code>&lt;template&gt;</code> と Shadow DOM から作った要素を登録する：</p>
+<pre class="prettyprint"><code>&lt;template id="sdtemplate"&gt;
+  &lt;style&gt;
+    p { color: orange; }
+  &lt;/style&gt;
+  &lt;p&gt;I'm in Shadow DOM. My markup was stamped from a &amp;lt;template&amp;gt;.&lt;/p&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+var proto = Object.create(HTMLElement.prototype, {
+  createdCallback: {
+    value: function() {
+      var t = document.querySelector('#sdtemplate');
+      var clone = document.importNode(t.content, true);
+      this.createShadowRoot().appendChild(clone);
+    }
+  }
+});
+document.registerElement('x-foo-from-template', {prototype: proto});
+&lt;/script&gt;
+</code></pre>
+<p><template id="sdtemplate">
+  <style>x-foo-from-template p { color: orange; }</style>
+  <p>I'm in Shadow DOM. My markup was stamped from a &lt;template&gt;.</p>
+</template></p>
+<div class="demoarea">
+  <x-foo-from-template></x-foo-from-template>
+</div>
+
+<p>たった数行のコードですが、この中には色んなモノが詰まっています。ここで行われていることを解説してみましょう：</p>
+<ol>
+<li>HTML に新しい要素 <code>&lt;x-foo-from-template&gt;</code> を登録</li>
+<li>その要素の DOM は <code>&lt;template&gt;</code> から生成</li>
+<li>その要素の中身は Shadow DOM で隠蔽</li>
+<li>Shadow DOM により要素のスタイルはカプセル化されている (<code>p {color: orange;}</code> はページ全体を <span style="color: orange;">オレンジ</span> にしない)</li>
+</ol>
+<p>どうですか？</p>
+<h2 id="styling">Custom Element にスタイルを付与する</h2>
+
+<p>他の HTML タグ同様、あなたの Custom Element ユーザーはセレクターを使ってスタイルを割り当てることができます：</p>
+<pre class="prettyprint"><code>&lt;style&gt;
+  app-panel {
+    display: flex;
+  }
+  [is="x-item"] {
+    transition: opacity 400ms ease-in-out;
+    opacity: 0.3;
+    flex: 1;
+    text-align: center;
+    border-radius: 50%;
+  }
+  [is="x-item"]:hover {
+    opacity: 1.0;
+    background: rgb(255, 0, 255);
+    color: white;
+  }
+  app-panel &gt; [is="x-item"] {
+    padding: 5px;
+    list-style: none;
+    margin: 0 7px;
+  }
+&lt;/style&gt;
+
+&lt;app-panel&gt;
+  &lt;li is="x-item"&gt;Do&lt;/li&gt;
+  &lt;li is="x-item"&gt;Re&lt;/li&gt;
+  &lt;li is="x-item"&gt;Mi&lt;/li&gt;
+&lt;/app-panel&gt;
+</code></pre>
+<div class="demoarea" style="width:300px;">
+
+<app-panel>
+  <li is="x-item">Do</li>
+  <li is="x-item">Re</li>
+  <li is="x-item">Mi</li>
+</app-panel>
+</div>
+
+<h3 id="styling">Shadow DOM を使った要素にスタイルを付与する</h3>
+
+<p>Shadow DOM を持ち込むことで、うさぎの穴は更に深くなっていきます。<a href="#shadowdom">Shadow DOM を使った Custom Elements</a> は恩恵も継承します。</p>
+<p>Shadow DOM はスタイルのカプセル化の恩恵をもたらします。Shadow Root で定義されたスタイルはホストから漏れることはなく、ページから漏れてくることもありません。<strong>Custom Element の場合、要素自体がホストとなります。</strong> Custom Elements は、カプセル化されたスタイルのプロパティのおかげで、デフォルトスタイルを定義することができます。</p>
+<p>Shadow DOM のスタイルは複雑です！もっと詳しく知りたければ、私の書いた他の記事をおすすめします：</p>
+<ul>
+<li><a href="http://www.polymer-project.org">Polymer</a> のドキュメントから "<a href="http://www.polymer-project.org/articles/styling-elements.html">A Guide to Styling Elements</a>"</li>
+<li>html5rocks.com の "<a href="/tutorials/webcomponents/shadowdom-201/">Shadow DOM 201: CSS &amp; Styling</a>"</li>
+</ul>
+<h3 id="fouc">:unresolved を使って FOUC を防ぐ</h3>
+
+<p><a href="http://en.wikipedia.org/wiki/Flash_of_unstyled_content">FOUC (Flash of unstyled content: スタイルが与えられていないコンテンツによる明滅)</a> をなくすため、Custom Elements 仕様では、新しい CSS 擬似クラスである <code>:unresolved</code> を定義しています。<code>createdCallback()</code> が呼び出されるまでの、<a href="#unresolvedels">未解決の要素</a> に使って下さい (<a href="#lifecycle">ライフサイクルメソッド参照</a>)。一度解決すれば、要素はもう未解決ではなくなります。アップグレードプロセスが完了し、要素は定義された状態に変わります。</p>
+<p class="notice">CSS <code>:unresolved</code> は Chrome 29 からサポートされています。</p>
+
+<p><strong>例：</strong> 登録されるとフェードインする "x-foo" タグ：</p>
+<pre class="prettyprint"><code>&lt;style&gt;
+  x-foo {
+    opacity: 1;
+    transition: opacity 300ms;
+  }
+  x-foo:unresolved {
+    opacity: 0;
+  }
+&lt;/style&gt;
+</code></pre>
+<p><code>:unresolved</code> は <a href="#unresolvedels">未解決の要素</a> にのみ適用され、 <code>HTMLUnknownElement</code> (<a href="#upgrades">要素のアップグレードについて</a> 参照) から継承された要素には適用されないことに注意して下さい。</p>
+<pre class="prettyprint"><code>&lt;style&gt;
+  /* すべての未解決の要素に破線を適用 */
+  :unresolved {
+    border: 1px dashed red;
+    display: inline-block;
+  }
+  /* 未解決の x-panel は赤 */
+  x-panel:unresolved {
+    color: red;
+  }
+  /* x-panel の定義が登録されると緑に変わる */
+  x-panel {
+    color: green;
+    display: block;
+    padding: 5px;
+    display: block;
+  }
+&lt;/style&gt;
+
+&lt;panel&gt;
+  I'm black because :unresolved doesn't apply to "panel".
+  It's not a valid custom element name.
+&lt;/panel&gt;
+
+&lt;x-panel&gt;I'm red because I match x-panel:unresolved.&lt;/x-panel&gt;
+</code></pre>
+<div class="demoarea">
+  <panel>I'm black because :unresolved doesn't apply to "panel". It's not a valid custom element name.</panel>
+  <x-panel>I'm red because I match x-panel:unresolved.</x-panel>
+  <p><button id="register-x-panel">Register &lt;x-panel></button></p>
+</div>
+
+<p><code>:unresolved</code> についてより詳しく知るには、Polymer の <a href="http://www.polymer-project.org/articles/styling-elements.html#preventing-fouc">A Guide to styling elements</a> をご覧下さい。</p>
+<h2 id="historysupport">歴史とブラウザーサポート状況</h2>
+
+<h3 id="featuredetect">機能検知</h3>
+
+<p>機能検知は <code>document.registerElement()</code> の存在をチェックするだけです：</p>
+<pre class="prettyprint"><code>function supportsCustomElements() {
+  return 'registerElement' in document;
+}
+
+if (supportsCustomElements()) {
+  // Good to go!
+} else {
+  // Use other libraries to create components.
+}
+</code></pre>
+<h3 id="support">ブラウザーサポート状況</h3>
+
+<p><code>document.registerElement()</code> は Chrome 27 と Firefox ~23 でフラグ付きで実装されました。しかし、その後仕様が大きく変更したため、Chrome 31 が最新の仕様に対応した最初のブラウザーということになります。</p>
+<p class="notice fact">Custom Elements は Chrome 31 で <code>about:flags</code> の "Experimental Web Platform features" フラグをオンにすることで利用できます。</p>
+
+<p>ブラウザーサポートがよくなるまでの間使うことができる Polyfill がいくつかあります：</p>
+<ul>
+<li>Google の <a href="http://polymer-project.org">Polymer</a> の <a href="http://www.polymer-project.org/platform/custom-elements.html">polyfill</a></li>
+<li>Mozilla の <a href="http://www.x-tags.org/">x-tags</a></li>
+</ul>
+<h3 id="elementel">HTMLElementElement はどうなったの？</h3>
+
+<p>標準化を追いかけてきた人ならば、<code>&lt;element&gt;</code> という仕様が存在していたことをご存知のはずです。これは新しい要素を宣言的に定義できる素晴らしいものでした：</p>
+<pre class="prettyprint"><code>&lt;element name="my-element"&gt;
+  ...
+&lt;/element&gt;
+</code></pre>
+<p>残念なことに、<a href="#upgrades">アップグレードプロセス</a> などで対処すべき問題が多過ぎたため、2013 年 8 月、Dimitri Glazkov が、少なくともしばらくは <code>&lt;element&gt;</code> を仕様から取り除くことを <a href="http://lists.w3.org/Archives/Public/public-webapps/2013JulSep/0287.html">public-webapps</a> のメーリングリストで宣言しました。</p>
+<p>Polymer では <code>&lt;polymer-element&gt;</code> を使うことで、宣言的に要素を登録する方法を実装しています。どうやって？ <code>document.registerElement('polymer-element')</code> と <a href="#fromtemplate">テンプレートから要素を作る</a> で述べたテクニックを使っています。</p>
+<h2 id="conclusion">最後に</h2>
+
+<p>Custom Elements は HTML のボキャブラリーを拡張し、新しいトリックや、ウェブプラットフォームの虫食い穴を飛び越えるためのツールを提供してくれます。これを Shadow DOM や <code>&lt;template&gt;</code> と組み合わせて使うことで、Web Components の絵が見えてきます。マークアップはまたセクシーになるのです！</p>
+<p>Web Components について調べてみたいと思った方は、ぜひ <a href="http://polymer-project.org">Polymer</a> をご覧下さい。期待以上のものが待ってるはずですよ！</p>
+<script>
+if ('registerElement' in document) {
+  (function() {
+    if ('registerElement' in document) {
+      var XFooProto = Object.create(HTMLElement.prototype);
+
+      XFooProto.createdCallback = function() {
+        this.innerHTML = "<b>I'm an x-foo-with-markup!</b>";
+      };
+
+      var XFoo = document.registerElement('x-foo-with-markup', {prototype: XFooProto});
+    }
+  })();
+
+  (function() {
+    document.querySelector('#register-x-panel').addEventListener('click', function(e) {
+      var XFoo = document.registerElement('x-panel', {prototype: Object.create(HTMLElement.prototype)});
+      document.querySelector('x-panel').textContent = "x-panel is registered!";
+    });
+  })();
+}
+
+if ('createShadowRoot' in document.body && 'registerElement' in document) {
+
+(function() {
+    var XFooProto = Object.create(HTMLElement.prototype);
+
+    XFooProto.createdCallback = function() {
+      var shadow = this.createShadowRoot();
+      shadow.innerHTML = "<b>I'm in the element's Shadow DOM!</b>";
+    };
+
+    var XFoo = document.registerElement('x-foo-shadowdom', {prototype: XFooProto});
+})();
+
+(function() {
+  var proto = Object.create(HTMLElement.prototype, {
+    createdCallback: {
+      value: function() {
+        var t = document.querySelector('#sdtemplate');
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
+      }
+    }
+  });
+  document.registerElement('x-foo-from-template', {prototype: proto});
+})();
+
+}
+</script><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+  }
+});
+</script>
+{% endblock %}

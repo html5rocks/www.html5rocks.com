@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 <h2 id="intro">Introduction</h2>
 
 The web severely lacks expression. To see what I mean, take a peek at a "modern" web app like GMail:
@@ -516,7 +514,7 @@ complete and the element has transformed into its definition.
     </style>
 
 Keep in mind that `:unresolved` only applies to [unresolved elements](#unresolvedels),
-not to elements that inherit from `HTMLUnkownElement` (see [How elements are upgraded](#upgrades)).
+not to elements that inherit from `HTMLUnknownElement` (see [How elements are upgraded](#upgrades)).
 
     <style>
       /* apply a dashed border to all unresolved elements */
@@ -576,10 +574,7 @@ true support for the updated spec.
 
 <p class="notice fact">Custom elements can be enabled in Chrome 31 under "Experimental Web Platform features" in <code>about:flags</code>.</p>
 
-Until browser support is stellar, there are a couple of great polyfills:
-
-- Google's [Polymer](http://polymer-project.org) has a [polyfill](http://www.polymer-project.org/platform/custom-elements.html)
-- Mozilla's [x-tags](http://www.x-tags.org/)
+Until browser support is stellar, there's a [polyfill](http://www.polymer-project.org/platform/custom-elements.html) which is used by Google's [Polymer](http://polymer-project.org) and Mozilla's [X-Tag](http://www.x-tags.org/).
 
 <h3 id="elementel">What happened to HTMLElementElement?</h3>
 

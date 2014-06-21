@@ -306,23 +306,23 @@ but loosened for custom pseudo element definitions.
 想象一下，当一个自定义元素的作者在 Shadow DOM 中标记出变量的占位符。其中一个用于样式化内部按钮的字体，另一个用于样式化它的颜色：
 
     button {
-      color: {% mixin var(button-text-color, pink) %} /* default color will be pink */
-      font: {% mixin var(button-font) %}
+      color: var(--button-text-color, pink); /* default color will be pink */
+      font-family: var(--button-font);
     }
 
 然后，元素的使用者按照自己的喜好定义了这些值。很可能是为了和他自己页面中非常酷的漫画字体主题(Comic Sans theme)相搭配： 
 
     #host {
-      {% mixin var-button-text-color: green %}
-      {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+      --button-text-color: green;
+      --button-font: "Comic Sans MS", "Comic Sans", cursive;
     }
 
 由于 CSS 变量的这种继承方式，使得这些工作完成的很出色！完整的代码如下：
 
     <style>
       #host {
-        {% mixin var-button-text-color: green %}
-        {% mixin var-button-font: "Comic Sans MS", "Comic Sans", cursive %}
+        --button-text-color: green;
+        --button-font: "Comic Sans MS", "Comic Sans", cursive;
       }
     </style>
     <div id="host">Host node</div>
@@ -330,8 +330,8 @@ but loosened for custom pseudo element definitions.
     var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<style>' +
         'button {' +
-          'color: {% mixin var(button-text-color, pink) %}' +
-          'font: {% mixin var(button-font) %}' +
+          'color: var(--button-text-color, pink);' +
+          'font-family: var(--button-font);' +
         '}' +
         '</style>' +
         '<content></content>';

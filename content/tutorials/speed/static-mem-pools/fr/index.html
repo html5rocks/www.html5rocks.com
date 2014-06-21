@@ -1,0 +1,191 @@
+
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/coltmcanlis.75.png);
+  background-position: 0px 0px !important;
+}
+.talkinghead-rm:before {
+  background-image: url(/static/images/profiles/75/renatomangini.75.png);
+  background-position: 0px 0px !important;
+}
+.tutorial section {
+  overflow: visible;
+}
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+
+{% block content %}
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>Vous recevez un e-mail disant que votre jeu/application web se comporte mal au bout d'un certain temps, vous cherchez dans votre code, ne remarquez rien de particulier, jusqu'à ce que vous ouvriez les outils de performance mémoire de Chrome, et que vous voyiez ça :
+</p>
+<center><img src="fig1.jpg"  title="Un aperçu de votre mémoire dans le temps" alt="Je me demande ce que sont ces dents de scie ?"></center>
+<p>
+
+<i>Un de vos collègues glousse parce qu'il comprend que vous avez un problème de performance lié à la gestion de la mémoire.</i><br><br>
+
+Dans le graphique représentant la mémoire, ce motif en dents de scie est très représentatif d'un potentiel problème critique de performance. Tant que votre utilisation mémoire grandit, la zone du graphique grossit aussi dans le temps. Lorsque la courbe plonge soudainement, c'est que le ramasse-miettes est passé et a nettoyé vos objets référencés en mémoire.
+</p>
+<center><img src="fig2.jpg" title="Ce que les dents de scie signifient" alt="Jetez un oeil à tous ces événements du ramasse-miettes !"></center>
+<p>
+  Dans un graphique comme ça, vous pouvez voir qu'il y a beaucoup d'événements dus au ramasse-miettes, ce qui peut être nuisible aux performance de votre application web. Cet article vous montrera comment reprendre le contrôle sur votre utilisation mémoire et réduire l'impact sur les performances.
+</p>
+
+<h2 id="toc-gcperf">Ramasse-miettes et coûts en performance</h2>
+<p>
+  Le <a href="http://en.wikipedia.org/wiki/Memory_model_(programming)">modèle mémoire</a> de JavaScript est basé sur une technologie appelée <a href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)">ramasse-miettes</a>. Dans beaucoup de langages, le développeur est directement responsable d'allouer et de libérer la mémoire à partir du <a href="https://en.wikipedia.org/wiki/Memory_management">tas mémoire</a> du système. Cependant un système de ramasse-miettes peut s'occuper de cette tâche pour le développeur, ce qui signifie que les objets ne sont pas directement libérés de la mémoire lorsque le développeur les déréférence, mais plus tard quand les heuristiques du ramasse-miettes décident que ce serait bien de le faire. Ce processus de décision requiert que le ramasse-miettes fasse quelques analyses statistiques sur les objets actifs et inactifs, ce qui peut prendre un certain temps.
+</p>
+
+<p class="notice fact">
+En informatique, un <a href="http://en.wikipedia.org/wiki/Garbage_collection_(computer_science)">ramasse-miettes</a> (GC, garbage collector) est une forme de gestion automatique de la mémoire. Le ramasse-miettes tente de récupérer les déchets, ou la mémoire occupée par des objets qui ne sont plus utilisés par le programme.<br><br>
+Le ramassage de miettes est souvent décrit comme l'opposé de la gestion manuelle de la mémoire, laquelle demande au développeur de spécifier quels sont les objets à désallouer et à retourner à la mémoire du système.
+</p>
+
+<p>
+  Le processus par lequel un ramasse-miettes récupère la mémoire n'est pas gratuit, il empiète sur les performances possibles en prenant un certain temps pour faire son travail ; en plus de ça, le système décide lui-même quand il s'exécute. Vous n'avez aucun contrôle là-dessus, une action du ramasse-miettes peut survenir n'importe quand pendant l'exécution du code, ce qui bloque l'exécution du code jusqu'à ce que le nettoyage soit terminé. La durée de cette action vous est généralement inconnue ; cela prendra un certain temps à s'exécuter, en fonction de comment votre programme utilise la mémoire à un moment donné.
+</p>
+<p>
+  Les applications <a href="https://en.wikipedia.org/wiki/Supercomputer">hautes performances</a> s'appuie sur des limites de performance cohérentes pour assurer une expérience agréable aux utilisateurs. Les systèmes de ramasse-miettes peuvent court-circuiter ce but, car ils s'exécutent à des moments aléatoires pour une durée aléatoire, consommant ainsi le temps disponible dont l'application a besoin pour respecter ses objectifs de performance.
+</p>
+
+<h3 id="toc-churn-taxes">Réduire le churn mémoire, réduire les taxes du ramasse-miettes</h3>
+<p>
+  Comme vu précédemment, une action du ramasse-miettes survient une fois qu'un ensemble d'heuristiques a déterminé qu'il y a assez d'objets inactifs pour que ce soit bénéfique. Ainsi, la clé pour réduire le temps que le ramasse-miettes prend à votre application repose sur l'élimination des cas de création/libération excessive d'objets. Ce processus de création/libération fréquente d'objets est appelé "churn mémoire" (change and turn, attrition). Si vous pouvez réduire le churn mémoire durant le cycle de vie de votre application, vous réduisez aussi le temps que le ramasse-miettes prend à l'exécution de votre application. Cela signifie que vous avez besoin de supprimer/réduire le nombre d'objets créés et détruits ; effectivement, vous devez arrêter d'allouer de la mémoire.
+
+Ce processus transformera votre mémoire de ça :
+</p>
+<center><img src="fig1.jpg"  title="Un aperçu de votre mémoire dans le temps" alt="Je me demande ce que sont ces dents de scie ?"></center>
+<p>en ça :</p>
+<center><img src="fig3.jpg"  title="Mémoire statique en JavaScript" alt="Ahhhh, c'est mieux."></center>
+
+<p>
+  Dans ce modèle, vous pouvez voir que la courbe n'a plus de motif en <a href="http://en.wikipedia.org/wiki/Sawtooth_wave">dents de scie</a>, mais grandit plutôt une bonne fois au début, et ensuite augmente légèrement au fil du temps. Si vous rencontrez des problèmes de performance à cause du churn mémoire, c'est ce type de courbe que vous voulez créer.
+</p>
+
+<h2 id="toc-moving-static">Vers la mémoire statique en JavaScript</h2>
+<p><i>La mémoire statique en JavaScript</i> est une technique qui implique de <a href="http://en.wikipedia.org/wiki/Sawtooth_wave">pré-allouer</a>, au démarrage de votre application, toute la mémoire qui sera nécessaire pour sa durée de vie, et de gérer cette mémoire durant l'exécution dès que les objets ne sont plus utiles.
+Nous pouvons approcher cet objectif en quelques étapes :
+<ol>
+<li>Instrumentaliser votre application pour déterminer quel est le nombre maximum d'objets mémoire requis (par type) pour un certain nombre de cas d'utilisation ;
+<li>Ré-implémenter votre code pour pré-allouer la quantité maximale d'objets, et ensuite les récupérer/libérer manuellement plutôt que d'aller les chercher dans la mémoire principale.
+</ol>
+En réalité, accomplir #1 nous demande de faire un peu de #2, donc commençons par là.</p>
+
+<h3 id="toc-objpool">Pool d'objets</h3>
+<p>Simplement, mettre des <a href="http://en.wikipedia.org/wiki/Object_pool_pattern">objets dans un pool</a> consiste à conserver un ensemble d'objets inutilisés qui partagent le même type. Quand vous avez besoin d'un nouvel objet pour votre code, plutôt que d'en allouer un nouveau à partir du <a href="https://en.wikipedia.org/wiki/Memory_management">tas mémoire</a> du système, vous en recyclez un inutilisé à partir du pool. Une fois que le code externe en a fini avec cet objet, plutôt que de le libérer dans la mémoire principale, il est remis dans le pool. Parce que l'objet n'est jamais <a href="http://en.wikipedia.org/wiki/Reference_(computer_science)">déréférencé</a> (ou effacé) du code il ne sera pas récupéré par le ramasse-miettes. <b>Utiliser des pools d'objets met le contrôle de la mémoire dans les mains du développeur, réduisant l'influence du ramasse-miettes sur les performances.</b></p>
+
+<blockquote class="commentary talkinghead" id="how-works">
+    Les pools d'objets sont une pratique commune dans beaucoup d'applications hautes performances, car ils réduisent la quantité d'aller-retours de la mémoire avec le système. Les pools d'objets eux-mêmes ont deux caractéristiques principales :
+    <ol>
+<li> Un pool verra son empreinte mémoire grandir avec le nombre d'objets qu'il contient.</li>
+<li> Le nombre d'objets créés/libérés chutera au minimum requis par votre application.</li>
+</ol>
+</blockquote>
+
+<p>
+  Puisqu'une application maintient un ensemble hétérogène de types d'objet, un usage propre des pools d'objets demande que vous ayez un pool par type qui connaît une haut churn durant l'exécution de votre application.
+</p>
+<pre class="prettyprint">
+var newEntity = gEntityObjectPool.allocate();
+newEntity.pos = {x: 215, y: 88};
+
+//..... effectuer quelque chose dont nous avons besoin avec l'objet
+
+gEntityObjectPool.free(newEntity); //libérer l'objet lorsque nous avons fini
+newEntity = null; //libérer la référence de l'objet
+</pre>
+<p>
+  Pour la large majorité des applications, vous atteindrez éventuellement une stabilisation en termes de besoin d'allouer de nouveaux objets.
+Après plusieurs exécutions de votre application, vous devriez être capable d'avoir un bonne idée de la limite haute, et ainsi pouvoir pré-allouer le bon nombre d'objets au démarrage de votre application.</p>
+
+<h3>Pré-allouer des objets</h3>
+<p>
+  Implémenter un pool d'objets dans votre projet vous donnera un supérieur théorique pour le nombre d'objets requis durant l'exécution de votre application. Après avoir testé votre site avec plusieurs scénarii, vous pouvez avoir une bonne idée des types de besoins en mémoire qui seront nécessaires, et pouvez cataloguer les données quelque part, et les analyser pour comprendre quelles sont les limites supérieures requises pour votre application.
+</p>
+<p>
+  Ensuite, dans la version de livraison de votre application, vous pouvez paramétrer la phase d'initialisation pour pré-remplir les pools d'objets avec une quantité spécifiée. Ceci va forcer toute l'initialisation des objets au démarrage de votre application, et réduire le nombre d'allocations qui se produisent de façon dynamique lors de son exécution.
+</p>
+<pre class="prettyprint">
+function init() {
+  //pré-alloue tous nos pools. 
+  //Notez que nous gardons chaque pool homogène par type d'objets
+  gEntityObjectPool.preAllocate(256);
+  gDomObjectPool.preAllocate(888);
+}
+</pre>
+<p>
+La quantité que vous choisissez a un fort lien avec le comportement de votre application ; parfois le maximum théorique n'est pas la meilleure option. Par exemple, choisir le niveau supérieur moyen peut vous donner une empreinte mémoire plus petite pour les utilisateurs non-avancés.
+</p>
+<h3>Loin d'être une solution miracle</h3>
+<p>
+Il y a tout une classification d'application pour lesquelles les motifs de croissance de la mémoire statique peut être un gain. Cependant, comme le camarade <a href="https://plus.google.com/u/0/+RenatoMangini/posts">Renato Mangini</a> de Chrome DevRel l'a signalé, il y a quelques inconvénients.<p>
+<blockquote class="commentary talkinghead talkinghead-rm" id="watchiout">
+Les pools ne sont pas pour tout le monde, même pour des applications hautes performances. Considérez les compromis suivants avant d'adopter les pools d'objets et les méthodes de mémoire statique :
+le temps de démarrage sera plus long, puisque vous dépensez des cycles à allouer la mémoire lors de l'initialisation.
+La mémoire ne diminue pas dans les scénarii qui utilisent peu d'objets ; votre application consommera avidement la mémoire.
+Vous aurez parfois besoin de nettoyer un objet quand il sera retourné au pool, cela peut être une surcharge non négligeable durant les périodes de haut churn mémoire.
+</blockquote>
+
+<h2>Conclusion</h2>
+<p>Une des raisons qui fait que JavaScript est idéal pour le web est qu'il est rapide, sympa et facile pour débuter. Ceci est principalement dû à une barrière basse en termes de restrictions syntaxiques et qu'il gère les problèmes de mémoire pour vous. Vous pouvez coder et lui laisser faire le sale boulot. Cependant pour des applications web hautes performances, comme les <a href="https://www.udacity.com/course/cs255">jeux HTML5</a>, le ramasse-miettes peut souvent altérer sévèrement le <a href="http://en.wikipedia.org/wiki/Frame_rate">nombre d'images par seconde</a>, dégradant ainsi l'expérience de l'utilisateur final. Avec quelques prudentes instrumentations et l'adoption des pools d'objets, vous pouvez réduire cette charge sur votre taux de d'images, et récupérer ce temps pour des choses plus impressionnantes.</p>
+
+<h2>Code source</h2>
+<p>Il y a beaucoup d'implémentations de pools d'objets partout sur le web, donc je ne vais pas vous ennuyer avec une autre. À la place, je vais vous rediriger vers les existantes, chacune ayant des nuances de mise en oeuvre ; ce qui est important, étant donné que chaque usage peut avoir des besoins spécifiques.
+<ul>
+<li><a href="https://github.com/playcraft/gamecore.js/blob/master/src/pooled.js">pool d'objets de Gamecore.js</a></li>
+<li><a href="http://beej.us/blog/data/object-pool/">pool d'objets de Beej</a></li>
+<li><a href="https://github.com/emehrkay/Pool">pool d'objets super simple de Emehrkay</a></li>
+<li><a href="http://blog.sklambert.com/javascript-object-pool/">pool d'objets orienté jeu de Steven Lambert</a></li>
+<li><a href="https://code.google.com/p/renderengine/wiki/ObjectPooling">Paramétrage de pool d'objets de RenderEngine (moteur de rendu)</a></li>
+</ul>
+</p>
+
+<h2 id="toc-references">Références</h2>
+<ul>
+<li><a href="http://buildnewgames.com/garbage-collector-friendly-code/">Garbage Collector Friendly Code</a></li>
+<li><a href="http://addyosmani.com/blog/taming-the-unicorn-easing-Javascript-memory-profiling-in-devtools/">Taming the unicorn : easing Javascript memory profiling in devtools</a></li>
+<li><a href="http://coding.smashingmagazine.com/2012/11/05/writing-fast-memory-efficient-Javascript/#more-123093">Writing fast, memory efficient javascript</a></li>
+</ul>
+
+
+
+{% endblock %}

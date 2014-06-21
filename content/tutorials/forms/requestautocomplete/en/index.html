@@ -22,6 +22,15 @@
 
 <h2 id="toc-requestautocomplete">requestAutocomplete</h2>
 
+
+ <p class="notice tip">
+    There is even more up to date forms tutorials on our new
+    <a href="https://developers.google.com/web/fundamentals/documentation/user-input/form-input/">Web Fundamentals</a> site as well as
+    more in depth information about <a href="https://developers.google.com/web/fundamentals/documentation/user-input/form-input/use-request-auto-complete">requestAutoComplete</a>.
+  </p>
+
+
+
 <p>In a world of WebGL, WebRTC and other fancy web APIs that start with “Web”, <code>requestAutocomplete</code> is rather unglamorous. However, it’s a superhero in beige clothing. A tiny, boring API that can stick a stake through the heart of the web payments time-vampire.</p>
 
 <div style="position: relative; padding-top: 56.25%;">
@@ -29,7 +38,7 @@
 </div>
 
 <p>Rather than the site relying on a particular payment provider, it requests payment details from the browser, which stores them on the user’s behalf.</p>
-<p>It currently works on <a href="https://play.google.com/store/apps/details?id=com.chrome.beta&amp;hl=en_GB">Chrome Beta for Android</a> and <a href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary/Beta for Windows</a>. The Google Wallet integration is currently <strong>only available to US users</strong>. Give it a <a href="https://googledrive.com/host/0B28BnxIvH5DueUxvWVNsQXd5dU0/">try on our test site</a>.</p>
+<p>Chrome's version of requestAutocomplete() also integrates with Google Wallet for <strong>US users only (currently)</strong>. Give it a <a href="https://googledrive.com/host/0B28BnxIvH5DueUxvWVNsQXd5dU0/">try on our test site</a>.</p>
 
 <h2 id="toc-form-requestautocomplete">form.requestAutocomplete</h2>
 
@@ -46,12 +55,6 @@ button.addEventListener('click', function(event) {
 </pre>
 
 <p>Note: If you’re adding events using a JavaScript library, be aware that some will redispatch events in a way that loses the link with the original interaction, meaning your call to requestAutocomplete will fail the security check. If this happens to you, use <code>addEventListener</code> directly as above.</p>
-<p>If you’re requesting credit card details, you should only call this from pages served via SSL. Otherwise, the dialog will warn the user that their information may be leaked to bad people like, I dunno, Skeletor or whatever.</p>
-
-<figure>
-  <img src="unsafe-payment.png" alt="" />
-  <figcaption>Insecure payment warning</figcaption>
-</figure>
 
 <p>Before we look at the events, we need to make sure the browser understands your form fields…
 </p>
@@ -89,7 +92,14 @@ button.addEventListener('click', function(event) {
 
 <p>The “name” attributes I’ve used above are examples only, there’s no requirement to use particular values. If you’re going to reuse this form for users without <code>requestAutocomplete</code>, which is the ideal, you’ll want to add labels, layout and basic HTML5 validation.</p>
 
-<p>You’re not restricted to input elements either, you can use any form input type. For example, you could use <code>&lt;select&gt;</code> for the card expiry fields. For a detailed breakdown of data format and recommended elements, see the <a href="http://www.chromium.org/developers/using-requestautocomplete#h.mbcntk221rc4">chromium guide to using <code>requestAutocomplete</code></a>.</p>
+<p>You’re not restricted to input elements either, you can use any form input type. For example, you could use <code>&lt;select&gt;</code> for the card expiry fields.</p>
+
+<p><strong>Note:</strong> Because requestAutocomplete is only geared toward payments for now, it requires you include <strong>at least one credit card related field</strong> in your &lt;form&gt; and only works on <strong>SSL-encrypted pages</strong>. To help developers get their code working faster, Chrome logs the exact reason why requestAutocomplete failed to the developer console.</p>
+
+<figure>
+  <img src="console-message.png" alt="" />
+  <figcaption>Detailed console message</figcaption>
+</figure>
 
 <h3>Address</h3>
 <ul>
@@ -221,13 +231,13 @@ form.addEventListener('autocompleteerror', function(event) {
   else if (event.reason == 'disabled') {
     // the browser supports requestAutocomplete, but it's not
     // available at this time. Eg, it wasn't called from an
-    // interaction event or it's disabled in browser preferences
+    // interaction event or the page is insecure
   }
 });
 </pre>
 
 <p>If everything worked, you can do whatever you want with the data, the simplest thing to do would be to submit the form. The server can then validate the data and give the user a confirmation page including delivery cost.</p>
-<p>If the data is invalid, you could show the form and highlight the fields the user needs to amend. Alternatively, you could just submit the form and let your regular server-side validation take over. This isn’t implemented in the current version of Chrome Canary, but it’ll be there in the stable version.</p>
+<p>If the data is invalid, you could show the form and highlight the fields the user needs to amend. Alternatively, you could just submit the form and let your regular server-side validation take over.</p>
 <p>If the user cancelled the process, you don’t really need to do anything. If the feature is disabled, send the user to the regular form.</p>
 <p>So in most cases, your listeners will look a lot like…</p>
 

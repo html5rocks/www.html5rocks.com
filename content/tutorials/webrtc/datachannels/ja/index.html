@@ -1,0 +1,269 @@
+<!-- title: "高パフォーマンスなデータ交換のためのWebRTC data channels"
+url: /tutorials/webrtc/datachannels/
+author_id: danristic
+publication_date: 2013-12-19
+update_date: 2013-12-19
+description: "データ交換の問題はWebRTCのRTCDataChannel APIを使ってピアツーピア間で直接データ転送することで軽減できる。"
+browser_support:
+- chrome
+- ff
+- opera
+tags:
+- type:tutorial
+- class:multimedia
+- class:connectivity
+
+ -->
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block iscompatible %}
+return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || window.webkitRTCPeerConnection);
+{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/danristic.75.png);
+  background-position: 0px 0px !important;
+}
+td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+.page header a[href^='http']:not([href*='html5rocks.']),
+.tutorials a[href^='http']:not([href*='html5rocks.']),
+.feed-section a[href^='http']:not([href*='html5rocks']),
+.info-section a[href^='http']:not([href*='html5rocks.']),
+article section a[href^='http']:not([href*='html5rocks']),
+a[rel='external']
+{
+  background: none;
+  padding-right: 0;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong> <a href="https://github.com/iwashi">岩瀬 義昌</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+
+<p>コミュニケーション、ゲーム、ファイル転送のために、2つのブラウザ間でデータを送信するのは、やや難解なプロセスです。データを中継するためには、お金を払ってサーバを建てたり、サーバを複数のデータセンタへ拡大する必要があります。このようなシナリオでは、レイテンシが高くなる可能性がありますし、データを秘匿するのも困難です。</p>
+
+<p>これらの問題は、WebRTCのRTCDataChannel APIを活用して、一方のピアからもう一方のピアへデータを直接送れば、軽減できます。本記事では、data channelとその一般的なユースケースについて取り扱います。</p>
+
+  <blockquote class="notice tip">
+    <p>本記事を最大限に活かすためには、RTCPeerConnection API、STUN、TURN、シグナリングについて、ある程度の知識が必要です。<a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a>を参照ください。</p>
+  </blockquote>
+
+
+<h2 id="why-another-data-channel">なぜ、もうひとつdata channelが必要？</h2>
+
+<p>すでに<a href="http://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a>、<a href="http://www.html5rocks.com/en/tutorials/file/xhr2/">AJAX</a>、<a href="http://www.html5rocks.com/en/tutorials/eventsource/basics/">Server Sent Events</a>があります。なぜ、もう一つのコミュニケーションchannelが必要なのでしょうか？ WebSocketは双方向ですが、これら全ての技術はサーバとの送受信を目的として設計されています。</p>
+
+<p>RTCDataChannelの異なるアプローチ：</p>
+
+<ul>
+  <li>ピアツーピア間の接続を可能にするRTCPeerConnection APIと連携して動きます。これにより、レイテンシを低くすることができます。なぜならば、中継サーバが無く、中継するホップも少ないためです。 </li>
+  <li>RTCDataChannelは<a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol#Features">Stream Control Transmission Protocol</a> (SCTP)を利用しており、転送方式を変更可能です：つまり、順序を考慮しない方式、順序を考慮して再送制御する方式を設定可能となります。</li>
+</ul>
+
+<p>SCTPのサポートを含むRTCDataChannelは、Chrome、Opera、Firefox(デスクトップ版、Android版)で現在利用可能です。</p>
+
+<h2>注意：シグナリング、STUN、TURNについて</h2>
+
+<p>WebRTCはピアツーピア間のコミュニケーションを可能にしますが、サーバは依然として必要です：</p>
+
+<ul>
+  <li><strong>シグナリング：</strong>ピア接続を確立するために、メディアやネットワークのメタ情報の交換が必要です。</li>
+  <li><strong>NATとファイアウォールの対処</strong>：ICEフレームワークの活用によりピア間の最適な経路を確立できます。ICEフレームワークは、STUNサーバ（ピア間で接続可能な外部に公開されているIPとポートの確認）とTURN（ピア間の直接の接続が失敗した場合には、データの中継が必要）と連動して動作します。</li>
+</ul>
+
+<p>HTML5 Rocksの記事である<a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC&nbsp;in&nbsp;the real world: STUN, TURN, and signaling</a>は、シグナリングとネットワーク、とWebRTCがどのように関連しているか、詳細に説明しています。</p>
+
+<h2 id="the-capabilities">能力</h2>
+
+<p>RTCDataChannel APIは、柔軟なデータ形式をサポートしています。APIはWebSocketをそっくり真似るように設計されています。また、JavaScriptにおける<a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-Blob-data" title="W3C Blob spec">Blob</a>, <a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-ArrayBuffer-data" title="W3C ArrayBuffer spec">ArrayBuffer</a>、<a href="http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-send-void-ArrayBufferView-data" title="W3C ArrayBufferView spec">ArrayBufferView</a>のようなデータ形式をサポートしています。これらの形式は、ファイル転送や多人数ゲームを実現する際に、有用です。</p>
+
+<table>
+<th>
+  <td style="font-weight: bold;">TCP</td><td style="font-weight: bold;">UDP</td><td style="font-weight: bold;">SCTP</td>
+</th>
+<tr>
+  <td style="font-weight: bold;">信頼性</td><td>到達保証有り</td><td>到達保証無し</td><td>変更可能</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">配送順序</td><td>順序付け有り</td><td>順序付け無し</td><td>変更可能</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">転送方式</td><td>バイト指向</td><td>メッセージ指向</td><td>メッセージ指向</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">流量制御</td><td>有り</td><td>無し</td><td>有り</td>
+</tr>
+<tr>
+  <td style="font-weight: bold;">輻輳制御</td><td>有り</td><td>無し</td><td>有り</td>
+</tr>
+</table>
+
+<p>(<a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>氏の<a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">High Performance Browser Networking</a>の記事より)</p>
+
+<p>RTCDataChannelはUDP同様に信頼性の無いモードでも動作しますし、TCP同様に信頼性のあるモードでも動作します。これら２つのモードは、シンプルな違いがあります：</p>
+
+<ul>
+  <li><strong>信頼性の有るモード</strong>では、メッセージの到達を保証しており、また到達される順序も保証しています。これらの処理はオーバヘッドがあるため、潜在的に動作が遅くなります。</li>
+  <li><strong>信頼性の無いモード</strong>では、全てのメッセージがもう一方に到達されることを保証しておらず、また順序も保証しません。これによりオーバヘッドが生じないため、より早く動作します。</li>
+</ul>
+
+<p>もしパケットロスがなければ、これらの両方のモードの性能はおおよそ同じです。しかし、信頼性のあるモードにおいて、パケットロスが発生すると、他の後続パケットがブロックされます。また、ロスしたパケットは再送により到達するのを待つ必要があります。</p>
+
+<p>以下では、信頼性の有るモードおよび無いモードについて、どのようにRTCDataChannelで変更するかを示します。</p>
+
+<h2 id="just-show-me-the-action">Data Channelの変更</h2>
+
+<p>RTCDataChannelのシンプルなオンラインデモがあります：</p>
+
+<ul>
+  <li><a href="http://simpl.info/dc">simpl.info/dc</a></li>
+  <li><a href="http://googlechrome.github.io/webrtc/dc1.html">googlechrome.github.io/webrtc/dc1.html</a> (SCTPまたはRTP)</li>
+  <li><a href="http://pubnub.github.io/webrtc">pubnub.github.io/webrtc</a> (２つのPubNubクライアント間で)</li>
+</ul>
+
+<p>これらのケースでは、ブラウザが自身にピア接続を作ります。その後、Data Channelを作成し、ピア接続に応じてメッセージを送信します。そして、最後にはもう一方の欄にメッセージが表示されます！</p>
+
+<p>この動作をはじめるコードは短いです：</p>
+
+<pre class="prettyprint">
+var peerConnection = new RTCPeerConnection();
+
+var dataChannel =
+  peerConnection.createDataChannel("myLabel", dataChannelOptions);
+
+dataChannel.onerror = function (error) {
+  console.log("Data Channel Error:", error);
+};
+
+dataChannel.onmessage = function (event) {
+  console.log("Got Data Channel Message:", event.data);
+};
+
+dataChannel.onopen = function () {
+  dataChannel.send("Hello World!");
+};
+
+dataChannel.onclose = function () {
+  console.log("The Data Channel is Closed");
+};
+</pre>
+
+<p>dataChannelオブジェクトは、既に確立しているピア接続から作られます。このオブジェクトは、シグナリングが起こる前後に作られます。ラベルを用いて、他のチャネル間と識別して、設定(省略可能)を行います。</p>
+
+<pre class="prettyprint">
+var dataChannelOptions = {
+  ordered: false, // 順序を保証しない
+  maxRetransmitTime: 3000, // ミリ秒
+};
+</pre>
+
+<p>maxRetransmits（再送が失敗するまでの試行回数）をオプションとして加えることも可能ですが、maxRetransmitsかmaxRetransmitsTimeのどちらかしか指定できません。例えばUDPのようにするためには、<code>maxRetransmits</code>を0にして、<code>ordered</code>をfalseに設定してください。さらなる詳細は、<a href="http://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">RFC 4960</a> (SCTP) と <a href="http://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">RFC 3758</a> (SCTP partial reliability)を確認してください。</p>
+
+<ul>
+  <li><strong>ordered:</strong> 順序を保証するか、しないか</li>
+  <li><strong>maxRetransmitTime:</strong> 送信に失敗したメッセージの最大再送時間(信頼性の無いモード)</li>
+  <li><strong>maxRetransmits:</strong> 送信に失敗したメッセージの最大再送回数(信頼性の無いモード)</li>
+  <li><strong>protocol:</strong>  下位のプロトコル利用が可能になる、指定したプロトコルがサポートされていない場合は失敗する</li>
+  <li><strong>negotiated:</strong> trueに設定されている場合は、他方のピアとのdata channelの自動設定しない。つまり、同じidを活用して、他方のピアと、あなた自身がdata channelを作成する</li>
+  <li><strong>id:</strong> チャネル向けに独自のIDを指定</li>
+</ul>
+
+<p>ほとんどの人が使う唯一のオプションは、最初の３つです：つまり、<code>ordered</code>、<code>maxRetransmitTimes</code>、<code>maxRetransmits</code>です。<a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol" title="Wikipedia article about SCTP">SCTP</a>（全てのブラウザせ現在サポートされています）を使えば、reliableとorderedはデフォルトでtrueとなります。もし、アプリケーションレイヤを完全にコントロールしたければ、信頼性の無いモードを活用するのは理にかなっていますが、ほとんどのケースでは信頼性の有るモードが有効です。 </p>
+
+<p>WebSocketと同様に、接続が確立された場合・閉じた場合・エラーが起きた場合・他方のピアからメッセージを受信した場合に、RTCDataChannelはイベントを起こします。</p>
+
+<h2 id="is-it-safe">安全？</h2>
+
+<p>暗号化はWebRTCの全ての構成要素で必須です。WebRTCDataChannelの全てのデータは、<a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security</a> (DTLS)により、保証されます。DTLSはSSLの派生で、データは標準的なSSLベースの接続と同様の安全さになります。DTLSは標準化されており、WebRTCをサポートする全てのブラウザに搭載されています。さらなるDTLSの情報は、<a href="http://wiki.wireshark.org/DTLS">Wireshark wiki</a>を確認してください。</p>
+
+
+<h2 id="change-how-you-think-about-data">データの考え方を変える</h2>
+
+<p>大量のデータをJavaScriptで扱うのは苦痛となります。<a href="http://www.sharefest.me/">Sharefest</a>の開発者が指摘するように、データについて新しい考え方が必要となります。もし、利用可能なメモリ上限を超えてデータを転送したい場合は、データを保存するのに新しい方法を考えなければなりません。以下で示しますが、<a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a>のような技術になります。</p>
+
+<h2 id="build-a-file-sharing-application">ファイル共有アプリケーションの開発</h2>
+
+<p>RTCDataChannelを使えば、ファイルをブラウザ間で共有するWebアプリケーションが作れます。RTCDataChannel上に作るということは、転送されるデータは暗号化され、アプリケーション提供者のサーバでは、手が加えられないことを意味します。この機能性は、複数のクライアントと迅速なファイル共有の可能性を含んでおり、WebRTCによるファイル共有を有力な候補としています。</p>
+
+<p>ファイル共有を成功させるために必要ないくつかのステップ</p>
+<ol style="list-style-type: decimal">
+  <li><a href="http://www.html5rocks.com/en/tutorials/file/dndfiles/">File API</a>を活用した、<a href="http://www.html5rocks.com/en/tutorials/file/dndfiles/">JavaScriptでのファイルの読み込み</a></li>
+  <li>RTCPeerConnectionを使ったクライアント間でのピア接続の確立</li>
+  <li>RTCPeerConnectionを使ったクライアント間でのdata channelの作成</li>
+</ol>
+
+<p>RTCDataChannelでファイルを送る際に気をつけるいくつかのポイント：</p>
+
+<ul>
+  <li><strong>ファイルサイズ：</strong> ファイルサイズが小さくて、1つのBlobに保存できるのであれば、FileAPIを用いてメモリ上に読み込み、信頼性のあるchannelを用いてファイルを送ってください（ブラウザが最大送信サイズを制限していることも忘れずに）。ファイルサイズが大きくなるにつれて、やや面倒になります。チャンキング（分割）の仕組みが必要になります：ファイルチャンク（ファイルのかたまり）を読み込み、もう一方のピアへ送ります。また、受信側でどのチャンクかを認識するために、メタ情報であるチャンクIDも必要です。また、この例やファイルをユーザのディスクに保存する場合は、チャンクをオフラインストレージ（例えば、FileAPIを活用して）に、最初に保存する必要があるでしょう。</li>
+  <li><strong>速度：</strong> ファイル転送に、信頼性の無いモード（UDP同様）と信頼性の有るモード（TCP同様）のどちらを使うかは議論があるところです。もしアプリケーションが1対1の簡単なデータ転送で、信頼性の無いdata channelを使う場合は、ACK/再送プロトコルを設計する必要があります。これは自身で実装する必要があり、たとえあなたが上手くできても、信頼性のある転送よりも大して早くならないかもしれません。信頼性があり、順序を気にしない方式であれば最適でしょうが、マルチメッシュでのファイル転送においては、結果は変わるでしょう。</li>
+  <li><strong>チャンクサイズ：</strong> チャンクは、あなたのアプリケーションの最小単位です。送信サイズに制限があるので（将来のdata channelでは改修される予定ですが）、チャンキングは必要です。現在の最大チャンクサイズの推奨値は、16KBです。   </li>
+</ul>
+
+<p>ひとたびデータが他方に完全に転送されてしまえば、アンカータグを用いてダウンロードできます：</p>
+<pre class="prettyprint">
+function saveFile(blob) {
+  var link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.download = 'File Name';
+  link.click();
+};
+</pre>
+
+<p>ファイル共有アプリの<a href="http://pubnub.github.io/rtc-pubnub-fileshare/">pubnub.github.io/rtc-pubnub-fileshare</a>や、<a href="https://github.com/Peer5/ShareFest">github.com/Peer5/ShareFest</a>は、このテクニックを使っています。これらはどちらもオープンソースであり、RTCDataChannelベースのファイル共有アプリの良い出発点になります。 </p>
+
+<h2 id="so-what-can-we-do">で、何が出来るのでしょうか？</h2>
+
+<p>RTCDataChannelは、ファイル共有・マルチプレイヤゲーム・コンテンツデリバリのアプリケーションの新しい作成方法への扉を開いてくれます。 </p>
+
+<ul>
+  <li>ピアツーピアのファイル共有（上述したように）</li>
+  <li>マルチプレイヤーゲーム：Mozillaの<a href="https://hacks.mozilla.org/2013/03/webrtc-data-channels-for-great-multiplayer/">Banana Bread</a>のような、WebGLのような他の技術と併せて作られる</li>
+  <li>コンテンツデリバリ：<a href="https://peercdn.com/">PeerCDN</a>ピアツーピアのデータ転送を通じて、Webの要素を転送するフレームワーク）で再発明されているように</li>
+</ul>
+
+<h2 id="change-the-way-you-build-applications">アプリケーションの構築方法を変える</h2>
+
+<p>今なら、高いパフォーマンスで低レイテンシのRTCDataChannelを使うことにより、より魅力的なアプリケーションを提供できます。<a href="http://peerjs.com/">PeerJS</a>や<a href="https://github.com/pubnub/webrtc">PubNub WebRTC SDK</a>は、RTCDataChannelの利用を簡単にしており、多数のプラットフォームをサポートしています。 </p>
+
+<p>RTCDataChannelの出現は、ブラウザでのデータ転送の考え方を変えうるのです。</p>
+
+<h2 id="find-out-more">さらなる情報</h2>
+
+<ul>
+  <li><a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting started with WebRTC</a></li>
+  <li><a href="http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC in the real world: STUN, TURN and signaling</a></li>
+  <li><a href="http://bit.ly/webrtcwebaudio">WebRTC resources</a></li>
+  <li><a href="http://www.w3.org/TR/webrtc/#peer-to-peer-data-api">W3C Working Draft</a></li>
+  <li><a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04">IETF WebRTC Data Channel Protocol Draft</a></li>
+  <li><a href="http://bloggeek.me/send-file-webrtc-data-api/">How to send a File Using WebRTC Data API</a></li>
+  <li><a href="http://bloggeek.me/webrtc-data-channel-uses/" title="bloggeek.me blog post by Tsahi Levent-Levi">7 Creative Uses of WebRTC’s Data Channel</a></li>
+  <li><a href="https://developer.mozilla.org/en/demos/detail/bananabread" title="Banana Breat game">Banana Bread</a> 一人称3DのゲームでJS+WebGLを用いており、マルチプレイヤーモードではWebRTC DataChannelを活用しています。</li>
+</ul>
+
+<p><strong>この記事の準備にあたり、Hadar WeissとShachar Zoharの助力に感謝します。</strong></p>
+
+{% endblock %}

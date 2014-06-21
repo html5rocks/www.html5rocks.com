@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 <h2 id="why">Why imports?</h2>
 
 Think about how you load different types of resources on the web. For JS, we have `<script src>`. For CSS, your go-to is probably `<link rel="stylesheet">`. For images it's `<img>`. Video has `<video>`. Audio, `<audio>`.... Get to the point! The majority of the web's content has a simple and declarative way to load itself. Not so for HTML. Here's your options:
@@ -44,12 +42,7 @@ To detect support, check if `.import` exists on the `<link>` element:
       // Use other libraries/require systems to load files.
     }
 
-Browser support is still in the early days. Chrome 31 is the first browser to have an implementation. You can enable the flag by turning on **Enable HTML Imports** in `about:flags`. For other browsers, [Polymer's polyfill](http://www.polymer-project.org/platform/html-imports.html) works great until things are widely supported.
-
-<figure>
-  <img src="aboutflag.png">
-  <figcaption><b>Enable HTML Imports</b> in <code>about:flags</code>.</figcpation>
-</figure>
+Browser support is still in the early days. Chrome 31 was the first browser to see an implementation. Since then, Chrome 36 was update with the latest spec. You can enable the flag by turning on **Enable experimental Web Platform features** in `about:flags` in Chrome Canary. For other browsers, [Polymer's polyfill](http://www.polymer-project.org/platform/html-imports.html) works great until things are widely supported.
 
 <p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
 
@@ -195,6 +188,15 @@ Imports are not in the main document. They're satellite to it. However, your imp
 
     <link rel="stylesheet" href="http://www.example.com/styles.css">
     <link rel="stylesheet" href="http://www.example.com/styles2.css">
+
+    <style>
+      /* Note: <style> in an import apply to the main
+         document by default. That is, style tags don't need to be
+         explicitly added to the main document. */
+      #somecontainer {
+        color: blue;
+      }
+    </style>
     ...
 
     <script>
@@ -576,7 +578,7 @@ Alternatively, add the import near the end of the `<body>`:
 
 - Scripts in an import are processed in order, but do not block the main document parsing.
 
-- An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
+- An import link doesn't mean "#include the content here". It means "parser, go off an fetch this document so I can use it later". While scripts execute at import time, stylesheets, markup, and other resources need to be added to the main page explicitly. Note, `<style>` don't need to be added explicitly. This is a major difference between HTML Imports and `<iframe>`, which says "load and render this content here".
 
 <h2 id="conclusion">Conclusion</h2>
 

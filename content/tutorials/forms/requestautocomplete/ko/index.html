@@ -1,0 +1,310 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block iscompatible %}
+  return 'requestAutocomplete' in document.createElement('form');
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-css3-semantics.png" width="165" height="64" alt="This article is powered by HTML5 CSS3 &amp; Styling and Semantics" title="This article is powered by HTML5 CSS3 &amp; Styling and Semantics" />
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https://github.com/xarus01">Taegun Park</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">소개</h2>
+<p>나는 웹을 좋아합니다. 대체로 나는 그것이 꽤나 좋은 방식이라고 생각합니다. 때문에 나는 웹 vs 네이티브 논쟁에 많이 휘말리곤 합니다. 논쟁에서 다른 사람들이 네이티브 시스템상에서 결제의 편의성에 대해서 언급하기까지는 그리 많이 걸리지 않습니다. 그때 나의 일반적인 반응은 채팅룸에 연막탄을 던지고 미친듯이 웃으면서 그 자리를 벗어나는것입니다. 그런 종류의 논쟁은 내가 이길 수 있는 것이 아니기 때문입니다.</p>
+<p><strong>모바일 웹에서 카트를 다 채워놓고 결제를 포기하는 행위는 <a href="http://seewhy.com/blog/2012/10/10/97-shopping-cart-abandonment-Yirgachefe:Project xarus$ n-you/">최대 97%나 일어납니다</a></strong>. 실제의 상황에서 그것을 상상해보세요. 슈퍼마켓에서 97%의 사람들이 온갖 물건으로 가득찬 카트를 끌고 와서는 버려두고 떠나는 것을 한번 상상해보세요.</p>
+<p>물론 그들 중 일부는 단순히 물건들의 가격을 알고자 하는 목적으로 웹사이트에 방문한 것이고 실제 구매 의사는 전혀 없었다고 하지만, 웹에서 물건을 사는 것에 대한 끔찍한 사용자 경험이야말로 이런 높은 이탈률의 주된 이유일것입니다. 다시 말해서, 우리는 사용자들을 완전히 돌아버리게 만들고 있습니다.</p>
+<p>당신이 웹상에서 경험할 수 있었던 행복한 결제 경험에 대해서 생각해보세요. 앱스토어, 그렇죠? 아니면 적어도 당신의 결제 정보를 항상 보관하고 있는 비슷한 폐쇄된 시스템일 것입니다.</p>
+<p>이것은 큰 문제입니다. 웹의 한계는 웹사이트들이 이미 사용자들이 계정을 가지고 로그인할 수 있는 특정 결제 대행사에 예속되게 하거나 대개 해당 플랫에 맞추어서 코딩하도록 강제되는 단일 플랫폼들, 가령 앱스토어에 종속되도록 합니다. 당신이 이 중 하나를 택하지 않으면 사용자들은 손금이 없어질때까지 스크린이나 키보드를 두드려야 하는 절망에 빠지게 됩니다. 아니면 포기하거나요.</p>
+<p>우리는 이것을 고쳐야만 합니다.</p>
+
+<h2 id="toc-requestautocomplete">requestAutocomplete</h2>
+
+
+ <p class="notice tip">
+    보다 최신의 forms tutorial들이 우리의 새
+    <a href="https://developers.google.com/web/fundamentals/documentation/user-input/form-input/">Web Fundamentals</a> 사이트에 있습니다. 물론 
+    <a href="https://developers.google.com/web/fundamentals/documentation/user-input/form-input/use-request-auto-complete">requestAutoComplete</a>
+    에 대한 더 자세한 정보도 함께요.
+  </p>
+
+
+
+<p>WebGL, WebRTC와 다른 멋진 "Web"이라는 글자로 시작하는 웹 API들의 세상에서 <code>requestAutocomplete</code>는 그닥 매력적이지 않습니다. 하지만 보다 간단한 기능을 구현하는 경우에는 말 그대로 구원자나 다름없습니다. 작고, 지루한 API이지만 웹에서 결제를 할 때 마다 시간을 잡아먹는 못된 뱀파이어의 심장에 말뚝을 박을 수 있는 해결책이죠.</p>
+
+<div style="position: relative; padding-top: 56.25%;">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/VQO8hMqyn00?rel=0" frameborder="0" allowfullscreen=""></iframe>
+</div>
+
+<p>특정 결제 대행사에 의존하는 사이트와는 다르게 이 API는 상세한 결제 정보를 브라우저에서 요청하고, 사용자 단에 저장합니다.</p>
+<p>크롬 버전의 requstAutocomplete() 은 또한 <strong>미국 사용자에 한해서 (현재로써는)</strong> 구글 월렛과도 연동됩니다. 우리들의 <a href="https://googledrive.com/host/0B28BnxIvH5DueUxvWVNsQXd5dU0/">테스트 사이트에서 한번 시험해보세요</a>.</p>
+
+<h2 id="toc-form-requestautocomplete">form.requestAutocomplete</h2>
+
+<p>form 요소는 단 한가지의 새 메소드, 바로 requestAutocompltete를 가지며 그 기능은 브라우저에게 form을 채우도록 요청하는 것입니다. 브라우저는 사용자에게 허가와 어떤 정보들을 제공할것인지 묻는 대화창을 나타낼 것입니다.</p>
+<p>당신이 이것을 원하는 때 언제나 불러올 수 있는 것은 아닙니다. 이 메소드는 특정한 인터랙션 이벤트들, 가령 마우스 업/다운, 클릭, 키보드 &amp; 터치 이벤트들이 일어나는 도중 불러져야 합니다. 이것은 보안을 위해서 의도적으로 만들어진 제한사항입니다.</p>
+
+<pre class="prettyprint">
+button.addEventListener('click', function(event) {
+  form.requestAutocomplete();
+  event.preventDefault();
+});
+
+// TODO: listen for autocomplete events on the form
+</pre>
+
+<p>노트: 만일 당신이 자바스크립트 라이브러리를 이용해서 이벤트들을 추가한다면 몇몇 경우 이벤트들이 기존의 인터랙션과 연결고리를 잃어버리는 방식으로 재정의된다는 점에 유의하세요. 이것은 당신의 requestAutocomplete 실행이 보안 검사를 통과하지 못할것이라는 의미입니다. 만약 이런 일이 당신에게 일어난다면 위와 같이 <code>addEventListener</code>를 직접 이용하세요.</p>
+
+<p>우리가 이벤트들에 대해서 보기 이전에 우리는 브라우저가 당신의 form field들을 정확하게 이해하고 있는지 확인해야 합니다...
+</p>
+
+<h2 id="toc-form-requirements">Form 의 필요조건들</h2>
+
+<p>인터넷이 아직 흑백이었던 시절에 인터넷 익스플로러 5는 form input 요소에 <code>autocomplete</code>라는 새로운 항목을 추가했습니다. 그것은 브라우저가 제안들을 제공하는것을 막기 위해서 off로 설정될 수 있었으며 사실 그게 전부였습니다. <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#autofilling-form-controls:-the-autocomplete-attribute">이 API는 확장되었으며</a> 따라서 이제 당신은 name 항목을 변경하지 않고도 field에 채워질것으로 예상되는 항목을 정의할 수 있습니다. 그리고 이것이 바로 <code>requestAutocomplete</code>가 form을 사용자 데이터와 연결하기 위해서 사용하는 방법입니다.</p>
+
+<pre class="prettyprint">
+&lt;input name="fullname" autocomplete="name"&gt;
+</pre>
+
+<p>명세상으로, <code>requestAutocomplte</code>가 한 종류의 결제방식에 대해서만 동작하는 것은 아니지만 현재 Chrome에 구현된 것은 그렇게 구현되어 있는 편입니다. 미래에는 브라우저들이 로그인 상세 정보나 패스워드 생성기, 여권 정보, 심지어는 아바타 업로딩과 같은 다른 종류의 데이터들도 다룰 수 있을 것으로 기대됩니다.</p>
+
+<p>현재 크롬에서 <code>requestAutocomplete</code>는 아래와 같은 항목들을 인식합니다:</p>
+
+<h3>결제</h3>
+<ul>
+  <li>email</li>
+  <li>cc-name - 카드의 이름</li>
+  <li>cc-number - 카드번호</li>
+  <li>cc-exp-month - 두자리수로 표현된 카드 만료 월</li>
+  <li>cc-exp-year - 네자리수로 표현된 카드 만료 연도</li>
+  <li>cc-csc - 3-4 자리의 카드 보안 번호</li>
+</ul>
+
+<pre class="prettyprint">
+&lt;input type="email" autocomplete="email" name="email"&gt;
+&lt;input type="text" autocomplete="cc-name" name="card-name"&gt;
+&lt;input type="text" autocomplete="cc-number" name="card-num"&gt;
+&lt;input type="text" autocomplete="cc-exp-month" name="card-exp-month"&gt;
+&lt;input type="text" autocomplete="cc-exp-year" name="card-exp-year"&gt;
+&lt;input type="text" autocomplete="cc-csc" name="card-csc"&gt;
+</pre>
+
+<p>위에서 사용된 name 항목들은 단지 예시에 불과합니다. 위에 나타난 특정 문자열들을 따라가야 할 필요는 없습니다. 만일 당신이, 아마도 일반적인 경우일, <code>requestAutocomplete</code> 기능을 사용하지 못하는 사용자들의 경우에도 form을 재사용할것이라면 라벨과 레이아웃, 그리고 기본적인 HTML5 validation을 추가하는 편이 좋을것입니다.</p>
+
+<p>이 기능은 또한 inpute element 만을 사용하도록 제한되어있지 않습니다. 당신은 어떤 form input type이든 사용할 수 있습니다. 일례로 카드 유효기한 항목에 대해서는 <code>&lt;select&gt;</code> 를 사용할 수 있을것입니다.</p>
+
+<p><strong>노트:</strong> 현재로써는 requestAutocomplete가 결제 기능에만 초점이 맞추어져 있기 때문에 당신의 &lt;form&gt;에 <strong>적어도 하나의 신용카드 관련 필드</strong>를 포함하는것이 필요하며, <strong>SSL로 암호화된 페이지들</strong>에 대해서만 동작합니다. 개발자들이 자신들의 코드를 더 빠르게 동작하도록 하는 것을 돕기 위해 크롬은 requestAutocomplete가 실패하는 정확한 이유를 개발자 콘솔에 로그로 나타내어줍니다.</p>
+
+<figure>
+  <img src="console-message.png" alt="" />
+  <figcaption>Detailed console message</figcaption>
+</figure>
+
+<h3>주소</h3>
+<ul>
+  <li>name - 성명. 이름을 하나의 필드로 입력받는것은 여러개의 필드를 사용하는것에 비해 훨씬 좋습니다. First name과 Last name과 같은 복수의 필드는 서구 중심적으로 보이며 다른 문화권에서는 타당하지 못할수도 있습니다. 또한 이름 전부를 하나의 필드에 입력하는것이 더 간단합니다.</li>
+  <li>tel - 국가번호를 포함하는 전화번호 전부. 이 항목을 사용하는 대신 아래의 두 항목을 사용할수도 있습니다.
+    <ul>
+      <li>tel-country-code - 국가번호. 가령 +44</li>
+      <li>tel-national - 전화번호의 나머지 부분</li>
+    </ul>
+  </li>
+  <li>street-address - 따옴표로 구분되어진 주소. 아래와 같이 나뉘어서 쓰일 수 있습니다.
+    <ul>
+      <li>address-line1</li>
+      <li>address-line2 - 경우에 따라 비어있을 수 있음</li>
+    </ul>
+  </li>
+  <li>locality - 시/읍</li>
+  <li>region - 도, 군, 구</li>
+  <li>postal-code - 우편번호</li>
+  <li>country</li>
+</ul>
+
+<p>위의 항목들은 아래의 항목들과 함께 사용되어야 합니다:</p>
+<ul>
+  <li>billing</li>
+  <li>shipping</li>
+</ul>
+
+<pre class="prettyprint">
+&lt;input type="text" autocomplete="billing name" required name="billing-name"&gt;
+&lt;input type="tel" autocomplete="billing tel" required name="billling-tel"&gt;
+&lt;input type="text" autocomplete="billing address-line1" required name="billing-address1"&gt;
+&lt;input type="text" autocomplete="billing address-line2" required name="billing-address2"&gt;
+&lt;input type="text" autocomplete="billing locality" required name="billing-locality"&gt;
+&lt;input type="text" autocomplete="billing region" required name="billing-region"&gt;
+&lt;input type="text" autocomplete="billing postal-code" required name="billing-postal-code"&gt;
+&lt;select autocomplete="billing country" required name="billing-country"&gt;
+  &lt;option value="US"&gt;United States&lt;/option&gt;
+  …
+&lt;/select&gt;
+
+&lt;input type="text" autocomplete="shipping name" name="shipping-name"&gt;
+…
+</pre>
+
+<p>한번 더 언급하는 것이지만, name항목들은 예시에 불과합니다. 실제 상황에서는 무엇이든 당신이 원하는 대로 사용할 수 있습니다.</p>
+<p>당연하게도 모든 form들이 shipping address를 요구하지는 않을것입니다. 가령 아무도 내가 어디에서 호텔 방을 수령할지를 묻지 않습니다. 호텔의 위치는 이동시킬 수 있는 성질의 것이 아니며 대개 호텔을 선택할 때 많이 고려되는 부분입니다.</p>
+<p>좋습니다. 이로써 우리는 적절한 form의 형태가 어떤것인지 이해했고 <code>autocomplete</code>를 요청하는 법을 알고 있습니다. 하지만...</p>
+
+<h2 id="toc-when-to-call-rac">언제 requestAutocomplete 이 호출되어야 할까요??</h2>
+
+<p>이상적인 경우 당신은 결제 페이지가 로딩되는 대신 <code>requestAutocomplete</code> 대화창이 보이도록 하고 싶을것입니다. 모든것들이 제대로 맞아 떨어진다면 사용자는 form 자체를 볼 이유가 없습니다.</p>
+
+<div style="position: relative; padding-top: 146%;">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden" src="payments-flow.svg" frameborder="0" allowtransparency="true"></iframe>
+</div>
+
+<p>한가지 흔한 패턴은 장바구니 페이지에서 결제 버튼을 누를 경우 payment detail form으로 이동하도록 하는 것입니다. 이 경우 당신은 당신의 청구서 form을 장바구니 페이지에 로딩하되 사용자로부터는 숨기고, 결제 버튼이 눌렸을때 <code>requestAutocomplete</code>를 호출하고 싶을 것입니다. 기억하세요. 당신의 장바구니 페이지는 Skeletor 경고를 피하기 위해 SSL을 통해서 제공되어야 합니다.</p>
+<p>우선, 우리가 준비를 마치기 이전에 사용자가 체크아웃 버튼을 먼저 누르는 것을 원하지 않으므로 버튼을 숨겨야 합니다. 하지만 자바스크립트를 사용 가능한 사용자들에 대해서만 이러한 방지 대책을 세우고자 합니다. 따라서 페이지의 head에:</p>
+
+<pre class="prettyprint">
+&lt;script&gt;document.documentElement.className += ' js';&lt;/script&gt;
+</pre>
+
+<p>그리고 css 파일 내부에:</p>
+
+<pre class="prettyprint">
+.js #checkout-button,
+#checkout-form.for-autocomplete {
+  display: none;
+}
+</pre>
+
+<p>우리는 청구서 form을 장바구니 페이지에 포함해야 합니다. 이것은 페이지의 어느 부분에 존재해도 관계없습니다. 위의 css 가 form이 사용자들에게 보이지 않도록 할 것입니다.</p>
+
+<pre class="prettyprint">
+&lt;form id="checkout-form" class="for-autocomplete" action="/checkout" method="post"&gt;
+  …fields for payment, billing address &amp; shipping if relevant…
+&lt;/form&gt;
+</pre>
+
+<p>이제 우리의 자바스크립트가 모든것들을 준비할 수 있습니다:</p>
+
+<pre class="prettyprint">
+function enhanceForm() {
+  var button = document.getElementById('checkout-button');
+  var form = document.getElementById('checkout-form');
+
+  // show the checkout button
+  button.style.display = 'block';
+
+  // exit early if there's no requestAutocomplete support
+  if (!form.requestAutocomplete) {
+    // be sure to show the checkout button so users can
+    // access the basic payment form!
+    return;
+  }
+
+  button.addEventListener('click', function(event) {
+    form.requestAutocomplete();
+    event.preventDefault();
+  });
+
+  // TODO: listen for autocomplete events on the form
+}
+</pre>
+
+<p>당신은 장바구니 페이지의 결제 form과 버튼 뒤의 어딘가에서 <code>enhanceForm</code>을 호출할것입니다.</p>
+<p><code>requestAutocomplete</code>을 지원하는 브라우저는 빠르고 놀라운 새로운 경험을 제공할것이고 그렇지 못한 브라우저는 일반적인 결제 양식으로 폴백할것입니다.</p>
+<p>한가지 첨언하자면, form HTML을 <code>enhanceForm</code>의 한 부분으로써 XHR로 불러오는것을 추천합니다. 이것은 <code>requestAutocomplete</code>를 지원하는 브라우저에서만 form을 불러올것이며, 모든 페이지에서 <code>enhanceForm</code>을 호출하는 이상 매 페이지마다 form을 추가하느라 골머리를 썩일 필요가 없다는 의미입니다. 우리의 <a href="https://googledrive.com/host/0B28BnxIvH5DueUxvWVNsQXd5dU0/">데모 사이트</a>가 이러한 방식으로 만들어졌습니다.</p>
+
+<h2 id="toc-after-calling-rac">requestAutocomplete를 호출했습니다. 그 다음에는요?</h2>
+
+<p><code>autocomplete</code> 프로세스는 비동기식으로 동작하는 반면 <code>requestAutocomplete</code>는 곧장 값을 반환합니다. 호출 결과를 확인하기 위해서는 두개의 새로운 이벤트 리스너를 만들어야 합니다:</p>
+
+<pre class="prettyprint">
+form.addEventListener('autocomplete', function() {
+  // hurrah! You got all the data you needed
+});
+
+form.addEventListener('autocompleteerror', function(event) {
+  if (event.reason == 'invalid') {
+    // the form was populated, but it failed html5 validation
+    // eg, the data didn't match one of your pattern attributes
+  }
+  else if (event.reason == 'cancel') {
+    // the user aborted the process
+  }
+  else if (event.reason == 'disabled') {
+    // the browser supports requestAutocomplete, but it's not
+    // available at this time. Eg, it wasn't called from an
+    // interaction event or the page is insecure
+  }
+});
+</pre>
+
+<p>만약 모든것이 잘 동작했다면, 반환된 값으로 무엇이든 원하는 것을 하면 됩니다. 할 수 있는 가장 간단한 일은 form을 제출하는것일것입니다. 그 결과 서버에서 데이터를 승인하고 운송비를 포함한 확인 페이지를 사용자에게 제공할것입니다.</p>
+<p>만일 데이터가 부적절하다면 form을 보여주고 사용자가 고쳐야 할 field를 강조할 수 있습니다. 혹은, 그냥 form을 제출하고 서버측의 유효성 검사기에 맡겨버리는 방법도 있습니다.</p>
+<p>그것이 아니라 사용자가 프로세스를 취소한것이라면 사실 그에 대해서 어떠한 일도 할 필요가 없습니다. 만일 기능이 disable되어 있다면 사용자에게 일반적인 form을 보내면 됩니다.</p>
+<p>따라서 많은 경우에 당신의 리스너는 아래와 비슷할것입니다...</p>
+
+<pre class="prettyprint">
+form.addEventListener('autocomplete', function() {
+  form.submit();
+});
+
+form.addEventListener('autocompleteerror', function(event) {
+  if (event.reason == 'invalid') {
+    form.submit();
+  }
+  else if (event.reason != 'cancel') {
+    window.location = '/checkout-page/';
+  }
+});
+</pre>
+
+<h2 id="toc-data-storage">브라우저는 내 데이터를 어디에 보관하나요?</h2>
+
+<p>데이터의 저장에 대해서 명세상에서 제한하는 바는 없습니다. 이는 브라우저들이 발전할 수 있도록 하기 위한 조치입니다.</p>
+<p>만일 당신이 크롬에 로그인되어있다면 데이터를 구글 월렛에 저장하고 당신의 다른 장치들에서도 접근가능하도록 하는 선택지가 제공됩니다. 만일 당신이 결제 정보를 구글 월렛에 보관한다면 당신의 카드번호 그 자체가 <code>requestAutocomplete</code>에 의해서 다루어지는 일이 없게 되며 보안성을 증가시킵니다.</p>
+<p>만일 당신이 크롬에 로그인되어있지 않거나 구글 월렛을 사용하지 않기로 결정하면 결제 정보들은 이후의 재사용을 위해서 로컬 브라우저 내에 선택적으로 저장됩니다.</p>
+<p>지금으로써는 이것이 전부입니다. 하지만 미래에는 크롬이나 다른 브라우저들이 추가적인 결제 대행사들도 채택할 가능성도 있습니다.</p>
+
+<h2 id="toc-making-payments-easy">결제를 쉽게 하기</h2>
+
+<p>사실 사용자가 매번 뭔가를 사고 싶을 때마다 결제 정보를 입력하고 또 입력해야 한다는 것은 꽤나 웃기는 일입니다. 판매 사이트들이 여러분의 결제 정보를 보유하고 있게 된다면 좀 더 이야기는 간단해지지만, 사실 나는 얼마나 많은 웹사이트들이 내 결제정보를 보유하고 있는가에 대해서 약간 까다로운 편입니다. 이것이야말로 웹 표준이 풀어나가기에 완벽한 문제입니다.</p>
+<p><code>requestAutocomplete</code> 는 웹 전체에 대해서 원클릭 결제를 제공할 수 있습니다. 특정 서비스나 플랫에 종속되지 않고도요. 사실 이미 이루어졌어야 하는 일이죠.</p>
+
+<h2 id="toc-multi-page-forms">보너스 라운드: 여러 페이지에 걸친 form 다루기</h2>
+
+<p><code>requestAutocomplete</code>를 여러번 호출하기보다는 단 한번만 불러온 후에 모든 정보를 모아들이는것이 훨씬 나은 선택입니다. 만일 당신이 모든 데이터들을 한번에 받아오도록 서버를 변경할 수 없어도 관계 없습니다. completed form에서 데이터들을 호출해서 그게 무엇이건 여러분이 편한 방식대로 제출하세요.</p>
+<p>지원되는 모든 데이터를 하나의 간단한 오브젝트로 불러들이는 데 이 <a href="https://gist.github.com/jakearchibald/5774636">작고 실용적인 함수</a>를 사용할 수 있습니다. form을 직접 작성하지 않고도요. 데이터를 취득한 후에는 어떤 형태건 여러분의 서버가 요구하는 형태로 데이터를 변환하고 여러 단계에 거쳐서 POST하면 됩니다.</p>
+
+<pre class="prettyprint">
+checkoutButton.addEventListener('click', function() {
+  requestUserData({
+    billing: true,
+    shipping: true
+  }, function(response) {
+    if (response.err == 'cancel') {
+      // exit silently
+      return;
+    }
+    if (response.err) {
+      // fall back to normal form
+      window.location.href = '/normal-checkout-form/';
+      return;
+    }
+
+    // the rest is just made-up pseudo code as an example
+    postToServer(data.shipping).then(function() {
+      return postToServer(data.billing);
+    }).then(function() {
+      return postToServer(data.cc);
+    }).catch(function() {
+      // handle error
+    });
+  });
+});
+</pre>
+
+{% endblock %}

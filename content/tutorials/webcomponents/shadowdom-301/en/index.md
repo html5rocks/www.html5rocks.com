@@ -1,5 +1,3 @@
-{% include "warning.html" %}
-
 This article discusses more of the amazing things you can do with Shadow DOM! It builds on the concepts discussed in [Shadow DOM 101](/tutorials/webcomponents/shadowdom/)
 and [Shadow DOM 201](/tutorials/webcomponents/shadowdom-201/).
 
