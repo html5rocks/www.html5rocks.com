@@ -458,7 +458,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
       }
     </style>
 
-`:unresolved`는 `HTMLUnkownElement`로부터 상속받은 element([elements가 업그레이드 되기 위한 방법](#upgrades) 참고)가 아닌 [unresolved elements](#unresolvedels)에만 적용된다는 것을 기억하세요.
+`:unresolved`는 `HTMLUnknownElement`로부터 상속받은 element([elements가 업그레이드 되기 위한 방법](#upgrades) 참고)가 아닌 [unresolved elements](#unresolvedels)에만 적용된다는 것을 기억하세요.
 
     <style>
       /* 모든 unresolved element에 dashed border 적용하기 */
