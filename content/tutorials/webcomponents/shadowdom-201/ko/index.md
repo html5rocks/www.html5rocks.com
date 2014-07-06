@@ -162,7 +162,7 @@ root.innerHTML = '<style>\
 이는 섀도 트리 내의 엘리먼트를 쉽게 선택할 수 있도록 합니다.
 
     <style>
-      #host ^ span {
+      #host::shadow span {
         color: red;
       }
     </style>
@@ -227,7 +227,7 @@ root.innerHTML = '<span>Shadow DOM</span>' +
 
 네이티브 HTML 컨트롤들은 스타일 적용에 대한 도전입니다. 많은 사람들이 쉽게 포기하고 주먹구구식으로 해결합니다. 그러나 ^와 ^^를 사용하여 Shadow DOM을 사용하는 웹 플랫폼의 어떠한 엘리먼트라도 스타일을 적용할 수 있습니다. `<video>`와 `<input>`이 좋은 예입니다.
 
-    video ^ input[type="range"] {
+    video /deep/ input[type="range"] {
       background: hotpink;
     }
 
