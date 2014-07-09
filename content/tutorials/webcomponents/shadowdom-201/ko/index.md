@@ -19,7 +19,7 @@ Shadow DOM의 핵심 기능 중의 한가지는 [섀도 경계(shadow boundary)]
     <div><h3>Light DOM</h3></div>
     <script>
     var root = document.querySelector('div').createShadowRoot();
-    root.innerHTML = '<style>h3{ color: red; }</style>' + 
+    root.innerHTML = '<style>h3{ color: red; }</style>' +
                      '<h3>Shadow DOM</h3>';
     </script>
 
@@ -51,9 +51,9 @@ root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM</h3>';
     <script>
     var button = document.querySelector('button');
     var root = button.createShadowRoot();
-    root.innerHTML = '<style>' + 
+    root.innerHTML = '<style>' +
         ':host { text-transform: uppercase; }' +
-        '</style>' + 
+        '</style>' +
         '<content></content>';
     </script>
 
@@ -64,9 +64,9 @@ root.innerHTML = '<style>h3{color: red;}</style><h3>Shadow DOM</h3>';
 (function() {
 var container = document.querySelector('#style-athost');
 var root = container.createShadowRoot();
-root.innerHTML = '<style>' + 
+root.innerHTML = '<style>' +
                      ':host { text-transform: uppercase; }' +
-                      '</style>' + 
+                      '</style>' +
                       '<content></content>';
 })();
 </script>
@@ -132,18 +132,18 @@ root.innerHTML = '<style>\
 **예제** - 호스트 자체가 클래스를 가지고 있을 때만 매칭 (예시. `<x-foo class="different"></x-foo>`):
 
     :host(.different:host) {
-      ...  
+      ...
     }
 
 <h3 id="toc-style-multi">하나의 섀도 루트 내로부터 여러 호스트 형식들의 지원</h3>
 
 `:host`에 대한 또다른 사용법은 여러분이 테마 라이브러리를 생성하고 동일한 Shadow DOM으로부터 호스트 엘리먼트의 많은 타입들에 대한 스타일링을 지원하고자 하는 것입니다.
 
-    :host(x-foo:host) { 
+    :host(x-foo:host) {
       /* Applies if the host is a <x-foo> element.*/
     }
 
-    :host(x-bar:host) { 
+    :host(x-bar:host) {
       /* Applies if the host is a <x-bar> element. */
     }
 
@@ -151,18 +151,18 @@ root.innerHTML = '<style>\
       /* Applies if the host element or an ancestor is a <div>. */
     }
 
-<h2 id="toc-style-cat-hat">^와 ^^ 연결자</h2>
+<h2 id="toc-style-cat-hat">외부에서 Shadow DOM 내부를 스타일링하기</h2>
 
-`^^` (Cat)와 `^` (Hat) 연결자는 CSS 저작의 명검을 가진 것과도 같습니다.
+`/deep/`과 `:shadow` 연결자는 CSS 저작의 명검을 가진 것과도 같습니다.
 이들은 Shadow DOM의 경계를 꿰뚫을 수 있도록 하며 섀도 트리 내의 엘리먼트의 스타일 적용을 가능하게 합니다.
 
-<h3 id="toc-style-hat">^ 연결자</h3>
+<h3 id="toc-style-hat">:shadow 연결자</h3>
 
-`^` 연결자는 *하나의 섀도 경계(Shadow boundary)를 가로지를 때*를 제외하고는 자손 연결자(Descendant combinator, 예시. `div p {...}`)와 일반적으로 동등합니다.
+`:shadow` 연결자는 *하나의 섀도 경계(Shadow boundary)를 가로지를 때*를 제외하고는 자손 연결자(Descendant combinator, 예시. `div p {...}`)와 일반적으로 동등합니다.
 이는 섀도 트리 내의 엘리먼트를 쉽게 선택할 수 있도록 합니다.
 
     <style>
-      #host ^ span {
+      #host::shadow span {
         color: red;
       }
     </style>
@@ -174,7 +174,7 @@ root.innerHTML = '<style>\
     <script>
       var host = document.querySelector('div');
       var root = host.createShadowRoot();
-      root.innerHTML = "<span>Shadow DOM</span>" + 
+      root.innerHTML = "<span>Shadow DOM</span>" +
                        "<content></content>";
     </script>
 
@@ -187,7 +187,7 @@ root.innerHTML = '<style>\
 (function() {
 var host = document.querySelector('#style-hat-ex');
 var root = host.createShadowRoot();
-root.innerHTML = '<span>Shadow DOM</span>' + 
+root.innerHTML = '<span>Shadow DOM</span>' +
                  '<content></content>';
 })();
 </script>
@@ -195,19 +195,19 @@ root.innerHTML = '<span>Shadow DOM</span>' +
 **예제** (custom elements) - `<x-tabs>`는 `<x-panel>`을 그 자신의 Shadow DOM 내에 자식으로 가지고 있습니다. 각 패널은 제목 `h2`들을 포함하고 있는 그 자신의 섀도 트리를 호스팅합니다. 메인 페이지로부터 저러한 제목들에 스타일을 적용하기 위해서는 다음과 같이 사용합니다.
 
 
-    x-tabs ^ x-panel ^ h2 {
+    x-tabs :shadow x-panel :shadow h2 {
       ...
     }
 
-<h3 id="toc-style-cat">^^ 연결자</h3>
+<h3 id="toc-style-cat">/deep/ 연결자</h3>
 
-`^^` 연결자도 유사하지만 더 강력합니다. `A ^^ B` 형태의 셀렉터는 모든 섀도 경계들을 무시하고 임의적인 자손 엘리먼트 B를 매칭합니다. 간단히 말해, `^^`는 **섀도 경계(Shadow boundary)를 몇개든 가로지를 수 있습니다.**
+`/deep/` 연결자도 `::shadow`와 유사하지만 더 강력합니다. `A /deep/ B` 형태의 셀렉터는 모든 섀도 경계들을 무시하고 임의적인 자손 엘리먼트 B를 매칭합니다. 간단히 말해, `/deep/`는 **섀도 경계(Shadow boundary)를 몇개던 가로지를 수 있습니다.**
 
-`^^` 연결자는 일반적으로 다중 레벨의 Shadow DOM을 가진 커스텀 엘리먼트(Custome Elements)의 세상에서 특별히 더 유용합니다. 최고의 예제들은 (각각이 그들 자신의 Shadow DOM을 가진) 커스텀 엘리먼트들이 엄청나게 중첩되어 내재되는 것이나 [`<shadow>`](/ko/tutorials/webcomponents/shadowdom-301/#toc-shadow-insertion)를 사용하여 또다른 엘리먼트로부터 상속받는 엘리먼트를 생성하는 것입니다.
+`/deep/` 연결자는 일반적으로 다중 레벨의 Shadow DOM을 가진 커스텀 엘리먼트(Custome Elements)의 세상에서 특별히 더 유용합니다. 최고의 예제들은 (각각이 그들 자신의 Shadow DOM을 가진) 커스텀 엘리먼트들이 엄청나게 중첩되어 내재되는 것이나 [`<shadow>`](/ko/tutorials/webcomponents/shadowdom-301/#toc-shadow-insertion)를 사용하여 또다른 엘리먼트로부터 상속받는 엘리먼트를 생성하는 것입니다.
 
 **예제** (custom elements) - 다음과 같이 `<x-tabs>`의 자손인 모든 `<x-panel>` 엘리먼트를 선택하며 모든 섀도 경계를 무시합니다.
 
-    x-tabs ^^ x-panel {
+    x-tabs /deep/ x-panel {
       ...
     }
 
@@ -221,35 +221,35 @@ root.innerHTML = '<span>Shadow DOM</span>' +
             .querySelector('#foo');
 
     // Fun.
-    document.querySelector('x-tabs ^ x-panel ^ #foo');
+    document.querySelector('x-tabs :shadow x-panel :shadow #foo');
 
 <h3 id="toc-style-native">네이티브 엘리먼트의 스타일 적용</h3>
 
-네이티브 HTML 컨트롤들은 스타일 적용에 대한 도전입니다. 많은 사람들이 쉽게 포기하고 주먹구구식으로 해결합니다. 그러나 ^와 ^^를 사용하여 Shadow DOM을 사용하는 웹 플랫폼의 어떠한 엘리먼트라도 스타일을 적용할 수 있습니다. `<video>`와 `<input>`이 좋은 예입니다.
+네이티브 HTML 컨트롤들은 스타일 적용에 대한 도전입니다. 많은 사람들이 쉽게 포기하고 주먹구구식으로 해결합니다. 그러나 :shadow와 /deep/을 사용하여 Shadow DOM을 사용하는 웹 플랫폼의 어떠한 엘리먼트라도 스타일을 적용할 수 있습니다. `<video>`와 `<input>`이 좋은 예입니다.
 
-    video ^ input[type="range"] {
+    video /deep/ input[type="range"] {
       background: hotpink;
     }
 
-<div class="demoarea">  
+<div class="demoarea">
   <video id="ex-style-video" controls></video>
 </div>
 
 <blockquote class="commentary talkinghead">
-^와 ^^가 스타일 캡슐화의 목적을 깨뜨릴 수 있을까요? 특히 Shadow DOM은 외부로부터의 <em>돌발적인</em> 스타일링을 방지하긴 하지만 이것이 방탄조끼를 약속하지는 않습니다. 개발자들은 여러분의 섀도 트리의 내부를 <em>의도적으로</em> 스타일링할 수 있도록 합니다..만약 그들 스스로가 무엇을 하는 중인지 알고 있다면 말이죠. 더 많은 조작성을 가지고 있는 것은 또한 유연성, 테마 그리고 여러분의 엘리먼트에 대한 재사용성에도 좋은 일입니다.
+:shadow와 /deep/가 스타일 캡슐화의 목적을 깨뜨릴 수 있을까요? 특히 Shadow DOM은 외부로부터의 <em>돌발적인</em> 스타일링을 방지하긴 하지만 이것이 방탄조끼를 약속하지는 않습니다. 개발자들은 여러분의 섀도 트리의 내부를 <em>의도적으로</em> 스타일링할 수 있도록 합니다..만약 그들 스스로가 무엇을 하는 중인지 알고 있다면 말이죠. 더 많은 조작성을 가지고 있는 것은 또한 유연성, 테마 그리고 여러분의 엘리먼트에 대한 재사용성에도 좋은 일입니다.
 </blockquote>
 
 <h2 id="toc-style-hooks">스타일 훅(Hook) 생성하기</h2>
 
 커스터마이징은 좋습니다. 특정 경우에 여러분은 섀도의 스타일 방어막에 구멍을 내고 스타일링할 다른 것에 대한 훅(Hook)들을 생성하고 싶을 수 있습니다.
 
-<h3 id="toc-custom-pseduo">^와 ^^의 사용</h3>
+<h3 id="toc-custom-pseduo">:shadow와 /deep/의 사용</h3>
 
-`^^` 뒤에는 엄청난 강력함이 있습니다. 이는 개별적인 엘리먼트를 스타일화할 수 있도록 하거나 대량의 엘리먼트들을 테마가 적용될 수 있도록 지정하는 방법을 컴포넌트 저작자에게 제공합니다.
+`/deep/` 뒤에는 엄청난 강력함이 있습니다. 이는 개별적인 엘리먼트를 스타일화할 수 있도록 하거나 대량의 엘리먼트들을 테마가 적용될 수 있도록 지정하는 방법을 컴포넌트 저작자에게 제공합니다.
 
 **예제** - `.library-theme` 클래스를 가진 모든 엘리먼트에 스타일을 적용하고, 모든 섀도 트리를 무시
 
-    body ^^ .library-theme {
+    body /deep/ .library-theme {
       ...
     }
 
@@ -291,7 +291,7 @@ its slider thumb <span style="color:blue">blue</span>:
     <script>
     var root = document.querySelector('#host').createShadowRoot();
     root.innerHTML = '<div>' +
-                       '<div pseudo="x-slider-thumb"></div>' + 
+                       '<div pseudo="x-slider-thumb"></div>' +
                      '</div>';
     </script>
 
@@ -333,10 +333,10 @@ CSS 변수들이 상속되는 방법으로 인해 모든 것이 아주 멋지고
     <div id="host">Host node</div>
     <script>
     var root = document.querySelector('#host').createShadowRoot();
-    root.innerHTML = '<style>' + 
-        'button {' + 
-          'color: var(--button-text-color, pink);' + 
-          'font-family: var(--button-font);' + 
+    root.innerHTML = '<style>' +
+        'button {' +
+          'color: var(--button-text-color, pink);' +
+          'font-family: var(--button-font);' +
         '}' +
         '</style>' +
         '<content></content>';
@@ -376,8 +376,8 @@ CSS 변수들이 상속되는 방법으로 인해 모든 것이 아주 멋지고
 var root = document.querySelector('div').createShadowRoot();
 root.applyAuthorStyles = <span id="code-applyAuthorStyles">true</span>;
 root.resetStyleInheritance = <span id="code-resetStyleInheritance">false</span>;
-root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' + 
-                 '&lt;h3 class="border">Shadow DOM&lt;/h3>' + 
+root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' +
+                 '&lt;h3 class="border">Shadow DOM&lt;/h3>' +
                  '&lt;content select="h3">&lt;/content>';
 &lt;/script>
 </pre>
@@ -419,7 +419,7 @@ document.querySelector('#demo-resetStyleInheritance').addEventListener('click', 
 
 이는 어떻게 `.applyAuthorStyles`가 동작하는지를 쉽게 보여줍니다. 이는 저작자의 `.border` 클래스가 또한 Shadow DOM 내의 같은 클래스를 가진 엘리먼트에 적용되도록 합니다. (예를 들어 "페이지 저작자의 스타일의 적용" 같이)
 
-<p class="notice fact">심지어 <code>apply-author-styles</code> 속성이 설정되면 문서 내에 정의된 CSS 셀렉터들이 섀도 경계(Shadow boundary)를 넘나들지 않습니다. <b>스타일 규칙은 섀도 트리의 내부나 외부 전체에만 매칭되는 것은 아닙니다.</b> 만약 뭔가 더 강력한 것을 원하신다면 <a href="#toc-style-cat-hat">Cat (^^)과 Hat (^) 연결자(Combinator)</a>을 확인하시기 바랍니다.</p>
+<p class="notice fact">심지어 <code>apply-author-styles</code> 속성이 설정되면 문서 내에 정의된 CSS 셀렉터들이 섀도 경계(Shadow boundary)를 넘나들지 않습니다. <b>스타일 규칙은 섀도 트리의 내부나 외부 전체에만 매칭되는 것은 아닙니다.</b> 만약 뭔가 더 강력한 것을 원하신다면 <a href="#toc-style-cat-hat">:shadow 유사 엘리먼트(Pseudo element)와 /deep/ 연결자(Combinator)</a>을 확인하시기 바랍니다.</p>
 
 <img src="showinheritance.gif" title="DevTools inherited properties" alt="DevTools inherited properties" style="height:215px;border:1px solid #ccc;float:right;margin-left:10px;">
 
