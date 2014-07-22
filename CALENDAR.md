@@ -1,4 +1,4 @@
-HTML5 Rocks Quarter Report for 2014-07-21
+HTML5 Rocks Quarter Report for 2014-07-22
 =========================================
 
 Articles due this quater
