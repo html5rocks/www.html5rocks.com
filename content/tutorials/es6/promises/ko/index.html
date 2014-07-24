@@ -196,6 +196,8 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 <p>현재의 브라우저들에서 promises의 (부분적인) 구현이 이미 존재합니다.</p>
 <p>크롬에서는 Chromans이 하는 것처럼 하시면 됩니다. Promises가 기본적으로 가능한 <a href="https://www.google.com/intl/en/chrome/browser/canary.html">카나리 버전을 다운로드</a>합니다. 그렇지 않고 Firefox에 대한 신념을 가지고 있다면 <a href="http://nightly.mozilla.org/">그에 대한 최신 Nightly 버전을 다운로드</a>을 사용할 수 있습니다.</p>
 
+<p>크롬 32 버전, 오페라 19 및 파이어폭스 29부터 promises는 기본적으로 사용 가능합니다. 웹킷 나이틀리(WebKit Nightlies)에 포함되어 있으며, 사파리의 다음 릴리즈에서 포함되는 것을 기대할만 하며 <a href="http://status.modern.ie/promiseses6?term=promise">IE에서는 개발 중에 있습니다.</a>
+
 <p>완전함과 완벽하게 호환되는 구현은 아직 없습니다. 여러분은 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=918806">파이어폭스의 개발상황을 Bugzilla</a>과 <a href="http://www.chromestatus.com/features/5681726336532480">크롬 기능 대쉬보드</a>에서 이를 추적해볼 수 있습니다.</p>
 <p>저러한 브라우저들이 스펙을 준수하거나 다른 브라우저와 Node.js에 promises를 추가하기 위해서 <a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">대체 라이브러리(Polyfill)</a> (gzip으로 압축 시 2KB)를 확인해보시기 바랍니다.</p>
 
@@ -751,6 +753,9 @@ adder.next(50).value; // 65</pre>
 
 <p>이는 promises, generators, let, for-of와 같은 많은 새로운 ES6 기능들을 제공합니다. promise를 양보(yield)할 때 생성된 헬퍼는 promise의 해결과 최종 값의 반환을 기다리게 됩니다. 만약 promise가 거부(reject)되면, 생성은 일반적인 자바스크립트의 try/catch 문에서 처리할 수 있는 예외를 전달하기 위한 양보문(yield statement)를 발생합니다. 놀랍도록 쉬운 비동기 코딩입니다!</p>
 
+<p><a href="http://jakearchibald.com/2014/es7-async-functions/">비동기 함수들</a>의 형태에서의 패턴은 꽤 유용하며, ES7에 포함되는 중입니다. 이는 앞에서 말한 것과 상당히 많이 비슷합니다만 <code>spawn</code> 메소드가 필요하지 않습니다.</p>
+
+
 <h2 id="toc-api">Promise API 레퍼런스</h2>
 
 <p>모든 메소드는 별도의 표기가 없는 한 크롬 및 파이어폭스의 nightly 버전에서 동작합니다. <a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">대체 라이브러리(Polyfill)</a>는 모든 브라우저에 대해 아래 기능들을 제공합니다.</p>
@@ -772,10 +777,10 @@ adder.next(50).value; // 65</pre>
   <dt>
   <dt><code>Promise.all(array);</code></dt>
   <dd>배열 내의 모든 아이템이 완료되거나 그 중 어떤 아이템이라도 거부되는 경우(그리고 거부되었을 때) 거부되는 promise를 생성합니다. 추가된 배열 아이템은 Promise.resolve로 전달되므로 배열은 promise스러운 객체들과 다른 객체들의 혼합일 수 있습니다. 완료된 값은 완료된 값들의 (순차적인) 배열입니다. 거부된 값은 첫번째로 거부된 값입니다.
-  <p class="notice"><b>주의:</b> 당분간 크롬에서만 구현되어 있을 것입니다.</p></dd>
   <dt><code>Promise.race(array);</code></dt>
   <dd>어떤 아이템이라도 완료되면 함께 완료되고 반대로 어떤 아이템이라도 거부되면 함께 거부되는 promise를 생성합니다.
-  <p class="notice"><b>Note:</b> 크롬에서만 <code>Promise.one</code>로 구현되어 있습니다. 또한, 저는 이에 대한 유용성에 대하여 납득하지 못하고 있고 만약 모든 아이템이 거부되었을 때만 거부되는 <code>Promise.all</code>에 대한 정반대의 기능이 낫다고 생각합니다.</p></dd>
+  <p class="notice"><b>Note:</b> 저는 이에 대한 유용성에 대하여 납득하지 못하고 있고 만약 모든 아이템이 거부되었을 때만 거부되는 <code>Promise.all</code>에 대한 정반대의 기능이 낫다고 생각합니다.</p>
+  </dd>
 </dl>
 
 <h3>생성자</h3>
