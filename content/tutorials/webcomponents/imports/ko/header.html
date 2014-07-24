@@ -5,108 +5,74 @@
 
 {% block head %}
 <style>
-label.bad, label.good, label.sortof {
-  padding: 4px;
-  line-height: 1.7;
-  border-radius: 50%;
-  color: white;
-  display: inline-block;
-  vertical-align: middle;
-  text-align: center;
-  -webkit-transform: rotateZ(90deg);
-  -moz-transform: rotateZ(90deg);
-  -ms-transform: rotateZ(90deg);
-  -o-transform: rotateZ(90deg);
-  transform: rotateZ(90deg);
-  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
-  width: 20px;
-  height: 20px;
-  font-size: 16px;
-}
-label.good::after,
-label.bad::after,
-label.sortof::after {
-  position: relative;
-  left: 2px;
-  top: -5px;
-}
-label.bad {
-  background-color: red;
-}
-label.bad::after {
-  content: ':(';
-}
-label.good {
-  background-color: green;
-}
-label.good::after {
-  content: ':)';
-}
-label.sortof {
-  background-color: rgb(230, 190, 32);
-  line-height: 1.8;
-}
-label.sortof::after {
-  content: ':|';
-}
-button a {
-  color: inherit !important;
-}
-.centered {
-  text-align: center;
-}
 figure img {
   border: 1px solid #ccc;
-  padding: 10px;
 }
-article.tutorial section {
+.tutorial section {
   overflow: visible;
 }
-.talkinghead:before {
-  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
-  background-position: 0px 0px !important;
+.tutorial section iframe {
+  width: 100%;
+  border: none;
 }
-/*blockquote:not(.talkinghead) {
-  background: rgb(238, 238, 238);
-  padding: 1px 15px;
+article.tutorial .notice.fact {
   position: relative;
-}*/
-/*blockquote:not(.talkinghead):before {
-  content: '“';
-  top: -25px;
-  left: -15px;
+  padding-left: 25px;
 }
-blockquote:not(.talkinghead):after {
-  content: '”';
-  right: -5px;
-  bottom: -55px;
-}
-blockquote:not(.talkinghead):before,
-blockquote:not(.talkinghead):after {
-  font-size: 75px;
+article.tutorial .notice.fact:before {
   position: absolute;
-  color: rgb(204, 204, 204);
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
 }
-*/
-
-/*
 .tutorial table td,
 .tutorial table th {
   border: 1px solid #ccc;
   padding: 5px;
 }
 .tutorial table th {
-  background: #222;
+  background: #444;
   color: white;
   padding: 10px;
-  font-weight: 600;
-}*/
-
+  font-weight: normal;
+}
+.tutorial table em {
+  margin-left: 15px;
+}
+.tutorial table tr {
+  background: #fff;
+}
+.tutorial table tr:nth-child(odd) {
+  background: #eee;
+}
 .disabledemos .demoarea {
   display: none !important;
 }
-.demoarea {
+.demoarea, .demodevtools {
   margin-top: 20px;
+}
+.demodevtools {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  margin-right: 1em;
+}
+.demodevtools:before {
+  content: 'DevTools view:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 .demoarea {
   padding: 10px;
@@ -118,16 +84,45 @@ blockquote:not(.talkinghead):after {
 .demoarea:before {
   content: 'Live demo:';
   position: absolute;
-  top: -20px;
+  top: -30px;
   left: 0;
-  font-weight: bold;
-  text-transform: uppercase;
+}
+.featuresupported.no {
+  display: none !important;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+
+#inherit-buttons {
+  margin-left: 15px;
+  margin-top: 20px;
+  display: inline-block;
+  vertical-align: top;
+}
+#inherit-buttons button {
+  display: block;
+  margin-bottom: 10px;
+}
+.small-notice {
+  font-size: 85%;
+}
+#style-hat-ex::shadow span {
+  color: red;
+}
+#ex-style-video {
+  height: 30px;
+  width: 100%;
+}
+#ex-style-video /deep/ input[type="range"] {
+  background: hotpink;
 }
 </style>
 {% endblock %}
 
 {% block iscompatible %}
-  return 'import' in document.createElement('link');
+  return !!HTMLElement.prototype.createShadowRoot;
 {% endblock %}
 
 {% block html5badge %}
@@ -143,5 +138,3 @@ blockquote:not(.talkinghead):after {
   <strong>Translator:</strong> <a href="http://cwdoh.com">도창욱 (Chang W. Doh)</a>
 </div>
 {% endblock %}
-
-{% block content %}

@@ -210,21 +210,21 @@
 
       &lt;div class="col-lg-4"&gt;
 
-          &lt;template if="&#123;&#123;post.gsx$slug.$t === selected&#125;&#125;"&gt;
+          &lt;template if="[[post.gsx$slug.$t === selected]]"&gt;
 
             &lt;h2&gt;
-              &lt;a href="#&#123;&#123;post.gsx$slug.$t&#125;&#125;"&gt;
-                &#123;&#123;post.gsx$title.$t  &#125;&#125;
+              &lt;a href="#[[post.gsx$slug.$t]]"&gt;
+                [[post.gsx$title.$t  ]]
               &lt;/a&gt;
             &lt;/h2&gt;
 
-            &lt;p&gt;By &#123;&#123;post.gsx$author.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;By [[post.gsx$author.$t]]&lt;/p&gt;
 
-            &lt;p&gt;&#123;&#123;post.gsx$content.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;[[post.gsx$content.$t]]&lt;/p&gt;
 
-            &lt;p&gt;Published on: &#123;&#123;post.gsx$date.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;Published on: [[post.gsx$date.$t]]&lt;/p&gt;
 
-            &lt;small&gt;Keywords: &#123;&#123;post.gsx$keywords.$t&#125;&#125;&lt;/small&gt;
+            &lt;small&gt;Keywords: [[post.gsx$keywords.$t]]&lt;/small&gt;
 
           &lt;/template&gt;
 
@@ -366,7 +366,7 @@
 <pre class="prettyprint"><code>&lt;link rel="import" href="../bower_components/polymer-jsonp/polymer-jsonp.html"&gt;
 </code></pre>
 <p>그리고, 그를 위한 태그를 포함시키고 마지막 부분에 <code>&amp;callback=</code>를 추가하여 앞에 나온 스프레드쉬트를 우리의 블로그에 포스팅하기 위한 <code>url</code>를 넣어야 합니다.</p>
-<pre class="prettyprint"><code>&lt;polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&amp;callback=" response="&#123;&#123;posts&#125;&#125;"&gt;&lt;/polymer-jsonp&gt;
+<pre class="prettyprint"><code>&lt;polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/your-key-value/od6/public/values?alt=json-in-script&amp;callback=" response="[[posts]]"&gt;&lt;/polymer-jsonp&gt;
 </code></pre>
 <p class="notice"><b>주의:</b>  만약 더 이상 아무것도 할 수 없다면 튜토리얼을 계속하기 위해 여러분의 URL 값으로 <a href="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script">https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdDhuQ2pvN21JVW9NeVA0M1h4eGo3RGc/od6/public/values?alt=json-in-script</a>에 있는 제 스프레드쉬트를 편하게 사용하셔도 됩니다.</p>
 
@@ -375,9 +375,9 @@
 
 &lt;ul&gt;
 
-  &lt;template repeat="&#123;&#123;post in posts.feed.entry&#125;&#125;"&gt;
+  &lt;template repeat="[[post in posts.feed.entry]]"&gt;
 
-    &lt;li&gt;&lt;a href="#&#123;&#123;post.gsx$slug.$t&#125;&#125;"&gt;&#123;&#123;post.gsx$title.$t&#125;&#125;&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#[[post.gsx$slug.$t]]"&gt;[[post.gsx$title.$t]]&lt;/a&gt;&lt;/li&gt;
 
   &lt;/template&gt;
 
@@ -386,17 +386,17 @@
 <p>두번째로 각 entry에 마다 'post-element'의 인스턴스 하나를 게시물의 내용을 전달하여 렌더링합니다. 우리가 스프레드쉬트 한 행의 게시물 내용을 나타내는 'post' 속성과 덧붙이고자 하는 'selected' 속성을 route로 전달하고 있다는데 주목하시기 바랍니다.</p>
 <pre class="prettyprint"><code>&lt;!-- Post content --&gt;
 
-&lt;template repeat="&#123;&#123;post in posts.feed.entry&#125;&#125;"&gt;
+&lt;template repeat="[[post in posts.feed.entry]]"&gt;
 
-  &lt;post-element post="&#123;&#123;post&#125;&#125;" selected="&#123;&#123;route&#125;&#125;"&gt;&lt;/post-element&gt;
+  &lt;post-element post="[[post]]" selected="[[route]]"&gt;&lt;/post-element&gt;
 
 &lt;/template&gt;
 </code></pre>
-<p>여러분이 템플릿에서 볼 수 있는 'repeat' 속성으로 게시물들의 컬렉션 배열이 제공되면 그 안의 모든 요소에 대해 &#123;&#123;bindings&#125;&#125;을 가진 인스턴스를 생성하고 관리할 수 있습니다.</p>
+<p>여러분이 템플릿에서 볼 수 있는 'repeat' 속성으로 게시물들의 컬렉션 배열이 제공되면 그 안의 모든 요소에 대해 [[bindings]]을 가진 인스턴스를 생성하고 관리할 수 있습니다.</p>
 <p><img src="image_10.png" class="screenshot"/></p>
-<p>이제 우리는 &#123;&#123;route&#125;&#125;를 덧붙이기 위해 URL 해쉬가 변경될 때마다 &#123;&#123;route&#125;&#125;로 바인딩하는 Flatiron director 라이브러리를 사용하고 트릭을 부릴 수 있을 것입니다.</p>
+<p>이제 우리는 [[route]]를 덧붙이기 위해 URL 해쉬가 변경될 때마다 [[route]]로 바인딩하는 Flatiron director 라이브러리를 사용하고 트릭을 부릴 수 있을 것입니다.</p>
 <p>고맙게도 이미 우리가 그렇게 할 수 있는 <a href="https://github.com/Polymer/more-elements/tree/master/flatiron-director">Polymer element</a>(<a href="https://github.com/Polymer/more-elements">more-elements</a> 패키지의 일부)가 있습니다.
-/elements 디렉토리에 한번 복사하고 나면, 우리는 <code>&lt;flatiron-director route="&#123;&#123;route&#125;&#125;" autoHash&gt;&lt;/flatiron-director&gt;</code>로 그것을 참조할 수 있으며, 'route'를 우리가 바인딩하고 싶은 속성처럼 지정하고 어떠한 해시의 변경값도 자동으로 읽도록(autoHash) 정의할 수 있습니다.</p>
+/elements 디렉토리에 한번 복사하고 나면, 우리는 <code>&lt;flatiron-director route="[[route]]" autoHash&gt;&lt;/flatiron-director&gt;</code>로 그것을 참조할 수 있으며, 'route'를 우리가 바인딩하고 싶은 속성처럼 지정하고 어떠한 해시의 변경값도 자동으로 읽도록(autoHash) 정의할 수 있습니다.</p>
 <p>이제 우리가 가진 모든 것을 함께 버무려봅시다.</p>
 <pre class="prettyprint"><code>&lt;link rel="import" href="post.html"&gt;
 
@@ -416,7 +416,7 @@
 
       &lt;h1&gt;&lt;a href="/#"&gt;My Polymer Blog&lt;/a&gt;&lt;/h1&gt;
 
-      &lt;flatiron-director route="&#123;&#123;route&#125;&#125;" autoHash&gt;&lt;/flatiron-director&gt;
+      &lt;flatiron-director route="[[route]]" autoHash&gt;&lt;/flatiron-director&gt;
 
       &lt;h2&gt;Posts&lt;/h2&gt;
 
@@ -424,9 +424,9 @@
 
       &lt;ul&gt;
 
-        &lt;template repeat="&#123;&#123;post in posts.feed.entry&#125;&#125;"&gt;
+        &lt;template repeat="[[post in posts.feed.entry]]"&gt;
 
-          &lt;li&gt;&lt;a href="#&#123;&#123;post.gsx$slug.$t&#125;&#125;"&gt;&#123;&#123;post.gsx$title.$t&#125;&#125;&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#[[post.gsx$slug.$t]]"&gt;[[post.gsx$title.$t]]&lt;/a&gt;&lt;/li&gt;
 
         &lt;/template&gt;
 
@@ -434,15 +434,15 @@
 
       &lt;!-- Post content --&gt;
 
-      &lt;template repeat="&#123;&#123;post in posts.feed.entry&#125;&#125;"&gt;
+      &lt;template repeat="[[post in posts.feed.entry]]"&gt;
 
-        &lt;post-element post="&#123;&#123;post&#125;&#125;" selected="&#123;&#123;route&#125;&#125;"&gt;&lt;/post-element&gt;
+        &lt;post-element post="[[post]]" selected="[[route]]"&gt;&lt;/post-element&gt;
 
       &lt;/template&gt;
 
     &lt;/div&gt;
 
-    &lt;polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&amp;callback=" response="&#123;&#123;posts&#125;&#125;"&gt;&lt;/polymer-jsonp&gt;
+    &lt;polymer-jsonp auto url="https://spreadsheets.google.com/feeds/list/0AhcraNy3sgspdHVQUGd2M2Q0MEZnRms3c3dDQWQ3V1E/od6/public/values?alt=json-in-script&amp;callback=" response="[[posts]]"&gt;&lt;/polymer-jsonp&gt;
 
   &lt;/template&gt;
 
@@ -485,19 +485,19 @@
 
       &lt;div class="col-lg-4"&gt;
 
-          &lt;template if="&#123;&#123;post.gsx$slug.$t === selected&#125;&#125;"&gt;
+          &lt;template if="[[post.gsx$slug.$t === selected]]"&gt;
 
-            &lt;h2&gt;&lt;a href="#&#123;&#123;post.gsx$slug.$t&#125;&#125;"&gt;&#123;&#123;post.gsx$title.$t&#125;&#125;&lt;/a&gt;&lt;/h2&gt;
+            &lt;h2&gt;&lt;a href="#[[post.gsx$slug.$t]]"&gt;[[post.gsx$title.$t]]&lt;/a&gt;&lt;/h2&gt;
 
-            &lt;p&gt;By &#123;&#123;post.gsx$author.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;By [[post.gsx$author.$t]]&lt;/p&gt;
 
-            &lt;gravatar-element username="&#123;&#123;post.gsx$email.$t&#125;&#125;" size="100"&gt;&lt;/gravatar-element&gt;
+            &lt;gravatar-element username="[[post.gsx$email.$t]]" size="100"&gt;&lt;/gravatar-element&gt;
 
-            &lt;p&gt;&#123;&#123;post.gsx$content.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;[[post.gsx$content.$t]]&lt;/p&gt;
 
-            &lt;p&gt;&#123;&#123;post.gsx$date.$t&#125;&#125;&lt;/p&gt;
+            &lt;p&gt;[[post.gsx$date.$t]]&lt;/p&gt;
 
-            &lt;small&gt;Keywords: &#123;&#123;post.gsx$keywords.$t&#125;&#125;&lt;/small&gt;
+            &lt;small&gt;Keywords: [[post.gsx$keywords.$t]]&lt;/small&gt;
 
           &lt;/template&gt;
 

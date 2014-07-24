@@ -2,7 +2,7 @@
 
 <h2 id="intro">소개</h2>
 
-웹은 표현에 대해 심각한 부족함을 갖고 있습니다. 무슨 뜻인지 확인하려면 GMail 같은 "모던" 웹앱을 보세요.:
+웹은 표현에 대해 심각한 부족함을 갖고 있습니다. 무슨 뜻인지 알고 싶다면 다음에서 예로 드는 지메일 같은 "모던" 웹앱에서 확인해볼 수 있습니다.
 
 <figure>
   <a href="gmail.png"><img src="gmail.png" style="max-width:75%"></a>
@@ -11,11 +11,11 @@
 
 <div> soup에 대해서는 모던 하지 않습니다. 그리고 아직까지도 이것은 우리가 웹앱을 구축하는 방법이며 슬픕니다. 플랫폼에게 더 많이 요구하지 말아야 할까요?
 
-<h3 id="meaningful">훌륭한 markup. 만들어 봅시다.</h3>
+<h3 id="meaningful">좋은 마크업을 만들어 봅시다.</h3>
 
-HTML은 문서를 구조화 하기 위한 훌륭한 도구를 제공합니다만 [HTML 표준](http://www.whatwg.org/specs/web-apps/current-work/multipage/) 정의 element들에 한정되어 있습니다.
+HTML은 문서를 구조화 하기 위한 훌륭한 도구를 제공합니다만 [HTML 표준](http://www.whatwg.org/specs/web-apps/current-work/multipage/) 정의 엘리먼트들에 한정되어 있습니다.
 
-어떤 마크업이 GMail을 끔찍해 보이지 않게 할까요. 어떤 마크업이 GMail을 아름답게 보이게 할까요.:
+어떤 마크업이 지메일을 끔찍해 보이지 않게 할까요. 어떤 마크업이 지메일을 아름답게 보이게 할까요.:
 
     <hangout-module>
       <hangout-chat from="Paul, Addy">
@@ -91,12 +91,12 @@ native elements로부터 상속받은 custom element는 _타입 확장 custom el
 
 
 <h4 id="extendcustomeel">custom element 확장하기</h4>
- 
+
 `<x-foo>` custom element를 확장한 `<x-foo-extended>` element를 만들기 위해서는 단순히 prototype을 상속받으면 되며 여러분이 무엇으로부터 상속받았는지 `extends`에 이름을 넣으면 됩니다.:
 
     var XFooProto = Object.create(HTMLElement.prototype);
     ...
- 
+
     var XFooExtended = document.registerElement('x-foo-extended', {
       prototype: XFooProto,
       extends: 'x-foo'
@@ -112,7 +112,7 @@ HTML Parser가 표준에 맞지 않는 태그에서 exception을 던지지 않�
     <code>HTMLUnknownElement</code> interface는 현재 specification에 정의 되지 않은 HTML element에서 사용되기 위해 제공된다.
     <cite>HTML spec</cite>
 </blockquote>
- 
+
 `<randomtag>` 미안! `<randomtag>`는 비표준이며 `HTMLUnknownElement`로부터 상속된다.
 
 custom elements의 같음 비교는 true가 아닌 결과를 줍니다. **유효한 custom element이름을 갖는 element는 `HTMLElement`로부터 상속받는다.** 여러분은 콘솔에서 이 사실을 확인할 수 있습니다:  <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">J</span> (또는 Mac에서는  <span class="kbd">Cmd</span>+<span class="kbd">Opt</span>+<span class="kbd">J</span>) 실행된 콘솔에 다음 코드 라인들을 붙여보면 다음 코드 라인들의 return이 `true`인 것을 확인 할 수 있습니다.:
@@ -429,13 +429,13 @@ element의 `.innerHTML`를 설정하는 것 대신에 저는 `<x-foo-shadowdom>`
 </app-panel>
 </div>
 
-<h3 id="styling">Shadow DOM을 이용한 elements Styling 하기</h3>
+<h3 id="styling">Shadow DOM을 이용한 엘리먼트 스타일링하기</h3>
 
 Shadow DOM을 사용하면 토끼굴은 _훨씬 더_ 깊어집니다. [Shadow DOM을 사용하는 custom elements](#shadowdom)는 큰 이점들을 상속받았습니다.
 
-Shadow DOM은 스타일 캡슐화된 element를 주입했습니다. Shadow Root 안에 정의된 Style은 host에 누설되지도 않고 페이지에 흘리지도 않습니다. **custom element의 경우 element 자체가 host입니다.** style 캡슐화의 프로퍼티들은 custom elements가 그들 자신의 기본 style을 정의할 수 있도록 합니다.
+Shadow DOM은 스타일 캡슐화된 엘리먼트를 주입했습니다. Shadow Root 안에 정의된 스타일은 호스트(Host)에 누설되지도 않고 페이지에 흘리지도 않습니다. **custom element의 경우 엘리먼트 자체가 호스트(Host)입니다.** style 캡슐화의 프로퍼티들은 custom elements가 그들 자신의 기본 스타일을 정의할 수 있도록 합니다.
 
-Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 다른 몇몇 article을 추천합니다.:
+Shadow DOM의 스타일링은 큰 주제입니다! 더 배우기를 원한다면, 다른 몇가지 제 글들을 추천합니다.:
 
 - [Polymer](http://www.polymer-project.org) 문서 상의 "[element를 스타일링 하기 위한 가이드](http://www.polymer-project.org/articles/styling-elements.html)"
 - html5rock.com 상의 "[Shadow DOM 201: CSS & Styling](/tutorials/webcomponents/shadowdom-201/)"
@@ -458,7 +458,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
       }
     </style>
 
-`:unresolved`는 `HTMLUnkownElement`로부터 상속받은 element([elements가 업그레이드 되기 위한 방법](#upgrades) 참고)가 아닌 [unresolved elements](#unresolvedels)에만 적용된다는 것을 기억하세요.
+`:unresolved`는 `HTMLUnknownElement`로부터 상속받은 element([elements가 업그레이드 되기 위한 방법](#upgrades) 참고)가 아닌 [unresolved elements](#unresolvedels)에만 적용된다는 것을 기억하세요.
 
     <style>
       /* 모든 unresolved element에 dashed border 적용하기 */
@@ -478,7 +478,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
         display: block;
       }
     </style>
-    
+
     <panel>
       I'm black because :unresolved doesn't apply to "panel".
       It's not a valid custom element name.
@@ -500,7 +500,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
 <h3 id="featuredetect">기능 탐지</h3>
 
 기능 탐지는 `document.registerElement()`의 존재 유무를 확인한다.:
-    
+
     function supportsCustomElements() {
       return 'registerElement' in document;
     }
@@ -517,10 +517,7 @@ Shadow DOM styling은 큰 주제입니다! 더 배우기 원한다면, 저의 �
 
 <p class="notice fact">custom element는 Chrome 31 에서 "실험 웹 플랫폼 기능"으로 <code>about:flags</code>에 활성화 할 수 있었습니다.</p>
 
-브라우저 지원이 활성화될때까지 아래 두가지 훌륭한 polyfills를 사용할 수 있습니다:
-
-- Google의 [Polymer](http://polymer-project.org)는 [polyfill](http://www.polymer-project.org/platform/custom-elements.html)을 갖습니다.
-- Mozilla의 [x-tags](http://www.x-tags.org/)
+브라우저의 지원이 활성화될 때까지 Google's [Polymer](http://polymer-project.org)와 Mozilla's [X-Tag](http://www.x-tags.org/) 모두에서 사용할 수 있는 [polyfill](http://www.polymer-project.org/platform/custom-elements.html)이 존재합니다.
 
 <h3 id="elementel">HTMLElementElement에 무슨 일이 발생하나요?</h3>
 
@@ -592,4 +589,3 @@ if (('createShadowRoot' in document.body || 'webkitCreateShadowRoot' in document
 
 }
 </script>
-

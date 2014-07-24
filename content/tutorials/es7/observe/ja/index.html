@@ -1,0 +1,686 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-intro">はじめに</h2>
+
+<p>革命が始まります。あなたがデータバインディングについて知っていたこと <em>すべて</em> が変わるほどの機能が、JavaScript に追加されます。また、既存の MVC が使っている、編集や更新が行われた際の監視 (observe) モデルのアプローチがガラッと変わります。準備はいいですか？</p>
+
+<p>もったいぶらずに言いましょう。<a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe()</a> が <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> Beta から使えるようになります (<em>パチパチパチ！</em>)。</p>
+
+<p>未来の ECMAScript 標準の一部である <code>Object.observe()</code> は、ライブラリなしに、非同期で JavaScript オブジェクトに関する変更を監視するための関数です。これにより監視者 (observer) は、オブジェクトに対して発生した変更履歴を、時系列で受け取ることができるようになります。</p>
+
+<pre class="prettyprint">
+// データを持ったモデル
+var model = {};
+
+// それを監視する
+Object.observe(model, function(changes){
+
+    // この非同期コールバックが変更を収集
+    changes.forEach(function(change) {
+
+        // 変更内容
+        console.log(change.type, change.name, change.oldValue);
+    });
+
+});
+</pre>
+
+<p>変更が起きるたびに、レポートされます:</p>
+
+<p><img src="image_0.png"  /></p>
+
+<p><code>Object.observe()</code> (私は O.o() とか Oooooooo と呼ぶのが好きです) を使えば、<a href="http://bitworking.org/news/2014/05/zero_framework_manifesto">フレームワーク</a> なしの 2 Way データバインディングを実現することができます。</p>
+
+<p>もちろんこれは、フレームワークを使うな、という意味ではありません。複雑なビジネスロジックを持った巨大なプロジェクトであれば、フレームワークは欠かせないものですし、使い続けるべきです。フレームワークがあれば、新参開発者の指針をシンプルにし、メンテナンスコストを下げ、よくあるタスクを手軽に実現できるようにできます。必要なければ、もっと小さな目的に特化したライブラリ、例えば <a href="http://polymer-project.org">Polymer</a> (既に O.o() の利点を活かしています) を使えばよいのです。</p>
+
+<p>もし既にフレームワークや MV* のライブラリをお使いなら、O.o() は、API はそのままに、早くてシンプルな実装を実現しつつ、パフォーマンスを改善する助けになるかもしれません。例えば昨年、AngularJS では、従来の方式で 40ms かかっていた変更検知を、1 〜 2 ms で実現できる (20 倍 〜 40 倍の早さ) という <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-September/024978.html">ベンチマーク結果</a> を得ました。</p>
+
+<p>大量かつ複雑なコードなしにデータバインディングが実現できるということは、ポーリングが不要になるということであり、電池もより長く持つということを意味します。</p>
+
+<p>既に O.o() に惚れ込んでしまったのであれば、この後の <a href="#toc-intro-oo">Object.observe() の紹介</a> まで飛ばしてください。そうでなければ、O.o() が解決してくれる問題を読み進めて下さい。</p>
+
+<h2 id="toc-what-are-we-observing">何を監視したいのか？</h2>
+
+<p>通常データを監視するといった場合、特定の種類の変更について指しています：</p>
+
+<ul>
+<li><p>生の JavaScript オブジェクトの変更</p></li>
+<li><p>プロパティの追加、変更、削除</p></li>
+<li><p>配列の要素の変更</p></li>
+<li><p>オブジェクトのプロトタイプの変更</p></li>
+</ul>
+
+
+<h2 id="toc-importance">データバインディングの重要性</h2>
+
+<p>ひとことで言ってしまえば、モデルとビューコントロールの分離です。HTML は宣言的な構造には適していますが、完全に静的です。理想的には、データと DOM の関係を宣言することで、DOM には常に最新の状態を保っていて欲しいはずです。そうすればレバレッジが効き、DOM とアプリケーションの状態、またはサーバーとの間で、データをやりとりするコードを繰り返し書かなくて済みます。</p>
+
+<p>データバインディングは、ビューに複数の要素があり、かつデータモデルが複数のプロパティを持つような、複雑なユーザーインターフェースの場合に、特に威力を発揮します。</p>
+
+<p>ブラウザに、直接データを監視する機能を持たせることで、JavaScript フレームワークは、現在広く使われているスピードの遅いハックに頼ることなく、モデルデータへの変更を監視することができるようになります。</p>
+
+<h2 id="toc-world-look-like-today">今、どんな解決策があるのか</h2>
+
+<p><strong>ダーティチェッキング</strong></p>
+
+<p>データバインディングを見たことがありますか？ウェブアプリを作る際、モダンな MV* ライブラリ (例えば AngularJS) を使っているのであれば、モデルデータを DOM にバインドするのには慣れっこでしょう。もう一度思い出してもらうために、電話帳アプリを例に説明していきます。データと UI が常に同期するよう、各電話番号の値は <code>phones</code> 配列 (JavaScript で定義) として、リストアイテムにバインドします。
+
+<pre class="prettyprint">
+&lt;html ng-app&gt;
+  &lt;head&gt;
+    ...
+    &lt;script src=&quot;angular.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;controller.js&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body ng-controller=&quot;PhoneListCtrl&quot;&gt;
+    &lt;ul&gt;
+      &lt;li ng-repeat=&quot;phone in phones&quot;&gt;
+        &#123;&#123;phone.name&#125;&#125;
+        &lt;p&gt;&#123;&#123;phone.snippet&#125;&#125;&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>この controller の JavaScript はこちら：</p>
+
+<pre class="prettyprint">
+var phonecatApp = angular.module('phonecatApp', []);
+
+phonecatApp.controller('PhoneListCtrl', function($scope) {
+  $scope.phones = [
+    {'name': 'Nexus S',
+     'snippet': 'Fast just got faster with Nexus S.'},
+    {'name': 'Motorola XOOM with Wi-Fi',
+     'snippet': 'The Next, Next Generation tablet.'},
+    {'name': 'MOTOROLA XOOM',
+     'snippet': 'The Next, Next Generation tablet.'}
+  ];
+});
+</pre>
+
+<p><a href="http://angular.github.io/angular-phonecat/step-2/app/">(Demo)</a></p>
+
+<p></p>
+<p>下地となるデータモデルが変更される都度、DOM のリストは更新されます。Angular はどのようにこれを実現しているのでしょうか？実はこれは、ダーティチェックと呼ばれる方法で実現されています。</p>
+
+<img src="image_1.png"/>
+
+<p>ダーティチェックの基本的な考え方では、データが変更された可能性があるとその都度、ライブラリがダイジェスト、またはチェンジサイクルを介して変更されたかどうかをチェックしなければなりません。Angular の場合、ダイジェストサイクルは、<code>watch</code> に登録されたすべての Expression について、変更があったかどうかをチェックします。モデルの以前の状態を<a href="http://stackoverflow.com/questions/9682092/databinding-in-angularjs/9693933#9693933">把握</a>しており、変更された場合、<code>change</code> イベントが発生します。開発者にとって主な利点は、生の JavaScript オブジェクトデータが使えることにあります。欠点は、あまり好ましくないアルゴリズムを使った振る舞いが行われるため、処理が重いということです。</p>
+
+<img src="image_2.png"/>
+
+<p>この処理にかかるコストは、監視されるオブジェクトの総数に比例します。場合によっては多数のダーティチェックを行う必要があります。また、データが変更された <em>可能性がある</em> 場合、ダーティチェックをトリガーする方法が必要になります。そのための手段はフレームワークによって様々で、これを完璧に行えるかは不確定です。</p>
+
+<p>ウェブのエコシステムには、宣言的メカニズムとしてこれを実現し、改善していくための方法が必要です。例えば：</p>
+
+<ul>
+<li>制約ベースのモデルシステム</li>
+<li>自動的に永続化するシステム (例：IndexedDB や localStorage を利用する)</li>
+<li>コンテナオブジェクト (Ember や Backbone)</li>
+</ul>
+
+<p><a href="http://www.slideshare.net/mixonic/containers-di">コンテナ</a> オブジェクトは、内部的にデータを保存するオブジェクトをフレームワークが作成する領域です。データに Accessor を持ち、set や get を検知して内部的にブロードキャストします。 これはとてもよい仕組みで、比較的パフォーマンスも良いですし、アルゴリズム的に見てもうまくやっています。Ember を使ったコンテナオブジェクトの例を見てみましょう：</p>
+
+<pre class="prettyprint">
+// コンテナオブジェクト
+MyApp.president = Ember.Object.create({
+  name: "Barak Obama"
+});
+
+MyApp.country = Ember.Object.create({
+  // "Binding" で終わるプロパティ名が Ember に
+  // presidentName プロパティにバインドを作成しろ、と伝える
+  presidentNameBinding: "MyApp.president.name"
+});
+
+// Ember がバインディングを解決後...
+MyApp.country.get("presidentName");
+// "Barack Obama"
+
+// サーバーから受け取ったデータは変換される必要があるが
+// これまでのコードでは高品質が期待できない
+</pre>
+
+<p>何が変更されたかを検知するコストは、変更されたものの総数に比例します。もうひとつの問題点は、ここで特殊なオブジェクトを使っているということです。サーバーから受け取ったデータを監視するためには、一般的に、これらのオブジェクトに変換されなければなりません。</p>
+
+<p>既存の JavaScript コードでは、大抵の場合、生のデータを扱うことが想定されているため、この特殊なオブジェクトへの変換は簡単にはいきません。</p>
+
+<h2 id="toc-intro-oo">Object.observe() の紹介</h2>
+
+<p>理想的には、我々が欲しいのは双方の利点を兼ね備えたもの、つまり、必要に応じて生のデータオブジェクト (通常の JavaScript オブジェクト) を含めたデータを監視できる手段と、常にすべてをダーティチェックする必要がないもの、ということになります。アルゴリズム的にも、構成的にもうまいことやってくれる何かが、プラットフォームに必要なのです。これこそが、<code>Object.observe()</code> のもたらすものです。</p>
+
+<p><code>Object.observe()</code> はオブジェクトを監視し、何が変更、削除、または設定変更されたかのレポートを手軽に受け取ることができます。理屈はもういいですね。コードを見てみましょう！</p>
+
+<img src="image_3.png"/>
+
+<h3>Object.observe() と Object.unobserve()</h3>
+
+<p>ここにモデルを司る素の JavaScript オブジェクトがあると想像して下さい：</p>
+
+<pre class="prettyprint">
+// モデルは素のオブジェクトでよい
+var todoModel = {
+  label: 'Default',
+  completed: false
+};
+</pre>
+
+<p>そしてオブジェクトに何か変更があった場合に受け取れるコールバックを指定します：</p>
+
+<pre class="prettyprint">
+function observer(changes){
+  changes.forEach(function(change, i){
+      console.log('what property changed? ' + change.name);
+      console.log('how did it change? ' + change.type);
+      console.log('whats the current value? ' + change.object[change.name]);
+      console.log(change); // すべての変更
+  });
+}
+</pre>
+
+<p>注意： コールバックが呼び出された際、監視されているオブジェクトが複数回変更されているため、現在の値 (最後の値) と新しい値 (変更後の値) が <em>一致しない場合がある</em> ことに気をつけて下さい。</p>
+
+<p>その後、これらの変更を O.o() で監視することができます。第一引数に監視したいオブジェクトを、第二引数にコールバック関数を渡します：</p>
+
+<pre class="prettyprint">
+Object.observe(todoModel, observer);
+</pre>
+
+<p>試しに Todo モデルオブジェクトに変更を加えてみましょう：</p>
+
+<pre class="prettyprint">
+todoModel.label = 'Buy some more milk';
+</pre>
+
+<p>コンソールを見てみると、何やら便利な情報が返ってきています。これにより、何が、どのように、何に変更されたかが分かります。</p>
+
+<p><img src="image_4.png"  /></p>
+
+<p>これでダーティチェッキングともおさらばですね！墓石には Comic Sans で名前を刻んであげましょう。もう一つプロパティを変更してみます。今度は <code>completeBy</code> です：</p>
+
+<pre class="prettyprint">
+todoModel.completeBy = '01/01/2014';
+</pre>
+
+<p>見ての通り、こちらもうまく変更のレポートが受け取れたようです：</p>
+
+<p><img src="image_5.png"  /></p>
+
+<p>いいですね。それでは、オブジェクトから <code>completed</code> プロパティを消してみたらどうなるでしょう？</p>
+
+<pre class="prettyprint">
+delete todoModel.completed;
+</pre>
+
+<p><img src="image_6.png"  /></p>
+
+<p>今度は、レポートに削除に関する情報が入ってきました。期待通り、プロパティの新しい値は <code>undefined</code> ですね。ということは、プロパティが追加された場合や削除された場合もわかるということです。基本的に、オブジェクトのプロパティーの <code>set</code> ("new", "deleted", "reconfigured") と、そのプロトタイプ (<code>_proto_</code>) の変更がわかります。</p>
+
+<p>どんな監視システムでも、監視を停止する方法が存在します。この場合は、O.o() と同じシグニチャを持つ <code>Object.unobserve()</code> がそれに当たります。下記のように呼び出します：</p>
+
+<pre class="prettyprint">
+Object.unobserve(todoModel, observer);
+</pre>
+
+<p>ご覧のように、その後オブジェクトに対して行われる変更は、通知されなくなります。</p>
+
+<p><img src="image_7.png"  /></p>
+
+<h3>関心のある変更を指定する</h3>
+
+<p>ここまで監視対象のオブジェクトの変更内容リストを取得するための基礎を見てきました。それでは、すべてではなく、監視対象の一部の変更点のみに着目したい場合は、どうすればよいのでしょう？きっとスパムフィルターが必要なことでしょう。実は accpet list を使うことで、必要な種類の変更に絞って監視することができます。これは下記のように O.o() の 3 番目の引数を指定することで可能です：</p>
+
+<pre class="prettyprint">
+Object.observe(obj, callback, opt_acceptList)
+</pre>
+
+<p>例を交えて見て行きましょう：</p>
+
+<pre class="prettyprint">
+// 先ほど紹介したとおり、モデルは生のオブジェクトを使うことができる
+
+var todoModel = {
+  label: 'Default',
+  completed: false
+
+};
+
+
+// オブジェクトに変更がされた都度呼び出されるコールバックを指定
+function observer(changes){
+  changes.forEach(function(change, i){
+    console.log(change);
+  })
+
+};
+
+// 興味のある種類の変更を配列で指定して監視
+
+Object.observe(todoModel, observer, ['delete']);
+
+// 3 番目のオプションを省けば、すべてのタイプに対する変更を監視可能
+
+todoModel.label = 'Buy some milk';
+
+// この場合、何も変更はレポートされない
+</pre>
+
+<p>もちろん <code>label</code> を削除すれば、変更はレポートされます。</p>
+
+<pre class="prettyprint">
+delete todoModel.label;
+</pre>
+
+<p>O.o() に監視したい種類の配列を指定しなければ、すべてのタイプ ("add", "update", "delete", "reconfigure", "preventExtensions" (拡張不可にされたオブジェクトが監視できない場合)) がデフォルトとなります。</p>
+
+<h2 id="toc-notifications">通知</h2>
+
+<p>O.o() にはいわゆる通知が伴います。これはもちろん、電話で受け取るような迷惑なものではなく、有益なものです。ここで言う通知は、<a href="https://developer.mozilla.org/en/docs/Web/API/MutationObserver">Mutation Observers</a> に似たもので、小さなタスクの後に発生します。ブラウザー上の場合、現在のイベントハンドラの最後に来ます。</p>
+
+<p>一般的にタスクの一単位が終了した後に observer が仕事を始めるため、これは便利な順序ベースの処理モデルと言えます。</p>
+
+<p>通知を使うワークフローはこんな感じ：</p>
+
+<p><img src="image_8.png"  /></p>
+
+<p>オブジェクトのプロパティが get または set された場合に利用されるカスタム通知を定義するという、通知機能の実用例を見てみましょう。コメントに注目して下さい：</p>
+
+<pre class="prettyprint">
+// 単純なモデルを定義
+var model = {
+    a: {}
+};
+
+// あとでモデルの getter として利用する変数
+var _b = 2;
+
+// カスタム getter と setter を定義した 'b' を
+// 'a' の新しいプロパティとして定義
+
+Object.defineProperty(model.a, 'b', {
+    get: function () {
+        return _b;
+    },
+    set: function (b) {
+
+        // モデルに 'b' が set される都度
+        // 特定の変更を通知する。これにより
+        // 通知の大部分が制御できる
+        Object.getNotifier(this).notify({
+            type: 'update',
+            name: 'b',
+            oldValue: _b
+        });
+
+        // set された場合は、value をログにも出力
+        console.log('set', b);
+
+        _b = b;
+    }
+});
+
+// observer を設定
+function observer(changes) {
+    changes.forEach(function (change, i) {
+        console.log(change);
+    })
+}
+
+// model.a の変更監視を開始
+Object.observe(model.a, observer);
+</pre>
+
+<img src="image_9.png"/>
+
+<p>ここでは、データプロパティの値が変更されると、("update") をレポートします。その他については、オブジェクトの実装に従って (<code>notifier.notifyChange()</code>) をレポートします。</p>
+
+<p>ウェブプラットフォームに長年取り組んできた皆さんならお分かりと思いますが、まずは同期的アプローチから試すのがベストプラクティスです。問題は、ここで危険な処理モデルを作り上げていることです。オブジェクトのプロパティを更新するコードを書いている際、プロパティの更新が他の何かのコードを実行してしまうのは望ましくないはずです。関数実行の途中で、想定していた挙動が無効になってしまうのは理想的とは言えません。</p>
+
+<p>もしあなたが監視者 (observer) なら、作業の途中の状態で呼び出されたくはないはずです。不確定な状態で仕事に呼び出されれば、エラーチェックの数も増えるし、困難な状況を耐えなければなりませんし、仕事は難しくなってしまいます。非同期は扱いにくいものであると同時に、最終的にはよりよいモデルでもあります。</p>
+
+<p>これに対する解決策が、Synthetic change records です。</p>
+
+<h2 id="toc-synth-change-records">Synthetic change records</h2>
+
+<p>基本的に、 Accessor や Computed Property が欲しければ、値が変更された際に通知するのはあなたの責任です。ちょっとした追加作業ではありますが、この仕組における一級機能としてデザインされていますし、元になるデータオブジェクトから送られる他の通知と一緒に送信されます。</p>
+
+<img src="image_10.png"/>
+
+<p>Accessor や Computed Property の監視は O.o() の別の一面である <code>notifier.notify</code> を使うことで解決することができます。ほとんどの監視システムは何らかの方法で値を監視する手段が必要です。これを実現する方法はいくつかありますが、O.o が「正しい」手段かどうか疑う余地はありません。Computed Property は、内部的な状態の変更が発生した際に通知を行う Accessor であるべきです。</p>
+
+<p>もう一度言いますが、ウェブ開発者は通知機能と Computed Property に対する様々なアプローチについて (ボイラープレートを減らすことについても)、ライブラリに期待するべきです。</p>
+
+<p>もうひとつ例を挙げましょう。今度は Circle クラスです。Circle (円) であり、radius (直径) プロパティを持ったクラスがあるとします。この場合、直径は Accessor であり、値が変更されると、そのことを自分自身に伝えます。これはこのオブジェクト、または他のオブジェクトに対する他の変更点と合わせて行われます。基本的に、Synthetic もしくは Computed Property を持ったオブジェクトを実装しない限り、これがどのように動くかのストラテジーは、あなたが自身が選ぶ必要があります。一度選んでしまえば、後はシステム全体にフィットしてきます。</p>
+
+<p>これが DevTools でどのように動くかはコードの後に示します。</p>
+
+<pre class="prettyprint">
+function Circle(r) {
+  var radius = r;
+
+  var notifier = Object.getNotifier(this);
+  function notifyAreaAndRadius(radius) {
+    notifier.notify({
+      type: 'update',
+      name: 'radius',
+      oldValue: radius
+    })
+    notifier.notify({
+      type: 'update',
+      name: 'area',
+      oldValue: Math.pow(radius * Math.PI, 2)
+    });
+  }
+
+  Object.defineProperty(this, 'radius', {
+    get: function() {
+      return radius;
+    },
+    set: function(r) {
+      if (radius === r)
+        return;
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+
+  Object.defineProperty(this, 'area', {
+    get: function() {
+      return Math.pow(radius, 2) * Math.PI;
+    },
+    set: function(a) {
+      r = Math.sqrt(a)/Math.PI;
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+}
+
+function observer(changes){
+  changes.forEach(function(change, i){
+    console.log(change);
+  })
+}
+</pre>
+
+<img src="image_11.png"/>
+
+<h2 id="toc-accessor-props">Accessor プロパティ</h2>
+
+<p>Accessor プロパティについて簡単に触れておきます。先ほどデータプロパティの値の変更についてのみ、監視を行うことができると述べました。これは Computed Property や Accessor については当てはまりません。理由は、JavaScript が Accessor に対して値の変更という概念を持たないためです。Accessor とは、単なる関数の集合に過ぎません。</p>
+
+<p>Accessor を割り当てても、JavaScript は関数を起動するだけで、それ自体から見た場合何が変更されたようにも認識されません。コードが動く機会を与えたに過ぎません。</p>
+
+<p>問題は、値に対する上記の割り当てが、セマンティクス的には 5 を与えているように見えることです。ここで我々は、何が発生したかを知る必要があります。実はこれは、ほとんど不可能な問題です。理由は上記の例でも明らかです。どんなシステムであっても、これが誰かの書いたコードである限り、何を意味しているか知る術はありません。どんなことだってできてしまうのです。値はアクセスされるたびに更新されるため、いつ変更が行われたかを知ったところで、意味は無いのです。</p>
+
+<h2 id="toc-single-callback-observers">シングルコールバックの observer</h2>
+
+<p>O.o() で可能な別のパターンとして、シングルコールバックの observer が挙げられます。これにより、様々なオブジェクトの "observer" として、ひとつのコールバックだけを利用することができます。コールバックは、「小さなタスクの最後」に、監視対象のすべてのオブジェクトに対するすべての変更が届けられます (Mutation Observers との類似性に注意して下さい)。</p>
+
+<img src="image_12.png"/>
+
+<h2 id="toc-largescale">大規模な変更</h2>
+
+<p>あなたが、とてつもなく大きなアプリケーションの開発に携わっていて、頻繁に規模の大きな変更が発生するとします。オブジェクトは大きなセマンティクス上の変更が、たくさんのプロパティに (多数の変更をブロードキャストする代わりに) より小さな形で影響を与える場合です。</p>
+
+<p>O.o() は 2 つの特殊なユーティリティを使ってこれを支援します。それが <code>notifier.performChange()</code> と、既に紹介した <code>notifier.notify()</code> です。</p>
+
+<img src="image_13.png">
+
+<p>いくつかの計算ユーティリティ (<code>multiply</code>, <code>increment</code>, <code>incrementAndMultiply</code>) を持ったThingy オブジェクトを定義した場合、大規模な変更がどのように伝えられるか表す例を見てみましょう。</p>
+
+<p>例：<code>notifier.performChange('foo', performFooChangeFn);</code></p>
+
+<pre class="prettyprint">
+function Thingy(a, b, c) {
+  this.a = a;
+  this.b = b;
+}
+
+Thingy.MULTIPLY = 'multiply';
+Thingy.INCREMENT = 'increment';
+Thingy.INCREMENT_AND_MULTIPLY = 'incrementAndMultiply';
+
+
+Thingy.prototype = {
+  increment: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    // 与えられた changeType などから成るタスクのリストをシステムに伝える
+    // notifier.performChange('foo', performFooChangeFn);
+    // notifier.notify('foo', 'fooChangeRecord');
+    notifier.performChange(Thingy.INCREMENT, function() {
+      this.a += amount;
+      this.b += amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT,
+      incremented: amount
+    });
+  },
+
+  multiply: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.MULTIPLY, function() {
+      this.a *= amount;
+      this.b *= amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.MULTIPLY,
+      multiplied: amount
+    });
+  },
+
+  incrementAndMultiply: function(incAmount, multAmount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.INCREMENT_AND_MULTIPLY, function() {
+      this.increment(incAmount);
+      this.multiply(multAmount);
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT_AND_MULTIPLY,
+      incremented: incAmount,
+      multiplied: multAmount
+    });
+  }
+}
+
+</pre>
+
+<p>オブジェクトには 2 つの observer を定義します：ひとつは変更点をすべて受け取るもの、もうひとつは特定の種類 (<code>Thingy.INCREMENT</code>, <code>Thingy.MULTIPLY</code>, <code>Thingy.INCREMENT_AND_MULTIPLY</code>) のみのレポートを受け付けるものです。</p>
+
+<pre class="prettyprint">
+var observer, observer2 = {
+    records: undefined,
+    callbackCount: 0,
+    reset: function() {
+      this.records = undefined;
+      this.callbackCount = 0;
+    },
+};
+
+observer.callback = function(r) {
+    console.log(r);
+    observer.records = r;
+    observer.callbackCount++;
+};
+
+observer2.callback = function(r){
+	console.log('Observer 2', r);
+}
+
+
+Thingy.observe = function(thingy, callback) {
+  // Object.observe(obj, callback, opt_acceptList)
+  Object.observe(thingy, callback, [Thingy.INCREMENT,
+                                    Thingy.MULTIPLY,
+                                    Thingy.INCREMENT_AND_MULTIPLY,
+                                    'update']);
+}
+
+Thingy.unobserve = function(thingy, callback) {
+  Object.unobserve(thingy);
+}
+
+</pre>
+
+<p>それではこのコードで遊んでみましょう。まずは新しい Thingy を定義します：</p>
+
+<pre class="prettyprint">
+var thingy = new Thingy(2, 4);
+</pre>
+
+<p>監視を開始し、変更を加えてみます。thingy がたくさんで楽しいですね！</p>
+
+<pre class="prettyprint">
+// thingy を監視
+Object.observe(thingy, observer.callback);
+Thingy.observe(thingy, observer2.callback);
+
+// thingy が表に出している関数で遊ぶ
+thingy.increment(3);               // { a: 5, b: 7 }
+thingy.b++;                        // { a: 5, b: 8 }
+thingy.multiply(2);                // { a: 10, b: 16 }
+thingy.a++;                        // { a: 11, b: 16 }
+thingy.incrementAndMultiply(2, 2); // { a: 26, b: 36 }
+</pre>
+
+
+<img src="image_14.png"/>
+
+<p>&nbsp;</p>
+
+<p>「関数の実行」内部で行われることはすべて「大きな変更」と考えられます。「大きな変更」を受け取る Observer は「大きな変更」の記録のみを受け取ります。受け取らない Observer は「関数の実行」によって発生した変更を受け取ります。</p>
+
+<h2 id="toc-observing-arrays">配列の監視</h2>
+
+<p>ここまでオブジェクトの変更の監視について見てきましたが、配列についてはどうでしょう？よい質問ですね。もし誰かが「よい質問だ」といった場合、私はその答えを聞きません。なぜなら、そのよい質問をした自分を褒めるのに忙しいからです。話が逸れましたね。配列には専用のメソッドが用意されています。</p>
+
+<p><code>Array.observe()</code> は、自身に発生した大規模な変更を扱うためのメソッドです。例えば <code>splice</code>, <code>unshift</code> など、暗黙的に長さを変更するようなものです。内部的には <code>notifier.performChange("splice",...)</code> を使います。</p>
+
+<p>下記はモデルである「配列」を監視し、データが変更されると変更のリストを受け取るという、これまで同様の例です：</p>
+
+<pre class="prettyprint">
+var model = ['Buy some milk', 'Learn to code', 'Wear some plaid'];
+var count = 0;
+
+Array.observe(model, function(changeRecords) {
+  count++;
+  console.log('Array observe', changeRecords, count);
+});
+
+model[0] = 'Teach Paul Lewis to code';
+model[1] = 'Channel your inner Paul Irish';
+</pre>
+
+<img src="image_15.png"/>
+
+<h2 id="toc-performance">パフォーマンス</h2>
+
+<p>O.o() のパフォーマンスによる影響は、キャッシュを読み込む場合と似ている、と考えて下さい。一般的にキャッシュは、下記のような場合に (重要度順) 有効です：</p>
+
+<ol>
+  <li>読み込み頻度が書き込み頻度を上回る。</li>
+  <li>読み込み時のパフォーマンスと引き換えに、書き込みに負荷がかかっても構わない。</li>
+  <li>書き込みの速度低下を許容できる。</li>
+</ol>
+
+<p>O.o() は 1) のようなユースケースを対象としてデザインされています。</p>
+
+<p>ダーティチェッキングでは、監視中のデータすべてのコピーを保存する必要がありました。これはダーティチェッキングによって、O.o() には存在しない構造的なメモリコストを受けることを意味します。ダーティチェッキングは、上質な解決策であると同時に、不必要な複雑さをもたらす、根本的に漏れのある抽象化でもあるとも言えます。</p>
+
+<p>なぜでしょう？ダーティチェッキングは、データが変更された <em>かもしれない</em> 時に必ず動く処理です。これには明快な解決手段が存在しないと同時に、どんなアプローチも重大な欠点 (例えばポーリングは、見た目やレースコンディションのリスクがあります) を持っているためです。また、observer のグローバルレポジトリが必要になるため、メモリリークの危険が高まります。</p>
+
+<p>いくつか数字を見てみましょう。</p>
+
+<p>下記のベンチマークテスト (<a href="https://github.com/Polymer/observe-js/tree/master/benchmark">GitHub</a> 参照)では、ダーティチェッキングと O.o() を比較することができます。監視対象のオブジェクトと変更点の数のグラフで構成されています。</p>
+<p>全般的な傾向としては、ダーティチェッキングのパフォーマンスが監視対象のオブジェクト数に比例しているのに対し、O.o() のパフォーマンスは変更点の数に比例していることがわかると思います。</p>
+
+<strong>ダーティチェッキング</strong>
+
+<img src="image_16.png"/>
+
+<strong>Chrome で Object.observe()</strong>
+
+<img src="image_17.png"/>
+
+<h2 id="toc-polyfills">Object.observe() の Polyfill</h2>
+
+<p>O.o() は Chrome 36 Beta から使えます。しかし他のブラウザではどうでしょうか？安心して下さい。Polymer の <a href="https://github.com/Polymer/observe-js">Observe-JS</a> は O.o() の polyfill です。O.o() が利用可能であればネイティブ機能を利用し、そうでなければ polyfill してくれます。これがあれば、変更の通知と、その内容を知らせてくれます。重要な点は 2 つ：</p>
+
+<p>1) パスを監視することができます。例えばあるオブジェクトの "foo.bar.baz" を監視した場合、そのパスの値が変更されるとお知らせを受け取ることができます。パスが存在しない場合、その値は <code>undefined</code> と解釈されます。</p>
+
+<p>オブジェクトのパスの値を監視する例です：</p>
+
+<pre class="prettyprint">
+var obj = { foo: { bar: 'baz' } };
+
+var observer = new PathObserver(obj, 'foo.bar');
+observer.open(function(newValue, oldValue) {
+  // obj.foo.bar の変更に応じて反応
+});
+</pre>
+
+<p>2) 配列の splice (継ぎ足し) を教えてくれます。Array.splice は、配列の内容を古いものから新しいものへ変更する際に必要とされる最小限の継ぎ足し処理です。This is a type of transform or different view of the array. これは古い状態から新しい状態へ遷移するために必要とされる最低限やらなければならないことです。</p>
+
+<p>最低限の splice セットとして変更内容を配列にレポートする例：</p>
+
+<pre class="prettyprint">
+var arr = [0, 1, 2, 4];
+
+var observer = new ArrayObserver(arr);
+observer.open(function(splices) {
+  // 配列の要素の変更に応答する
+  splices.forEach(function(splice) {
+    splice.index; // 変更が発生したインデックス位置
+    splice.removed; // 削除された一連の要素を表す値の配列
+    splice.addedCount; // 挿入された要素の数
+  });
+});
+</pre>
+
+<h2 id="toc-frameworks">フレームワークと Object.observe()</h2>
+
+<p>既に述べたように、O.o() はフレームワークとライブラリに、データバインディングのパフォーマンスを大幅に改善する機会を与えます。</p>
+
+<p>Ember チームの Yehuda Katz と Erik Bryn によると、Ember に O.o() が搭載される日はそう遠くないそうです。また、Angular チームの Misko Hevery は Angular 2.0 の <a href="https://docs.google.com/document/d/10W46qDNO8Dl0Uye3QX0oUDPYAwaPl0qNy73TVLjd1WI/edit">デザインドキュメント</a> で、変更の検知機能を追加すると明言しています。長期的な計画としては、Chrome Stable に Object.observe() が搭載された時点で、現在利用している独自開発の <a href="https://github.com/angular/watchtower.js/">Watchtower.js</a> と差し替えるとのことです。楽しみですね。</p> 
+
+<h2 id="toc-conclusions">まとめ</h2>
+
+<p>O.o() は今日のウェブプラットフォームですぐにでも使えるパワフルな新機能です。</p>
+
+<p>一日も早く他のブラウザでもサポートされ、JavaScript フレームワークがネイティブオブジェクトの監視機能を使って、パフォーマンス改善を実現できるといいですね。Chrome をターゲットに開発を進めている方は、Chrome 36 beta 以上で利用することができますし、Opera でも近いうちに利用できることになるはずです。</p>
+
+<p>ぜひ JavaScript フレームワークの作者に <code>Object.observe()</code> の実装計画を聞いてみてください。お楽しみはもうすぐそこですよ！</p>
+
+<h2 id="toc-resources">資料</h2>
+
+<ul>
+<li><a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Harmony wiki の Object.observe()</a></li>
+<li><a href="http://bocoup.com/weblog/javascript-object-observe/">Rick Waldron による Databinding with Object.observe()</a></li>
+<li><a href="http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/">Everything you wanted to know about Object.observe() - JSConf</a></li>
+<li><a href="http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html">Why Object.observe() is the best ES7 feature</a></li>
+</ul>
+
+<p><em>最後に、Rafael Weinstein, Jake Archibald, Eric Bidelman, Paul Kinlan, Vivian Cromwell 知見の提供とレビューをありがとうございました。</em></p>
+
+{% endblock %}
