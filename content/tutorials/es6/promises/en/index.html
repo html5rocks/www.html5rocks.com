@@ -184,7 +184,7 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 
 <h2 id="toc-browser-support">Browser support &amp; polyfill</h2>
 <p>There are already implementations of promises in browsers today.</p>
-<p>As of Chrome 32 and Opera 19, promises are enabled by default. Alternatively, if you're of the Firefox persuasion, <a href="http://nightly.mozilla.org/">grab their latest nightly</a>, which has <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=918806">partial</a> promises support.</p>
+<p>As of Chrome 32, Opera 19 &amp; Firefox 29, promises are enabled by default. They're in WebKit nightlies so expect them in the next release of Safari, and they're <a href="http://status.modern.ie/promiseses6?term=promise">in development in IE</a>.</p>
 
 <p>To bring browsers that lack a complete promises implementation up to spec compliance, or add promises to other browsers and Node.js, check out <a href="https://github.com/jakearchibald/ES6-Promises#readme">the polyfill</a> (2k gzipped).</p>
 
@@ -742,6 +742,8 @@ adder.next(50).value; // 65</pre>
 
 <p>This throws together a lot of new ES6 stuff: promises, generators, let, for-of. When we yield a promise, the spawn helper waits for the promise to resolve and returns the final value. If the promise rejects, spawn causes our yield statement to throw an exception, which we can catch with normal JavaScript try/catch. Amazingly simple async coding!</p>
 
+<p>This pattern is so useful, it's coming to ES7 in the form of <a href="http://jakearchibald.com/2014/es7-async-functions/">async functions</a>. It's pretty much the same as above, but no need for a <code>spawn</code> method.</p>
+
 <h2 id="toc-api">Promise API Reference</h2>
 
 <p>All methods work in Chrome, Opera and in Firefox Nightly unless otherwise noted. <a href="https://github.com/jakearchibald/ES6-Promises#readme">The polyfill</a> provides the below for all browers.</p>
@@ -759,10 +761,9 @@ adder.next(50).value; // 65</pre>
   <dd>Make a promise that rejects to <code>obj</code>. For consistency and debugging (e.g. stack traces), <code>obj</code> should be an <code>instanceof Error</code>.</dd>
   <dt><code>Promise.all(array);</code></dt>
   <dd>Make a promise that fulfills when every item in the array fulfills, and rejects if (and when) any item rejects. Each array item is passed to <code>Promise.resolve</code>, so the array can be a mixture of promise-like objects and other objects. The fulfillment value is an array (in order) of fulfillment values. The rejection value is the first rejection value.
-  <p class="notice"><b>Note:</b> Only implemented in Chrome and Opera so far</p></dd>
   <dt><code>Promise.race(array);</code></dt>
   <dd>Make a Promise that fulfills as soon as any item fulfills, or rejects as soon as any item rejects, whichever happens first.
-  <p class="notice"><b>Note:</b> Only implemented in Chrome and Opera. Also, I'm unconvinced of its usefulness; I'd rather have an opposite of <code>Promise.all</code> that only rejected if all items rejected.</p></dd>
+  <p class="notice"><b>Note:</b> I'm unconvinced of <code>Promise.race</code>'s usefulness; I'd rather have an opposite of <code>Promise.all</code> that only rejects if all items reject.</p></dd>
 </dl>
 
 <h3>Constructor</h3>

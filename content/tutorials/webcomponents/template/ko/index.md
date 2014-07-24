@@ -143,7 +143,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
         width: 450px;
         max-width: 100%;
       } 
-      :host:hover {
+      :host(:hover) {
         background: #ccc;
       }
       div {
@@ -201,7 +201,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
     width: 450px;
     max-width: 100%;
   } 
-  :host:hover {
+  :host(:hover) {
     background: #ccc;
   }
   #unsupportedbrowsersneedscoping {
