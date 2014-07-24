@@ -1,0 +1,857 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong>
+  <a href="https://github.com/kuu">Kuu Miyazaki</a>
+</div>
+{% endblock %}
+
+{% block head %}
+  {{ block.super }}
+  <style>
+    .get-example {
+      display: none;
+    }
+    dt {
+      display: block;
+      margin: 0;
+      font-weight: bold;
+      color: #333;
+    }
+    dd {
+      margin: 0 0 0.8em;
+    }
+
+    dl.inline dt {
+      display: inline;
+    }
+    dl.inline dd {
+      display: inline;
+    }
+    dl.inline dd::before {
+      content:" - ";
+    }
+    dl.inline dd::after {
+      content:"\A";
+      white-space:pre;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+<p>レディース・アンド・ジェントルマン！ Web 開発の歴史に残る瞬間です。</p>
+<p><em>[ドラムロール]</em></p>
+<p>JavaScript で Promise がサポートされました！</p>
+<p><em>[打ち上げ花火、きらびやかな紙吹雪、そして群衆の歓声]</em></p>
+<p>おそらく、ここで読者の反応は以下のいずれかでしょう。</p>
+
+<ul>
+  <li>なぜ周囲の人たちが騒いでいるのかよくわからない、そこのあなた。そもそも Promise が何なのかを知らないでしょう？肩をすくめてごまかそうとしても、積もる紙吹雪が重くのしかかりますよ。大丈夫です、実はこの私もなぜこれが一大事なのか、理解するのに長い年月がかかりました。<a href="#toc-async">こちら</a>から始めましょう。</li>
+  <li>「ついに！」とガッツポーズをとったあなたは、以前に Promise を使った事がありますね？ Promise の API は実装ごとに微妙に異なるので、苦労されたことでしょう。JavaScript のオフィシャルな Promise の API に関しては<a href="#toc-promise-terminology">こちら</a>をお読みください。</li>
+  <li>すでに知っていて、今頃喜んでいる人達に冷たい視線を送っている、そこのあなた。しばし優位性に酔いしれた後、直接 <a href="#toc-api">API reference</a> へ進んでください。</li>
+</ul>
+
+<h2 id="toc-async">いったい何事ですか？</h2>
+
+<p>JavaScript はシングルスレッドです。つまり、スクリプト中の異なるコードが同時に実行される事はあり得ません。それらは必ず順番に実行されます。ブラウザの内部では、JavaScript の実行と他の処理は同一のスレッドで行われます。処理の内容はブラウザにより異なりますが、描画、スタイルの更新、ユーザ操作の処理（テキストのハイライトやフォームの操作）等は通常、JavaScript と同じタスクキューに格納され、これらのうちひとつの処理が遅れれば、他の処理が待たされることになります。</p>
+<p>一方で、人間はそもそもマルチスレッドです。あなたは複数の指でタイプしたり、運転しながら会話したりしますよね？くしゃみは我々にとって、いわばブロッキング関数です。くしゃみをしている間、我々はすべての活動を中断せざるを得ません。運転しながら会話しようとしているときにくしゃみが出そうになれば、困りますよね？そのようなもどかしいコードは書きたくないものです。</p>
+<p>そのような事態を避けるために、我々は通常、以下のようにイベントとコールバックを使います。</p>
+
+<pre class="prettyprint">var img1 = document.querySelector('.img-1');
+
+img1.addEventListener('load', function() {
+  // woo yey image loaded
+});
+
+img1.addEventListener('error', function() {
+  // argh everything's broken
+});</pre>
+
+<p>このコードはまったくもどかしくありません。イメージ要素を取得して、２つのリスナーを追加した後、どちらかのリスナーが呼び出されるまで、JavaScript は実行を停止します。</p>
+<p>しかし残念ながら、上のコードではリスナーを追加する前にイベントが発生した場合に対応できていません。そのためには、イメージ要素のcomplete プロパティを使います。</p>
+
+<pre class="prettyprint">var img1 = document.querySelector('.img-1');
+
+function loaded() {
+  // woo yey image loaded
+}
+
+if (img1.complete) {
+  loaded();
+}
+else {
+  img1.addEventListener('load', loaded);
+}
+
+img1.addEventListener('error', function() {
+  // argh everything's broken
+});</pre>
+
+<p>このコードにもまだ問題があり、リスナーを追加する前にイメージ要素でエラーが発生した場合に破綻します。残念ながらそれを捕捉するための手段を DOM は提供していません。また、ここではひとつのイメージしかロードしていませんが、複数のイメージのロードが完了したタイミングを知ろうとすると、コードは一気に複雑になります。 </p>
+
+<h2 id="toc-events-not-always-best">イベントは常に最善の方法ではない</h2>
+
+<p>あるオブジェクトに対して複数回発生する事象（例えばキーアップやタッチ開始）を表現するのに、イベントは向いています。通常これらの場合は、リスナーを追加する前に何が起きたか気にする必要はありません。しかし、非同期処理が成功したか失敗したかによって処理を分けたい場合、以下のように書けると理想的です。</p>
+
+<pre class="prettyprint">img1.callThisIfLoadedOrWhenLoaded(function() {
+  // loaded
+}).orIfFailedCallThis(function() {
+  // failed
+});
+
+// and…
+whenAllTheseHaveLoaded([img1, img2]).callThis(function() {
+  // all loaded
+}).orIfSomeFailedCallThis(function() {
+  // one or more failed
+});</pre>
+
+<p>これこそが、Promise が行っていることです。（ちなみに、実際のネーミングは上記コードよりも幾分ましになっています。）例えば、もしイメージ要素が Promise を返すメソッド "ready" を持っていたとすると、以下のように書けます。</p>
+
+<pre class="prettyprint">img1.ready().then(function() {
+  // loaded
+}, function() {
+  // failed
+});
+
+// and…
+Promise.all([img1.ready(), img2.ready()]).then(function() {
+  // all loaded
+}, function() {
+  // one or more failed
+});</pre>
+
+<p>Promise は基本的にイベントリスナーと似ていますが、以下の点で異なります。</p>
+
+<ul>
+  <li>Promise は一度だけ成功もしくは失敗します。２回成功／失敗したり、成功状態から失敗状態へ変化したりしません。</li>
+  <li>Promise がすでに成功もしくは失敗した後に成功／失敗を通知するコールバックを追加した場合、すでにイベントは完了しているにもかかわらず、正しいコールバックが呼び出されます。</li>
+</ul>
+
+<p>これは、失敗／成功によって処理を分けたい場合に、非常に役に立ちます。なぜなら大抵の場合、何かが利用可能になった正確な時刻はどうでもよく、その結果に対して何らかの処理を行うことの方が重要だからです。</p>
+
+<h2 id="toc-promise-terminology">Promise の用語</h2>
+
+<p>この記事の最初のドラフト版を <a href="https://twitter.com/domenic">Domenic Denicola</a> に査読してもらったのですが、用語が不正確という理由で評価は"F"でした。私は居残りを命じられ、<a href="https://github.com/kuu/promises-unwrapping/blob/master/docs/states-and-fates.md">『State と Fate』</a> を 100 回書き写すという苦行を強いられ、さらに彼は私の両親宛に苦言を呈す手紙を送りつけたのです。 それにもかかわらず、私は未だにたくさんの用語を混ぜて使ってしまうのですが、基本的な用語は以下のとおりです。</p>
+
+<p>Promise は以下のうち、いずれかの状態を取り得る：</p>
+<dl class="inline">
+  <dt>fulfilled</dt>
+  <dd>アクションは成功した。</dd>
+  <dt>rejected</dt>
+  <dd>アクションは失敗した。</dd>
+  <dt>pending</dt>
+  <dd>まだ成功／失敗していない。</dd>
+  <dt>settled</dt>
+  <dd>すでに成功／失敗した。</dd>
+</dl>
+
+<p><a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">仕様書</a>ではさらに <strong>thenable</strong> という用語が使われています。thenable は promise 「風」なオブジェクトという意味で、<code>then</code> という名のメソッドを持っているオブジェクトは thenable とみなされます。ただ、この言葉の響きは元イングランド代表の<a href="http://en.wikipedia.org/wiki/Terry_Venables">テリー・ヴェナブルズ</a> を連想させるので、私はなるべく使わないようにしています。</p>
+
+<h2 id="toc-javascript-promises">JavaScript に Promise がやって来た！</h2>
+<p>Promis は実は昔からライブラリの形で存在していました。以下のライブラリはすべて Promise を提供します。</p>
+
+<ul>
+  <li><a href="https://github.com/kriskowal/q">Q</a></li>
+  <li><a href="https://github.com/cujojs/when">when</a></li>
+  <li><a href="http://msdn.microsoft.com/en-us/library/windows/apps/br211867.aspx">WinJS</a></li>
+  <li><a href="https://github.com/tildeio/rsvp.js">RSVP.js</a></li>
+</ul>
+
+<p>これらのライブラリと JavaScript の Promise は <a href="https://github.com/promises-aplus/promises-spec">Promises/A+</a> と呼ばれる標準に準拠しています。jQuery ユーザの方は、<a href="http://api.jquery.com/category/deferred-object/">Deferred</a> になじみ深いと思いますが、Deferred は実は Promise/A+ とは<a href="https://thewayofcode.wordpress.com/tag/jquery-deferred-broken/">微妙に異なり、要件を満たしていない</a>点にご注意ください。jQuery にはまた、<a href="http://api.jquery.com/Types/#Promise">Promise</a> というものもありますが、これは Deferred のサブセットであり、同様の問題があります。</p>
+<p>標準に準拠した Promise であったとしても、実装により API が異なります。JavaScript の Promise は RSVP.js の API に似ています。以下は、Promise を生成する例です。</p>
+
+<pre class="prettyprint">var promise = new Promise(function(resolve, reject) {
+  // do a thing, possibly async, then…
+
+  if (/* everything turned out fine */) {
+    resolve("Stuff worked!");
+  }
+  else {
+    reject(Error("It broke"));
+  }
+});</pre>
+
+<p>Promise のコンストラクターは一つのコールバック関数を引数として受け取ります。さらにコールバック関数は二つの関数、resolve と reject を引数として受け取ります。使い方としては、コールバック関数内で何らかの非同期処理を行い、処理が成功すれば resolve を呼び出し、失敗すれば reject を呼びます。</p>
+<p>従来の JavaScript の "throw" と同様、reject の引数に Error オブジェクトを渡すことができますが、これは必須ではありません。Error オブジェクトを渡す利点としては、呼び出しのスタックトレースが保持されるので、デバッグが容易になることです。</p>
+<p>では、生成された Promise をどのように使うか、見てみましょう。</p>
+
+<pre class="prettyprint">promise.then(function(result) {
+  console.log(result); // "Stuff worked!"
+}, function(err) {
+  console.log(err); // Error: "It broke"
+});</pre>
+
+<p>"then" は２つの引数をとり、それぞれ成功時と失敗時のコールバック関数となります。両方の引数とも必須ではないので、成功か失敗のどちらかのコールバック関数だけを指定することもできます。</p>
+<p>JavaScript Promise は、最初 "Future" という名前で DOM の一部として実装されていたのが、後に "Promise" と改名されて、最終的に JavaScript の一部として実装されました。DOM ではなく JavaScript の一部とすることで、例えば Node.js のような非ブラウザ環境でも利用可能になります。(Node.js が Promise をコア API として採用するかどうかはまた別の話ですが。)</p>
+<p>Promise は JavaScript の機能ですが、DOM で Promise を使用するのはまったく問題ありません。実際、最近の DOM の API で、成功／失敗の結果を返す非同期処理メソッドは、すべて Promise を使用しています。すでに Promise を使用している API として、<a href="https://dvcs.w3.org/hg/quota/raw-file/tip/Overview.html#idl-def-StorageQuota">Quota Management API</a>、<a href="http://dev.w3.org/csswg/css-font-loading/#font-face-set-ready">Font Load Event</a>、<a href="https://github.com/slightlyoff/ServiceWorker/blob/cf459d473ae09f6994e8539113d277cbd2bce939/service_worker.ts#L17"> ServiceWorker</a>、<a href="http://webaudio.github.io/web-midi-api/#widl-Navigator-requestMIDIAccess-Promise-MIDIOptions-options">Web MIDI</a>、<a href="https://github.com/whatwg/streams#basereadablestream">Stream</a> などがあります。</p>
+
+<h2 id="toc-browser-support">ブラウザにおけるサポート状況と Polyfill</h2>
+<p>現時点ですでに Promise は複数のブラウザで実装されています。</p>
+<p>Chrome 32 と Opera 19 では、Promise はデフォルトで有効になっています。Firefox ユーザの方は<a href="http://nightly.mozilla.org/">最新の Nightly バージョン</a>を使うことで、Promise の<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=918806">一部の</a>機能を使えます。</p>
+
+<p>Promise に対応していない、もしくは Promise の標準に完全に対応していないブラウザや、Node.js で Promise を使うには、<a href="https://github.com/jakearchibald/ES6-Promises#readme">こちらの Polyfill</a> をお使いください。gzip で圧縮された状態で2Kbyteです。</p>
+
+<h2 id="toc-lib-compatibility">他ライブラリとの互換性</h2>
+<p>JavaScript Promise API では、<code>then</code> メソッドを持つオブジェクトであればなんでも、Promise 風オブジェクト、、もとい、Promise 語で言うところの <em>thenable</em> として扱うので、例えばお使いのライブラリが Q の Promise を返す場合であっても、問題なく JavaScript の Promise と相互運用できます。</p>
+<p>ところで、先に述べたとおり、jQuery の Deferred には問題がありますが、幸い、以下のようにすれば Deferred を標準の Promise にキャストできるので、すぐにでもお試しください。</p>
+
+<pre class="prettyprint">var jsPromise = Promise.resolve($.ajax('/whatever.json'));</pre>
+
+<p>上の例で、jQuery の <code>$.ajax</code> は Deferred を返します。Deferred は "then" メソッドを持っているため、<code>Promise.resolve</code> に渡すことで、JavaScript Promise に変換されます。ただ注意してほしいのは、Deferred はコールバック関数を呼び出す際、以下のように複数の引数を渡すのに対して、</p>
+
+<pre class="prettyprint">var jqDeferred = $.ajax('/whatever.json');
+
+jqDeferred.then(function(response, statusText, xhrObj) {
+  // ...
+}, function(xhrObj, textStatus, err) {
+  // ...
+});</pre>
+
+<p>JavaScript Promise は先頭の引数以外は無視します。</p>
+
+<pre class="prettyprint">jsPromise.then(function(response) {
+  // ...
+}, function(xhrObj) {
+  // ...
+});</pre>
+
+<p>ただ、だいたいの場合において、先頭の引数しか必要ないので、これで問題ありません。あと、注意しておいてほしいのは、jQuery は Error オブジェクトを reject 関数に渡しません。</p>
+
+<h2 id="toc-coding-with-promises">複雑な非同期処理</h2>
+<p>さて、何かコードを書いてみましょう。例えば、以下のことがやりたいとします。</p>
+
+<ol>
+  <li>ロード中のインジケータを表示する</li>
+  <li>ある本のタイトルと各章の URL が記述された JSON データを取得する</li>
+  <li>ページにタイトルを表示する</li>
+  <li>各章のデータを取得する</li>
+  <li>ページに文章を表示する</li>
+  <li>ロード中のインジケータを止める</li>
+</ol>
+
+<p>さらに、エラーが発生した場合はユーザーに通知すること。また、その場合はインジケータを止めること。ずっとインジケータが回転したままだと、目が回るし、次のページのUIにかぶってしまうので。</p>
+<p>もちろん、本のデータを取得するのに JavaScript を使わずに、<a href="http://jakearchibald.com/2013/progressive-enhancement-is-faster/">HTML として取得する方が速い</a>です。しかしながら、このように複数のデータを同時に取得して、全部取得し終わってから何かをする、というのは Web API を 扱う上で、非常によくあるパターンです。</p>
+<p>まずは、ネットワークからデータを取得する部分の実装から始めましょう。</p>
+
+<h2 id="toc-promisifying-xmlhttprequest">XMLHttpRequest の Promise 化</h2>
+
+<p>古くから使われている API も後方互換性を保つ限り、Promise を使うように変更されるべきです。特に、<code>XMLHttpRequest</code> は真っ先にその候補に挙がります。しかし、それらが実際に利用可能になるまでは、以下のような GET リクエストを送信するシンプルな関数を書きましょう。</p>
+
+<pre class="prettyprint">function get(url) {
+  // Return a new promise.
+  return new Promise(function(resolve, reject) {
+    // Do the usual XHR stuff
+    var req = new XMLHttpRequest();
+    req.open('GET', url);
+
+    req.onload = function() {
+      // This is called even on 404 etc
+      // so check the status
+      if (req.status == 200) {
+        // Resolve the promise with the response text
+        resolve(req.response);
+      }
+      else {
+        // Otherwise reject with the status text
+        // which will hopefully be a meaningful error
+        reject(Error(req.statusText));
+      }
+    };
+
+    // Handle network errors
+    req.onerror = function() {
+      reject(Error("Network Error"));
+    };
+
+    // Make the request
+    req.send();
+  });
+}</pre>
+
+<p>では、使ってみましょう。</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  console.log("Success!", response);
+}, function(error) {
+  console.error("Failed!", error);
+});</pre>
+
+<p>動作させるには DevTools のコンソールを開いて、<span class="live-example get-example"><a href="story.json">ここをクリックしてみてください</a>。</span> これで、<code>XMLHttpRequest</code> とタイプしなくても HTTP リクエストを送信することができました。これは素晴らしい事です。なぜなら、あの腹立たしい <code>XMLHttpRequest</code> のキャメルケースを少しでも見ないで済むことにより、私の人生は幾分ハッピーになるからです。</p>
+
+<h2 id="toc-chaining">処理の連鎖</h2>
+<p>"then" の話はまだ続きます。"then"を複数接続することで、続けて値を変更したり、他の非同期処理を実行することが可能です。</p>
+
+<h3 id="toc-transforming-values">値の変更</h3>
+<p>値を変更するには、単に別の値を返せばよいだけです。</p>
+
+<pre class="prettyprint">var promise = new Promise(function(resolve, reject) {
+  resolve(1);
+});
+
+promise.then(function(val) {
+  console.log(val); // 1
+  return val + 2;
+}).then(function(val) {
+  console.log(val); // 3
+});</pre>
+
+<p>実用的な例として、先のコードに戻ってみましょう。</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  console.log("Success!", response);
+});</pre>
+
+<p>ここでレスポンスは JSON データですが、テキスト値として受け取っています。JSON オブジェクトとして受け取るには、get 関数を変更して、<code><a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#responseType">responseType</a></code> に "json" を指定する方法もありますが、ここでは Promise のコールバックを変更しましょう。</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  return JSON.parse(response);
+}).then(function(response) {
+  console.log("Yey JSON!", response);
+});</pre>
+
+<p><code>JSON.parse</code> は単一の引数をとり、変換された値を返す関数であるので、以下のように書く事もできます。</p>
+
+<pre class="prettyprint">get('story.json').then(JSON.parse).then(function(response) {
+  console.log("Yey JSON!", response);
+});</pre>
+
+<p>DevTools のコンソールを開いて<span class="live-example json-example"><a href="story.json">ここをクリックすれば</a><span> 実際に動作を試せます。結局、以下のような <code>getJSON</code> 関数を実装するのが一番良いかもしれません。</p>
+
+<pre class="prettyprint">function getJSON(url) {
+  return get(url).then(JSON.parse);
+}</pre>
+
+<p><code>getJSON</code> もまた、Promise を返す関数です。URL で指定されたリソースを読み込み、JSONデータとしてパースします。</p>
+
+<h3 id="toc-promises-queues">複数の非同期処理をキューイングする</h3>
+<p>"then" を接続することで、複数の非同期処理を順番に実行することもできます。</p>
+<p>"then" のコールバック関数の中で何らかの値を返すことで、ちょっとした魔法がおきます。上で見た通り、コールバック関数の中で値を返せば、その値は次に接続された "then" のコールバック関数に引数として渡されます。さらに、コールバック関数の中で Promise オブジェクトを返す事により、次に接続された "then" のコールバック関数は、その Promise オブジェクトが settled の状態になるまで、つまり成功／失敗するまで、待たされます。以下に例を挙げます。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  return getJSON(story.chapterUrls[0]);
+}).then(function(chapter1) {
+  console.log("Got chapter 1!", chapter1);
+});</pre>
+
+<p>ここではまず、"story.json" をリクエストすることで、URL のリストを非同期で取得してから、さらにそのリストの先頭の URL をリクエストしています。これこそが、従来のコールバックパターンと一線を画す Promise の本領なのです。
+
+  さらに簡略化して、以下のようなメソッドを書く事が出来ます。</p>
+
+<pre class="prettyprint">var storyPromise;
+
+function getChapter(i) {
+  storyPromise = storyPromise || getJSON('story.json');
+
+  return storyPromise.then(function(story) {
+    return getJSON(story.chapterUrls[i]);
+  })
+}
+
+// and using it is simple:
+getChapter(0).then(function(chapter) {
+  console.log(chapter);
+  return getChapter(1);
+}).then(function(chapter) {
+  console.log(chapter);
+});</pre>
+
+<p>最初に <code>getChapter</code> が呼ばれたときに "story.json" がダウンロードされ、2回目以降は <code>storyPromise</code> を再利用しているので、"story.json" は 1 回しか読み出されません。 さすが、Promise!</p>
+
+<h2 id="toc-error-handling">エラー処理</h2>
+<p>すでに見た通り、"then" は引数を２つ取ります。ひとつは成功時、もうひとつは失敗時に呼ばれるコールバック関数です。(Promise 語で言うところの、fulfill 時および reject 時のコールバック関数)</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  console.log("Success!", response);
+}, function(error) {
+  console.log("Failed!", error);
+});</pre>
+
+<p>これに加えて "catch" を使う事も可能です。</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  console.log("Success!", response);
+}).catch(function(error) {
+  console.log("Failed!", error);
+});</pre>
+
+<p>"catch" といっても大した事はありません。ただのシンタックスシュガーで、<code>then(undefined, func)</code> を読みやすくするためのものです。ただ、上記２つのコード例は振る舞いが異なることに注意してください。つまり、後者は以下と同等になります。</p>
+
+<pre class="prettyprint">get('story.json').then(function(response) {
+  console.log("Success!", response);
+}).then(undefined, function(error) {
+  console.log("Failed!", error);
+});</pre>
+
+<p>違いは微妙ですが、非常に重要なので注目してください。Promise において、処理が reject された場合、reject コールバック関数を持つ直近の "then" (もしくは "catch") まで、処理が飛びます。つまり上の例で、<code>then(func1, func2)</code> の場合、<code>func1</code> か <code>func2</code> のどちらかが呼ばれ、決して両方が呼ばれる事はあり得ません。一方、<code>then(func1).catch(func2)</code> の場合は、<code>func1</code> が reject されると、両方呼ばれます。これらは、異なるステップで "then" に接続されているからです。さらなる例として、以下をご覧ください。</p>
+
+<pre class="prettyprint">asyncThing1().then(function() {
+  return asyncThing2();
+}).then(function() {
+  return asyncThing3();
+}).catch(function(err) {
+  return asyncRecovery1();
+}).then(function() {
+  return asyncThing4();
+}, function(err) {
+  return asyncRecovery2();
+}).catch(function(err) {
+  console.log("Don't worry about it");
+}).then(function() {
+  console.log("All done!");
+});</pre>
+
+<p>上記コードの処理フローは、JavaScript の try/catch にとてもよく似ています。"try" 節の中でエラー発生すると、すぐに "catch" ブロックに処理が移りますが、それと同じです。では、フローチャートにして見てみましょう。(ちなみに私はフローチャートが大好きです。)</p>
+
+<div style="max-width: 495px; margin: 10px auto">
+  <div style="position: relative; padding-top: 93%;">
+    <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden" src="promise-flow.svg" frameborder="0" allowtransparency="true"></iframe>
+  </div>
+</div>
+
+<p>緑の線は Promise が fulfilled になった場合を、また、赤い線は reject された場合を表します。</p>
+
+<h3 id="toc-exceptions-and-promises">JavaScript の例外と Promise</h3>
+<p>Promise は明示的に reject される場合もありますが、暗黙のうちに reject される場合もあります。それは、コンストラクタのコールバック関数内で例外が throw された場合です。</p>
+
+<pre class="prettyprint">var jsonPromise = new Promise(function(resolve, reject) {
+  // JSON形式ではないデータを JSON.parse に渡しているので、
+  // 例外が throw され、Promise は reject されます。
+  resolve(JSON.parse("This ain't JSON"));
+});
+
+jsonPromise.then(function(data) {
+  // ここは通りません。
+  console.log("It worked!", data);
+}).catch(function(err) {
+  // こちらが通ります。
+  console.log("It failed!", err);
+});</pre>
+
+<p>Promise の コンストラクタのコールバック関数で例外が throw されると、自動的に catch され、Promise が reject されます。</p>
+<p>これは、"then" のコールバック関数内で例外が throw された場合も同じです。</p>
+
+<pre class="prettyprint">get('/').then(JSON.parse).then(function() {
+  // This never happens, '/' is an HTML page, not JSON
+  // so JSON.parse throws
+  console.log("It worked!", data);
+}).catch(function(err) {
+  // Instead, this happens:
+  console.log("It failed!", err);
+});</pre>
+
+<h3 id="toc-errors-in-practice">エラー処理の実際</h3>
+
+<p>では、実際に本の内容を表示するアプリにおいて、ユーザにエラーを表示する部分を catch を用いて実装しましょう。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  return getJSON(story.chapterUrls[0]);
+}).then(function(chapter1) {
+  addHtmlToPage(chapter1.html);
+}).catch(function() {
+  addTextToPage("Failed to show chapter");
+}).then(function() {
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>例えば、<code>story.chapterUrls[0]</code> の読み込み中にエラーが発生した場合、(サーバがステータスコード 500 を返した、もしくはユーザがオフラインだった場合等、) 以降の成功時のコールバックはすべて無視されます。これは、<code>getJSON</code> の中のJSON データをパースする処理と、上記の chapter1.html をページに追加する処理を含みます。そしてその代わりに、catch のコールバック関数が呼ばれ、その結果、"Failed to show chapter" の文字がページに表示されます。</p>
+<p>JavaScript の try/catch と同様、例外がリカバーされた後は、引き続き処理が実行されるので、ロード中のインジケータを隠す処理が必ず実行されます。上記のコードは、以下のコードのノンブロッキング非同期バージョンと言えます。</p>
+
+<pre class="prettyprint">try {
+  var story = getJSONSync('story.json');
+  var chapter1 = getJSONSync(story.chapterUrls[0]);
+  addHtmlToPage(chapter1.html);
+}
+catch (e) {
+  addTextToPage("Failed to show chapter");
+}
+
+document.querySelector('.spinner').style.display = 'none';</pre>
+
+<p>"catch" で例外をリカバーせずに、単にログの記録だけを行いたい場合もあります。そのような場合は、単純に再度例外を throw してください。例えば、<code>getJSON</code> メソッドで以下のようにログを記録できます。</p>
+
+<pre class="prettyprint">function getJSON(url) {
+  return get(url).then(JSON.parse).catch(function(err) {
+    console.log("getJSON failed for", url, err);
+    throw err;
+  });
+}</pre>
+
+<p>ここまでで我々は、一つのチャプターのみを取得することができましたが、次にすべての章を取得してみましょう。</p>
+
+<h2 id="toc-parallelism-sequencing">並列処理と逐次処理 - 両方のいいとこ取り</h2>
+
+<p>非同期処理というものは容易にイメージできないので、もし書き始めるのが困難な場合、まずは同期処理であるかのようにコードを書いてみましょう。この場合、以下のようになります。</p>
+
+<pre class="prettyprint">try {
+  var story = getJSONSync('story.json');
+  addHtmlToPage(story.heading);
+
+  story.chapterUrls.forEach(function(chapterUrl) {
+    var chapter = getJSONSync(chapterUrl);
+    addHtmlToPage(chapter.html);
+  });
+
+  addTextToPage("All done");
+}
+catch (err) {
+  addTextToPage("Argh, broken: " + err.message);
+}
+
+document.querySelector('.spinner').style.display = 'none';</pre>
+
+<p>このコードは普通に実行できます。(<a href="sync-example.html">実際の実行例をご覧ください</a>) ただし、同期処理なので、ダウンロード中はブラウザが他の処理を実行できません。これを解決するために、"then" を用いて、それぞれの処理を非同期かつ順番に実行するのです。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  addHtmlToPage(story.heading);
+
+  // TODO: for each url in story.chapterUrls, fetch &amp; display
+}).then(function() {
+  // And we're all done!
+  addTextToPage("All done");
+}).catch(function(err) {
+  // Catch any error that happened along the way
+  addTextToPage("Argh, broken: " + err.message);
+}).then(function() {
+  // Always hide the spinner
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>では、各章の URL のリストをループで回して、順番に読み込む処理はどうなるでしょうか？まず最初に、以下のコードは<strong>想定通り動きません</strong>。</p>
+
+<pre class="prettyprint">story.chapterUrls.forEach(function(chapterUrl) {
+  // Fetch chapter
+  getJSON(chapterUrl).then(function(chapter) {
+    // and add it to the page
+    addHtmlToPage(chapter.html);
+  });
+});</pre>
+
+<p>"forEach" は非同期処理を想定していないので、これだと章のデータはダウンロードが終わったものから順次表示されます。映画『パルプフィクション』はそのような構成になっていましたが、我々は映画を制作しているのではないので、正しい順番で表示されるように修正する必要があります。</p>
+
+<h3 id="toc-creating-sequences">処理の順番を記述する</h3>
+<p>ここでやりたいことは、配列 <code>chapterUrls</code> を Promise の連鎖に変換することです。以下のように "then" を使ってこれを実現します。</p>
+
+<pre class="prettyprint">// Start off with a promise that always resolves
+var sequence = Promise.resolve();
+
+// Loop through our chapter urls
+story.chapterUrls.forEach(function(chapterUrl) {
+  // Add these actions to the end of the sequence
+  sequence = sequence.then(function() {
+    return getJSON(chapterUrl);
+  }).then(function(chapter) {
+    addHtmlToPage(chapter.html);
+  });
+});</pre>
+
+<p>初出なので説明しておくと、<code>Promise.resolve</code> は任意の値を引数として受け取り、その値に resolve される Promise オブジェクトを作成して返します。もし <code>Promise</code> オブジェクトを引数として受け取った場合、そのオブジェクトをそのまま返します。(<strong>注：</strong> これは仕様外の機能であり、実装によってはサポートされていません。) もし Promise 風 ('then' メソッドを持つ) オブジェクトを引数として受け取った場合、正規の <code>Promise</code> オブジェクトに変換して返します。その他の値、例えば <code>Promise.resolve('Hello')</code> 等を受け取った場合、その値で fulfill された Promise オブジェクトを生成して返します。そして、上記のように引数無しで呼び出された場合、"undefined" 値で fulfill された Promise オブジェクトを生成して返します。</p>
+
+<p><code>Promise.reject(val)</code> というのもあって、こちらは任意の値もしくは undefined 値で reject された Promise オブジェクトを生成して返します。</p>
+<p>ちなみに、上記のコードは <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">array.reduce</a></code> を使えば、もう少し見栄えよく書くことができます。</p>
+
+<pre class="prettyprint">// Loop through our chapter urls
+story.chapterUrls.reduce(function(sequence, chapterUrl) {
+  // Add these actions to the end of the sequence
+  return sequence.then(function() {
+    return getJSON(chapterUrl);
+  }).then(function(chapter) {
+    addHtmlToPage(chapter.html);
+  });
+}, Promise.resolve());</pre>
+
+<p>やっていることは先のコード例と同じですが、"sequence" を外部の変数として持つ必要がなくなりました。reduce のコールバック関数は配列の要素ごとに呼ばれます。初回の呼び出しにおいて、"sequence" は <code>Promise.resolve()</code> の戻り値ですが、以降の呼び出しでは "sequence" は直前の呼び出しの戻り値になります。このように、<code>array.reduce</code> は配列をあるひとつの値 (ここでは Promise オブジェクト) に集約するのにたいへん便利です。</p>
+<p>では、いままで書いたコードをまとめましょう。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  addHtmlToPage(story.heading);
+
+  return story.chapterUrls.reduce(function(sequence, chapterUrl) {
+    // Once the last chapter's promise is done…
+    return sequence.then(function() {
+      // …fetch the next chapter
+      return getJSON(chapterUrl);
+    }).then(function(chapter) {
+      // and add it to the page
+      addHtmlToPage(chapter.html);
+    });
+  }, Promise.resolve());
+}).then(function() {
+  // And we're all done!
+  addTextToPage("All done");
+}).catch(function(err) {
+  // Catch any error that happened along the way
+  addTextToPage("Argh, broken: " + err.message);
+}).then(function() {
+  // Always hide the spinner
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>これで当初の同期バージョンのコードを完全に非同期に書き換えることが出来ました。(<a href="async-example.html">ここで実際に試せます。</a>) しかし、まだまだ改善の余地はあります。以下は、ページがダウンロードされる様子を表しています。</p>
+
+<figure>
+  <img src="promise1.gif">
+</figure>
+
+<p>ここで言えるのは、せっかくブラウザは複数のデータを同時にダウンロードすることができるのに、我々は章のデータをひとつづつ順番にダウンロードしているため、パフォーマンスが損なわれているということです。そうではなく、ダウンロードは同時に行い、すべて完了した時点で表示するというのが理想です。幸いこれは、Promise の提供する API を用いて実現可能です。</p>
+
+<pre class="prettyprint">Promise.all(arrayOfPromises).then(function(arrayOfResults) {
+  //...
+});</pre>
+
+<p><code>Promise.all</code> は Promise オブジェクトの配列を引数として受け取り、それらすべてが成功したときに fulfill される Promise オブジェクトを生成して返します。実行結果は値の配列 (引数として渡した配列の順番で、各要素の fulfill 値が格納された配列) として "then" のコールバック関数に渡されます。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  addHtmlToPage(story.heading);
+
+  // Take an array of promises and wait on them all
+  return Promise.all(
+    // Map our array of chapter urls to
+    // an array of chapter json promises
+    story.chapterUrls.map(getJSON)
+  );
+}).then(function(chapters) {
+  // Now we have the chapters jsons in order! Loop through…
+  chapters.forEach(function(chapter) {
+    // …and add to the page
+    addHtmlToPage(chapter.html);
+  });
+  addTextToPage("All done");
+}).catch(function(err) {
+  // catch any error that happened so far
+  addTextToPage("Argh, broken: " + err.message);
+}).then(function() {
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>ネットワークの状況にもよりますが、このコードは先ほどのひとつづつロードするバージョンより数秒速くなります。(<a href="async-all-example.html">ここで実際に試せます。</a>) また、コード量も先ほどの例より少なくなります。これにより、章のデータは任意の順番でダウンロードされますが、画面の表示は正しい順番で行われるようになりました。</p>
+
+<figure>
+  <img src="promise2.gif">
+</figure>
+
+<p>それでもまだ、上記のコードは改善の余地があります。我々は第一章のデータが取得できた時点で、それを表示すべきです。それにより、ユーザは残りのすべての章がダウンロードされるのを待たずに第一章を読み始めることが出来るからです。ただし、その後第三章がダウンロードされた時点では、まだそれを表示しません。なぜなら、そうした場合、ユーザは第二章がまだ表示されていないことに気づかずに読み進めてしまうからです。なので、第二章がダウンロードされた時点で、我々は第二章と第三章の両方を表示します。</p>
+<p>これを実現するために、まず全章の JSON データを同時に読み込み、それらをドキュメントに追加するたの処理の連鎖を作ります。</p>
+
+<pre class="prettyprint">getJSON('story.json').then(function(story) {
+  addHtmlToPage(story.heading);
+
+  // Map our array of chapter urls to
+  // an array of chapter json promises.
+  // This makes sure they all download parallel.
+  return story.chapterUrls.map(getJSON)
+    .reduce(function(sequence, chapterPromise) {
+      // Use reduce to chain the promises together,
+      // adding content to the page for each chapter
+      return sequence.then(function() {
+        // Wait for everything in the sequence so far,
+        // then wait for this chapter to arrive.
+        return chapterPromise;
+      }).then(function(chapter) {
+        addHtmlToPage(chapter.html);
+      });
+    }, Promise.resolve());
+}).then(function() {
+  addTextToPage("All done");
+}).catch(function(err) {
+  // catch any error that happened along the way
+  addTextToPage("Argh, broken: " + err.message);
+}).then(function() {
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>これで両方のいいとこ取りが完成しました。(<a href="async-best-example.html">ここで実際に試せます。</a>) すべてのコンテンツを取得するための時間は先の例と同じですが、より早い時点でユーザは先頭部分を読み始めることが出来ます。</p>
+
+<figure>
+  <img src="promise3.gif">
+</figure>
+
+<p>このような小さなサンプルでは、すべての章のデータはほぼ同時にダウンロードされるので違いは分かりにくいですが、もっと大きな章の場合、取得できたものから表示するという方式により大きな効果が得られます。</p>
+
+<p>もし上記コードを <a href="https://gist.github.com/jakearchibald/0e652d95c07442f205ce">Node.js スタイルのコールバック関数とイベントで実現した場合</a>、コード量はほぼ倍になります。そして何よりも重要なことは、そのようなコードは読みにくいということです。ただし、Promise の実力は、これだけではありません。ES6 の他の機能と組み合わせることで、これらのコードはさらに読みやすくなります。</p>
+
+<h2 class="toc-generators">おまけ：Promise と Generator</h2>
+
+<p>次に紹介するコードは ES6 の新しい機能をたくさん使っているので、さしあたり、Promise を使うには理解する必要はありません。映画の予告編みたいなものと捉えてください。</p>
+<p>ES6 の <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">Generator</a> を使うと、関数の特定の箇所でいったん処理を抜けて、後から同じ状態を保持したままで、またその箇所から処理を再開することができます。以下の例をご覧ください。</p>
+
+<pre class="prettyprint">function *addGenerator() {
+  var i = 0;
+  while (true) {
+    i += yield i;
+  }
+}</pre>
+
+<p>関数名の前にアスタリスクがついているのに注目してください。これにより、関数が Generator になります。そして、yield キーワードの箇所で関数を中断／再開できます。これを利用するコードは以下の通りです。</p>
+
+<pre class="prettyprint">var adder = addGenerator();
+adder.next().value; // 0
+adder.next(5).value; // 5
+adder.next(5).value; // 10
+adder.next(5).value; // 15
+adder.next(50).value; // 65</pre>
+
+<p>ところで、これが Promise と何の関係があるのでしょうか？実はこの Generator の中断／再開の機能を使って、非同期処理のコードを同期っぽく書く (つまり読みやすくする) ことが出来るのです。以下のコードは 'yield' を Promise の待ち合わせに使うためのヘルパー関数です。もちろん、すべての行を理解する必要はありません。</p>
+
+<pre class="prettyprint">function spawn(generatorFunc) {
+  function continuer(verb, arg) {
+    var result;
+    try {
+      result = generator[verb](arg);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    if (result.done) {
+      return result.value;
+    } else {
+      return Promise.resolve(result.value).then(onFulfilled, onRejected);
+    }
+  }
+  var generator = generatorFunc();
+  var onFulfilled = continuer.bind(continuer, "next");
+  var onRejected = continuer.bind(continuer, "throw");
+  return onFulfilled();
+}</pre>
+
+<p>実は上のコードはほとんど<a href="https://github.com/kriskowal/q/blob/db9220d714b16b96a05e9a037fa44ce581715e41/q.js#L500">Q ライブラリのパクリ</a> で、JavaScript Promise 向けに少し書き直しただけです。では、これを使って、例の章データを表示するコードを書き直してみましょう。ES6 の技が詰まった最終バージョンは以下のようになります。</p>
+
+<pre class="prettyprint">spawn(function *() {
+  try {
+    // 'yield' effectively does an async wait,
+    // returning the result of the promise
+    let story = yield getJSON('story.json');
+    addHtmlToPage(story.heading);
+
+    // Map our array of chapter urls to
+    // an array of chapter json promises.
+    // This makes sure they all download parallel.
+    let chapterPromises = story.chapterUrls.map(getJSON);
+
+    for (let chapterPromise of chapterPromises) {
+      // Wait for each chapter to be ready, then add it to the page
+      let chapter = yield chapterPromise;
+      addHtmlToPage(chapter.html);
+    }
+
+    addTextToPage("All done");
+  }
+  catch (err) {
+    // try/catch just works, rejected promises are thrown here
+    addTextToPage("Argh, broken: " + err.message);
+  }
+  document.querySelector('.spinner').style.display = 'none';
+});</pre>
+
+<p>これはひとつ前のコードと全く同じ振る舞いをしますが、とても読みやすいですね。このコードは Chrome と Opera で動作させることができます。ただし、まず <strong>about:flags</strong> から <strong>Enable experimental JavaScript</strong> を有効にする必要があります。(<a href="async-generators-example.html">ここで実際に試せます。</a>)</p>
+
+<p>このコードは Promise、Generator、let、for-of、等々、ES6 の新しい機能が満載です。Promise を yield することで、ヘルパー関数 spawn は Promise が resolve されて最終的な値を返すまで処理を中断します。もし Promise が reject された場合、spawn 関数により yield 文は例外を throw します。それにより、JavaScript の通常の try/catch が使えます。こうして見ると、同期プログラミングは驚くほどコードがシンプルですね。</p>
+
+<h2 id="toc-api">Promise API リファレンス</h2>
+
+<p>これらのメソッドは特に記述が無い場合、Chrome、Opera、Firefox Nightly のいずれのブラウザでも動作します。また、すべてのブラウザで動作する <a href="https://github.com/jakearchibald/ES6-Promises#readme">Polyfill</a> もあります。</p>
+
+<h3>スタティックメソッド</h3>
+<dl>
+  <dt><code>Promise.resolve(promise);</code></dt>
+  <dd>promise をそのまま返す。(ただし <code>promise.constructor == Promise</code> の場合のみ。)
+  <dt><code>Promise.resolve(thenable);</code></dt>
+  <dd>thenable から新しく Promise オブジェクトを生成する。thenable は Promise 風オブジェクトで、"then" というメソッドを持っているオブジェクトはすべて thenable とみなされる。
+  </dd>
+  <dt><code>Promise.resolve(obj);</code></dt>
+  <dd><code>obj</code> 値で fulfill された Promise オブジェクトを生成する。</dd>
+  <dt><code>Promise.reject(obj);</code></dt>
+  <dd><code>obj</code> 値で reject された Promise オブジェクトを生成する。コードの一貫性およびデバッグ (スタックトレース等) のため、<code>obj</code> は <code>Error</code> のインスタンスであるべき。</dd>
+  <dt><code>Promise.all(array);</code></dt>
+  <dd>生成された Promise オブジェクトは、配列 array のすべての要素が fulfill された時点で fulfill される。また、要素のうちひとつでも reject された時点で reject される。配列 array の各要素は、内部で <code>Promise.resolve</code> に渡されるので、array の要素は Promise 風オブジェクトとその他のオブジェクトが混在できる。成功時の値は array の順番で各 fulfill 値が格納された配列となる。失敗時の値は、最初に reject された値となる。
+  <p class="notice"><b>Note:</b> 現時点では Chrome と Opera でのみ実装されています。</p></dd>
+  <dt><code>Promise.race(array);</code></dt>
+  <dd>生成された Promise オブジェクトは、配列 array のいずれかの要素が fulfill された時点で fulfill される。また、いずれかの要素が reject された時点で reject される。つまり これらのうちどちらが先に起きるかで結果が決まる。
+  <p class="notice"><b>Note:</b> Chrome と Opera でのみ実装されています。ちなみに、私はこの API の有用性が理解できません。私だったら <code>Promise.all</code> の反対、つまりすべての要素が reject された場合に reject される API を採用したでしょう。</p></dd>
+</dl>
+
+<h3>コンストラクタ</h3>
+<pre class="prettyprint">new Promise(function(resolve, reject) {});</pre>
+<dl>
+  <dt><code>resolve(thenable)</code></dt>
+  <dd>Promise オブジェクトは <code>thenable</code> の結果を受けて fulfill もしくは reject される。</dd>
+  <dt><code>resolve(obj)</code></dt>
+  <dd>Promise オブジェクトは <code>obj</code> で fulfill される。</dd>
+  <dt><code>reject(obj)</code></dt>
+  <dd>Promise オブジェクトは <code>obj</code> で reject される。コードの一貫性およびデバッグ (スタックトレース等) のため、obj は <code>Error</code> のインスタンスであるべき。 コンストラクタのコールバック関数内で throw された例外は自動的に <code>reject()</code> に渡される。</dd>
+</dl>
+
+<h3>インスタンスメソッド</h3>
+<dl>
+  <dt><code>promise.then(onFulfilled, onRejected)</code></dt>
+  <dd>promise が resolve された時点で <code>onFulfilled</code> が呼ばれる。
+  また、promise が reject された時点で <code>onRejected</code> が呼ばれる。
+  両方とも省略可能。一方もしくは両方が省略された場合、then の連鎖内で次に位置する <code>onFulfilled</code> もしくは <code>onRejected</code> が呼ばれる。
+  両方のコールバック関数は単一の引数 (fulfill 値もしくは reject の理由) を取る。
+  "then" は新たに生成された Promise オブジェクトを返すが、これは <code>onFulfilled</code> もしくは <code>onRejected</code> により返却された値を <code>Promise.resolve</code> に渡して生成されたものと等価である。これらのコールバック関数内で例外が throw された場合、Promise オブジェクトはその例外値で reject される。</dd>
+  <dt><code>promise.catch(onRejected)</code></dt>
+  <dd><code>promise.then(undefined, onRejected)</code> のシンタックスシュガーである。</dd>
+</dl>
+
+<p>この記事を書くにあたって多くの方に訂正やコメントをいただきましたので、ここに感謝の意を表します。Anne van Kesteren、Domenic Denicola、Tom Ashworth、Remy Sharp、Addy Osmani、Arthur Evans、そして Yutaka Hirano、ありがとう！</p>
+
+<p>また、<a href="http://mathiasbynens.be/">Mathias Bynens</a> には、この記事に対して <a href="https://github.com/html5rocks/www.html5rocks.com/pull/921/files">たくさんのアップデート</a> をいただき、大変お世話になりました。ありがとうございます。</p>
+
+<script src="promise-2.0.4.min.js"></script>
+<script>
+  function get(url) {
+    // Return a new promise.
+    // We do all the work within the constructor callback, so we can return here
+    return new Promise(function(resolve, reject) {
+      // Do the usual XHR stuff
+      var req = new XMLHttpRequest();
+      req.open('GET', url);
+
+      req.onload = function() {
+        // This is called even on 404 etc
+        // so check the status
+        if (req.status == 200) {
+          // Resolve the promise with the response text
+          resolve(req.response);
+        }
+        else {
+          // Otherwise reject with the status text
+          // which will hopefully be a meaningful error
+          reject(Error(req.statusText));
+        }
+      };
+
+      // Handle network errors
+      req.onerror = function() {
+        reject(Error("Network Error"));
+      };
+
+      // Make the request
+      req.send();
+    });
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll('.live-example')).forEach(function(el) {
+    el.style.display = "inline";
+  });
+
+  document.querySelector('.get-example a').addEventListener('click', function(event) {
+    get(this.href).then(
+      console.log.bind(console, "Success!"),
+      console.error.bind(console, "Failure!")
+    );
+    event.preventDefault();
+  });
+
+  document.querySelector('.json-example a').addEventListener('click', function(event) {
+    get(this.href).then(JSON.parse).then(
+      console.log.bind(console, "Success!"),
+      console.error.bind(console, "Failure!")
+    );
+    event.preventDefault();
+  });
+</script>
+
+{% endblock %}
