@@ -2,7 +2,7 @@
 {% load mixin from templatefilters %}
 
 {% block head %}
-  {{ block.super }} 
+  {{ block.super }}
   <style>
     figcaption p {
       font-style: normal;
@@ -34,7 +34,7 @@
       }
       .request-animation-frame figure:last-child {
         width: 30%;
-        padding-top: 30.3%;
+        padding-top: 31.5%;
       }
       .mutation-observer figure:last-child {
         width: 30%;
@@ -46,22 +46,22 @@
 {% endblock %}
 
 {% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
- 
+
 {% block translator %}
 <div class="translator">
   <strong>번역:</strong> <a href="mailto:sbnet21@gmail.com">한순보 (Soonbo Han)</a>
 </div>
 {% endblock %}
- 
+
 {% block content %}
- 
+
 <h2 id="toc-introduction">소개</h2>
- 
+
 <p>콜백 함수를 통해 비동기로 동작할 수 있는 능력은 자바스크립트를 특별하게 만드는 강력한 기능입니다. 비동기 콜백 등록은 이벤트 기반 코드를 작성하게 합니다. 하지만 자바스크립트는 선형 방식으로 실행하지 않아 머리 싸매고 버그를 찾는 경험을 하게 됩니다.</p>
 
 <p>다행히 이제 크롬 카나리 개발자 도구(DevTools)에서 비동기 자바스크립트 콜백의 콜 스택 <strong>전부</strong>를 볼 수 있습니다.</p>
 
-<figure> 
+<figure>
   <img src="xhr-async.gif" width="572" alt="비동기 콜 스택 빠른 개요 예고편"/>
   <figcaption>
     짧은 예고편 - 비동기 콜 스택 개요
@@ -69,7 +69,7 @@
   </figcaption>
 </figure>
 
-<p>개발자 도구에서 비동기 콜 스택 기능을 활성화하면 다양한 지점에서 그 시간에 맞는 웹 앱의 상태를 자세히 볼 수 있습니다. 이벤트 리스너, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>, Promise, <code>requestAnimationFrame</code>, <code>MutationObservers</code> 등을 위한 스택 전부를 추적합니다.</p>
+<p>개발자 도구에서 비동기 콜 스택 기능을 활성화하면 다양한 지점에서 그 시간에 맞는 웹 앱의 상태를 자세히 볼 수 있습니다. 일부 이벤트 리스너, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>, Promise, <code>requestAnimationFrame</code>, <code>MutationObservers</code> 등을 위한 스택 전부를 추적합니다.</p>
 
 <p>스택을 추적해 가면서 런타임 실행에서 특정 지점의 어떤 변수 값을 분석할 수도 있습니다. 이것은 Watch Expressions(역자주: 표현식 보기)를 위한 일종의 타임머신과 같습니다.</p>
 
@@ -86,7 +86,7 @@
 </figure>
 
 <h2 id="toc-timer-xhr">지연 타이머 이벤트와 XHR 응답 캡처하기</h2>
- 
+
 <p>아마도 지메일에서 다음과 같은 것을 본 적이 있을 것입니다.</p>
 
 <figure>
@@ -126,19 +126,33 @@
     <figcaption>
       async를 <em>활성화한</em> Call Stack 패널
       <br />
-      <p>XHR이 <code>submitHandler()</code>에서 시작한 것을 알 수 있습니다. 이는 scripts.js에서 바인딩한 클릭 핸들러에서 시작했습니다.</p>
+      <p>XHR이 <code>submitHandler()</code>에서 시작한 것을 알 수 있습니다. 좋군요!</p>
     </figcaption>
   </figure>
 
 </div>
 
-<p>콜 스택의 async를 켜면 콜 스택 전부를 볼 수 있어서 요청이 위와 같이 <code>submitHandler()</code>에서 시작했는지 혹은 아래와 같이 <code>retrySubmit()</code>에서 시작했는지 쉽게 알 수 있습니다.</p>
+<p>콜 스택의 async를 켜면 콜 스택 전부를 볼 수 있으므로 아래와 같이 요청이 (submit 버튼을 클릭한 뒤에 호출되는) <code>submitHandler()</code>으로부터 시작되었는지 아니면 <code>retrySubmit()</code>에서 시작했는지 쉽게 알 수 있습니다.</p>
 
-<figure>
-  <img src="xhr-after-retry-shortened.gif" width="320" alt="비동기 호출 스택의 모의 지메일 예제에서의 또 다른 중단점 설정"/>
-</figure>
+<div class="comparision side-by-side">
 
-<p>Call Stack 패널에서는 중단점 이벤트가 이전의 '클릭' 같은 UI 이벤트, <code>setTimeout()</code> 지연, 혹은 자주 사용하는 어떤 비동기 콜백 이벤트에서 발생했는지를 알려줄 수 있습니다.</p>
+  <figure>
+    <figcaption>submitHandler()</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="비동기 호출 스택을 이용하여 가짜 Gmail 예제에서 중단점(Breakpoint) 설정하기"/>
+    <figcaption>
+      <p>비동기 호출 스택을 이용하여 가짜 Gmail 예제에서 중단점(Breakpoint) 설정하기</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>retrySubmit()</figcaption>
+    <img src="xhr-after-retry-shortened.gif" width="320" alt="비동기 호출 스택을 이용하여 가짜 Gmail 예제에서 또다른 중단점(Breakpoint) 설정하기"/>
+    <figcaption>
+      <p>비동기 호출 스택을 이용하여 가짜 Gmail 예제에서 또다른 중단점(Breakpoint) 설정하기</p>
+    </figcaption>
+  </figure>
+
+</div>
 
 <h2 id="toc-watch-expressions">비동기로 표현식(expressions) 감시하기</h2>
 
@@ -155,7 +169,7 @@
 <p>여러분이 닥터후이고 타디스(Tardis, 역자주: 영국 드라마 '닥터후'에 나오는 타임머신)에 들어가기 전부터 "지금"까지 시간을 비교하는 데 도움이 약간 필요하다고 생각해보세요. 개발자 도구 콘솔에서 다른 실행점의 값을 쉽게 실행, 저장, 계산할 수 있습니다.</p>
 
 <figure>
-  <img src="time-travel.gif" width="539" alt="비동기 콜 스택을 활성화하고 자바스크립트 콘솔을 사용한 예"/>
+  <img src="time-travel.gif" width="433" alt="비동기 콜 스택을 활성화하고 자바스크립트 콘솔을 사용한 예"/>
   <figcaption>
     비동기 콜 스택을 활성화하고 자바스크립트 콘솔을 사용하여 코드를 디버깅하세요. 위 데모는 <a href="past-scope/demo.html" target="_blank">여기</a>에서 볼 수 있습니다.
   </figcaption>
@@ -196,7 +210,7 @@
     <figcaption>후</figcaption>
     <img src="promises-after.gif" width="600" alt="Breakpoint set in promises example with async call stacks"/>
     <figcaption>
-      비동기를 <em>활성화한</em> Call Stack 패널  
+      비동기를 <em>활성화한</em> Call Stack 패널
       <br />
       <p>와우! 앞에서 말한 Promise들. 수많은 콜백.</p>
     </figcaption>
@@ -211,11 +225,11 @@
 
 <h2 id="toc-request-animation-frame">웹 애니메이션 이해하기</h2>
 
-<p>HTML5Rocks 기록을 더 자세히 살펴보도록 합시다. Paul Lewis의 
+<p>HTML5Rocks 기록을 더 자세히 살펴보도록 합시다. Paul Lewis의
 <em><a href="/ko/tutorials/speed/animations/" target="_blank">Leaner, Meaner, Faster Animations with requestAnimationFrame</a></em>?을 기억하십니까?</p>
 
-<p><a href="/ko/tutorials/speed/animations/post.html" target="_blank">requestAnimationFrame 
-데모</a>를 열어 post.html의 (874번째 줄 근처) <code>update()</code> 메소드 시작 부분에 중단점을 설정합니다. 비동기 콜 스택을 사용해 <code>requestAnimationFrame</code>에 대해 더 많이 이해하게 됩니다. 그리고 모의 지메일 예제에서와 매우 유사하게 초기화 이벤트였던 '스크롤' 이벤트로 돌아가 보는 모든 경로를 살펴보게 됩니다.</p>
+<p><a href="/ko/tutorials/speed/animations/post.html" target="_blank">requestAnimationFrame
+데모</a>를 열고 post.html의 <code>update()</code> 메소드의 시작 위치(874 라인 근처)에 중단점을 추가합니다. 비동기 호출 스택을 이용하면 스크롤 이벤트 콜백의 발생으로 되돌아가며 살펴볼 수 있는 모든 기능을 포함하여 <code>requestAnimationFrame</code>를 파악하기 위한 더 많은 통찰력을 얻을 수 있습니다.</p>
 
 <div class="comparision side-by-side request-animation-frame">
 
@@ -230,7 +244,7 @@
   <figure>
     <figcaption>후
     After</figcaption>
-    <img src="requestAnimationFrame-after.gif" width="320" alt="비동기 콜 스택을 사용하고 requestAnimationFrame에서 중단점 설정"/>
+    <img src="requestAnimationFrame-after.gif" width="305" alt="비동기 콜 스택을 사용하고 requestAnimationFrame에서 중단점 설정"/>
     <figcaption>
       그리고 비동기 <em>활성화</em>하기
     </figcaption>
@@ -315,28 +329,32 @@
     setTimeout()이나 setInterval()을 초기화한 곳으로 돌아갑니다.
   </li>
   <li>
-    <strong>XHR</strong>: 
+    <strong>XHR</strong>:
     xhr.send()를 호출한 곳으로 돌아갑니다.
   </li>
   <li>
-    <strong>애니메이션 프레임</strong>: 
+    <strong>애니메이션 프레임</strong>:
     requestAnimationFrame을 호출한 곳으로 돌아갑니다.
   </li>
   <li>
-    <strong>이벤트 리스너</strong>: 
-    이벤트를 addEventListner()와 처음에 바인딩한 곳으로 돌아갑니다.
-  </li>
-  <li>
-    <strong>MutationObserver</strong>: 
+    <strong>MutationObserver</strong>:
     Mutation Observer 이벤트가 발생한 곳으로 돌아갑니다.
   </li>
+  <li>
+    <strong>addEventListener()를 통한 적정한 DOM 이벤트들</strong>:
+    이벤트가 발생한 곳으로 돌아갑니다. 성능 상의 이유로 인해 모든 DOM 이벤트들이 비동기 호출 스택 기능에 적합하지는 않습니다. 'scroll', 'hashchange' 그리고 'selectionchange'가 현재 가능한 이벤트들의 예입니다.
+ </li>
+  <li>
+    <strong>addEventListener()를 통한 멀티미디어 이벤트들</strong>:
+    이벤트가 발생한 곳으로 돌아갑니다. (예를 들어 'play', 'pause', 'ratechage'와 같은) 오디오와 비디오 이벤트, WebRTC의 MediaStreamTrackList 이벤트('addtrack', 'removetrack') 그리고 MediaSource 이벤트('sourceopen')이 현재 가능한 멀티미디어 이벤트들입니다.
+ </li>
 </ul>
 
 <p>이러한 실험용 자바스크립트 API에 대한 전체 콜 스택을 곧 지원할 것입니다.</p>
 
 <ul>
   <li>
-    <strong>Promise</strong>: 
+    <strong>Promise</strong>:
     Promise가 해결된(resolved) 곳으로 돌아갑니다.
   </li>
   <li>
@@ -347,7 +365,6 @@
 
 <p>자바스크립트 콜백의 스택 전부를 추적할 수 있다는 것이 여러분을 차분하게 해줄 것입니다. 다수의 비동기 이벤트가 서로 관련지어 발생하거나, 비동기 콜백 내에서 캐치(Catch) 되지 않은 예외(Exception)를 던진다면 개발자 도구의 이 기능이 특히 유용할 것입니다.</p>
 
-<p>크롬 카나리에서 해보세요. 이 새로운 기능에 대한 피드백이 있으면 <a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">Chrome DevTools 
-Group</a>으로 연락하거나 크롬 개발자 도구 버그 추적 시스템에 <a href="http://crbug.com/new" target="_blank">버그 신고</a>를 해주세요.</p>
+<p>크롬 카나리에서 해보세요. 이 새로운 기능에 대한 피드백이 있으면 크롬 개발자 도구(Chrome DevTools)의 <a href="https://code.google.com/p/chromium/issues/detail?id=272416" target="_blank">버그 추적기(Bug Tracker)</a>나 <a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">Chrome DevTools Group</a>에 알려주세요.</p>
 
 {% endblock %}

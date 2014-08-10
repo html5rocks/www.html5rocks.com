@@ -34,7 +34,7 @@
       }
       .request-animation-frame figure:last-child {
         width: 30%;
-        padding-top: 30.3%;
+        padding-top: 31.5%;
       }
       .mutation-observer figure:last-child {
         width: 30%;
@@ -70,7 +70,7 @@ asynchronous JavaScript callbacks!</p>
 
 <p>Once you enable the async call stack feature in DevTools, you will be able to 
 drill into the state of your web app at various points in time. Walk the full 
-stack trace for event listeners, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>, 
+stack trace for some event listeners, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>, 
 promises, <code>requestAnimationFrame</code>, <code>MutationObservers</code>, and more.</p>
 
 <p>As you walk the stack trace, you can also analyze the value of any variable at 
@@ -140,23 +140,29 @@ async stacks:</p>
     <figcaption>
       The Call Stack panel <em>with</em> async enabled.
       <br />
-      <p>Here you can see that the XHR was initiated from <code>submitHandler()</code>, which was initiated from a click handler bound from scripts.js. Nice!</p>
+      <p>Here you can see that the XHR was initiated from <code>submitHandler()</code>. Nice!</p>
     </figcaption>
   </figure>
 
 </div>
 
 <p>With async call stacks turned on, you can view the entire call stack to easily 
-see if the request was initiated from <code>submitHandler()</code> as it was above, or from
-<code>retrySubmit()</code> as it is below:</p>
+see if the request was initiated from <code>submitHandler()</code> (which happens after clicking the submit button) or from
+<code>retrySubmit()</code> (which happens after a <code>setTimeout()</code> delay):</p>
 
-<figure>
-  <img src="xhr-after-retry-shortened.gif" width="320" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
-</figure>
+<div class="comparision side-by-side">
 
-<p>From the Call Stack panel, you can also tell if the breakpoint event originated 
-earlier from an UI event like 'click', a <code>setTimeout()</code> delay, or any commonly 
-used async callback event.</p>
+  <figure>
+    <figcaption>submitHandler()</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Breakpoint set in mock Gmail example with async call stacks"/>
+  </figure>
+
+  <figure>
+    <figcaption>retrySubmit()</figcaption>
+    <img src="xhr-after-retry-shortened.gif" width="320" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
+  </figure>
+
+</div>
 
 <h2 id="toc-watch-expressions">Watch expressions asynchronously</h2>
 
@@ -174,7 +180,7 @@ reflect the state that it was in at that time!</p>
 <p>Imagine that you are Dr. Who and you need a little help comparing the clock from before you got into the Tardis to "now". From the DevTools console, you can easily evaluate, store, and do calculations on values from across different execution points.</p>
 
 <figure>
-  <img src="time-travel.gif" width="539" alt="An example of using the JavaScript console with aysnc call stacks"/>
+  <img src="time-travel.gif" width="433" alt="An example of using the JavaScript console with aysnc call stacks"/>
   <figcaption>
     Use the JavaScript console in conjunction with async call stacks to debug your code. The above demo can be found <a href="past-scope/demo.html" target="_blank">here</a>.
   </figcaption>
@@ -244,8 +250,8 @@ example.</p>
 demo</a>
 and add a breakpoint at the beginning of the <code>update()</code> method (around line 874) of 
 post.html. With async call stacks we get a lot more insights into 
-<code>requestAnimationFrame</code>. And, much like the mock Gmail example, we get to walk all 
-the way back to the initiating event which was a 'scroll' event.</p>
+<code>requestAnimationFrame</code>, including the ability to walk all 
+the way back to the initiating scroll event callback.</p>
 
 <div class="comparision side-by-side request-animation-frame">
 
@@ -259,7 +265,7 @@ the way back to the initiating event which was a 'scroll' event.</p>
 
   <figure>
     <figcaption>After</figcaption>
-    <img src="requestAnimationFrame-after.gif" width="320" alt="Breakpoint set in requestAnimationFrame example with async call stacks"/>
+    <img src="requestAnimationFrame-after.gif" width="305" alt="Breakpoint set in requestAnimationFrame example with async call stacks"/>
     <figcaption>
       And <em>with</em> async enabled.
     </figcaption>
@@ -360,12 +366,17 @@ display the full call stack:</p>
     Walk back to where requestAnimationFrame was called.
   </li>
   <li>
-    <strong>Event listeners</strong>: 
-    Walk back to where the event was originally bound with addEventListener().
-  </li>
-  <li>
     <strong>MutationObservers</strong>: 
     Walk back to where the mutation observer event was fired.
+  </li>
+  <li>
+    <strong>Eligible DOM events via addEventListener()</strong>: 
+    Walk back to where the event was fired. Due to performance reasons, not all DOM events are eligible for the async call stacks feature. Examples of currently available events include: 'scroll', 'hashchange', and 
+    'selectionchange'.
+  </li>
+  <li>
+    <strong>Multimedia events via addEventListener()</strong>: 
+    Walk back to where the event was fired. Available multimedia events include: audio and video events (e.g. 'play', 'pause', 'ratechange'), WebRTC MediaStreamTrackList events (e.g. 'addtrack', 'removetrack'), and MediaSource events (e.g. 'sourceopen').
   </li>
 </ul>
 
@@ -389,9 +400,9 @@ exception is thrown from within an async callback.</p>
 
 <p>Give it a try in Chrome Canary. 
 If you have feedback on this new feature, drop us a line on the 
+Chrome DevTools <a href="https://code.google.com/p/chromium/issues/detail?id=272416" target="_blank">bug tracker</a>
+or in the 
 <a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">Chrome DevTools 
-Group</a>
-or 
-<a href="http://crbug.com/new" target="_blank">file a bug</a> in the Chrome DevTools bug tracker.</p>
+Group</a>.</p>
 
 {% endblock %}

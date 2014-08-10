@@ -1,0 +1,107 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block headauthor %}Umar Hansa{% endblock %}
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="http://www.cwdoh.com">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<style>
+.undo-multiple-occurrence-video {
+	width: 50%;
+}
+</style>
+
+<h2 id="devtools-digest-chrome-35-edition">개발자도구 요약: Chrome 35 버전</h2>
+
+<p>모두들 안녕한가요? 우리는 개발자도구 요약의 <a href="http://www.html5rocks.com/ko/tutorials/developertools/chrome-33/">지난 버전</a>에서 강력한 비동기 호출 스택과 몇가지 다른 기능에 대해 확인해보았습니다. 이 버전에서 개선된 (자동완성 기능을 가진) 네트워크 패널 필터링, Shadow DOM 컨텐츠를 수정할 수 있는 기능, 코드 미러 4의 업데이트 등을 확인해볼 것입니다.</p>
+
+<h3 id="network-panel-filtering">네트워크 패널 필터링</h3>
+
+<p>도메인(Domain)과 같은 확실한 필드들을 통해 리소스들을 필터링할 수 있습니다. 하나의 필터 형식의 예는 <code>Domain:website.com</code>입니다. 필터링 기능에 대해 추가적으로 타이핑하고 있는 쿼리들에 대해 실시간의 유효한 필터 값들을 제안하는 자동완성 기능 역시 확인할 수 있을 것입니다. 이는 특정 도메인에서 제공되는 전체 리소스를 검색할 필요가 있을 때 유용할 것입니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=258421">crbubg.com/258421</a>]</p>
+
+<p><img src="network-panel-filtering.png" alt="Network panel filtering"></p>
+
+<h3 id="edit-shadow-dom-content">Shadow DOM 컨텐츠 편집</h3>
+
+<p>개발자도구는 Element 패널 내에서 정규적인 HTML의 수정이 항상 가능했으며, 이러한 기능들은 이제 Shadow DOM의 엘리먼트 부분까지 확장되었습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=348991">crbug.com/348991</a>]</p>
+
+<p><img src="edit-shadow-dom.png" alt="Edit Shadow DOM content"></p>
+
+<h3 id="upgrade-to-codemirror-40">CodeMirror 4.0으로의 업그레이드</h3>
+
+<p>자바스크립트 기반의 텍스트 에디터로써 Source 패널의 일부분으로 사용되고 있는 CodeMirror가 버전 4로 업그레이드되었습니다. <a href="http://codemirror.net/demo/sublime.html">키보드 단축키</a>를 포함한 많은 새로운 기능들이 추가되었습니다. [<a href="http://crbug.com/356878">crbug.com/356878</a>]</p>
+
+<video class="undo-multiple-occurrence-video" autoplay loop muted src="undo-multiple-occurrence.mp4"></video>
+
+<h3 id="quick-search-for-a-css-property">CSS 속성의 빠른 검색</h3>
+
+<p>이제 Style 패널의 새로운 검색 상자에서 속성 이름들이나 룰 셀렉터들을 검색할 수 있습니다. 결과물은 여러분이 타이핑하고 있는 쿼리에 대해 실시간으로 강조처리됩니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=278852">crbug.com/278852</a>]</p>
+
+<p><img src="css-prop-quick-search.png" alt="Quick search for a CSS-property"></p>
+
+<h3 id="timestamps-next-to-console-messages">콘솔 메세지에 대한 타임스탬프</h3>
+
+<p>로그 메세지들이 빠르고 연쇄적으로 발생하는 경우 메세지가 출력된 정확한 시간을 확인할 수 있는 것은 유용할 것입니다. 이를 개발자도구의 실험실 기능을 통해 활성화할 수 있습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=131714">crbug.com/131714</a>]</p>
+
+<p><img src="console-timestamp.png" alt="Timestamps next to console messages"></p>
+
+<h3 id="memory-statistics-breakdown-for-heap-snapshots">힙 스냅샷에 대한 통계적 메모리 명세</h3>
+
+<p>기록된 힙 스냅샷을 볼 때 자바스크립트의 관점에서 어떠한 부분이 대부분의 메모리를 소모하는지를 확인하기 위한 시각적이고 컬러화된 통계 파이 차트를 확인할 수 있습니다. 현재 실험실 기능이므로 “Heap snapshot statistics”의 활성화를 통해 확인할 수 있습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=346335">crbug.com/346335</a>]</p>
+
+<p><img src="memory-heap-stats.png" alt="Memory Statistics breakdown for heap snapshots"></p>
+
+<h3 id="view-the-original-source-of-a-consolelog-not-the-wrapped-version">console.log의 감싸진 버전(Wrapping version)이 아닌 원본 소스 보기</h3>
+
+<p>여러분은 아마도 console.log의 래퍼 함수(Wrapper function)을 가지고 있겠지만 불행하게도 콘솔에서 모든 메세지는 util.js:46와 같은 무언가로부터 발생합니다. 이제 개발자도구는 원래 위치를 가지고 있습니다. 개발자도구가 블랙박스를 가지고 있기 위해 콘솔 로그 메세지를 감싸고 있는 파일을 “Skip stepping through sources with particular names” 입력 상자 내에 입력하면 로그 문장의 실제 소스를 보여 줍니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=231007">crbug.com/231007</a>]</p>
+
+<h3 id="a-few-more-small-but-powerful-additions">작지만 강력한 추가 기능들:</h3>
+
+<ul>
+
+<li><p>Element 패널 내에서 <strong>Event Listeners 상자를 새로고침</strong>하고 나서 동적으로 자바스크립트 이벤트 리스너를 추가하거나 삭제할 수 있습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=341044">crbug.com/341044</a>]</p></li>
+
+<li><p><strong>콘솔 입력에 포커스를 설정하기 위해 Ctrl+`</strong>를 사용할 수 있습니다. 이는 개발자도구의 키보드 전용 작업흐름을 사용하고자 할 때 유용할 것입니다. [<a href="http://crbug.com/144943">crbug.com/144943</a>]</p></li>
+
+<li><p><strong>border-스타일 값의 자동완성 제안 사항들</strong>(dotted, dashed, double, groove)이 규격에 맞게 업데이트되었습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=349998">crbug.com/349998</a>]</p></li>
+
+<li><p>정확히 주장하는 대로 <strong>Restore defaults and reload(초기화 및 갱신)</strong> 버튼이 Setting 패널에 추가되었습니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=135451">crbug.com/135451</a>]</p></li>
+
+<li><p>현재 실험실 기능에서 여러분의 작업흐름에 적합하도록 <strong>dock to left(왼쪽으로 도킹하기)</strong>를 적용해볼 수 있습니다. 다른 레이아웃 모드는 메인 윈도우 (좌우)에 도킹되고 별도의 윈도우로 도킹이 해제됩니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=134282">crbug.com/134282</a>]</p></li>
+
+<li><p>"<a href="https://developer.mozilla.org/en-US/docs/Web/Reference/Events/wheel">휠(Wheel)</a>"이 이제 <strong>이벤트 리스너의 중단점(event listener breakpoint)</strong>으로 추가되며, 이는 일반적인 click, mousemove, mousedown 등의 이벤트에 대한 추가사항입니다. [<a href="https://code.google.com/p/chromium/issues/detail?id=347562">crbug.com/347562</a>]</p></li>
+
+</ul>
+
+<p>이것이 전체 사항합니다. 읽어주셔서 고맙습니다!</p>
+
+{% endblock %}
