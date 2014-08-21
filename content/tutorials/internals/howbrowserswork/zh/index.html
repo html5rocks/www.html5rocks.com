@@ -286,7 +286,7 @@ The current CSS version is 2 (<a href="http://www.w3.org/TR/CSS2/">http://www.w3
 呈现引擎的作用嘛...当然就是“呈现”了，也就是在浏览器的屏幕上显示请求的内容。
 </p>
 <p>
-默认情况下，呈现引擎可显示 HTML 和 XML 文档与图片。通过插件（或浏览器扩展程序），还可以显示其它类型的内容；例如，使用 PDF 查看器插件就能显示 PDF 文档。但是在本章中，我们将集中介绍其主要用途：显示使用 CSS 格式化的 HTML 内容和图片。</p>
+默认情况下，呈现引擎可显示 HTML 和 XML 文档与图片。通过插件（或浏览器扩展程序），还可以显示其他类型的内容；例如，使用 PDF 查看器插件就能显示 PDF 文档。但是在本章中，我们将集中介绍其主要用途：显示使用 CSS 格式化的 HTML 内容和图片。</p>
 
 <h3 id="Rendering_engines">呈现引擎</h3>
 <p>
@@ -473,7 +473,7 @@ term := INTEGER | expression
 </p>
 <h4 id="Generating_parsers_automatically">自动生成解析器</h4>
 <p>
-有一些工具可以帮助您生成解析器，它们称为解析器生成器。您只要向其提供您所用语言的语法（词汇和语法规则），它就会生成相应的解析器。创建解析器需要对解析有深刻理解，而人工创建优化的解析器并不是一件容易的事情，所以解析器生成器是非常实用的。
+有一些工具可以帮助您生成解析器，它们称为解析器生成器。您只要向其提供您所用语言的语法（词汇和语法规则），它就会生成相应的解析器。创建解析器需要对解析有深刻理解，而人工创建并优化解析器并不是一件容易的事情，所以解析器生成器是非常实用的。
 </p>
 <p>
 <a id="parser_generators">Webkit</a> 使用了两种非常有名的解析器生成器：用于创建词法分析器的 <a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> 以及用于创建解析器的 <a href="http://www.gnu.org/software/bison/">Bison</a>（您也可能遇到 Lex 和 Yacc 这样的别名）。Flex 的输入是包含标记的正则表达式定义的文件。Bison 的输入是采用 BNF 格式的语言语法规则。
@@ -538,7 +538,7 @@ DOM 与标记之间几乎是一一对应的关系。比如下面这段标记：
 和 HTML 一样，DOM 也是由 W3C 组织指定的。请参见 <a href="http://www.w3.org/DOM/DOMTR">www.w3.org/DOM/DOMTR</a>。这是关于文档操作的通用规范。其中一个特定模块描述针对 HTML 的元素。HTML 的定义可以在这里找到：<a href="http://www.w3.org/TR/2003/REC-DOM-Level-2-HTML-20030109/idl-definitions.html">www.w3.org/TR/2003/REC-DOM-Level-2-HTML-20030109/idl-definitions.html</a>。
 </p>
 <p>
-我所说的树包含 DOM 节点，指的是树是由实现了某个 DOM 接口的元素构成的。浏览器所用的具体实现也会具有一些其他属性，供浏览器在内部使用。
+我所说的树包含 DOM 节点，指的是树是由实现了某个 DOM 接口的元素构成的。浏览器在具体的实现中会有一些供内部使用的其他属性。
 </p>
 <h4 id="The_parsing_algorithm">解析算法</h4>
 <p>
@@ -632,7 +632,7 @@ DOM 与标记之间几乎是一一对应的关系。比如下面这段标记：
 
 </p><p>
 
-现在我们进入了<b>“in head”</b>模式，然后转入<b>“after head”</b>模式。系统对 body 标记进行重新处理，创建并插入 HTMLBodyElement，同时模式转变为<b>“body”</b>。
+现在我们进入了<b>“in head”</b>模式，然后转入<b>“after head”</b>模式。系统对 body 标记进行重新处理，创建并插入 HTMLBodyElement，同时模式转变为<b>“in body”</b>。
 
 </p><p>
 
@@ -1209,7 +1209,7 @@ div {margin:5px}
 对于下面的 HTML 代码段：
 <pre class="prettyprint">
 &lt;p class="error">an error occurred &lt;/p>
-&lt;div id=" messageDiv">this is a message&lt;/div&gt;
+&lt;div id="messageDiv">this is a message&lt;/div&gt;
 </pre>
 </p>
 <p>
@@ -1226,7 +1226,7 @@ Webkit 和 Firefox 都进行了这一处理。
 </p>
 <h5 id="Applying_the_rules_in_the_correct_cascade_order">以正确的层叠顺序应用规则</h5>
 <p>
-样式对象具有每个可视化属性一一对应的属性（均为 CSS 属性但更为通用）。如果某个属性未由任何匹配规则所定义，那么部分属性就可由父代元素样式对象继承。其他属性具有默认值。
+样式对象具有与每个可视化属性一一对应的属性（均为 CSS 属性但更为通用）。如果某个属性未由任何匹配规则所定义，那么部分属性就可由父代元素样式对象继承。其他属性具有默认值。
 </p>
 <p>
 如果定义不止一个，就会出现问题，需要通过层叠顺序来解决。
@@ -1307,7 +1307,7 @@ HTML 采用基于流的布局模型，这意味着大多数情况下只要一次
 </p>
 根呈现器的位置左边是 0,0，其尺寸为视口（也就是浏览器窗口的可见区域）。
 <p>
-所有的呈现器都有一个“laybout”或者“reflow”方法，每一个呈现器都会调用其需要进行布局的子代的 layout 方法。
+所有的呈现器都有一个“layout”或者“reflow”方法，每一个呈现器都会调用其需要进行布局的子代的 layout 方法。
 </p>
 <h4 id="Dirty_bit_system">Dirty 位系统</h4>
 <p>
@@ -1489,7 +1489,7 @@ none - no box is generated.
 </ol>
 </p>
 <p>
-定位方案是由“position”属性和“loat”属性设置的。
+定位方案是由“position”属性和“float”属性设置的。
 <ul>
 <li>如果值是 static 和 relative，就是普通流</li>
 <li>如果值是 absolute 和 fixed，就是绝对定位</li>
