@@ -389,20 +389,43 @@ document.head.appendChild(link);
   };
 
   document.registerElement('say-hi', {prototype: proto});
+&lt;/script&gt;
 
-  // Define and register &lt;shadow-element&gt; that uses Shadow DOM.
-  var proto2 = Object.create(HTMLElement.prototype);
+&lt;template id="t"&gt;
+  &lt;style&gt;
+    ::content &gt; * {
+      color: red;
+    }
+  &lt;/style&gt;
+  &lt;span&gt;I'm a shadow-element using Shadow DOM!&lt;/span&gt;
+  &lt;content&gt;&lt;/content&gt;
+&lt;/template&gt;
 
-  proto2.createdCallback = function() {
-    var root = this.createShadowRoot();
-    root.innerHTML = "&lt;style&gt;::content &gt; *{color: red}&lt;/style&gt;" +
-                     "I'm a " + this.localName +
-                     " using Shadow DOM!&lt;content&gt;&lt;/content&gt;";
-  };
-  document.registerElement('shadow-element', {prototype: proto2});
+&lt;script&gt;
+  (function() {
+    var importDoc = document.currentScript.ownerDocument; // importee
+
+    // Define and register &lt;shadow-element&gt;
+    // that uses Shadow DOM and a template.
+    var proto2 = Object.create(HTMLElement.prototype);
+
+    proto2.createdCallback = function() {
+      // get template in import
+      var template = importDoc.querySelector('#t');
+
+      // import template into
+      var clone = document.importNode(template.content, true);
+
+      var root = this.createShadowRoot();
+      root.appendChild(clone);
+    };
+
+    document.registerElement('shadow-element', {prototype: proto2});
+  })();
 &lt;/script&gt;
 </code></pre>
-<p>This import defines (and registers) two elements, <code>&lt;say-hi&gt;</code> and <code>&lt;shadow-element&gt;</code>. The importer can simply declare them on their page. No wiring needed.</p>
+<p>This import defines (and registers) two elements, <code>&lt;say-hi&gt;</code> and <code>&lt;shadow-element&gt;</code>. The first shows a basic custom element that registers itself inside the import. The second example shows how to implement a custom element that creates Shadow DOM from a <code>&lt;template&gt;</code>, then registers itself. </p>
+<p>The best part about registering custom elements inside an HTML import is that the the importer simply declares your element on their page. No wiring needed.</p>
 <p>index.html</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;link rel="import" href="elements.html"&gt;
