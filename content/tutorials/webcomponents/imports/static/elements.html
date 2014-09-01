@@ -1,21 +1,40 @@
 <script>
+(function() {
   var proto = Object.create(HTMLElement.prototype);
 
   proto.createdCallback = function() {
     this.innerHTML = "Hello, <b>" + (this.getAttribute('name') || '?') + "</b>";
   };
 
-  document.register('say-hi', {prototype: proto});
+  document.registerElement('say-hi', {prototype: proto});
+  })();
+</script>
 
+<template id="t">
+  <style>
+    ::content > * {
+      color: red;
+    }
+  </style>
+  <span>I'm a shadow-element using Shadow DOM!</span>
+  <content></content>
+</template>
 
-  var proto2 = Object.create(HTMLElement.prototype);
+<script>
+  (function() {
+    var importDoc = document.currentScript.ownerDocument; // importee
 
-  proto2.createdCallback = function() {
-    var root = this.createShadowRoot();
-    root.innerHTML = "<style>::content > *{color: red}</style>" +
-                         "I'm a " + this.localName +
-                         " using Shadow DOM!<content></content>";
-  };
+    // Define and register <shadow-element> that uses Shadow DOM and a template.
+    var proto2 = Object.create(HTMLElement.prototype);
 
-  document.register('shadow-element', {prototype: proto2});
+    proto2.createdCallback = function() {
+      var template = importDoc.querySelector('#t'); // get template in import
+      var clone = document.importNode(template.content, true); // import template into
+
+      var root = this.createShadowRoot();
+      root.appendChild(clone);
+    };
+
+    document.registerElement('shadow-element', {prototype: proto2});
+  })();
 </script>

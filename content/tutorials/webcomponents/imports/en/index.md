@@ -275,20 +275,44 @@ elements.html
       };
 
       document.registerElement('say-hi', {prototype: proto});
-
-      // Define and register <shadow-element> that uses Shadow DOM.
-      var proto2 = Object.create(HTMLElement.prototype);
-
-      proto2.createdCallback = function() {
-        var root = this.createShadowRoot();
-        root.innerHTML = "<style>::content > *{color: red}</style>" +
-                         "I'm a " + this.localName +
-                         " using Shadow DOM!<content></content>";
-      };
-      document.registerElement('shadow-element', {prototype: proto2});
     </script>
 
-This import defines (and registers) two elements, `<say-hi>` and `<shadow-element>`. The importer can simply declare them on their page. No wiring needed.
+    <template id="t">
+      <style>
+        ::content > * {
+          color: red;
+        }
+      </style>
+      <span>I'm a shadow-element using Shadow DOM!</span>
+      <content></content>
+    </template>
+
+    <script>
+      (function() {
+        var importDoc = document.currentScript.ownerDocument; // importee
+
+        // Define and register <shadow-element>
+        // that uses Shadow DOM and a template.
+        var proto2 = Object.create(HTMLElement.prototype);
+
+        proto2.createdCallback = function() {
+          // get template in import
+          var template = importDoc.querySelector('#t');
+
+          // import template into
+          var clone = document.importNode(template.content, true);
+
+          var root = this.createShadowRoot();
+          root.appendChild(clone);
+        };
+
+        document.registerElement('shadow-element', {prototype: proto2});
+      })();
+    </script>
+
+This import defines (and registers) two elements, `<say-hi>` and `<shadow-element>`. The first shows a basic custom element that registers itself inside the import. The second example shows how to implement a custom element that creates Shadow DOM from a `<template>`, then registers itself. 
+  
+The best part about registering custom elements inside an HTML import is that the the importer simply declares your element on their page. No wiring needed.
 
 index.html
 
