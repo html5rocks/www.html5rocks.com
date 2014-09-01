@@ -141,11 +141,13 @@
 <p>Basic shapes on the other hand do not require any SVG markup. They were added to <code>clip-path</code> to provide easy shorthand functions for simple clipping operations.</p>
 
 <ul>
-<li><code>rectangle(&lt;top&gt;, &lt;left&gt;, &lt;width&gt;, &lt;height&gt;, &lt;rx&gt;, &lt;ry&gt;)</code> defines a rectangle, similar to the <code>rect()</code> function of <code>clip</code>, and adds two optional radius parameters for <a href="http://www.folklore.org/StoryView.py?story=Round_Rects_Are_Everywhere.txt">rounded rects</a>.</li>
-<li><code>circle(&lt;cx&gt;, &lt;cy&gt;, &lt;r&gt;)</code> defines a simple circle with a center point and a radius.</li>
-<li><code>ellipse(&lt;cx&gt;, &lt;cy&gt;, &lt;rx&gt;, &lt;ry&gt;)</code> defines an ellipse with a center point and a horizontal and a vertical radius.</li>
-<li><code>polygon(&lt;x1&gt; &lt;y1&gt;, &lt;x2&gt; &lt;y2&gt;, ..., &lt;xn&gt; &lt;yn&gt;)</code> defines a polygon based on the passed point list.</li>
+<li><code>inset(&lt;top&gt; &lt;right&gt; &lt;bottom&gt; &lt;left&gt; [ round &lt;border-radius&gt; ]?)</code> defines a rectangle, similar to the <code>rect()</code> function of <code>clip</code>. The paramters describe the offsets from the top, right, bottom and left side. The function also has optional radius parameters with the syntax of the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius">border-radius</a> property for <a href="http://www.folklore.org/StoryView.py?story=Round_Rects_Are_Everywhere.txt">rounded rects</a>.</li>
+<li><code>circle(&lt;r&gt;? [ at &lt;position&gt; ]?)</code> defines a simple circle with an optional radius parameter. In addition, the optional position parameter described the center point of the circle. <code>&lt;position&gt;</code> has the same syntax as the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position">background-position</a> property.</li>
+<li><code>ellipse(&lt;rx&gt; &lt;ry&gt;? [ at &lt;position&gt; ]?)</code> defines an ellipse with a horizontal and an optional vertical radius as well as a center point based on the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position">background-position</a> property's syntax.</li>
+<li><code>polygon(&lt;x1&gt; &lt;y1&gt;, &lt;x2&gt; &lt;y2&gt;, ..., &lt;xn&gt; &lt;yn&gt;)</code> defines a polygon based on the point list parameters.</li>
 </ul>
+
+<p>Keywords like <code>content-box</code>, <code>border-box</code>, <code>margin-box</code> can be used in combination with basic shapes to position and size the specified clipping path. Defined without basic shapes, keywords act as a clipping path themselfes taking the <code>border-radius</code> property into account.</p>
 
 <p>The CSS markup can look like the following example:</p>
 
@@ -239,7 +241,7 @@
   <image xlink:href="humayun-thom-arno.jpg" width="568" height="426" mask="url(#mask1)"/>
 </svg>
 
-<p>The CSS Masking specification defines two shorthand properties for masking: <code>mask</code> and <code>mask-box-image</code>. </p>
+<p>The CSS Masking specification defines two shorthand properties for masking: <code>mask</code> and <code>mask-border</code>. </p>
 
 <h2 id="toc-the-mask-property">The mask property</h2>
 
@@ -301,12 +303,13 @@
   <image xlink:href="humayun-thom-arno.jpg" width="500" height="350" mask="url(#masking2)"/>
 </svg>
 
-<h2 id="toc-the-mask-box-image-property">The mask-box-image property</h2>
+<h2 id="toc-the-mask-border-property">The mask-border property</h2>
 
-<p>The <code>mask-box-image</code> property allows to divide a mask image into 9 tiles: four corners, four edges and the middle piece. These pieces may be sliced, scaled and stretched in various ways to fit the size of the mask image area. The property borrows the functionality from <code>border-image</code> and allows powerful masking at the edges and corners of the content. The following example demonstrates the behavior of the property:</p>
+<p>The <code>mask-border</code> property allows to divide a mask image into 9 tiles: four corners, four edges and the middle piece. These pieces may be sliced, scaled and stretched in various ways to fit the size of the mask image area. The property borrows the functionality from <code>border-image</code> and allows powerful masking at the edges and corners of the content. The following example demonstrates the behavior of the property:</p>
 
 <pre class="prettyprint"><code>img {
-  mask-box-image: url("stamp.svg") 35 repeat;
+  -webkit-mask-box-image: url("stamp.svg") 35 repeat;
+  mask-border: url("stamp.svg") 35 repeat;
 }
 </code></pre>
 
@@ -316,7 +319,7 @@
 
 <p>These parts are now used to mask the corner and edges of the content and result in the following view:</p>
 
-<p><img src="humayun-thom-arno.jpg" style="-webkit-mask-box-image: url(stampTiles.svg) 35 repeat;" alt="Image masked with mask-box-image" /></p>
+<p><img src="humayun-thom-arno.jpg" style="-webkit-mask-box-image: url(stampTiles.svg) 35 repeat;" alt="Image masked with mask-border" /></p>
 
 <h2 id="toc-browser-support">Browser support</h2>
 
@@ -324,9 +327,9 @@
 
 <p>All browsers support <code>clip</code> as specified. All browsers support the <code>mask</code> and the <code>clip-path</code> properties as specified in <a href="http://www.w3.org/TR/SVG/masking.html">SVG 1.1</a> on SVG elements. But just one browser lets you apply the properties on HTML elements: Firefox (sort of). Lets get into more details.</p>
 
-<p>The <code>clip-path</code> and the <code>mask</code> property with references to <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> elements work in Firefox out of the box; both properties are unprefixed. On the other hand, <code>mask-image</code>, <code>mask-box-image</code> and related properties are not supported at all. Basic shapes for clipping aren't supported either.</p>
+<p>The <code>clip-path</code> and the <code>mask</code> property with references to <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> elements work in Firefox out of the box; both properties are unprefixed. On the other hand, <code>mask-image</code>, <code>mask-border</code> and related properties are not supported at all. Basic shapes for clipping aren't supported either.</p>
 
-<p>WebKit based browsers, like Safari and Chrome, have support for <code>mask-image</code>, <code>mask-box-image</code> and related properties. All of them are prefixed and can just be applied to HTML elements. The nightly builds of both browsers already support the prefixed <code>-webkit-clip-path</code> property with basic shapes and referencing <code>&lt;clipPath&gt;</code> elements on HTML.</p>
+<p>Blink and WebKit based browsers, like Chrome and Safari, have support for <code>mask-image</code>, <code>mask-border</code> (currently called <code>-webkit-mask-box-image</code> in both implementations) and related properties. All of them are prefixed and can just be applied to HTML elements. The nightly builds of both browsers already support the prefixed <code>-webkit-clip-path</code> property with basic shapes and referencing <code>&lt;clipPath&gt;</code> elements on HTML. WebKit supports the additional box-sizing keywords.</p>
 
 <p>If you want to try clipping and masking, make sure that you use the prefixed and unprefixed properties. The unprefixed properties must use reference of <code>&lt;mask&gt;</code> or <code>&lt;clipPath&gt;</code> at the moment.</p>
 
@@ -334,8 +337,6 @@
   #image {
     mask: url(#mask);
     -webkit-mask: url(mask.svg) top left / cover;
-    -o-mask: url(mask.svg) top left / cover;
-    -ms-mask: url(mask.svg) top left / cover;
   }
 &lt;/style&gt;
 
