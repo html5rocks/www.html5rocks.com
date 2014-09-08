@@ -62,7 +62,7 @@
 <p>你应该会用事件加回调的办法来处理这类情况：</p>
 
 <pre class="prettyprint">var img1 = document.querySelector('.img-1');
-  
+
 img1.addEventListener('load', function() {
   // 啊哈图片加载完成
 });
@@ -167,7 +167,7 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 
 <pre class="prettyprint">var promise = new Promise(function(resolve, reject) {
   // 做一些异步操作的事情，然后……
-  
+
   if (/* 一切正常 */) {
     resolve("Stuff worked!");
   }
@@ -192,18 +192,18 @@ Promise.all([img1.ready(), img2.ready()]).then(function() {
 
 <h2 id="toc-browser-support">浏览器支持和 Polyfill</h2>
 <p>目前的浏览器已经（部分）实现了 Promise。</p>
-<p>用 Chrome 的话，就像个 Chroman 一样 <a href="https://www.google.com/intl/en/chrome/browser/canary.html">装上 Canary</a>，默认即启用了 Promise 支持。如果是 Firefox 拥趸，则可以安装最新的 <a href="http://nightly.mozilla.org/">nightly build</a>。</p>
 
-<p>不过这两个浏览器的实现都还不够完整彻底，你可以 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=918806">在 bugzilla 上跟踪 Firefox 的最新进展</a>或者<a href="http://www.chromestatus.com/features/5681726336532480">到 Chromium Dashboard 查看 Chrome 的实现情况</a>。</p>
+<p>Chrome 32、Opera 19 和 Firefox 29 以上的版本已经默认支持 Promise。由于是在 WebKit 内核中所以我们有理由期待下个版本的 Safari 也会支持，并且 IE 也在[不断的开发](http://status.modern.ie/promiseses6?term=promise)中。</p>
+
 <p>要在这两个浏览器上达到兼容标准 Promise，或者在其他浏览器以及 Node.js 中使用 Promise，可以看看这个 <a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">polyfill</a>（gzip 之后 2K）。</p>
 
 <h2 id="toc-lib-compatibility">与其他库的兼容性</h2>
-<p>JavaScript Promise 的 API 会把任何包含有 then 方法的对象当作“类 Promise”（或者用术语来说就是 <em>thenable</em>。<em>*叹气*</em>）的对象，这些对象经过 <code>Promise.cast</code> 处理之后就和原生的 JavaScript Promise 实例没有任何区别了。所以如果你使用的库返回一个 Q Promise，那没问题，无缝融入新的 JavaScript Promise。</p>
+<p>JavaScript Promise 的 API 会把任何包含有 then 方法的对象当作“类 Promise”（或者用术语来说就是 <em>thenable</em>。<em>*叹气*</em>）的对象，所以如果你使用的库返回一个 Q Promise，那没问题，无缝融入新的 JavaScript Promise。</p>
 <p>尽管，如前所述，jQuery 的 Deferred 对象有点……没什么用，不过幸好还可以转换成标准 Promise，你最好一拿到对象就马上加以转换：</p>
 
-<pre class="prettyprint">var jsPromise = Promise.cast($.ajax('/whatever.json'));</pre>
+<pre class="prettyprint">var jsPromise = Promise.resolve($.ajax('/whatever.json'));</pre>
 
-<p>这里 jQuery 的 <code>$.ajax</code> 返回一个 Deferred 对象，含有“then”方法，因此 <code>Promise.cast</code> 可以将其转换为 JavaScript Promise。不过有时候 Deferred 对象会给它的回调函数传递多个参数，例如：</p>
+<p>这里 jQuery 的 <code>$.ajax</code> 返回一个 Deferred 对象，含有“then”方法，因此 <code>Promise.resolve</code> 可以将其转换为 JavaScript Promise。不过有时候 Deferred 对象会给它的回调函数传递多个参数，例如：</p>
 
 <pre class="prettyprint">var jqDeferred = $.ajax('/whatever.json');
 
@@ -704,7 +704,7 @@ adder.next(50).value; // 65</pre>
     if (result.done) {
       return result.value;
     } else {
-      return Promise.cast(result.value).then(onFulfilled, onRejected);
+      return Promise.resolve(result.value).then(onFulfilled, onRejected);
     }
   }
   var generator = generatorFunc();
@@ -746,26 +746,21 @@ adder.next(50).value; // 65</pre>
 
 <h2 id="toc-api">Promise API 参考</h2>
 
-<p>除非额外注明，最新版的 Chrome（Canary） 和 Firefox（nightly） 均支持下列所有方法。<a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">这个 polyfill</a> 则在所有浏览器内实现了同样的接口。</p>
+<p>除非额外注明，Chrome、Opera 和 Firefox（nightly）均支持下列所有方法。<a href="https://github.com/jakearchibald/ES6-Promises/blob/master/README.md">这个 polyfill</a> 则在所有浏览器内实现了同样的接口。</p>
 
 <h3>静态方法</h3>
 <dl>
-  <dt><code>Promise.cast(promise);</code></dt>
+  <dt><code>Promise.resolve(promise);</code></dt>
   <dd>返回一个 Promise（当且仅当 <code>promise.constructor == Promise</code>）
-  <p class="notice"><b>备注：</b> 目前仅有 Chrome 实现</p></dd>
-  <dt><code>Promise.cast(obj);</code></dt>
-  <dd>创建一个以 obj 为成功结果的 Promise。
-<p class="notice"><b>备注：</b> 目前仅有 Chrome 实现</p></dd>
   <dt><code>Promise.resolve(thenable);</code></dt>
-  <dd>从 thenable 对象创建一个新的 Promise。一个 thenable（类 Promise）对象是一个带有“then”方法的对象。如果你传入一个原生的 JavaScript Promise 对象，则会创建一个新的 Promise。此方法涵盖了 <code>Promise.cast</code> 的特性，但是不如 <code>Promise.cast</code> 更简单高效。
+  <dd>从 thenable 对象创建一个新的 Promise。一个 thenable（类 Promise）对象是一个带有“then”方法的对象。
   </dd>
   <dt><code>Promise.resolve(obj);</code></dt>
-  <dd>创建一个以 obj 为肯定结果的 Promise。这种情况下等同于 <code>Promise.cast(obj)</code>。</dd>
+  <dd>创建一个以 obj 为肯定结果的 Promise。</dd>
   <dt><code>Promise.reject(obj);</code></dt>
   <dd>创建一个以 obj 为否定结果的 Promise。为了一致性和调试便利（如堆栈追踪），obj 应该是一个 Error 实例对象。</dd>
   <dt><code>Promise.all(array);</code></dt>
-  <dd>创建一个 Promise，当且仅当传入数组中的所有 Promise 都肯定之后才肯定，如果遇到数组中的任何一个 Promise 以否定结束，则抛出否定结果。每个数组元素都会首先经过 Promise.cast，所以数组可以包含类 Promise 对象或者其他对象。肯定结果是一个数组，包含传入数组中每个 Promise 的肯定结果（且保持顺序）；否定结果是传入数组中第一个遇到的否定结果。
-<p class="notice"><b>备注：</b> 目前仅有 Chrome 实现</p></dd>
+  <dd>创建一个 Promise，当且仅当传入数组中的所有 Promise 都肯定之后才肯定，如果遇到数组中的任何一个 Promise 以否定结束，则抛出否定结果。每个数组元素都会首先经过 Promise.resolve，所以数组可以包含类 Promise 对象或者其他对象。肯定结果是一个数组，包含传入数组中每个 Promise 的肯定结果（且保持顺序）；否定结果是传入数组中第一个遇到的否定结果。
   <dt><code>Promise.race(array);</code></dt>
   <dd>创建一个 Promise，当数组中的任意对象肯定时将其结果作为肯定结束，或者当数组中任意对象否定时将其结果作为否定结束。
   <p class="notice"><b>备注：</b>我不大确定这个接口是否有用，我更倾向于一个 <code>Promise.all</code> 的对立方法，仅当所有数组元素全部给出否定的时候才抛出否定结果</p></dd>
