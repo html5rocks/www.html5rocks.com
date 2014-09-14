@@ -70,7 +70,7 @@
 <div class="preface">
 <h2>序言</h2>
 <p>
-  这是一篇全面介绍 Webkit 和 Gecko 内部操作的入门文章，是以色列开发人员塔利·加希尔大量研究的成果。在过去的几年中，她查阅了所有公开发布的关于浏览器内部机制的数据<small>（请参见<a href="#Resources">资源</a>）</small>，并花了很多时间来研读网络浏览器的源代码。她写道：
+  这是一篇全面介绍 WebKit 和 Gecko 内部操作的入门文章，是以色列开发人员塔利·加希尔大量研究的成果。在过去的几年中，她查阅了所有公开发布的关于浏览器内部机制的数据<small>（请参见<a href="#Resources">资源</a>）</small>，并花了很多时间来研读网络浏览器的源代码。她写道：
 
   <blockquote>
     在 IE 占据 90% 市场份额的年代，我们除了把浏览器当成一个“黑箱”，什么也做不了。但是现在，开放源代码的浏览器拥有了<a href="http://techcrunch.com/2011/08/01/open-web-browsers/">过半的市场份额</a>，因此，是时候来揭开神秘的面纱，一探网络浏览器的内幕了。呃，里面只有数以百万行计的 C++ 代码...
@@ -137,7 +137,7 @@
   </li>
   <li><a href="#CSS_parsing">CSS 解析</a>
   <ol>
-    <li><a href="#Webkit_CSS_parser">Webkit CSS 解析器</a></li>
+    <li><a href="#Webkit_CSS_parser">WebKit CSS 解析器</a></li>
   </ol>
   </li>
   <li><a href="#The_order_of_processing_scripts_and_style_sheets">处理脚本和样式表的顺序</a>
@@ -191,7 +191,7 @@
     <li><a href="#Global_and_Incremental">全局绘制和增量绘制</a></li>
     <li><a href="#The_painting_order">绘制顺序</a></li>
     <li><a href="#Firefox_display_list">Firefox 显示列表</a></li>
-    <li><a href="#Webkit_rectangle_storage">Webkit 矩形存储</a></li>
+    <li><a href="#Webkit_rectangle_storage">WebKit 矩形存储</a></li>
   </ol>
  </li>
 <li><a href="#Dynamic_changes">动态变化</a></li>
@@ -290,10 +290,10 @@ The current CSS version is 2 (<a href="http://www.w3.org/TR/CSS2/">http://www.w3
 
 <h3 id="Rendering_engines">呈现引擎</h3>
 <p>
-本文所讨论的浏览器（Firefox、Chrome 浏览器和 Safari）是基于两种呈现引擎构建的。Firefox 使用的是 Gecko，这是 Mozilla 公司“自制”的呈现引擎。而 Safari 和 Chrome 浏览器使用的都是 Webkit。
+本文所讨论的浏览器（Firefox、Chrome 浏览器和 Safari）是基于两种呈现引擎构建的。Firefox 使用的是 Gecko，这是 Mozilla 公司“自制”的呈现引擎。而 Safari 和 Chrome 浏览器使用的都是 WebKit。
 </p>
 <p>
-Webkit 是一种开放源代码呈现引擎，起初用于 Linux 平台，随后由 Apple 公司进行修改，从而支持苹果机和 Windows。有关详情，请参阅 <a href="http://webkit.org/">webkit.org</a>。
+WebKit 是一种开放源代码呈现引擎，起初用于 Linux 平台，随后由 Apple 公司进行修改，从而支持苹果机和 Windows。有关详情，请参阅 <a href="http://webkit.org/">webkit.org</a>。
 </p>
 
 <h3 id="The_main_flow">主流程</h3>
@@ -328,7 +328,7 @@ Webkit 是一种开放源代码呈现引擎，起初用于 Linux 平台，随后
 
   <figure>
     <img src="webkitflow.png" width="624" height="289" alt=""  />
-    <figcaption><span>图</span>：Webkit 主流程</figcaption>
+    <figcaption><span>图</span>：WebKit 主流程</figcaption>
   </figure>
 
 
@@ -339,9 +339,9 @@ Webkit 是一种开放源代码呈现引擎，起初用于 Linux 平台，随后
 
 
 <p>
-从图 3 和图 4 可以看出，虽然 Webkit 和 Gecko 使用的术语略有不同，但整体流程是基本相同的。
+从图 3 和图 4 可以看出，虽然 WebKit 和 Gecko 使用的术语略有不同，但整体流程是基本相同的。
 <p>
-Gecko 将视觉格式化元素组成的树称为“框架树”。每个元素都是一个框架。Webkit 使用的术语是“呈现树”，它由“呈现对象”组成。对于元素的放置，Webkit 使用的术语是“布局”，而 Gecko 称之为“重排”。对于连接 DOM 节点和可视化信息从而创建呈现树的过程，Webkit 使用的术语是“附加”。有一个细微的非语义差别，就是 Gecko 在 HTML 与 DOM 树之间还有一个称为“内容槽”的层，用于生成 DOM 元素。我们会逐一论述流程中的每一部分：
+Gecko 将视觉格式化元素组成的树称为“框架树”。每个元素都是一个框架。WebKit 使用的术语是“呈现树”，它由“呈现对象”组成。对于元素的放置，WebKit 使用的术语是“布局”，而 Gecko 称之为“重排”。对于连接 DOM 节点和可视化信息从而创建呈现树的过程，WebKit 使用的术语是“附加”。有一个细微的非语义差别，就是 Gecko 在 HTML 与 DOM 树之间还有一个称为“内容槽”的层，用于生成 DOM 元素。我们会逐一论述流程中的每一部分：
 <p>
 <h3 id="Parsing_general">解析 - 综述</h3>
 <p>
@@ -476,7 +476,7 @@ term := INTEGER | expression
 有一些工具可以帮助您生成解析器，它们称为解析器生成器。您只要向其提供您所用语言的语法（词汇和语法规则），它就会生成相应的解析器。创建解析器需要对解析有深刻理解，而人工创建并优化解析器并不是一件容易的事情，所以解析器生成器是非常实用的。
 </p>
 <p>
-<a id="parser_generators">Webkit</a> 使用了两种非常有名的解析器生成器：用于创建词法分析器的 <a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> 以及用于创建解析器的 <a href="http://www.gnu.org/software/bison/">Bison</a>（您也可能遇到 Lex 和 Yacc 这样的别名）。Flex 的输入是包含标记的正则表达式定义的文件。Bison 的输入是采用 BNF 格式的语言语法规则。
+<a id="parser_generators">WebKit</a> 使用了两种非常有名的解析器生成器：用于创建词法分析器的 <a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> 以及用于创建解析器的 <a href="http://www.gnu.org/software/bison/">Bison</a>（您也可能遇到 Lex 和 Yacc 这样的别名）。Flex 的输入是包含标记的正则表达式定义的文件。Bison 的输入是采用 BNF 格式的语言语法规则。
 </p>
 <h3 id="HTML_Parser">HTML 解析器</h3>
 <p>
@@ -689,7 +689,7 @@ DOM 与标记之间几乎是一一对应的关系。比如下面这段标记：
 
 </p><p>
 
-HTML5 规范定义了一部分这样的要求。Webkit 在 HTML 解析器类的开头注释中对此做了很好的概括。
+HTML5 规范定义了一部分这样的要求。WebKit 在 HTML 解析器类的开头注释中对此做了很好的概括。
 
 </p>
 
@@ -710,11 +710,11 @@ HTML5 规范定义了一部分这样的要求。Webkit 在 HTML 解析器类的�
 </blockquote>
 
 <p>
-让我们看一些 Webkit 容错的示例：
+让我们看一些 WebKit 容错的示例：
 </p>
 <h5>使用了 &lt;/br&gt; 而不是 &lt;br&gt;</h5>
 <p>
-有些网站使用了 &lt;/br&gt; 而不是 &lt;br&gt;。为了与 IE 和 Firefox 兼容，Webkit 将其与 &lt;br&gt; 做同样的处理。
+有些网站使用了 &lt;/br&gt; 而不是 &lt;br&gt;。为了与 IE 和 Firefox 兼容，WebKit 将其与 &lt;br&gt; 做同样的处理。
 <br>
 代码如下：
 <pre class="prettyprint">
@@ -738,7 +738,7 @@ if (t->isCloseTag(brTag) && m_document->inCompatMode()) {
     &lt;tr&gt;&lt;td&gt;outer table&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 </pre>
-Webkit 会将其层次结构更改为两个同级表格：
+WebKit 会将其层次结构更改为两个同级表格：
 <pre class="prettyprint">
 &lt;table&gt;
     &lt;tr&gt;&lt;td&gt;outer table&lt;/td&gt;&lt;/tr&gt;
@@ -752,7 +752,7 @@ Webkit 会将其层次结构更改为两个同级表格：
 if (m_inStrayTableContent && localName == tableTag)
         popBlock(tableTag);
 </pre>
-Webkit 使用一个堆栈来保存当前的元素内容，它会从外部表格的堆栈中弹出内部表格。现在，这两个表格就变成了同级关系。
+WebKit 使用一个堆栈来保存当前的元素内容，它会从外部表格的堆栈中弹出内部表格。现在，这两个表格就变成了同级关系。
 </p>
 <h5>嵌套的表单元素</h5>
 <p>
@@ -799,7 +799,7 @@ if (t->tagName == htmlTag || t->tagName == bodyTag )
         return;
 
 </pre>
-所以网页作者需要注意，除非您想作为反面教材出现在 Webkit 容错代码段的示例中，否则还请编写格式正确的 HTML 代码。
+所以网页作者需要注意，除非您想作为反面教材出现在 WebKit 容错代码段的示例中，否则还请编写格式正确的 HTML 代码。
 </p>
 <p>
 
@@ -867,9 +867,9 @@ ruleset
 </pre>
 这表示一个规则集就是一个选择器，或者由逗号和空格（S 表示空格）分隔的多个（数量可选）选择器。规则集包含了大括号，以及其中的一个或多个（数量可选）由分号分隔的声明。“声明”和“选择器”将由下面的 BNF 格式定义。
 </p>
-<h4 id="Webkit_CSS_parser">Webkit CSS 解析器</h4>
+<h4 id="Webkit_CSS_parser">WebKit CSS 解析器</h4>
 <p>
-Webkit 使用 <a href="#parser_generators">Flex 和 Bison</a> 解析器生成器，通过 CSS 语法文件自动创建解析器。正如我们之前在解析器简介中所说，Bison 会创建自下而上的移位归约解析器。Firefox 使用的是人工编写的自上而下的解析器。这两种解析器都会将 CSS 文件解析成 StyleSheet 对象，且每个对象都包含 CSS 规则。CSS 规则对象则包含选择器和声明对象，以及其他与 CSS 语法对应的对象。
+WebKit 使用 <a href="#parser_generators">Flex 和 Bison</a> 解析器生成器，通过 CSS 语法文件自动创建解析器。正如我们之前在解析器简介中所说，Bison 会创建自下而上的移位归约解析器。Firefox 使用的是人工编写的自上而下的解析器。这两种解析器都会将 CSS 文件解析成 StyleSheet 对象，且每个对象都包含 CSS 规则。CSS 规则对象则包含选择器和声明对象，以及其他与 CSS 语法对应的对象。
 </p>
 
 <figure>
@@ -885,22 +885,22 @@ Webkit 使用 <a href="#parser_generators">Flex 和 Bison</a> 解析器生成器
 </p>
 <h4 id="Speculative_parsing">预解析</h4>
 <p>
-Webkit 和 Firefox 都进行了这项优化。在执行脚本时，其他线程会解析文档的其余部分，找出并加载需要通过网络加载的其他资源。通过这种方式，资源可以在并行连接上加载，从而提高总体速度。请注意，预解析器不会修改 DOM 树，而是将这项工作交由主解析器处理；预解析器只会解析外部资源（例如外部脚本、样式表和图片）的引用。
+WebKit 和 Firefox 都进行了这项优化。在执行脚本时，其他线程会解析文档的其余部分，找出并加载需要通过网络加载的其他资源。通过这种方式，资源可以在并行连接上加载，从而提高总体速度。请注意，预解析器不会修改 DOM 树，而是将这项工作交由主解析器处理；预解析器只会解析外部资源（例如外部脚本、样式表和图片）的引用。
 </p>
 <h4 id="Style_sheets">样式表</h4>
 <p>
-另一方面，样式表有着不同的模型。理论上来说，应用样式表不会更改 DOM 树，因此似乎没有必要等待样式表并停止文档解析。但这涉及到一个问题，就是脚本在文档解析阶段会请求样式信息。如果当时还没有加载和解析样式，脚本就会获得错误的回复，这样显然会产生很多问题。这看上去是一个非典型案例，但事实上非常普遍。Firefox 在样式表加载和解析的过程中，会禁止所有脚本。而对于 Webkit 而言，仅当脚本尝试访问的样式属性可能受尚未加载的样式表影响时，它才会禁止该脚本。
+另一方面，样式表有着不同的模型。理论上来说，应用样式表不会更改 DOM 树，因此似乎没有必要等待样式表并停止文档解析。但这涉及到一个问题，就是脚本在文档解析阶段会请求样式信息。如果当时还没有加载和解析样式，脚本就会获得错误的回复，这样显然会产生很多问题。这看上去是一个非典型案例，但事实上非常普遍。Firefox 在样式表加载和解析的过程中，会禁止所有脚本。而对于 WebKit 而言，仅当脚本尝试访问的样式属性可能受尚未加载的样式表影响时，它才会禁止该脚本。
 </p>
 <h3 id="Render_tree_construction">呈现树构建</h3>
 <p>
 在 DOM 树构建的同时，浏览器还会构建另一个树结构：呈现树。这是由可视化元素按照其显示顺序而组成的树，也是文档的可视化表示。它的作用是让您按照正确的顺序绘制内容。
 </p>
 <p>
-Firefox 将呈现树中的元素称为“框架”。Webkit 使用的术语是呈现器或呈现对象。
+Firefox 将呈现树中的元素称为“框架”。WebKit 使用的术语是呈现器或呈现对象。
 <br>
 呈现器知道如何布局并将自身及其子元素绘制出来。
 <br>
-Webkits RenderObject 类是所有呈现器的基类，其定义如下：
+WebKits RenderObject 类是所有呈现器的基类，其定义如下：
 <pre class="prettyprint">
 class RenderObject{
   virtual void layout();
@@ -915,7 +915,7 @@ class RenderObject{
 <p>
 每一个呈现器都代表了一个矩形的区域，通常对应于相关节点的 CSS 框，这一点在 CSS2 规范中有所描述。它包含诸如宽度、高度和位置等几何信息。
 <br>
-框的类型会受到与节点相关的“display”样式属性的影响（请参阅<a href="#style_computation">样式计算</a>章节）。下面这段 Webkit 代码描述了根据 display 属性的不同，针对同一个 DOM 节点应创建什么类型的呈现器。
+框的类型会受到与节点相关的“display”样式属性的影响（请参阅<a href="#style_computation">样式计算</a>章节）。下面这段 WebKit 代码描述了根据 display 属性的不同，针对同一个 DOM 节点应创建什么类型的呈现器。
 <pre class="prettyprint">
 RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 {
@@ -947,7 +947,7 @@ RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 </pre>
 元素类型也是考虑因素之一，例如表单控件和表格都对应特殊的框架。
 <br>
-在 Webkit 中，如果一个元素需要创建特殊的呈现器，就会替换 <code>createRenderer</code> 方法。呈现器所指向的样式对象中包含了一些和几何无关的信息。
+在 WebKit 中，如果一个元素需要创建特殊的呈现器，就会替换 <code>createRenderer</code> 方法。呈现器所指向的样式对象中包含了一些和几何无关的信息。
 </p>
 <h5 id="The_render_tree_relation_to_the_DOM_tree">呈现树和 DOM 树的关系</h5>
 呈现器是和 DOM 元素相对应的，但并非一一对应。非可视化的 DOM 元素不会插入呈现树中，例如“head”元素。如果元素的 display 属性值为“none”，那么也不会显示在呈现树中（但是 visibility 属性值为“hidden”的元素仍会显示）。
@@ -965,7 +965,7 @@ RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 
   <figure>
       <img src="image025.png" width="731" height="396" >
-    <figcaption><span>图</span>：呈现树及其对应的 DOM 树 (<a href="#3_1">3.1</a>)。初始容器 block 为“viewport”，而在 Webkit 中则为“RenderView”对象。</figcaption>
+    <figcaption><span>图</span>：呈现树及其对应的 DOM 树 (<a href="#3_1">3.1</a>)。初始容器 block 为“viewport”，而在 WebKit 中则为“RenderView”对象。</figcaption>
   </figure>
 
 
@@ -975,9 +975,9 @@ RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 在 Firefox 中，系统会针对 DOM 更新注册展示层，作为侦听器。展示层将框架创建工作委托给 <code>FrameConstructor</code>，由该构造器解析样式（请参阅<a href="#style">样式计算</a>）并创建框架。
 </p>
 <p>
-在 Webkit 中，解析样式和创建呈现器的过程称为“附加”。每个 DOM 节点都有一个“attach”方法。附加是同步进行的，将节点插入 DOM 树需要调用新的节点“attach”方法。
+在 WebKit 中，解析样式和创建呈现器的过程称为“附加”。每个 DOM 节点都有一个“attach”方法。附加是同步进行的，将节点插入 DOM 树需要调用新的节点“attach”方法。
 <p>
-处理 html 和 body 标记就会构建呈现树根节点。这个根节点呈现对象对应于 CSS 规范中所说的容器 block，这是最上层的 block，包含了其他所有 block。它的尺寸就是视口，即浏览器窗口显示区域的尺寸。Firefox 称之为 <code>ViewPortFrame</code>，而 Webkit 称之为 <code>RenderView</code>。这就是文档所指向的呈现对象。呈现树的其余部分以 DOM 树节点插入的形式来构建。
+处理 html 和 body 标记就会构建呈现树根节点。这个根节点呈现对象对应于 CSS 规范中所说的容器 block，这是最上层的 block，包含了其他所有 block。它的尺寸就是视口，即浏览器窗口显示区域的尺寸。Firefox 称之为 <code>ViewPortFrame</code>，而 WebKit 称之为 <code>RenderView</code>。这就是文档所指向的呈现对象。呈现树的其余部分以 DOM 树节点插入的形式来构建。
 </p>
 <p>
 请参阅<a href="http://www.w3.org/TR/CSS21/intro.html#processing-model">关于处理模型的 CSS2 规范</a>。
@@ -1016,7 +1016,7 @@ div div div div{
 
 <h5 id="Sharing_style_data">共享样式数据</h5>
 <p>
-Webkit 节点会引用样式对象 (RenderStyle)。这些对象在某些情况下可以由不同节点共享。这些节点是同级关系，并且：
+WebKit 节点会引用样式对象 (RenderStyle)。这些对象在某些情况下可以由不同节点共享。这些节点是同级关系，并且：
 <ol>
 <li>这些元素必须处于相同的鼠标状态（例如，不允许其中一个是“:hover”状态，而另一个不是）</li>
 <li> 任何元素都没有 ID</li>
@@ -1032,7 +1032,7 @@ Webkit 节点会引用样式对象 (RenderStyle)。这些对象在某些情况�
 
 <h5 id="Firefox_rule_tree">Firefox 规则树</h5>
 <p>
-为了简化样式计算，Firefox 还采用了另外两种树：规则树和样式上下文树。Webkit 也有样式对象，但它们不是保存在类似样式上下文树这样的树结构中，只是由 DOM 节点指向此类对象的相关样式。
+为了简化样式计算，Firefox 还采用了另外两种树：规则树和样式上下文树。WebKit 也有样式对象，但它们不是保存在类似样式上下文树这样的树结构中，只是由 DOM 节点指向此类对象的相关样式。
 
 </p>
 
@@ -1161,7 +1161,7 @@ p {font-family:Verdana;font size:10px;font-weight:bold}
 那么，该段落元素作为上下文树中的 div 的子代，就会共享与其父代相同的 font 结构（前提是该段落没有指定 font 规则）。
 </p>
 <p>
-在 Webkit 中没有规则树，因此会对匹配的声明遍历 4 次。首先应用非重要高优先级的属性（由于作为其他属性的依据而应首先应用的属性，例如 display），接着是高优先级重要规则，然后是普通优先级非重要规则，最后是普通优先级重要规则。这意味着多次出现的属性会根据正确的层叠顺序进行解析。最后出现的最终生效。
+在 WebKit 中没有规则树，因此会对匹配的声明遍历 4 次。首先应用非重要高优先级的属性（由于作为其他属性的依据而应首先应用的属性，例如 display），接着是高优先级重要规则，然后是普通优先级非重要规则，最后是普通优先级重要规则。这意味着多次出现的属性会根据正确的层叠顺序进行解析。最后出现的最终生效。
 <br>
 </p>
 <p>
@@ -1222,7 +1222,7 @@ table div {margin:5px}
 这条规则仍然会从标记表中提取出来，因为键是最右边的选择器，但这条规则并不匹配我们的 div 元素，因为 div 没有 table 祖先。
 </P>
 <P>
-Webkit 和 Firefox 都进行了这一处理。
+WebKit 和 Firefox 都进行了这一处理。
 </p>
 <h5 id="Applying_the_rules_in_the_correct_cascade_order">以正确的层叠顺序应用规则</h5>
 <p>
@@ -1276,7 +1276,7 @@ Webkit 和 Firefox 都进行了这一处理。
 </p>
 <h5 id="Sorting_the_rules">规则排序</h5>
 <p>
-找到匹配的规则之后，应根据级联顺序将其排序。Webkit 对于较小的列表会使用冒泡排序，而对较大的列表则使用归并排序。对于以下规则，Webkit 通过替换“&gt;”运算符来实现排序：
+找到匹配的规则之后，应根据级联顺序将其排序。WebKit 对于较小的列表会使用冒泡排序，而对较大的列表则使用归并排序。对于以下规则，WebKit 通过替换“&gt;”运算符来实现排序：
 <pre class="prettyprint">
 static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
 {
@@ -1288,7 +1288,7 @@ static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
 </p>
 <h4 id="Gradual_process">渐进式处理</h4>
 <p>
-Webkit 使用一个标记来表示是否所有的顶级样式表（包括 @imports）均已加载完毕。如果在附加过程中尚未完全加载样式，则使用占位符，并在文档中进行标注，等样式表加载完毕后再重新计算。
+WebKit 使用一个标记来表示是否所有的顶级样式表（包括 @imports）均已加载完毕。如果在附加过程中尚未完全加载样式，则使用占位符，并在文档中进行标注，等样式表加载完毕后再重新计算。
 </p>
 
 
@@ -1337,7 +1337,7 @@ HTML 采用基于流的布局模型，这意味着大多数情况下只要一次
 </figure>
 
 <h4 id="Asynchronous_and_Synchronous_layout">异步布局和同步布局</h4>
-增量布局是异步执行的。Firefox 将增量布局的“reflow 命令”加入队列，而调度程序会触发这些命令的批量执行。Webkit 也有用于执行增量布局的计时器：对呈现树进行遍历，并对 dirty 呈现器进行布局。
+增量布局是异步执行的。Firefox 将增量布局的“reflow 命令”加入队列，而调度程序会触发这些命令的批量执行。WebKit 也有用于执行增量布局的计时器：对呈现树进行遍历，并对 dirty 呈现器进行布局。
 <br>
 请求样式信息（例如“offsetHeight”）的脚本可同步触发增量布局。
 <br>
@@ -1377,7 +1377,7 @@ Firefox 布局的输出为“metrics”对象 (nsHTMLReflowMetrics)，其包含�
 <pre class="prettyprint">
 &lt;div style="width:30%"/&gt;
 </pre>
-将由 Webkit 计算如下（BenderBox 类，calcWidth 方法）：
+将由 WebKit 计算如下（BenderBox 类，calcWidth 方法）：
 <ul>
 <li>容器的宽度取容器的 availableWidth 和 0 中的较大值。availableWidth 在本例中相当于 contentWidth，计算公式如下：
 <pre class="prettyprint">
@@ -1422,8 +1422,8 @@ Firefox 遍历整个呈现树，为绘制的矩形建立一个显示列表。列
 <p>
 Firefox 对此过程进行了优化，也就是不添加隐藏的元素，例如被不透明元素完全遮挡住的元素。
 </p>
-<h4 id="Webkit_rectangle_storage">Webkit 矩形存储</h4>
-在重新绘制之前，Webkit 会将原来的矩形另存为一张位图，然后只绘制新旧矩形之间的差异部分。
+<h4 id="Webkit_rectangle_storage">WebKit 矩形存储</h4>
+在重新绘制之前，WebKit 会将原来的矩形另存为一张位图，然后只绘制新旧矩形之间的差异部分。
 
 <br>
 
@@ -1665,7 +1665,7 @@ inline 框放置在行中或“行框”中。这些行至少和最高的框一�
               <li id="3_7">Alexander Larsson, <a href="https://developer.mozilla.org/en/The_life_of_an_HTML_HTTP_request">The life of an HTML HTTP request</a>
           </ol>
 
-      <li id="4">Webkit
+      <li id="4">WebKit
           <ol>
               <li id="4_1">David Hyatt, <a href="http://weblogs.mozillazine.org/hyatt/archives/cat_safari.html">Implementing CSS（第一部分）</a>
               <li id="4_2">David Hyatt, <a href="http://weblogs.mozillazine.org/hyatt/WebCore/chapter2.html">An Overview of WebCore</a>
@@ -1683,7 +1683,7 @@ inline 框放置在行中或“行框”中。这些行至少和最高的框一�
       <li>浏览器构建说明
           <ol>
               <li>Firefox. <a href="https://developer.mozilla.org/en/Build_Documentation">https://developer.mozilla.org/en/Build_Documentation</a>
-              <li>Webkit. <a href="http://webkit.org/building/build.html">http://webkit.org/building/build.html</a>
+              <li>WebKit. <a href="http://webkit.org/building/build.html">http://webkit.org/building/build.html</a>
           </ol>
 
   </ol>
