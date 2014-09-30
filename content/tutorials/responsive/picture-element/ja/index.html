@@ -1,0 +1,312 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block head %}
+  {{ block.super }} 
+  <style>
+    dt {
+      font-weight: bold;
+    }
+    dt em {
+      font-weight: normal;
+    }
+    dd {
+      margin-bottom: 0.5em;
+    }
+    figcaption p {
+      font-style: normal;
+      font-weight: normal;
+    }
+    figcaption em {
+      font-style: normal;
+    }
+    .comparision figcaption {
+      font-size: 13px;
+      width: 90%;
+    }
+    .comparision figcaption:first-child {
+      font-size: 15px;
+      margin-bottom: 0.8em;
+    }
+    @media screen and (min-width: 620px) {
+      .comparision.side-by-side figure:first-child {
+        margin-right: 2%;
+      }
+      .comparision.side-by-side figure {
+        float: left;
+        width: 49%;
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+  
+{% block content %}
+
+<!-- HEAD was 33c0309 -->
+ 
+<h2 id="toc-introduction">&lt;picture&gt; 要素とは</h2>
+
+<p><code>&lt;picture&gt;</code> 要素は、画像リソースの読み込みを宣言的に行う仕組みです。Web 開発者はこの要素によって、CSS や JavaScript によるハックなしに、レスポンシブデザインで画像を扱えるようになります。また、画像リソースの読み込みがネイティブに実装・最適化されたのは、遅いモバイル回線でページを見ているユーザーにも嬉しいことです。これはとくに重要でしょう。</p>
+
+<p><code>&lt;picture&gt;</code> 要素と、新しく <code>&lt;img&gt;</code> に追加された <code>srcset</code> と <code>sizes</code> 属性を使えば、画像リソースを柔軟に指定できます。レスポンシブデザインのサポートとページ読み込み時間を短くするため、どの状況下でどの画像を読み込むかはブラウザにまかせてしまいましょう。私たちは、今から紹介する画像の使われ方にもとづいて、わかりやすい HTML を書くだけです。</p>
+
+<dl>
+
+  <dt>アートディレクションによる選択</dt>
+  <dd>
+    モバイルデバイス（縦向き）用、ワイドデスクトップモニター用と、表示される画面によって画像を出し分けたいですか？でしたら<a href="#toc-art-direction">画面の大きさごとに最適化された画像を読み込む</a>ようにしましょう。
+  </dd>
+
+  <dt>デバイスピクセル比による選択</dt>
+  <dd>
+    表示されるデバイスが高DPIなディスプレイかによって画像を出し分けたいですか？でしたら<a href="#toc-pixel-density-descriptors">高解像度の画像を読み込む</a>ようにしましょう。
+  </dd>
+
+  <dt>ビューポートによる選択</dt>
+  <dd>
+    ウインドウの一定割合を画像が占めるようにしたいですか？でしたら<a href="#toc-width-descriptors">画像をビューポートの大きさに合わせて表示</a>させましょう。
+  </dd>
+
+  <dt>画像フォーマットによる選択</dt>
+  <dd>
+    ファイルサイズが小さいなど、パフォーマンスを向上させる新しい画像ファイル形式をサポートしているかによって画像を出し分けたいですか？でしたら<a href="#toc-file-type">WebP などの別のファイル形式を読み込む</a>ようにしましょう。
+  </dd>
+
+</dl> 
+
+<h3 id="toc-art-direction">アートディレクションでの利用</h3>
+
+<p><code>&lt;picture&gt;</code> 要素が最も使われるケースは、レスポンシブデザインにおいて「アートディレクション」と呼ばれるものです。これは、ひとつの画像をビューポート幅に応じて拡大縮小するのではなく、ビューポートの大きさにあわせ用意した複数の画像を使うものです。</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <img src="resized-image.png"
+      srcset="resized-image@2X.png 2x"
+      width="320">
+    <figcaption>
+      ビューポート幅に応じてひとつの画像を拡大縮小した結果
+    </figcaption>
+  </figure>
+
+  <figure>
+    <img src="art-direction.png"
+      srcset="art-direction@2X.png 2x"
+      width="320">
+    <figcaption>
+      ブラウザのビューポートに応じ別々に用意された画像を使った結果
+    </figcaption>
+  </figure>
+
+</div>
+
+<h3 id="improve-performance">リソース読み込みのパフォーマンスを改善する</h3>
+
+<p><code>&lt;picture&gt;</code> 要素、もしくは <code>srcset</code> 属性と <code>sizes</code> 属性を持つ <code>&lt;img&gt;</code> 要素を使うと、ブラウザは明示的に指定された条件にマッチする画像のみをダウンロードします。この実装は HTML パーザ互換で、ブラウザの画像キャッシュ機能と先読み機能の恩恵に預かれます。</p>
+
+<h2 id="toc-demo">&lt;picture&gt; のデモ</h2>
+
+<p>インターネットが猫の画像を提供するために作られたことはご存知ですよね。<code>&lt;picture&gt;</code> を使うと、どんな隙間にも入り込んでしまうという猫の特徴をエミュレートできるのです。</p>
+
+<figure> 
+  <a href="http://googlechrome.github.io/samples/picture-element/" target="_blank">
+    <img src="cat-stretching.png"
+      srcset="cat-stretching@2X.png 2x"
+      alt="のびている猫のイラスト">
+  </a>
+  <figcaption>
+    猫のイラスト（作：@itsJonQ）
+  </figcaption>
+</figure>
+
+<p><strong>Chrome 38</strong> 以上で<strong><a href="http://googlechrome.github.io/samples/picture-element/" target="_blank">デモを新しいタブで開いてください</a></strong>。開いたら、ウインドウを大きくしたり小さくしてみて、猫がどうなるかを確認してみてください。</p>
+
+<p>このデモは <code>&lt;picture&gt;</code> がもたらす機能のほんの一部をお見せしたに過ぎません。さて、ではまず構文から見ていきましょう。</p>
+
+<h2 id="toc-syntax">&lt;picture&gt; の構文</h2>
+
+<p>デモで使った HTML と CSS は、たったこれだけです。</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+  img {display: block; margin: 0 auto;}
+&lt;/style&gt;
+
+&lt;picture&gt;
+  &lt;source 
+    media="(min-width: 650px)"
+    srcset="images/kitten-stretching.png"&gt;
+  &lt;source 
+    media="(min-width: 465px)"
+    srcset="images/kitten-sitting.png"&gt;
+  &lt;img 
+    src="images/kitten-curled.png" 
+    alt="a cute kitten"&gt;
+&lt;/picture&gt;
+</pre>
+
+<p>このコードには JavaScript やサードパーティ製のライブラリが使われていません。CSS については <code>&lt;style&gt;</code> 要素がありますが、<code>&lt;img&gt;</code> 要素のスタイルを少し触っただけで、メディアクエリーなどはありません。<code>&lt;picture&gt;</code> 要素のネイティブ実装では、レスポンシブイメージは HTML だけで指定するのです。</p>
+
+<h3 id="toc-source-element">&lt;source&gt; 要素を使う</h3>
+
+<p><code>&lt;picture&gt;</code> 要素にはなんの属性も定義されていません。魔法が起こるのは、<code>&lt;source&gt;</code> のコンテナとして <code>&lt;picture&gt;</code> が使われたときです。</p>
+
+<p><code>&lt;source&gt;</code> 要素はビデオやオーディオなどの読み込みに使われていましたが、画像の読み込みにも対応するように拡張され、さらに次の新しい属性も追加されました。</p>
+
+<dl>
+
+  <dt>srcset<em>（必須）</em></dt>
+  <dd>
+    <p>画像がひとつの場合は、そのファイルのパスを指定します（例：<code>srcset="kitten.png"</code>）。</p>
+    <p>画像を複数指定する場合は、ファイルのパスとピクセル密度デスクリプタの組み合わせを、カンマで区切って指定します（例：<code>srcset="kitten.png, kitten@2X.png 2x"</code>）。ファイル名のみでデスクリプタがない場合、そのファイルは 1x が指定されたものとみなされます。</p>
+    <p>使い方は<a href="#toc-pixel-density-descriptors">ピクセル密度デスクリプタと組み合わせる例</a>をご覧ください。</p>
+  </dd>
+
+  <dt>media<em>（任意）</em></dt>
+  <dd>
+    <p>CSS の <code>@media</code> で使うメディアクエリーを指定します（例：<code>media="(max-width: 30em)"</code>）。</p>
+    <p>使い方は <a href="#toc-syntax">&lt;picture&gt; の構文</a>にある例をご覧ください。</p>
+  </dd>
+
+  <dt>sizes<em>（任意）</em></dt>
+  <dd>
+    <p>幅デスクリプタのみ（例：<code>sizes="100vw"</code>）、もしくは、メディアクエリーと幅デスクリプタの組み合わせ（例：<code>sizes="(max-width: 30em) 100vw"</code>）を指定します。</p>
+    <p>メディアクエリーと幅デスクリプタの組み合わせはカンマで区切って複数指定できます（例：<code>sizes="(max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)"</code>）。このとき、最後の組み合わせが規定値になります。</p>
+    <p>使い方は<a href="#toc-width-descriptors">幅デスクリプタと組み合わせた例</a>をご覧ください。</p>
+  </dd>
+
+  <dt>type<em>（任意）</em></dt>
+  <dd>
+    <p>MIME を指定します（例：<code>type="image/webp"</code>、 <code>type="image/vnd.ms-photo"</code>）。</p>
+    <p>使い方は<a href="#toc-file-type">新しい画像フォーマットを読み込む例</a>をご覧ください。</p>
+  </dd>
+
+</dl>
+
+<p>ブラウザはこれらの属性に指定された値をヒントに、もっとも適切な画像リソースを読み込みます。要素の記述順は重要です。なぜならブラウザは条件にマッチした <code>&lt;source&gt;</code> 要素のうち最初のものを読み込み、他の <code>&lt;source&gt;</code> を無視するからです。</p>
+
+<h3 id="toc-add-img">最後に &lt;img&gt; 要素を指定する</h3>
+
+<p><code>&lt;picture&gt;</code> 要素の導入にあわせ、<code>&lt;img&gt;</code> 要素が<code>&lt;picture&gt;</code> 要素のフォールバックとして使えるように更新されました。ブラウザが <code>&lt;picture&gt;</code> 要素をサポートしていない場合や、<code>&lt;source&gt;</code> 要素がマッチしない場合に、<code>&lt;picture&gt;</code> 要素内の <code>&lt;img&gt;</code> 要素が使われます。 <code>&lt;picture&gt;</code> 内の <code>&lt;img&gt;</code> は<strong>必須</strong>です。もし忘れた場合、画像は表示されません。</p>
+
+<p><code>&lt;picture&gt;</code> のデフォルト画像は、<code>&lt;img&gt;</code> に指定しましょう。ここで、<code>&lt;img&gt;</code> は <code>&lt;picture&gt;</code> の一番後ろに書かなければなりません。なぜなら <code>&lt;img&gt;</code> の後に <code>&lt;source&gt;</code> が書かれた場合、それらの <code>&lt;source&gt;</code> はすべて無視されるからです。</p>
+
+<p>また、画像が表示されない場合のフォールバックにも <code>&lt;img&gt;</code> 要素が使われます。<code>&lt;img&gt;</code> の <code>alt</code> 属性に代替テキストを指定しましょう。</p>
+
+<h3 id="toc-pixel-density-descriptors">ピクセル密度デスクリプタを使う</h3>
+
+<p>高解像度のディスプレイをサポートサポートするには、1x、1.5x、2x、3x といったピクセル密度デスクリプタを使います。<a href="https://developers.google.com/web/fundamentals/media/images/images-in-markup#enhance-imgs-with-srcset-for-high-dpi-devices" target="_blank"><code>srcset</code> 属性</a> は <code>&lt;img&gt;</code> 要素 <code>&lt;source&gt;</code> 要素どちらでも使えます。</p>
+
+<p>次の例は、1x、1.5x、2x な画面に対応させるコードです。</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source 
+    media="(min-width: 650px)" 
+    srcset="images/kitten-stretching.png,
+            images/kitten-stretching@1.5x.png 1.5x,  
+            images/kitten-stretching@2x.png 2x"&gt;
+  &lt;source 
+    media="(min-width: 465px)" 
+    srcset="images/kitten-sitting.png,
+            images/kitten-sitting@1.5x.png 1.5x
+            images/kitten-sitting@2x.png 2x"&gt;
+  &lt;img 
+    src="images/kitten-curled.png" 
+    srcset="images/kitten-curled@1.5x.png 1.5x,
+            images/kitten-curled@2x.png 2x"
+    alt="かわいい子猫"&gt;
+&lt;/picture&gt;
+</pre>
+
+<h3 id="toc-width-descriptors">幅デスクリプタを使う</h3>
+
+<p><em>Web Fundamentals</em> では新しく追加された <a href="https://developers.google.com/web/fundamentals/media/images/images-in-markup#relative-sized-images"  target="_blank"><code>sizes</code> 属性</a>を <code>&lt;img&gt;</code> 要素で使う例が詳しく紹介されています。</p>
+
+<blockquote>
+<p>画像の最終的に表示される大きさがわからないと、画像ソースのピクセル密度デスクリプタが指定しづらい場合があるでしょう。ウインドウの大きさに応じて画像を可変させたい場合はとくにです。</p>
+
+<p>固定された画像の大きさと密度を指定しなくても、画像の表示される大きさは、幅デスクリプタと画像のもとの大きさを提供すれば計算できます。指定された値からブラウザが有効なピクセル密度を計算し、最も適した画像をダウンロードするわけです。</p>
+</blockquote>
+
+<p>次の例は、<code>sizes</code> 属性を使い、画像を常にビューポートの幅80％で表示する画像ですが、<code>srcset</code> と組み合わせ、幅の違う灯台の画像4つ（160px, 320px, 640px, 1280px）からひとつを提供するように指定しています。</p>
+
+<pre class="prettyprint">
+&lt;img src="lighthouse-160.jpg" alt="灯台"
+     sizes="80vw"
+     srcset="lighthouse-160.jpg 160w, 
+             lighthouse-320.jpg 320w,        
+             lighthouse-640.jpg 640w,
+             lighthouse-1280.jpg 1280w"&gt;
+</pre>
+
+<p>ブラウザは与えられたヒントと、ビューポートの幅とハードウェアの画面解像度に基づき、最も適切な画像リソースを選び読み込みます。</p>
+
+<figure>
+  <img src="lighthouse-example-img.png"
+    srcset="lighthouse-example-img@2X.png 2x"
+    alt="常にビューポートの80％をfillする、lighthouseの写真">
+  <figcaption>
+    左のビューポート幅は約 800px。デバイスピクセル比が 2x でない限りブラウザは lighthouse-640.jpg を読み込み、2x である場合は lighthouse-1280.jpg を読み込む
+  </figcaption>
+</figure>
+
+
+<p><code>&lt;picture&gt;</code> の登場により、<code>sizes</code> 属性は <code>&lt;img&gt;</code> 要素と <code>&lt;source&gt;</code> 要素のどちらにも使えるようになりました。</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source media="(min-width: 800px)"
+          sizes="80vw"
+          srcset="lighthouse-landscape-640.jpg 640w,
+                  lighthouse-landscape-1280.jpg 1280w,
+                  lighthouse-landscape-2560.jpg 2560w"&gt;
+  &lt;img src="lighthouse-160.jpg" alt="灯台"
+       sizes="80vw"
+       srcset="lighthouse-160.jpg 160w,
+               lighthouse-320.jpg 320w,
+               lighthouse-640.jpg 640w,
+               lighthouse-1280.jpg 1280w"&gt;
+&lt;/picture&gt;
+</pre>
+
+<p>ここでは先の例を更新し、ビューポートの幅が 800px 以上の場合、横長の写真を表示するようにしています。</p>
+
+<figure>
+  <img src="lighthouse-example-picture.png"
+    srcset="lighthouse-example-picture@2X.png 2x"
+    alt="灯台の写真はブラウザのビューポート幅の80％で表示され、大きなビューポートではさらに横長の写真が表示される">
+  <figcaption>
+    左のビューポートは幅 800px 以上なので、横長の灯台の写真が表示される
+  </figcaption>
+</figure>
+
+<h3 id="toc-file-type">ほかの画像フォーマットを読み込む</h3>
+
+<p><code>&lt;source&gt;</code> 要素の <code>type</code> 属性は、すべてのブラウザでサポートされていないような画像を読み込むのに使えます。たとえば、<a href="https://developers.google.com/speed/webp/" target="_blank">WebP フォーマット</a>をサポートしているブラウザには WebP 画像を、サポートしていないブラウザには JPEG 画像を提供するといったことができます。</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source type="image/webp" srcset="images/butterfly.webp"&gt;
+  &lt;img src="images/butterfly.jpg" alt="蝶"&gt;
+&lt;/picture&gt;
+</pre>
+
+<h3 id="toc-additional-code-examples">コードサンプルAdditional code examples</h3>
+
+<p>Dev.Opera のブログ記事「<a href="http://dev.opera.com/articles/responsive-images/" target="_blank">Responsive Images: Use Cases and Documented Code Snippets to Get You Started</a>」では<code>&lt;picture&gt;</code> と <code>&lt;img&gt;</code> 要素、それに <code>srcset</code>、<code>media</code>、<code>sizes</code>、<code>type</code> 属性をそれぞれ組み合わせた例を網羅し紹介しています。</p>
+
+<h2 id="toc-try-it-out">使ってみよう</h2>
+
+<p><code>&lt;picture&gt;</code> 要素は <a href="http://www.chromestatus.com/feature/5910974510923776" target="_blank">Chrome 38 から利用できます</a>。Chrome DevTools の<a href="https://developer.chrome.com/devtools/docs/device-mode#screen-emulation" target="_blank">スクリーンエミュレーション機能</a>でテストしてみましょう。</p>
+
+<p>この機能へのフィードバックがあれば、<a href="http://crbug.com" target="_blank">Chrome バグトラッカー</a>までお願いします。</p>
+
+<p><code>&lt;picture&gt;</code> も使い、他のブラウザにもレスポンシブイメージを提供したい場合は、<a href="https://google-developers.appspot.com/web/fundamentals/resources/samples/media/images/media" target="_blank"><code>&lt;picture&gt;</code> と共に polyfill を使ったサンプル</a>がありますのでそちらをご覧ください。</p>
+
+<p><a href="https://developers.google.com/web/fundamentals/media/images/" target="_blank">Web Fundamentals の画像についての記事</a>では、Web での画像の利用についてベストプラクティスや例が紹介されています。こちらもあわせてご覧ください。</p>
+
+{% endblock %}
