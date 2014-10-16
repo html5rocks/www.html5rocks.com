@@ -80,9 +80,9 @@
     </tr>
     <tr>
       <th></th>
-      <th>33</th>
+      <th>40</th>
       <th>4.3</th>
-      <th>26</th>
+      <th>34</th>
       <th>6, 7</th>
       <th>6, 7</th>
     </tr>
@@ -151,8 +151,8 @@
     </tr>
     <tr>
       <th></th>
-      <th>33</th>
-      <th>26</th>
+      <th>40</th>
+      <th>34</th>
       <th>6, 7</th>
       <th>9</th>
       <th>10, 11</th>
@@ -224,7 +224,7 @@
 <th>SessionStorage</th>
 </tr>
 <tr>
-<td>Chrome 33</td>
+<td>Chrome 40</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
@@ -233,7 +233,7 @@
 <td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
-<td>Chrome for Android 33</td>
+<td>Chrome for Android 40</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
@@ -309,7 +309,7 @@ FileSystem API について調査したい場合は：</p>
 <th>SessionStorage</th>
 </tr>
 <tr>
-<td>Firefox 26</td>
+<td>Firefox 34</td>
 <td>500<span class="mb">MB</span>, Unlimited</td>
 <td class="empty"></td>
 <td>50<span class="mb">MB</span>, Unlimited</td>
@@ -317,7 +317,7 @@ FileSystem API について調査したい場合は：</p>
 <td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 <tr>
-<td>Firefox for Android 26</td>
+<td>Firefox for Android 34</td>
 <td>5<span class="mb">MB</span>, Unlimited</td>
 <td class="empty"></td>
 <td>5<span class="mb">MB</span>, Unlimited</td>
@@ -341,19 +341,29 @@ Application Cache はデスクトップ版が 500MB、モバイル版が 5MB が
 
 <h3 id="toc-firefox_inspect">インスペクト方法</h3>
 
-<p>実際に使われている容量は、デスクトップ版では <a href="https://addons.mozilla.org/en-US/firefox/addon/data-manager/">Tahoe Data Manager</a> を使ってインスペクトできますが、調査時の最新版 26 では Storage タブが利用できなくなっているようです。 <br />
-データは sqlite に保存されるため、一般的なツールを使って中身を調査することもできます。sqlite ファイルは各 OS のプロファイルが収められているフォルダの idb 内に存在します。</p>
+<p>Firefox 34 以降をお使いであれば、IndexedDB、LocalStorage、SessionStorage を DevTools の Storage パネルを使うことでインスペクトすることができます。<br />
+DevTools の設定項目にある "Default Firefox Developer Tools" から "Storage" を見つけ、チェックしてください。ストレージに保存されているデータを実際に覗くことができるようになります。</p>
 
-<p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default</code><br />
-<strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default</code></p>
+<figure><img src="ff-inspect.png" /></figure>
 
-<p><a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> という Add-on を使えばインスペクトがやりやすくなるかもしれません。 <p>
+<p><a href="http://www.sqlite.org/">sqlite</a> を使うことで、保存されているデータを直接調査することができます。sqlite ファイルは各 OS のプロファイルが収められているフォルダの idb 内に存在します。</p>
+
+<p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default\storage\persistent</code><br />
+<strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default/storage/persistent</code></p>
+
+<p><a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> という Add-on を使えば、GUI ベースなのでインスペクトがやりやすくなるかもしれません。<p>
 
 <figure><img src="sqlite-manager.png" /></figure>
 
-<p>また、サイトごとに与えたクオータの上限を外す許可は <code>about:permissions</code> で初期化可能です。</p>
+<p>ドメインごとにパーミッションの許可を変更するには、URL の左にあるアイコンをクリックし、"More Information..." を選択します。</p>
 
-<p>Android 版については、残念ながら現時点でインスペクトやサイトごとのデータ削除を行う方法はないようです。デバッグ方法については<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android" target="_blank">このドキュメント</a>が参考になります。</p>
+<figure><img src="ff-more-info.png" /></figure>
+
+<p>"Permission" タブにある "Maintain Offline Storage" を変更することで、パーミッションが変更できます。ここでは、そのページ上で保存されたデータをすべて削除することもできます。</p>
+
+<figure><img src="ff-page-info.png" /></figure>
+
+<p>Android 版についても、リモートデバッグを有効にすることで、同様の方法を使ってインスペクトを行うことができます。リモートデバッグの方法については<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android" target="_blank">このドキュメント</a>を参考にしてください。デスクトップ版のように、直接データベースをいじるようなことはできないようです。</p>
 
 <h2 id="toc-android">Android Browser</h2>
 
