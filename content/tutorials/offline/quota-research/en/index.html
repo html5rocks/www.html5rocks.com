@@ -76,9 +76,9 @@
     </tr>
     <tr>
       <th></th>
-      <th>33</th>
+      <th>40</th>
       <th>4.3</th>
-      <th>26</th>
+      <th>34</th>
       <th>6, 7</th>
       <th>6, 7</th>
     </tr>
@@ -146,8 +146,8 @@
     </tr>
     <tr>
       <th></th>
-      <th>33</th>
-      <th>26</th>
+      <th>40</th>
+      <th>34</th>
       <th>6, 7</th>
       <th>9</th>
       <th>10, 11</th>
@@ -219,7 +219,7 @@
 <th>SessionStorage</th>
 </tr>
 <tr>
-<td>Chrome 33</td>
+<td>Chrome 40</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
@@ -228,7 +228,7 @@
 <td>10<span class="mb">MB</span></td>
 </tr>
 <tr>
-<td>Chrome for Android 33</td>
+<td>Chrome for Android 40</td>
 <td>up to quota</td>
 <td>up to quota</td>
 <td>up to quota</td>
@@ -306,7 +306,7 @@ Desktop:</p>
 <th>SessionStorage</th>
 </tr>
 <tr>
-<td>Firefox 26</td>
+<td>Firefox 34</td>
 <td>500<span class="mb">MB</span>, Unlimited</td>
 <td class="empty"></td>
 <td>50<span class="mb">MB</span>, Unlimited</td>
@@ -314,7 +314,7 @@ Desktop:</p>
 <td colspan="2">10<span class="mb">MB</span></td>
 </tr>
 <tr>
-<td>Firefox for Android 26</td>
+<td>Firefox for Android 34</td>
 <td>5<span class="mb">MB</span>, Unlimited</td>
 <td class="empty"></td>
 <td>5<span class="mb">MB</span>, Unlimited</td>
@@ -337,19 +337,29 @@ A user can also change the warning quota by changing <code>about:config</code>'s
 
 <h3 id="toc-firefox_inspect">How to inspect</h3>
 
-<p>You can inspect actual consumption by using an Add-on called <a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#remote-debugging-overview">Tahoe Data Manager</a>
-on desktop, but its Storage tab doesn't seem to work on Firefox 26. You can actually use <a href="http://www.sqlite.org/">sqlite</a> command to inspect content of the database. The sqlite files are located under idb folder under profile directory of respective OSes.</p>
+<p>If you are running Firefox later than version 34, you can inspect details of IndexedDB, LocalStorage and SessionStorage if you open DevTools' Storage panel. <br />
+In order to use it, you'll first need to check a box next to "Storage" under "Default Firefox Developer Tools" section in the DevTools' Settings. You can inspect actual contents stored in the storage.</p>
+
+<figure><img src="ff-inspect.png" /></figure>
+
+<p>If you want to manipulate those data, you need to use <a href="http://www.sqlite.org/">sqlite</a> command against the raw database. The sqlite files are located under idb folder under profile directory of respective OSes.</p>
 
 <p><strong>Windows:</strong> <code>%AppData%\Mozilla\Firefox\Profiles\xxxxxxxx.default\storage\persistent</code><br />
 <strong>Mac:</strong> <code>~/Library/Application Support/Firefox/Profiles/xxxxxxxx.default/storage/persistent</code></p>
 
-<p>Add-on called <a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> might be a good choice for inspection using a GUI. </p>
+<p>Add-on called <a href="http://sqlite-manager.googlecode.com">SQLite Manager</a> might be a good choice for this purpose using GUI. </p>
 
 <figure><img src="sqlite-manager.png" /></figure>
 
-<p>If you want to remove permissions per domain, go to the <code>about:permissions</code> page.</p>
+<p>If you want to remove permissions per domain, click on the icon left to the URL on the page. Then choose "More Information...".</p>
 
-<p>For Android version, I couldn't find any way to inspect or delete stored data per domain. To learn more about debugging mobile Firefox, see <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android">this document</a>.</p>
+<figure><img src="ff-more-info.png" /></figure>
+
+<p>You can then change permission status of the page's storage from "Maintain Offline Storage" under "Permissions" tab. You can clear the stored data for this page as well.</p>
+
+<figure><img src="ff-page-info.png" /></figure>
+
+<p>For Android version, you can inspect storage using similar technique as desktop version once you get the remote debugging working. To learn more about debugging mobile Firefox, see <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Firefox_for_Android">this document</a>. Note that manipulation on raw database is still not possible.</p>
 
 <h2 id="toc-android">Android Browser</h2>
 
