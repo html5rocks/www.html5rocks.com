@@ -478,13 +478,12 @@ The same concept holds true for the import document. Unless you append it's cont
 
 _Imports block rendering of the main page_. This is similar to what `<link rel="stylesheet">` do. The reason the browser blocks rendering on stylesheets in the first place is to minimize FOUC. Imports behave similarly because they can contain stylsheets. 
 
-To be completely asynchronous and block the parser or rendering, use the `async` attribute:
+To be completely asynchronous and not block the parser or rendering, use the `async` attribute:
 
     <link rel="import" href="/path/to/import_that_takes_5secs.html" async>
 
-The reason `async` isn't the default for HTML imports is because it requires developers
-to do more work. By being synchronously by default, HTML imports that have custom element definitions inside of are guaranteed to load and upgrade, in order. In a completely async world,
-developers would have to manage the dance of all those timings themselves.
+The reason `async` isn't the default for HTML Imports is because it requires developers
+to do more work. Synchronous by default means that HTML Imports that have custom element definitions inside of them are guaranteed to load and upgrade, in order. In a completely async world, developers would have to manage that dance and upgrade timings themselves.
 
 <h4 id="perf-rendering">Imports do not block parsing</h4>
 
