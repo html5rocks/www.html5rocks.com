@@ -80,6 +80,8 @@ for (var i=0,y=0; y&lt;lettersPerSide; y++) {
 
 // Create a texture from the letter canvas.
 var tex = new THREE.Texture(c);
+// Tell Three.js not to flip the texture.
+tex.flipY = false;
 // And tell Three.js that it needs to update the texture.
 tex.needsUpdate = true;
 </pre>
@@ -89,10 +91,6 @@ tex.needsUpdate = true;
 <p>Creating the geometry for the book:
 <pre class="prettyprint">
 var geo = new THREE.Geometry();
-
-var v3 = function(x,y,z) {
-  return new THREE.Vertex(new THREE.Vector3(x,y,z));
-};
 
 var i=0, x=0, line=0;
 for (i=0; i<BOOK.length; i++) {
@@ -106,23 +104,31 @@ for (i=0; i<BOOK.length; i++) {
   // Add letter vertices to the geometry.
   var v,t;
   geo.vertices.push(
-    v3( x*1.1+0.05, line*1.1+0.05, 0 ),
-    v3( x*1.1+1.05, line*1.1+0.05, 0 ),
-    v3( x*1.1+1.05, line*1.1+1.05, 0 ),
-    v3( x*1.1+0.05, line*1.1+1.05, 0 )
+    new THREE.Vector3( x*1.1+0.05, line*1.1+0.05, 0 ),
+    new THREE.Vector3( x*1.1+1.05, line*1.1+0.05, 0 ),
+    new THREE.Vector3( x*1.1+1.05, line*1.1+1.05, 0 ),
+    new THREE.Vector3( x*1.1+0.05, line*1.1+1.05, 0 )
   );
-  // Create face for the letter.
-  var face = new THREE.Face4(i*4+0, i*4+1, i*4+2, i*4+3);
+  // Create faces for the letter.
+  var face = new THREE.Face3(i*4+0, i*4+1, i*4+2);
+  geo.faces.push(face);
+  face = new THREE.Face3(i*4+0, i*4+2, i*4+3);
   geo.faces.push(face);
 
   // Compute texture coordinates for the letters.
-  var tx=cx/lettersPerSide, ty=cy/lettersPerSide, off=1/lettersPerSide;
+  var tx = cx/lettersPerSide, 
+      ty = cy/lettersPerSide,
+      off = 1/lettersPerSide;
   var sz = lettersPerSide*fontSize;
   geo.faceVertexUvs[0].push([
-    new THREE.UV( tx, ty+off ),
-    new THREE.UV( tx+off, ty+off ),
-    new THREE.UV( tx+off, ty ),
-    new THREE.UV( tx, ty )
+    new THREE.Vector2( tx, ty+off ),
+    new THREE.Vector2( tx+off, ty+off ),
+    new THREE.Vector2( tx+off, ty )
+  ]);
+  geo.faceVertexUvs[0].push([
+    new THREE.Vector2( tx, ty+off ),
+    new THREE.Vector2( tx+off, ty ),
+    new THREE.Vector2( tx, ty )
   ]);
 
   // On newline, move to the line below and move the cursor to the start of the line.

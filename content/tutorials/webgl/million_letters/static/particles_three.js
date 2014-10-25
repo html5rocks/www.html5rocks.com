@@ -1,5 +1,6 @@
 window.onload = function() {
   var renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setClearColor( 0xffffff );
   document.body.appendChild(renderer.domElement);
 
   var camera = new THREE.PerspectiveCamera(45,1,4,40000);
@@ -34,6 +35,7 @@ window.onload = function() {
   }
 
   var tex = new THREE.Texture(c);
+  tex.flipY = false;
   tex.needsUpdate = true;
 
   var mat = new THREE.MeshBasicMaterial({map: tex});
@@ -50,20 +52,26 @@ window.onload = function() {
     var cy = Math.floor(code / lettersPerSide);
     var v,t;
     geo.vertices.push(
-      new THREE.Vertex(new THREE.Vector3( j*1.1+0.05, ln*1.1+0.05, 0 )),
-      new THREE.Vertex(new THREE.Vector3( j*1.1+1.05, ln*1.1+0.05, 0 )),
-      new THREE.Vertex(new THREE.Vector3( j*1.1+1.05, ln*1.1+1.05, 0 )),
-      new THREE.Vertex(new THREE.Vector3( j*1.1+0.05, ln*1.1+1.05, 0 ))
+      new THREE.Vector3( j*1.1+0.05, ln*1.1+0.05, 0 ),
+      new THREE.Vector3( j*1.1+1.05, ln*1.1+0.05, 0 ),
+      new THREE.Vector3( j*1.1+1.05, ln*1.1+1.05, 0 ),
+      new THREE.Vector3( j*1.1+0.05, ln*1.1+1.05, 0 )
     );
-    var face = new THREE.Face4(i*4+0, i*4+1, i*4+2, i*4+3);
+    var face = new THREE.Face3(i*4+0, i*4+1, i*4+2);
     geo.faces.push(face);
-    var ox=cx/lettersPerSide, oy=cy/lettersPerSide, off=1/lettersPerSide;
+    face = new THREE.Face3(i*4+0, i*4+2, i*4+3);
+    geo.faces.push(face);
+    var ox=(cx+0.05)/lettersPerSide, oy=(cy+0.05)/lettersPerSide, off=0.9/lettersPerSide;
     var sz = lettersPerSide*fontSize;
     geo.faceVertexUvs[0].push([
-      new THREE.UV( ox, oy+off ),
-      new THREE.UV( ox+off, oy+off ),
-      new THREE.UV( ox+off, oy ),
-      new THREE.UV( ox, oy )
+      new THREE.Vector2( ox, oy+off ),
+      new THREE.Vector2( ox+off, oy+off ),
+      new THREE.Vector2( ox+off, oy )
+    ]);
+    geo.faceVertexUvs[0].push([
+      new THREE.Vector2( ox, oy+off ),
+      new THREE.Vector2( ox+off, oy ),
+      new THREE.Vector2( ox, oy )
     ]);
     if (code == 10) {
       ln--;
@@ -81,10 +89,8 @@ window.onload = function() {
   var uniforms = {
     time : { type: "f", value: 1.0 },
     size : { type: "v2", value: new THREE.Vector2(width,height) },
-    map : { type: "t", value: 1, texture: tex },
-    effectAmount : { type: "f", value: 0.0 },
-    ContentProtection : { type: "f", value: 0.0 },
-    Censorship : { type: "f", value: 0.0 }
+    map : { type: "t", value: tex },
+    effectAmount : { type: "f", value: 0.0 }
   };
 
   var shaderMaterial = new THREE.ShaderMaterial({
@@ -92,6 +98,7 @@ window.onload = function() {
     vertexShader : document.querySelector('#vertex').textContent,
     fragmentShader : document.querySelector('#fragment').textContent
   });
+  shaderMaterial.transparent = true;
   shaderMaterial.depthTest = false;
 
   var books = [];
