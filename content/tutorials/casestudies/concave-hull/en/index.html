@@ -1,0 +1,45 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-problem-definition">Problem definition</h2>
+
+<p>
+  Imagine that you have a set of points that form a shape like this:
+  <p><img src="/static/images/tutorials/casestudies/concave-hull/0.png" alt="source-points"></p>
+  This points may represent restaurants on the map, pixels after image analysis, etc.
+  But what to do if you need to display border of this shape? For example:
+  <p><img src="/static/images/tutorials/casestudies/concave-hull/12.png" alt="dist-points"></p>  
+  In this case the main problem which must be solved is receiving polygon of the border. So, in this article we’ll see how to solve this problem via <a href="https://github.com/AndreyGeonya/hull" target="_blank">hull.js</a> library.
+</p>
+
+<h2 id="toc-hulljs-usage">Hull.js usage</h2>
+
+<p>
+  Hull.js is very simple and consists of only one function that generates concave hull:
+  <pre class="prettyprint">
+  var srcPointset = [[168, 180], [168, 178], [168, 179], ...];
+  var distPointset = hull(srcPointset, 10);</pre>
+  1st parameter is source pointset and the 2nd parameter is concavity of the hull.
+</p>
+<p>
+  For a better understanding of the 2nd parameter let’s see how hull.js works. First of all <code>hull</code> function builds <a href="http://en.wikipedia.org/wiki/Convex_hull" target="_blank">convex hull</a>:
+  <p><img src="/static/images/tutorials/casestudies/concave-hull/1.png" alt="convex-hull"></p>
+  After that, while shape contains edges with length less than concavity value the edges recursively flexing inward:
+  <p>1) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/1.png" alt=""> 2) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/2.png" alt=""> 3) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/3.png" alt=""><br> 4) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/4.png" alt=""> 5) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/5.png" alt=""> 6) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/6.png" alt=""><br> 7) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/7.png" alt=""> 8) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/8.png" alt=""> 9) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/9.png" alt=""><br> 10) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/10.png" alt=""> 11) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/11.png" alt=""> 12) <img width="180" src="/static/images/tutorials/casestudies/concave-hull/12.png" alt=""></p>
+</p>
+So, via 2nd param you can set max edge length and adjust concavity of your shape. 1 - thin shape. Infinity - convex hull.
+
+<p>That's all ;-) Enjoy it! And feel free to ask questions and suggest improvements.</p>
+
+<h2 id="toc-references">References</h2>
+<ul>
+  <li>Github page: <a href="https://github.com/AndreyGeonya/hull" target="_blank">https://github.com/AndreyGeonya/hull;</a></li>
+  <li>NPM page: <a href="https://www.npmjs.org/package/hull.js" target="_blank">https://www.npmjs.org/package/hull.js</a>;</li>
+  <li>Live examples: <a href="http://andreygeonya.github.io/hull/" target="_blank">http://andreygeonya.github.io/hull/</a>.</li>
+</ul>
+
+{% endblock %}
