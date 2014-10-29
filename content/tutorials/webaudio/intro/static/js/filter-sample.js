@@ -10,7 +10,8 @@ FilterSample.play = function() {
   source.buffer = BUFFERS.techno;
   // Create the filter.
   var filter = context.createBiquadFilter();
-  filter.type = 0; // LOWPASS
+  //filter.type is defined as string type in the latest API. But this is defined as number type in old API.
+  filter.type = (typeof filter.type === 'string') ? 'lowpass' : 0; // LOWPASS
   filter.frequency.value = 5000;
   // Connect source to filter, filter to destination.
   source.connect(filter);
