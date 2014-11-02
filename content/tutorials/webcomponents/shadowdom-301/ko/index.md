@@ -288,7 +288,7 @@ if ('HTMLTemplateElement' in window) {
     </div>
 
     <script>
-      var host = document.querySelector('div');
+      var container = document.querySelector('div');
 
       var root1 = container.createShadowRoot();
       var root2 = container.createShadowRoot();
