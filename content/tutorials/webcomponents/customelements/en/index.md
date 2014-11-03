@@ -417,7 +417,7 @@ allows you to declare fragments of DOM which are parsed, inert at page load, and
     </script>
 
 <template id="sdtemplate">
-  <style>x-foo-from-template p { color: orange; }</style>
+  <style>:host p { color: orange; }</style>
   <p>I'm in Shadow DOM. My markup was stamped from a &lt;template&gt;.</p>
 </template>
 

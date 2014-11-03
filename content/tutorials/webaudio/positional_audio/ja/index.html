@@ -79,12 +79,15 @@ request.responseType = "arraybuffer";
 request.onload = function(e) {
 
   // Create a buffer from the response ArrayBuffer.
-  var buffer = ctx.createBuffer(this.response, false);
-  sound.buffer = buffer;
+  ctx.decodeAudioData(this.response, function onSuccess(buffer) {
+    sound.buffer = buffer;
 
-  // Make the sound source use the buffer and start playing it.
-  sound.source.buffer = sound.buffer;
-  sound.source.noteOn(ctx.currentTime);
+    // Make the sound source use the buffer and start playing it.
+    sound.source.buffer = sound.buffer;
+    sound.source.start(ctx.currentTime);
+  }, function onFailure() {
+    alert("Decoding the audio buffer failed");
+  });
 };
 request.send();
 </pre>
@@ -121,7 +124,8 @@ sound.panner.connect(mainVolume);
 // In the frame handler function, get the object's position.
 object.position.set(newX, newY, newZ);
 object.updateMatrixWorld();
-var p = object.matrixWorld.getPosition();
+var p = new THREE.Vector3();
+p.setFromMatrixPosition(object.matrixWorld);
 
 // And copy the position over to the sound of the object.
 sound.panner.setPosition(p.x, p.y, p.z);
@@ -134,7 +138,8 @@ sound.panner.setPosition(p.x, p.y, p.z);
 // Get the camera position.
 camera.position.set(newX, newY, newZ);
 camera.updateMatrixWorld();
-var p = camera.matrixWorld.getPosition();
+var p = new THREE.Vector3();
+p.setFromMatrixPosition(camera.matrixWorld);
 
 // And copy the position over to the listener.
 ctx.listener.setPosition(p.x, p.y, p.z);
@@ -159,13 +164,15 @@ ctx.listener.setPosition(p.x, p.y, p.z);
 ...
 var dt = secondsSinceLastFrame;
 
-var p = object.matrixWorld.getPosition();
+var p = new THREE.Vector3();
+p.setFromMatrixPosition(object.matrixWorld);
 var px = p.x, py = p.y, pz = p.z;
 
 object.position.set(newX, newY, newZ);
 object.updateMatrixWorld();
 
-var q = object.matrixWorld.getPosition();
+var q = new THREE.Vector3();
+q.setFromMatrixPosition(object.matrixWorld);
 var dx = q.x-px, dy = q.y-py, dz = q.z-pz;
 
 sound.panner.setPosition(q.x, q.y, q.z);
@@ -195,19 +202,19 @@ var vec = new THREE.Vector3(0,0,1);
 var m = object.matrixWorld;
 
 // Save the translation column and zero it.
-var mx = m.n14, my = m.n24, mz = m.n34;
-m.n14 = m.n24 = m.n34 = 0;
+var mx = m.elements[12], my = m.elements[13], mz = m.elements[14];
+m.elements[12] = m.elements[13] = m.elements[14] = 0;
 
 // Multiply the 0,0,1 vector by the world matrix and normalize the result.
-m.multiplyVector3(vec);
+vec.applyProjection(m);
 vec.normalize();
 
 sound.panner.setOrientation(vec.x, vec.y, vec.z);
 
 // Restore the translation column.
-m.n14 = mx;
-m.n24 = my; 
-m.n34 = mz;
+m.elements[12] = mx;
+m.elements[13] = my;
+m.elements[14] = mz;
 ...
 </pre>
 
@@ -218,25 +225,25 @@ m.n34 = mz;
 // The camera's world matrix is named "matrix".
 var m = camera.matrix;
 
-var mx = m.n14, my = m.n24, mz = m.n34;
-m.n14 = m.n24 = m.n34 = 0;
+var mx = m.elements[12], my = m.elements[13], mz = m.elements[14];
+m.elements[12] = m.elements[13] = m.elements[14] = 0;
 
 // Multiply the orientation vector by the world matrix of the camera.
 var vec = new THREE.Vector3(0,0,1);
-m.multiplyVector3(vec);
+vec.applyProjection(m);
 vec.normalize();
 
 // Multiply the up vector by the world matrix.
 var up = new THREE.Vector3(0,-1,0);
-m.multiplyVector3(up);
+up.applyProjection(m);
 up.normalize();
 
 // Set the orientation and the up-vector for the listener.
 ctx.listener.setOrientation(vec.x, vec.y, vec.z, up.x, up.y, up.z);
 
-m.n14 = mx;
-m.n24 = my; 
-m.n34 = mz;
+m.elements[12] = mx;
+m.elements[13] = my;
+m.elements[14] = mz;
 ...
 </pre>
 
@@ -332,8 +339,9 @@ function loadBuffer(ctx, filename, callback) {
   request.responseType = "arraybuffer";
   request.onload = function() {
     // Create a buffer and keep the channels unchanged.
-    var buffer = ctx.createBuffer(request.response, false);
-    callback(buffer);
+    ctx.decodeAudioData(request.response, callback, function() {
+      alert("Decoding the audio buffer failed");
+    });
   };
   request.send();
 }

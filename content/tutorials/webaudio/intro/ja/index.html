@@ -53,7 +53,9 @@ Web Audio APIを使って音を出すには、ひとつ以上のサウンドソ�
 window.addEventListener('load', init, false);
 function init() {
   try {
-    context = new webkitAudioContext();
+    // Fix up for prefixing
+    window.AudioContext = window.AudioContext||window.webkitAudioContext;
+    context = new AudioContext();
   }
   catch(e) {
     alert('Web Audio API is not supported in this browser');
@@ -76,7 +78,9 @@ function init() {
 <p>以下のコードでは、音声サンプルをロードしています。</p>
 
 <pre class="prettyprint"><code>var dogBarkingBuffer = null;
-var context = new webkitAudioContext();
+// Fix up prefixing
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var context = new AudioContext();
 
 function loadDogSound(url) {
   var request = new XMLHttpRequest();
@@ -113,13 +117,16 @@ function loadDogSound(url) {
 例えば、犬の鳴き声の音声データのロードが完了して、<code>AudioBuffer</code>を取得したとしましょう。
 以下のコードで、音声データを再生することができます。</p>
 
-<pre class="prettyprint"><code>var context = new webkitAudioContext();
+<pre class="prettyprint"><code>// Fix up prefixing
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var context = new AudioContext();
 
 function playSound(buffer) {
   var source = context.createBufferSource(); // creates a sound source
   source.buffer = buffer;                    // tell the source which sound to play
   source.connect(context.destination);       // connect the source to the context's destination (the speakers)
-  source.noteOn(0);                          // play the source now
+  source.start(0);                           // play the source now
+                                             // note: on older systems, may have to use deprecated noteOn(time);
 }
 </code></pre>
 
@@ -141,7 +148,9 @@ var context;
 var bufferLoader;
 
 function init() {
-  context = new webkitAudioContext();
+  // Fix up prefixing
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  context = new AudioContext();
 
   bufferLoader = new BufferLoader(
     context,
@@ -164,8 +173,8 @@ function finishedLoading(bufferList) {
 
   source1.connect(context.destination);
   source2.connect(context.destination);
-  source1.noteOn(0);
-  source2.noteOn(0);
+  source1.start(0);
+  source2.start(0);
 }
 </code></pre>
 
@@ -208,7 +217,7 @@ function finishedLoading(bufferList) {
   var source = context.createBufferSource();
   source.buffer = buffer;
   source.connect(context.destination);
-  source.noteOn(time);
+  source.start(time);
 }
 </code></pre>
 
@@ -229,7 +238,7 @@ Web Audio APIを使って音量を変更するには、ソースを<a href="http
 <p>対応するコードは以下のようになります。</p>
 
 <pre class="prettyprint"><code>// Create a gain node.
-var gainNode = context.createGainNode();
+var gainNode = context.createGain();
 // Connect the source to the gain node.
 source.connect(gainNode);
 // Connect the gain node to the destination.
@@ -267,7 +276,7 @@ Volume: <input type="range" min="0" max="100" value="100" onchange="VolumeSample
 <pre class="prettyprint"><code>function createSource(buffer) {
   var source = context.createBufferSource();
   // Create a gain node.
-  var gainNode = context.createGainNode();
+  var gainNode = context.createGain();
   source.buffer = buffer;
   // Turn on looping.
   source.loop = true;
@@ -328,7 +337,7 @@ Web Audio APIでは、<code>AudioGainNode</code>のGain値のようなパラメ�
   gainNode.gain.linearRampToValueAtTime(0, currTime);
   gainNode.gain.linearRampToValueAtTime(1, currTime + ctx.FADE_TIME);
   // Play the playNow track.
-  source.noteOn(0);
+  source.start(0);
   // At the end of the track, fade it out.
   gainNode.gain.linearRampToValueAtTime(1, currTime + duration-ctx.FADE_TIME);
   gainNode.gain.linearRampToValueAtTime(0, currTime + duration);
@@ -389,10 +398,10 @@ var filter = context.createBiquadFilter();
 source.connect(filter);
 filter.connect(context.destination);
 // Create and specify parameters for the low-pass filter.
-filter.type = 0; // Low-pass filter. See BiquadFilterNode docs
+filter.type = 'lowpass'; // Low-pass filter. See BiquadFilterNode docs
 filter.frequency.value = 440; // Set cutoff to 440 HZ
 // Playback the sound.
-source.noteOn(0);
+source.start(0);
 </code></pre>
 
 <p>以下のデモでは、同様のテクニックを使ってます。
