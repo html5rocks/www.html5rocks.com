@@ -41,30 +41,27 @@
 
 
 <h2 id="toc-tldr">TL;DR : Checklist de Compression de Données Textuelles</h2>
-<p>
-  <ol>
-    <li>Pensez <b>mobile d’abord</b> pour vos expériences utilisateurs.
-      <ol>
-        <li>Que pèsent les ressources de votre page ? Pouvez-vous réduire ça ?</li>
-        <li>Combien de temps vos utilisateurs vont-ils attendre que votre page soit chargée sur une connexion moyenne ?</li>
-      </ol>
-    </li>
-    <li>Minifiez tous les contenus qui peuvent l’être.
-      <ol>
-        <li>Les minifieurs CSS et JavaScript sont puissants, simples d’emploi, et intégrables dans vos chaînes de <em>build</em>.</li>
-        <li>Passez vos contenus à travers leurs préprocesseurs le plus en amont possible.</li>
-      </ol>
-    </li>
-    <li>Utilisez la compression GZIP pour toutes les ressources textuelles.
-      <ol>
-        <li>Assurez-vous que votre serveur a la compression GZIP activée.</li>
-        <li>Compressez davantage et en amont (mais GZIP) grâce à <a href="https://code.google.com/p/zopfli/">Zopfli</a> ou <a href="http://www.7-zip.org/">7zip</a>.</li>
-      </ol>
-    </li>
-    <li>Si vous avez encore besoin de réduire, utilisez des codecs avancés tels que <a href="http://www.bzip.org/">BZIP2</a> et <a href="http://www.7-zip.org/">LZMA</a>.</li>
-  </ol>
-
-</p>
+<ol>
+  <li>Pensez <b>mobile d’abord</b> pour vos expériences utilisateurs.
+    <ol>
+      <li>Que pèsent les ressources de votre page ? Pouvez-vous réduire ça ?</li>
+      <li>Combien de temps vos utilisateurs vont-ils attendre que votre page soit chargée sur une connexion moyenne ?</li>
+    </ol>
+  </li>
+  <li>Minifiez tous les contenus qui peuvent l’être.
+    <ol>
+      <li>Les minifieurs CSS et JavaScript sont puissants, simples d’emploi, et intégrables dans vos chaînes de <em>build</em>.</li>
+      <li>Passez vos contenus à travers leurs préprocesseurs le plus en amont possible.</li>
+    </ol>
+  </li>
+  <li>Utilisez la compression GZIP pour toutes les ressources textuelles.
+    <ol>
+      <li>Assurez-vous que votre serveur a la compression GZIP activée.</li>
+      <li>Compressez davantage et en amont (mais GZIP) grâce à <a href="https://code.google.com/p/zopfli/">Zopfli</a> ou <a href="http://www.7-zip.org/">7zip</a>.</li>
+    </ol>
+  </li>
+  <li>Si vous avez encore besoin de réduire, utilisez des codecs avancés tels que <a href="http://www.bzip.org/">BZIP2</a> et <a href="http://www.7-zip.org/">LZMA</a>.</li>
+</ol>
 
 <h2 id="toc-smallisbig">Être petit : un gros enjeu</h2>
 
@@ -186,182 +183,159 @@ La majorité des développeurs déploient simplement du contenu non compressé e
   <img src="image00.jpg" style="float:left;margin:15px;">
   <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a> est loin d’être le seul candidat sur le marché, et si votre appli web envoie de gros paquets de données, fréquemment, alors il va vous falloir investir dans d’autres techniques pour réduire la tailled e vos contenus.  Une de ces techniques pourrait inclure une format de compression orienté JavaScript qui offre de meilleurs résultats que <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>, avec une vitesse de décompression raisonable.</p>
 
-<!-- RESUME HERE -->
+<p>On a deux formats de compression compétitifs (en gros « ce que les p’tits jeunes d’aujourd’hui utilisent »), à savoir <a href="http://www.bzip.org/" hreflang="en">BZIP2</a> et <a href="http://www.7-zip.org/">LZMA</a>, qui produisent tous les deux le plus souvent des fichiers plus petits que <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>, et qui bien souvent décompressent plus vite par-dessus le marché.</p>
 
-<p>Two competitive compression formats (aka “What the kids are using”) are <a href="http://www.bzip.org/">BZIP2</a> and <a href="http://www.7-zip.org/">LZMA</a>, which both can regularly produce smaller files than <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>, and in many cases can decompress faster as well.</p>
+<p>Malheureusement ces deux formats ne sont pas nativement pris en charge par les navigateurs, mais ils sont si populaires qu’on trouve désormais <a href="https://github.com/cscott/compressjs" hreflang="en">un portage JavaScript des deux</a>, ce qui signifie que vous pouvez compresser vos données avec ces formats, en amont, et les décompresser avec JS côté client. </p>
 
-<p>Sadly these two formats aren’t supported in browsers at the native level, but these popular formats now have <a href="https://github.com/cscott/compressjs">JavaScript ported versions of their code</a>, meaning you can compress your data with these codecs offline, and decompress them in javascript on the client. </p>
+<p>Les temps de décompression seront plus longs avec cette approche, ce qui implique que ce n’est pas forcément adapté à tous vos contenus, mais les développeurs d’applications web interactives et riches pourraient y trouver des avantages significatifs.</p>
 
-<p>Decompression times will be slower for this activity, which means it may not be suitable for all data, however developers of interactive, and highly detailed web applications may find large wins going down this route.</p>
+<p>En termes de formats, ces deux-là utilisent des approches bien distinctes dans leurs chaînes de compression, de sorte qu’il est délicat de faire une comparaison détaillée avec <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>.</p>
 
-<p>As far as formats go, these two use completely different stages in their data compression path, making it hard to do a proper comparison against <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>.</p>
+<p>Par exemple, <a href="http://www.bzip.org/" hreflang="en">BZIP2</a> est construit autour de la <a href="http://fr.wikipedia.org/wiki/Transform%C3%A9e_de_Burrows-Wheeler">transformée de Burrows-Wheeler</a>, couplée à une transformée <a href="http://fr.wikipedia.org/wiki/Move-To-Front">Move-To-Front</a>.  Ces deux étapes ne réduisent en rien la taille effective des données, mais les transforment de manière à améliorer les résultats ultérieurs d’une Huffman ou d’un encodage arithmétique, qui s’occupent de la compression à proprement parler.  BZIP est souvent critiqué pour sa consommation élevée de mémoire (la transformée de B-W peut, si elle est implémentée de façon naïve, consommer très vite beaucoup de mémoire), mais si on compare simplement les résultats, BZIP produit des fichiers plus petits que GZIP.</p>
 
-<p>For example, <a href="http://www.bzip.org/">BZIP2</a> is built around the <a href="http://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">Burrows Wheeler Transform</a>, coupled with a <a href="http://en.wikipedia.org/wiki/Move-to-front_transform">Move To Front</a> transform. Both of these transforms do nothing to reduce the actual size of the data, but instead, transform the data in a way that a following huffman / arithmetic encoder can do the actual compression. BZIP is often criticised for it’s larger memory needs, (the BWT can consume memory quickly with naive implementations) but as far as comparison goes, it can easily compress smaller than gzip.</p>
+<p><a href="http://www.7-zip.org/">LZMA</a> peut être considéré comme un cousin éloigné de <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>. Ils démarrent tous les deux par la très appréciée compression à dictionnaire LZ, suivie d’un système d’encodage à intervalles statistiques. Ce qui permet cependant à <a href="http://www.7-zip.org/">LZMA</a> de produire des fichiers plus petits que <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>, c’est qu’il pousse nettement plus loin ses algorithmes de correspondance et de fenêtrage LZ.</p>
 
-<p><a href="http://www.7-zip.org/">LZMA</a> can be considered a distant cousin to <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>. They both start with the popular LZ dictionary compression followed by a statistical range encoding system. What makes <a href="http://www.7-zip.org/">LZMA</a> produce smaller files than <a href="http://fr.wikipedia.org/wiki/Gzip">GZIP</a>, however, lies in its’ advanced LZ matching and windowing algorithms.</p>
+<h2 id="toc-preprc">Les préprocesseurs peuvent aider à une meilleure compression</h2>
 
-
-<h2 id="toc-preprc">Preprocessing text for better compression</h2>
-
-<p>
-Typically text compression on the web is a two-step process; First a minimization step, followed by a lossless compression step.
-</p>
+<p>Classiquement, la compression textuelle sur le web est un processus à deux étapes ; d’abord une minification, puis une compression sans perte.</p>
 
 <h3 id="toc-minif">Minification</h3>
-<p>
-The first step, <b>Minification</b> is the act of reducing the size of data such that it can be consumed without processing by the <a href="https://code.google.com/p/v8/">underlying systems</a>. Basically we remove as much unnecessary data from the file as possible, without changing it syntactically. For example, it’s safe to remove most whitespace from a Javascript file,reducing the file size without changing the JavaScript syntax. Minification is typically handled during the <a href="http://gruntjs.com/">build process</a> either as a manual step or as part of an automated build chain.
-</p>
 
 <p>
-<b>CSS Minifiers</b></br>
-There are many CSS minifiers to choose from. A few of the available options include.
-<img src="image02.png" style="float:right;margin:15px;">
+La première étape, <b>la minification</b>, conssite à réduire la taille des données de façon à permettre sa lecture sans traitement complémentaire par les <a href="https://code.google.com/p/v8/" hreflang="en">systèmes internes du navigateur</a>.  En gros, on retire tout octet superflu du fichier, sans le changer syntaxiquement.  Par exemple, il est généralement acceptable de retirer tout <em>whitespace</em> d’un fichier JavaScript, ce qui réduit sa taille sans changer sa syntaxe.  La minification est généralement traitée par votre <a href="http://gruntjs.com/" hreflang="en">système de build</a>, soit manuellement soit dans le cadre de builds automatiques.
+</p>
+
+<h3>Minifieurs CSS</h3>
+
+<p>
+  <img src="image02.png" style="float:right;margin:15px;">
+  Le choix ne manque pas pour les minifieurs CSS.  Parmi les choix possibles, on a notamment :</p>
 <ul>
-<li><a href="https://github.com/GoalSmashers/clean-css">CleanCSS</a></li>
-<li><a href="https://code.google.com/p/cssmin/">CSSMin</a></li>
-<li><a href="http://yui.github.io/yuicompressor/">YUI</a></li>
-<li><a href="http://csstidy.sourceforge.net/usage.php">CSSTidy</a></li>
-<li><a href="https://pypi.python.org/pypi/slimmer/">Slimmer</a></li>
-<li><a href="http://www.csscompressor.com/">CSS Compressor</a></li>
+<li><a href="https://github.com/GoalSmashers/clean-css" hreflang="en">CleanCSS</a></li>
+<li><a href="https://code.google.com/p/cssmin/" hreflang="en">CSSMin</a></li>
+<li><a href="http://yui.github.io/yuicompressor/" hreflang="en">YUI</a></li>
+<li><a href="http://csstidy.sourceforge.net/usage.php" hreflang="en">CSSTidy</a></li>
+<li><a href="https://pypi.python.org/pypi/slimmer/" hreflang="en">Slimmer</a></li>
+<li><a href="http://www.csscompressor.com/" hreflang="en">CSS Compressor</a></li>
 </ul>
-</p><p>
-Try a few and choose the one that gives you good results and fits into your workflow with the least amount of friction.<br><br>
 
-The main difference between these tools lies in how deep their minification processes go. For example, simple optimization filters text to remove excess whitespace and empty blocks. More advanced optimizations might include swapping “<a href="http://www.w3schools.com/tags/ref_color_tryit.asp?color=AntiqueWhite">AntiqueWhite</a>” with “<a href="http://www.w3schools.com/tags/ref_color_tryit.asp?hex=FAEBD7">#FAEBD7</a>” since the hex form is shorter in the file, and forcing all of the characters to lowercase to increase GZIP compression.<br><br>
+<p>Essayez-en quelques-uns et choisissez celui qui vous donne les meilleurs résultats et s’intègre facilement dans votre outillage existant.</p>
 
-More aggressive methods of CSS minimization save more space, <a href="http://mainroach.blogspot.com/2013/07/css-compression-minifier-roulette.html">but run the risk of breaking your CSS rules</a>. As such, most improvements can’t always be automated, and developers must decide whether the file-size improvement is worth the risk.<br><br>
+<p>La principale différence entre ces outils tient à la complexité et la profondeur de leurs approches de minification.  Par exemple, une optimisation simple filtre le texte pour retirer le <em>whitespace</em> et les blocs vides.  Mais des optimisations plus avancées incluent le remplacement de codes couleurs nommés, tels que « <a href="http://www.html-color-names.com/antiquewhite.php">AntiqueWhite</a> », par leur équivalent hexadécimal (« <a href="http://www.html-color-names.com/antiquewhite.php">#FAEBD7</a> ») lorsqu'il est plus court, et le passage en minuscule de tous les caractères pour améliorer la compression GZIP.</p>
 
-In fact, there’s a new trend of creating <a href="http://lesscss.org/">other versions</a> of <a href="http://sass-lang.com/">CSS languages</a> to help author CSS code more efficiently, and as an added benefit, allow the compiler to produce  smaller CSS code. <br><br>
+<p>Des méthodes plus agressives d’optimisations vont encore réduire la taille, mais dans certains cas précis <a href="http://mainroach.blogspot.com/2013/07/css-compression-minifier-roulette.html" hreflang="en">risquent de casser vos règles CSS</a>. Du coup, certaines améliorations ne peuvent être automatisées, et les développeurs doivent choisir si le gain en réduction de taille justifie le risque éventuel ou non.</p>
 
+<p>En fait, on voit apparaître une tendance de création d’<a href="http://lesscss.org/">autres</a> <a href="http://sass-lang.com/">langages</a> <a href="http://learnboost.github.io/stylus/">alternatifs</a> à CSS qui vous permettent d’écrire vos feuilles de style plus efficacement, et ont l’avantage que leurs compilateurs peuvent souvent produire des CSS plus compactes.
 </p>
 
-
-
+<h3>Minifieurs JavaScript</h3>
 
 <p>
-<b>Javascript Minifiers</b></br>
-As with CSS minifiers, there’s no one-size-fits-all JavaScript minifier. Once again, they all do much the same work, so choose the one that works with your build chain and has the features you want. Some of the more popular being:
-<img src="image01.jpg" style="float:right;margin:15px;">
+  <img src="image01.jpg" style="float:right;margin:15px;">
+  Comme pour les minifieurs CSS, on ne trouve pas forcément une solution unique qui marche pour tout le monde côté JavaScript.  Là encore, ils jouent tous dans la même cour, aussi prenez le temps de les évaluer pour vos besoins et votre environnement de travail.  Les plus populaires sont :</p>
 <ul>
-  <li><a href="https://github.com/mishoo/UglifyJS">UglifyJS</a></li>
-  <li><a href="http://www.crockford.com/javascript/jsmin.html">JSMin</a></li>
-  <li><a href="http://yui.github.io/yuicompressor/">YUI</a></li>
-  <li><a href="http://opensource.perlig.de/rjsmin/">rJSMin</a></li>
-  <li><a href="http://dojotoolkit.org/documentation/">Dojo ShrinkSafe</a></li>
-  <li><a href="http://aspnet.codeplex.com/releases/view/40584">Ajax Minifier</a></li>
-  <li><a href="https://developers.google.com/closure/compiler/">Closure</a></li>
+  <li><a href="https://github.com/mishoo/UglifyJS" hreflang="en">UglifyJS</a></li>
+  <li><a href="http://www.crockford.com/javascript/jsmin.html" hreflang="en">JSMin</a></li>
+  <li><a href="http://yui.github.io/yuicompressor/" hreflang="en">YUI</a></li>
+  <li><a href="http://opensource.perlig.de/rjsmin/" hreflang="en">rJSMin</a></li>
+  <li><a href="http://dojotoolkit.org/documentation/" hreflang="en">Dojo ShrinkSafe</a></li>
+  <li><a href="http://aspnet.codeplex.com/releases/view/40584" hreflang="en">Ajax Minifier</a></li>
+  <li><a href="https://developers.google.com/closure/compiler/" hreflang="en">Closure</a></li>
 </ul>
-</p>
-<p>
-Most of these systems work by compiling your Javascript into some sort of <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">Abstract Syntax Tree</a> representation, and re-generating more compact JavaScript from the ASK. Sample optimizations including minimizing whitespace, shortening variable names, and rewriting expressions in shorter forms. For example, foo.bar instead of foo[“bar”])<br><br>
-
-Automated minifiers do their job well, but there are some advanced optimizations that <a href="http://www.slideshare.net/ruidlopes/humanpowered-javascript-compression-for-fun-and-gummy-bears">robots have no idea how to do. A new generation of JS hackers are pushing past automated minification methods into <a href="https://github.com/jed/140bytes/wiki/Byte-saving-techniques">hand-generated minification</a>, which often produces smaller files than any of the automated tools can produce. Of course, requiring a bit of insanity to achieve.<br><br>
-
-</p>
-
-
-<h3 id="toc-context">Content specific processing</h3>
-<p>
-While general purpose lossless compression algorithms produce great savings, there’s a common trend of pre-processing your data to get better compression.  The largest wins in most compression systems now come from highly-informed decisions about the format and organization of the information, and exploiting that with grouping and custom compression (this is also called <i>modeling</i>). Most of the time this requires a clear, hard look at your content to determine what types of redundancies you can exploit at a high level. Here are some ideas to get you thinking:</p>
 
 <p>
-<ul><li>For text data, some symbols can be removed from the compressed stream, and recovered on the client at a later time (spaces, for example) which can reduce the overall file size, and doesn’t impact client-side performance too much.</li></ul>
-</p>
-  <figure>
+La plupart opèrent en analysant votre JavaScript pour produire un <a href="http://fr.wikipedia.org/wiki/Arbre_syntaxique_abstrait">Abre Syntaxique Abstrait</a>, puis en re-générant une version plus compacte du JavaScript à partir de là. Parmi les optimisations possibles, on trouve le retrait du <em>whitespace</em> superflu, le raccourcissement des identifiants privés, et la réécriture d’expressions vers des formes plus courtes.  Par exemple, <code>foo.bar</code> au lieu de <code>foo['bar']</code>.</p>
+
+<p>Les minifieurs automatisés font bien leur boulot, mais certaines optimisations avancées sont <a href="http://www.slideshare.net/ruidlopes/humanpowered-javascript-compression-for-fun-and-gummy-bears" hreflang="en">hors de la portée des robots</a>.Une nouvelle génération de hackers JS repousse les limites de la minification au-delà des automatisations à l’aide de <a href="https://github.com/jed/140bytes/wiki/Byte-saving-techniques" hreflang="en">minifications artisanales</a>, qui produisent souvent des fichiers plus compacts que ce que les outils automatisés peuvent générer.  Naturellement, ça demande un peu de folie pour y arriver.</p>
+
+<h3 id="toc-context">Traitements spécifiques au contenu</h3>
+
+<p>Même si les algorithmes de compression sans perte à portée générale produisent déjà d’excellents résultats, il est courant de pré-traiter vos données pour améliorer la compression.  Les plus gros gains dans la plupart des systèmes de compressions viennent désormais de décisions soigneusement informées sur le format et la structure de l’information, et exploitent ces éléments pour personnaliser le regroupement et la compression (on parle de <em>modélisation</em>). L’essentiel du temps cela nécessite de porter un regard clair et attentif sur le contenu pour déterminer quels types de redondances peuvent être exploitées intensivement. Voici quelques exemples pour lancer votre réflexion :</p>
+
+<ul>
+  <li>
+    <p>Pour des données textuelles, certains symboles peuvent être retirés du flux compressés, et restitués côté client plus tard (les espaces, par exemple), ce qui réduit la taille totale du fichier mais n’impacte pas trop la performance client.</p>
+
+    <figure>
       <table width="100%" border="1">
-        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
-        <tr><td width="50%"><center>“1,2,3,4,5,6,7,8,0,2,3,4,2,1,2”</center></td><td width="50%"><center>“123456780234212”0</center></td></tr>
+        <tr><td width="50%"><center>Avant</center></td><td width="50%"><center>Après</center></td></tr>
+        <tr><td width="50%"><center>“1,2,3,4,5,6,7,8,0,2,3,4,2,1,2”</center></td><td width="50%"><center>“123456780234212”</center></td></tr>
       </table>
 
-    <figcaption>
-    Figure 3 - An example of removing known, redundant text. We know in this example that all the values are single digit bytes, we can remove the commas and recover them later.
-    </figcaption>
-   </figure>
-<p>
-<ul><li>If you’re passing around lots of floating point numbers, <a href="http://en.wikipedia.org/wiki/Vector_quantization">quantizing</a> your values is a great idea, as it will likely reduce the number of unique symbols, and also truncate some precision that is needlessly added to the file.</li></ul>
-</p>
-  <figure>
+      <figcaption>
+      Figure 3 - Exemple de retrait de texte connu et redondant. Dans cet exemple on sait que toutes les valeurs seront sur un seul caractère, on peut donc retirer les virgules et les restituer ultérieurement.
+      </figcaption>
+    </figure>
+  </li>
+
+  <li>
+    <p>Si vous transmettez beaucoup de nombres à virgule flottante, la <a href="http://fr.wikipedia.org/wiki/Quantification_vectorielle">quantification</a> de vos données est une excellente idée, dans la mesure où elle va probablement réduire le nombre de symboles uniques, mais aussi tronquer un niveau de précision qui n’était pas utile à votre fichier.</p>
+    <figure>
       <table width="100%" border="1">
-        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
+        <tr><td width="50%"><center>Avant</center></td><td width="50%"><center>Après</center></td></tr>
         <tr><td width="50%"><center>0.123, 1.2345, 21.2165, 21.999, 12.123</center></td><td width="50%"><center>0,0,20,20,10</center></td></tr>
       </table>
 
-    <figcap>Figure 4 - An example of lossy compression. Values are quantized to the smallest multiple of 10 they occupy. This transform cannot be reversed.
-    </figcaption>
-   </figure>
-   <br>
-<p>
-<ul><li>Often times, developers sent around arrays of indexes, which tend to be order-independent. If your index information happens to be a closed interval (ie, all values of X,Y, without any skips) then you could sort your information, and delta encode it for bigger gains.</li></ul>
-</p>
-  <figure>
-      <table width="100%" border="1">
-        <tr><td width="50%"><center>Before</center></td><td width="50%"><center>After</center></td></tr>
-        <tr><td width="50%"><center>[8,2,1,5,3,7,6,3,2,9,0,4]</center></td><td width="50%"><center>sorted = [0,1,2,3,4,5,6,7,8,9,0]<br>
-delta encoded = [0,1,1,1,1,1,1,1,1,1,1]</center></td></tr>
-      </table>
+      <figcaption>Figure 4 - Un exemple de compression à perte.  Les valeurs sont quantifiées au plus proche multiple de 10 inférieur ou égal à elles.  Cette transformation ne peut être inversée.
+      </figcaption>
+    </figure>
+  </li>
+  <li>
+    <p>Souvent, les développeurs transmettent des tableaux d’indices, qui ont tendance à ne pas dépendre de leur ordre.  Si vos infos d’index sont une liste consécutive (pas d’éléments à signification autre, idéalement toutes les valeurs de l’intervalle figurent dans la liste), vous pourriez trier l’information puis l’encoder en tant qu’écarts pour gagner de la place.</p>
 
-    <figcaption>
-    Figure 5 - An example of sorting and delta encoding. We first sort the data, and then encode it, such that each element is represented as the difference between the previous element. Note how the delta encoded form contains many repetitive symbols.
-    </figcaption>
-   </figure>
-   <br>
+    <figure>
+        <table width="100%" border="1">
+          <tr><td width="50%"><center>Avant</center></td><td width="50%"><center>Après</center></td></tr>
+          <tr><td width="50%"><center>[8,2,1,5,3,7,6,3,2,9,0,4]</center></td><td width="50%"><center>sorted = [0,1,2,3,4,5,6,7,8,9]<br>
+  delta encoded = [0,1,1,1,1,1,1,1,1,1]</center></td></tr>
+        </table>
 
-
-<blockquote class="commentary talkinghead talkinghead-cm" id="compressors">
-  Recently, compression guru <a href="http://mattmahoney.net/">Matt Mahoney</a> entered a competition to compress <a href="http://maq.sourceforge.net/fastq.shtml">human DNA sequences</a>. His <a href="https://docs.google.com/a/google.com/document/pub?id=1f-8C-ZfCUTEsO-EqvlcTXQ0M5aYM61Aet902dA8QZZk">results were impressive</a>, and generally centered around extraction, modeling and analysis of the content at hand. The ability to extract similar data types from the interleaved stream into homogeneous blocks allows the compression algorithm to take advantage of local information to aid in compression, often allowing the ability to predict future symbols based on several independent data points.
-</blockquote>
-
-
-
-
-
-<p>
-It’s quite tricky, and cumbersome to write this type of content-specific compression for arbitrary, mixed-content data files. Luckily for you, some people have already started heading down that path:
-<ul>
-<li><a href="http://homes.cs.washington.edu/~suciu/XMILL/">XMILL</a> is an <b>XML</b> specific compression system which extracts out heterogenous types of data, groups them together, and runs various compression algorithms on them.
-<li>Another fantastic application of this is <a href="http://research.microsoft.com/apps/pubs/?id=120832">JSZap</a>, which will dissect your <b>JavaScript</b> into an Abstract Syntax Tree, and then separate out similar data types into separate streams, compressing each stream individually using an optimal compressor for each one.
-<li>You can easily find multiple references in applying this idea to <b>JSON</b> data; once again, you can <a href="http://mainroach.blogspot.com/2013/08/json-compression-transpose-binary.html">preprocess JSON files</a> before passing them off to GZIP in order to produce greater savings.
+      <figcaption>
+      Figure 5 - Un exemple de tri puis encodage delta.  Chaque élément devient l’écart avec l’élément suivant.  Remarquez que le texte résultat contient de nombreuses répétitions, qui se compresseront mieux.
+      </figcaption>
+    </figure>
+  </li>
 </ul>
 
-</p>
+<blockquote class="commentary talkinghead talkinghead-cm" id="compressors">
+  Récemment, le gourou de la compression
+  <a href="http://mattmahoney.net/" hrelfang="en">Matt Mahoney</a> a participé à une compétition qui visait à compresser <a href="http://maq.sourceforge.net/fastq.shtml" hreflang="en">des séquences d’ADN humain</a>. Ses <a href="https://docs.google.com/a/google.com/document/pub?id=1f-8C-ZfCUTEsO-EqvlcTXQ0M5aYM61Aet902dA8QZZk" hreflang="en">résultats étaient impressionnants</a>, et reposaient principalement sur l’extraction, la modélisation et l’analyse du contenu exploité. La capacité à extraire des types de données similaires à partir d’un flux entrelacé de blocs homogènes optimise les algorithmes de compression grâce à ces informations locales et spécifiques au contexte, facilitant notamment la prédiction de symboles ultérieurs dans le flux sur base de quelques points de données indépendants.
+</blockquote>
 
+<p>
+  Écrire ce genre de compression spécifique au contenu peut être compliqué et difficile à maintenir lorsqu’on manipule des fichiers quelconques, aux contenus de multiples natures.  Heureusement pour nous, certaines personnes ont déjà fait de belles avancées dans cette direction :</p>
+
+<ul>
+  <li><a href="http://homes.cs.washington.edu/~suciu/XMILL/" hreflang="en">XMILL</a> est un système de compression spécifique au <b>XML</b> qui extrait des types hétérogènes de données, les regroupe et procède à diverses compressions plus classiques sur eux.</li>
+  <li>Une autre application géniale est <a href="http://research.microsoft.com/apps/pubs/?id=120832" hreflang="en">JSZap</a>, qui dissecte votre <b>JavaScript</b> pour produire un Arbre Syntaxique Abstrait, découpe les types de données similaires en flux distincts, et compresse chaque flux individuellement avec le compresseur le plus approprié.</li>
+  <li>On retrouve de nombreuses références à l’application de cette idée à des données <b>JSON</b> ; là encore, on peut <a href="http://mainroach.blogspot.com/2013/08/json-compression-transpose-binary.html" hreflang="en">pré-traiter des fichiers JSON</a> avant de les passer à GZIP pour améliorer les réductions de taille.</li>
+</ul>
 
 <h2 id="toc-conclusion">Conclusion</h2>
-<p>
-Although images take up 60% of most website bandwidth, you can’t ignore that other data block coming from text content. JavaScript files are getting larger, JSON data is sent around every day, and more users are coming online with poor connections. So make sure that every time you push a build of your site, you follow the <b>Text compression checklist</b>:
+
+<p>Bien que les images continuent à occuper 60% de la bande passante pour la plupart des sites web, vous ne pouvez pas juste ignorer cet autre bloc de données qui arrive au format texte. Les fichiers JavaScript ne cessent de grossir, des données JSON circulent dans tous les sens, et de plus en plus d’utilisateurs sont en ligne au travers de connexions de piètre qualité.  Alors assurez-vous de bien respecter cette <b>checklist de compression textuelle</b> chaque fois que vous déployez un build de votre site :</p>
 
 <ol>
-    <li>Think <b>mobile first</b> about user experiences
-      <ol>
-        <li>What is your page's asset footprint? Can you reduce it?</li>
-        <li>How long will it take for users to load your page on average connections?</li>
-      </ol>
-    </li>
-    <li>Minify all content that can be minified.
-      <ol>
-        <li>CSS and Javascript minifiers are powerful, easy to use, and fit into existing build pipelines.</li>
-        <li>Preprocess your data as much as you can.</li>
-      </ol>
-    </li>
-    <li>Use GZIP compression for all text resources.
-      <ol>
-        <li>Ensure that your server has GZIP compression turned on.</li>
-        <li>Generate better compressed GZIP data offline using <a href="https://code.google.com/p/zopfli/">Zopfli</a> or <a href="http://www.7-zip.org/">7zip</a>.</li>
-      </ol>
-    </li>
-    <li>If you need more, embrace advanced codecs like <a href="http://www.bzip.org/">BZIP2</a> and <a href="http://www.7-zip.org/">LZMA</a>.</li>
-  </ol>
-</p>
-
-
-
-
-
-
-
-
-
-
+  <li>Pensez <b>mobile d’abord</b> pour vos expériences utilisateurs.
+    <ol>
+      <li>Que pèsent les ressources de votre page ? Pouvez-vous réduire ça ?</li>
+      <li>Combien de temps vos utilisateurs vont-ils attendre que votre page soit chargée sur une connexion moyenne ?</li>
+    </ol>
+  </li>
+  <li>Minifiez tous les contenus qui peuvent l’être.
+    <ol>
+      <li>Les minifieurs CSS et JavaScript sont puissants, simples d’emploi, et intégrables dans vos chaînes de <em>build</em>.</li>
+      <li>Passez vos contenus à travers leurs préprocesseurs le plus en amont possible.</li>
+    </ol>
+  </li>
+  <li>Utilisez la compression GZIP pour toutes les ressources textuelles.
+    <ol>
+      <li>Assurez-vous que votre serveur a la compression GZIP activée.</li>
+      <li>Compressez davantage et en amont (mais GZIP) grâce à <a href="https://code.google.com/p/zopfli/">Zopfli</a> ou <a href="http://www.7-zip.org/">7zip</a>.</li>
+    </ol>
+  </li>
+  <li>Si vous avez encore besoin de réduire, utilisez des codecs avancés tels que <a href="http://www.bzip.org/">BZIP2</a> et <a href="http://www.7-zip.org/">LZMA</a>.</li>
+</ol>
 
 
 {% endblock %}
