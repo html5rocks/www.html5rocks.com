@@ -30,7 +30,7 @@ window.requestAnimFrame = (function(){
   var lastScrollY = 0;
 
   function onResize () {
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
   }
 
   function onScroll (evt) {
@@ -38,7 +38,7 @@ window.requestAnimFrame = (function(){
     if(!ticking) {
       ticking = true;
       requestAnimFrame(updateElements);
-      lastScrollY = win.scrollY;
+      lastScrollY = win.pageYOffset;
     }
   }
 
@@ -95,7 +95,7 @@ window.requestAnimFrame = (function(){
 
   (function() {
 
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
 
     blob1.classList.add('force-show');
     blob2.classList.add('force-show');
