@@ -38,14 +38,14 @@ window.requestAnimFrame = (function(){
     canvas.width = 960;
     canvas.height = window.innerHeight;
 
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
   }
 
   function onScroll (evt) {
     if(!ticking) {
       ticking = true;
       requestAnimFrame(updateElements);
-      lastScrollY = win.scrollY;
+      lastScrollY = win.pageYOffset;
     }
   }
 
