@@ -95,8 +95,7 @@ first installation.</p>
 
 <p>This polyfill will add support for CacheStorage.match, Cache.add and
 Cache.addAll which Chrome 40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
-API</a>
-doesn't currently support.</p>
+API</a> doesn't currently support.</p>
 
 <p>Grab <strong>_dist/serviceworker-cache-polyfill.js_</strong> to put somewhere in your site
 and use it in a service worker with the <strong><em>importScripts</em></strong> method. Any script
@@ -104,7 +103,7 @@ which is imported will automatically be cached by the service worker.</p>
 
 <pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
 
-<h2>HTTPS  is Needed</h2>
+<h2>HTTPS is Needed</h2>
 
 <p>During development you'll be able to use service worker through <em>localhost</em>, but
 to deploy it on a site you'll need to have HTTPS setup on your server.</p>
@@ -116,15 +115,11 @@ workers on pages served over HTTPS, so we know the service worker the browser
 receives hasn't been tampered with during its journey through the network.</p>
 
 <p><a href="https://www.google.com/url?q=https%3A%2F%2Fpages.github.com%2F&sa=D&sntz=1&usg=AFQjCNHTeKh4NNMECG4ItyP0UvIZJs6L_Q">Github
-Pages</a>
-are served over HTTPS, so they're a great place to host demos.</p>
+Pages</a> are served over HTTPS, so they're a great place to host demos.</p>
 
 <p>If you want to add HTTPS to your server then you'll need to get a TLS
 certificate and set it up for your server. This varies depending on your setup,
-so check your server's documentation and be sure to check out <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL
-config
-generator</a> for
-best practices.</p>
+so check your server's documentation and be sure to check out <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL config generator</a> for best practices.</p>
 
 <h2>Using Service Worker</h2>
 
@@ -137,15 +132,15 @@ each step.</p>
 a service worker in your page. This tells the browser where your service
 worker JavaScript file lives.</p>
 
-    <pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(function(regstration) {
-      // Registration was successful
-          console.log('ServiceWorker registration successful with scope: ',    registration.scope);
-      }).catch(function(err) {
-            // registration failed :(
-            console.log('ServiceWorker registration failed: ', err);
-      });
-    }</code></pre>
+<pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function(regstration) {
+  // Registration was successful
+      console.log('ServiceWorker registration successful with scope: ',    registration.scope);
+  }).catch(function(err) {
+        // registration failed :(
+        console.log('ServiceWorker registration failed: ', err);
+  });
+}</code></pre>
 
 <p>This code checks to see if the service worker API is available, and if it is,
 the service worker at <code>/sw.js</code> is registered.</p>
@@ -188,18 +183,18 @@ handle the <code>install</code> event.</p>
 <p>For the most basic example, you need to define a callback for the install event
 and decide which files you want to cache.</p>
 
-    <pre class="prettyprint"><code>// The files we want to cache
-    var urlsToCache = [
-      '/index.html',
-      '/styles/main.css'
-      '/script/main.js'
-    ];
+<pre class="prettyprint"><code>// The files we want to cache
+var urlsToCache = [
+  '/index.html',
+  '/styles/main.css'
+  '/script/main.js'
+];
 
-    // Set the callback for the install step
-    self.addEventListener('install', function(event) {
-        // Perform install steps
-      );
-    });</code></pre>
+// Set the callback for the install step
+self.addEventListener('install', function(event) {
+    // Perform install steps
+  );
+});</code></pre>
 
 <p>Inside of our install callback, we need to take the following steps:</p>
 
@@ -209,23 +204,23 @@ and decide which files you want to cache.</p>
 <li>Confirm whether all the required assets are cached or not</li>
 </ol>
 
-    <pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
-    var urlsToCache = [
-      '/index.html',
-      '/styles/main.css'
-      '/script/main.js'
-    ];
+<pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
+var urlsToCache = [
+  '/index.html',
+  '/styles/main.css'
+  '/script/main.js'
+];
 
-    self.addEventListener('install', function(event) {
-      // Perform install steps
-      event.waitUntil(
-        cache.open(CACHE_NAME)
-          .then(function(cache) {
-            console.log('Opened cache');
-            return cache.addAll(urlsToCache);
-          })
-      );
-    });</code></pre>
+self.addEventListener('install', function(event) {
+  // Perform install steps
+  event.waitUntil(
+    cache.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});</code></pre>
 
 <p>Here you can see we call caches.open with our desired cache name, after this we
 call <code>cache.addAll</code> and pass in our array of files. This is a chain of promises
@@ -252,19 +247,19 @@ your cached responses right?</p>
 or refreshes, the service worker will begin to receive fetch events, an example
 of which is below.</p>
 
-    <pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
-      event.respondWith(
-        caches.match(event.request)
-          .then(function(response) {
-            // Cache hit - return response
-            if (response) {
-              return response;
-            }
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
 
-            return fetch(event.request);
-          });
-      );
-    });</code></pre>
+        return fetch(event.request);
+      });
+  );
+});</code></pre>
 
 <p>Here we've defined our fetch event and within the <code>event.respondWith</code>, we pass
 in a promise from <code>caches.match</code>. <code>caches.match</code> will look at the request
@@ -278,47 +273,45 @@ uses any cached assets we cached during the install step.</p>
 <p>If we wanted to cache new requests cumulatively, we can do so by handling the
 response of the fetch request and then adding it to the cache, like below.</p>
 
-    <pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
-      event.respondWith(
-        caches.match(event.request)
-          .then(function(response) {
-            // Cache hit - return response
-            if (response) {
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // IMPORTANT: Clone the request. A request is a stream and can only
+        // be consumed once. Since we are consuming this once by cache and once
+        // by the browser for fetch, we need to clone the response
+        var fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(
+          function(response) {
+            // Check if we received a valid response
+            if(!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
+            // IMPORTANT: Clone the response. A response is a stream and
+            // because we want the browser to consume the response as well as
+            // the cache consuming the response, we need to clone it so
+            // we have 2 stream.
+            var responseToCache = response.clone();
 
-            // IMPORTANT: Clone the request. A request is a stream and can only
-            // be consumed once. Since we are consuming this once by cache and once
-            // by the browser for fetch, we need to clone the response
-            var fetchRequest = event.request.clone();
+            caches.open(CACHE_NAME)
+                .then(function(cache) {
+                  var cacheRequest = event.request.clone();
+                  cache.put(cacheRequest, responseToCache);
+                });
 
-            return fetch(fetchRequest).then(
-              function(response) {
-
-      // Check if we received a valid response
-      if(!response || response.status !== 200 || response.type !== 'basic') {
-        return response;
-      }
-
-        // IMPORTANT: Clone the response. A response is a stream and
-                // because we want the browser to consume the response as well as
-                // the cache consuming the response, we need to clone it so
-        // we have 2 stream.
-                var responseToCache = response.clone();
-
-                caches.open(CACHE_NAME)
-                    .then(function(cache) {
-                      var cacheRequest = event.request.clone();
-                      cache.put(cacheRequest, responseToCache);
-                    });
-
-                return response;
-              }
-            );
-          })
-      );
-    });</code></pre>
+            return response;
+          }
+        );
+      })
+    );
+});</code></pre>
 
 <p>What we are doing is this:</p>
 
@@ -377,22 +370,22 @@ means in the install step we'd create two caches, 'pages-cache-v1' and
 service worker and deleting any caches which aren't defined in the cache
 whitelist.</p>
 
-  <pre class="prettyprint"><code>self.addEventListener('activate', function(event) {
+<pre class="prettyprint"><code>self.addEventListener('activate', function(event) {
 
-      var cacheWhitelist = ['pages-cache-v1', 'blog-posts-cache-v1'];
+  var cacheWhitelist = ['pages-cache-v1', 'blog-posts-cache-v1'];
 
-      event.waitUntil(
-        caches.keys().then(function(cacheNames) {
-          return Promise.all(
-            cacheNames.map(function(cacheName) {
-              if (cacheWhitelist.indexOf(cacheName) === -1) {
-                return caches.delete(cacheName);
-              }
-            })
-          );
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
         })
       );
-    });</code></pre>
+    })
+  );
+});</code></pre>
 
 <h1>Rough Edges &amp; Gotchas</h1>
 
@@ -424,9 +417,9 @@ cache is only available in the service worker.</p>
 <p>When you use fetch, by default, requests won't contain credentials such as
 cookies. If you want credentials, instead call:</p>
 
-    <pre class="prettyprint"><code>fetch(url, {
-      credentials: 'include'
-    })</code></pre>
+<pre class="prettyprint"><code>fetch(url, {
+  credentials: 'include'
+})</code></pre>
 
 <p>This behaviour is on purpose, and is arguably better than XHR's more complex
 default of sending credentials if the URL is same-origin, but omiting them
@@ -442,11 +435,11 @@ although this will cause an <a href="https://www.google.com/url?q=https%3A%2F%2F
 response</a>,
 which means you won't be able to tell if the response was successful or not.</p>
 
-          <pre class="prettyprint"><code>cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
-            return new Request(urlToPrefetch, { mode: 'no-cors' });
-          })).then(function() {
-            console.log('All resources have been fetched and cached.');
-          });</code></pre>
+<pre class="prettyprint"><code>cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+  return new Request(urlToPrefetch, { mode: 'no-cors' });
+})).then(function() {
+  console.log('All resources have been fetched and cached.');
+});</code></pre>
 
 <h2>fetch() Doesn't Follow 30x Redirects</h2>
 
@@ -477,7 +470,6 @@ dandy to do but there is one problem with this.</p>
 
 <p>If we have the following two images:</p>
 
-
 <table>
 <tr>
 <td>Screen Density</td>
@@ -498,7 +490,7 @@ dandy to do but there is one problem with this.</p>
 
 <p>In a srcset image, we'd have some markup like this:</p>
 
-    <pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
 
 <p>If we are on a 2x display, then the browser will opt to download 'image-2x.png',
 if we are offline you could catch this request and return 'image-src.png'
@@ -507,7 +499,7 @@ takes into account the extra pixels on a 2x screen, so the image will appear as
 200x200 CSS pixels instead of 400x400 CSS pixels. The only way around this is to
 set a fixed height and width on the image.</p>
 
-    <pre ><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x"
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x"
 style="width:400px; height: 400px;" /&gt;</code></pre>
 
 <img src="./images/sw-responsive-img-example.png" width="225" height="409" />
