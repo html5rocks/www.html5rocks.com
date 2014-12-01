@@ -28,8 +28,8 @@ experience is.</p>
 <p>Before service worker there was one other API that would give users an offline
 experience on the web called <a href="http://www.html5rocks.com/en/tutorials/appcache/beginner/">App
 Cache</a>. The major
-issue with App Cache is the [number of gotcha's that
-exist](http://alistapart.com/article/application-cache-is-a-douchebag) as well
+issue with App Cache is the <a href="http://alistapart.com/article/application-cache-is-a-douchebag">number
+of gotcha's that exist</a> as well
 as the design working particularly well for single page web apps, but not for
 multi-page sites. Service workers have been designed to avoid these common pain
 points.</p>
@@ -70,7 +70,7 @@ all the files are cached successfully, then the service worker becomes
 installed. If any of the files fail to download and cache, then the install step
 will fail and the service worker won't activate (i.e. won't be installed). If
 that happens, don't worry, it'll try again next time. But that means if it
-_does_ install, you <strong>know</strong> you've got those static assets in the cache.</p>
+<em>does</em> install, you <strong>know</strong> you've got those static assets in the cache.</p>
 
 <p>When we're installed, the activation step will follow and this is a great
 opportunity for handling any management of old caches, which we'll cover during
@@ -94,10 +94,10 @@ first installation.</p>
 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a>.</p>
 
 <p>This polyfill will add support for CacheStorage.match, Cache.add and
-Cache.addAll which Chrome 40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
+Cache.addAll which Chrome M40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
 API</a> doesn't currently support.</p>
 
-<p>Grab <strong>_dist/serviceworker-cache-polyfill.js_</strong> to put somewhere in your site
+<p>Grab <strong><em>dist/serviceworker-cache-polyfill.js</em></strong> to put somewhere in your site
 and use it in a service worker with the <strong><em>importScripts</em></strong> method. Any script
 which is imported will automatically be cached by the service worker.</p>
 
@@ -159,7 +159,7 @@ pages whose URL starts with <code>/example/</code> (i.e. /example/page1/,
 /example/page2/).</p>
 
 <p>Now you can check that a service worker is enabled by going to
-chrome://inspect/#service-workers and looking for your site.</p>
+<em>chrome://inspect/#service-workers</em> and looking for your site.</p>
 
 <img src="./images/sw-chrome-inspect.png" width="624" height="316" />
 
@@ -226,7 +226,7 @@ call <code>cache.addAll</code> and pass in our array of files. This is a chain o
 (<code>caches.open</code> and <code>cache.addAll</code>). <code>event.waitUntil</code> takes a promise and uses it
 to know how long installation takes, and whether it succeeded.</p>
 
-<p>If all the files passed into are successfully cached, then the service worker
+<p>If all the files are successfully cached, then the service worker
 will be installed. If <strong>any</strong> of the files fail to download, then the install
 step will fail. This allows you to rely on having all the assets that you
 defined, but does mean you need to be careful with the list of files you decide
@@ -266,7 +266,7 @@ in a promise from <code>caches.match</code>. <code>caches.match</code> will look
 and find any cached results from any of the caches your service worker created.</p>
 
 <p>If we have a matching response, we return the cached value, otherwise we return
-the result of a call to fetch, which will make a network request and return the
+the result of a call to <code>fetch</code>, which will make a network request and return the
 data if anything can be retrieved from the network. This is a simple example and
 uses any cached assets we cached during the install step.</p>
 
@@ -317,7 +317,7 @@ response of the fetch request and then adding it to the cache, like below.</p>
 <p>What we are doing is this:</p>
 
 <ol>
-<li>Add a callback to `.then` on the fetch request</li>
+<li>Add a callback to <code>.then</code> on the fetch request</li>
 <li>Once we get a response, we perform the following checks:</li>
   <ol>
     <li>Ensure the response is valid.</li>
@@ -397,11 +397,11 @@ mindful of.</p>
 <h3>If Installation Fails, We're Not so Good at Telling You About It</h3>
 
 <p>If a worker registers, but then doesn't appear in
-chrome://inspect/#service-workers or chrome://serviceworker-internals, it's
-likely it failed to install due an error being thrown, or a rejected promise
+<code>chrome://inspect/#service-workers</code> or <code>chrome://serviceworker-internals</code>, it's
+likely its failed to install due to an error being thrown, or a rejected promise
 being passed to <code>event.waitUntil</code>.</p>
 
-<p>To work around this, go to chrome://serviceworker-internals and check "Opens the
+<p>To work around this, go to <code>chrome://serviceworker-internals</code> and check "Opens the
 DevTools window for service worker on start for debugging", and put a debugger;
 statement at the start of your install event. This, along with "Pause on
 uncaught exceptions", should reveal the issue.</p>
@@ -461,13 +461,13 @@ have a few options:</p>
 <li>Install a single high-res version of the image</li>
 </ol>
 
-<p>Realistically you should be picking option 2 or 3 since download all of the
+<p>Realistically you should be picking option 2 or 3 since downloading all of the
 images would be a waste of memory.</p>
 
 <p>Let's assume you go for the low res version at install time and you want to try
 and retrieve higher res images from the network when the page is loaded, but if
-those high res images fail, fallback to the low res version. This is fine and
-dandy to do but there is one problem with this.</p>
+the high res images fail, fallback to the low res version. This is fine and
+dandy to do but there is one problem.</p>
 
 <p>If we have the following two images:</p>
 
@@ -495,7 +495,7 @@ dandy to do but there is one problem with this.</p>
 
 <p>If we are on a 2x display, then the browser will opt to download 'image-2x.png',
 if we are offline you could catch this request and return 'image-src.png'
-instead since if it's cached, however the browser will expect an image which
+instead if it's cached, however the browser will expect an image which
 takes into account the extra pixels on a 2x screen, so the image will appear as
 200x200 CSS pixels instead of 400x400 CSS pixels. The only way around this is to
 set a fixed height and width on the image.</p>
@@ -525,7 +525,7 @@ that you may find useful.</p>
 <h2 id="toc-help">Get Help</h2>
 
 If you get stuck then please post your questions on Stackoverflow and use the
-<a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> tag so that we can keep a track of issues, try and help as much
+<a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> tag so that we can keep a track of issues and try and help as much
 as possible.
 
 {% endblock %}
