@@ -12,7 +12,7 @@ functionality, that would normally require a native application, are coming to
 the web. Service workers provide the technical foundation that all these
 features will rely on.</p>
 
-<h1 id="toc-what">What is a Service Worker?</h1>
+<h2 id="toc-what">What is a Service Worker?</h2>
 
 <p>A service worker is a script that is run by your browser in the background,
 separate from a web page, opening the door to features which don't need a web
@@ -56,7 +56,7 @@ points.</p>
   article</a>.</li>
 </ul>
 
-<h1 id="lifecycle">Service Worker Lifecycle</h1>
+<h2 id="lifecycle">Service Worker Lifecycle</h2>
 
 <p>A service worker has a lifecycle which is completely separate from your web
 page.</p>
@@ -88,7 +88,7 @@ first installation.</p>
 
 <img src="images/sw-lifecycle.png" width="624" height="609" />
 
-<h1 id="toc-before">Before We Start</h1>
+<h2 id="toc-before">Before We Start</h2>
 
 <p>Grab the caches polyfill from this repository
 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a>.</p>
@@ -103,7 +103,7 @@ which is imported will automatically be cached by the service worker.</p>
 
 <pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
 
-<h2>HTTPS is Needed</h2>
+<h3>HTTPS is Needed</h3>
 
 <p>During development you'll be able to use service worker through <em>localhost</em>, but
 to deploy it on a site you'll need to have HTTPS setup on your server.</p>
@@ -121,12 +121,12 @@ Pages</a> are served over HTTPS, so they're a great place to host demos.</p>
 certificate and set it up for your server. This varies depending on your setup,
 so check your server's documentation and be sure to check out <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL config generator</a> for best practices.</p>
 
-<h2>Using Service Worker</h2>
+<h3>Using Service Worker</h3>
 
 <p>Now that we've got the Polyfill and covered HTTPS, let's look at what we do in
 each step.</p>
 
-<h2>How to Register and Install a Service Worker</h2>
+<h3>How to Register and Install a Service Worker</h3>
 
 <p>To install a service worker you need to kick start the process by <strong>registering</strong>
 a service worker in your page. This tells the browser where your service
@@ -174,7 +174,7 @@ that you can close and reopen knowing that the previous service worker won't
 affect the new window. Any registrations and caches created from within an
 Incognito window will be cleared out once that window is closed.</p>
 
-<h2>Service Worker Install Step</h2>
+<h3>Service Worker Install Step</h3>
 
 <p>After a controlled page kicks off the registration process, let's shift to the
 point of view of the service worker script, which is given the opportunity to
@@ -237,7 +237,7 @@ getting installed.</p>
 <p>This is just one example, you can perform other tasks in the install event or
 avoid setting an install event listener altogether.</p>
 
-<h2>How to Cache and Return Requests</h2>
+<h3>How to Cache and Return Requests</h3>
 
 <p>Now that you've installed a service worker, you probably want to return one of
 your cached responses right?</p>
@@ -334,7 +334,7 @@ response of the fetch request and then adding it to the cache, like below.</p>
    need to clone it so we can send one to the browser and one to the cache.</li>
 </ol>
 
-<h1 id="toc-how">How to Update a Service Worker</h1>
+<h2 id="toc-how">How to Update a Service Worker</h2>
 
 <p>There will be a point in time where your service worker will need updating. When that time comes, you'll need to follow these steps:</p>
 
@@ -387,13 +387,13 @@ whitelist.</p>
   );
 });</code></pre>
 
-<h1 id="toc-rough">Rough Edges &amp; Gotchas</h1>
+<h2 id="toc-rough">Rough Edges &amp; Gotchas</h2>
 
 <p>This stuff is really new. Here's a collection of issues that get in the way.
 Hopefully this section can be deleted soon, but for now these are worth being
 mindful of.</p>
 
-<h2>If Installation Fails, We're Not so Good at Telling You About It</h2>
+<h3>If Installation Fails, We're Not so Good at Telling You About It</h3>
 
 <p>If a worker registers, but then doesn't appear in
 chrome://inspect/#service-workers or chrome://serviceworker-internals, it's
@@ -405,14 +405,14 @@ DevTools window for service worker on start for debugging", and put a debugger;
 statement at the start of your install event. This, along with "Pause on
 uncaught exceptions", should reveal the issue.</p>
 
-<h2>fetch() is Only Available in Service Workers</h2>
+<h3>fetch() is Only Available in Service Workers</h3>
 
 <p><code>fetch</code> will eventually be available from pages, but Chrome's implementation
 currently isn't. The cache API should also be available from pages, but today,
 cache is only available in the service worker.</p>
 
-<h2>The Defaults of fetch()</h2>
-<h3>No Credentials by Default</h3>
+<h3>The Defaults of fetch()</h3>
+<h4>No Credentials by Default</h4>
 
 <p>When you use fetch, by default, requests won't contain credentials such as
 cookies. If you want credentials, instead call:</p>
@@ -427,7 +427,7 @@ otherwise. Fetch's behaviour is more like other CORS requests, such as &lt;img
 crossorigin&gt;, which never sends cookies unless you opt-in with &lt;img
 crossorigin="use-credentials"&gt;.</p>
 
-<h3>Non-CORS Fail by Default</h3>
+<h4>Non-CORS Fail by Default</h4>
 
 <p>By default, fetching a resource from a third party URL will fail if it doesn't
 support CORS. You can add a non-CORS option to the Request to overcome this,
@@ -441,12 +441,12 @@ which means you won't be able to tell if the response was successful or not.</p>
   console.log('All resources have been fetched and cached.');
 });</code></pre>
 
-<h2>fetch() Doesn't Follow 30x Redirects</h2>
+<h3>fetch() Doesn't Follow 30x Redirects</h3>
 
 <p>Unfortunately redirects will not be followed in a <code>fetch()</code> response. This is a
 bug in Chrome: <a href="https://code.google.com/p/chromium/issues/detail?id=402389">https://code.google.com/p/chromium/issues/detail?id=402389</a></p>
 
-<h2>Handling Responsive Images</h2>
+<h3>Handling Responsive Images</h3>
 
 <p>A src-set or picture element will select the the most appropriate image asset at
 run time and make a network request.</p>
@@ -508,20 +508,20 @@ style="width:400px; height: 400px;" /&gt;</code></pre>
 more difficult and will depend heavily on how your images are created and used,
 but you may be able to use a similar approach to srcset.</p>
 
-<h2>Changing URL Hash Bug</h2>
+<h3>Changing URL Hash Bug</h3>
 
 <p>In M40 a bug exists in Chrome's implementation that causes service worker to no
 longer work when the hash of the URL is changed.</p>
 
 <p>You can find more info here: <a href="https://code.google.com/p/chromium/issues/detail?id=433708">https://code.google.com/p/chromium/issues/detail?id=433708</a></p>
 
-<h1 id="toc-learn">Learn More</h1>
+<h2 id="toc-learn">Learn More</h2>
 
 <p>There is a list of documentation on service worker being maintained at
 <a href="https://jakearchibald.github.io/isserviceworkerready/resources.html">https://jakearchibald.github.io/isserviceworkerready/resources.html</a>
 that you may find useful.</p>
 
-<h1 id="toc-help">Get Help</h1>
+<h2 id="toc-help">Get Help</h2>
 
 If you get stuck then please post your questions on Stackoverflow and use the
 <a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> tag so that we can keep a track of issues, try and help as much
