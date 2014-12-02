@@ -51,7 +51,7 @@ points.</p>
   reuse across restarts, service workers do have access to the
   <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a>
   API.</li>
-<li>Service worker's make extensive use of promises, so if you're new to promises,
+<li>Service workers make extensive use of promises, so if you're new to promises,
   then you should stop reading this and check out <a href="http://www.html5rocks.com/en/tutorials/es6/promises/">Jake Archibald's
   article</a>.</li>
 </ul>
@@ -133,7 +133,7 @@ a service worker in your page. This tells the browser where your service
 worker JavaScript file lives.</p>
 
 <pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(function(regstration) {
+  navigator.serviceWorker.register('/sw.js').then(function(registration) {
     // Registration was successful
     console.log('ServiceWorker registration successful with scope: ',    registration.scope);
   }).catch(function(err) {
@@ -213,7 +213,7 @@ var urlsToCache = [
 self.addEventListener('install', function(event) {
   // Perform install steps
   event.waitUntil(
-    cache.open(CACHE_NAME)
+    caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
@@ -328,9 +328,9 @@ response of the fetch request and then adding it to the cache, like below.</p>
   </ol>
 <li>If we pass the checks, we
    <a href="https://www.google.com/url?q=https%3A%2F%2Ffetch.spec.whatwg.org%2F%23dom-response-clone&sa=D&sntz=1&usg=AFQjCNGla6bxzm1bb1q6xGeBonsra6Mr9w">clone</a>
-   the response. The reason for this is that because the the response is a
+   the response. The reason for this is that because the response is a
    <a href="https://www.google.com/url?q=https%3A%2F%2Fstreams.spec.whatwg.org%2F&sa=D&sntz=1&usg=AFQjCNFsF1mjSSDZt4qfhHxlSOZ2pRPU7Q">stream</a>,
-   the body of which can only be consumed once. Since we want to return the
+   the body can only be consumed once. Since we want to return the
    response for the browser to use, as well as pass it to the cache to use, we
    need to clone it so we can send one to the browser and one to the cache.</li>
 </ol>
@@ -449,7 +449,7 @@ bug in Chrome: <a href="https://code.google.com/p/chromium/issues/detail?id=4023
 
 <h3>Handling Responsive Images</h3>
 
-<p>A src-set or picture element will select the the most appropriate image asset at
+<p>A src-set or picture element will select the most appropriate image asset at
 run time and make a network request.</p>
 
 <p>For service worker, if you wanted to cache an image during the install step, you

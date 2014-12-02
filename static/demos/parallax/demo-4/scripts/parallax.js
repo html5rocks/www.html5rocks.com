@@ -58,13 +58,13 @@
     }
     renderer.setSize(960, window.innerHeight);
 
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
   }
 
   function onScroll (evt) {
     if(!ticking) {
       ticking = true;
-      lastScrollY = win.scrollY;
+      lastScrollY = win.pageYOffset;
       requestAnimationFrame(updateElements);
     }
   }
