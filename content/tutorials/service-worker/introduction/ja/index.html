@@ -1,0 +1,377 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳</strong>: <a href="https://profiles.google.com/myakura.web">Masataka Yakura</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- in sync with f70073e -->
+
+<p>リッチなオフライン体験、定期的なバックグラウンド同期、プッシュ通知など、これまでネイティブアプリを必要としていた機能が Web にもやってきます。そして、それらの機能が提供される基盤技術が Service Worker なのです。
+
+<h2 id="toc-what">Service Worker とは</h2>
+
+<p>Service Worker はブラウザが Web ページとは別にバックグラウンドで実行するスクリプトで、Web ページやユーザのインタラクションを必要としない機能を Web にもたらします。将来的にはプッシュメッセージ、バックグラウンド同期、ジオフェンシングなどが導入されるでしょう。しかし最初は、ネットワークリクエストへの介入や処理機能と、レスポンスをプログラムから操作できるキャッシュ機能に限定されます。</p>
+
+<p>この API にとてもわくわくするのは、オフライン体験をサポートし、そしてその体験を開発者が完全にコントロールできることにあります。</p>
+
+<p>Service Worker 以前にも、オフライン体験を Web にもたらすものとして <a href="http://www.html5rocks.com/en/tutorials/appcache/beginner/">AppCache</a> というものがありました。しかし AppCache の重大な問題として、<a href="http://alistapart.com/article/application-cache-is-a-douchebag">問題がたくさん</a>あったこと、シングルページ Web アプリにはうまく動いてくれたものの、複数のページにまたがるサイトではうまく動いてくれない設計がありました。Service Worker はこれらの弱点を避けるように設計されています。</p>
+
+<p>Service Worker について、知っておきたいことを挙げます。</p>
+
+<ul>
+<li>Service Worker は <a href="http://www.html5rocks.com/en/tutorials/workers/basics/">JavaScript Worker</a> のひとつです。ですので DOM に直接アクセスできません。Service Worker がコントロールするページとの通信は、<a href="https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage"><code>postMessage</code></a> インターフェースから送られるメッセージに返信することで行えます。DOM を操作したい場合は、コントロールするページ経由で行えます。</li>
+<li>Service Worker はプログラム可能なネットワークプロキシです。ページからのネットワークリクエストをコントロールできます。</li>
+<li>Service Worker は使用されていな間は終了され、必要な時になったら起動します。ですので <code>onfetch</code>、<code>onmessage</code> ハンドラ内でグローバルに設定したステートに依存できません。持続的で再利用可能な情報を Service Worker のライフサイクル間で共有したい場合は、<a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a> API にアクセスしなければいけません。</li>
+<li>Service Worker は JavaScript の Promises を多用します。Promises についてよく知らない方はこの記事を読むのをいったん止めて、<a href="/tutorials/es6/promises/">Jake Archibald の記事</a> を読みましょう。</li>
+</ul>
+
+<h2 id="lifecycle">Service Worker のライフサイクル</h2>
+
+<p>Service Worker は Web ページとはまったく異なるライフサイクルで動作します。</p>
+
+<p>Service Worker を Web ページにインストールするには、ページの JavaScript から<strong>登録</strong>しなければいけません。Service Worker の登録をすると、ブラウザは Service Worker のインストール処理をバックグラウンドで実行します。</p>
+
+<p>インストールは、静的なアセットをキャッシュするために使われることが多いでしょう。すべてのファイルがキャッシュされたら、Service Worker のインストールは完了です。もしファイルがひとつでもダウンロード失敗、もしくはキャッシュに失敗した場合、インストールステップは失敗し Service Worker はアクティベートされません（つまりインストールされません）。失敗しても心配しないでください、次にまたトライしますから。これがどういう事かというと、Service Worker がインストールされたなら、静的なアセットが<strong>確実に</strong>キャッシュされているということなのです。</p>
+
+<p>インストールが完了したら、アクティベーション処理が続きます。ここでは古いキャッシュの処理などに最適です。これは <a href="#toc-how">Service Worker の更新</a>を説明する時に紹介しますね。</p>
+
+<p>アクティベーションステップが終了したら、Service Worker はそのスコープ内のすべてのページをコントロールします。しかし、Service Worker を登録したページについては登録時点ではコントロールされず、次に読み込まれた際にコントロールされます。Service Worker が管理中、その状態は2つしかありません。メモリ節約のため Service Worker が終了されているか、ページで起こったネットワークリクエストまたはメッセージに対して <code>fetch</code> イベントもしくは <code>message</code> イベントの処理を行おうとしているかのどちらかです。</p>
+
+<p>次の図は最初のインストール後の Service Worker のライフサイクルをおおまかに図示したものです。</p>
+
+<img src="images/sw-lifecycle.png" />
+
+<h2 id="toc-before">はじめる前に</h2>
+
+<p>次のレポジトリから Cache polyfill をダウンロードしましょう：
+<a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a></p>
+
+<p>この polyfill は <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
+API</a> のうち、Chrome 40 ではまだ実装されていない <code>CacheStorage.match</code>, <code>Cache.add</code>,
+<code>Cache.addAll</code> をサポートするものです。</p>
+
+<p><strong><code>dist/serviceworker-cache-polyfill.js</code></strong> をサイトのどこかにコピーし、Service Worker のスクリプトから <strong><code>importScripts</code></strong> メソッドで呼び出します。インポートされたすべてのスクリプトは Service Worker によってキャッシュされます。</p>
+
+<pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
+
+<h3>HTTPS が必須</h3>
+
+<p>Service Worker は、開発中は <em>localhost</em> で動作しますが、デプロイ時にはサーバに HTTPS を設定しなければいけません。</p>
+
+<p>Service Worker を使うと接続へのハイジャック、改ざん、フィルタリングができてしまいます。とても強力です。良いことに使えばそれでよいのですが、中間者（man-in-the-middle）はそうではないかもしれません。これを防ぐため、Service Worker は HTTPS で提供されるページのみに登録できるようになっています。こうすることでブラウザが受け取る Service Worker は、ネットワークの旅の途中で改ざんされていないことを保証できます。</p>
+
+<p><a href="https://pages.github.com/">GitHub Pages</a> は HTTPS で提供されるので、デモをホストするには絶好の環境です。</p>
+
+<p>サーバに HTTPS を設定したい場合は、TLS 証明書を取得しサーバにセットアップしなければなりません。セットアップ方法は環境によるので、サーバのドキュメントを読み、そして <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla の SSL コンフィグジェネレータ</a>を使ってベストプラクティスを得てください。</p>
+
+<h3>Service Worker を使ってみる</h3>
+
+<p>Polyfill と HTTPS の説明をしたので、各ステップでなにをするか見ていきましょう。</p>
+
+<h3>Service Worker の登録とインストール</h3>
+
+<p>Service Worker をインストールするには、ページから Service Worker を<strong>登録</strong>しなければいけません。登録によって、ブラウザに Service Worker の JavaScript ファイルの場所を知らせられます。</p>
+
+<pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+    // 登録成功
+    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+  }).catch(function(err) {
+    // 登録失敗 :(
+    console.log('ServiceWorker registration failed: ', err);
+  });
+}</code></pre>
+
+<p>このコードはまず、Service Worker API が存在しているかをチェックし、あればさらに <code>/sw.js</code> にある Service Worker が登録されてるかをチェックします。</p>
+
+<p><code>register</code> メソッドのコール回数について心配することはありません。ブラウザは Service Worker が登録されているかを調べてから登録処理をするかしないか判断してくれます。</p>
+
+<p><code>register</code> メソッドについて気にかけておきたいところが、Service Worker ファイルの場所です。この例の場合、Service Worker のファイルはドメインのルートにあります。これはこの Service Worker のスコープが origin 全体ということです。つまり、この Service Worker はこのドメイン下ですべての <code>fetch</code> イベントを受け取ります。もし <code>/example/sw.js</code> という Service Worker ファイルを登録した場合、その Service Worker はページのパスが <code>/example/</code> から始まるもの（例：<code>/example/page1/</code>, <code>/example/page2</code>）のみの <code>fetch</code> イベントを受け取ります。</p>
+
+<p>Service Worker が有効になっているかは、<code>chrome://inspect/#service-workers</code> の自分のサイトのセクションから確かめられます。</p>
+
+<img src="./images/sw-chrome-inspect.png" />
+
+<p>Service Worker が Chrome で実装された当初は、<code>chrome://serviceworker-internals</code> からその詳細を確認できました。これも Service Worker のライフサイクルを知りたいというだけの場合には有用かもしれません。ただもし今後 <code>chrome://inspect/#service-workers</code> に置き換わってもびっくりしないでくださいね。</p>
+
+<p>Service Worker のテストはシークレットウインドウで行うと便利です。というのもウインドウを閉じてまた新しいウインドウにすれば、古い Service Worker に影響されることがないからです。シークレットウインドウへの登録やキャッシュは、そのウインドウが閉じられたらすべて消去されます。</p>
+
+<h3>Service Worker のインストール</h3>
+
+<p>コントロールされたページが登録プロセスを発生させると、主役は Service Worker のスクリプトに移ります。そしてスクリプトは <code>install</code> イベントを処理します。</p>
+
+<p>最も簡単なケースとして、<code>install</code> イベントにコールバックを定義し、キャッシュさせたいファイルを指定します。</p>
+
+<pre class="prettyprint"><code>// キャッシュさせたいファイル
+var urlsToCache = [
+  '/index.html',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+// インストール処理のコールバックをセット
+self.addEventListener('install', function(event) {
+  // インストール処理
+});</code></pre>
+
+<p>セットしたコールバックでは以下を実行しています。</p>
+
+<ol>
+<li>キャッシュを開く</li>
+<li>ファイルをキャッシュさせる</li>
+<li>必要なアセットがすべてキャッシュされたかを確認する</li>
+</ol>
+
+<pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
+var urlsToCache = [
+  '/index.html',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+self.addEventListener('install', function(event) {
+  // インストール処理
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});</code></pre>
+
+<p>ここでは、好きなキャッシュ名をつけ <code>caches.open</code> をコールし、その後キャッシュさせたいファイルの配列を <code>cache.addAll</code> に渡しています。一連の処理は Promise をチェーンさせています（<code>caches.open</code> と <code>cache.addAll</code>）。 <code>event.waitUntil</code> は Promise をとり、インストールにかかる時間と、与えた処理が成功したかどうかを知るために使われます。</p>
+
+<p>渡したファイルがすべて無事にキャッシュされた場合、Service Worker のインストールが完了します。渡したファイルのうち<strong>どれかひとつでも</strong>ダウンロードに失敗した場合、インストールは失敗します。こうすることによりすべてのアセットが存在していると保証できますが、インストール時にキャッシュさせたいファイルを決めなければいけません。ファイルの数が大きくなれば、キャッシュが失敗して Service Worker がインストールされない確率も高くなります。</p>
+
+<p>これはあくまで一例です。<code>install</code> イベントでは他の処理もできますし、<code>install</code> にイベントリスナを設定しなくてもいいのです。</p>
+
+<h3>リクエストをキャッシュしてから返す</h3>
+
+<p>Service Worker がインストールされた今、あなたがしたいのはキャッシュさせたレスポンスを返すことですよね？</p>
+
+<p>Service Worker がインストールされた状態で、他のページヘ移動したりページを更新したりすると、Service Worker は <code>fetch</code> イベントを受け取ります。</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // キャッシュがあったのでそのレスポンスを返す
+        if (response) {
+          return response;
+        }
+
+        return fetch(event.request);
+      });
+  );
+});</code></pre>
+
+<p>ここでは <code>fetch</code> イベント内に <code>event.respondWith</code> を定義しています。その中には <code>caches.match</code> の Promise を渡しています。<code>caches.match</code> はリクエストを見て、Service Worker が生成したキャッシュの中に該当するものがあるかを探します。</p>
+
+<p>ここでは、マッチするレスポンスがある場合はその値を返し、そうでない場合はコール結果を <code>fetch</code> に渡しています。これによりネットワークリクエストが発生し、結果が得られたらそれを返します。インストール時にキャッシュしたアセットは基本的にこうやって使います。</p>
+
+<p>もし新しいリクエストを逐次キャッシュさせたい場合は、<code>fetch</code> リクエストのレスポンスを処理しキャッシュに追加すればいいのです。</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // キャッシュがあったのでレスポンスを返す
+        if (response) {
+          return response;
+        }
+
+        // 重要：リクエストを clone する。リクエストは Stream なので
+        // 一度しか処理できない。ここではキャッシュ用、fetch 用と2回
+        // 必要なので、リクエストは clone しないといけない
+        var fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest)
+          .then(function(response) {
+            // レスポンスが正しいかをチェック
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // 重要：レスポンスを clone する。レスポンスは Stream で
+            // ブラウザ用とキャッシュ用の2回必要。なので clone して
+            // 2つの Stream があるようにする
+            var responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(function(cache) {
+                var cacheRequest = event.request.clone();
+                cache.put(cacheRequest, responseToCache);
+              });
+
+            return response;
+          });
+      })
+  );
+});</code></pre>
+
+<p>ここでは以下のようなことを実行しています。</p>
+
+<ol>
+<li><code>fetch</code> リクエストに対する <code>.then()</code> にコールバックを追加</li>
+<li>レスポンスを取得したら、以下のチェックを行う</li>
+  <ol>
+  <li>レスポンスが正しいかを保証</li>
+  <li>レスポンスのステータスコードが <code>200</code> かを確認</li>
+  <li>レスポンスの型が <code>basic</code> かを確認。これは同じ origin からのリクエストということを表します。これはまた、サードパーティのアセットがキャッシュされないことも意味します</li>
+  </ol>
+<li>チェックが通れば、レスポンスを <a href="https://fetch.spec.whatwg.org/#dom-response-clone"><code>clone</code></a> する。これはレスポンスが <a href="https://streams.spec.whatwg.org/">Stream</a> なので、その中身を一度しか使えないからです。この例ではレスポンスをブラウザに返すだけではなく、キャッシュに渡さなければいけません。ですのでレスポンスを clone し、ひとつをブラウザに、もうひとつをキャッシュに渡します。</li>
+</ol>
+
+<h2 id="toc-how">Service Worker の更新</h2>
+
+<p>開発が進むと、Service Worker を更新しなければいけない時が来るでしょう。
+Service Worker の更新は以下のステップで行います。</p>
+
+<ol>
+<li>Service Worker の JavaScript ファイルを更新します</li>
+  <ol>
+  <li>ユーザーがあなたのサイトに移動してきた時、ブラウザは Service Worker を定義する JavaScript ファイルを再度ダウンロードしようとします。現在ブラウザが保持しているファイルとダウンロードしようとするファイルにバイト差異がある場合、それは「新しいもの」と認識されます。</li>
+  </ol>
+<li>新しい Service Worker がスタートし、<code>install</code> イベントが発火します</li>
+<li>この時点では、まだ古い Service Worker が現在のページをコントロールしているため、新しい Service Worker は <code>waiting</code> 状態になります</li>
+<li>開かれているページが閉じられたら、古い Service Worker は終了され、新しい Service Worker がページをコントロール可能になります</li>
+<li>新しい Service Worker がページをコントロール可能になったら、<code>activate</code> イベントが発火します</li>
+</ol>
+
+<p><code>activate</code> のコールバックで行いたいのが、キャッシュの管理です。なぜかというと、古いキャッシュをインストール時に削除すると、現在のページを管理する古い Service Worker がそのキャッシュからリソースを提供できなくなるからです。</p>
+
+<p>たとえば、「my-site-cache-v1」という名前のキャッシュがあり、これをページ用、ブログ用のふたつのキャッシュに分割したいとしましょう。インストール時に「pages-cache-v1」と「blog-posts-cache-v1」というふたつのキャッシュを作り、アクティベーション時に古い「my-site-cache-v1」を削除するわけです。</p>
+
+<p>次のコードは Service Worker 中のキャッシュすべてをループ処理し、ホワイトリストにないものを削除するものです。</p>
+
+<pre class="prettyprint"><code>self.addEventListener('activate', function(event) {
+
+  var cacheWhitelist = ['pages-cache-v1', 'blog-posts-cache-v1'];
+
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});</code></pre>
+
+<h2 id="toc-rough">つまづきポイント</h2>
+
+<p>Service Worker はとても新しい技術でまだ実装中です。ここでは今ある課題を紹介します。早くこのセクションがなくなればいいですが、今 Service Worker で何かをする場合は気に留めておいてください。</p>
+
+<h3>インストールが失敗したときのフィードバックが少ない</h3>
+
+<p>Worker が登録されても <code>chrome://inspect/#service-workers</code> や <code>chrome://serviceworker-internals</code> に現れない場合、<code>event.waitUntil</code> に渡された Promise が reject されたなどの理由からインストールに失敗した可能性が高いです。</p>
+
+<p>インストールが成功したか失敗したかを知るには、<code>chrome://serviceworker-internals</code> に行き、「Opens the DevTools window for service worker on start for debugging」にチェックを入れ、そして <code>install</code> イベントの開始時に <code>debugger;</code> ステートメントを記述してください。これとDevTools の「<a href="https://developer.chrome.com/devtools/docs/javascript-debugging#pause-on-uncaught-exceptions">Pause on uncaught exceptions</a>」で問題を見つけられるでしょう。</p>
+
+<h3>fetch() は今のところ Service Worker のみ</h3>
+
+<p><code>fetch</code> メソッドは将来的にふつうのページでも利用可能になるでしょうが、現在の Chrome ではそうではありません。Cache API についてもふつうのページで利用可能になるでしょうが、こちらも現時点では Service Worker のみに提供されています。</p>
+
+<h3>fetch() のデフォルト</h3>
+
+<h4>クレデンシャルがデフォルトでは送られない</h4>
+
+<p><code>fetch()</code> はデフォルトでは Cookie などのクレデンシャルをリクエストに含めません。含めたい場合は次のようにコールします。</p>
+
+<pre class="prettyprint"><code>fetch(url, {
+  credentials: 'include'
+})</code></pre>
+
+<p>この挙動は意図的で、XHR の「URL が同一 origin の場合にだけクレデンシャルを含める」という複雑な挙動よりも明らかに良いものです。Fetch の挙動は他の CORS リクエストに似ています。CORS リクエストはたとえば <code>&lt;img crossorigin&gt;</code> といったものです。この場合、<code>&lt;img crossorigin="use-credentials"&gt;</code> とオプトインしなければ Cookie は送られません。</p>
+
+<h4>非 CORS なリクエストはデフォルトで失敗する</h4>
+
+<p>サードパーティの URL を取得しようとしても、CORS がサポートされていない場合 <code>fetch</code> は失敗します。非 CORS なリクエストを送るためには、<code>Request</code> オブジェクトにそのオプションを指定しなければいけません。しかしこうすると、返ってくるのは <a href="https://fetch.spec.whatwg.org/#concept-filtered-response-opaque">'opaque' response</a> になります。これはレスポンスが成功したかどうかが分からないということです。</p>
+
+<pre class="prettyprint"><code>cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+  return new Request(urlToPrefetch, { mode: 'no-cors' });
+})).then(function() {
+  console.log('All resources have been fetched and cached.');
+});</code></pre>
+
+<h3>fetch() は 30x リダイレクトを追わない</h3>
+
+<p>残念なことに <code>fetch()</code> はリダイレクトを追いかけません。これは Chrome のバグで、<a href="https://code.google.com/p/chromium/issues/detail?id=402389">https://code.google.com/p/chromium/issues/detail?id=402389</a> に詳細があります。</p>
+
+<h3>レスポンシブ・イメージの処理</h3>
+
+<p><code>srcset</code> 属性や <code>&lt;picture&gt;</code> 要素は、最も適切な画像アセットを選択しリクエストする仕組みです。
+
+<p>Service Worker のインストール時に画像をキャッシュさせたい場合、以下のパターンが考えられます。</p>
+
+<ol>
+<li><code>srcset</code> 属性や <code>&lt;picture&gt;</code> 要素に指定された画像すべてをインストールする</li>
+<li>低解像度版の画像をインストールする</li>
+<li>高解像度版の画像をインストールする</li>
+</ol>
+
+<p>実際には、2番か3番を選ぶべきでしょう。すべての画像をダウンロードするのは無駄ですから。</p>
+
+<p>低解像度の画像をインストール時にキャッシュさせるなら、後でネットワークが繋がった時に高解像度の画像をダウンロードするようにすればいいのです。高解像度の画像がダウンロードされなくても手元には低解像度の画像があるのでフォールバックできます。素敵な考えですが、ひとつ問題があります。</p>
+
+<p>以下の様なふたつの画像があるとします。</p>
+
+<table>
+<tr>
+<td>ピクセル密度</td>
+<td>幅</td>
+<td>高さ</td>
+</tr>
+<tr>
+<td>1x</td>
+<td>400</td>
+<td>400</td>
+</tr>
+<tr>
+<td>2x</td>
+<td>800</td>
+<td>800</td>
+</tr>
+</table>
+
+<p><code>srcset</code> 属性を使ったマークアップは次のようになります。</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
+
+<p>2x な画面では、ブラウザは <code>image-2x.png</code> をダウンロードするでしょう。オフラインであれば <code>.catch()</code> し、キャッシュした <code>image-src.png</code> を返せます。しかしブラウザは 2x な画面での表示を想定しているので、画像は 400×400 CSS ピクセルではなく 200×200 CSS ピクセルで表示されます。これを回避するには、画像の幅と高さを明示します。</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x"
+  style="width:400px; height: 400px;" /&gt;</code></pre>
+
+<img src="./images/sw-responsive-img-example.png" />
+
+<p>アート・ディレクションで <code>&lt;picture&gt;</code> 要素を使う場合、この方法はとても難しくなり、画像がどのように作られ使われるかにかなり依存します。しかし <code>srcset</code> と同じような方法は使えます。</p>
+
+<h3>URL ハッシュ変更のバグ</h3>
+
+<p>Chrome 40 には URL のハッシュが変化した時 Service Worker が動かないというバグがあります。</p>
+
+<p>詳しくは <a href="https://code.google.com/p/chromium/issues/detail?id=433708">https://code.google.com/p/chromium/issues/detail?id=433708</a> をご覧ください。</p>
+
+<h2 id="toc-learn">もっと知る</h2>
+
+<p>Service Worker についてのドキュメンテーションは <a href="https://jakearchibald.github.io/isserviceworkerready/resources.html">https://jakearchibald.github.io/isserviceworkerready/resources.html</a> にまとめられています。</p>
+
+<h2 id="toc-help">ヘルプ</h2>
+
+<p>もしつまづいた場合、Stackoverflow に質問してみてください。また <a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> を使ってください。また助けあったりしてください。</p>
+
+{% endblock %}
