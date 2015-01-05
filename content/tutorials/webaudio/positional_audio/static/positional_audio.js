@@ -184,8 +184,9 @@ Demo.prototype = {
     request.responseType = "arraybuffer";
     var ctx = this.audio.context;
     request.onload = function() {
-      var buffer = ctx.createBuffer(request.response, false);
-      callback(buffer);
+      ctx.decodeAudioData(request.response, callback, function() {
+        alert("Decoding the audio buffer failed");
+      });
     };
     request.send();
     return request;
@@ -244,7 +245,7 @@ Demo.prototype = {
       innerConeGeo,
       new THREE.MeshBasicMaterial({color: 0x00ff00, opacity: 0.5})
     );
-    innerCone.doubleSided = true;
+    innerCone.material.side = THREE.DoubleSide;
     innerCone.material.transparent = true;
     innerCone.material.blending = THREE.AdditiveBlending;
     innerCone.material.depthWrite = false;
@@ -254,7 +255,7 @@ Demo.prototype = {
       outerConeGeo,
       new THREE.MeshBasicMaterial({color: 0xff0000, opacity: 0.5})
     );
-    outerCone.doubleSided = true;
+    outerCone.material.side = THREE.DoubleSide;
     outerCone.material.transparent = true;
     outerCone.material.blending = THREE.AdditiveBlending;
     outerCone.material.depthWrite = false;
@@ -275,7 +276,7 @@ Demo.prototype = {
   setupObjects : function() {
     this.setupAudio();
 
-    var cubeGeo = new THREE.CubeGeometry(1.20,1.20,2.00);
+    var cubeGeo = new THREE.BoxGeometry(1.20,1.20,2.00);
     var cubeMat = new THREE.MeshLambertMaterial({color: 0xFF0000});
     var cube = new THREE.Mesh(cubeGeo, cubeMat);
     this.cube = cube;
@@ -289,7 +290,7 @@ Demo.prototype = {
     this.scene.add(light);
 
     var plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(20, 200, 20, 200),
+      new THREE.PlaneBufferGeometry(20, 200, 20, 200),
       new THREE.MeshLambertMaterial({color: 0xffffff})
     );
     plane.position.y = -5.0;
@@ -374,11 +375,13 @@ Demo.prototype = {
   },
 
   setPositionAndVelocity : function(object, audioNode, x, y, z, dt) {
-    var p = object.matrixWorld.getPosition();
+    var p = new THREE.Vector3();
+    var q = new THREE.Vector3();
+    p.setFromMatrixPosition(object.matrixWorld);
     var px = p.x, py = p.y, pz = p.z;
     object.position.set(x,y,z);
     object.updateMatrixWorld();
-    var q = object.matrixWorld.getPosition();
+    q.setFromMatrixPosition(object.matrixWorld);
     var dx = q.x-px, dy = q.y-py, dz = q.z-pz;
     if (this.positionEnabled) {
       audioNode.setPosition(q.x, q.y, q.z);
@@ -393,14 +396,14 @@ Demo.prototype = {
     if (this.orientationEnabled) {
       var vec = new THREE.Vector3(0,0,1);
       var m = object.matrixWorld;
-      var mx = m.n14, my = m.n24, mz = m.n34;
-      m.n14 = m.n24 = m.n34 = 0;
-      m.multiplyVector3(vec);
+      var mx = m.elements[12], my = m.elements[13], mz = m.elements[14];
+      m.elements[12] = m.elements[13] = m.elements[14] = 0;
+      vec.applyProjection(m);
       vec.normalize();
       object.sound.panner.setOrientation(vec.x, vec.y, vec.z);
-      m.n14 = mx;
-      m.n24 = my; 
-      m.n34 = mz;
+      m.elements[12] = mx;
+      m.elements[13] = my;
+      m.elements[14] = mz;
     }
   },
 
@@ -408,22 +411,22 @@ Demo.prototype = {
     this.setPositionAndVelocity(object, this.audio.context.listener, x, y, z, dt);
     if (this.orientationEnabled) {
       var m = object.matrix;
-      var mx = m.n14, my = m.n24, mz = m.n34;
-      m.n14 = m.n24 = m.n34 = 0;
+      var mx = m.elements[12], my = m.elements[13], mz = m.elements[14];
+      m.elements[12] = m.elements[13] = m.elements[14] = 0;
 
       var vec = new THREE.Vector3(0,0,1);
-      m.multiplyVector3(vec);
+      vec.applyProjection(m);
       vec.normalize();
 
       var up = new THREE.Vector3(0,-1,0);
-      m.multiplyVector3(up);
+      up.applyProjection(m);
       up.normalize();
 
       this.audio.context.listener.setOrientation(vec.x, vec.y, vec.z, up.x, up.y, up.z);
 
-      m.n14 = mx;
-      m.n24 = my; 
-      m.n34 = mz;
+      m.elements[12] = mx;
+      m.elements[13] = my;
+      m.elements[14] = mz;
     }
   },
 

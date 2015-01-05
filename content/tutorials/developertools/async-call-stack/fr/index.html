@@ -1,0 +1,376 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block head %}
+  {{ block.super }}
+  <style>
+    figcaption p {
+      font-style: normal;
+      font-weight: normal;
+    }
+    figcaption em {
+      font-style: normal;
+    }
+    .comparision figcaption {
+      font-size: 13px;
+      width: 90%;
+    }
+    .comparision figcaption:first-child {
+      font-size: 15px;
+      margin-bottom: 0.8em;
+    }
+    @media screen and (min-width: 620px) {
+      .comparision.side-by-side figure:first-child {
+        margin-right: 2%;
+      }
+      .comparision.side-by-side figure {
+        float: left;
+        width: 49%;
+      }
+      .request-animation-frame figure:first-child,
+      .mutation-observer figure:first-child {
+        width: 65%;
+        padding-right: 10px;
+      }
+      .request-animation-frame figure:last-child {
+        width: 30%;
+        padding-top: 31.5%;
+      }
+      .mutation-observer figure:last-child {
+        width: 30%;
+        padding-top: 35.4%
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block translator %}
+
+<div class="translator">
+  <strong>Traducteur :</strong> <a href="http://tddsworld.com/">Christophe Porteneuve</a>
+</div>
+
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Introduction</h2>
+
+<p>Parmi les fonctionnalités puissantes de JavaScript qui contribuent à en faire un langage unique, on trouve sa capacité à travailler de façon asynchrone à l’aide de fonctions de rappel.  Utiliser des fonctions de rappel nous permet d’écrire du code piloté par événements, mais engendre aussi un débogage à s’arracher les cheveux, car JavaScript ne s’exécute alors pas de façon linéaire.</p>
+
+<p>Heureusement, dans les Chrome DevTools, nous avons désormais la possibilité de voir la pile d’appels <strong>entière</strong>, rappels asynchrones compris !</p>
+
+<figure>
+  <img src="xhr-async.gif" width="572" alt="Une bande-annonce rapide des piles d’appels asynchrones"/>
+  <figcaption>
+    Une petite bande-annonce rapide des piles d’appels asynchrones
+    <p>(On analysera le déroulé de cette démo dans un instant.)</p>
+  </figcaption>
+</figure>
+
+<p>Une fois que vous aurez activé les piles d’appels asynchrones dans les DevTools, vous pourrez explorer l’état de votre appli web à des moments distincts dans le temps.  Parcourez la pile d’appels complète pour y trouver des gestionnaires d’événements, <code>setInterval</code>, <code>setTimeout</code>, <code>XMLHttpRequest</code>,
+des promesses, <code>requestAnimationFrame</code>, des <code>MutationObservers</code>, et plus encore.</p>
+
+<p>Lorsque vous parcourez la pile, vous pouvez analyser les valeurs de n’importe quelle variable au moment précis de l’exécution qui correspond à l’entrée de pile sélectionnée.  C’est comme avoir une machine à remonter le temps pour des expressions espions !</p>
+
+<p>Activons cette fonctionnalité et examinons ensemble quelques scenarii.</p>
+
+<h2 id="toc-enable">Activer le débogage asynchrone dans Chrome</h2>
+
+<p>Pour essayer cette nouvelle possibilité, activez-la dans Chrome.  Allez dans le panneau <strong>Sources</strong> d’un Chrome récent (stable à partir de mars 2014, Canary depuis décembre 2013).</p>
+
+<p>À côté du paneau <code>Call Stack</code> sur la droite (ou en bas, si vous êtes sur un espace étroit), vous trouverez une nouvelle case à cocher « Async ». Cochez-la pour activer le débogage asynchrone (et vous ne voudrez sans doute plus jamais la décocher).</p>
+
+<figure>
+  <img src="enable-async-toggle.gif" width="658" alt="(Dés)activer le débogage asynchrone"/>
+</figure>
+
+<h2 id="toc-timer-xhr">Capturer des rappels de timer et des réponses Ajax</h2>
+
+<p>Vous avez probablement déjà vu ce type de message dans Gmail par le passé :</p>
+
+<figure>
+  <img src="gmail-retrying.png" width="551" alt="Gmail qui ré-essaie d’envoyer un e-mail"/>
+</figure>
+
+<p>Si l’envoi de la requête rencontre un problème (que ce soit côté serveur ou en raison de soucis de connectivité du côté client), Gmail ré-essaie automatiquement d’envoyer après un court délai.</p>
+
+<p>Pour voir en quoi les piles d’appels asynchrones peuvent nous aider à analyser les rappels de timer et les réponses Ajax, j’ai recréé un <a href="xhr/demo.html" target="_blank">faux Gmail à titre d’illustration</a>. Le code JavaScript complet peut être trouvé via ce lien, mais le flux de contrôle est comme suit :</p>
+
+<figure>
+  <img src="xhr-async-flow.gif" width="660" alt="Diagramme de flux du faux Gmail d’illustration"/>
+  <figcaption>
+    Dans ce diagrame, les méthodes signalées en bleu plus foncé sont des candidats de choix pour notre nouvelle fonctionnalité DevTools, car ils déclenchent un traitement asynchrone.
+  </figcaption>
+</figure>
+
+<p>Si on regardait la pile d’appels de versions précédentes des DevTools, un point d’arrêt dans <code>postOnFail()</code> nous donnerait trop peu d’informations sur le contexte de son appel.  Mais regardez la différence lorsque les piles d’appels asynchrones sont activées :</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>Avant</figcaption>
+    <img src="xhr-before.gif" width="320" alt="Point d’arrêt dans notre faux Gmail sans les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>sans</em> Async activé.
+      <br />
+      <p>On voit que <code>postOnFail()</code> vient d’un rappel Ajax, mais aucune info supplémentaire.</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>Après</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Point d’arrêt dans notre faux Gmail avec les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>avec</em> Async activé.
+      <br />
+      <p>On voit que notre appel XHR est parti de <code>submitHandler()</code>. Sympa !</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+<p>Avec les piles d’appels asynchrones activées, il est facile de déterminer si la requête vient de <code>submitHandler()</code> (lorsqu’on a cliqué sur le bouton d’envoi) ou de <code>retrySubmit()</code> (qui survient après un délai par <code>setTimeout()</code>) :</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>submitHandler()</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Point d’arrêt dans notre faux Gmail en situation nominale"/>
+  </figure>
+
+  <figure>
+    <figcaption>retrySubmit()</figcaption>
+    <img src="xhr-after-retry-shortened.gif" width="320" alt="Point d’arrêt dans notre faux Gmail en situation de ré-essai d’envoi"/>
+  </figure>
+
+</div>
+
+<h2 id="toc-watch-expressions">Expressions espions asynchrones</h2>
+
+<p>Lorsque vous parcourez votre pile d’appels complète, vos expressions espions se mettent aussi à jour pour refléter leur état à l’instant correspondant !</p>
+
+<figure>
+  <img src="watch-expressions.gif" width="368" alt="Un exemple d’expressions espions avec des piles d’appels asynchrones"/>
+</figure>
+
+<h2 id="toc-past-scopes">Évaluer du code dans des portées passées</h2>
+
+<p>Non seulement vous pouvez simplement <em>surveiller</em> des expressions, mais vous pouvez interagir avec le code de portées passées directement dans le panneau Console des DevTools.</p>
+
+<p>Imaginez que vous êtes Dr. Who et que vous ayez besoin d’aide pour comparer l’horloge d’avant que vous montiez à bord du Tardis avec « maintenant ».  Depuis la console des DevTools, vous pouvez facilement évaluer, stocker, et faire des calculs avec des valeurs issues de différents points d’exécution.</p>
+
+<figure>
+  <img src="time-travel.gif" width="433" alt="Un exemple d’utilisation de la console avec des piles d’appels asynchrones"/>
+  <figcaption>
+    Utilisez la console JavaScript conjointement aux piles d’appels asynchrones pour déboguer votre code.  La démo ci-dessus est <a href="past-scope/demo.html" target="_blank">disponible ici</a>.
+  </figcaption>
+</figure>
+
+<p>En restant dans les DevTools pour manipuler vos expressions, vous économiserez du temps en évitant de basculer dans votre code source, faire des modifications, puis rafraîchir votre navigateur.</p>
+
+<h2 id="toc-promises">Dérouler les résolutions de chaînes de promesses</h2>
+
+<p>Si vous trouviez que le flux du faux Gmail juste avant était difficile à déboguer sans les piles d’appels asynchrones, imaginez-vous à quel point des flux asynchrones plus complexes, tels que des chaînes de promesses, sont difficiles à déboguer sans aide ?  Revoyons ensemble le dernier exemple du didacticiel de Jake Archibald sur <a href="/fr/tutorials/es6/promises/" target="_blank">les promesses en JavaScript</a>.</p>
+
+<figure>
+  <div style="max-width: 495px; margin: 10px auto">
+    <div style="position: relative; padding-top: 93%;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden" src="/tutorials/es6/promises/fr-promise-flow.svg" frameborder="0" allowtransparency="true"></iframe>
+    </div>
+  </div>
+  <figcaption>
+    Diagramme de flux des <em>Promesses en JavaScript</em>.
+  </figcaption>
+</figure>
+
+<p>Voici une petite animation illustrant le parcours de la pile d’appels de l’exemple
+<a href="/tutorials/es6/promises/fr-async-best-example.html" target="_blank">async-best-example.html</a>
+de Jake.</p>
+
+<div class="comparision stacked">
+
+  <figure>
+    <figcaption>Avant</figcaption>
+    <img src="promises-before.gif" width="600" alt="Parcours de la résolution de promesses sans les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>sans</em> Async activé.
+      <br />
+      <p>Remarquez que le panneau Call Stack ne donne que très peu d’infos lorsqu’on essaie de déboguer nos promesses.</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>Après</figcaption>
+    <img src="promises-after.gif" width="600" alt="Parcours de la résolution de promesses avec les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>avec</em> Async activé.
+      <br />
+      <p>Wow! Such promises. Much callbacks.</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+
+<h2 id="toc-request-animation-frame">Apprenez-en davantage sur vos animations web</h2>
+
+<p>Fouillons plus loin dans les archives de HTML5Rocks. Vous vous souvenez du didacticiel
+<em><a href="/tutorials/speed/animations/" target="_blank">Leaner, Meaner, Faster Animations with requestAnimationFrame</a></em> de Paul Lewis ?</p>
+
+<p>Ouvrez la
+<a href="/tutorials/speed/animations/post.html" target="_blank">démo requestAnimationFrame</a> et ajoutez un point d’arrêt au début de la méthode <code>update()</code> (vers la ligne 874) de <code>post.html</code>.  Avec les piles d’appels asynchrones, nous récupérons beaucoup plus d’informations sur <code>requestAnimationFrame</code>, et gagnons notamment la possibilité de revenir en arrière jusqu’au tout premier rappel d’événement de défilement.</p>
+
+<div class="comparision side-by-side request-animation-frame">
+
+  <figure>
+    <figcaption>Avant</figcaption>
+    <img src="requestAnimationFrame-before.gif" width="500" alt="Point d’arrêt sur requestAnimationFrame sans les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>sans</em> Async activé.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>Après</figcaption>
+    <img src="requestAnimationFrame-after.gif" width="305" alt="Point d’arrêt sur requestAnimationFrame avec les piles d’appels asynchrones"/>
+    <figcaption>
+      Et <em>avec</em> Async activé.
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-mutation-observer">Suivez les mises à jour du DOM en utilisant <code>MutationObserver</code></h2>
+
+<p><code>MutationObserver</code> nous permet de surveiller les modifications du DOM. Dans cet
+<a href="mutation-observers/demo.html" target="_blank">exemple simple</a>, lorsque vous cliquez sur le bouton, un nouveau nœud DOM est ajouté au <code style="white-space:nowrap;">
+&lt;div class="rows"&gt;&lt;/div&gt;</code>.</p>
+
+<p>Ajoutez un point d’arrêt dans la méthode <code>nodeAdded()</code> (ligne 31) de <code>demo.html</code>. Avec les piles d’appels asynchrones activées, vous pouvez désormais parcourir la pile d’appel antérieure à <code>addNode()</code> jusqu’à l’événement <code>click</code> initial.</p>
+
+<div class="comparision side-by-side mutation-observer">
+
+  <figure>
+    <figcaption>Avant</figcaption>
+    <img src="mutationObserver-before.gif" width="721" alt="Point d’arrêt sur un MutationObserver sans les piles d’appels asynchrones"/>
+    <figcaption>
+      Le panneau Call Stack <em>sans</em> Async activé.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>Après</figcaption>
+    <img src="mutationObserver-after.gif" width="320" alt="Point d’arrêt sur un MutationObserver avec les piles d’appels asynchrones"/>
+    <figcaption>
+      Et <em>avec</em> Async activé.
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-debugging-tips">Astuces pour le débogage JavaScript à l’aide des piles d’appels asynchrones</h2>
+
+<h3>Nommez vos fonctions</h3>
+
+<p>Si vous avez tendance à utiliser des fonctions de rappel anonymes, vous voudrez sans doute leur donner un nom pour faciliter la lecture de votre pile d’appel.</p>
+
+<p>Par exemple, prenez une fonction anonyme comme celle-ci :</p>
+
+<pre class="prettyprint">window.addEventListener('load', function(){
+  // faire quelque chose
+});</pre>
+
+<p>Et donnez-lui plutôt un nom, genre <code>windowLoaded()</code> :</p>
+
+<pre class="prettyprint">window.addEventListener('load', function <strong>windowLoaded</strong>(){
+  // faire quelque chose
+});</pre>
+
+<p>Lorsque l’événement <code>load</code> se déclenche, il apparaît dans la pile d’appels des DevTools avec le bon nom de fonction, au lieu de l’inutile « <em>(anonymous function)</em> ».  Il est alors bien plus facile de comprendre d’un coup d’œil ce qui se passe dans votre pile d’appels.</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>Avant</figcaption>
+    <img src="function-names-before.gif" width="320" alt="Une fonction de rappel anonyme"/>
+    <!-- <figcaption>
+      An anonymous function.
+    </figcaption> -->
+  </figure>
+
+  <figure>
+    <figcaption>Après</figcaption>
+    <img src="function-names-after.gif" width="320" alt="Une fonction de rappel nommée"/>
+    <!-- <figcaption>
+      A named function.
+    </figcaption> -->
+  </figure>
+
+</div>
+
+<h2 id="toc-explore-further">Allez plus loin</h2>
+
+<p>Récapitulons.  Voici les types de traitements asynchrones pour lesquels les DevTools vous afficheront une pile d’appels intégrale :</p>
+
+<ul>
+  <li>
+    <strong>Timers</strong> :
+    Revenez à l’origine du <code>setTimeout()</code> ou du <code>setInterval()</code>.
+  </li>
+  <li>
+    <strong>XHRs</strong> :
+    Revenez à l’appel <code>xhr.send()</code> qui a déclenché Ajax.
+  </li>
+  <li>
+    <strong>Étapes d’animation</strong> :
+    Revenez à la ligne d’appel de <code>requestAnimationFrame</code>.
+  </li>
+    <li>
+    <strong>Promesses</strong> :
+    Revenez à la résolution (ou au rejet) de la promesse.
+  </li>
+  <li>
+    <strong><code>Object.observe()</code></strong> :
+    Revenez à l’endroit qui avait défini le rappel d’observation.
+  </li>
+  <li>
+    <strong><code>MutationObserver</code></strong> :
+    Revenez à l’endroit qui a déclenché l’événement de mutation.
+  </li>
+
+  <li>
+    <strong><code>window.postMessage()</code></strong> :
+    Traversez les envois de message intra-process.
+  </li>
+  <li>
+    <strong><code>DataTransferItem.getAsString()</code></strong>
+  </li>
+  <li>
+      <strong>API FileSystem</strong>
+  </li>
+  <li>
+      <strong>IndexedDB</strong>
+  </li>
+  <li>
+      <strong>WebSQL</strong>
+  </li>
+    <li>
+    <strong>Événements DOM écoutés par <code>addEventListener()</code></strong> :
+    Revenez au site de déclenchement de l’événement.  Pour des raisons de performance, tous les événements DOM ne sont pas éligibles à un suivi asynchrone.  Parmi ceux qui le sont, on trouve par exemple <code>'scroll'</code>, <code>'hashchange'</code>, et <code>'selectionchange'</code>.
+  </li>
+  <li>
+    <strong>Événements multimédia écoutés par <code>addEventListener()</code></strong> :
+    Revenez au site de déclenchement de l’événement.  Les événements multimédia disponibles incluent : les événements audio/vidéo (ex. <code>'play'</code>, <code>'pause'</code>, <code>'ratechange'</code>), les événements de <code>MediaStreamTrackList</code> en WebRTC (ex. <code>'addtrack'</code>, <code>'removetrack'</code>) et les événements <code>MediaSource</code> (ex. <code>'sourceopen'</code>).
+  </li>
+</ul>
+
+<p>Pouvoir enfin visualiser les piles d’appels intégrales de nos rappels JavaScript devrait nous épargner une calvitie précoce.  Cette fonctionnalité des DevTools est particulièrement utile pour déboguer plusieurs événements asynchrones en relation les uns aux autres, ou lorsqu’une exception non capturée est levée depuis du code asynchrone.</p>
+
+<p>Essayez ça dans Chrome.  Si vous avez des retours à nous faire sur cette nouvelle possibilité, envoyez-nous un mot sur le <a href="https://code.google.com/p/chromium/issues/detail?id=272416" target="_blank">bug tracker</a> des Chrome DevTools ou dans le
+<a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">groupe de discussion Chrome DevTools</a>.</p>
+
+{% endblock %}

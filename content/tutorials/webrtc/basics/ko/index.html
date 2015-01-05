@@ -221,7 +221,7 @@ NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</pre>
   <li>Media capabilities: 내 브라우저와 상대브라우저가 사용 가능한 코덱들과 해상도들은 어떻게 되지?</li>
 </ul>
 
-<p>Signaling을 통한 정보 교환은 p2p streaming이 시작되기 전에 반드시 성곡적으로 완료되어야 합니다. </p>
+<p>Signaling을 통한 정보 교환은 p2p streaming이 시작되기 전에 반드시 성공적으로 완료되어야 합니다. </p>
 
 <p>예를들어 Alice가 Bob과 통신하기를 원한다고 상상해봅시다. Signaling 과정을 보여주는 <a href="http://www.w3.org/TR/webrtc/#simple-example" title="WebRTC 1.0: Real-time Communication Between Browsers"> WebRTC W3C Working Draft</a>에 따라 예제 코드는 아래와 같습니다. 이 코드는 이미 특정 Signaling 방식이 존재한다고 가정하에 <code>createSignalingChannel()</code> 함수를 만들었습니다. 또한 Chrome과 Opera에서는 RTCPeerConnection가 prefix를 가지고 있다는 점을 유의해야합니다.</p>
 
@@ -287,7 +287,7 @@ signalingChannel.onmessage = function (evt) {
 
 <ol>
   <li>Alice가 RTCPeerConnection의 <code>createOffer()</code> 함수를 호출합니다. 이 함수의 argument로 입력된 callback을 통해 Alice의 Session description 정보를 나타내는 RTCSessionDescription을 얻습니다.</li>
-  <li>callback 안에서 Alice는 자신의 description을 <code>setLocalDescription()</code> 함수로 설정하고 이 session description을 signaling 채널을 통해 Bob에게 전달합니다. <code>setLocalDescription()</code>가 후출되기 전까지는 candidates 수집이 시작되지 않는 다는 점을 주의해야 합니다: 이것은 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-4.2.4" title="Javascript Session Establishment Protocol draft-ietf-rtcweb-jsep-03">JSEP IETF draft</a>에 문서화 되어있습니다.</li>
+  <li>callback 안에서 Alice는 자신의 description을 <code>setLocalDescription()</code> 함수로 설정하고 이 session description을 signaling 채널을 통해 Bob에게 전달합니다. <code>setLocalDescription()</code>가 호출되기 전까지는 candidates 수집이 시작되지 않는 다는 점을 주의해야 합니다: 이것은 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-4.2.4" title="Javascript Session Establishment Protocol draft-ietf-rtcweb-jsep-03">JSEP IETF draft</a>에 문서화 되어있습니다.</li>
   <li>Bob은 Alice가 보낸 session description 정보를 <code>setRemoteDescription()</code> 함수를 통해 설정합니다.</li>
   <li>Bob은 RTCPeerConnection의 <code>createAnswer()</code> 함수에 Alice로 부터 받은 remote description을 전달하고 실행합니다. 그러면 그녀의 정보를 기반으로 Local Session이 생성됩니다. <code>createAnswer()</code>의 callback은 RTCSessionDescription을 전달해줍니다: Bob은 이것을 local description으로 설정하고 Alice에게 전달합니다.</li>
   <li>Alice가 Bob의 Session description을 받으면 <code>setRemoteDescription</code>을 이용해 remote descirption으로 설정합니다.</li>
@@ -311,7 +311,7 @@ a=ssrc:2223794119 label:H4fjnMzxy3dPIgQ7HxuCTLb4wLLLeRHnFxh810
 
 <p>네트워크와 미디어 정보의 교환과 획득은 동시에 완료됩니다, 그러나 이 두가지 과정들은 피어간의 오디오/비디오 스트리밍 시작전에 반드시 완료 되어야합니다.</p>
 
-<p>위에서 설명된 offer/answer 아키텍쳐는 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-00" title="IETF JSEP draft proposal">JSEP</a>, JavaScript Session Establishment Protocol 이라고 불리웁니다. (<a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-peer-peer-conversational-video" title="Ericsson conversational video demo">Ericsson's demo video</a>은 Ericsson에서 첫번째 WebRTC 구현할 당시 signaling과 streaming 과정을 아주 훌륭하게 설명한 에니메이션 입니다.) </p>
+<p>위에서 설명된 offer/answer 아키텍쳐는 <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-00" title="IETF JSEP draft proposal">JSEP</a>, JavaScript Session Establishment Protocol 이라고 불리웁니다. (<a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-peer-peer-conversational-video" title="Ericsson conversational video demo">Ericsson's demo video</a>은 Ericsson에서 첫번째 WebRTC 구현할 당시 signaling과 streaming 과정을 아주 훌륭하게 설명한 애니메이션 입니다.) </p>
 
 <figure>
   <img src="jsep.png" alt="JSEP architecture diagram" />

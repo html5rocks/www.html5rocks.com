@@ -56,7 +56,7 @@ asynchronously via callback functions. Assigning async callbacks let you write
 event-driven code but it also makes tracking down bugs a hair pulling experience 
 since the JavaScript is not executing in a linear fashion.</p>
 
-<p>Luckily, now in Chrome Canary DevTools, 
+<p>Luckily, now in Chrome  DevTools, 
 you can view the <strong>full</strong> call stack of 
 asynchronous JavaScript callbacks!</p>
 
@@ -79,9 +79,9 @@ watch expressions!</p>
 
 <p>Let's enable this feature and take a look at a few of these scenarios.</p>
 
-<h2 id="toc-enable">Enable async debugging in Chrome Canary</h2>
+<h2 id="toc-enable">Enable async debugging in Chrome </h2>
 
-<p>Try out this new feature by enabling it in Chrome Canary (build 35 or higher). Go to the <strong>Sources</strong> panel of Chrome Canary DevTools.</p>
+<p>Try out this new feature by enabling it in Chrome. Go to the <strong>Sources</strong> panel of Chrome Canary DevTools.</p>
 
 <p>Next to the <strong>Call Stack</strong> panel on the right hand side, there is a new checkbox 
 for "Async". Toggle the checkbox to turn async debugging on or off. (Although 
@@ -188,7 +188,7 @@ reflect the state that it was in at that time!</p>
 
 <p>Staying within DevTools to manipulate your expressions will save you time from having to switch back to your source code, make edits, and refresh the browser.</p>
 
-<h2 id="toc-promises">Coming soon: Unravel chained promise resolutions</h2>
+<h2 id="toc-promises">Unravel chained promise resolutions</h2>
 
 <p>If you thought the previous mock Gmail flow was hard to unravel without the async 
 call stack feature enabled, can you imagine how much harder it would be with 
@@ -235,10 +235,6 @@ example.</p>
 
 </div>
 
-<div class="notice tip">
-<p>Promise support for call stacks will be ready soon, as the promise implementation is switching from the version in Blink to the final one within V8.</p>
-<p>In the spirit of walking back in time, if you want to preview async call stacks for promises today, you can check it out in <a href="https://googledrive.com/host/0B8R1QvA3x5IbWll3M0hIYXVLZlk/" target="_blank">Chrome 33 or Chrome 34</a>. Go to <code>chrome://flags/#enable-devtools-experiments</code> and enable Developer Tools experiments . After you restart Canary, go to the DevTools settings and there will be an option to <a href="enable-async-experiments.gif" target="_blank">enable support for async stack traces</a>.</p>
-</div>
 
 <h2 id="toc-request-animation-frame">Get insights into your web animations</h2>
 
@@ -352,38 +348,21 @@ much easier to see at a glance what's happening in your stack trace.</p>
 <p>To recap, these are all the asynchronous callbacks in which DevTools will 
 display the full call stack:</p>
 
+
 <ul>
   <li>
     <strong>Timers</strong>: 
-    Walk back to where setTimeout() or setInterval() was initialized.
+    Walk back to where <code>setTimeout()</code> or <code>setInterval()</code> was initialized.
   </li>
   <li>
     <strong>XHRs</strong>: 
-    Walk back to where xhr.send() was called.
+    Walk back to where <code>xhr.send()</code> was called.
   </li>
   <li>
     <strong>Animation frames</strong>: 
-    Walk back to where requestAnimationFrame was called.
+    Walk back to where </ode>requestAnimationFrame</code> was called.
   </li>
-  <li>
-    <strong>MutationObservers</strong>: 
-    Walk back to where the mutation observer event was fired.
-  </li>
-  <li>
-    <strong>Eligible DOM events via addEventListener()</strong>: 
-    Walk back to where the event was fired. Due to performance reasons, not all DOM events are eligible for the async call stacks feature. Examples of currently available events include: 'scroll', 'hashchange', and 
-    'selectionchange'.
-  </li>
-  <li>
-    <strong>Multimedia events via addEventListener()</strong>: 
-    Walk back to where the event was fired. Available multimedia events include: audio and video events (e.g. 'play', 'pause', 'ratechange'), WebRTC MediaStreamTrackList events (e.g. 'addtrack', 'removetrack'), and MediaSource events (e.g. 'sourceopen').
-  </li>
-</ul>
-
-<p>Full call stacks will be coming soon for these experimental JavaScript APIs:</p>
-
-<ul>
-  <li>
+    <li>
     <strong>Promises</strong>: 
     Walk back to where a promise has been resolved.
   </li>
@@ -391,14 +370,43 @@ display the full call stack:</p>
     <strong>Object.observe</strong>:
     Walk back to where the observer callback was originally bound.
   </li>
+  <li>
+    <strong>MutationObservers</strong>: 
+    Walk back to where the mutation observer event was fired.
+  </li>
+
+  <li> <strong>window.postMessage()</strong>: Walk over intra-process messaging calls.
+  </li>
+  <li>
+    <strong>DataTransferItem.getAsString()</strong>
+  </li>
+  <li>
+      <strong>FileSystem API</strong>
+  </li>
+  <li>
+      <strong>IndexedDB</strong>
+  </li>
+  <li>
+      <strong>WebSQL</strong>
+  </li>
+    <li>
+    <strong>Eligible DOM events via <code>addEventListener()</code></strong>: 
+    Walk back to where the event was fired. Due to performance reasons, not all DOM events are eligible for the async call stacks feature. Examples of currently available events include: 'scroll', 'hashchange', and 
+    'selectionchange'.
+  </li>
+  <li>
+    <strong>Multimedia events via <code>addEventListener()</code></strong>: 
+    Walk back to where the event was fired. Available multimedia events include: audio and video events (e.g. 'play', 'pause', 'ratechange'), WebRTC MediaStreamTrackList events (e.g. 'addtrack', 'removetrack'), and MediaSource events (e.g. 'sourceopen').
+  </li>
 </ul>
+
 
 <p>Being able to see the full stack trace of your JavaScript callbacks should keep 
 those hairs on your head. This feature in DevTools will be especially helpful 
 when multiple async events happen in relation to each other, or if an uncaught 
 exception is thrown from within an async callback.</p>
 
-<p>Give it a try in Chrome Canary. 
+<p>Give it a try in Chrome. 
 If you have feedback on this new feature, drop us a line on the 
 Chrome DevTools <a href="https://code.google.com/p/chromium/issues/detail?id=272416" target="_blank">bug tracker</a>
 or in the 
