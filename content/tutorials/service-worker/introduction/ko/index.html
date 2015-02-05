@@ -120,7 +120,7 @@ Pages</a>는 HTTPS를 통해 제공되므로 데모를 호스팅하기 위한 �
 
 <pre class="prettyprint"><code>// 우리가 캐시하고자 하는 파일들
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -140,7 +140,7 @@ self.addEventListener('install', function(event) {
 
 <pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -179,7 +179,7 @@ self.addEventListener('install', function(event) {
 
         return fetch(event.request);
       }
-    );
+    )
   );
 });</code></pre>
 
@@ -219,8 +219,7 @@ self.addEventListener('install', function(event) {
 
             caches.open(CACHE_NAME)
               .then(function(cache) {
-                var cacheRequest = event.request.clone();
-                cache.put(cacheRequest, responseToCache);
+                cache.put(event.request, responseToCache);
               });
 
             return response;
