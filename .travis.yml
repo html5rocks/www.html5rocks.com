@@ -1,0 +1,33 @@
+language: ruby
+rvm:
+- 2.2
+
+env:
+  global:
+  - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+  - CLOUDSDK_PYTHON_SITEPACKAGES=1
+  - PROJECT_ID=html5rocks-hrd
+  - SRV_ACCOUNT=99453920800-hal1n7nprda09r5vcqbbk792tjtssl1e@developer.gserviceaccount.com
+
+script: 
+  - echo "script"
+
+before_install:
+  - export CURRENT_BRANCH=git branch
+  - echo $CURRENT_BRANCH
+  - sudo pip install PyOpenSSL
+  - openssl aes-256-cbc -K $encrypted_33a11b23443e_key -iv $encrypted_33a11b23443e_iv -in html5rocks-hrd.p12.enc -out html5rocks-hrd.p12 -d
+
+  - curl https://sdk.cloud.google.com | bash
+  - $HOME/google-cloud-sdk/bin/gcloud components update app -q
+  - $HOME/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
+  - $HOME/google-cloud-sdk/bin/gcloud auth activate-service-account $SRV_ACCOUNT --key-file $PROJECT_ID.p12
+
+after_success:
+ - $HOME/google-cloud-sdk/bin/gcloud preview app deploy --version $TRAVIS_BRANCH ./app.yaml
+
+# branch whitelist
+branches:
+  only:
+  - master     # test the master branch
+  - live
