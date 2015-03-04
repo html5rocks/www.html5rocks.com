@@ -83,10 +83,10 @@ a[rel='external']
 
 <ol>
   <li>A web application attempts to play audio or video that has one or more encrypted streams.</li>
-  <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires a <code>needkey</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
+  <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires an <code>encrypted</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
   <li>The application handles the <code>needkey</code> event:
     <ol style="list-style-type: lower-alpha; margin: 0">
-      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>MediaKeys.isTypeSupported()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
+      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>navigator.requestMediaKeySystemAccess()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System via a <code>MediaKeySystemAccess</code> object. Note that initialization of the MediaKeys object can happen before the first <code>encrypted</code> event. Getting a license server URL is done by the app independently of selecting an available key system. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
@@ -94,7 +94,7 @@ a[rel='external']
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
   <li>The application receives a response from the license server and passes the data to the CDM by using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
-  <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. Each key is identified by a Key ID; the CDM will store the key and related data, indexed by key ID.</li>
+  <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. Each key is identified by a Key ID; the CDM will store the key and related data in memory (unless a persistent license is used), indexed by key ID.</li>
   <li>Media playback begins.</li>
   </ol>
 
@@ -108,7 +108,7 @@ a[rel='external']
 
 </blockquote>
 
-<p>Note that there may be multiple messages between the CDM or server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
+<p>Note that there may be multiple messages between the CDM and license server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server, although the app layer can see <a href="w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType" title="MediaKeyMessageType enum">what type of message</a> the CDM is sending. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
 
 <h2 id="content-decryption-modules">...but what do CDMs actually do?</h2>
 
@@ -138,66 +138,52 @@ a[rel='external']
 
 <h2 id="getting-a-key-from-a-license-server">Getting a key from a license server</h2>
 
-<p>In typical commercial use, content will be encrypted and encoded using a packaging service or tool. Once the encrypted media is made available online, a web client can obtain a key (license) from a license server and use the key to enable decryption and playback of the content.</p>
+<p>In typical commercial use, content will be encrypted and encoded using a packaging service or tool. Once the encrypted media is made available online, a web client can obtain a key (contained within a license) from a license server and use the key to enable decryption and playback of the content.</p>
 
-<p>The following code (adapted from the <a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html#examples">spec examples</a>) shows how an application can select an appropriate key system and obtain a key from a license server.</p>
+<p>The following code (adapted from the <a href="http://w3c.github.io/encrypted-media/#examples">spec examples</a>) shows how an application can select an appropriate key system and obtain a key from a license server.</p>
 
 <pre class="prettyprint">
-&lt;script&gt;
-var keySystem;
-var licenseUrl;
+var video = document.querySelector('video');
 
-function selectKeySystem() {
-  if (MediaKeys.isTypeSupported("com.example.somesystem",
-      "video/webm; codecs='vp8, vorbis'")) {
-    licenseUrl = "https://license.example.com/getkey";
-    keySystem = "com.example.somesystem";
-  } else if (MediaKeys.isTypeSupported("com.foobar",
-      "video/webm; codecs='vp8, vorbis'")) {
-    licenseUrl = "https://license.foobar.com/request";
-    keySystem = "com.foobar";
-  } else {
-    throw "Key System not supported";
-  }
-}
+var config = [{initDataTypes: ['webm'],
+  videoCapabilities: [{contentType: 'video/webm; codecs="vp8"'}]}];
 
-function handleKeyNeeded(event) {
-  var video = event.target;
-  if (!video.mediaKeys) {
-    selectKeySystem();
-    video.setMediaKeys(new MediaKeys(keySystem));
-  }
-  if (!video.mediaKeys) {
-    throw "Could not create MediaKeys";
-  }
-  var keySession = video.mediaKeys.createSession(event.contentType, event.initData);
-  if (!keySession) {
-    throw "Could not create key session";
-  }
-  keySession.addEventListener("message", licenseRequestReady, false);
-}
-
-function licenseRequestReady(event) {
-  var keySession = event.target;
-  var request = event.message;
-  if (!request) {
-    throw "Could not create license request";
-  }
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.open("POST", licenseUrl);
-  xmlhttp.onreadystatechange = function () {
-    if (xmlhttp.readyState === 4) {
-      var license = new Uint8Array(xmlhttp.response);
-      keySession.update(license); // playback can now begin
+if (!video.mediaKeys) {
+  navigator.requestMediaKeySystemAccess('org.w3.clearkey', config).then(
+    function(keySystemAccess) {
+      var promise = keySystemAccess.createMediaKeys();
+      promise.catch(
+        console.error.bind(console, 'Unable to create MediaKeys')
+      );
+      promise.then(
+        function(createdMediaKeys) {
+          return video.setMediaKeys(createdMediaKeys);
+        }
+      ).catch(
+        console.error.bind(console, 'Unable to set MediaKeys')
+      );
+      promise.then(
+        function(createdMediaKeys) {
+          var initData = new Uint8Array([...]);
+          var keySession = createdMediaKeys.createSession();
+          keySession.addEventListener('message', handleMessage, false);
+          return keySession.generateRequest('webm', initData);
+        }
+      ).catch(
+        console.error.bind(console,
+          'Unable to create or initialize key session')
+      );
     }
-  }
-  xmlhttp.send(request);
+  );
 }
-&lt;/script&gt;
 
-...
-
-&lt;video src="foo.webm" autoplay onneedkey="handleKeyNeeded(event)"&gt;&lt;/video&gt;
+function handleMessage(event) {
+  var keySession = event.target;
+  var license = new Uint8Array([...]);
+  keySession.update(license).catch(
+    console.error.bind(console, 'update() failed')
+  );
+}
 </pre>
 
 <h2 id="common-encryption">Common Encryption</h2>
@@ -352,8 +338,7 @@ type="static"&gt;
 
 <p>(This XML is taken from <a href="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">the .mpd file</a> used for the <a href="http://dash-mse-test.appspot.com/dash-player.html?url=http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">YouTube DASH demo player</a>.)</p>
 
-<p>According to the DASH spec, an MPD file could in theory be used as the <code>src</code> for a video. However, to give more flexibility to web developers, browser vendors have chosen instead to leave DASH support up to JavaScript libraries using MSE such as <a href="http://www-itec.uni-klu.ac.at/dash/?p=792">dash.js</a>. Implementing DASH in JavaScript allows the adaptation algorithm to evolve without requiring browser updates. Using MSE also allows experimentation with alternative manifest formats and delivery mechanisms without requiring browser changes.</p>
-
+<p>According to the DASH spec, an MPD file could in theory be used as the <code>src</code> for a video. However, to give more flexibility to web developers, browser vendors have chosen instead to leave DASH support up to JavaScript libraries using MSE such as <a href="http://www-itec.uni-klu.ac.at/dash/?p=792">dash.js</a>. Implementing DASH in JavaScript allows the adaptation algorithm to evolve without requiring browser updates. Using MSE also allows experimentation with alternative manifest formats and delivery mechanisms without requiring browser changes. Google's <a href="https://github.com/google/shaka-player" title="Shaka Player GitHub repo">Shaka Player</a> implements a DASH client with EME support.</p>
 
 <p><a href="https://developer.mozilla.org/en-US/docs/DASH_Adaptive_Streaming_for_HTML_5_Video" title="MDN: DASH Adaptive Streaming for HTML 5 Video">Mozilla Developer Network has instructions</a> on how to use WebM tools and FFmpeg to segment video and build an MPD.</p>
 
@@ -367,7 +352,7 @@ type="static"&gt;
 
 <ul>
   <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: latest Editor's Draft</li>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as currently implemented by Chrome</li>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as initially implemented by Chrome. The unprefixed EME API was made available unflagged in Chrome 42.</li>
   <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397" target="_blank">Common Encryption (CENC)</a></li>
   <li><a href="http://www.w3.org/TR/media-source/" target="_blank">Media Source Extensions</a></li>
   <li><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c057623_ISO_IEC_23009-1_2012.zip" target="_blank">DASH standard</a> (yes, it's a PDF)</li>
