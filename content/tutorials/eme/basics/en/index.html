@@ -86,7 +86,7 @@ a[rel='external']
   <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires an <code>encrypted</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
   <li>The application handles the <code>needkey</code> event:
     <ol style="list-style-type: lower-alpha; margin: 0">
-      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>navigator.requestMediaKeySystemAccess()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System via a <code>MediaKeySystemAccess</code> object. Note that initialization of the MediaKeys object can happen before the first <code>encrypted</code> event. Getting a license server URL is done by the app independently of selecting an available key system. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
+      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>navigator.requestMediaKeySystemAccess()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System via a <code>MediaKeySystemAccess</code> object. Note that initialization of the MediaKeys object should happen before the first <code>encrypted</code> event. Getting a license server URL is done by the app independently of selecting an available key system. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
@@ -94,7 +94,7 @@ a[rel='external']
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
   <li>The application receives a response from the license server and passes the data to the CDM by using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
-  <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. Each key is identified by a Key ID; the CDM will store the key and related data in memory (unless a persistent license is used), indexed by key ID.</li>
+  <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. The CDM will access the key and policy, indexed by Key ID.</li>
   <li>Media playback begins.</li>
   </ol>
 
@@ -108,7 +108,7 @@ a[rel='external']
 
 </blockquote>
 
-<p>Note that there may be multiple messages between the CDM and license server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server, although the app layer can see <a href="w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType" title="MediaKeyMessageType enum">what type of message</a> the CDM is sending. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
+<p>Note that there may be multiple messages between the CDM and the license server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server, although the app layer can see <a href="w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType" title="MediaKeyMessageType enum">what type of message</a> the CDM is sending. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
 
 <h2 id="content-decryption-modules">...but what do CDMs actually do?</h2>
 
