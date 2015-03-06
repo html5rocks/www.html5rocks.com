@@ -81,6 +81,12 @@ a[rel='external']
 
 <p>Here's how the components of EME interact, corresponding to the <a href="#getting-a-key-from-a-license-server" title="Code example: getting a key from a license server">code example below</a>:</p>
 
+<blockquote>
+  <p>If multiple formats or codecs are available, <code>MediaSource.isTypeSupported()</code> or <code>HTMLMediaElement.prototype.canPlayType()</code> can both be used to select the right one. However, the CDM may only support a subset of what the browser supports for unencrypted content. It's best to negotiate a MediaKeys configuration before selecting a format and codec. If the application waits for the <code>encrypted</code> event but then <code>MediaKeys</code> shows it can't handle the chosen format/codec, it may be too late to switch without interrupting playback.</p>
+  <p>The recommended flow is to negotiate <code>MediaKeys first</code>, using <code>MediaKeysSystemAccess.prototype.getConfiguration()</code> to find out the negotiated configuration.</p>
+  <p>If there is only one format/codec to choose from, then there's no need for <code>getConfiguration()</code>. However, it's still preferable to set up <code>MediaKeys</code> first. The only reason to wait for the <code>encrypted</code> event is if there is no way of knowing whether the content is encrypted or not, but in practice that's unlikely.</p>
+</blockquote>
+
 <ol>
   <li>A web application attempts to play audio or video that has one or more encrypted streams.</li>
   <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires an <code>encrypted</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
@@ -90,6 +96,7 @@ a[rel='external']
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
+
   <li>The app passes the media data obtained in the <code>needkey</code> handler to a CDM, by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a license and its key(s).</li>
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
