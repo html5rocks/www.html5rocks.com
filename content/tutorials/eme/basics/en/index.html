@@ -81,6 +81,12 @@ a[rel='external']
 
 <p>Here's how the components of EME interact, corresponding to the <a href="#getting-a-key-from-a-license-server" title="Code example: getting a key from a license server">code example below</a>:</p>
 
+<blockquote>
+  <p>If multiple formats or codecs are available, <code>MediaSource.isTypeSupported()</code> or <code>HTMLMediaElement.prototype.canPlayType()</code> can both be used to select the right one. However, the CDM may only support a subset of what the browser supports for unencrypted content. It's best to negotiate a MediaKeys configuration before selecting a format and codec. If the application waits for the <code>encrypted</code> event but then <code>MediaKeys</code> shows it can't handle the chosen format/codec, it may be too late to switch without interrupting playback.</p>
+  <p>The recommended flow is to negotiate <code>MediaKeys first</code>, using <code>MediaKeysSystemAccess.prototype.getConfiguration()</code> to find out the negotiated configuration.</p>
+  <p>If there is only one format/codec to choose from, then there's no need for <code>getConfiguration()</code>. However, it's still preferable to set up <code>MediaKeys</code> first. The only reason to wait for the <code>encrypted</code> event is if there is no way of knowing whether the content is encrypted or not, but in practice that's unlikely.</p>
+</blockquote>
+
 <ol>
   <li>A web application attempts to play audio or video that has one or more encrypted streams.</li>
   <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires an <code>encrypted</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
@@ -90,6 +96,7 @@ a[rel='external']
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
+
   <li>The app passes the media data obtained in the <code>needkey</code> handler to a CDM, by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a license and its key(s).</li>
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
@@ -108,7 +115,7 @@ a[rel='external']
 
 </blockquote>
 
-<p>Note that there may be multiple messages between the CDM and the license server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server, although the app layer can see <a href="w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType" title="MediaKeyMessageType enum">what type of message</a> the CDM is sending. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
+<p>Note that there may be multiple messages between the CDM and the license server, and all communication in this process is opaque to the browser and application: messages are only understood by the CDM and license server, although the app layer can see <a href="//w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType" title="MediaKeyMessageType enum">what type of message</a> the CDM is sending. The license request contains proof of the CDM's validity (and trust relationship) as well as a key to use when encrypting the content key(s) in the resulting license.</p>
 
 <h2 id="content-decryption-modules">...but what do CDMs actually do?</h2>
 
@@ -198,7 +205,7 @@ function handleMessage(event) {
 
 <p>Although EME does not define DRM functionality, the spec currently mandates that all browsers supporting EME must implement Clear Key. Using this system, media can be encrypted with a key and then played back simply by providing that key. Clear Key can be built into the browser: it does not require the use of a separate decryption module.</p>
 
-<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/clearkey">simpl.info/clearkey</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">a prefixed version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
+<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/eme/clearkey">simpl.info/ck</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">a prefixed version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
 
 <pre class="prettyprint">
 // Define a key: hardcoded in this example – this corresponds to the key used for encryption
@@ -370,7 +377,7 @@ type="static"&gt;
 <h2 id="demos">Demos</h2>
 
 <ul>
-  <li><a href="http://simpl.info/clearkey" title="Clear Key demo" target="_blank">Clear Key</a></li>
+  <li><a href="http://simpl.info/eme/clearkey" title="Clear Key demo" target="_blank">Clear Key</a></li>
   <li><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive" target="_blank">WebM adaptive encrypted video</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">repo</a>)</li>
   <li><a href="http://dash-mse-test.appspot.com/" target="_blank">YouTube MPEG-DASH / Media Source demo</a></li>
   <li><a href="http://html5-demos.appspot.com/static/media-source.html" target="_blank">Media Source Extensions (MSE) demo</a></li>
