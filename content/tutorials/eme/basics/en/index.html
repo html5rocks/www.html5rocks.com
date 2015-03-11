@@ -156,7 +156,8 @@ var config = [{initDataTypes: ['webm'],
   videoCapabilities: [{contentType: 'video/webm; codecs="vp8"'}]}];
 
 if (!video.mediaKeys) {
-  navigator.requestMediaKeySystemAccess('org.w3.clearkey', config).then(
+  navigator.requestMediaKeySystemAccess('org.w3.clearkey',
+      config).then(
     function(keySystemAccess) {
       var promise = keySystemAccess.createMediaKeys();
       promise.catch(
@@ -173,7 +174,8 @@ if (!video.mediaKeys) {
         function(createdMediaKeys) {
           var initData = new Uint8Array([...]);
           var keySession = createdMediaKeys.createSession();
-          keySession.addEventListener('message', handleMessage, false);
+          keySession.addEventListener('message', handleMessage,
+              false);
           return keySession.generateRequest('webm', initData);
         }
       ).catch(
@@ -208,32 +210,88 @@ function handleMessage(event) {
 <p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/eme/clearkey">simpl.info/ck</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">a prefixed version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
 
 <pre class="prettyprint">
-// Define a key: hardcoded in this example – this corresponds to the key used for encryption
-var KEY = new Uint8Array([0xeb, 0xdd, 0x62, 0xf1, 0x68, 0x14, 0xd2, 0x7b,
+// Define a key: hardcoded in this example
+// – this corresponds to the key used for encryption
+var KEY = new Uint8Array([
+  0xeb, 0xdd, 0x62, 0xf1, 0x68, 0x14, 0xd2, 0x7b,
   0x68, 0xef, 0x12, 0x2a, 0xfc, 0xe4, 0xae, 0x3c
 ]);
 
-// Specify the Key System used: in this example, Clear Key
-var keySystem = 'webkit-org.w3.clearkey';
+var config = [{
+  initDataTypes: ['webm'],
+  videoCapabilities: [{
+    contentType: 'video/webm; codecs="vp8"'
+  }]
+}];
 
-// Add listeners to the media element
-var videoElement = document.querySelector('video');
-videoElement.addEventListener('needkey', onNeedKey);
-videoElement.addEventListener('keymessage', onKeyMessage);
-videoElement.addEventListener('keyerror', onKeyError);
-videoElement.addEventListener('keyadded', onKeyAdded);
+var video = document.querySelector('video');
+video.addEventListener('encrypted', handleEncrypted, false);
 
-// Handle the needkey event
-function onNeedKey(e) {
-  // Generate a key request, specifying the Key System and media InitData
-  // e.target is the video
-  e.target.webkitGenerateKeyRequest(keySystem, e.initData);
+navigator.requestMediaKeySystemAccess('org.w3.clearkey', config).then(
+  function(keySystemAccess) {
+    return keySystemAccess.createMediaKeys();
+  }
+).then(
+  function(createdMediaKeys) {
+    return video.setMediaKeys(createdMediaKeys);
+  }
+).catch(
+  function(error) {
+    console.error('Failed to set up MediaKeys', error);
+  }
+);
+
+function handleEncrypted(event) {
+  var session = video.mediaKeys.createSession();
+  session.addEventListener('message', handleMessage, false);
+  session.generateRequest(event.initDataType, event.initData).catch(
+    function(error) {
+      console.error('Failed to generate a license request', error);
+    }
+  );
 }
 
-// Handle a key message, adding a key
-function onKeyMessage(e) {
-  var initData = e.message;
-  e.target.webkitAddKey(keySystem, KEY, initData);
+function handleMessage(event) {
+  // If you had a license server, you would make an asynchronous XMLHttpRequest
+  // with event.message as the body.  The response from the server, as a
+  // Uint8Array, would then be passed to session.update().
+  // Instead, we will generate the license synchronously on the client, using
+  // the hard-coded KEY at the top.
+  var license = generateLicense(event.message);
+
+  var session = event.target;
+  session.update(license).catch(
+    function(error) {
+      console.error('Failed to update the session', error);
+    }
+  );
+}
+
+// Convert Uint8Array into base64 using base64url alphabet, without padding.
+function toBase64(u8arr) {
+  return btoa(String.fromCharCode.apply(null, u8arr)).
+      replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '');
+}
+
+// This takes the place of a license server.
+// kids is an array of base64-encoded key IDs
+// keys is an array of base64-encoded keys
+function generateLicense(message) {
+  // Parse the clearkey license request.
+  var request = JSON.parse(new TextDecoder().decode(message));
+  // We only know one key, so there should only be one key ID.
+  // A real license server could easily serve multiple keys.
+  console.assert(request.kids.length === 1);
+
+  var keyObj = {
+    kty: 'oct',
+    alg: 'A128KW',
+    kid: request.kids[0],
+    k: toBase64(KEY)
+  };
+  return new TextEncoder().encode(JSON.stringify({
+    keys: [keyObj]
+  }));
 }
 </pre>
 
@@ -350,7 +408,7 @@ type="static"&gt;
 <p><a href="https://developer.mozilla.org/en-US/docs/DASH_Adaptive_Streaming_for_HTML_5_Video" title="MDN: DASH Adaptive Streaming for HTML 5 Video">Mozilla Developer Network has instructions</a> on how to use WebM tools and FFmpeg to segment video and build an MPD.</p>
 
 <h2 id="conclusion">Conclusion</h2>
-<p>Use of the web to deliver paid-for video and audio is growing at a huge rate. It seems that every new device, whether it's a tablet, game console, connected TV, or set-top box, is able to stream media from the major content providers over HTTP. <a href="http://longtailvideo.com/html5">Over 85%</a> of mobile and desktop browsers now support &lt;video&gt; and &lt;audio&gt;, and Cisco estimates that <a href="http://www.cisco.com/en/US/solutions/collateral/ns341/ns525/ns537/ns705/ns827/white_paper_c11-481360_ns827_Networking_Solutions_White_Paper.html">video will be 80 to 90 percent of global consumer internet traffic</a> by 2017.  In this context, browser support for protected content distribution is likely to be become increasingly significant, as <a href="https://blog.mozilla.org/security/2013/01/29/putting-users-in-control-of-plugins/" title="Mozilla Security Blog: Putting Users in Control of Plugins">browser vendors</a> <a href="https://sites.google.com/a/chromium.org/dev/developers/npapi-deprecation" title="Chromium NPAPI deprecation: developer guide">curtail support</a> for APIs that most media plugins rely on.</p>
+<p>Use of the web to deliver paid-for video and audio is growing at a <a href="http://www.cmo.com/content/dam/CMO_Other/ADI/Video_Benchmark_Q2_2014/video_benchmark_report-2014.pdf" title="U.S. Digital Video Benchmark: Adobe Digital Index Q2 2014">huge rate</a>. It seems that every new device, whether it's a tablet, game console, connected TV, or set-top box, is able to stream media from the major content providers over HTTP. <a href="http://longtailvideo.com/html5">Over 85%</a> of mobile and desktop browsers now support &lt;video&gt; and &lt;audio&gt;, and Cisco estimates that <a href="http://www.cisco.com/en/US/solutions/collateral/ns341/ns525/ns537/ns705/ns827/white_paper_c11-481360_ns827_Networking_Solutions_White_Paper.html">video will be 80 to 90 percent of global consumer internet traffic</a> by 2017.  In this context, browser support for protected content distribution is likely to be become increasingly significant, as <a href="https://blog.mozilla.org/security/2013/01/29/putting-users-in-control-of-plugins/" title="Mozilla Security Blog: Putting Users in Control of Plugins">browser vendors</a> <a href="https://sites.google.com/a/chromium.org/dev/developers/npapi-deprecation" title="Chromium NPAPI deprecation: developer guide">curtail support</a> for APIs that most media plugins rely on.</p>
 
 <h2 id="find-out-more">Further reading</h2>
 
@@ -381,6 +439,7 @@ type="static"&gt;
   <li><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive" target="_blank">WebM adaptive encrypted video</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">repo</a>)</li>
   <li><a href="http://dash-mse-test.appspot.com/" target="_blank">YouTube MPEG-DASH / Media Source demo</a></li>
   <li><a href="http://html5-demos.appspot.com/static/media-source.html" target="_blank">Media Source Extensions (MSE) demo</a></li>
+  <li>Google's <a href="https://github.com/google/shaka-player" title="Shaka Player GitHub repo">Shaka Player</a> implements a DASH client with EME support</li>
 </ul>
 
 {% endblock %}
