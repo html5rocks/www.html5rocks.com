@@ -42,25 +42,17 @@ a[rel='external']
 
 <p>Encrypted Media Extensions provides an API that enables web applications to interact with content protection systems, to allow playback of encrypted audio and video.</p>
 
-<blockquote>
-
-  <p>This article is about the EME API and how to use it. For those interested in the politics of EME, we've summarized arguments pro and con in <a href="https://docs.google.com/document/d/1EV1O26wP3y3OkPLBDcJdrbU9S-x5lyjBZ2jRITcTCfM" target="_blank">this document</a>.</p>
-
-  <p>For a general introduction to digital media, take a look at Monty Montgomery's <a href="http://xiph.org/video/vid1.shtml" target="_blank">Digital Media Primer for Geeks</a>.</p>
-
-</blockquote>
-
 <p>EME is designed to enable the same app and encrypted files to be used in any browser, regardless of the underlying protection system. The former is made possible by the standardized APIs and flow while the latter is made possible by the concept of <a href="#common-encryption" title="Common Encryption section">Common Encryption</a>.</p>
 
-<p>EME is an extension to the <code>HTMLMediaElement</code> specification &mdash; hence the name. Being an 'extension' means that browser support for EME is optional: if a browser does not support encrypted media, it will not be able to play encrypted media, but EME is not required for HTML spec compliance. From <a href="http://www.w3.org/TR/encrypted-media/">the EME spec</a>:</p>
+<p>EME is an extension to the <code>HTMLMediaElement</code> specification &mdash; hence the name. Being an 'extension' means that browser support for EME is optional: if a browser does not support encrypted media, it will not be able to play encrypted media, but EME is not required for HTML spec compliance. From <a href="https://w3c.github.io/encrypted-media/">the EME spec</a>:</p>
 
 <blockquote style=" border: none; font-size: 90%; color: #555; font-style: normal; margin: 0">
 
-  <p>This proposal extends HTMLMediaElement providing APIs to control playback of protected content.</p>
+  <p>This proposal extends <a href="http://www.w3.org/TR/html5/embedded-content-0.html#htmlmediaelement" title="HTMLMediaElement spec">HTMLMediaElement</a> providing APIs to control playback of protected content.</p>
 
-  <p>The API supports use cases ranging from simple Clear Key decryption to high value video (given an appropriate user agent implementation). License/key exchange is controlled by the application, facilitating the development of robust playback applications supporting a range of content decryption and protection technologies.</p>
+  <p>The API supports use cases ranging from simple clear key decryption to high value video (given an appropriate user agent implementation). License/key exchange is controlled by the application, facilitating the development of robust playback applications supporting a range of content decryption and protection technologies.</p>
 
-  <p>This specification does not define a content protection or Digital Rights Management system. Rather, it defines a common API that may be used to discover, select and interact with such systems as well as with simpler content encryption systems. Implementation of Digital Rights Management is not required for compliance with this specification: only the simple Clear Key system is required to be implemented as a common baseline.</p>
+  <p>This specification does not define a content protection or Digital Rights Management system. Rather, it defines a common API that may be used to discover, select and interact with such systems as well as with simpler content encryption systems. Implementation of Digital Rights Management is not required for compliance with this specification: only the Clear Key system is required to be implemented as a common baseline.</p>
 
   <p>The common API supports a simple set of content encryption capabilities, leaving application functions such as authentication and authorization to page authors. This is achieved by requiring content protection system-specific messaging to be mediated by the page rather than assuming out-of-band communication between the encryption system and a license or other server.</p>
 
@@ -90,19 +82,20 @@ a[rel='external']
 <ol>
   <li>A web application attempts to play audio or video that has one or more encrypted streams.</li>
   <li>The browser recognizes that the media is encrypted (see box below for how that happens) and fires an <code>encrypted</code> event with metadata (<code>initData</code>) obtained from the media about the encryption.</li>
-  <li>The application handles the <code>needkey</code> event:
+  <li>The application handles the <code>encrypted</code> event:
     <ol style="list-style-type: lower-alpha; margin: 0">
-      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System and license server URL by using <code>navigator.requestMediaKeySystemAccess()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System via a <code>MediaKeySystemAccess</code> object. Note that initialization of the MediaKeys object should happen before the first <code>encrypted</code> event. Getting a license server URL is done by the app independently of selecting an available key system. A <code>MediaKeys</code> object represents the keys used to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions.</li>
+      <li>If no <code>MediaKeys</code> object has been associated with the media element, first select an available Key System by using <code>navigator.requestMediaKeySystemAccess()</code> to check what Key Systems are available, then create a <code>MediaKeys</code> object for an available Key System via a <code>MediaKeySystemAccess</code> object. Note that initialization of the MediaKeys object should happen before the first <code>encrypted</code> event. Getting a license server URL is done by the app independently of selecting an available key system. A <code>MediaKeys</code> object represents all the keys available to decrypt the media for an audio or video element. It represents a CDM instance and provides access to the CDM, specifically for creating key sessions, which are used to obtain keys from a license server.</li>
       <li>Once the <code>MediaKeys</code> object has been created, assign it to the media element: <code>setMediaKeys()</code> associates the <code>MediaKeys</code> object with an HTMLMediaElement, so that its keys can be used during playback, i.e. during decoding.</li>
     </ol>
   </li>
 
-  <li>The app passes the media data obtained in the <code>needkey</code> handler to a CDM, by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a license and its key(s).</li>
+  <li>The app creates a <code>MediaKeySession</code> by calling <code>createSession()</code> on the <code>MediaKeys</code>. This creates a <code>MediaKeySession</code>, which represents the lifetime of a license and its key(s).</li>
+  <li>The app generates a license request by padding the media data obtained in the <code>encrypted</code> handler to the CDM, by calling <code>generateRequest()</code> on the <code>MediaKeySession</code>.</li>
   <li>The CDM fires a <code>message</code> event: a request to acquire a key from a license server.</li>
   <li>The <code>MediaKeySession</code> object receives the <code>message</code> event and the application sends a message to the license server (via XHR, for example).</li>
-  <li>The application receives a response from the license server and passes the data to the CDM by using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
+  <li>The application receives a response from the license server and passes the data to the CDM using the <code>update()</code> method of the <code>MediaKeySession</code>.</li>
   <li>The CDM decrypts the media using the keys in the license. A valid key may be used, from any session within the <code>MediaKey</code>s associated with the media element. The CDM will access the key and policy, indexed by Key ID.</li>
-  <li>Media playback begins.</li>
+  <li>Media playback resumes.</li>
   </ol>
 
   <p>Phew...</p>
@@ -111,7 +104,7 @@ a[rel='external']
 
   <p>How does the browser know that media is encrypted?</p>
 
-  <p>This information is in the metadata of the media container file, which will be in a format such as <a href="https://en.wikipedia.org/wiki/ISO_base_media_file_format">ISO BMFF</a> or <a href="https://en.wikipedia.org/wiki/WebM">WebM</a>. For ISO BMFF this means header metadata, called the <em style="font-style: normal">protection scheme information box</em>. WebM uses the Matroska <a href="http://matroska.org/technical/specs/notes.html">ContentEncryption element</a>, with some WebM-specific additions. Guidelines are provided for each container <a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html#containers">in the EME spec</a>.</p>
+  <p>This information is in the metadata of the media container file, which will be in a format such as <a href="https://en.wikipedia.org/wiki/ISO_base_media_file_format">ISO BMFF</a> or <a href="https://en.wikipedia.org/wiki/WebM">WebM</a>. For ISO BMFF this means header metadata, called the <em style="font-style: normal">protection scheme information box</em>. WebM uses the Matroska <a href="http://matroska.org/technical/specs/notes.html">ContentEncryption element</a>, with some <a href="http://www.webmproject.org/docs/webm-encryption/" title="WebM Encryption">WebM-specific additions</a>. Guidelines are provided for each container <a href="http://w3c.github.io/encrypted-media/initdata-format-registry.html">in an EME-specific registry</a>.</p>
 
 </blockquote>
 
@@ -153,7 +146,7 @@ a[rel='external']
 var video = document.querySelector('video');
 
 var config = [{initDataTypes: ['webm'],
-  videoCapabilities: [{contentType: 'video/webm; codecs="vp8"'}]}];
+  videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}]}];
 
 if (!video.mediaKeys) {
   navigator.requestMediaKeySystemAccess('org.w3.clearkey',
@@ -201,13 +194,13 @@ function handleMessage(event) {
 
 <p>This is in contrast to legacy solutions that would only work with a complete vertical stack, including a single client that often also included an application runtime.</p>
 
-<p><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">CENC</a> is an <a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">ISO BMFF standard</a> for Common Encryption; a similar concept applies to WebM.</p>
+<p><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">Common Encryption</a> (CENC) is an <a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">ISO standard</a> defining a protection scheme for ISO BMFF; a similar concept applies to WebM.</p>
 
 <h2 id="clear-key">Clear Key</h2>
 
 <p>Although EME does not define DRM functionality, the spec currently mandates that all browsers supporting EME must implement Clear Key. Using this system, media can be encrypted with a key and then played back simply by providing that key. Clear Key can be built into the browser: it does not require the use of a separate decryption module.</p>
 
-<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/eme/clearkey">simpl.info/ck</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction. (This code corresponds to <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">a prefixed version 0.1b</a> of the EME Editor's Draft, as currently implemented by Chrome.)</p>
+<p>While not likely to be used for many types of commercial content, Clear Key is fully interoperable across all browsers that support EME. It is also handy for testing EME implementations, and applications using EME, without the need to request a content key from a license server. There is a simple Clear Key example at <a href="http://simpl.info/eme/clearkey">simpl.info/ck</a>. Below is a walkthrough of the code, which parallels the steps described <a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">above</a>, though without license server interaction.</p>
 
 <pre class="prettyprint">
 // Define a key: hardcoded in this example
@@ -416,8 +409,7 @@ type="static"&gt;
 <h3 id="specs-and-standards">Specs &amp; standards</h3>
 
 <ul>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: latest Editor's Draft</li>
-  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html" target="_blank">EME spec</a>: prefixed version 0.1b of the Editor's Draft, as initially implemented by Chrome. The unprefixed EME API was made available unflagged in Chrome 42.</li>
+  <li><a href="https://w3c.github.io/encrypted-media/" target="_blank">EME spec</a>: latest Editor's Draft</li>
   <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397" target="_blank">Common Encryption (CENC)</a></li>
   <li><a href="http://www.w3.org/TR/media-source/" target="_blank">Media Source Extensions</a></li>
   <li><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c057623_ISO_IEC_23009-1_2012.zip" target="_blank">DASH standard</a> (yes, it's a PDF)</li>
@@ -435,10 +427,8 @@ type="static"&gt;
 <h2 id="demos">Demos</h2>
 
 <ul>
-  <li><a href="http://simpl.info/eme/clearkey" title="Clear Key demo" target="_blank">Clear Key</a></li>
-  <li><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive" target="_blank">WebM adaptive encrypted video</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">repo</a>)</li>
-  <li><a href="http://dash-mse-test.appspot.com/" target="_blank">YouTube MPEG-DASH / Media Source demo</a></li>
-  <li><a href="http://html5-demos.appspot.com/static/media-source.html" target="_blank">Media Source Extensions (MSE) demo</a></li>
+  <li>Clear Key demo: <a href="http://simpl.info/eme/clearkey" title="Clear Key demo" target="_blank">simpl.info/ck</a></li>
+  <li><a href="http://simpl.info/mse" target="_blank">Media Source Extensions (MSE) demo</a></li>
   <li>Google's <a href="https://github.com/google/shaka-player" title="Shaka Player GitHub repo">Shaka Player</a> implements a DASH client with EME support</li>
 </ul>
 
