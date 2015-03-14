@@ -126,7 +126,7 @@ HTML `<template>` 元素代表标记中的一个模板。它包含"模板内容"
 
 <h3 id="toc-demo-sd">例子：从模板中生成 Shadow DOM</h3>
 
-大部分人通过为 `.innerHTML` 赋值一串标记来将 [Shadow DOM](/webcomponents/shadowdom/) 挂载到 host 上：
+大部分人通过为 `.innerHTML` 赋值一串标记来将 [Shadow DOM](/tutorials/webcomponents/shadowdom/) 挂载到 host 上：
 
     <div id="host"></div>
     <script>

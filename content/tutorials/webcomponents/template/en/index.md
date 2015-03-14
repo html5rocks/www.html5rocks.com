@@ -55,7 +55,7 @@ To create a templated content, declare some markup and wrap it in the `<template
 <blockquote class="commentary talkinghead">
 The observant reader may notice the empty image. That's perfectly fine
 and intentional. A broken image won't 404 or produce console errors because it
-won't be fetched on page load. We can dynamically generate the source URL later on. See 
+won't be fetched on page load. We can dynamically generate the source URL later on. See
 <a href="#toc-pillars">the pillars</a>.
 </blockquote>
 
@@ -89,7 +89,7 @@ but [content model](http://www.w3.org/TR/html5-diff/#content-model) children. It
 <h2 id="toc-using">Activating a template</h2>
 
 To use a template, you need to activate it. Otherwise its content will never render.
-The simplest way to do this is by creating a deep copy of its `.content` using `document.importNode()`. The `.content` property is a read-only `DocumentFragment` containing the guts of the template. 
+The simplest way to do this is by creating a deep copy of its `.content` using `document.importNode()`. The `.content` property is a read-only `DocumentFragment` containing the guts of the template.
 
     var t = document.querySelector('#mytemplate');
     // Populate the src at runtime.
@@ -144,7 +144,7 @@ runs when the button is pressed, stamping out the template.
 
 <h3 id="toc-demo-sd">Example: Creating Shadow DOM from a template</h3>
 
-Most people attach [Shadow DOM](/webcomponents/shadowdom/) to a host by setting a string of markup to `.innerHTML`:
+Most people attach [Shadow DOM](/tutorials/webcomponents/shadowdom/) to a host by setting a string of markup to `.innerHTML`:
 
     <div id="host"></div>
     <script>
@@ -170,7 +170,7 @@ content to a shadow root:
         border-radius: 5px;
         width: 450px;
         max-width: 100%;
-      } 
+      }
       :host(:hover) {
         background: #ccc;
       }
@@ -228,7 +228,7 @@ content to a shadow root:
     border-radius: 5px;
     width: 450px;
     max-width: 100%;
-  } 
+  }
   :host(:hover) {
     background: #ccc;
   }
@@ -306,7 +306,7 @@ The only time a template renders is when it goes live.
               <li>Stuff</li>
             </template>
           </ul>
-        </template> 
+        </template>
 
     Activating the outer template will not active inner templates. That is to say,
     nested templates require that their children also be manually activated.
@@ -335,7 +335,7 @@ While this technique works, there are a number of downsides. The rundown of this
 - <label class="bad"></label> *Not inert* - even though our content is hidden,
 a network request is still made for the image.
 - <label class="bad"></label> *Painful styling and theming* - an embedding page must prefix all of its
-CSS rules with `#mytemplate` in order to scope styles down to the template. This 
+CSS rules with `#mytemplate` in order to scope styles down to the template. This
 is brittle and there are no guarantees we won't encounter future naming collisions.
 For example, we're hosed if the embedding page already has an element with that id.
 
