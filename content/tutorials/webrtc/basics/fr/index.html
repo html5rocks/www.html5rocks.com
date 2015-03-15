@@ -709,5 +709,55 @@ function doAnswer() {
   <figcaption>Tethr/Tropo: dispositif de télécommunication d'urgence dans une valise</figcaption>
 </figure>
 
+<h2 id="toc-rtcdatachannel">RTCDataChannel</h2>
+
+<p>En plus de l'audio et de la vidéo, WebRTC supporte un canal temps-réel pour d'autres types de données.</p>
+
+<p>L'API RTCDataChannel permet de faire des échanges de pair à pair de n'importe quelle donnée avec peu de latence et un bon débit. Il y a une page de démo sur <a href="http://simpl.info/dc" title="Simple RTCDataChannel example">simpl.info/dc</a>.</p>
+
+<p>Cette fonctionnalité ouvre de nouvelles portes à cette API comme par exemple :</p>
+<ul>
+	<li>Les jeux vidéos</li>
+	<li>Les applications de bureau à distance</li>
+	<li>Le chat</li>
+	<li>L'échange de fichiers</li>
+	<li>Les réseaux décentralisés en tout genre</li>
+</ul>
+
+<p>L'API a quelques fonctionalités qui permettent de tirer le meilleur de RTCPeerConnection pour mettre en place une communication de qualité de par à pair :</p>
+<ul>
+	<li>Réutilisation des sessions RTCPeerConnection.</li>
+	<li>Multiples canaux simultanés avec prioritisation.</li>
+	<li>Gestion de la fiabilité de livraison.</li>
+	<li>Gestion intégrée de la sécurité (DTLS) et gestion de la congestion.</li>
+	<li>Possibilité d'utilisation avec ou sans audio et vidéo.</li>
+</ul>
+
+<p>La syntaxe est volontairement similaire au WebSocket, avec une méthode <code>send()</code>et une gestion des événements <code>message</code> :</p>
+
+<pre class="prettyprint">
+var pc = new webkitRTCPeerConnection(servers,
+  {optional: [{RtpDataChannels: true}]});
+
+pc.ondatachannel = function(event) {
+  receiveChannel = event.channel;
+  receiveChannel.onmessage = function(event){
+    document.querySelector("div#receive").innerHTML = event.data;
+  };
+};
+
+sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});
+
+document.querySelector("button#send").onclick = function (){
+  var data = document.querySelector("textarea#send").value;
+  sendChannel.send(data);
+};
+</pre>
+
+<p>La communication se fait directement entre les navigateurs si bien que RTCDataChannel peut être beaucoup plus rapide que WebSocket même si un serveur de relais (TURN) est requis pour la traversée des firewalls et des NAT.</p>
+
+<p>RTCDataChannel est disponible dans Chrome, Opera et Firefox. Le superbe jeu <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> utilise cette API pour gérer la couche communication. <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> permet de faire du partage de fichiers en P2P via RTCDataChannel et <a href="https://peercdn.com/" title="peerCDN site">peerCDN</a> propose une approche de ce que serait la distribution de contenu en P2P.</p>
+
+<p>Pour plus d'infos sur RTCDataChannel, jetez un œil <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-00" title="IETF Data Channel draft specification">au draft de la spécification</a> par l'IETF.</p>
 
 {% endblock %}
