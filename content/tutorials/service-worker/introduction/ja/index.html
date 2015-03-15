@@ -113,7 +113,7 @@ API</a> のうち、Chrome 40 ではまだ実装されていない <code>CacheSt
 
 <pre class="prettyprint"><code>// キャッシュさせたいファイル
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -133,7 +133,7 @@ self.addEventListener('install', function(event) {
 
 <pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -171,7 +171,7 @@ self.addEventListener('install', function(event) {
         }
 
         return fetch(event.request);
-      });
+      })
   );
 });</code></pre>
 
@@ -209,8 +209,7 @@ self.addEventListener('install', function(event) {
 
             caches.open(CACHE_NAME)
               .then(function(cache) {
-                var cacheRequest = event.request.clone();
-                cache.put(cacheRequest, responseToCache);
+                cache.put(event.request, responseToCache);
               });
 
             return response;
