@@ -439,4 +439,258 @@ function gotRemoteStream(e){
 
 <p>Si UDP échoue, ICE essaye TCP: d'abord HTTP puis HTTPS. Si la communication en direct échoue &mdash; souvent à cause des NAT ou des firewalls &mdash; ICE utilise un serveur TURN relais. En d'autres mots, ICE va d'abord essayer STUN en UDP pour connecter les pairs entre eux, et si ça échoue, il se rabattra sur un serveur de relais TURN. L'expression 'finding candidates' fait référence au procédé de découverte des interfaces réseaux et des ports.</p>
 
+
+<figure style="margin-bottom: 2em">
+  <img src="dataPathways.png" alt="WebRTC data pathways" />
+  <figcaption>WebRTC data pathways</figcaption>
+</figure>
+
+<p>Justin Uberti, un des concepteurs de WebRTC explique plus en détails ICE, STUN et TURN lors de  <a href="http://www.youtube.com/watch?v=p2HzZkd2A40&t=21m12s" title="Google I/O WebRTC presentation: discussion of ICE, STUN and TURN">la présentation de WebRTC lors da la Google I/O de 2013</a>. (Les <a href="http://io13webrtc.appspot.com/#52" title="Google I/O WebRTC presentation slide: Deploying STUN and TURN">supports de présentation</a> donnent des exemples d'implémentation de serveurs TURN et STUN.)</p>
+
+<h4 id="toc-simple">Un simple client de chat vidéo</h4>
+
+<p>Les explications ci-dessous décrivent les mécabnismes de signalisation utilisés par <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat application">apprtc.appspot.com</a>.</p>
+<blockquote class="talkinghead commentary">Si vous êtes un peu perdu, essayez le <a href="https://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab repository on Bitbucket">WebRTC codelab</a>. Ce guide qui explique pas à pas comment monter une application de chat vidéo, il y a même un petit serveur de signalisation basé sur <a href="http://Socket.io" title="Socket.io website">Socket.io</a> sur un <a href="http://nodejs.org/" title="Node website">serveur Node JS</a>.</blockquote>
+
+<p>Testez un environnement WebRTC complet avec signalisation et traversée de NAT/firewall par STUN sur la démo <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>. Cett application utilise <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> pour gérer les différentes implémentations de RTCPeerConnection et <code>getUserMedia()</code>.</p>
+
+<p>Le code est délibérément verbeux dans ses logs : gardez un &oelig;il sur la console pour suivre l'enchaînement des événements. Ci-dessous nous donnerons des détails pas à pas du code.</p>
+
+<h3>Que se passe-t-il ?</h3>
+
+<p>La démo commence en lançant la fonction <code>initalize()</code> :</p>
+
+<pre class="prettyprint">
+function initialize() {
+    console.log("Initializing; room=99688636.");
+    card = document.getElementById("card");
+    localVideo = document.getElementById("localVideo");
+    miniVideo = document.getElementById("miniVideo");
+    remoteVideo = document.getElementById("remoteVideo");
+    resetStatus();
+    openChannel('AHRlWrqvgCpvbd9B-Gl5vZ2F1BlpwFv0xBUwRgLF/* ...*/');
+    doGetUserMedia();
+  }
+</pre>
+
+<p>Vous remarquerez que des values comme celles de la variable <code>room</code> et le token utilisé par <code>openChannel()</code> sont fournis au niveau du serveur par le Google App Engine : jetez un œil <a href="https://code.google.com/p/webrtc/source/browse/trunk/samples/js/apprtc/index.html" title="index.html template code in the apprtc repository">au template de index.html</a> dans le repository pour voir les valeurs qui sont ajoutées.</p>
+
+<p>Ce code initialise This code initializes variables for the HTML video elements that will display video streams from the local camera (<code>localVideo</code>) and from the camera on the remote client (<code>remoteVideo</code>). <code>resetStatus()</code> simply sets a status message.</p>
+
+<p>This code initializes variables for the HTML video elements that will display video streams from the local camera (<code>localVideo</code>) and from the camera on the remote client (<code>remoteVideo</code>). <code>resetStatus()</code> simply sets a status message.</p>
+
+<p>The <code>openChannel()</code> function sets up messaging between WebRTC clients:</p>
+
+<pre class="prettyprint">
+function openChannel(channelToken) {
+  console.log("Opening channel.");
+  var channel = new goog.appengine.Channel(channelToken);
+  var handler = {
+    'onopen': onChannelOpened,
+    'onmessage': onChannelMessage,
+    'onerror': onChannelError,
+    'onclose': onChannelClosed
+  };
+  socket = channel.open(handler);
+}
+</pre>
+
+<p>Pour la signalisation, cette démo utilise le <a href="http://code.google.com/appengine/docs/python/channel/overview.html" title="Channel API Overview (Python)" target="_blank">Channel API</a> de Google App Engine, qui transmet les messages entre les clients JavaScript sans polling. (La signalisation dans WebRTC est traitée plus en détails <a href="#toc-signaling" title="WebRTC signaling">ci-dessous</a>).</p>
+
+<figure>
+  <img src="apprtcArchitecture.png" alt="Architecture of the apprtc video chat application" />
+  <figcaption>Architecture de l'application apprtc de chat vidéo</figcaption>
+</figure>
+
+<p>Pour établir un canal avec la Channel API, ça marche comme ça :</p>
+
+<ol>
+	<li>Le client A génère un identifiant (ID) unique.</li>
+	<li>Le client A demande un accès auprès de l'application en lui envoyant son ID.</li>
+	<li>L'App Engine crée un canal (channel) et génère un token pour y accéder.</li>
+	<li>L'App envoie le token au client A.</li>
+	<li>Le client A ouvre un socket et se connecte au channel créé sur le serveur.</li>
+</ol>
+
+<figure>
+  <img src="channelEstablishing.png" alt="The Google Channel API: establishing a channel" />
+  <figcaption>La Channel API de Google : création d'un channel</figcaption>
+</figure>
+
+<p>L'envoi de messages fonctionne comme ceci :</p>
+
+<ol>
+	<li>Le client B fait une requête POST à l'application.</li>
+	<li>L'App passe la requête au channel.</li>
+	<li>Le client A reçoit le message par le channel.</li>
+	<li>Chez le client A, un callback "onmessage" est lancé.</li>
+</ol>
+
+<figure>
+  <img src="channelSending.png" alt="The Google Channel API: sending a message" />
+  <figcaption>La Channel API de Google : envoi d'un message</figcaption>
+</figure>
+
+<p>Petit rappel : la signalisation de messages peuvent être communiqués par n'importe quel mécanisme choisi par le développeur, il n'est pas spécifié par WebRTC. Dans cette démo, on utilise la Channel API, mais d'autres méthodes (comme les WebSockets) peuvent être utilisés à la place.</p>
+
+<p>Après avoir appelé <code>OpenChannel()</code>, la fonction <code>getUserMedia()</code> appelée par <code>initialize()</code> vérifie si le navigateur supporte l'API <code>getUserMedia</code>. (Il y a plein d'articles à propos de getUserMedia sur <a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/" title="HMTL5 Rocks: Capturing Audio & Video in HTML5" target="_blank">HTML5 Rocks</a>.) Si tout se passe bien, , onUserMediaSuccess est appelé :
+
+<pre class="prettyprint">
+function onUserMediaSuccess(stream) {
+  console.log("L'utilisateur a autorisé l'accès à la caméra et au micro.");
+  // Ce polyfill permet d'attacher le flux de médias à cet élément.
+  attachMediaStream(localVideo, stream);
+  localVideo.style.opacity = 1;
+  localStream = stream;
+  // L'appelant créé une PeerConnection.
+  if (initiator) maybeStart();
+}
+</pre>
+
+<p>Là, on a la vidéo de la caméra locale qui s'affiche dans l'élément  <code>localVideo</code>, un <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: information about Blob URLs">objet (Blob) URL</a> fait référence aux données créées par le flux vidéo qui est envoyé vers l'attribut <code>src</code> de l'élément. (<code>createObjectURL</code> est utilisé pour accéder à l'URI "en mémoire" de la ressource binaire, c'est à dire le LocalDataStream de la vidéo.) le flux de données est aussi envoté dans  <code>localStream</code>, pour le rendre disponible pour l'interlocuteur.</p>
+
+
+<p>Dans ce cas, <code>initiator</code> a pour valeur 1 (et restera à cette valeur jusqu'à la fin de l'appel) donc <code>maybeStart()</code> est appelé :</p>
+
+<pre class="prettyprint">
+function maybeStart() {
+  if (!started && localStream && channelReady) {
+    // ...
+    createPeerConnection();
+    // ...
+    pc.addStream(localStream);
+    started = true;
+    // L'appelant lance l'offre à l'appelé
+    if (initiator)
+      doCall();
+  }
+}
+</pre>
+
+<p>On utilise ici <code>maybeStart()</code> qui peut être appelé d'un peu n'importe où dans le code mais qui ne s'execute que quand  <code>localStream</code> a été défini <em>et</em> <code>channelReady</code> a pour valeur true <em>et</em> que l'appel n'a pas encore commencé. Donc &mdash; si l'appel n'a pas encore commencé, et qu'un flux média local est disponible et qu'en plus le canal de communication est prêt à assurer la signalisation, alors on lance l'appel en passant le flux vidéo local. Une fois que cet appel a eu lieu, <code>started</code> prend pour valeur true pour éviter de relancer un 2e appel.</p>
+
+<h4 id="toc-RTCPeerConnection-caller">RTCPeerConnection : l'appel</h4>
+
+<p>C'est dans <code>createPeerConnection()</code>, appelé par <code>maybeStart()</code>, que l'appel commence vraiment :</p>
+
+<pre class="prettyprint">
+function createPeerConnection() {
+  var pc_config = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
+  try {
+    // Create an RTCPeerConnection via the polyfill (adapter.js).
+    pc = new RTCPeerConnection(pc_config);
+    pc.onicecandidate = onIceCandidate;
+    console.log("Created RTCPeerConnnection with config:\n" + "  \"" +
+      JSON.stringify(pc_config) + "\".");
+  } catch (e) {
+    console.log("Failed to create PeerConnection, exception: " + e.message);
+    alert("Cannot create RTCPeerConnection object; WebRTC is not supported by this browser.");
+      return;
+  }
+
+  pc.onconnecting = onSessionConnecting;
+  pc.onopen = onSessionOpened;
+  pc.onaddstream = onRemoteStreamAdded;
+  pc.onremovestream = onRemoteStreamRemoved;
+}
+</pre>
+
+<p>L'objectif sous-jacent est de mettre en place une connextion en utilisant un serveur STUN qui appelle <code>onIceCandidate()</code> (voir <a href="#stun" title="Explanation of what STUN servers do">ci-dessus</a> l'explication de ICE, STUN et la recherche de candidats). Chaque événement RTCPeerConnection, quand une session se connecte ou est ouverte et quand un flux distant est ajouté ou enlevé doit être écouté. Dans cet exemple, tous ces événements sont logués &mdash; sauf <code>onRemoteStreamAdded()</code> qui va être orienté vers l'élément <code>remoteVideo</code> :</p>
+
+<pre class="prettyprint">
+function onRemoteStreamAdded(event) {
+  // ...
+  miniVideo.src = localVideo.src;
+  attachMediaStream(remoteVideo, event.stream);
+  remoteStream = event.stream;
+  waitForRemoteVideo();
+}
+</pre>
+
+<p>Une fois que <code>createPeerConnection()</code> a été invoqué par  <code>maybeStart()</code>, un appel est créé par la création d'une offre et son envoi à l'appelé :</p>
+
+<pre class="prettyprint">
+function doCall() {
+  console.log("Sending offer to peer.");
+  pc.createOffer(setLocalAndSendMessage, null, mediaConstraints);
+}
+</pre>
+
+<p>Le processus de création de l'offre est ici similaire à l'<a href="#toc-sans" title="RTCPeerConnection sans signaling">exemple sans signalisation</a> ci-dessus, mais, en plus, un message est envoyé au pair distant, en donnant une  SessionDescription (description de session) sérialisée pour l'offre. Ce procédé est géré par <code>setLocalAndSendMessage()</code> :</p>
+
+<pre class="prettyprint">
+function setLocalAndSendMessage(sessionDescription) {
+  // Envoie "Opus" comme codec préféré dans le SDP si Opus est dispo sur la machine.
+  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+  pc.setLocalDescription(sessionDescription);
+  sendMessage(sessionDescription);
+}
+</pre>
+
+<h4 id="toc-signaling-with-channel">Signalisation avec la Channel API</h4>
+
+<p>Le callback <code>onIceCandidate()</code> invoqué quand la RTCPeerConnection a été bien créée dans <code>createPeerConnection()</code> envoie des informations à propos des candidats au fur et à mesure qu'ils se "rencontrent" :</p>
+
+<pre class="prettyprint">
+function onIceCandidate(event) {
+    if (event.candidate) {
+      sendMessage({type: 'candidate',
+        label: event.candidate.sdpMLineIndex,
+        id: event.candidate.sdpMid,
+        candidate: event.candidate.candidate});
+    } else {
+      console.log("End of candidates.");
+    }
+  }
+</pre>
+
+<p>L'envoi de messages, du client vers le serveur est pris en charge par <code>sendMessage()</code> qui fait des requêtes AJAX :</p>
+
+<pre class="prettyprint">
+function sendMessage(message) {
+  var msgString = JSON.stringify(message);
+  console.log('C->S: ' + msgString);
+  path = '/message?r=99688636' + '&u=92246248';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', path, true);
+  xhr.send(msgString);
+}
+</pre>
+
+<p>AJAX (XmlHttpRequest) fonctionne bien pour passer la signalisation du client vers le serveur, mais pas pour la signalisation de serveur à client. Cette application utilise le Google App Engine Channel API. Les messages de l'API (ceux du serveur, donc) sont gérés par <code>processSignalingMessage()</code> :</p>
+
+<pre class="prettyprint">
+function processSignalingMessage(message) {
+  var msg = JSON.parse(message);
+
+  if (msg.type === 'offer') {
+    // L'appelé crée une PeerConnection
+    if (!initiator && !started)
+      maybeStart();
+
+    pc.setRemoteDescription(new RTCSessionDescription(msg));
+    doAnswer();
+  } else if (msg.type === 'answer' && started) {
+    pc.setRemoteDescription(new RTCSessionDescription(msg));
+  } else if (msg.type === 'candidate' && started) {
+    var candidate = new RTCIceCandidate({sdpMLineIndex:msg.label,
+                                         candidate:msg.candidate});
+    pc.addIceCandidate(candidate);
+  } else if (msg.type === 'bye' && started) {
+    onRemoteHangup();
+  }
+}
+</pre>
+
+<p>Si le message est une réponse d'un pair (une réponse à une offre), RTCPeerConnection le place dans sa SessionDescription distante et l'appel peut commencer. Si le message est une offre (un message de l'appelé) RTCPeerConnection enrigistre la SessionDescription sistante, prépare une réponse et l'envoie en tant que réponse à l'appelé, et commence à invoquer la méthode <code>startIce()</code> de RTCPeerConnection :</p>
+
+<pre class="prettyprint">
+function doAnswer() {
+  console.log("Sending answer to peer.");
+  pc.createAnswer(setLocalAndSendMessage, null, mediaConstraints);
+}
+</pre>
+
+<p>Et c'est tot ! L'appelant et l'appelé sont en contact et ont échangé les informations sur leurs capacités, une session d'appel a été lancée et de l'échange de données en temps réel peut commencer.</p>
+
 {% endblock %}
