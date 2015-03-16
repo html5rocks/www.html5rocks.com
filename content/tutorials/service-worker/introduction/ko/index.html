@@ -1,0 +1,387 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="http://cwdoh.github.io">도창욱 (Chang W. Doh)</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>훌륭한 오프라인 경험, 주기적인 백그라운드 동기화, 푸시 알림&mdash;일반적으로 네이티브 어플리케이션에서 필요로 하는 기능들&mdash;이 웹에 적용되고 있습니다. 이 모든 기능들이 의존하고 있는 기술적인 기반을 제공하는 것이 바로 서비스 워커입니다.</p>
+
+<h2 id="toc-what">서비스워커란 무엇인가?</h2>
+
+<p>서비스워커는 웹페이지나 사용자 인터랙션이 필요하지 않은 기능들을 위한 기회를 제공하고, 웹페이지와는 별개로 여러분의 브라우저에 의해 백그라운드에서 실행되는 스크립트입니다. 이 기능은 앞으로 푸시 메세지, 백그라운드 동기화 그리고 지오펜싱(Geofencing)을 포함하겠지만 제공하는 첫번째 기능은 네트워크 요청을 가로채고, 조작하는 응답 캐시를 프로그래밍을 통해 제어할 수 있는 기능을 함꼐 제공하는 것입니다.</p>
+
+<p>이것이 그렇게 신나는 API인 이유는 서비스워커가 여러분이 오프라인을 지원할 수 있도록 하며, 이를 개발자로 하여금 완전하게 통제할 수 있도록 하는 바로 그러한 기능이기 때문입니다.</p>
+
+<p>서비스워커 이전에 <a href="/tutorials/appcache/beginner/">App
+Cache</a>불리는 웹 상에서 사용자에게 오프라인 경험을 제공하는 또 다른 API가 있었습니다. App Cache의 주요 이슈는 <a href="http://alistapart.com/article/application-cache-is-a-douchebag">수많은 흠들</a>, 즉 싱글 페이지 웹 앱에만 특별히 잘 동작하지만 멀티 페이지 사이트에는 그러하지 않은 디자인이었습니다. 서비스워커는 이러한 공통적인 고통들을 피할 수 있도록 디자인되었습니다.</p>
+
+<p>서비스워커에 대한 몇 가지를 읊어보자면 다음과 같습니다.</p>
+
+<ul>
+<li><a href="/tutorials/workers/basics/">JavaScript
+  Worker</a>이므로 DOM에 직접 액세스할 수 없습니다. 대신, 서비스워커는 <a href="https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage"><code>postMessage</code></a>를 통해 전송된 메세지들에 대한 대응을 통해 DOM을 제어할 수 있는 페이지들과 의사소통을 할 수 있습니다.</li>
+<li>서비스워커는 어떻게 네트워크 요청을 여러분의 페이지에서 조작할 수 있는지를 제어할 수 있는 프로그램 가능한 네트워크 프록시입니다.</li>
+<li>서비스워커는 사용 중이 아닐 때에는 종료되며, 다음번에 필요하다면 재시작되므로, 서비스워커의 <code>onfetch</code>와 <code>onmessage</code> 핸들러 내에 전역 상태를 만들고 의존할 수 없습니다. 만약 영구적으로 존재하며 재시작 시에 재활용할 필요가 있는 데이터가 있다면 서비스워커는 <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a> API에 액세스할 수 있습니다.</li>
+<li>서비스워커는 Promise를 폭넓게 사용하도록 하므로 Promise에 대해 생소하다면 이 문서를 읽는 것을 잠시 멈추고 <a href="/ko/tutorials/es6/promises/">Jake Archibald의 글</a>을 확인해보시기 바랍니다.</li>
+</ul>
+
+<p class="notice tip"><b>역자 주:</b> 익히 아시다시피 자바스크립트는 기본적으로 단일한 UI 스레드 상에서 동작하므로, 페이지 내에 존재하는 DOM 등의 조작은 UI 동작의 일부로써 존재합니다. 그러나 Worker는 빠르게 데이터를 처리할 수 있도록 UI 스레드 상에서 동작하지 않으며 UI에 대한 직접적인 액세스가 불가능하도록 설계되었습니다. 서비스워커는 Worker의 일종이므로 이를 그대로 수용합니다. 특히 서비스워커는 브라우저 상에서 페이지들과도 독립적인 형태로 유지되기 때문에 이와 더불어 추가적인 특성이 있음을 이해하시면 좋을 것입니다.</p>
+
+<h2 id="lifecycle">서비스워커의 생명주기</h2>
+
+<p>서비스워커는 여러분의 웹페이지와 완전하게 별개인 생명주기(Life Cycle)를 가지고 있습니다.</p>
+
+<p>사이트에 서비스워커를 설치하기 위해, 여러분의 자바스크립트 내에서 <strong>register</strong>를 실행하여야 합니다. 서비스워커의 등록은 브라우저가 백그라운드에서 설치 과정을 시작하도록 할 것입니다.</p>
+
+<p>일반적으로 설치 과정에서 여러분은 몇가지 정적인 리소스를 캐싱하고 싶을 것입니다. 모든 파일이 성공적으로 캐싱되고 나서 서비스워커는 설치된 상태가 될 것입니다. 만약 어떠한 파일이라도 다운로드나 캐싱에 실패한다면, 설치 과정은 실패할 것이며, 서비스워커는 활성화되지 않을 것입니다. (즉, 설치되지 않은 상태일 것입니다.) 만약 이러한 일이 일어난다고 해도 다음 번에 재시도될 것이므로 걱정하지 마시기 바랍니다. 그러나, 이는 설치를 <em>수행하고</em> 여러분이 이러한 정적인 리소스들을 캐시 내에 가지고 있음을 <strong>알고 있음</strong>을 뜻합니다.</p>
+
+<p>설치가 이루어졌을 때 이어서 활성화 단계가 수행되며, 이는 우리가 <a href="#toc-how">서비스워커 갱신하기 섹션</a>에서 다룰 기존 캐시의 관리를 위한 절호의 기회입니다.</p>
+
+<p>활성화 단계 후에 서비스워커는 페이지가 등록한 서비스워커가 처음에는 이를 제어할 수 없겠지만 다시 로딩된 이후에는 그 범주(scope) 내에 닿는 모든 페이지를 제어할 것입니다. 일단 서비스워커가 제어 하에 있게되면 이는 서비스워커가 메모리의 절약을 위해 종료된 상태이거나 여러분의 페이지로부터 네트워크 요청이나 메세지가 생성될 때 발생하는 <code>fetch</code>와 <code>message</code>를 제어하는 두가지 상태 중의 하나를 가질 것입니다.</p>
+
+<p>다음은 서비스워커의 첫 설치 시의 생명주기를 크게 단순하게 표현한 것입니다.</p>
+
+<img src="images/sw-lifecycle.png" />
+
+<h2 id="toc-before">시작하기 전에</h2>
+
+<p>이 저장소 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a>로부터 캐시 폴리필을 가져옵니다.</p>
+
+<p>이 폴리필은 크롬 M40에는 구현되어 있지만 현재는 지원하지 않고 있는 <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache API</a>의 <code>CacheStorage.match</code>, <code>Cache.add</code>과 <code>Cache.addAll</code>에 대한 지원을 추가해줄 것입니다.</p>
+
+<p><strong><code>dist/serviceworker-cache-polyfill.js</code></strong>를 받아 여러분의 사이트의 어딘가에 넣어두고, <strong><code>importScripts</code></strong> 메소드를 통해 서비스워커 내에서 이를 사용합니다. 삽입된 모든 스크립트들은 서비스워커에 의해 자동으로 캐시 처리될 것입니다.</p>
+
+<pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
+
+<h3>HTTPS의 필요</h3>
+
+<p>개발을 하는 동안 여러분은 <code>localhost</code>를 통해 서비스워커를 사용할 수 있을 것입니다만, 이를 사이트에 배포하기 위해서 서버에 HTTPS를 설치해야 할 것입니다.</p>
+
+<p>서비스워커를 사용하면 여러분은 연결을 가로채고 위조하거나 응답을 필터링할 수 있습니다. 강력한 기능이죠. 여러분은 이러한 강력한 기능을  올바르게 사용하고자 할 것입니다. 중간자 공격(man-in-the-middle)이 아니라 말이죠. 이러한 경우를 피하기 위해 여러분은 서비스워커를 HTTPS를 통해 제공된 페이지에서만 등록할 수 있으며, 따라서 
+네트워크를 통해 이동하는 동안 허가되지 않게 변조되지 않은 서비스워커를 수신했음을 알 수 있습니다.</p>
+
+<p><a href="https://pages.github.com/">Github
+Pages</a>는 HTTPS를 통해 제공되므로 데모를 호스팅하기 위한 훌륭한 장소입니다.</p>
+
+<p>만약 서버에 HTTPS를 추가하고 싶다면, 여러분은 TLS 인증서를 받고, 이를 서버에 설치할 필요가 있을 것입니다. 이는 설치 환경에 따라 다르기 때문에 여러분의 서버 관련 문서를 확인하고, 훌륭한 예제로써 <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">모질라의 SSL 설정 생성기</a>를 반드시 확인해보시기 바랍니다.</p>
+
+<h3>서비스워커 사용하기</h3>
+
+<p>이제 우리는 폴리필 라이브러리와 HTTPS의 지원을 가지게 되었으며, 각 단계에서 무엇을 해야하는지 살펴보도록 합시다.</p>
+
+<h3>어떻게 서비스워커를 등록하고 설치하는가</h3>
+
+<p>서비스워커를 설치하기 위해 여러분의 페이지 내에 서비스워커 <strong>설치하기</strong> 과정을 시작해볼 필요가 있습니다. 이는 브라우저에 여러분의 서비스워커 자바스크립트 파일이 어디에 존재하는지를 말해줍니다.</p>
+
+<pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+    // 등록이 성공했을 때
+    console.log('서비스워커가 다음 범주에 대해 등록 성공: ', registration.scope);
+  }).catch(function(err) {
+    // 등록이 실패했을 때 :(
+    console.log('서비스워커의 설치 실패: ', err);
+  });
+}</code></pre>
+
+<p>위 코드는 서비스워커 API가 유효한지를 확인하고, 만약 그렇다면 <code>/sw.js</code>에 있는 서비스워커를 등록합니다.</p>
+
+<p>브라우저가 이미 등록된 서비스워커 존재 여부를 확인하고 적절하게 이를 조작하므로 여러분은 페이지가 로딩될 때마다 문제없이 register를 호출 할 수 있습니다.</p>
+
+<p>register 메소드와 관련된 한가지 미묘한 점은 서비스워커 파일의 위치입니다. 서비스워커의 파일이 도메인의 최상위에 위치하고 있다는 것에 대해 주목할 것입니다. 이는 서비스워크의 범주(scope)가 시작 위치 전체에 해당한다는 것을 의미합니다. 반대로 말하자면 서비스워커는 이 도메인의 모든 것에 대해 <code>fetch</code> 이벤트를 받는다는 것을 의미합니다. 만약 우리가 <code>/example/sw.js</code>에 위치하고 있는 서비스워커 파일을 등록한다면, 서비스워커는 <code>/example/</code>로 시작하는 URL의 페이지들에 대해서만 <code>fetch</code> 이벤트를 확인할 수 있습니다. (즉, <code>/example/page1/</code>,
+<code>/example/page2/</code>)와 같은 페이지들</p>
+
+<p class="notice tip"><b>역자 주:</b> 이는 서비스워커에 반응하는 페이지들에 대해 적용되는 내용입니다. 등록된 서비스워커에서 가로챌 수 있는 네트워크 요청은 이와 관련이 없음을 주의하여 읽어주시기 바랍니다.</p>
+
+
+<p>이제 여러분은 <code>chrome://inspect/#service-workers</code>로 가서 여러분의 사이트를 찾아가보는 것을 통해 실행 중인 서비스워커를 확인할 수 있습니다.</p>
+
+<img src="./images/sw-chrome-inspect.png" />
+
+<p>또한 서비스워커에 처음으로 구현되였던 <code>chrome://serviceworker-internals</code>를 통해 여러분의 서비스워커에 대한 자세한 사항을 볼 수 있습니다. 서비스워커의 생명주기에 대해 학습하는 것에 불과하더라도 이는 여전히 유용합니다.  그렇지만 나중에 이 기능이 <code>chrome://inspect/#service-workers</code>로 변경되더라도 놀라지는 마시기 바랍니다.</p>
+
+<p>여러분은 Incognito 윈도우에서 이전 서비스워커가 새로운 윈도우에 영향을 끼치지 않음을 기억함으로써 서비스워커를 테스트하기 위해 Incognito 윈도우를 닫고 다시 열 수 있다는 것이 유용하다는 것을 알 수 있을 것입니다. Incoginito 윈도우 내로부터 생성된 모든 등록과 캐시들은 일단 해당 윈도우가 닫히고 나면 지워질 것입니다.</p>
+
+<p class="notice tip"><b>역자 주: </b>Incoginito 윈도우는 크롬에서 "시크릿 모드"로 오픈된 윈도우를 뜻합니다. 시크릿 모드로 열린 윈도우는 이전 캐시 등과의 데이터를 윈도우가 활성화된 동안만 유지하므로 이러한 캐시 테스트에 유용하게 사용하실 수 있습니다.</p>
+
+<h3>서비스워커의 설치 단계</h3>
+
+<p>제어하는 페이지가 등록 과정을 시작한 뒤, <code>install</code> 이벤트를 조작할 기회를 제공하는 서비스워커 스크립트의 관점으로 움직여봅시다.</p>
+
+<p>가장 기본적인 예제로써 여러분은 <code>install</code> 이벤트에 대한 콜백을 정의하고 캐시하고자 하는 파일을 결정할 필요가 있습니다.</p>
+
+<pre class="prettyprint"><code>// 우리가 캐시하고자 하는 파일들
+var urlsToCache = [
+  '/',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+// 설치 단계를 위한 콜백 설정
+self.addEventListener('install', function(event) {
+    // 설치 단계 수행
+});</code></pre>
+
+<p>install 콜백 내부에서 우리는 다음과 같은 단계를 처리할 필요가 있습니다.</p>
+
+<ol>
+<li>캐시 열기</li>
+<li>파일들의 캐시</li>
+<li>필요한 모든 리소스에 대하여 캐시 처리 여부 확인하기</li>
+</ol>
+
+<pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
+var urlsToCache = [
+  '/',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+self.addEventListener('install', function(event) {
+  // 설치 단계 수행
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});</code></pre>
+
+<p>여기에서 우리가 <code>caches.open</code>라고 부르는 것을 우리가 원하는 캐시 이름과 함께 볼 수 있을 것이며, 이후에는 <code>cache.addAll</code>을 호출하고 파일의 배열을 넘기는 것을 확인할 수 있을 것입니다. 이는 Promise의 체인(<code>caches.open</code>과 <code>caches.addAll</code>)입니다. <code>event.waitUnitl</code>은 Promise를 취하고 설치가 얼마나 걸리는지와 설치의 성공 여부를 알기 위해 사용됩니다.</p>
+
+<p>모든 파일들이 성공적으로 캐싱되고 나면 서비스워커는 설치될 것입니다. 만약 <strong>어떠한</strong> 파일이라도 다운로드에 실패하였다면 설치 단계는 실패할 것입니다. 이는 여러분이 정의한 모든 리소스를 가지는 것을 신뢰할 수 있도록 해주지만, 설치 단계에서 캐싱할 파일들의 목록을 결정하는데 신중할 필요가 있다는 것을 의미합니다. 긴 파일 목록은 파일 하나가 실패할 가능성을 높이고, 여러분의 서비스워커가 설치되지 못하게 합니다.</p>
+
+<p>이는 그냥 하나의 예제이므로, 여러분은 <code>install</code> 이벤트에서 다른 작업을 수행하거나 <code>install</code> 이벤트 리스너를 함께 설정하는 것을 하지 않을 수 있습니다.</p>
+
+<h3>어떻게 캐싱을 수행하고 요청을 반환하는가</h3>
+
+<p>이제 여러분은 서비스워커를 설치했으며, 아마도 캐싱된 응답 중 하나를 반환하고 싶을 겁니다. 맞나요?</p>
+
+<p>서비스워커가 설치되고 사용자가 다른 페이지로 이동하거나 새로고침을 한 뒤에 서비스워커는 아래 예제처럼 <code>fetch</code> 이벤트를 받기 시작할 것입니다.</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Cache hit - 응답 반환
+        if (response) {
+          return response;
+        }
+
+        return fetch(event.request);
+      }
+    )
+  );
+});</code></pre>
+
+<p>여기 우리가 정의한 <code>fetch</code> 이벤트와 <code>event.respondWith</code> 내에서 <code>caches.match</code>로부터 Promise를 전달합니다. <code>caches.match</code>는 요청을 바라보고 서비스워커가 생성한 모든 캐시로부터 어떤 캐싱된 결과를 찾아낼 것입니다.</p>
+
+<p>만약 알맞는 응답을 가지고 있고 캐시된 값을 반환한다면, 즉 네트워크 요청을 만들고 네트워크로부터 가져올 수 있는 무언가가 있다면 데이터를 반환하는 <code>fetch</code>로의 호출 결과를 반환합니다. 이는 단순한 예제이고, 설치 단계에서 캐싱한 모든 캐시된 리소스를 사용합니다.</p>
+
+<p>만약 새로운 요청들이 누적되어 캐싱되길 원한다면, 아래와 같이 페치(fetch)된 요청에 대한 응답 처리 후 이를 캐시에 추가하는 방법에 의해 그렇게 할 수 있습니다.</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Cache hit - 응답(Response) 반환
+        if (response) {
+          return response;
+        }
+
+        // 중요: 요청(request)을 복제합니다. 요청은 스트림이며
+        // 단 한번만 사용이 가능합니다. 이를 캐시에 의해 일단 사용되고
+        // 페치(fetch)를 위해 브라우저에서 사용된 후 우리는 이 응답을
+        // 복제할 필요가 있습니다.
+        var fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(
+          function(response) {
+            // 올바른 응답(Response)을 받았는지 확인
+            if(!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // 중요: 응답(Response)을 복제한다. 응답은 스트림이며
+            // 브라우저의 응답 사용과 더불어 사용되는 응답을 캐시하기를 원하기 때문에
+            // 이를 복제할 필요가 있으며
+            // 따라서 우리는 2개의 스트림을 가지게 됩니다.
+            var responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(function(cache) {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }
+        );
+      })
+    );
+});</code></pre>
+
+<p>우리가 하고자 하는 것은 다음과 같습니다.</p>
+
+<ol>
+<li>fetch 요청 시 <code>.then</code>로의 콜백 추가</li>
+<li>응답 수신 후 다음 체크들을 수행합니다.</li>
+  <ol>
+    <li>유효한 응답인지 확인한다.</li>
+    <li>응답의 상태(status)가 <code>200</code>인지를 확인한다.</li>
+    <li>응답 형식이 <strong>기본(basic)</strong>, 즉 요청이 우리로부터였음을 나타내는지 확인합니다. 이는 서드파티 리소스에 대한 요청도 캐싱되지 않음을 의미합니다.</li>
+  </ol>
+<li>체크 사항들을 통과한다면, 응답을 <a href="https://fetch.spec.whatwg.org/#dom-response-clone"><code>복제합니다</code></a>. 이는 응답이 <a href="https://streams.spec.whatwg.org/">스트림</a>이고, 바디는 단 한번만 사용할 수 있기 때문입니다. 브라우저에서의 사용을 위한 응답 반환과 더불어 사용을 위한 캐시 전달을 원하기 때문에 이를 복제할 필요가 있으므로 우리는 하나는 브라우저로 다른 하나는 캐시로 보낼 수 있습니다.</li>
+</ol>
+
+<h2 id="toc-how">어떻게 서비스워커를 갱신하는가</h2>
+
+<p>곧 서비스워커의 갱신이 필요할 곳이 어디인가가 요점이 될 것입니다. 때가 되면, 다음과 같은 단계를 따를 필요가 있을 것입니다.</p>
+
+<ol>
+<li>서비스워커 자바스크립트 파일을 갱신합니다.</li>
+  <ol>
+    <li>사용자가 여러분의 사이트를 방문할 때 브라우저는 백그라운드에서 서비스워커가 정의된 스크립트 파일의 재다운로드를 시도합니다. 만약 서비스워커 파일 내에서 현재 보유 중인 파일과 단 1바이트라도 차이가 존재한다면, `새로운 것`으로 간주합니다.</li>
+  </ol>
+  <li>새로운 서비스워커가 시작될 것이며 <code>install</code> 이벤트가 발생할 것입니다.</li>
+  <li>현시점에서 기존 서비스워커가 여전히 현재 페이지를 제어하고 있으므로 새로운 서비스워커는 "대기(Waiting)" 상태에 들어갈 것입니다.</li>
+  <li>현재 사이트의 열려진 페이지들이 닫힐 때, 기존 서비스워커는 종료될 것이며 새로운 서비스워커가 제어권을 가지게 될 것입니다.</li>
+  <li>일단 새로운 서비스워커가 제어권을 획득하고 나면 이 서비스워커의 <code>활성화(Activate)</code> 이벤트가 발생할 것입니다.</li>
+</ol>
+
+<p>활성화(activate) 콜백에서 발생할 공통적인 작업 하나는 캐시 관리입니다. 활성화(activate) 콜백에서 이를 수행하기를 원하게 될 이유는 만약 설치 단계에서 모든 기존 캐시들과 현재의 모든 페이지들에 대한 제어권을 유지하고 있는 모든 기존 서비스워커들을 제거하였다면 해당 캐시로부터 파일들을 제공하는 것이 갑자기 중지될 것이기 때문입니다.</p>
+
+<p>'my-site-cache-v1'라고 불리는 캐시가 하나 있으며, 이를 페이지들에 대한 캐시 하나와 블로그 포스트들을 위한 캐시 하나로 분리할 필요가 있음을 발견했다고 가정하겠습니다. 이는 설치 단계에서 `pages-cache-v1`과 `blog-posts-cache-v1`의 2개의 캐시를 생성하고 활성화(activate) 단계에서 기존 `my-site-cache-v1`을 삭제가 필요함을 의미합니다.</p>
+
+<p>다음 코드는 서비스워커 내의 모든 캐시들에 대한 루프와 캐시 백서(Whitelist) 내에 정의되지 않은 모든 캐시의 삭제를 통해 이를 수행할 것입니다.</p>
+
+<pre class="prettyprint"><code>self.addEventListener('activate', function(event) {
+
+  var cacheWhitelist = ['pages-cache-v1', 'blog-posts-cache-v1'];
+
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});</code></pre>
+
+<h2 id="toc-rough">Rough Edges &amp; Gotchas</h2>
+
+<p>이는 실로 새로운 것입니다. 여기 방해되는 이슈들에 대한 목록이 있습니다. 희망컨데 이 섹션이 곧 제거될 수 있기를 바라지만 현재로서는 유념할 필요가 있습니다.</p>
+
+<h3>설치가 실패해도 그에 대해 잘 알려주지만은 않습니다.</h3>
+
+<p>워커가 등록되었지만 <code>chrome://inspect/#service-workers</code>이나 <code>chrome://serviceworker-internals</code>에서 나타나지 않는다면, 이는 <code>event.waitUntil</code>으로 전달된 거부된 프로미스(Rejected promise) 혹은 발생한 에러에 의해 설치에 실패했을 가능성이 있습니다.</p>
+
+<p>이를 동작하도록 하기 위해서는 <code>chrome://serviceworker-internals</code>으로 가서 "Opens the DevTools window for service worker on start for debugging"을 체크하고 서비스워커의 <code>install</code> 이벤트에 debugger; 문장을 삽입합니다. 이는 "<a
+ href="https://developer.chrome.com/devtools/docs/javascript-debugging#pause-on-uncaught-exceptions">
+잡히지 않은 예외에서의 멈춤 기능(Pause on uncaught exceptions)</a>"와 마찬가지로 실제 이슈를 보여줄 것입니다.</p>
+
+<h3>fetch()는 서비스워커 내에서만 가능합니다.</h3>
+
+<p><code>fetch</code>는 언젠가는 페이지들에서 사용이 가능할 것입니다만, 현재 크롬의 구현은 그렇지 않습니다. 캐시 API 또한 페이지에서 사용이 가능하게 되겠지만 현재 캐시는 서비스워커에서만 사용할 수 있습니다.</p>
+
+<h3>fetch()의 기본 설정들</h3>
+<h4>기본으로 제공되는 정보 보호는 없음</h4>
+
+<p><code>fetch</code>를 사용할 때 기본적으로는 요청은 쿠키와 같은 credentials은 포함하지 않을 것입니다. 만약 credentials을 사용하고 싶다면 대신 다음 코드를 호출할 수 있습니다.</p>
+
+<pre class="prettyprint"><code>fetch(url, {
+  credentials: 'include'
+})</code></pre>
+
+<p>이 동작은 의도적인 것이며, 만약 URL이 동일출처(same-origin)라면 credentials 전송하고 그렇지 않으면 생략하는 XHR의 더 복잡한 기본 설정보다는 틀림없이 나을 것입니다. Fetch 동작은 <code>&lt;img crossorigin="use-credentials"&gt;</code>를 통해 사전동의를 하지 않았다면 절대로 쿠키를 보내지 않는 <code>&lt;img crossorigin&gt;</code>와 같은 다른 CORS 요청들과 더 유사합니다.</p>
+
+<h4>기본적으로 Non-CORS는 실패함</h4>
+
+<p>기본적으로 서드파티 URL로부터 리소스 불러오기는 만약 CORS를 지원하지 않는다면 실패하게 될 것입니다. 여러분은 이를 해결하기 위해 <code>Request</code>에 비-CORS 옵션을 추가할 수 있습니다만, 이는 응답이 성공인지 실패인지를 알려줄 수 없음을 의미하는 <a href="https://fetch.spec.whatwg.org/#concept-filtered-response-opaque">'불투명한' 응답('opaque' response)</a>를 발생시킬 수 있습니다.</p>
+
+<pre class="prettyprint"><code>cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+  return new Request(urlToPrefetch, { mode: 'no-cors' });
+})).then(function() {
+  console.log('모든 리소스들이 불러지고 캐시됨.');
+});</code></pre>
+
+<h3>fetch()는 30x 리다이렉션 뒤에 동작하지 않음</h3>
+
+<p>불행하게도 리다이렉션은 <code>fetch()</code> 응답 내에서 이어지지 않습니다. 이는 <a href="https://code.google.com/p/chromium/issues/detail?id=402389">https://code.google.com/p/chromium/issues/detail?id=402389</a>에서 보시다시피 크롬의 버그입니다.</p>
+
+<h3>반응형 이미지 다루기</h3>
+
+<p><code>srcset</code> 속성이나 <code>&lt;picture&gt;</code> 엘리먼트는 실행 중 가장 적합한 이미지 항목을 선택하고 네트워크 요청을 생성할 것입니다.</p>
+
+<p>서비스워커에서 설치 단계에서 이미지를 캐시하고 싶다면, 다음과 같은 몇가지 선택사항이 존재합니다.</p>
+
+<ol>
+<li><code>&lt;picture&gt;</code> 엘리먼트와 <code>srcset</code> 속성이 요청할 수 있는 모든 이미지의 설치</li>
+<li>단일 저해상도 이미지의 설치</li>
+<li>단일 고해상도 이미지의 설치</li>
+</ol>
+
+<p>모든 이미지의 다운로드는 메모리 낭비일 것이므로 현실적으로 여러분은 2번이나 3번 옵션을 선택할 것입니다.</p>
+
+<p>이제 설치 시점에 저해상도 버전을 선택하고 페이지가 로딩되면 네트워크로부터 고해상도 이미지를 가져오기를 시도하여 만약 고해상도 이미지를 가져오는 것이 실패하면, 저해상도 버전으로 대체하기로 했다고 가정해봅시다. 이는 깔끔하고 좋은 방법이지만 다음과 같은 한가지 문제점을 가지고 있습니다.</p>
+
+<p>다음과 같이 2개의 이미지를 가지고 있다고 가정해보겠습니다.</p>
+
+<table>
+<tr>
+<td>화면 밀도</td>
+<td>폭</td>
+<td>높이</td>
+</tr>
+<tr>
+<td>1x</td>
+<td>400</td>
+<td>400</td>
+</tr>
+<tr>
+<td>2x</td>
+<td>800</td>
+<td>800</td>
+</tr>
+</table>
+
+<p>srcset 이미지에서는 다음과 같은 마크업들을 가지고 있습니다.</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
+
+<p>만약 2x 디스플레이라면 브라우저는 <code>image-2x.png</code>를 다운로드할 것이고, 만약 오프라인 상태에서 여러분이 <code>.catch</code>를 통해 이 요청을 잡아 캐시 <code>image-src.png</code>를 반환한다면, 대신 이미지가 캐시되었더라도 브라우저는 2x 스크린 상의 더 많은 픽셀을 가진 이미지를 예상하고 있으므로 이미지는 400x400 CSS 픽셀 대신 200x200 CSS 픽셀처럼 보일 것입니다. 이를 해결하기 위한 유일한 방법은 고정폭과 높이를 이미지에 설정하는 것입니다.</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x"
+style="width:400px; height: 400px;" /&gt;</code></pre>
+
+<img src="./images/sw-responsive-img-example.png" />
+
+<p><code>&lt;picture&gt;</code> 엘리먼트를 아트 디렉션을 위해 사용하기 위해, 이는 훨씬 더 어려워지고 여러분의 이미지가 어떻게 생성되고 사용되는지에 대해 매우 의존적이 되겠지만, 여러분은 srcset에 대한 유사한 접근 방법을 사용할 수 있을 것입니다.</p>
+
+<h3>URL 해시 변경 관련 버그</h3>
+
+<p>Chrome의 구현과 관련하여 M40 버전에서 서비스워커가 URL의 Hash가 변경된 시점 이후로 동작하지 않는 버그가 존재합니다.</p>
+
+<p>관련 정보는 다음 URL에서 확인할 수 있습니다. <a href="https://code.google.com/p/chromium/issues/detail?id=433708">https://code.google.com/p/chromium/issues/detail?id=433708</a></p>
+
+<h2 id="toc-learn">더 알아보기</h2>
+
+<p><a href="https://jakearchibald.github.io/isserviceworkerready/resources.html">https://jakearchibald.github.io/isserviceworkerready/resources.html</a>에서 관리하고 있는 서비스워커 관련 문서 리스트가 여러분에게 아마 유용할 것입니다.</p>
+
+<h2 id="toc-help">도움받기</h2>
+
+<p>만약 여러분에게 막히는 부분이 있으시다면 Stackoverflow에 <a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> 태그를 달아 질문해주시면 저희가 가능한 더 많은 이슈들의 추적과 도움, 시도들을 지속할 수 있을 것입니다.</p>
+
+{% endblock %}

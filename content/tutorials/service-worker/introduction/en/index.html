@@ -26,7 +26,7 @@ experiences, giving developers complete control over what exactly that
 experience is.</p>
 
 <p>Before service worker there was one other API that would give users an offline
-experience on the web called <a href="http://www.html5rocks.com/en/tutorials/appcache/beginner/">App
+experience on the web called <a href="/tutorials/appcache/beginner/">App
 Cache</a>. The major
 issue with App Cache is the <a href="http://alistapart.com/article/application-cache-is-a-douchebag">number
 of gotcha's that exist</a> as well
@@ -37,22 +37,22 @@ points.</p>
 <p>Things to note about a service worker:</p>
 
 <ul>
-<li>It's a <a href="http://www.html5rocks.com/en/tutorials/workers/basics/">JavaScript
+<li>It's a <a href="/tutorials/workers/basics/">JavaScript
   Worker</a>, so it can't
   access the DOM directly. Instead, a service worker can communicate with the
   pages it controls by responding to messages sent via the
-  <a href="https://www.google.com/url?q=https%3A%2F%2Fhtml.spec.whatwg.org%2Fmultipage%2Fworkers.html%23dom-worker-postmessage&sa=D&sntz=1&usg=AFQjCNEhZhiJ-IbVSs5w1M3WanXGoKLjlQ">PostMessage</a>
+  <a href="https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage"><code>postMessage</code></a>
   interface, and those pages can manipulate the DOM if needed.</li>
 <li>Service worker is a programmable network proxy, allowing you to control
   how network requests from your page are handled.</li>
 <li>It will be terminated when not in use, and restarted when it's next needed, so
-  you cannot rely on global state within a service worker's `onfetch` and
-  `onmessage` handlers. If there is information that you need to persist and
+  you cannot rely on global state within a service worker's <code>onfetch</code> and
+  <code>onmessage</code> handlers. If there is information that you need to persist and
   reuse across restarts, service workers do have access to the
   <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a>
   API.</li>
 <li>Service workers make extensive use of promises, so if you're new to promises,
-  then you should stop reading this and check out <a href="http://www.html5rocks.com/en/tutorials/es6/promises/">Jake Archibald's
+  then you should stop reading this and check out <a href="/tutorials/es6/promises/">Jake Archibald's
   article</a>.</li>
 </ul>
 
@@ -74,13 +74,13 @@ that happens, don't worry, it'll try again next time. But that means if it
 
 <p>When we're installed, the activation step will follow and this is a great
 opportunity for handling any management of old caches, which we'll cover during
-the service worker update section.</p>
+the <a href="#toc-how">service worker update section</a>.</p>
 
 <p>After the activation step, the service worker will control all pages that fall
 under its scope, though the page that registered the service worker for the
 first time won't be controlled until it's loaded again. Once a service worker is
 in control, it will be in one of two states:  either the service worker will be
-terminated to save memory, or it will handle fetch and message events which
+terminated to save memory, or it will handle <code>fetch</code> and <code>message</code> events which
 occur when a network request or message is made from your page.</p>
 
 <p>Below is an overly simplified version of the service worker lifecycle on it's
@@ -93,19 +93,19 @@ first installation.</p>
 <p>Grab the caches polyfill from this repository
 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a>.</p>
 
-<p>This polyfill will add support for CacheStorage.match, Cache.add and
-Cache.addAll which Chrome M40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
+<p>This polyfill will add support for <code>CacheStorage.match</code>, <code>Cache.add</code> and
+<code>Cache.addAll</code> which Chrome M40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
 API</a> doesn't currently support.</p>
 
-<p>Grab <strong><em>dist/serviceworker-cache-polyfill.js</em></strong> to put somewhere in your site
-and use it in a service worker with the <strong><em>importScripts</em></strong> method. Any script
+<p>Grab <strong><code>dist/serviceworker-cache-polyfill.js</code></strong> to put somewhere in your site
+and use it in a service worker with the <strong><code>importScripts</code></strong> method. Any script
 which is imported will automatically be cached by the service worker.</p>
 
 <pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
 
 <h3>HTTPS is Needed</h3>
 
-<p>During development you'll be able to use service worker through <em>localhost</em>, but
+<p>During development you'll be able to use service worker through <code>localhost</code>, but
 to deploy it on a site you'll need to have HTTPS setup on your server.</p>
 
 <p>Using service worker you can hijack connections, fabricate, and filter
@@ -114,12 +114,12 @@ man-in-the-middle might not. To avoid this, you can only register for service
 workers on pages served over HTTPS, so we know the service worker the browser
 receives hasn't been tampered with during its journey through the network.</p>
 
-<p><a href="https://www.google.com/url?q=https%3A%2F%2Fpages.github.com%2F&sa=D&sntz=1&usg=AFQjCNHTeKh4NNMECG4ItyP0UvIZJs6L_Q">Github
+<p><a href="https://pages.github.com/">Github
 Pages</a> are served over HTTPS, so they're a great place to host demos.</p>
 
 <p>If you want to add HTTPS to your server then you'll need to get a TLS
 certificate and set it up for your server. This varies depending on your setup,
-so check your server's documentation and be sure to check out <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL config generator</a> for best practices.</p>
+so check your server's documentation and be sure to check out <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL config generator</a> for best practices.</p>
 
 <h3>Using Service Worker</h3>
 
@@ -152,22 +152,22 @@ accordingly.</p>
 <p>One subtlety with the register method is the location of the service worker
 file. You'll notice in this case that the service worker file is at the root of
 the domain. This means that the service worker's scope will be the entire
-origin. In other words, this service worker will receive fetch events for
+origin. In other words, this service worker will receive <code>fetch</code> events for
 everything on this domain. If we register the service worker file at
-<code>/example/sw.js</code>, then the service worker would only see fetch events for
-pages whose URL starts with <code>/example/</code> (i.e. /example/page1/,
-/example/page2/).</p>
+<code>/example/sw.js</code>, then the service worker would only see <code>fetch</code> events for
+pages whose URL starts with <code>/example/</code> (i.e. <code>/example/page1/</code>,
+<code>/example/page2/</code>).</p>
 
 <p>Now you can check that a service worker is enabled by going to
-<em>chrome://inspect/#service-workers</em> and looking for your site.</p>
+<code>chrome://inspect/#service-workers</code> and looking for your site.</p>
 
 <img src="./images/sw-chrome-inspect.png" />
 
 <p>When service worker was first being implemented you could also view your service
-worker details through <em>chrome://serviceworker-internals</em>. This may still be
+worker details through <code>chrome://serviceworker-internals</code>. This may still be
 useful, if for nothing more than learning about the life cycle of service
 workers, but don't be surprised if it gets replaced by
-<em>chrome://inspect/#service-workers</em> at a later date.</p>
+<code>chrome://inspect/#service-workers</code> at a later date.</p>
 
 <p>You may find it useful to test your service worker in an Incognito window so
 that you can close and reopen knowing that the previous service worker won't
@@ -180,12 +180,12 @@ Incognito window will be cleared out once that window is closed.</p>
 point of view of the service worker script, which is given the opportunity to
 handle the <code>install</code> event.</p>
 
-<p>For the most basic example, you need to define a callback for the install event
+<p>For the most basic example, you need to define a callback for the <code>install</code> event
 and decide which files you want to cache.</p>
 
 <pre class="prettyprint"><code>// The files we want to cache
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -205,7 +205,7 @@ self.addEventListener('install', function(event) {
 
 <pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
 var urlsToCache = [
-  '/index.html',
+  '/',
   '/styles/main.css',
   '/script/main.js'
 ];
@@ -221,7 +221,7 @@ self.addEventListener('install', function(event) {
   );
 });</code></pre>
 
-<p>Here you can see we call caches.open with our desired cache name, after this we
+<p>Here you can see we call <code>caches.open</code> with our desired cache name, after this we
 call <code>cache.addAll</code> and pass in our array of files. This is a chain of promises
 (<code>caches.open</code> and <code>cache.addAll</code>). <code>event.waitUntil</code> takes a promise and uses it
 to know how long installation takes, and whether it succeeded.</p>
@@ -234,8 +234,8 @@ to cache in the install step. Defining a long list of files will increase the
 chance that one file may fail to cache, leading to your service worker not
 getting installed.</p>
 
-<p>This is just one example, you can perform other tasks in the install event or
-avoid setting an install event listener altogether.</p>
+<p>This is just one example, you can perform other tasks in the <code>install</code> event or
+avoid setting an <code>install</code> event listener altogether.</p>
 
 <h3>How to Cache and Return Requests</h3>
 
@@ -243,7 +243,7 @@ avoid setting an install event listener altogether.</p>
 your cached responses right?</p>
 
 <p>After a service worker is installed and the user navigates to a different page
-or refreshes, the service worker will begin to receive fetch events, an example
+or refreshes, the service worker will begin to receive <code>fetch</code> events, an example
 of which is below.</p>
 
 <pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
@@ -257,11 +257,11 @@ of which is below.</p>
 
         return fetch(event.request);
       }
-    );
+    )
   );
 });</code></pre>
 
-<p>Here we've defined our fetch event and within the <code>event.respondWith</code>, we pass
+<p>Here we've defined our <code>fetch</code> event and within the <code>event.respondWith</code>, we pass
 in a promise from <code>caches.match</code>. <code>caches.match</code> will look at the request
 and find any cached results from any of the caches your service worker created.</p>
 
@@ -302,10 +302,9 @@ response of the fetch request and then adding it to the cache, like below.</p>
             var responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
-                .then(function(cache) {
-                  var cacheRequest = event.request.clone();
-                  cache.put(cacheRequest, responseToCache);
-                });
+              .then(function(cache) {
+                cache.put(event.request, responseToCache);
+              });
 
             return response;
           }
@@ -321,15 +320,15 @@ response of the fetch request and then adding it to the cache, like below.</p>
 <li>Once we get a response, we perform the following checks:</li>
   <ol>
     <li>Ensure the response is valid.</li>
-    <li>Check the status is 200 on the response.</li>
+    <li>Check the status is <code>200</code> on the response.</li>
     <li>Make sure the response type is <strong>basic</strong>, which indicates that it's a
        request from our origin. This means that requests to third party assets
        aren't cached as well.</li>
   </ol>
 <li>If we pass the checks, we
-   <a href="https://www.google.com/url?q=https%3A%2F%2Ffetch.spec.whatwg.org%2F%23dom-response-clone&sa=D&sntz=1&usg=AFQjCNGla6bxzm1bb1q6xGeBonsra6Mr9w">clone</a>
+   <a href="https://fetch.spec.whatwg.org/#dom-response-clone"><code>clone</code></a>
    the response. The reason for this is that because the response is a
-   <a href="https://www.google.com/url?q=https%3A%2F%2Fstreams.spec.whatwg.org%2F&sa=D&sntz=1&usg=AFQjCNFsF1mjSSDZt4qfhHxlSOZ2pRPU7Q">stream</a>,
+   <a href="https://streams.spec.whatwg.org/">Stream</a>,
    the body can only be consumed once. Since we want to return the
    response for the browser to use, as well as pass it to the cache to use, we
    need to clone it so we can send one to the browser and one to the cache.</li>
@@ -347,12 +346,12 @@ response of the fetch request and then adding it to the cache, like below.</p>
        is even a byte's difference in the service worker file compared to what
        it currently has, it considers it 'new'.</li>
   </ol>
-  <li>Your new service worker will be started and the install event will be fired.</li>
+  <li>Your new service worker will be started and the <code>install</code> event will be fired.</li>
   <li>At this point the old service worker is still controlling the current pages
    so the new service worker will enter a "waiting" state.</li>
   <li>When the currently open pages of your site are closed, the old service worker
    will be killed and the new service worker will take control.</li>
-  <li>Once your new service worker takes control, its activate event will be fired.</li>
+  <li>Once your new service worker takes control, its <code>activate</code> event will be fired.</li>
 </ol>
 
 <p>One common task that will occur in the activate callback is cache management.
@@ -403,8 +402,9 @@ being passed to <code>event.waitUntil</code>.</p>
 
 <p>To work around this, go to <code>chrome://serviceworker-internals</code> and check "Opens the
 DevTools window for service worker on start for debugging", and put a debugger;
-statement at the start of your install event. This, along with "Pause on
-uncaught exceptions", should reveal the issue.</p>
+statement at the start of your <code>install</code> event. This, along with "<a
+ href="https://developer.chrome.com/devtools/docs/javascript-debugging#pause-on-uncaught-exceptions">
+Pause on uncaught exceptions</a>", should reveal the issue.</p>
 
 <h3>fetch() is Only Available in Service Workers</h3>
 
@@ -415,7 +415,7 @@ cache is only available in the service worker.</p>
 <h3>The Defaults of fetch()</h3>
 <h4>No Credentials by Default</h4>
 
-<p>When you use fetch, by default, requests won't contain credentials such as
+<p>When you use <code>fetch</code>, by default, requests won't contain credentials such as
 cookies. If you want credentials, instead call:</p>
 
 <pre class="prettyprint"><code>fetch(url, {
@@ -424,15 +424,13 @@ cookies. If you want credentials, instead call:</p>
 
 <p>This behaviour is on purpose, and is arguably better than XHR's more complex
 default of sending credentials if the URL is same-origin, but omiting them
-otherwise. Fetch's behaviour is more like other CORS requests, such as &lt;img
-crossorigin&gt;, which never sends cookies unless you opt-in with &lt;img
-crossorigin="use-credentials"&gt;.</p>
+otherwise. Fetch's behaviour is more like other CORS requests, such as <code>&lt;img crossorigin&gt;</code>, which never sends cookies unless you opt-in with <code>&lt;img crossorigin="use-credentials"&gt;</code>.</p>
 
 <h4>Non-CORS Fail by Default</h4>
 
 <p>By default, fetching a resource from a third party URL will fail if it doesn't
-support CORS. You can add a non-CORS option to the Request to overcome this,
-although this will cause an <a href="https://www.google.com/url?q=https%3A%2F%2Ffetch.spec.whatwg.org%2F%23concept-filtered-response-opaque&sa=D&sntz=1&usg=AFQjCNFQdSxeb4oJnJ7-OPLbrpQX0Noirw">'opaque'
+support CORS. You can add a non-CORS option to the <code>Request</code> to overcome this,
+although this will cause an <a href="https://fetch.spec.whatwg.org/#concept-filtered-response-opaque">'opaque'
 response</a>,
 which means you won't be able to tell if the response was successful or not.</p>
 
@@ -449,14 +447,14 @@ bug in Chrome: <a href="https://code.google.com/p/chromium/issues/detail?id=4023
 
 <h3>Handling Responsive Images</h3>
 
-<p>A src-set or picture element will select the most appropriate image asset at
-run time and make a network request.</p>
+<p>The <code>srcset</code> attribute or the <code>&lt;picture&gt;</code> element
+will select the most appropriate image asset at run time and make a network request.</p>
 
 <p>For service worker, if you wanted to cache an image during the install step, you
 have a few options:</p>
 
 <ol>
-<li>Install all the images the picture and src-set elements will request</li>
+<li>Install all the images <code>&lt;picture&gt;</code> element and <code>srcset</code> attribute will request</li>
 <li>Install a single low-res version of the image</li>
 <li>Install a single high-res version of the image</li>
 </ol>
@@ -493,8 +491,8 @@ dandy to do but there is one problem.</p>
 
 <pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
 
-<p>If we are on a 2x display, then the browser will opt to download 'image-2x.png',
-if we are offline you could catch this request and return 'image-src.png'
+<p>If we are on a 2x display, then the browser will opt to download <code>image-2x.png</code>,
+if we are offline you could <code>.catch</code> this request and return <code>image-src.png</code>
 instead if it's cached, however the browser will expect an image which
 takes into account the extra pixels on a 2x screen, so the image will appear as
 200x200 CSS pixels instead of 400x400 CSS pixels. The only way around this is to
@@ -505,7 +503,7 @@ style="width:400px; height: 400px;" /&gt;</code></pre>
 
 <img src="./images/sw-responsive-img-example.png" />
 
-<p>For picture elements being used for art direction, this becomes considerably
+<p>For <code>&lt;picture&gt;</code> elements being used for art direction, this becomes considerably
 more difficult and will depend heavily on how your images are created and used,
 but you may be able to use a similar approach to srcset.</p>
 
@@ -524,8 +522,8 @@ that you may find useful.</p>
 
 <h2 id="toc-help">Get Help</h2>
 
-If you get stuck then please post your questions on Stackoverflow and use the
-<a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> tag so that we can keep a track of issues and try and help as much
-as possible.
+<p>If you get stuck then please post your questions on Stackoverflow and use the
+<a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a>
+tag so that we can keep a track of issues and try and help as much as possible.</p>
 
 {% endblock %}
