@@ -563,7 +563,7 @@ function maybeStart() {
 }
 </pre>
 
-<p>On utilise ici <code>maybeStart()</code> qui peut être appelé d'un peu n'importe où dans le code mais qui ne s'execute que quand  <code>localStream</code> a été défini <em>et</em> <code>channelReady</code> a pour valeur true <em>et</em> que l'appel n'a pas encore commencé. Donc &mdash; si l'appel n'a pas encore commencé, et qu'un flux média local est disponible et qu'en plus le canal de communication est prêt à assurer la signalisation, alors on lance l'appel en passant le flux vidéo local. Une fois que cet appel a eu lieu, <code>started</code> prend pour valeur true pour éviter de relancer un 2e appel.</p>
+<p>On utilise ici <code>maybeStart()</code> qui peut être appelé d'un peu n'importe où dans le code mais qui ne s'execute que quand  <code>localStream</code> a été défini <em>et</em> <code>channelReady</code> a pour valeur true <em>et</em> que l'appel n'a pas encore commencé. Donc, si l'appel n'a pas encore commencé, et qu'un flux média local est disponible et qu'en plus le canal de communication est prêt à assurer la signalisation, alors on lance l'appel en passant le flux vidéo local. Une fois que cet appel a eu lieu, <code>started</code> prend pour valeur true pour éviter de relancer un 2e appel.</p>
 
 <h4 id="toc-RTCPeerConnection-caller">RTCPeerConnection : l'appel</h4>
 
@@ -573,14 +573,14 @@ function maybeStart() {
 function createPeerConnection() {
   var pc_config = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
   try {
-    // Create an RTCPeerConnection via the polyfill (adapter.js).
+    // Création d'une RTCPeerConnection via adapter.js
     pc = new RTCPeerConnection(pc_config);
     pc.onicecandidate = onIceCandidate;
     console.log("Created RTCPeerConnnection with config:\n" + "  \"" +
       JSON.stringify(pc_config) + "\".");
   } catch (e) {
-    console.log("Failed to create PeerConnection, exception: " + e.message);
-    alert("Cannot create RTCPeerConnection object; WebRTC is not supported by this browser.");
+    console.log("Impossible de créer PeerConnection, erreur: " + e.message);
+    alert("L'objet RTCPeerConnection ne peut pas être créé; WebRTC n'est pas supporté par ce navigateur.");
       return;
   }
 
@@ -635,7 +635,7 @@ function onIceCandidate(event) {
         id: event.candidate.sdpMid,
         candidate: event.candidate.candidate});
     } else {
-      console.log("End of candidates.");
+      console.log("Tous les jeux de candidats ont été envoyés.");
     }
   }
 </pre>
@@ -653,7 +653,7 @@ function sendMessage(message) {
 }
 </pre>
 
-<p>AJAX (XmlHttpRequest) fonctionne bien pour passer la signalisation du client vers le serveur, mais pas pour la signalisation de serveur à client. Cette application utilise le Google App Engine Channel API. Les messages de l'API (ceux du serveur, donc) sont gérés par <code>processSignalingMessage()</code> :</p>
+<p>AJAX (XmlHttpRequest) fonctionne bien pour envoyer la signalisation du client vers le serveur, mais pas pour la signalisation de serveur à client. Cette application utilise le Google App Engine Channel API. Les messages de l'API (ceux du serveur, donc) sont gérés par <code>processSignalingMessage()</code> :</p>
 
 <pre class="prettyprint">
 function processSignalingMessage(message) {
@@ -678,7 +678,7 @@ function processSignalingMessage(message) {
 }
 </pre>
 
-<p>Si le message est une réponse d'un pair (une réponse à une offre), RTCPeerConnection le place dans sa SessionDescription distante et l'appel peut commencer. Si le message est une offre (un message de l'appelé) RTCPeerConnection enrigistre la SessionDescription sistante, prépare une réponse et l'envoie en tant que réponse à l'appelé, et commence à invoquer la méthode <code>startIce()</code> de RTCPeerConnection :</p>
+<p>Si le message est une réponse d'un pair (une réponse à une offre), RTCPeerConnection le place dans sa SessionDescription distante et l'appel peut commencer. Si le message est une offre (un message de l'appelé) RTCPeerConnection enregistre la SessionDescription distante, prépare une réponse et l'envoie en tant que réponse à l'appelé, et commence à invoquer la méthode <code>startIce()</code> de RTCPeerConnection :</p>
 
 <pre class="prettyprint">
 function doAnswer() {
@@ -698,7 +698,7 @@ function doAnswer() {
   <figcaption>exemple de Multipoint Control Unit</figcaption>
 </figure>
 
-  <p>La plupart des applications WebRTC servent à communiquer entre différents navigteurs, mais une appli serveur peut permettre l'intéraction de cette technologie avec le <a href="https://fr.wikipedia.org/wiki/R%C3%A9seau_t%C3%A9l%C3%A9phonique_commut%C3%A9" title="Wikipédia: Réseau téléphonique commuté">Réseau téléphonique commuté</a> (ou <a href="https://fr.wikipedia.org/wiki/T%C3%A9l%C3%A9phone" title="Wikipédia: Téléphone">bon vieux bigophone</a>) et avec les systèmes de <a href="http://en.wikipedia.org/wiki/Voice_over_IP" title="Wikipedia article about Voice Over IP">Voix sur IP</a>. En mai 2012, Doubango Télécom a rendu open-source le <a href="http://sipml5.org/" title="sipml5 site">client SIP sipml5</a>, basé sur WebRTC et WebSocket qui permet (entre autres) des appels vidéos entre navigateurs et des apps sur iOS ou Android. À la Google I/O, Tethr et Tropo ont fait une démo d'un <a href="http://tethr.tumblr.com/post/25513708436/tethr-and-tropo-in-the-google-i-o-sandbox" title="Tumblr post about Tethr/Tropo demo">dispositif de télécommunication d'urgence dans une valise</a> utilisant <a href="http://en.wikipedia.org/wiki/OpenBTS" title="Wikipedia article about OpenBTS">un appareil OpenBTS</a> pour permettre la communication entre ordinateurs et téléphones via WebRTC... autrement dit, de la communication téléphonique sans opérateur! </p>
+<p>La plupart des applications WebRTC servent à communiquer entre différents navigteurs, mais une appli serveur peut permettre l'intéraction de cette technologie avec le <a href="https://fr.wikipedia.org/wiki/R%C3%A9seau_t%C3%A9l%C3%A9phonique_commut%C3%A9" title="Wikipédia: Réseau téléphonique commuté">Réseau téléphonique commuté</a> (ou <a href="https://fr.wikipedia.org/wiki/T%C3%A9l%C3%A9phone" title="Wikipédia: Téléphone">bon vieux bigophone</a>) et avec les systèmes de <a href="http://en.wikipedia.org/wiki/Voice_over_IP" title="Wikipedia article about Voice Over IP">Voix sur IP</a>. En mai 2012, Doubango Télécom a rendu open-source le <a href="http://sipml5.org/" title="sipml5 site">client SIP sipml5</a>, basé sur WebRTC et WebSocket qui permet (entre autres) des appels vidéos entre navigateurs et des apps sur iOS ou Android. À la Google I/O, Tethr et Tropo ont fait une démo d'un <a href="http://tethr.tumblr.com/post/25513708436/tethr-and-tropo-in-the-google-i-o-sandbox" title="Tumblr post about Tethr/Tropo demo">dispositif de télécommunication d'urgence dans une valise</a> utilisant <a href="http://en.wikipedia.org/wiki/OpenBTS" title="Wikipedia article about OpenBTS">un appareil OpenBTS</a> pour permettre la communication entre ordinateurs et téléphones via WebRTC... autrement dit, de la communication téléphonique sans opérateur!</p>
 
 <figure>
   <img src="tethr.jpg" alt="Tethr/Tropo demo at Google I/O 2012" />
@@ -758,7 +758,7 @@ document.querySelector("button#send").onclick = function (){
 
 <h2 id="toc-security">Sécurité</h2>
 
-<p>Les solutions de communication en temps réel présentent plusieurs vulnérabilités potentielles, par exemple :</p>
+<p>Les solutions de communication en temps réel présentent plusieurs vulnérabilités potentielles comme par exemple :</p>
 <ul>
   <li>Les médias non cryptés pourraient être interceptés en route entre les navigateurs ou entre un navigateur et un serveur.</li>
   <li>Une application pourrait enreigsitrer le son et/ou la vidéo à l'insu de l'utilisateur.</li>
@@ -816,7 +816,7 @@ document.querySelector("button#send").onclick = function (){
   <li><a href="http://stackoverflow.com/questions/tagged/webrtc" title="Stack Overflow questions tagged 'webrtc'">Stack Overflow</a> pour trouver des réponses et poser des questions sur WebRTC</li>
 </ul>
 
-<h2 id="toc-standards">Standards et protocols</h2>
+<h2 id="toc-standards">Standards et protocoles</h2>
 
 <ul>
   <li><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html" title="W3C Editor's Draft document">The WebRTC W3C Editor's Draft</a></li>
