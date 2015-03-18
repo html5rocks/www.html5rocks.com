@@ -120,7 +120,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
 
 <h3 id="toc-demo-sd">예제: 템플릿으로부터 Shadow DOM 생성하기</h3>
 
-아래와 같이 대부분의 사람들은  `.innerHTML`로 마크업 문자열을 설정하는 것으로 [Shadow DOM](/webcomponents/shadowdom/)을 호스트에 붙입니다.
+아래와 같이 대부분의 사람들은  `.innerHTML`로 마크업 문자열을 설정하는 것으로 [Shadow DOM](/tutorials/webcomponents/shadowdom/)을 호스트에 붙입니다.
 
     <div id="host"></div>
     <script>
@@ -142,7 +142,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
         border-radius: 5px;
         width: 450px;
         max-width: 100%;
-      } 
+      }
       :host(:hover) {
         background: #ccc;
       }
@@ -200,7 +200,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
     border-radius: 5px;
     width: 450px;
     max-width: 100%;
-  } 
+  }
   :host(:hover) {
     background: #ccc;
   }
@@ -274,7 +274,7 @@ HTML `<template>` 엘리먼트는 여러분의 마크업에서 템플릿을 표�
               <li>Stuff</li>
             </template>
           </ul>
-        </template> 
+        </template>
 
     바깥 템플릿의 활성화는 내부 템플릿을 활성화하지 않습니다. 즉, 중첩된 템플릿들은 그들의 자식들 또한 수동으로 활성화하여야 합니다.
 

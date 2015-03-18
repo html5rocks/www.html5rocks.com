@@ -122,7 +122,7 @@ HTML `<template>` 要素はあなたのマークアップ上のテンプレー�
 
 <h3 id="toc-demo-sd">例：テンプレートから Shadow DOM を作る</h3>
 
-ほとんどの人が [Shadow DOM](/webcomponents/shadowdom/) にホストを与える際、`.innerHTML` にマークアップの文字列をセットします：
+ほとんどの人が [Shadow DOM](/tutorials/webcomponents/shadowdom/) にホストを与える際、`.innerHTML` にマークアップの文字列をセットします：
 
     <div id="host"></div>
     <script>
@@ -144,7 +144,7 @@ HTML `<template>` 要素はあなたのマークアップ上のテンプレー�
         border-radius: 5px;
         width: 450px;
         max-width: 100%;
-      } 
+      }
       :host:hover {
         background: #ccc;
       }
@@ -202,7 +202,7 @@ HTML `<template>` 要素はあなたのマークアップ上のテンプレー�
     border-radius: 5px;
     width: 450px;
     max-width: 100%;
-  } 
+  }
   :host:hover {
     background: #ccc;
   }
@@ -275,9 +275,9 @@ HTML `<template>` 要素はあなたのマークアップ上のテンプレー�
               <li>Stuff</li>
             </template>
           </ul>
-        </template> 
+        </template>
 
-    外側の template をアクティベートしても、内側の template はアクティベートされません。これはつまり、ネストされたテンプレートは、内側の template も手動でアクティベートされている必要があるということを意味します。 
+    外側の template をアクティベートしても、内側の template はアクティベートされません。これはつまり、ネストされたテンプレートは、内側の template も手動でアクティベートされている必要があるということを意味します。
 
 <h2 id="toc-old">標準への道</h2>
 
