@@ -1,0 +1,861 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block iscompatible %}
+return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || window.webkitRTCPeerConnection);
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+    <strong>Traducteur :</strong> <a href="https://github.com/gasp">Gaspard Beernaert</a>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/dutton.75.png);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<blockquote>
+  WebRTC est le nouveau front dans la longue guerre pour un web ouvert et décongestionné.
+  <cite><a href="http://hacks.mozilla.org/2012/03/video-mobile-and-the-open-web/" title="Brendan Eich blog post: Video, Mobile, and the Open Web">Brendan Eich</a>, l'inventeur du JavaScript</cite>
+</blockquote>
+
+<h2 id="toc-disruptive">Communication en temps réel sans plugins</h2>
+
+<p>Imaginez un monde où votre téléphone, votre télé et votre ordinateur pourraient tous communiquer sur une plateforme commune. Imaginez du chat vidéo et de l'échange de données en peer-to-peer ajoutés en toute simplicité à votre application web. Telle est la vision de WebRTC.</p>
+
+<p>Vous voulez essayer ? WebRTC est disponible dès maintenant dans Google Chrome, Opera et Firefox. Une bonne manière de commencer est de lancer cette application minimaliste de chat vidéo sur <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>:</p>
+
+<ol>
+	<li>Ouvrez <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a> dans Chrome, Opera ou Firefox.</li>
+	<li>Cliquez sur le bouton "Autoriser" pour laisser l'application utiliser votre webcam.</li>
+	<li>Puis ouvrez l'URL affichée en bas de la page dans un nouvel onglet ou, encore mieux, sur un autre ordinateur.</li>
+</ol>
+
+ <p>Il y a une version du code commenté de cette application <a href="#toc-simple" title="Code walkthrough of apprtc.appspot.com">un peu plus loin dans cet article</a>.</p>
+
+<h2 id="toc-tldr">Prise en main</h2>
+
+<p>Vous n'avez pas le temps de lire cet article ou vous voulez juste le code?</p>
+
+<ol>
+  <li>
+    <p>Suivez une présentation de WebRTC lors de la conférence Google I/O (<a href="http://io13webrtc.appspot.com" title="Google I/O 2013 WebRTC presentation">les supports sont là</a>) :</p>
+    <iframe width="560" height="315" src="http://www.youtube.com/embed/p2HzZkd2A40" frameborder="0" allowfullscreen></iframe>
+  </li>
+  <li>Si vous n'avez jamais utilisé getUserMedia, jetez un &oelig;il à <a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/" title="HMTL5 Rocks: Capturing Audio and Video in HTML5" target="_blank">l'article sur HTML5 Rocks</a> sur le sujet et parcourez la source d'un exemple simplifié sur <a href="http://www.simpl.info/getusermedia" title="Simple getUserMedia example">simpl.info/gum</a>.</li>
+  <li>Attaquez-vous à l'API de RTCPeerConnection en parcourant le <a href="#simpleRTCPeerConnectionExample" title="Internal link to simple RTCPeerConnecton example">petit exemple ci-dessous</a> et la démo sur <a href="http://www.simpl.info/pc" title="WebRTC demo without signaling">simpl.info/pc</a>, qui implémente WebRTC sur une seule page web.</li>
+	<li>Approfondissez vos connaissances sur la manière dont WebRTC utilise des serveurs pour la signalisation, le passage des firewalls et des NAT en lisant le code et les console logs de <a href="http://apprtc.appspot.com" title="Simple WebRTC video chat demo">apprtc.appspot.com</a>.</li>
+</ol>
+
+<p style="font-weight: bold">À défaut, plongez-vous directement dans notre <a href="https://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab repository on Bitbucket">codelab WebRTC</a> : un guide qui explique pas à pas comment construire une application de chat vidéo en utilisant un simple serveur de signalisation.</p>
+
+<h2 id="toc-history">La petite histoire de WebRTC</h2>
+
+<p>Un des derniers grands défis pour le web est de permettre la communication des personnes par la voix et la vidéo : la communication en temps réel, ou Real Time Communication abrégée RTC. Dans une application web, la communication en temps réel devrait être aussi naturelle que de saisir des mots dans un champ texte. Sans elle, nous sommes limités dans notre capacité à innover et développer de nouveaux médiums d'interaction.</p>
+
+<p>Historiquement, faire de la communication en temps réel était complexe et nécessitait des technologies propriétaires et coûteuses ou développées en silos. Du coup, intégrer des technologies RTC avec du contenu préexistant c'était assez galère, spécialement sur le web.</p>
+
+
+<p>Le chat vidéo de Gmail est devenu populaire en 2008 et en 2011 Google a introduit Hangouts qui utilisait le service Google Talk, comme dans Gmail. Google a racheté GIPS, une entreprise qui avait développé de nombreux composants logiciels requis pour la création de RTC comme des codecs et des dispositifs d'annulation d'écho. Google a rendues open source les technologies développées par GIPS et s'est engagé dans la standardisation d'une norme auprès de l'IETF et au W3C pour s'assurer d'un consensus. En mai 2011, Ericsson a développé <a href="http://www.ericsson.com/research-blog/context-aware-communication/beyond-html5-peer-peer-conversational-video/" title="Beyond HTML5: peer to peer conversational video">la première implémentation de WebRTC</a>.</p>
+
+<p>WebRTC a maintenant des standards ouverts et implémentés pour des dispositifs de communication audio, vidéo et data en temps réel et sans plugin. Il y a un vrai besoin :</p>
+
+<ul>
+  <li>De nombreux web services utilisent déjà ce genre de technologie mais nécessitent de télécharger une appli ou un plugin. C'est le cas de Skype, Facebook (qui utilise Skype) et Google Hangouts (qui utilise le plugin Google Talk).</li>
+  <li>Télécharger, installer et mettre à jour ses plugins peut être compliqué, générateur d'erreurs et ennyeux.</li>
+  <li>Les plugins peuvent être difficiles à déployer, débuger, corriger, tester et maintenir &mdash; et nécessitent souvent un jeu de licenses compliqué et une intégration avec un assortiment de technologies complexes et coûteuses. Et surtout, c'est bien difficile de convaincre les utilisateurs d'installer un plugin sur leur machine !</li>
+</ul>
+
+<p>Le fil rouge du projet WebRTC est que ses APIs doivent être open-source, libres, standardisées, inclues dans les navigateur et plus efficaces que l'état de l'art.</p>
+
+<h2 id="toc-where">Où en sommes-nous maintenant ?</h2>
+
+<p>WebRTC implémente trois APIs:</p>
+<ul>
+  <li><a href="#toc-mediastream" title="Internal link to section for MediaStream (aka getUserMedia)"><code>MediaStream</code></a> (aka <code>getUserMedia</code>)</li>
+  <li><code><a href="#toc-rtcpeerconnection" title="Internal link to section for RTCPeerConnection">RTCPeerConnection</a></code></li>
+  <li><a href="#toc-rtcdatachannel" title="Internal link to section about RTCDataChannel"><code>RTCDataChannel</code></a></li>
+</ul>
+
+<p><code><strong>getUserMedia</strong></code> est disponible dans Chrome, Opera et Firefox. Allez jeter un &oelig;il sur les démos cross-browser sur <a href="http://www.simpl.info/gum" title="Simple cross-platform getUserMedia demo">simpl.info/gum</a> et <a href="http://webaudiodemos.appspot.com/" title="">les super exemples de Chris Wilson</a> qui utilisent <code>getUserMedia</code> comme source pour du traitement avec Web Audio.</p>
+
+<p><code><strong>RTCPeerConnection</strong></code> est disponible dans Chrome (sur ordinateur et sur Android), Opera (sur ordinateur et sur les dernières versions Beta sur Android) et dans Firefox. Un petit point sur le nom : après plusieurs itérations, <code>RTCPeerConnection</code> est actuellement intégré dans Chrome et Opera en tant que <code>webkitRTCPeerConnection</code> et dans Firefox en tant que <code>mozRTCPeerConnection</code>. D'autres noms et implémentations ont été dépréciés. Quand les standards se seront stabilisés, les préfixes seront supprimés. Il y a une démo super simple de l'implémentation de RTCPeerConnection dans Chromium sur <a href="http://www.simpl.info/peerconnection" title="Simple cross-platform getUserMedia demo">simpl.info/pc</a> et une chouette application vidéo sur <a href="http://apprtc.appspot.com" title="Video chat demo">apprtc.appspot.com</a>. Cette appli utilise <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>, un petit fichier JavaScript qui s'occupe de la correspondance entre les différentes terminologies. Maintenu par Google, il permet de s'abstraire des différences entre les navigateurs et les spécifications.</p>
+
+<p><strong><code>RTCDataChannel</code></strong> est disponible dans Chrome 25, Opera 18 et Firefox 22 et ultérieurs.</p>
+
+<p>Les fonctionnalités de WebRTC sont disponibles dans Internet Explorer <a href="https://groups.google.com/forum/#!topic/discuss-webrtc/tKoh1wrI8ig" title="How to enable WebRTC functionality in Internet Explorer via Chrome Frame">via Chrome Frame</a> et Skype (racheté par Microsoft en 2011) prévoit <a href="http://gigaom.com/2012/06/26/skype-webrtc-web-client/" title="GigaOM blog post about Skype and WebRTC">d'utiliser WebRTC</a>. WebRTC a aussi été intégré par les applis natives <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-conversational-voice-and-video-implemented-webkit-gtk" title="Ericsson article about WebKitGTK+">WebKitGTK+</a> et <a href="http://www.youtube.com/watch?v=Vm5ebKWKNE8" title="basysKom showcasing WebRTC based video chat in QML application">Qt</a>.</p>
+
+<h3>Avertissement</h3>
+
+<p>Certains rapports annoncent que telle ou telle plateforme 'supporte WebRTC' et doivent être traîtés avec scepticisme. En effet, il y a souvent confusion entre WebRTC et <code>getUserMedia</code>, et en effet la plateforme le supporte mais pas les autres composants de WebRTC.</p>
+
+<h2 id="toc-first">Mon premier WebRTC</h2>
+
+<p>Les applications WebRTC nécessitent de faire plusieurs choses :</p>
+
+<ul>
+  <li>Récupérer des flux audio, vidéo ou autres données.</li>
+  <li>Récupérer les informations du réseau comme les adresses IP et les ports et les échanger avec d'autres clients WebRTC (appelés <em>pairs</em>), pour leur permettre d'établir une connexion, même au travers les <a href="http://en.wikipedia.org/wiki/NAT_traversal" title="Wikipedia article: Network Address Translation traversal">NATs</a> et les firewalls.</li>
+  <li>Coordonner la signalisation pour rapporter les erreurs ou clore les sessions.</li>
+  <li>Échanger les informations à propos des médias et de la compatibilité entre les clients en ce qui concerne leur résolution et leurs codecs.</li>
+  <li>Échanger des flux audios, vidéos ou simplement de données.</li>
+</ul>
+
+<p>Pour récupérer et communiquer des flux, WebRTC implémente les APIs suivantes :</p>
+<ul>
+	<li><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/streams/StreamProcessing.html" title="MediaStream API documentation">MediaStream</a> : avoir accès aux flux de données multimédia comme la caméra et le micro de l'utilisateur.</li>
+	<li><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html#rtcpeerconnection-interface" title="W3CRTCPeerConnection Editor's draft">RTCPeerConnection</a>: appels audio ou vidéo avec quelques utilitaires pour l'encryption et la gestion de la bande passante.</li>
+	<li><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html#rtcdatachannel" title="W3C WebRTC RTCDataChannel Editor's draft">RTCDataChannel</a>: échange en peer-to-peer de données.</li>
+</ul>
+
+<p>(Vous trouverez les détails de la gestion des aspects signalisation et réseau de WebRTC <a href="#signaling" title="Internal link to section about signaling">ci-dessous</a>.)</p>
+
+<h2 id="toc-mediastream">MediaStream (ou getUserMedia)</h2>
+
+<p>L'<a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html" title="W3C Editor's Draft: Media Capture and Streams">API MediaStream</a> gère la synchronisation de flux de données. Par exemple, parmi les flux venant de la caméra et du micro, les pistes d'image et de son sont synchronisées. (Ne mélangez pas les pistes de MediaStream (tracks) en anglais avec l'élément &lt;track&gt; qui est <a href="http://www.html5rocks.com/en/tutorials/track/basics/" title="HTML5 Rocks: Getting Started With the Track Element">un tout autre sujet</a> en HTML.)</p>
+
+<p>La meilleure manière de comprendre MediaStream est certainement de voir cette sélection de démos parmi celles qui fleurissent sur le Web :</p>
+
+<ol>
+  <li>Dans Chrome ou Opera, ouvrez la démo sur <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a>.</li>
+  <li>Ouvrez la console.</li>
+  <li>Inspectez la variable <code>stream</code> qui est dans le scope global.</li>
+</ol>
+
+<p>Chaque MediaStream a un input (une entrée) qui est un MediaStream généré par <code>navigator.getUserMedia()</code> et un output (une sortie) qui est envoyé vers un élément <code>video</code> ou une connexion RTCPeerConnection.</p>
+
+<p>La méthode <code>getUserMedia()</code> prend 3 arguments :</p>
+
+<ul>
+  <li>Un <a href="#toc-constraints" title="Internal link to section about Media Constraints">objet contrainte</a>.</li>
+  <li>Un callback en cas de succès qui renvoie un MediaStream.</li>
+  <li>Un callback en cas d'échec qui renvoie un objet de type error.</li>
+</ul>
+
+<p>Chaque MediaStream a un <code>label</code>, du grenre 'Xk7EuLhsuHKbnjLWkW4yYGNJJ8ONsgwHBvLQ'. Un tableau de MediaStreamTracks est renvoyé par les méthodes <code>getAudioTracks()</code> et <code>getVideoTracks()</code>.</p>
+
+<p>Dans l'exemple <a href="http://simpl.info/getusermedia/" title="simpl.info getUserMedia demo">simpl.info/gum</a>, <code>stream.getAudioTracks()</code> renvoie un tableau vide (parce qu'il n'y a pas de son) et, si vous disposez d'une webcam qui fonctionne, <code>stream.getVideoTracks()</code> renvoie un tableau contenant un MediaStreamTrack pour le flux vidéo. Chaque MediaStreamTrack a un attribut <code>kind</code> qui renvoie 'audio' ou 'video' et un <code>label</code> qui renvoie quelque chose du genre 'FaceTime HD Camera' et représente un ou plusieurs canaux audio ou vidéo. Dans ce cas, on n'a qu'une piste vidéo sans piste audio, mais on pourrait imaginer une application de chat qui récupèrerait les flux des deux caméras de chaque côté d'un téléphone mobile, du micro et d'une application de partage d'écran.</p>
+
+<p>Dans Chrome ou Opera, la méthode <code>URL.createObjectURL()</code> convertit un MediaStream en <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: Blob URLs">Blob URL</a> qui peut être défini comme <code>src</code> d'un élément videoelement. (Dans Firefox et Opera, le <code>src</code> de la vidéo peut appeler le flux lui-même.) Depuis leur version 25, les navigateurs à base de Chromium (Chrome et Opera) autorisent le flux de données audio à être passé depuis <code>getUserMedia</code> vers un élément audio ou video (mais prenez en compte que par défaut, l'élément média ne sera pas en sourdine).<p>
+
+<p><code>getUserMedia</code> peut aussi être utilisé <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled" title="HTML5 Rocks update from Chris Wilson: live Web Audio input enabled!">comme source pour l'API Web Audio</a> :</p>
+
+<pre class="prettyprint">
+function gotStream(stream) {
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    var audioContext = new AudioContext();
+
+    // Crée un AudioNode à partir du flux
+    var mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+    // Connectez le à une destination pour vous entendre
+    // ou à n'importe quoi d'autre pour effectuer du traîtement!
+    mediaStreamSource.connect(audioContext.destination);
+}
+
+navigator.getUserMedia({audio:true}, gotStream);
+</pre>
+
+<p>Les applications basées sur Chromium et leurs extensions peuvent aussi utiliser <code>getUserMedia</code>. Pour <a href="https://developer.chrome.com/extensions/manifest.html#permissions" title="Chrome app/extension permissions documentation">autoriser</a> <code>audioCapture</code>et/ou <code>videoCapture</code>, ajoutez-le au manifest et la permission ne sera demandée qu'une seule fois à l'utilisateur lors de l'installation. Dès lors, l'accès à la caméra et au micro seront automatiques.</p>
+
+<p>Dans le même esprit pour les pages qui utilisent HTTPS : la permission n'est demandée qu'une seule fois pour <code>getUserMedia()</code> (dans Chrome du moins). La première fois, un bouton 'Toujous autoriser' s'affiche dans l'<a href="http://dev.chromium.org/user-experience/infobars" title="Chromium information about the browser infobar">infobar</a> du navigateur.</p>
+
+<p>À terme, MediaStream pourrait capturer des flux de n'importe quelle source de données, pas seulement ceux de la caméra et du micro. On pourrait par exemple capter un flux venant du disque ou d'une toute autre source de données comme des capteurs.</p>
+
+<p>Notez que <code>getUserMedia()</code> doit être utilisé sur un serveur, pas directement à partir du système de fichiers sinon une erreur de type <code>PERMISSION_DENIED: 1</code> surviendra.</p>
+
+<p><code>getUserMedia()</code> devient vraiment cool quand on le combine avec d'autres API JavaScrpt :</p>
+
+<ul>
+   <li><a href="http://webcamtoy.com/app/" title="Webcam Toy site">Webcam Toy</a> est une application de type photomaton qui utilise WebGL pour ajouter des effets aux photos qu'on peut partager ou enregistrer sur son ordinateur.</li>
+   <li><a href="http://www.shinydemos.com/facekat/" title="FaceKat game">FaceKat</a> est un détecteur de visage qui utilise <a href="headtrackr library for realtime face and head tracking" title="headtrackr.js ">headtrackr.js</a> comme joystick.</li>
+   <li><a href="http://idevelop.ro/ascii-camera/" title="'ASCII camera' demo">ASCII Camera</a> utilise l'API de Canvas pour générer des images ASCII images.</li>
+</ul>
+
+<figure>
+  <a href="http://idevelop.ro/ascii-camera/" title="ASCII Camera app"><img src="ascii.png" alt="ASCII image generated by idevelop.ro/ascii-camera" /></a>
+  <figcaption>De l'ASCII art avec GetUserMedia !</figcaption>
+</figure>
+
+<h3 id="toc-constraints">Jeux de contraintes</h3>
+
+<p>Les <a href="http://tools.ietf.org/html/draft-alvestrand-constraints-resolution-00#page-4" title="IETF Resolution Constraints draft specification">jeux de contraintes</a> ont été implémentés dans Chrome depuis la version 24 et Opera 18. Elles définissent une liste de valeurs pour les appels à <code>getUserMedia()</code> et <code>addStream()</code> de RTCPeerConnection. Le but est d'implémenter <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#the-model-sources-sinks-constraints-and-states" title="W3C getUserMedia Editor's Draft - The model: sources, sinks, constraints, and states">un support pour d'autres séries de contraintes</a> comme le ratio d'image, le 'facing mode' (caméra avant ou caméra arrière), frame rate (FPS), hauteur et largeur, dans une unique méthode <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-1" title="applyConstraints() API proposal in W3C getUserMedia Editor's Draft"><code>applyConstraints()</code></a>. </p>
+
+<p>Voir le petit exemple sur <a href="http://simpl.info/getusermedia/constraints/index.html" title="Resolution Constraints example on simpl.info">simpl.info/getusermedia/constraints</a>.</p>
+
+<p>Il y a un hic : le jeu de contraintes de <code>getUserMedia</code> apliqué dans un onglet du navigateur impacte touts les autres onglets. Attribuer un jeu de contrainte non autorisé renvoie un message d'erreur assez incompréhensible du genre :</p>
+
+<pre class="prettyprint">navigator.getUserMedia error:
+NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</pre>
+
+<h4>Capture d'écran et d'onglet</h4>
+
+<p>Il est aussi possible d'utiliser la capture d'écran comme source de MediaStream. C'est actuellement possible dans Chrome en utilisant le jeu de contraintes experimental chromeMediaSource, comme dans <a href="https://html5-demos.appspot.com/static/getusermedia/screenshare.html" title="Screenshare demo">cette demo</a>. Cette fonctionnalité n'est pas encore disponible dans Opera. Notez que la capture d'écran nécessite HTTPS.</p>
+
+<p>Les applications basées sur Chrome permettent aussi de partager un flux vidéo d'un onglet du navigateur via l'API encore expérimentale <a href="http://developer.chrome.com/dev/extensions/tabCapture.html" title="chrome.tabCapture API documentation">chrome.tabCapture</a>. Pour faire du partage d'écran, veuillez consulter le code et les infos connexes sur cet article de HTML5 Rocks : <a href="http://updates.html5rocks.com/2012/12/Screensharing-with-WebRTC" title="HTML5 Rocks update article: Screensharing with WebRTC">Screensharing with WebRTC</a>. Cette fonctionnalité n'est pas encore disponible sur Opera.</p>
+
+<h2 id="toc-signaling">La signalisation : gestion de session, informations sur réseaux et médias</h2>
+
+<p>WebRTC utilise RTCPeerConnection pour communiquer des flux de données entre les navigateurs (pairs). Il a aussi besoin d'un mécanisme pour coordonner la communication et envoyer des messages de contrôle, c'est ce qu'on appelle la signalisation. Les méthodes de signalisation et les protocoles <em>ne sont pas spécifiés</em> par WebRTC : la signalisation n'est pas inclue dans l'API de RTCPeerConnection.</p>
+
+<p>Les développeurs d'applications utilisant WebRTC peuvent donc utiliser la signalisation qu'ils veulent comme SIP ou XMPP, et n'importe quel canal de communication duplex (dans les deux sens). L'exemple <a href="http://apprtc.appspot.com" title="apprtc WebRTC example">apprtc.appspot.com</a> utilise XHR et l'API Channel comme système de signalisation. Dans le <a href="http://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab">codelab</a>, on utilise une instance de <a href="http://Socket.io" title="Socket.io website">Socket.io</a> qui tourne sur un serveur <a href="http://nodejs.org/" title="Node website">Nodejs</a>.</p>
+
+<p>La signalisation est utilisée pour échanger trois types d'informations.</p>
+<ul>
+  <li>Messages de contrôle de session : pour initialiser ou fermer un lien de communication et rapporter les erreurs.</li>
+  <li>Configuration réseau : quelle est l'adresse IP et sur quel port l'ordinateur est-il connecté ?</li>
+  <li>Compatibilité des médias : quels codecs sont gérés et jusqu'à quelle résolution est-ce que mon navigateur et celui de mon interlocuteur vont pouvoir aller ?</li>
+</ul>
+
+<p>Ces informations doivent avoir été échangées avec succès par la méthode de signalisation avant que le flux de pair à pair ne puisse commencer.</p>
+
+<p>Par exemple, imaginez qu'Alice veuille communiquer avec Bob. Voici un exemple de code provenant du <a href="http://www.w3.org/TR/webrtc/#simple-example" title="WebRTC 1.0: Real-time Communication Between Browsers">document de travail sur WebRTC auprès du W3C</a> qui montre comment se passe la signalisation. Le code suppose qu'un système de signalisation existe, créé par la méthode <code>createSignalingChannel()</code>. On notera aussi que pour Chrome et Opera, RTCPeerConnection est actuellement préfixé.</p>
+
+<a id="simpleRTCPeerConnectionExample"></a>
+
+<pre class="prettyprint">var signalingChannel = createSignalingChannel();
+var pc;
+var configuration = ...;
+
+// start(true) pour commencer l'appel
+function start(isCaller) {
+    pc = new RTCPeerConnection(configuration);
+
+    // envoie un ice candidate à l'autre pair
+    pc.onicecandidate = function (evt) {
+        signalingChannel.send(JSON.stringify({ "candidate": evt.candidate }));
+    };
+
+    // affiche le flux vidéo
+    pc.onaddstream = function (evt) {
+        remoteView.src = URL.createObjectURL(evt.stream);
+    };
+
+    // récupère le flux local, le montre dans la vidéo de prévisu et l'envoie
+    navigator.getUserMedia({ "audio": true, "video": true }, function (stream) {
+        selfView.src = URL.createObjectURL(stream);
+        pc.addStream(stream);
+
+        if (isCaller)
+            pc.createOffer(gotDescription);
+        else
+            pc.createAnswer(pc.remoteDescription, gotDescription);
+
+        function gotDescription(desc) {
+            pc.setLocalDescription(desc);
+            signalingChannel.send(JSON.stringify({ "sdp": desc }));
+        }
+    });
+}
+
+signalingChannel.onmessage = function (evt) {
+    if (!pc)
+        start(false);
+
+    var signal = JSON.parse(evt.data);
+    if (signal.sdp)
+        pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+    else
+        pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+};
+</pre>
+
+<p>Pour commencer, Alice et Bob échangent des informations sur la configuration de leurs réseaux respectifs. (L'expression 'recherche de candidats' [ou finding candidates en anglais] fait référence à la recherche d'interface réseaux et de ports en utilisant <a href="#ice" title="Internal link to more information about the ICE framework">le framework ICE</a>.)</p>
+
+<ol>
+  <li>Alice crée un objet RTCPeerConnection avec un gestionnaire (handler) <code>onicecandidate</code>.</li>
+  <li>Le handler est lancé quand les candidats dont disponibles.</li>
+  <li>Alice envoie ses candidats à Bob via la méthode de signalisation qu'ils utilisent : WebSocket ou autre mécanisme.</li>
+  <li>Quand Bob reçoit les candidats d'Alice, il appelle la méthode <code>addIceCandidate</code> pour les ajouter à sa description de pair distant.</li>
+</ol>
+
+<p>Les clients WebRTC (connus comme <strong>pairs</strong>, dans notre cas Alice et Bob) ont aussi besoin de vérifier et échanger les informations sur les médias locaux et distants comme la résolution et les codecs. La signalisation de ces configurations s'effectue par l'échange d'une <em>offre</em> et d'une <em>réponse</em> en utilisant le protocole de description de session (Session Description Protocol, SDP):</p>
+
+<ol>
+  <li>Alice lance la méthode <code>createOffer()</code> de RTCPeerConnection.
+  En callback, elle reçoit un argument de type RTCSessionDescription qui contient la description de la session d'Alice.</li>
+  <li>Dans le callback, Alice spécifie la description locale en utilisant <code>setLocalDescription()</code> et dès lors envoie la description de cette session à Bob au travers de leur canal de signalisation. Notez que RTCPeerConnection ne va pas commencer à rechercher des candidats tant que <code>setLocalDescription()</code> est appelé: ceci est spécifié dans <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-4.2.4" title="Javascript Session Establishment Protocol draft-ietf-rtcweb-jsep-03">la proposition sur l'JSEP formulée auprès de l'IETF</a>.</li>
+  <li>Bob enregistre la description envoyée par Alice comme une description distante en utilisant <code>setRemoteDescription()</code>.</li>
+  <li>Bob lance la méthode <code>createAnswer()</code> de RTCPeerConnection en lui passant la description distante qu'il a reçu d'Alice afin de génerer une session locale qui lui soit compatible. Le callback de <code>createAnswer()</code> lui renvoie une RTCSessionDescription: Bob l'enregistre comme sa description locale de session et l'envoie à Alice.</li>
+  <li>Quand Alice reçoit la description de session de Bob, elle l'enregistre comme la description de la session distante avec <code>setRemoteDescription</code>.</li>
+  <li>Hop!</li>
+</ol>
+
+<p>Les objets RTCSessionDescription se conforment à la <a href="http://en.wikipedia.org/wiki/Session_Description_Protocol" title="Wikipedia article about the Session Description Protocol">description de protocoles de session (Session Description Protocol)</a>, SDP. Sérialisé, un objet SDP ressemble à ça :</p>
+
+<pre class="prettyprint">
+v=0
+o=- 3883943731 1 IN IP4 127.0.0.1
+s=
+t=0 0
+a=group:BUNDLE audio video
+m=audio 1 RTP/SAVPF 103 104 0 8 106 105 13 126
+
+// ...
+
+a=ssrc:2223794119 label:H4fjnMzxy3dPIgQ7HxuCTLb4wLLLeRHnFxh810
+</pre>
+
+<p>L'acquisition et l'échange des informations de médias et de réseaux peuvent être effectués de manière simultanée, mais doivent être achevés avant que les pairs puissent commencer à échanger leurs flux.</p>
+
+<p>L'architecture offre/réponse décrite ci-dessus est appelée <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-00" title="IETF JSEP draft proposal">JSEP</a> pour JavaScript Session Establishment Protocol.</p>
+
+<p>(Il y a une excellente animation qui explique le procédé de signalisation et d'échange de flux dans <a href="http://www.ericsson.com/research-blog/context-aware-communication/beyond-html5-peer-peer-conversational-video/" title="Ericsson conversational video demo">la vidéo de démo d'Ericsson</a> pour sa première implémentation de WebRTC.) </p>
+
+<figure>
+  <img src="jsep.png" alt="JSEP architecture diagram" />
+  <figcaption>L'architecture JSEP</figcaption>
+</figure>
+
+<p>Une fois que le processus de signalisation s'est correctement déroulé, les données peuvent être transférées directement de pair à pair entre l'appelant et l'appelé &mdash; ou si ça a échoué par l'intermédiaire d'un serveur de relais (on en parle plus bas). La diffusion est effectuée par RTCPeerConnection.</p>
+
+<h2 id="toc-rtcpeerconnection">RTCPeerConnection</h2>
+
+<p>RTCPeerConnection est le composant de WebRTC qui gère l'efficacité et la stabilité des échanges de flux entre les pairs.</p>
+
+<p>Le schéma ci-dessous montre le rôle de RTCPeerConnection. Comme vous pouvez le voir, les zones en vert sont assez complexes !</p>
+
+<figure>
+<a href="http://www.webrtc.org/reference/architecture" title="webrtc.org: architecture diagram"><img src="webrtcArchitecture.png" alt="WebRTC architecture diagram" style="width: 740px; height: 482px;" /></a>
+<figcaption>architecture de WebRTC (de <a href="http://www.webrtc.org/reference/architecture" title="webrtc.org: architecture diagram">webrtc.org</a>)</figcaption>
+</figure>
+
+<p>En ce qui concerne le JavaScript, ce qu'il faut comprendre, c'est que RTCPeerConnection protège les développeurs d'une myriade de complexités qui se cachent sous la spécification. Les codecs et les protocoles utilisés par WebRTC fournissent un travail considérable pour rendre possible la communication en temps réel, même sur des réseaux instables :</p>
+
+<ul>
+  <li>Masquage des effets de la perte de paquets IP</li>
+  <li>Annulation de l'écho</li>
+  <li>Adaptation de la bande passante</li>
+  <li>Gestion dynamique du buffer pour éviter les effets de sautillement de l'image</li>
+  <li>Contrôle automatique du gain</li>
+  <li>Réduction et suppression du bruit</li>
+  <li>'Nettoyage' de l'image.</li>
+</ul>
+
+<p><a href="#simpleRTCPeerConnectionExample" title="Internal link to W3C RTCPeerConnection example">Le code du W3C ci-dessus</a> montre un exemple simplifié de WebRTC d'un point de vue signal. Vous trouverez ci-dessous un guide pas à pas de deux applications WebRTC : le premier est une simple démonstration de RTCPeerConnection; le second est un client de chat vidéo complet.</p>
+
+<h3 id="toc-sans">RTCPeerConnection sans serveurs</h3>
+
+<p>Le code ci-dessous vient de la démo de WebRTC sur une seule page consultable sur <a href="https://webrtc-demos.appspot.com/html/pc1.html" title="WebRTC demo without signaling">webrtc-demos.appspot.com</a>. Il y a une connexion RTCPeerConnection locale <em>et</em> une distante (une vidéo est locale, l'autre distante) sur une seule page. Ça ne sert à rien d'avoir l'appelé et l'appelant sur la même page, mais ça permet de mieux comprendre les objets RTCPeerConnection en s'affranchissant des mécanismes de signalisation.</p>
+
+<p>Seul hic : le deuxième jeu de 'contraintes' (optionnel) du constructeur <code>RTCPeerConnection()</code> est différent des jeux de contraintes utilisés lors du <code>getUserMedia()</code> : voir <a href=" http://www.w3.org/TR/webrtc/#constraints" title="W3C Working Draft Constraints section">w3.org/TR/webrtc/#constraints</a> pour plus d'infos.</p>
+
+<p>Dans cet exemple, <code>pc1</code> représente le pair local (l'appelant) et <code>pc2</code> représente le pair distant (appelé).</p>
+
+<h3>L'appelant</h3>
+
+<ol>
+
+<li>
+<p>Crée une nouvelle RTCPeerConnection et attache le flux de <code>getUserMedia()</code> :</p>
+<pre class="prettyprint">
+// 'servers' est une config optionnelle (voir la note sur TURN et STUN plus bas)
+pc1 = new webkitRTCPeerConnection(servers);
+// ...
+pc1.addStream(localstream); </pre>
+</li>
+
+<li>
+<p>Crée une offre et l'associe à la description locale pour <code>pc1</code> et à la description distante pour <code>pc2</code>. Dans ce cas, c'est fait directement dans le code sans utiliser de signalisation puisque l'appelant et l'appelé sont dans la même page.</p>
+<pre class="prettyprint">
+pc1.createOffer(gotDescription1);
+//...
+function gotDescription1(desc){
+  pc1.setLocalDescription(desc);
+  trace("Offer from pc1 \n" + desc.sdp);
+  pc2.setRemoteDescription(desc);
+  pc2.createAnswer(gotDescription2);
+}
+</pre>
+</li>
+
+
+</ol>
+
+<h3>L'appelé</h3>
+
+<ol>
+
+<li>
+<p>Crée <code>pc2</code> et, quand le flux arrive de <code>pc1</code>, l'affiche dans un élément vidéo : </p>
+<pre class="prettyprint">
+pc2 = new webkitRTCPeerConnection(servers);
+pc2.onaddstream = gotRemoteStream;
+//...
+function gotRemoteStream(e){
+  vid2.src = URL.createObjectURL(e.stream);
+}
+</pre>
+</li>
+
+</ol>
+
+<h3 id="toc-real">RTCPeerConnection avec serveurs</h3>
+
+<p>Dans la vraie vie, WebRTC a besoin de serveurs pour permettre différentes choses :</p>
+
+<ul>
+  <li>Les utilisateurs doivent se découvrir et échanger leurs détails respectifs, comme leurs noms.</li>
+  <li>Les clients WebRTC (pairs) doivent échanger leurs configurations réseau.</li>
+  <li>Les pairs doivent échanger des infos sur leurs capacités comme leurs formats vidéo et résolution.</li>
+  <li>Les clients WebRTC doivent passer les barrières des <a href="http://en.wikipedia.org/wiki/NAT_traversal" title="Wikipedia article: Network Address Translation traversal">NAT</a> et des firewalls (pare-feux).</li>
+</ul>
+
+<p>En d'autres termes, WebRTC a besoin de quatre types de fonctionnalités fournies par les serveurs :</p>
+<ul>
+	<li>Découverte d'utilisateurs et communication.</li>
+  <li>Signalisation.</li>
+	<li>Traversée des NAT/firewall.</li>
+  <li>Serveurs de relais au cas où la communication de pair à pair échoue.</li>
+</ul>
+
+<a id="stun"></a>
+<a id="ice"></a>
+
+
+<p>Nous ne traiterons dans cet article ni la traversée des NAT, ni les réseaux de pair à pair, ni les moyens de faire se rencontrer les utilisateurs, ni encore les différents moyens de signalisation, parce qu'on s'écarterait trop du sujet. Disons pour faire simple que le protocole <a href="http://en.wikipedia.org/wiki/STUN" title="Wikipedia STUN article">STUN</a> et ses extensions <a href="http://en.wikipedia.org/wiki/Traversal_Using_Relay_NAT" title="Wikipedia article about TURN">TURN</a> sont utilisés dans le framework <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment" title="Wikipedia article about ICE">ICE</a> pour permettre à RTCPeerConnection de gérer la traversée des NAT et autres aléas liés aux réseaux.</p>
+
+<p>ICE est un framework pour connecter les pairs comme deux personnes qui feraient du chat vidéo. Pour commencer, ICE tente de connecter les pairs <em>directement</em>, avec le moins de latence possible, via UDP. Dans ce processus, des serveurs STUN ne font qu'une chose : permettre au pair derrière son NAT de trouver son adresse IP publique et son port. (Google a quelques serveurs STUN, l'un d'entre eux est utilisé pour l'exemple sur apprtc.appspot.com.)</p>
+
+<figure>
+  <img src="stun.png" alt="Finding connection candidates" />
+  <figcaption>À la recheche de candidats de connexion</figcaption>
+</figure>
+
+
+<p>Si UDP échoue, ICE essaye TCP: d'abord HTTP puis HTTPS. Si la communication en direct échoue &mdash; souvent à cause des NAT ou des firewalls &mdash; ICE utilise un serveur TURN relais. En d'autres termes, ICE va d'abord essayer STUN en UDP pour connecter les pairs entre eux, et si ça échoue, il se rabattra sur un serveur de relais TURN. L'expression «recherche de candidats» (en anglais «finding candidates») fait référence au procédé de découverte des interfaces réseaux et des ports.</p>
+
+
+<figure style="margin-bottom: 2em">
+  <img src="dataPathways.png" alt="WebRTC data pathways" />
+  <figcaption>le chemin des données dans WebRTC</figcaption>
+</figure>
+
+<p>Justin Uberti, un des concepteurs de WebRTC explique plus en détails ICE, STUN et TURN lors de  <a href="http://www.youtube.com/watch?v=p2HzZkd2A40&t=21m12s" title="Google I/O WebRTC presentation: discussion of ICE, STUN and TURN">la présentation de WebRTC lors da la Google I/O de 2013</a>. (Les <a href="http://io13webrtc.appspot.com/#52" title="Google I/O WebRTC presentation slide: Deploying STUN and TURN">supports de présentation</a> donnent des exemples d'implémentation de serveurs TURN et STUN.)</p>
+
+<h4 id="toc-simple">Un simple client de chat vidéo</h4>
+
+<p>Les explications ci-dessous décrivent les mécanismes de signalisation utilisés par <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat application">apprtc.appspot.com</a>.</p>
+<blockquote class="talkinghead commentary">Si vous êtes un peu perdu, essayez le <a href="https://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab repository on Bitbucket">WebRTC codelab</a>. Ce guide qui explique pas à pas comment monter une application de chat vidéo, il y a même un petit serveur de signalisation basé sur <a href="http://Socket.io" title="Socket.io website">Socket.io</a> sur <a href="http://nodejs.org/" title="Node website">un serveur Nodejs</a>.</blockquote>
+
+<p>Testez un environnement WebRTC complet avec signalisation et traversée de NAT/firewall par STUN sur la démo <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>. Cette application utilise <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> pour gérer les différentes implémentations de <code>RTCPeerConnection</code> et <code>getUserMedia()</code>.</p>
+
+<p>Le code est délibérément verbeux dans ses logs : gardez un &oelig;il sur la console pour suivre l'enchaînement des événements. Nous donnerons ci-dessous des détails du code pas à pas.</p>
+
+<h3>Que se passe-t-il ?</h3>
+
+<p>La démo commence en lançant la fonction <code>initalize()</code> :</p>
+
+<pre class="prettyprint">
+function initialize() {
+    console.log("Initializing; room=99688636.");
+    card = document.getElementById("card");
+    localVideo = document.getElementById("localVideo");
+    miniVideo = document.getElementById("miniVideo");
+    remoteVideo = document.getElementById("remoteVideo");
+    resetStatus();
+    openChannel('AHRlWrqvgCpvbd9B-Gl5vZ2F1BlpwFv0xBUwRgLF/* ...*/');
+    doGetUserMedia();
+  }
+</pre>
+
+<p>Vous remarquerez que des valeurs comme celles de la variable <code>room</code> et le token utilisé par <code>openChannel()</code> sont fournis au niveau du serveur par le Google App Engine : jetez un &oelig;il <a href="https://code.google.com/p/webrtc/source/browse/trunk/samples/js/apprtc/index.html" title="index.html template code in the apprtc repository">au template de index.html</a> dans le repository pour voir les valeurs qui sont ajoutées.</p>
+
+<p>Ce code initialise les variables pour l'élément HTML video qui va afficher le flux venant de la caméra locale (<code>localVideo</code>) et de la caméra distante (<code>remoteVideo</code>). <code>resetStatus()</code> quant à lui définit juste un message avertissant sur l'état.</p>
+
+<p>La fonction <code>openChannel()</code> met en place l'échange de messages entre les clients WebRTC :</p>
+
+<pre class="prettyprint">
+function openChannel(channelToken) {
+  console.log("Ouverture du canal.");
+  var channel = new goog.appengine.Channel(channelToken);
+  var handler = {
+    'onopen': onChannelOpened,
+    'onmessage': onChannelMessage,
+    'onerror': onChannelError,
+    'onclose': onChannelClosed
+  };
+  socket = channel.open(handler);
+}
+</pre>
+
+<p>Pour la signalisation, cette démo utilise le <a href="http://code.google.com/appengine/docs/python/channel/overview.html" title="Channel API Overview (Python)" target="_blank">Channel API</a> de Google App Engine, qui transmet les messages entre les clients JavaScript sans polling. (La signalisation dans WebRTC est traitée plus en détails <a href="#toc-signaling" title="WebRTC signaling">ci-dessous</a>).</p>
+
+<figure>
+  <img src="apprtcArchitecture.png" alt="Architecture of the apprtc video chat application" />
+  <figcaption>Architecture de l'application apprtc de chat vidéo</figcaption>
+</figure>
+
+<p>Pour établir un canal avec la Channel API, ça marche comme ça :</p>
+
+<ol>
+	<li>Le client A génère un identifiant (ID) unique.</li>
+	<li>Le client A demande un accès auprès de l'application en lui envoyant son ID.</li>
+	<li>L'App Engine crée un canal (channel) et génère un token pour y accéder.</li>
+	<li>L'App envoie le token au client A.</li>
+	<li>Le client A ouvre un socket et se connecte au channel créé sur le serveur.</li>
+</ol>
+
+<figure>
+  <img src="channelEstablishing.png" alt="The Google Channel API: establishing a channel" />
+  <figcaption>La Channel API de Google : création d'un channel</figcaption>
+</figure>
+
+<p>L'envoi de messages fonctionne comme ceci :</p>
+
+<ol>
+	<li>Le client B fait une requête POST à l'application.</li>
+	<li>L'App passe la requête au channel.</li>
+	<li>Le client A reçoit le message par le channel.</li>
+	<li>Chez le client A, un callback "onmessage" est lancé.</li>
+</ol>
+
+<figure>
+  <img src="channelSending.png" alt="The Google Channel API: sending a message" />
+  <figcaption>La Channel API de Google : envoi d'un message</figcaption>
+</figure>
+
+<p>Petit rappel : les messages de signalisation peuvent être communiqués par n'importe quel mécanisme choisi par le développeur, il n'est pas spécifié par WebRTC. Dans cette démo, on utilise la Channel API, mais d'autres méthodes (comme les WebSockets) peuvent être utilisées à la place.</p>
+
+<p>Après avoir appelé <code>OpenChannel()</code>, la fonction <code>getUserMedia()</code> appelée par <code>initialize()</code> vérifie si le navigateur supporte l'API <code>getUserMedia</code>. (Il y a plein d'articles à propos de getUserMedia sur <a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/" title="HMTL5 Rocks: Capturing Audio & Video in HTML5" target="_blank">HTML5 Rocks</a>.) Si tout se passe bien, <code>onUserMediaSuccess</code> est appelé :
+
+<pre class="prettyprint">
+function onUserMediaSuccess(stream) {
+  console.log("L'utilisateur a autorisé l'accès à la caméra et au micro.");
+  // Ce polyfill permet d'attacher le flux de médias à cet élément.
+  attachMediaStream(localVideo, stream);
+  localVideo.style.opacity = 1;
+  localStream = stream;
+  // L'appelant créé une PeerConnection.
+  if (initiator) maybeStart();
+}
+</pre>
+
+<p>Là, on a la vidéo de la caméra locale qui s'affiche dans l'élément  <code>localVideo</code>, un <a href="http://www.html5rocks.com/tutorials/workers/basics/#toc-inlineworkers-bloburis" title="HTML5 Rocks: information about Blob URLs">objet (Blob) URL</a> fait référence aux données créées par le flux vidéo qui est envoyé vers l'attribut <code>src</code> de l'élément. (<code>createObjectURL</code> est utilisé pour accéder à l'URI "en mémoire" de la ressource binaire, c'est à dire le LocalDataStream de la vidéo.) le flux de données est aussi envoté dans  <code>localStream</code>, pour le rendre disponible pour l'interlocuteur.</p>
+
+
+<p>Dans ce cas, <code>initiator</code> a pour valeur 1 (et restera à cette valeur jusqu'à la fin de l'appel) donc <code>maybeStart()</code> est appelé :</p>
+
+<pre class="prettyprint">
+function maybeStart() {
+  if (!started && localStream && channelReady) {
+    // ...
+    createPeerConnection();
+    // ...
+    pc.addStream(localStream);
+    started = true;
+    // L'appelant lance l'offre à l'appelé
+    if (initiator)
+      doCall();
+  }
+}
+</pre>
+
+<p>On utilise ici <code>maybeStart()</code> qui peut être appelé d'un peu n'importe où dans le code mais qui ne s'execute que quand  <code>localStream</code> a été défini <em>et</em> <code>channelReady</code> a pour valeur true <em>et</em> que l'appel n'a pas encore commencé. Donc, si l'appel n'a pas encore commencé, et qu'un flux média local est disponible et qu'en plus le canal de communication est prêt à assurer la signalisation, alors on lance l'appel en passant le flux vidéo local. Une fois que cet appel a eu lieu, <code>started</code> prend pour valeur true pour éviter de relancer un deuxième appel.</p>
+
+<h4 id="toc-RTCPeerConnection-caller">RTCPeerConnection : l'appel</h4>
+
+<p>C'est dans <code>createPeerConnection()</code>, appelé par <code>maybeStart()</code>, que l'appel commence vraiment :</p>
+
+<pre class="prettyprint">
+function createPeerConnection() {
+  var pc_config = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
+  try {
+    // Création d'une RTCPeerConnection via adapter.js
+    pc = new RTCPeerConnection(pc_config);
+    pc.onicecandidate = onIceCandidate;
+    console.log("Created RTCPeerConnnection with config:\n" + "  \"" +
+      JSON.stringify(pc_config) + "\".");
+  } catch (e) {
+    console.log("Impossible de créer PeerConnection, erreur: " + e.message);
+    alert("L'objet RTCPeerConnection ne peut pas être créé; WebRTC n'est pas supporté par ce navigateur.");
+      return;
+  }
+
+  pc.onconnecting = onSessionConnecting;
+  pc.onopen = onSessionOpened;
+  pc.onaddstream = onRemoteStreamAdded;
+  pc.onremovestream = onRemoteStreamRemoved;
+}
+</pre>
+
+<p>L'objectif sous-jacent est de mettre en place une connexion en utilisant un serveur STUN qui appelle <code>onIceCandidate()</code> (voir <a href="#stun" title="Explanation of what STUN servers do">ci-dessus</a> l'explication de ICE, STUN et la recherche de candidats). Chaque événement RTCPeerConnection, quand une session se connecte ou est ouverte et quand un flux distant est ajouté ou enlevé, doit être écouté. Dans cet exemple, tous ces événements sont logués &mdash; sauf <code>onRemoteStreamAdded()</code> qui va être orienté vers l'élément <code>remoteVideo</code> :</p>
+
+<pre class="prettyprint">
+function onRemoteStreamAdded(event) {
+  // ...
+  miniVideo.src = localVideo.src;
+  attachMediaStream(remoteVideo, event.stream);
+  remoteStream = event.stream;
+  waitForRemoteVideo();
+}
+</pre>
+
+<p>Une fois que <code>createPeerConnection()</code> a été invoqué par  <code>maybeStart()</code>, un appel est créé par l'établissement d'une offre et son envoi à l'appelé :</p>
+
+<pre class="prettyprint">
+function doCall() {
+  console.log("Sending offer to peer.");
+  pc.createOffer(setLocalAndSendMessage, null, mediaConstraints);
+}
+</pre>
+
+<p>Le processus de création de l'offre est ici similaire à l'<a href="#toc-sans" title="RTCPeerConnection sans signaling">exemple sans signalisation</a> ci-dessus, mais, en plus, un message est envoyé au pair distant, en donnant une  SessionDescription (description de session) sérialisée pour l'offre. Ce procédé est géré par <code>setLocalAndSendMessage()</code> :</p>
+
+<pre class="prettyprint">
+function setLocalAndSendMessage(sessionDescription) {
+  // Envoie "Opus" comme codec préféré dans le SDP si Opus est dispo sur la machine.
+  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+  pc.setLocalDescription(sessionDescription);
+  sendMessage(sessionDescription);
+}
+</pre>
+
+<h4 id="toc-signaling-with-channel">Signalisation avec la Channel API</h4>
+
+<p>Le callback <code>onIceCandidate()</code> invoqué quand la RTCPeerConnection a été bien créée dans <code>createPeerConnection()</code> envoie des informations à propos des candidats au fur et à mesure qu'ils se "rencontrent" :</p>
+
+<pre class="prettyprint">
+function onIceCandidate(event) {
+    if (event.candidate) {
+      sendMessage({type: 'candidate',
+        label: event.candidate.sdpMLineIndex,
+        id: event.candidate.sdpMid,
+        candidate: event.candidate.candidate});
+    } else {
+      console.log("Tous les jeux de candidats ont été envoyés.");
+    }
+  }
+</pre>
+
+<p>L'envoi de messages du client vers le serveur est pris en charge par <code>sendMessage()</code> qui fait des requêtes AJAX :</p>
+
+<pre class="prettyprint">
+function sendMessage(message) {
+  var msgString = JSON.stringify(message);
+  console.log('C->S: ' + msgString);
+  path = '/message?r=99688636' + '&u=92246248';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', path, true);
+  xhr.send(msgString);
+}
+</pre>
+
+<p>AJAX (XmlHttpRequest) fonctionne bien pour envoyer la signalisation du client vers le serveur, mais pas pour la signalisation de serveur à client. Cette application utilise le Google App Engine Channel API. Les messages de l'API (ceux du serveur, donc) sont gérés par <code>processSignalingMessage()</code> :</p>
+
+<pre class="prettyprint">
+function processSignalingMessage(message) {
+  var msg = JSON.parse(message);
+
+  if (msg.type === 'offer') {
+    // L'appelé crée une PeerConnection
+    if (!initiator && !started)
+      maybeStart();
+
+    pc.setRemoteDescription(new RTCSessionDescription(msg));
+    doAnswer();
+  } else if (msg.type === 'answer' && started) {
+    pc.setRemoteDescription(new RTCSessionDescription(msg));
+  } else if (msg.type === 'candidate' && started) {
+    var candidate = new RTCIceCandidate({sdpMLineIndex:msg.label,
+                                         candidate:msg.candidate});
+    pc.addIceCandidate(candidate);
+  } else if (msg.type === 'bye' && started) {
+    onRemoteHangup();
+  }
+}
+</pre>
+
+<p>Si le message est une réponse d'un pair (une réponse à une offre), RTCPeerConnection le place dans sa SessionDescription distante et l'appel peut commencer. Si le message est une offre (un message de l'appelé) RTCPeerConnection enregistre la SessionDescription distante, prépare une réponse et l'envoie en tant que réponse à l'appelé, et commence à invoquer la méthode <code>startIce()</code> de RTCPeerConnection :</p>
+
+<pre class="prettyprint">
+function doAnswer() {
+  console.log("Sending answer to peer.");
+  pc.createAnswer(setLocalAndSendMessage, null, mediaConstraints);
+}
+</pre>
+
+<p>Et c'est tout ! L'appelant et l'appelé sont en contact et ont échangé les informations sur leurs capacités, une session d'appel a été lancée et de l'échange de données en temps réel peut commencer.</p>
+
+<h3>Topologies de réseau</h3>
+
+<p>WebRTC tel qu'il est actuellement implémenté ne supporte que les communications 1 à 1 mais peut être utilisé dans des scenarii plus complexes, par exemple 3 utilisateurs pourraient communiquer les uns avec les autres directement de pair à pair ou en passant par une <a href="http://en.wikipedia.org/wiki/Multipoint_control_unit" title="MCU article on Wikipedia">MCU</a> (Multipoint Control Unit), un serveur qui peut gérer un grand nombre de participants et fait du transfert de flux, les mixe ou encore les enregistre :</p>
+
+<figure style="margin-bottom: 2em">
+  <img src="mcu.png" alt="Multipoint Control Unit topology diagram" />
+  <figcaption>exemple de Multipoint Control Unit</figcaption>
+</figure>
+
+<p>La plupart des applications WebRTC servent à communiquer entre différents navigateurs, mais une appli serveur peut permettre l'intéraction de cette technologie avec le <a href="https://fr.wikipedia.org/wiki/R%C3%A9seau_t%C3%A9l%C3%A9phonique_commut%C3%A9" title="Wikipédia: Réseau téléphonique commuté">Réseau téléphonique commuté</a> (ou <a href="https://fr.wikipedia.org/wiki/T%C3%A9l%C3%A9phone" title="Wikipédia: Téléphone">bon vieux bigophone</a>) et avec les systèmes de <a href="http://en.wikipedia.org/wiki/Voice_over_IP" title="Wikipedia article about Voice Over IP">Voix sur IP</a>. En mai 2012, Doubango Télécom a rendu open-source le <a href="http://sipml5.org/" title="sipml5 site">client SIP sipml5</a>, basé sur WebRTC et WebSocket qui permet (entre autres) des appels vidéos entre navigateurs et des apps sur iOS ou Android. À la Google I/O, Tethr et Tropo ont fait une démo d'un <a href="http://tethr.tumblr.com/post/25513708436/tethr-and-tropo-in-the-google-i-o-sandbox" title="Tumblr post about Tethr/Tropo demo">dispositif de télécommunication d'urgence dans une valise</a> utilisant <a href="http://en.wikipedia.org/wiki/OpenBTS" title="Wikipedia article about OpenBTS">un appareil OpenBTS</a> pour permettre la communication entre ordinateurs et téléphones via WebRTC... autrement dit, de la communication téléphonique sans opérateur!</p>
+
+<figure>
+  <img src="tethr.jpg" alt="Tethr/Tropo demo at Google I/O 2012" />
+  <figcaption>Tethr/Tropo: dispositif de télécommunication d'urgence dans une valise</figcaption>
+</figure>
+
+<h2 id="toc-rtcdatachannel">RTCDataChannel</h2>
+
+<p>En plus de l'audio et de la vidéo, WebRTC supporte un canal temps-réel pour d'autres types de données.</p>
+
+<p>L'API RTCDataChannel permet de faire des échanges de pair à pair de n'importe quelle donnée avec peu de latence et un bon débit. Il y a une page de démo sur <a href="http://simpl.info/dc" title="Simple RTCDataChannel example">simpl.info/dc</a>.</p>
+
+<p>Cette fonctionnalité ouvre de nouvelles portes à cette API comme par exemple :</p>
+<ul>
+	<li>Les jeux vidéos</li>
+	<li>Les applications de bureau à distance</li>
+	<li>Le chat</li>
+	<li>L'échange de fichiers</li>
+	<li>Les réseaux décentralisés en tout genre</li>
+</ul>
+
+<p>L'API a quelques fonctionalités qui permettent de tirer le meilleur de RTCPeerConnection pour mettre en place une communication de qualité de pair à pair :</p>
+<ul>
+	<li>Réutilisation des sessions RTCPeerConnection.</li>
+	<li>Multiples canaux simultanés avec prioritisation.</li>
+	<li>Gestion de la fiabilité de livraison.</li>
+	<li>Gestion intégrée de la sécurité (DTLS) et gestion de la congestion.</li>
+	<li>Possibilité d'utilisation avec ou sans audio et vidéo.</li>
+</ul>
+
+<p>La syntaxe est volontairement similaire au WebSocket, avec une méthode <code>send()</code>et une gestion des événements <code>message</code> :</p>
+
+<pre class="prettyprint">
+var pc = new webkitRTCPeerConnection(servers,
+  {optional: [{RtpDataChannels: true}]});
+
+pc.ondatachannel = function(event) {
+  receiveChannel = event.channel;
+  receiveChannel.onmessage = function(event){
+    document.querySelector("div#receive").innerHTML = event.data;
+  };
+};
+
+sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});
+
+document.querySelector("button#send").onclick = function (){
+  var data = document.querySelector("textarea#send").value;
+  sendChannel.send(data);
+};
+</pre>
+
+<p>La communication se fait directement entre les navigateurs si bien que RTCDataChannel peut être beaucoup plus rapide que WebSocket même si un serveur de relais (TURN) est requis pour la traversée des firewalls et des NAT.</p>
+
+<p>RTCDataChannel est disponible dans Chrome, Opera et Firefox. Le superbe jeu <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> utilise cette API pour gérer la couche communication. <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> permet de faire du partage de fichiers en P2P via RTCDataChannel et <a href="https://peercdn.com/" title="peerCDN site">peerCDN</a> propose une approche de ce que serait la distribution de contenu en P2P.</p>
+
+<p>Pour plus d'infos sur RTCDataChannel, jetez un &oelig;il <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-00" title="IETF Data Channel draft specification">au draft de la spécification</a> par l'IETF.</p>
+
+<h2 id="toc-security">Sécurité</h2>
+
+<p>Les solutions de communication en temps réel présentent plusieurs vulnérabilités potentielles comme par exemple :</p>
+<ul>
+  <li>Les médias non cryptés pourraient être interceptés en route entre les navigateurs ou entre un navigateur et un serveur.</li>
+  <li>Une application pourrait enregistrer le son et/ou la vidéo à l'insu de l'utilisateur.</li>
+  <li>Des malwares ou des virus pourraient être installés cachés dans les plugins ou les applications.</li>
+</ul>
+
+<p>WebRTC apporte plusieurs solutions pour se prémunir contre ces problèmes :</p>
+
+<ul>
+  <li>l'implémentation de WebRTC utilise des couches de sécurisation comme <a href="http://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about Datagram Transport Layer Security">DTLS</a> et <a href="http://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol" title="Wikipedia article about Secure Real-time Transport Protocol">SRTP</a>.</li>
+  <li>Le cryptage est obligatoire pour tous les composants de WebRTC y compris la signalisation.</li>
+  <li>WebRTC n'est pas un plugin : il tourne dans une sandbox du navigateur dans un processus séparé et il ne requiert aucune installation de logiciel tiers. En plus il se met à jour en même temps que le navigateur.</li>
+  <li>Les accès à la caméra et au micro doivent être autorisés explicitement et quand ils sont actifs, c'est indiqué de manière claire dans l'interface de l'utilisateur.</li>
+</ul>
+
+<p>Pour une approche plus approfondie sur la sécurisation des flux de médias, vous pouvez consulter le document <a href="http://www.ietf.org/proceedings/82/slides/rtcweb-13.pdf" title="Slides for IETF Proposed WebRTC Security Architecture">WebRTC Security Architecture</a> proposé par l'IETF.</p>
+
+
+<h2 id="toc-conclusion">En conclusion</h2>
+
+<p>La bibliothèque logicielle et les standards de WebRTC peuvent démocratiser et décentraliser des outils pour la création de contenu et la communication &mdash; pour la téléphonie, les jeux vidéos, la production audiovisuelle, la (co)création musicale, la diffusion de messages et de nombreuses autres applications.</p>
+
+<p>Difficile de trouver une technologie plus <a href="http://fr.wikipedia.org/wiki/Technologie_de_rupture" title="Wikipedia article about 'disruptive innovation'">en rupture</a> que celle-ci.</p>
+
+<p>Nous avons hâte de voir ce que les développeurs JavaScript feront de WebRTC au fur et à mesure de son implémentation. <a href="http://www.nojitter.com/post/232901042/webrtc-is-it-a-game-changer" title="nojitter blog post: WebRTC: Is it a Game Changer?">Comme l'écrit le blogueur Phil Edholm </a>, «Potentiellement, WebRTC et HTML5 pourraient rendre possible le même genre d'avancées pour la communication en temps réel que le navigateur a apporté pour la communication figée.»</p>
+
+<h2 id="toc-tools">Outils de développement</h2>
+
+<ul>
+  <li style="margin-bottom: 1.5em;">La page de Chrome <strong>chrome://webrtc-internals</strong> (ou pour Opéra <strong><strong>opera://webrtc-internals</strong>) fournit des informations détaillées et des statistiques sur les sessions WebRTC en cours :
+    <figure>
+      <img src="internals.png" alt="chrome://webrtc-internals page" />
+      <figcaption>Copie d'écran de chrome://webrtc-internals</figcaption>
+    </figure>
+  </li>
+  <li><a href="http://www.webrtc.org/interop" title="webrtc.org Firefox/Chrome interop information">Notes d'interopérabilité</a> entre les navigateurs</li>
+  <li><a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> est un adaptateur maintenu par Google pour assurer le maximum de compatibilité entre les navigateurs au fur et à mesure de leur implémentation se WebRTC</li>
+  <li>Pour en savoir plus sur la signalisation de WebRTC, regardez les console.log de <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat demo">apprtc.appspot.com</a></li>
+  <li>Si tout ceci est un peu trop touffu, vous pouvez préférer un <a href="http://io13webrtc.appspot.com/#69" title="WebRTC frameworks">framework WebRTC</a> ou carrément <a href="http://io13webrtc.appspot.com/#72" title="WebRTC service providers">un service WebRTC</a></li>
+  <li>La remontée de bugs et la demande de nouvelles fonctionalités sont toujours appréciés : <a href="http://www.crbug.com/new" title="Report Chrome bugs and feature requests">crbug.com/new</a> pour Chrome, <a href="https://bugs.opera.com/wizard/" title="Report Opera bugs and feature requests">bugs.opera.com/wizard/</a> pour Opera et <a href="https://bugzilla.mozilla.org/" title="File a Firefox bug">bugzilla.mozilla.org</a> pour Firefox</li>
+</ul>
+
+<h2 id="toc-more">Pour en savoir plus</h2>
+
+<ul>
+  <li><a href="https://www.youtube.com/watch?v=p2HzZkd2A40" title="Video of Google I/O WebRTC session, 2013">Présentation de WebRTC à la Google I/O 2013</a> (les supports sont sur <a href="http://io13webrtc.appspot.com" title="Google I/O 2013 WebRTC presentation">io13webrtc.appspot.com</a>)</li>
+  <li>La conférence de<a href="https://www.youtube.com/watch?v=E8C8ouiXHHk" title="Video of Justin Uberti WebRTC session at Google I/O, 27 June 2012">Justin Uberti à la Google I/O 2012</a></li>
+  <li>Alan B. Johnston et Daniel C. Burnett maintiennent un livre sur l'état de l'art de WebRTC book, dispo en papier et en numérique : <a href="http://www.webrtcbook.com" title="WebRTC book information and download">webrtcbook.com</a></li>
+  <li><a href="http://www.webrtc.org/" title="webrtc.org">webrtc.org</a> est le site officiel de WebRTC: démos, documentation et discussions</li>
+  <li><a href="http://www.webrtc.org/demo" title="webrtc.org demos">démos sur webrtc.org</a>: une liste de démos</li>
+  <li><a href="https://groups.google.com/forum/?fromgroups#!forum/discuss-webrtc" title="discuss-webrt Google Group">discuss-webrtc</a>: Liste de discussion (dans un Google Group) sur les aspects techniques de WebRTC</li>
+  <li><a href="https://plus.sandbox.google.com/113817074606039822053/posts" title="WebRTC on Google+">+webrtc</a></li>
+  <li><a href="https://twitter.com/webrtc" title="WebRTC on Twitter">@webrtc</a></li>
+  <li>Développeurs Google <a href="https://developers.google.com/talk/libjingle/important_concepts#connections" title="Google Developers: Google Talk for Developers">Doc de Google Talk </a>, riche en informations sur la traversée de NAT, STUN, serveurs relais et recherche de candidats</li>
+  <li><a href="http://stackoverflow.com/questions/tagged/webrtc" title="Stack Overflow questions tagged 'webrtc'">Stack Overflow</a> pour trouver des réponses et poser des questions sur WebRTC</li>
+</ul>
+
+<h2 id="toc-standards">Standards et protocoles</h2>
+
+<ul>
+  <li><a href="http://dev.w3.org/2011/webrtc/editor/webrtc.html" title="W3C Editor's Draft document">The WebRTC W3C Editor's Draft</a></li>
+  <li><a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html" title="W3C Editor's Draft: Media Capture and Streams">W3C Editor's Draft: Media Capture and Streams</a> (aka getUserMedia)</li>
+  <li><a href="http://tools.ietf.org/wg/rtcweb/charters" title="IETF Working Group Charter">IETF Working Group Charter</a></li>
+  <li><a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-01" title="IETF RTCDataChannel documentation">IETF WebRTC Data Channel Protocol Draft</a></li>
+  <li><a href="http://tools.ietf.org/html/draft-uberti-rtcweb-jsep-02" title="IETF JSEP documentation">IETF JSEP Draft</a></li>
+  <li><a href="http://tools.ietf.org/html/rfc5245" title="IETF proposed standard for ICE">IETF proposed standard for ICE</a></li>
+  <li>IETF RTCWEB Working Group Internet-Draft: <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-use-cases-and-requirements-10" title="">Web Real-Time Communication Use-cases and Requirements</a></li>
+</ul>
+
+<h2 id="toc-support">Résumé du support de WebRTC</h2>
+
+<h3>MediaStream et getUserMedia</h3>
+<ul>
+	<li>Chrome desktop 18.0.1008+; Chrome pour Android 29+</li>
+	<li>Opera 18+; Opera pour Android 20+</li>
+	<li>Opera 12, Opera Mobile 12 (basé sur le moteur Presto)</li>
+	<li>Firefox 17+</li>
+</ul>
+
+<h3>RTCPeerConnection</h3>
+<ul>
+	<li>Chrome desktop 20+ ; Chrome pour Android 29+ </li>
+	<li>Opera 18+ ; Opera for Android 20+</li>
+	<li>Firefox 22+</li>
+</ul>
+
+<h3>RTCDataChannel</h3>
+<ul>
+	<li>Version expérimentale dans Chrome 25, plus stable (et avec l'interopérabilité Firefox) dans Chrome 26+; Chrome pour Android 29+</li>
+	<li>Verison stable (et avec la compatibilité Firefox) dans Opera 18+; Opera pour Android 20+</li>
+  <li>Firefox 22+</li>
+</ul>
+
+<p>WebRTC est dispo pour Internet Explorer via Chrome Frame : <a href="http://www.youtube.com/watch?v=rICLVXcc02A" title="YouTube video, with links to documentation">vidéo de démo et lien dans la description</a>.</p>
+
+<p>Les API natives pour RTCPeerConnection sont aussi disponibles <a href="http://www.webrtc.org/reference/native-apis" title="webrtc.org native API documentation">dans la documentation sur webrtc.org</a>.</p>
+
+<p>Pour plus d'informations sur le support de WebRTC sur les différentes plateformes, veuillez vous référer à <a href="http://caniuse.com/getUserMedia" title="caniuse.com: getUserMedia/getUserMedia support">caniuse.com</a>.</p>
+
+{% endblock %}
