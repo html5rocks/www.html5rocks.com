@@ -36,9 +36,8 @@ While script resources are the most obvious security risks, CSP provides a rich 
 * **`object-src`** allows control over Flash and other plugins.
 * **`plugin-types`** limits the kinds of plugins a page may invoke.
 * **`report-uri`** specifies a URL where a browser will send reports when a content security policy is violated. This directive cant be used in `<meta>` tags.
-
-
 * **`style-src`** is `script-src`'s counterpart for stylesheets.
+* **`upgrade-insecure-requests`** Instructs user agents to rewrite URL schemes, changing HTTP to HTTPS. This directive is for web sites with large numbers of old URL's that need to be rewritten.
 
 By default, directives are wide open. If you don't set a specific policy for a directive, let's say `font-src`, then that directive behaves by default as though you'd specified `*` as the valid source (e.g. you could load fonts from everywhere, without restriction).
 
