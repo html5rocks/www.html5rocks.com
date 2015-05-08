@@ -1,0 +1,132 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>Translator:</strong> <a href="https://github.com/xiaoyuze88">Xiao Yuze</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+<h2 id="toc-introduction">介绍</h2>
+
+<p>反锯齿是网络图形显示技术中一个从未被赞颂过的英雄；正是因为有了反锯齿，我们才可以在屏幕上看到各种清晰的文字与平滑的矢量图形。如今，有好几种反锯齿技术被用在了浏览器上，尤其是在对文字的渲染上，我们可以很明显的观察到反锯齿的作用。如果改变反锯齿的处理算法，将可能导致一些出乎意料的视觉差异。在这篇文章中，我们将对在浏览器上使用的反锯齿技术做一个介绍，并让我们来看看浏览器上的像素点是如何绘制的。</p>
+
+<p>正如我们所知，我们的屏幕是由像素组成的。它是一个巨大的块状的网格，每一个都由红、绿、蓝（RGB）三原色组合而成。从一定距离看向屏幕时，我们可以看到图片、文字和各种图标。但是当我们近距离观察时，我们就可以看到这些由三原色组成的网格，还有它们是如何组成的。</p>
+
+<figure>
+  <img src="/static/images/tutorials/antialiasing-101/pixels.jpg" />
+  <figcaption>
+    图 1 - 近距离观察时屏幕上的像素点。每一个像素点由红、绿、蓝三原色组成。
+  </figcaption>
+</figure>
+
+<h2 id="toc-antialiasing">反锯齿</h2>
+
+<p>现在我们考虑，当需要绘制一个矢量图形，而这个图形需要经过一个完整像素点的一部分，这时会发生什么呢？假设我们要绘制的这个图形是黑色的，且背景是白色的。我们需要给那个图形通过的非完整的像素点绘颜色吗？如果需要的话，应该绘制什么颜色呢？黑色、灰色，还是别的什么颜色？</p>
+
+<p>通过反锯齿的处理，决定了我们应该给像素填充哪个颜色。最简单的反锯齿处理被称为灰度反锯齿，它将像素的三原色分量做了相同的处理。所以，如果一个图形仅通过了一个像素点的一部分 &mdash; 并且为了简单考虑，让我们暂时假设是黑色的文字在白色的背景上渲染 &mdash; 你可能会认为每一个三原色分量都会被设为半明度（我知道我自己肯定会这么认为），但是实际上的情况要比这复杂的多：你需要考虑颜色的伽马值（gamma），这意味着你可能永远不可能将它设置到一个精确的值（半明度）。当然，这让事情变得有一些复杂，但由于这里仅是对这个话题的一个介绍，我不会在这里对它进行深入的分析。我们仅需要知道的是，灰度反锯齿是在 <em>像素级别</em> 上做处理的, 而我们可以选择更好的办法来处理它。
+
+<figure>
+  <img src="/static/images/tutorials/antialiasing-101/antialiasedvsaliased.png" />
+  <figcaption>
+    图 2 - 反锯齿处理 vs 锯齿边
+  </figcaption>
+</figure>
+
+<p>从图2你可以看到两个同样的三角图形被绘制在屏幕上，不过左图做了反锯齿处理，而右图没有。正如你看到的，当我们对图形做了反锯齿处理以后，图形通过一个不完整的像素点时，这个像素会被施加一种灰色的阴影。而没有做反锯齿处理时，所有的像素点不是被完全填充成黑色，就是被填充成白色，如你所见，整个图形看起来非常糟糕。</p>
+
+<h2 id="toc-text-rendering">文字渲染</h2>
+
+<p>无论何时，当浏览器渲染文字时，和渲染矢量图形一样，我们都需要面对这样的问题：对字符的渲染，它们总是需要通过非完整的像素点，所以我们需要一种策略，到底该给这些像素点绘制何种颜色。理想情况下，我们希望给文字施加反锯齿，好使得文字对于人们阅读来说更加友好。</p>
+
+ <p>然而，事实证明灰度反锯齿仅能以 <em>一种办法</em> 去处理像素。另外还有一种常用来处理反锯齿的办法，这种办法让我们对于像素点三原色各分量的处理上更有选择性，它叫做次像素反锯齿。这些年来，微软的ClearType团队在研究次像素反锯齿上花了大量的时间，并且让其技术的发展有了很大的进步。现在，次像素反锯齿是用的最多的技术，所有主流浏览器目前都多多少少使用了这项技术。</p>
+
+<p>首先我们知道，每一个像素点实际上都是由红、绿、蓝三原色由左到右并排组成的。我们发现要决定一个像素上的哪些分量需要打开（switch on）、哪些需要关闭（switch off）是一个问题。所以，如果一个像素是从左手边“半覆盖”的，我们将把红色分量全部打开，绿色分量只打开一半，而完全关闭蓝色分量。这个过程通常被称之为“三倍屏幕的水平分辨率”，这是依赖于每个像素都是由三个分量挨个分布、而不是一个独立的单位的事实的。</p>
+
+<figure>
+  <img src="/static/images/tutorials/antialiasing-101/rgb.png" />
+  <figcaption>
+    图 3 - 灰度反锯齿 vs 次像素反锯齿
+  </figcaption>
+</figure>
+
+<p>你可以从上面的图3中看到，在左图（灰度反锯齿）里，我们同等的对待每一个三原色分量，每一个分量都是相同的“打开”或是“关闭”的状态。而在右图里，我们使用了次像素反锯齿 - 根据三原色分量各在待绘制图形上占有多少比重，来决定抗锯齿后三原色分量的开闭。</p>
+
+<p>虽然有了上面的说法，人类的视觉对三原色的感知是有差异的。我们对绿色的敏感程度要远远大于红色与蓝色，这意味着比起灰度反锯齿，次像素反锯齿是更有优势的。就像<a href="http://alienryderflex.com/sub_pixel/">Darel Rex Finley 的文章</a>里说的，分别对待三原色的开闭实际上并<em>没有</em>提升3倍的清晰度，但是次像素反锯齿绝对是对清晰度有帮助的，跟灰度反锯齿比起来，次像素反锯齿可以帮助我们更清晰的读到文字。</p>
+
+<figure>
+  <img src="/static/images/tutorials/antialiasing-101/text.jpg" />
+  <figcaption>
+    图 4 - 次像素反锯齿的文字。这个效果是由每个像素中的三原色分量分别开闭而组合成的
+  </figcaption>
+</figure>
+
+<h2 id="toc-cutting-to-the-chase">切入正题</h2>
+
+<p>那么这些对我们开发者有什么意义呢？嗯，至少从Chrome perspective的角度来说，Chrome混合使用了灰度反锯齿和次像素反锯齿来渲染文字，而有一套标准来决定你实际看到的是使用哪种技术来渲染的文字。不过首先，我们需要对浏览器中的layer（渲染层，下文统一用layer来表示）需要有一定的了解，因为这是浏览器渲染的主要标准。如果你对layer以及Chrome内部是如何使用它的并不熟悉，你应该首先阅读Tom Wiltzius曾经写过的一篇<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">关于这个话题非常优秀的文章</a>。</p>
+
+<p>假设你已经对渲染层非常熟悉了，或者你已经刚刚翻阅了相关的文章，那么让我们继续往下说。如果一个网页使用了硬件合成，并且你现在有一些文本内容被渲染在<em>非root layer （non-root layer）</em>上，那么默认的，这些文本将使用灰度反锯齿来渲染。一些开发者会经常发现这样一个现象，当他们对元素施加一些黑魔法来使得这些元素获得自己的（非root layer）layer（<a href="http://aerotwist.com/blog/on-translate3d-and-layer-creation-hacks/">比如说添加translateZ属性</a>）时，会发现文字渲染出来变得不一样了。当开发者通过CSS或者JavaScript来使元素获得layer时，会让文字渲染从灰度反锯齿变到次像素反锯齿。如果你不清楚是什么导致渲染出现差异的话，这会让人觉得非常困惑。而如果你的文本是在root layer上，那么它们在渲染时会被施加次像素反锯齿，这会使得它们看起来要更加清晰。</p>
+
+<p>但是，就像所有web技术一样，一切都是在变化的。在Chrome中，次像素反锯齿会在当non-root layer满足如下三个条件的情况下被激活。有必要提出的是，这些条件适用于<em>当前</em>，但是将来很可能会改变，你可以持续关注这方面的变化。目前使用的条件为：</p>
+
+<ol>
+<li><strong>这个layer拥有一个完全不透明的背景颜色。</strong> 特别要注意的是当 <code>border-radius</code> 或者一个非标准的 <code>background-clip</code> 属性施加在这个layer上时，会导致这个layer被当作一个非不透明的层来对待，而使得它从次像素反锯齿回退到灰度反锯齿。</li>
+
+<li><strong>这个layer只能被施加一个单一的transform，或者一个整数translation。</strong>整数translation的意思是施加给translate的值必须是整数，如<code>translate(20.2px, 30px)</code> 就会被施加灰度反锯齿，因为它的x分量 <code>20.2px</code>是一个非整数。而单一的transform的意思是在一个transform语句中除了默认值，不能有另外的rotation、translation或者scale。</li>
+
+<li><strong>这个layer不可以带透明度（=1.0）</strong>。任何透明度的变化都将使得它从次像素反锯齿回退到灰度反锯齿。</li>
+</ol>
+
+<figure>
+  <img src="/static/images/tutorials/antialiasing-101/beforeafter.png" />
+  <figcaption>
+    图 5 - 之前与之后: 灰度反锯齿 vs. 次像素反锯齿. 注意文字右边的彩色的锯齿边
+  </figcaption>
+</figure>
+
+<p>最后一件需要注意的事就是，当施加一个CSS animation时，会给这个元素创建一个layer，但是使用<code>requestAnimationFrame</code>时却不会。所以对于一些开发者，当他们发现文字渲染不同时，应该去检查你是否使用了CSS animation。而当你使用JavaScript去执行动画，却发现文字渲染不同时，你应该去检查上述的这些特性你是否注意到了。</p>
+
+<p>所以这就是Chrome对反锯齿的表现了。对于其他浏览器，比如说Opera，由于它迁移到了Chromium，所以它对反锯齿的表现应该很接近Chrome。IE貌似使用次像素反锯齿来渲染所有可见的文本（当然，仅当你启用了ClearType的情况下），但是这样的行为貌似并没有在Win8的Metro mode中的IE中表现。Safari，由于使用了WebKit内核，它的表现也十分接近Chrome，尽管它没有那么多最新的优化来使得更多的次像素反锯齿被使用于渲染。Firefox，目前来说，大部分表现都接近于IE，它对所有可见文本施加了次像素反锯齿。当然，这并不是一个详尽的关于各浏览器关于反锯齿具体表现的列表，而仅仅是各浏览中可能会使用灰度反锯齿而不是次像素反锯齿的一些可能情况，但知道次像素反锯齿是被广泛应用于各主流浏览器是有好处的。</p>
+
+<h2 id="toc-conclusion">结论</h2>
+
+<p>所以现在你知道了关于反锯齿是如何作用的，并且知道了为什么你的网站和应用中，有些情况下字体渲染得不一样，特别对于某些低分辨率（DPI）的设备。如果你对关于Chrome对于文本的渲染是如何实施的感兴趣，可以阅读以下相关的文章：</p>
+
+<ul>
+<li><a href="https://crbug.com/167131">Automatic Font Grayscale Anti-Aliasing above 48px not Overridable</a></li>
+<li><a href="https://crbug.com/137692">Horrible font rendering with Google Web Fonts on Chrome for Windows</a></li>
+<li><a href="https://crbug.com/25541">DirectWrite support</a></li>
+</ul>
+
+<h2 id="toc-resources">资源和参考文献:</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Subpixel_rendering">Subpixel Rendering on Wikipedia</a></li>
+<li><a href="http://alienryderflex.com/sub_pixel/">Darel Rex Finley on Subpixel Text Rendering</a></li>
+<li><a href="http://www.grc.com/ctwhat.htm">How Subpixel rendering works</a></li>
+<li><a href="http://blog.typekit.com/category/type-rendering/">CSS properties that affect type rendering</a></li>
+</ul>
+
+
+{% endblock %}
