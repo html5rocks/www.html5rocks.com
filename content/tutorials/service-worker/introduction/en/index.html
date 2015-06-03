@@ -16,8 +16,10 @@ features will rely on.</p>
 
 <p>A service worker is a script that is run by your browser in the background,
 separate from a web page, opening the door to features which don't need a web
-page or user interaction. In the future this will include push messages,
-background sync, and geofencing, but the first feature it will launch with is
+page or user interaction. Today, they already include features like
+<a href= "http://updates.html5rocks.com/2015/03/push-notificatons-on-the-open-web">
+ push notifications</a> and in the future it will include other things like,
+background sync, or geofencing. The core feature discussed in this tutorial is
 the ability to intercept and handle network requests, including programmatically
 managing a cache of responses.</p>
 
@@ -93,8 +95,8 @@ first installation.</p>
 <p>Grab the caches polyfill from this repository
 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a>.</p>
 
-<p>This polyfill will add support for <code>CacheStorage.match</code>, <code>Cache.add</code> and
-<code>Cache.addAll</code> which Chrome M40's implementation of the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
+<p>This polyfill will add support for <code>Cache.addAll</code> which Chrome M43's implementation of
+ the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
 API</a> doesn't currently support.</p>
 
 <p>Grab <strong><code>dist/serviceworker-cache-polyfill.js</code></strong> to put somewhere in your site
@@ -406,12 +408,6 @@ statement at the start of your <code>install</code> event. This, along with "<a
  href="https://developer.chrome.com/devtools/docs/javascript-debugging#pause-on-uncaught-exceptions">
 Pause on uncaught exceptions</a>", should reveal the issue.</p>
 
-<h3>fetch() is Only Available in Service Workers</h3>
-
-<p><code>fetch</code> will eventually be available from pages, but Chrome's implementation
-currently isn't. The cache API should also be available from pages, but today,
-cache is only available in the service worker.</p>
-
 <h3>The Defaults of fetch()</h3>
 <h4>No Credentials by Default</h4>
 
@@ -439,11 +435,6 @@ which means you won't be able to tell if the response was successful or not.</p>
 })).then(function() {
   console.log('All resources have been fetched and cached.');
 });</code></pre>
-
-<h3>fetch() Doesn't Follow 30x Redirects</h3>
-
-<p>Unfortunately redirects will not be followed in a <code>fetch()</code> response. This is a
-bug in Chrome: <a href="https://code.google.com/p/chromium/issues/detail?id=402389">https://code.google.com/p/chromium/issues/detail?id=402389</a></p>
 
 <h3>Handling Responsive Images</h3>
 
@@ -506,13 +497,6 @@ style="width:400px; height: 400px;" /&gt;</code></pre>
 <p>For <code>&lt;picture&gt;</code> elements being used for art direction, this becomes considerably
 more difficult and will depend heavily on how your images are created and used,
 but you may be able to use a similar approach to srcset.</p>
-
-<h3>Changing URL Hash Bug</h3>
-
-<p>In M40 a bug exists in Chrome's implementation that causes service worker to no
-longer work when the hash of the URL is changed.</p>
-
-<p>You can find more info here: <a href="https://code.google.com/p/chromium/issues/detail?id=433708">https://code.google.com/p/chromium/issues/detail?id=433708</a></p>
 
 <h2 id="toc-learn">Learn More</h2>
 
