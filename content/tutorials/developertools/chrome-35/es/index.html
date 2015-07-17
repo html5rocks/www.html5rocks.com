@@ -1,0 +1,103 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block headauthor %}Umar Hansa{% endblock %}
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
+<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<style>
+.undo-multiple-occurrence-video {
+	width: 50%;
+}
+</style>
+
+<h2 id="devtools-digest-chrome-35-edition">DevTools Digest: Chrome 35 Edition</h2>
+
+<p>Hola a todos, en la <a href="http://www.html5rocks.com/en/tutorials/developertools/chrome-33/">última edición</a> del resumen DevTools revisamos las potentes pilas de llamadas asíncronas y algunas otras. En esta edición , veremos un filtrado panel de red mejorado (con autocompletar), editar habilidades con contenido Shadow DOM, CodeMirror 4 actualizaciones y más.</p>
+
+<h3 id="network-panel-filtering">Filtrado panel de Red</h3>
+
+<p>Ahora puedes filtrar los recursos por tal campos, como Dominio. Un tal formato de filtro es la siguiente: <code>Domain:website.com</code>. Además de filtrando, también tienes sugerencias de autocompletar por valores de filtros válidos que actualizan en vivo a medida que escribe su búsqueda. Usted puede encontrar esto útil cuando se necesita encontrar todos los recursos atendidos por un dominio particular. [<a href="https://code.google.com/p/chromium/issues/detail?id=258421">crbubg.com/258421</a>]</p>
+
+<p><img src="network-panel-filtering.png" alt="Network panel filtering"></p>
+
+<h3 id="edit-shadow-dom-content">Edit Shadow DOM content</h3>
+
+<p>DevTools siempre ha sido capaz de editar HTML regular en el panel de Elementos , ahora, estas capacidades se extienden a los elementos de parte de un Shadow DOM. [<a href="https://code.google.com/p/chromium/issues/detail?id=348991">crbug.com/348991</a>]</p>
+
+<p><img src="edit-shadow-dom.png" alt="Edit Shadow DOM content"></p>
+
+<h3 id="upgrade-to-codemirror-40">Actualizar a CodeMirror 4.0</h3>
+
+<p>CodeMirror, el editor de texto basado en JavaScript se utiliza como parte del Panel de Fuentes ha sido actualizado a la versión 4. Un montón de nuevas funcionalidades se ha agregado como resultado de esto. [<a href="http://crbug.com/356878">crbug.com/356878</a>]</p>
+
+<video class="undo-multiple-occurrence-video" autoplay loop muted src="undo-multiple-occurrence.mp4"></video>
+
+<h3 id="quick-search-for-a-css-property">Búsqueda rápida de una propiedad de CSS</h3>
+
+<p>Ahora puede buscar nombres de propiedades , valores o selectores de la nueva caja de búsqueda en el panel Estilos. Los resultados se destacan en vivo a medida que escribe su consulta. [<a href="https://code.google.com/p/chromium/issues/detail?id=278852">crbug.com/278852</a>]</p>
+
+<p><img src="css-prop-quick-search.png" alt="Quick search for a CSS-property"></p>
+
+<h3 id="timestamps-next-to-console-messages">Sellos de tiempo junto a consolar mensajes</h3>
+
+<p>Al registrar los mensajes en una sucesión rápida , puede ser útil ver la hora exacta en que se registra un mensaje . Usted puede habilitar esto vía experimentos de DevTools  [<a href="https://code.google.com/p/chromium/issues/detail?id=131714">crbug.com/131714</a>]</p>
+
+<p><img src="console-timestamp.png" alt="Timestamps next to console messages"></p>
+
+<h3 id="memory-statistics-breakdown-for-heap-snapshots">Desglose de Estadísticas de Memoria para instantáneas del montón</h3>
+
+<p>Al ver una instantánea de montón grabada, observe la gráfica circular de estadísticas que da un panorama visual , con código de color en cuanto a qué aspecto de JavaScript se consume la mayor cantidad de memoria . Actualmente una característica experimental , habilite "Heap snapshot statistics" para intentarlo. [<a href="https://code.google.com/p/chromium/issues/detail?id=346335">crbug.com/346335</a>]</p>
+
+<p><img src="memory-heap-stats.png" alt="Memory Statistics breakdown for heap snapshots"></p>
+
+<h3 id="view-the-original-source-of-a-consolelog-not-the-wrapped-version">Ver la fuente original de un console.log , no la versión envuelta</h3>
+
+<p>Es probable que tenga una función de contenedor console.log , pero por desgracia, en la consola todos los mensajes vienen de algo como util.js : 46 . Ahora usted puede tener DevTools resolver sus localizaciónes originales. Ingresa el archivo que envuelve los mensajes de registro de la consola en el "Skip stepping through sources with particular names" cuadro de entrada para tener DevTools BlackBox y mostrar la verdadera fuente de una declaración de registro. [<a href="https://code.google.com/p/chromium/issues/detail?id=231007">crbug.com/231007</a>]</p>
+
+<h3 id="a-few-more-small-but-powerful-additions">Algunos más pequeños, pero poderosos adiciones:</h3>
+
+<ul>
+
+<li><p><strong>Actualizá el panel de Event Listeners</strong> en el Panel de Elementos, después de añadir o eliminar dinámicamente observadores de JavaScript. [<a href="https://code.google.com/p/chromium/issues/detail?id=341044">crbug.com/341044</a>]</p></li>
+
+<li><p>Puede usar <strong>Ctrl+` para obtener el foco en la entrada de la consola</strong>, puede encontrar esto útil para un flujo de trabajo de teclado en el DevTools. [<a href="http://crbug.com/144943">crbug.com/144943</a>]</p></li>
+
+<li><p><strong>sugerencias de autocompletado de estilo de borde </strong> para valores (dotted, dashed, double, groove) han sido actualizados para cumplir con las especificaciónes. [<a href="https://code.google.com/p/chromium/issues/detail?id=349998">crbug.com/349998</a>]</p></li>
+
+<li><p><strong>Restaurar los valores predeterminados y botón de recargar</strong>** se ha añadido al panel de Ajustes que hace exactamente lo que dice en la lata. [<a href="https://code.google.com/p/chromium/issues/detail?id=135451">crbug.com/135451</a>]</p></li>
+
+<li><p>Actualmente una característica experimental, puede probar <strong>dock to left</strong> para descubrir su pertinencia para su flujo de trabajo. Los otros modos de diseño son el muelle a la ventana principal ( derecha o de abajo de ) y desacoplar en una ventana separada.  [<a href="https://code.google.com/p/chromium/issues/detail?id=134282">crbug.com/134282</a>]</p></li>
+
+<li><p>"<a href="https://developer.mozilla.org/en-US/docs/Web/Reference/Events/wheel">wheel</a>" es ofrecido como un <strong>breakpoint de observador</strong>, esto es en adición al clic de costumbre, movimiento del ratón , clic del ratón encima del elemento, y otros eventos. [<a href="https://code.google.com/p/chromium/issues/detail?id=347562">crbug.com/347562</a>]</p></li>
+
+</ul>
+
+<p>Es todo por ahora, gracias por leer!</p>
+
+{% endblock %}
+Status API Training Shop Blog About
+© 2015 GitHub, Inc. Terms Privacy Security Contact
