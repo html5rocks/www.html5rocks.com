@@ -24,7 +24,7 @@ With this policy defined, the browser will simply throw an error instead of load
 
 While script resources are the most obvious security risks, CSP provides a rich set of policy directives that enable fairly granular control over the resources that a page is allowed to load. You've already seen `script-src`, so the concept should be clear. Let's quickly walk through the rest of the resource directives:
 
-* **`base-uri`** restricts the URLs that can appear in a pages `<base>` element.
+* **`base-uri`** restricts the URLs that can appear in a page's `<base>` element.
 * **`child-src`** lists the URLs for workers and embedded frame contents. For example: `child-src https://youtube.com` would enable embedding videos from YouTube but not from other origins. Use this in place of the deprecated **`frame-src`** directive.
 * **`connect-src`** limits the origins to which you can connect (via XHR, WebSockets, and EventSource).
 * **`font-src`** specifies the origins that can serve web fonts. Google's Web Fonts could be enabled via `font-src https://themes.googleusercontent.com`
@@ -44,6 +44,7 @@ By default, directives are wide open. If you don't set a specific policy for a d
 You can override this default behavior by specifying a **`default-src`** directive. This directive, as you might suspect, defines the defaults for most directives you leave unspecified. Generally, this applies to any directive that ends with `-src`. If `default-src` is set to `https://example.com`, and you fail to specify a `font-src` directive, then you can load fonts from `https://example.com`, and nowhere else. We specified only `script-src` in our earlier examples, which means that images, fonts, and so on can be loaded from any origin.
 
 The following directives don't use default-src as a fallback. Remember that failing to set them is the same as allowing anything.
+
 * `base-uri`
 * `form-action`
 * `frame-ancestors`
@@ -53,9 +54,9 @@ The following directives don't use default-src as a fallback. Remember that fail
 
 You can use as many or as few of these directives as makes sense for your specific application, simply listing each in the HTTP header, separating directives with semicolons. You'll want to make sure that you list _all_ required resources of a specific type in a _single_ directive. If wrote something like `script-src https://host1.com; script-src https://host2.com` the second directive would simply be ignored. Something like the following would correctly specify both origins as valid.
 
-    `script-src https://host1.com https://host2.com`
+    script-src https://host1.com https://host2.com
 
-If, for example, you have an application that loads all of it's resources from a content delivery network (say, `https://cdn.example.net`), and know that you don't need framed content or any plugins at all, then your policy might look like the following:
+If, for example, you have an application that loads all of its resources from a content delivery network (say, `https://cdn.example.net`), and know that you don't need framed content or any plugins at all, then your policy might look like the following:
 
     Content-Security-Policy: default-src https://cdn.example.net; child-src 'none'; object-src 'none'
 
@@ -154,7 +155,7 @@ A Google search on generating SHA hashes will lead you to solutions in any numbe
 
 Even when an attacker can't inject script directly, she might be able to trick your application into converting otherwise inert text into executable JavaScript and executing it on her behalf. `eval()`, `new Function()`, `setTimeout([string], ...)`, `and setInterval([string], ...)` are all vectors through which injected text might end up executing something unexpectedly malicious. CSP's default response to this risk is, unsurprisingly, to block all of these vectors completely.
 
-This has a more than few impacts on the way you build applications:
+This has more than a few impacts on the way you build applications:
 
 *   Parse JSON via the built-in `JSON.parse`, rather than relying on `eval`. Native JSON operations are available in [every browser since IE8](http://caniuse.com/#feat=json), and they're completely safe.
 *   Rewrite any `setTimeout` or `setInterval` calls you're currently making with inline functions rather than strings. For example:
