@@ -145,9 +145,9 @@ Hashes work in much the same way. Instead of adding code to the script tag, crea
 
 Your policy would contain this:
 
-    Content-Security-Policy: script-src 'sha256-sha256-qznLcsROx4GACP2dm0UCKCzCG-HiZ1guq6ZZDob_Tng='
+    Content-Security-Policy: script-src 'sha256-qznLcsROx4GACP2dm0UCKCzCG-HiZ1guq6ZZDob_Tng='
 
-There are a few things to note here. The sha*- prefix specifies the algorithm used to generate the hash. In the example above, sha256- is used. CSP also supports sha384- and sha512-. When generating the hash do not include the `<script>` tags. Also capitalization and whitespace matter, including leading or trailing whitespace.   
+There are a few things to note here. The `sha*-` prefix specifies the algorithm used to generate the hash. In the example above, sha256- is used. CSP also supports sha384- and sha512-. When generating the hash do not include the `<script>` tags. Also capitalization and whitespace matter, including leading or trailing whitespace.   
 
 A Google search on generating SHA hashes will lead you to solutions in any number of languages. Using Chrome 40 or later you can open DevTools then reload your page. The Console tab will contain error messages with the correct sha256 hash for each of your inline scripts.
 
