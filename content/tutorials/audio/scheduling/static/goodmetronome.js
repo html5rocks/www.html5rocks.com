@@ -62,9 +62,8 @@ function scheduleNote( beatNumber, time ) {
 	else						// other 16th notes = high pitch
 		osc.frequency.value = 880.0;
 
-    // TODO: Once start()/stop() deploys on Safari and iOS, these should be changed.
-	osc.noteOn( time );
-	osc.noteOff( time + noteLength );
+	osc.start( time );
+	osc.stop( time + noteLength );
 }
 
 function scheduler() {

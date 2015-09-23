@@ -1,3 +1,5 @@
+sudo: false
+
 language: ruby
 rvm:
 - 2.2
@@ -13,13 +15,13 @@ script:
   - echo "script"
 
 before_install:
-  - sudo pip install PyOpenSSL
-  - openssl aes-256-cbc -K $encrypted_33a11b23443e_key -iv $encrypted_33a11b23443e_iv -in html5rocks-hrd.p12.enc -out html5rocks-hrd.p12 -d
-
+  - openssl aes-256-cbc -K $encrypted_33a11b23443e_key -iv $encrypted_33a11b23443e_iv -in html5rocks-hrd.json.enc -out html5rocks-hrd.json -d
   - curl https://sdk.cloud.google.com | bash
   - $HOME/google-cloud-sdk/bin/gcloud components update app -q
+  - $HOME/google-cloud-sdk/bin/gcloud auth activate-service-account $SRV_ACCOUNT --key-file $PROJECT_ID.json
   - $HOME/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
-  - $HOME/google-cloud-sdk/bin/gcloud auth activate-service-account $SRV_ACCOUNT --key-file $PROJECT_ID.p12
+  - $HOME/google-cloud-sdk/bin/gcloud preview app modules cancel-deployment default --version $TRAVIS_BRANCH
+  - $HOME/google-cloud-sdk/bin/gcloud --verbosity info preview app deploy --version $TRAVIS_BRANCH ./app.yaml
 
 after_success:
  - $HOME/google-cloud-sdk/bin/gcloud preview app deploy --version $TRAVIS_BRANCH ./app.yaml
