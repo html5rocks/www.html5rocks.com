@@ -133,21 +133,17 @@ xhr.send();
     <dd>リクエストが成功すると、xhr の応答プロパティに、リクエストしたデータが <code>DOMString</code>、<code>ArrayBuffer</code>、<code>Blob</code>、または <code>Document</code> として含まれます（<code>responseType</code> に何を設定したかによる）。</dd>
   </dl>
 
-  <p>このすばらしい新機能を使用して、前の例を書き換えることができます。今度は画像を文字列ではなく <code>ArrayBuffer</code> として取得します。バッファを <code>BlobBuilder</code> API に渡して <code>Blob</code> を作成します: </p>
+  <p>このすばらしい新機能を使用して、前の例を書き換えることができます。今度は画像を文字列ではなく <code>ArrayBuffer</code> として取得します。バッファを <code>Blob</code> API に渡して <code>Blob</code> を作成します: </p>
 
   <pre class="prettyprint">
-BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/path/to/image.png', true);
 <b>xhr.responseType = 'arraybuffer';</b>
 
-<b>xhr.onload</b> = function(e) {
+<b>xhr.onload</b>= function(e) {
   if (this.status == 200) {
-    var bb = new BlobBuilder();
-    bb.append(<b>this.response</b>); // Note: not xhr.responseText
-
-    var blob = bb.getBlob('image/png');
+    // Note: .response instead of .responseText
+    var blob = new Blob([<b>this.response</b>], {type : 'image/png'});
     ...
   }
 };
@@ -318,7 +314,7 @@ document.querySelector('input[type="file"]').addEventListener('change', function
 
   <p>XHR を使用して <code>File</code> または <code>Blob</code> データを送信することもできます。すべての <code>File</code> は <code>Blob</code> であることに注意してください。したがって、ここではどちらを使ってもかまいません。</p>
 
-  <p>この例は、<code>BlobBuilder</code> API を使用してテキスト ファイルを一から作成し、その <code>Blob</code> をサーバーにアップロードします。また、このコードでは、ユーザーにアップロードの進捗を通知するハンドラを設定しています。</p>
+  <p>この例は、<code>Blob</code> API を使用してテキスト ファイルを一から作成し、その <code>Blob</code> をサーバーにアップロードします。また、このコードでは、ユーザーにアップロードの進捗を通知するハンドラを設定しています。</p>
 
 <pre class="prettyprint">
 &lt;progress min="0" max="100" value="0">0% complete&lt;/progress>
@@ -341,13 +337,7 @@ function upload(blobOrFile) {
   xhr.send(<b>blobOrFile</b>);
 }
 
-// Take care of vendor prefixes.
-BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
-var bb = new <b>BlobBuilder</b>();
-<b>bb.append</b>('hello world');
-
-upload(<b>bb.getBlob('text/plain')</b>);
+upload(<b>new Blob(['hello world'], {type: 'text/plain'})</b>);
 </pre>
 
   <h3 id="toc-send-arraybuffer">バイト チャンクのアップロード: xhr.send(ArrayBuffer)</h3>
@@ -434,10 +424,9 @@ xhr.open('GET', '/path/to/image.png', true);
         writer.onwrite = function(e) { ... };
         writer.onerror = function(e) { ... };
 
-        <b>var bb = new BlobBuilder();</b>
-        <b>bb.append</b>(<b>xhr.response</b>);
+        var blob = new Blob([<b>xhr.response</b>], {type: 'image/png'});
 
-        <b>writer.write</b>(bb.getBlob('image/png'));
+        <b>writer.write</b>(blob);
 
       }, onError);
     }, onError);
@@ -454,9 +443,6 @@ xhr.send();
   <p><a href="/tutorials/file/dndfiles/">File API</a> を使用すると、最小限の作業で大きいファイルをアップロードすることができます。これは、アップロードを複数のチャンクにスライスしてから部分ごとに XHR を作成し、ファイルにしてサーバーに保存するというテクニックです。これは、GMail で大きい添付ファイルがきわめて高速でアップロードされるしくみに似ています。このようなテクニックを使用して、Google App Engine の 32 MB という http リクエストの上限を回避することができます。</p>
 
 <pre class="prettyprint">
-window.BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder ||
-                     window.BlobBuilder;
-
 function upload(blobOrFile) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/server', true);
@@ -551,8 +537,6 @@ function upload(blobOrFile) {
 }
 
 document.querySelector('#afile').addEventListener('change', function() {
-  window.BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
-
   var blob = this.files[0];
 
   const BYTES_PER_CHUNK = parseInt(document.querySelector('#numChunks').value);
