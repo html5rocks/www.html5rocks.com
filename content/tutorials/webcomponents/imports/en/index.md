@@ -88,7 +88,7 @@ and `onerror` when the attempt fails (e.g. if the resource 404s).
 Imports try to load immediately. An easy way avoid headaches
 is to use the `onload`/`onerror` attributes:
 
-    <script async>
+    <script>
       function handleLoad(e) {
         console.log('Loaded import: ' + e.target.href);
       }
@@ -106,7 +106,8 @@ Or, if you're creating the import dynamically:
 
     var link = document.createElement('link');
     link.rel = 'import';
-    link.href = 'file.html'
+    // link.setAttribute('async', ''); // make it async!
+    link.href = 'file.html';
     link.onload = function(e) {...};
     link.onerror = function(e) {...};
     document.head.appendChild(link);
@@ -484,6 +485,14 @@ To be completely asynchronous and not block the parser or rendering, use the `as
 
 The reason `async` isn't the default for HTML Imports is because it requires developers
 to do more work. Synchronous by default means that HTML Imports that have custom element definitions inside of them are guaranteed to load and upgrade, in order. In a completely async world, developers would have to manage that dance and upgrade timings themselves.
+
+You can also create an async import, dynamically:
+
+    var l = document.createElement('link');
+    l.rel = 'import';
+    l.href = 'elements.html';
+    l.setAttribute('async', '');
+    l.onload = function(e) { ... };
 
 <h4 id="perf-rendering">Imports do not block parsing</h4>
 
