@@ -318,7 +318,7 @@ localStorage["checkins"] = JSON.stringify(checkins);
 <p>With Web SQL Database, we run everything inside a transaction. We're going to create a new row in the checkins table, It's a straightforward SQL call, and instead of including the checkin data in the "insert" command, we use "?" syntax because it's cleaner and more secure. The actual data - the four values we want to store as columns in the new checkins row - are specified in the second row. The "?" elements will be replaced by those values (<tt>checkin.time</tt>, <tt>checkin.latitude</tt>, etc.). The next two arguments indicate functions which will be called when the operation has completed, one for success and one for failure. In this app, we use the same generic error handler for all transactions. In this case, the success function is simply the handler that was passed into the search function - we ensure the handler will be called on success so that the UI logic can be notified when the operation has been completed (e.g. to update the count of checkins so far).</p>
 
 <pre class="prettyprint">
-store.db.transaction(function(tx) {
+this.db.transaction(function(tx) {
   tx.executeSql(
     "insert into checkins " +
     "(time, latitude, longitude, mood) values (?,?,?,?);",
@@ -369,7 +369,7 @@ handler(matchingCheckins);
 
 <pre class="prettyprint">
 var matchingCheckins = [];
-store.db.transaction(function(tx) {
+this.db.transaction(function(tx) {
   tx.executeSql(
     "select * from checkins where mood=?",
     [moodQuery],
