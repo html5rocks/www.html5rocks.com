@@ -42,9 +42,8 @@ To detect support, check if `.import` exists on the `<link>` element:
       // Use other libraries/require systems to load files.
     }
 
-Browser support is still in the early days. Chrome 31 was the first browser to see an implementation. Since then, Chrome 36 was update with the latest spec. You can enable the flag by turning on **Enable experimental Web Platform features** in `about:flags` in Chrome Canary. For other browsers, [Polymer's polyfill](http://www.polymer-project.org/platform/html-imports.html) works great until things are widely supported.
-
-<p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
+Browser support is still in the early days. Chrome 31 was the first browser to see an implementation but other browser vendors are waiting to see how ES Modules play out.
+However, for other browsers the [webcomponents.js polyfill](http://webcomponents.org/polyfills/) works great until things are widely supported.
 
 <h3 id="bundling">Bundling resources</h3>
 
@@ -137,9 +136,9 @@ To access the content of an import, use the link element's `.import` property:
 Let's say `warnings.html` contains:
 
     <div class="warning">
-      <style scoped>
+      <style>
         h3 {
-          color: red;
+          color: red !important;
         }
       </style>
       <h3>Warning!</h3>
@@ -171,7 +170,7 @@ Importers can grab a specific portion of this document and clone it into their p
 
 <div class="demoarea" id="warning-example-area"></div>
 
-<link rel="import" id="warning-example-link" href="warning.html">
+<link rel="import" id="warning-example-link" href="/static/demos/imports/warning.html">
 <script>
   var link = document.querySelector('#warning-example-link');
   if ('import' in link) {
@@ -327,7 +326,7 @@ index.html
       </shadow-element>
     </body>
 
-<link rel="import" href="elements.html">
+<link rel="import" href="/static/demos/imports/elements.html">
 
 <div class="demoarea">
   <say-hi name="Eric"></say-hi><br><br>
@@ -351,29 +350,31 @@ In my opinion, this workflow alone makes HTML Imports an ideal way to share Web 
 
 It can be useful for one import to include another. For example, if you want to reuse or extend another component, use an import to load the other element(s).
 
-Below is a real example from [Polymer](http://polymer-project.org). It's a new tab component (`<polymer-ui-tabs>`) that reuses a layout and selector component. The dependencies are managed using HTML Imports. 
+Below is a real example from [Polymer](http://polymer-project.org). It's a new tab component (`<paper-tabs>`) that reuses a layout and selector component. The dependencies are managed using HTML Imports. 
 
-polymer-ui-tabs.html
+paper-tabs.html (simplified):
 
-    <link rel="import" href="polymer-selector.html">
-    <link rel="import" href="polymer-flex-layout.html">
+    <link rel="import" href="iron-selector.html">
+    <link rel="import" href="classes/iron-flex-layout.html">
 
-    <polymer-element name="polymer-ui-tabs" extends="polymer-selector" ...>
+    <dom-module id="paper-tabs">
       <template>
-        <link rel="stylesheet" href="polymer-ui-tabs.css">
-        <polymer-flex-layout></polymer-flex-layout>
-        <shadow></shadow>
+        <style>...</style>
+        <iron-selector class="layout horizonta center">
+          <content select="*"></content>
+        </iron-selector>
       </template>
-    </polymer-element>
+      <script>...</script>
+    </dom-module>
 
-[full source](https://github.com/Polymer/polymer-ui-elements/blob/master/polymer-ui-tabs/polymer-ui-tabs.html)
+[full source](https://github.com/polymerelements/paper-tabs)
 
 App developers can import this new element using:
 
-    <link rel="import" href="polymer-ui-tabs.html">
-    <polymer-ui-tabs></polymer-ui-tabs>
+    <link rel="import" href="paper-tabs.html">
+    <paper-tabs></paper-tabs>
 
-When a new, more awesome `<polymer-selector2>` comes along in the future, you can swap out `<polymer-selector>` and start using it straight away. You won't break your users thanks to imports and web components.
+When a new, more awesome `<iron-selector2>` comes along in the future, you can swap out `<iron-selector>` and start using it straight away. You won't break your users thanks to imports and web components.
 
 <h4 id="deps">Dependency management</h4>
 
