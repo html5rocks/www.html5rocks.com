@@ -1,0 +1,356 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻译</strong>: <a href="http://nianpengli.com">Nianpeng Li</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>丰富的离线用户体验、周期性的后台同步、消息推送&mdash;这些原本只存在于原生应用（native application）上的功能，即将登陆Web应用。正是 Service workers 为这些功能在Web应用上的实现提供了技术基础。
+
+<h2 id="toc-what">什么是Service Worker？</h2>
+
+<p>Service worker 是一个浏览器在后台运行的且独立于当前页面的脚本。它允许浏览器在没有页面指令和用户交互的情况下依然能够实现一些功能。现在 service worker 已经能够实现<a href="http://updates.html5rocks.com/2015/03/push-notificatons-on-the-open-web">消息推送</a>，未来其功能将包括后台更新、地理围栏（geofencing）等。本教程讲主要讨论 service worker 的拦截和处理网络请求能力，包括如何通过程序管理响应缓存。</p>
+
+<p>之所以说这是个令人兴奋的API是因为它对离线体验的支持。同时，它赋予开发者对离线功能的所有环节的完全掌控。</p>
+
+<p>在 service worker 出现以前，另一个提供离线用户体验支持的编程接口是 <a href="http://www.html5rocks.com/en/tutorials/appcache/beginner/">App Cache</a>。但使用中 App Cache 常常带来<a href="http://alistapart.com/article/application-cache-is-a-douchebag">很多棘手的问题</a>，同时其设计初衷本来只是为了满足单页应用（single page web apps）而不是多页网站。Service worker 的出现正是为了解决这些痛点和不便。</p>
+
+<p>关于 Service Worker 几点需要注意的地方：</p>
+
+<ul>
+<li>Service worker 是个 <a href="http://www.html5rocks.com/en/tutorials/workers/basics/">JavaScript Worker</a>，这意味着它不能直接访问DOM。Service worker 是通过 <a href="https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage"><code>postMessage</code></a> 接口与页面进行交互。在有需要的情况下，由收到消息的页面负责对DOM进行操作。</li>
+<li>Service worker 是个可编程的网络代理模块。它允许开发者定设定如何处理页面发出的网络请求。</li>
+<li>Service worker 在空闲时将被自动关闭，在下次需要使用时被激活。这个特性使得其 <code>onfetch</code> 和 <code>onmessage</code> 处理程序内的全局状态变量非常不可靠。如果你需要在 service worker 重启之间保存一些信息，那你将需要用到 <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a> API。</li>
+<li>Service worker 大量使用 promises，所以假如你不了解 promise，那你应该先读一下 <a href="/tutorials/es6/promises/">Jake Archibald 的 promise 教程</a>。</li>
+</ul>
+
+<h2 id="lifecycle">Service Worker 的生命周期</h2>
+
+<p>每个 service worker 都拥有一个完全独立于页面的生命周期。</p>
+
+<p>安装 service worker 的方法是使用 JavaScirpt 在页面上对其进行注册。注册后浏览器将在后台启动 service worker 的安装步骤。</p>
+
+<p>通常你会在 service worker 的安装阶段缓存一些静态资源。只有当所有资源都下载且缓存完毕时，service worker才提示安装成功。否则，它将无法启动（或者说，安装失败）。在安装失败的情况下，它会稍后重新尝试。所以你可以<strong>放心</strong>的认为，安装成功时所有需要的静态资源都已经就绪。</p>
+
+<p>Server worker 在安装完成后会进入启动程序。在这一阶段，你可以处理之前的遗留缓存。有关这一点，我们将在后面的 <a href="#toc-how">service worker 的更新</a> 部分具体讨论.</p>
+
+<p>启动之后，service worker 将会接管所有其管辖范围内的页面。这里有一个例外，service worker 的注册页面不会在启动时直接被接管，之后再次访问该页面时 service worker 将正常生效。Service worker 启动后处于这两种状态之一：要么关闭以节省内存资源， 要么在网页有网络请求或信息传送时处理 <code>fetch</code> 和 <code>message</code></p> 事件。
+
+<p>下图简要概括了 service worker 的初次安装及其后的生命周期。</p>
+
+<img src="images/sw-lifecycle.png" />
+
+<h2 id="toc-before">准备工作</h2>
+
+<p>下载 <a href="https://github.com/coonsta/cache-polyfill">https://github.com/coonsta/cache-polyfill</a> 提供的浏览器缓存兼容代码（cache polyfill）。
+
+<p>因为 Google Chrome M43 的 <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-interface">Cache
+API</a> 目前还不支持 <code>Cache.addAll</code>， 所以我们需要上述的兼容代码。</p>
+
+<p>把 <strong><code>dist/serviceworker-cache-polyfill.js</code></strong> 加入你的网站，然后在你的 service worker 程序中通过 <strong><code>importScripts</code></strong> 方法加载该脚本。所有被加载的脚本都会被 service worker 自动缓存以备再次使用。</p>
+
+<pre class="prettyprint"><code>importScripts('serviceworker-cache-polyfill.js');</code></pre>
+
+<h3>必须使用 HTTPS</h3>
+
+<p>在开发环境下，你可以在 localhost 上测试 service worker。但如果需要上线，你的网站必须使用 HTTPS 协议。</p>
+
+<p>你可以通过 service worker 来拦截网络连接，伪造和过滤服务器响应。是不是非常给力？但它强大的功能也是一把双刃剑，在提供功能帮助的同时它也给中间人攻击（man-in-the-middle）提供了可能。为了避免类似的网络攻击，你只能在支持 HTTPS 协议的页面上注册和使用 service worker，只有这样我们才能确保页面加载的 service worker 没有在传输过程中被篡改。</p>
+
+<p><a href="https://pages.github.com/">GitHub Pages</a> 由于对 HTTPS 的支持，非常适合用来做 service worker 的测试 。</p>
+
+<p>要想让你的服务器支持 HTTPS， 你需要一个 TLS 证书并将其安装至你的服务器。 具体方法取决于你的服务器构架，所以建议你仔细阅读你的服务器文档，而且不要忘记通过 <a href="http://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla's SSL config generator</a> 了解最佳实践。</p>
+
+<h3>Service worker 的使用</h3>
+
+<p>假设我们已经加载了 polyfill 并且使用 HTTPS 协议，接下来让我们看一下具体怎么使用 service worker。</p>
+
+<h3>如何注册和安装 Service Worker</h3>
+
+<p>在页面上<strong>注册</strong> service worker 会开启 service worker 的安装。这一步浏览器需要知道 service worker 的 JavaScript 文件地址。</p>
+
+<pre class="prettyprint"><code>if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+    // 注册成功
+    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+  }).catch(function(err) {
+    // 注册失败 :(
+    console.log('ServiceWorker registration failed: ', err);
+  });
+}</code></pre>
+
+<p>上面的代码检查 service worker API 是否可用，如果可用，service worker 代码 <code>/sw.js</code> 将会被。</p>
+
+<p>你可以放心地在每次页面加载时执行注册代码。浏览器会判断该 service worker 是否已经被注册，不会出现重复注册的问题。</p>
+
+<p>上面代码中有一个需要注意的地方--<code>register</code> 使用的 service worker 脚本地址。你可能已经注意到示例中的 service woker 文件位于域名的根目录下。这表示该 service worker 的作用范围为所在站点的整个域。或者说，该 service worker 将可以接收到所在网站整个域发出的 <code>fetch</code> 事件。假设 service worker 的注册地址改为 <code>/example/sw.js</code>， 那么它就只能收到以 <code>/example/</code> 起始的 URL 页面上的 <code>fetch</code> 事件 （比如：<code>/example/page1/</code>, <code>/example/page2/</code>）。</p>
+
+<p>如果你想知道一个 service worker 是否在正常运行，你可以访问 <code>chrome://inspect/#service-workers</code> 然后在列表中寻找你的网站。</p>
+
+<img src="./images/sw-chrome-inspect.png" />
+
+<p>在最早的 service worker 实现版本中，你可以通过 <code>chrome://serviceworker-internals</code> 来得到更多的信息。现在这个方法很多时候也还非常有效，通过它你能很方便的了解 service wokers 的生命周期。但它很有可能在不久的将来被  <code>chrome://inspect/#service-workers</code> 取代。</p>
+
+<p>浏览器的匿名模式（Incognito）为 service worker 的测试提供了非常好的环境，因为每次打开和关闭匿名窗口你都会得到一个全新的 service worker 环境。匿名窗口在关闭时会把 service worker 的注册信息以及使用中产生的缓存彻底清除。</p>
+
+<h3>Service Worker 的安装步骤</h3>
+
+<p>在页面开始了注册步骤之后，让我们把视角转到 service worker 脚本上来。因为这里你将有机会处理安装（<code>install</code>）事件。</p>
+
+<p>一种最基本的情况是你需要为安装（<code>install</code>）事件定义一个 callback 来决定哪些资源要被缓存。</p>
+
+<pre class="prettyprint"><code>// 需要缓存的资源
+var urlsToCache = [
+  '/',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+// 定义安装事件的 callback
+self.addEventListener('install', function(event) {
+  // 执行安装步骤
+});</code></pre>
+
+<p>在安装（<code>install</code>）callback 函数中我们使用如下步骤：</p>
+
+<ol>
+<li>启用一个缓存</li>
+<li>将资源存入缓存</li>
+<li>确认是否所有必要资源都已加入缓存</li>
+</ol>
+
+<pre class="prettyprint"><code>var CACHE_NAME = 'my-site-cache-v1';
+var urlsToCache = [
+  '/',
+  '/styles/main.css',
+  '/script/main.js'
+];
+
+self.addEventListener('install', function(event) {
+  // 执行安装步骤
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});</code></pre>
+
+<p>如上面的代码所示，我们通过 <code>caches.open</code> 打开指定的缓存文件，然后再调用 <code>cache.addAll</code> 并传入我们的文件名数组。这里有一连串的 promise（<code>caches.open</code> 和 <code>cache.addAll</code>）。 <code>event.waitUntil</code> 使用一个 promise 作为参数，并通过它得到安装步骤运行的时间以及安装是否完成。</p>
+
+<p>如果所有指定文件都缓存成功，service worker 就算顺利完成安装。<strong>任一</strong>文件下载失败都会导致安装失败。这一方面确保了你可以得到所有指定的资源，但同时也要求你在定义你的缓存文件列表时非常谨慎。缓存文件列表越长，其中有个别文件缓存失败的几率就越大，也就是说你的 service worker 有更大的可能安装失败。</p>
+
+<p>上面只是安装（<code>install</code>）的一个例子。你还可以在安装（<code>install</code>）时执行其他任务。 当然，你也可以选择直接忽略安装（<code>install</code>）事件。</p>
+
+<h3>如何缓存和返回请求（Requests）</h3>
+
+<p>既然已经安装好了 service worker，那为什么不用它返回一个已缓存的响应（response）呢？</p>
+
+<p>假设现在 service worker 已经安装完成，当用户开始浏览另一个页面或者刷新当前页面时， service worker 就可以监听并接收到 <code>fetch</code> 事件，如下所示：</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // 缓存命中
+        if (response) {
+          return response;
+        }
+
+        return fetch(event.request);
+      })
+  );
+});</code></pre>
+
+<p>这里我们定义了 <code>fetch</code> 函数，并通过 <code>caches.match</code> 把一个 promise 传入 <code>event.respondWith</code>。<code>caches.match</code> 会检视请求（request），从 service worker 之前生成的缓存中找到相应的结果。</p>
+
+<p>如果缓存中有相符的响应，我们直接返回缓存值。否则会返回 <code>fetch</code> 的结果，也即发送网络请求并返回响应数据--假如有响应的话。这个简单的例子可以应用于任何我们在安装（install）阶段缓存的资源。</p>
+
+<p>如果你想积累式地（cumulatively）缓存新请求，你可以参考下面这个例子来处理 <code>fetch</code> 请求的响应并将其加入缓存：</p>
+
+<pre class="prettyprint"><code>self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // 缓存命中 - 返回响应
+        if (response) {
+          return response;
+        }
+
+        // 要点：克隆请求（request)。请求是数据流（stream）而且只能
+        // 被一次性使用。由于我们要在检查缓存时和 <code>fetch</code>
+        // 时共使用两次，所以克隆请求是不可少的。
+        var fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest)
+          .then(function(response) {
+            // 检查接收到的响应是否有效
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // 要点：克隆响应（response）。响应也是数据流（stream），
+            // 浏览器要使用一次，缓存要使用一次。所以通过克隆响应来
+            // 得到两个流。
+            var responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(function(cache) {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          });
+      })
+  );
+});</code></pre>
+
+<p>我们来解释一下上面的代码：</p>
+
+<ol>
+<li>给 <code>fetch</code> 请求加一个回调函数 <code>.then</code></li>
+<li>得到返回值后执行一下步骤：</li>
+  <ol>
+  <li>检查确保响应数据存在。</li>
+  <li>检查响应状态代码（status code）为 <code>200</code>。</li>
+  <li>检查返回结果类型为 <code>basic</code> 以保证请求是由当前网站域发送。这样的话我们就不会缓存其他第三方资源。</li>
+  </ol>
+<li>当所有检查都通过时，我们 <a href="https://fetch.spec.whatwg.org/#dom-response-clone"><code>clone</code></a> 返回结果。因为响应值是个<a href="https://streams.spec.whatwg.org/">数据流</a>，所以它只能被使用一次。浏览器需要得到该响应的同时我们还希望将它缓存起来，因此这一步的克隆非常关键。</li>
+</ol>
+
+<h2 id="toc-how">如何更新 Service Worker</h2>
+
+<p>或早或迟你总会需要更新你的 service worker，当这个时刻到来时，请参照下列步骤：</p>
+
+<ol>
+  <li>更新 service worker 的 JavaScript 脚本文件。</li>
+  <ol>
+    <li>当用户访问你的网站时，浏览器会试图在后台重新下载 service worker 的脚本文件。如果浏览器比较后发现新文件与现存文件有任何差别，它都会开始准备更新。</li>
+  </ol>
+  <li>浏览器将启动新 service worker 并触发 <code>install</code> 事件。</li>
+  <li>与此同时，整个页面还是处于旧的 service worker 的控制下，新 service worker 会进入待机（<code>waiting</code>）状态。</li>
+  <li>当前页面被关闭时，旧 service worker 将被终止，新 service worker 获得控制权。</li>
+  <li>新 service worker 获得控制权的同时，它的激活（<code>activate</code>）事件将被触发。</li>
+</ol>
+
+<p>在激活（<code>activate</code>）事件的回调函数中进行缓存管理是种常见的做法。之所以选择激活事件的回调函数是因为：假设你在安装（install）步骤清除旧缓存或者旧 service worker，它们还保持着对当前页面的控制，清除操作会导致缓存文件无法读取而产生错误。</p>
+
+<p>举例来说，如果我们希望把旧的缓存文件 'my-site-cache-v1' 分成两个缓存，一个给常规页面，一个给博客文章。这意味着在安装（install）阶段我们需要创建两个缓存，'pages-cache-v1' 和 'blog-posts-cache-v1'， 这样在激活（active）步骤我们就可以安全地清除 'my-site-cache-v1' 并开始使用新缓存。</p>
+
+<p>下面的代码将会循环检索所有 service worker 使用的缓存，并删除其中那些不在白名单（white list）上的缓存。</p>
+
+<pre class="prettyprint"><code>self.addEventListener('activate', function(event) {
+
+  var cacheWhitelist = ['pages-cache-v1', 'blog-posts-cache-v1'];
+
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});</code></pre>
+
+<h2 id="toc-rough">疑难问题与常见陷阱</h2>
+
+<p>Service worker 目前还很新且不成熟。下面列出了一些使用过程中的常见问题。希望将来我们不再需要这一部分，但是目前了解一下还是很有帮助的。</p>
+
+<h3>你没有什么可靠的办法知道 service worker 安装失败了。</h3>
+
+<p>如果一个 worker 进行了注册（register），却没有出现在<code>chrome://inspect/#service-workers</code> 或 <code>chrome://serviceworker-internals</code> 中，那最大的可能是由于某个抛出错误或 rejected promise 被传给了 <code>event.waitUntil</code> 并导致了安装（install）失败 。</p>
+
+<p>一个变通的解决方案是访问 <code>chrome://serviceworker-internals</code>，勾选"Opens the DevTools window for service worker on start for debugging"并在安装（<code>install</code>）程序开始处设置一个 <code>debugger</code>。再加上在 DevTool 的 <a href="https://developer.chrome.com/devtools/docs/javascript-debugging#pause-on-uncaught-exceptions">Pause on uncaught exceptions</a> 应该可以帮助你发现问题的原因。</p>
+
+<h3>fetch() 的默认设置</h3>
+<h4>无预设用户名密码</h4>
+
+<p>当你使用 <code>fetch()</code> 时，默认请求不带有任何包括 cookies 在内的用户凭证（credentials）。如果你需要使用用户凭证（credentials），那函数调用方式应为：</p>
+
+<pre class="prettyprint"><code>fetch(url, {
+  credentials: 'include'
+})</code></pre>
+
+<p>这一规则是设计者有意为之，相比与 XHR 那种更复杂的"在发送 URL 时同域（same-origin）则带用户凭证，异域则不带"的规则，这貌似是个更好的选择。Fetch 的行为模式更像是跨域资源共享（CORS），比如 <code>&lt;img crossorigin&gt;</code>，除非你通过 <code>&lt;img crossorigin="use-credentials"&gt;</code> 选择性使用，否则它并不会自动发送 cookies。</p>
+
+<h4>非跨域资源共享（Non-CORS）请求会默认失败</h4>
+
+<p>用来获取第三方资源的 URL 如果不支持跨域资源共享（CORS），那 <code>fetch</code> 函数将默认失败。如果你一定需要这样做，你可以给 <code>Request</code> 添加 non-CORS 选项。但这样你会得到一个 <a href="https://fetch.spec.whatwg.org/#concept-filtered-response-opaque">'opaque' response</a>，也就是说你无法判断响应成功与否。</p>
+
+<pre class="prettyprint"><code>cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+  return new Request(urlToPrefetch, { mode: 'no-cors' });
+})).then(function() {
+  console.log('所有资源都已下载并缓存。');
+});</code></pre>
+
+<h3>处理响应式图片（Responsive Images）</h3>
+
+<p>图片的<code>srcset</code> 属性或者 <code>&lt;picture&gt;</code> 元素会在运行时选择最合适的图片资源并发送网络请求。
+
+<p>如果你想用 service worker 在安装阶段缓存图片，你有如下几个选择：</p>
+
+<ol>
+<li>安装<code>srcset</code> 属性以及 <code>&lt;picture&gt;</code> 元素可能选择的所有图片</li>
+<li>仅安装图片的一个低像素版本</li>
+<li>仅安装图片的一个高像素版本</li>
+</ol>
+
+<p>一般来说选项2和选项3更加实际，因为下载所有图片会浪费大量内存。</p>
+
+<p>让我们来设想你选择在安装时仅缓存低像素版本，然后在图片实际加载时首先尝试下载高分辨率版。当高分辨率版下载失败时，使用已缓存的低像素版作为后备。这是一个可行方案，但是如下所示，这里有一个需要注意的问题。</p>
+
+<p>假设页面上有两张图片：</p>
+
+<table>
+<tr>
+<td>屏幕密度</td>
+<td>宽度</td>
+<td>高度</td>
+</tr>
+<tr>
+<td>1x</td>
+<td>400</td>
+<td>400</td>
+</tr>
+<tr>
+<td>2x</td>
+<td>800</td>
+<td>800</td>
+</tr>
+</table>
+
+<p>使用 <code>srcset</code> 的图片一般会用类似这样的标记（markup）：</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x" /&gt;</code></pre>
+
+<p>当我们使用 2x 显示的时候，浏览器选择下载 <code>image-2x.png</code>。如果这是在离线的情况下进行， service worker 会 <code>.catch</code> 请求并返回缓存的 <code>image-src.png</code>。但浏览器期待的返回图片拥有更多像素来填充 2x 的屏幕，结果是图片被显示在 200x200 的 CSS 像素下，而非我们希望的 400x400 像素。唯一的解决方案是给图片设定一个固定（fixed）宽度和高度。</p>
+
+<pre class="prettyprint"><code>&lt;img src="image-src.png" srcset="image-src.png 1x, image-2x.png 2x"
+  style="width:400px; height: 400px;" /&gt;</code></pre>
+
+<img src="./images/sw-responsive-img-example.png" />
+
+<p>这个问题在使用<code>&lt;picture&gt;</code> 元素作为艺术导向（art direction）时会变得更加棘手，而且很大程度上取决于你的图片的创建和使用方式。但是也许你可以使用类似 <code>srcset</code> 的方法。</p>
+
+<h2 id="toc-learn">更多资料</h2>
+
+<p>这里能够找到一系列关于 service worker 的文档 <a href="https://jakearchibald.github.io/isserviceworkerready/resources.html">https://jakearchibald.github.io/isserviceworkerready/resources.html</a> 。</p>
+
+<h2 id="toc-help">求助</h2>
+
+<p>如果你在使用 service worker 的过程中遇到问题，请将问题发布在 <a href="http://stackoverflow.com/">Stackoverflow</a>，并使用<a href="http://stackoverflow.com/questions/tagged/service-worker">'service-worker'</a> 标签来保证问题更可能被检索到，并得到大家的帮助。</p>
+
+{% endblock %}
