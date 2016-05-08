@@ -1,6 +1,6 @@
-The web's security model is rooted in the [_same origin policy_](http://en.wikipedia.org/wiki/Same_origin_policy). Code from `https://mybank.com` should only have access to `https://mybank.com`'s data, and `https://evil.example.com` should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system. 
+The web's security model is rooted in the [_same origin policy_](http://en.wikipedia.org/wiki/Same_origin_policy). Code from `https://mybank.com` should only have access to `https://mybank.com`'s data, and `https://evil.example.com` should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system.
 
-[Cross-site scripting (XSS)](http://en.wikipedia.org/wiki/Cross-site_scripting) attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page's security origin. The [XSS Cheat Sheet](http://ha.ckers.org/xss.html) is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects _any_ code at all, it's pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys. We'd obviously like to prevent that if possible. 
+[Cross-site scripting (XSS)](http://en.wikipedia.org/wiki/Cross-site_scripting) attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page's security origin. The [XSS Cheat Sheet](http://ha.ckers.org/xss.html) is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects _any_ code at all, it's pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys. We'd obviously like to prevent that if possible.
 
 This tutorial highlights one promising new defense that can significantly reduce the risk and impact of XSS attacks in modern browsers: Content Security Policy (CSP).
 
@@ -85,7 +85,7 @@ There's one more directive worth talking about: **`sandbox`**. It's a bit differ
 
 CSPs preferred delivery mechanism is an HTTP header. It can be useful, however, to set a policy on a page directly in the markup. Do that using a meta tag with an http-equiv attribute:
 
-    <meta http-equiv="Content-Security-Policy" content="default-src https://cdn.example.net; child-src 'none'; object-src 'none'"> 
+    <meta http-equiv="Content-Security-Policy" content="default-src https://cdn.example.net; child-src 'none'; object-src 'none'">
 
 This can't be used for frame-ancestors, report-uri, or sandbox.
 
@@ -117,15 +117,15 @@ to something more like:
               .addEventListener('click', doAmazingThings);
     });
 
-The rewritten code has a number of advantages above and beyond working well with CSP; it's already best practice, regardless of your use of CSP. Inline JavaScript mixes structure and behavior in exactly the way you shouldn't. External resources are easier for browsers to cache, more understandable for developers, and conducive to compilation and minification. You'll write better code if you do the work to move code into external resources. 
+The rewritten code has a number of advantages above and beyond working well with CSP; it's already best practice, regardless of your use of CSP. Inline JavaScript mixes structure and behavior in exactly the way you shouldn't. External resources are easier for browsers to cache, more understandable for developers, and conducive to compilation and minification. You'll write better code if you do the work to move code into external resources.
 
-Inline style is treated in the same way: both the `style` attribute and `style` tags should be consolidated into external stylesheets to protect against a variety of [surprisingly clever](http://scarybeastsecurity.blogspot.com/2009/12/generic-cross-browser-cross-domain.html) data exfiltration methods that CSS enables. 
+Inline style is treated in the same way: both the `style` attribute and `style` tags should be consolidated into external stylesheets to protect against a variety of [surprisingly clever](http://scarybeastsecurity.blogspot.com/2009/12/generic-cross-browser-cross-domain.html) data exfiltration methods that CSS enables.
 
 If you really, absolutely must have inline script and style, you can enable it by adding `'unsafe-inline'` as an allowed source in a `script-src` or `style-src` directive. You can also use a nonce or a has (see below). But please don't. Banning inline script is the biggest security win CSP provides, and banning inline style likewise hardens your application. It's a little bit of effort up front to ensure that things work correctly after moving all the code out-of-line, but that's a tradeoff that's well worth making.
 
 ### If You Absolutely Must Use It...
 
-CSP Level 2 offers backward compatibility for inline scripts by allowing you to whitelist specific inline scripts using either a cryptographic nonce (number used once) or a hash. Although this may be cumbersome in practice, it is useful in a pinch. 
+CSP Level 2 offers backward compatibility for inline scripts by allowing you to whitelist specific inline scripts using either a cryptographic nonce (number used once) or a hash. Although this may be cumbersome in practice, it is useful in a pinch.
 
 To use a nonce, give your script tag a nonce attribute. Its value must match one in the list of trusted sources. For example:
 
@@ -135,7 +135,7 @@ To use a nonce, give your script tag a nonce attribute. Its value must match one
 
 Now, add the nonce to your script-src directive appended to the nonce- keyword.
 
-    Content-Security-Policy: script-src 'nonce-EDNnf03nceIOfn39fn3e9h3sdfa' 
+    Content-Security-Policy: script-src 'nonce-EDNnf03nceIOfn39fn3e9h3sdfa'
 
 Remember that nonces must be regenerated for every page request and they must be unguessable.
 
@@ -171,7 +171,7 @@ This has more than a few impacts on the way you build applications:
 *   Avoid inline templating at runtime: Many templating libraries use `new Function()` liberally to speed up template generation at runtime. It's a nifty application of dynamic programming, but comes at the risk of evaluating malicious text. Some frameworks support CSP out of the box, falling back to a robust parser in the absence of `eval`; [AngularJS's ng-csp directive](http://docs.angularjs.org/api/angular.module.ng.$compileProvider.directive.ngCsp) is a good example of this.
 
 You're even better off, however, if your templating language of choice offers precompilation ([Handlebars does](http://handlebarsjs.com/precompilation.html), for instance). Precompiling your templates can make the user experience even faster than the fastest runtime implementation, and it's safer too. Win, win!
-If eval and its text-to-JavaScript brethren are completely essential to your application, you can enable them by adding `'unsafe-eval'` as an allowed source in a `script-src` directive. But, again, please don't. Banning the ability to execute strings makes it much more difficult for an attacker to execute unauthorized code on your site. 
+If eval and its text-to-JavaScript brethren are completely essential to your application, you can enable them by adding `'unsafe-eval'` as an allowed source in a `script-src` directive. But, again, please don't. Banning the ability to execute strings makes it much more difficult for an attacker to execute unauthorized code on your site.
 
 ## Reporting
 
