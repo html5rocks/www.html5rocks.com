@@ -135,6 +135,9 @@ article.tutorial .notice.fact:before {
 
 {% block content %}
 
+<p class="notice warning" style="text-align:center">
+This article describes an old version of Shadow DOM (v0). If you're interested in using Shadow DOM, check out our new article at developers.google.com, "<a href="https://developers.google.com/web/fundamentals/primers/shadowdom/">Shadow DOM v1: self-contained web components</a>". It covers everything in the newer Shadow DOM v1 spec shipping in Chrome 53, Opera, and Safari 10.</p>
+
 <p>This article discusses more of the amazing things you can do with Shadow DOM.
 It builds on the concepts discussed in <a href="/tutorials/webcomponents/shadowdom/">Shadow DOM 101</a>.
 If you're looking for an introduction, see that article.</p>
@@ -154,7 +157,7 @@ but one of the best is that it provides style encapsulation for free. Stated ano
 <pre class="prettyprint"><code>&lt;div&gt;&lt;h3&gt;Light DOM&lt;/h3&gt;&lt;/div&gt;
 &lt;script&gt;
 var root = document.querySelector('div').createShadowRoot();
-root.innerHTML = '&lt;style&gt;h3{ color: red; }&lt;/style&gt;' + 
+root.innerHTML = '&lt;style&gt;h3{ color: red; }&lt;/style&gt;' +
                  '&lt;h3&gt;Shadow DOM&lt;/h3&gt;';
 &lt;/script&gt;
 </code></pre>
@@ -186,9 +189,9 @@ That's because <strong>selectors don't cross the shadow boundary</strong>.</li>
 &lt;script&gt;
 var button = document.querySelector('button');
 var root = button.createShadowRoot();
-root.innerHTML = '&lt;style&gt;' + 
+root.innerHTML = '&lt;style&gt;' +
     ':host { text-transform: uppercase; }' +
-    '&lt;/style&gt;' + 
+    '&lt;/style&gt;' +
     '&lt;content&gt;&lt;/content&gt;';
 &lt;/script&gt;
 </code></pre>
@@ -200,9 +203,9 @@ root.innerHTML = '&lt;style&gt;' +
 (function() {
 var container = document.querySelector('#style-athost');
 var root = container.createShadowRoot();
-root.innerHTML = '<style>' + 
+root.innerHTML = '<style>' +
                      ':host { text-transform: uppercase; }' +
-                      '</style>' + 
+                      '</style>' +
                       '<content></content>';
 })();
 </script>
@@ -214,7 +217,7 @@ defined on the host element.  This allows users to override your styling from th
 <p>The functional form of <code>:host(&lt;selector&gt;)</code> allows you to target the host element if it matches a <code>&lt;selector&gt;</code>. </p>
 <p><strong>Example</strong> - match only if the element itself has the class <code>.different</code> (e.g.. <code>&lt;x-foo class="different"&gt;&lt;/x-foo&gt;</code>):</p>
 <pre class="prettyprint"><code>:host(.different) {
-  ...  
+  ...
 }
 </code></pre>
 <h3 id="toc-style-states">Reacting to user states</h3>
@@ -276,11 +279,11 @@ uniquely style it, based on its context.</p>
 
 <p>Another use for <code>:host</code> is if you're creating a theming library and want to
 support styling many types of host elements from within the same Shadow DOM.</p>
-<pre class="prettyprint"><code>:host(x-foo) { 
+<pre class="prettyprint"><code>:host(x-foo) {
   /* Applies if the host is a &lt;x-foo&gt; element.*/
 }
 
-:host(x-foo:host) { 
+:host(x-foo:host) {
   /* Same as above. Applies if the host is a &lt;x-foo&gt; element. */
 }
 
@@ -310,7 +313,7 @@ It allows you to write selectors that style nodes internal to an element's shado
 &lt;script&gt;
   var host = document.querySelector('div');
   var root = host.createShadowRoot();
-  root.innerHTML = "&lt;span&gt;Shadow DOM&lt;/span&gt;" + 
+  root.innerHTML = "&lt;span&gt;Shadow DOM&lt;/span&gt;" +
                    "&lt;content&gt;&lt;/content&gt;";
 &lt;/script&gt;
 </code></pre>
@@ -324,7 +327,7 @@ It allows you to write selectors that style nodes internal to an element's shado
 (function() {
 var host = document.querySelector('#style-hat-ex');
 var root = host.createShadowRoot();
-root.innerHTML = '<span>Shadow DOM</span>' + 
+root.innerHTML = '<span>Shadow DOM</span>' +
                  '<content></content>';
 })();
 </script>
@@ -371,7 +374,7 @@ uses Shadow DOM can be styled. Great examples are the <code>&lt;input&gt;</code>
   background: hotpink;
 }
 </code></pre>
-<div class="demoarea">  
+<div class="demoarea">
   <video id="ex-style-video" controls></video>
 </div>
 
@@ -422,7 +425,7 @@ its slider thumb <span style="color:blue">blue</span>:</p>
 &lt;script&gt;
 var root = document.querySelector('#host').createShadowRoot();
 root.innerHTML = '&lt;div&gt;' +
-                   '&lt;div pseudo="x-slider-thumb"&gt;&lt;/div&gt;' + 
+                   '&lt;div pseudo="x-slider-thumb"&gt;&lt;/div&gt;' +
                  '&lt;/div&gt;';
 &lt;/script&gt;
 </code></pre>
@@ -460,10 +463,10 @@ works beautifully! The whole picture looks like this:</p>
 &lt;div id="host"&gt;Host node&lt;/div&gt;
 &lt;script&gt;
 var root = document.querySelector('#host').createShadowRoot();
-root.innerHTML = '&lt;style&gt;' + 
-    'button {' + 
-      'color: var(--button-text-color, pink);' + 
-      'font-family: var(--button-font);' + 
+root.innerHTML = '&lt;style&gt;' +
+    'button {' +
+      'color: var(--button-text-color, pink);' +
+      'font-family: var(--button-font);' +
     '}' +
     '&lt;/style&gt;' +
     '&lt;content&gt;&lt;/content&gt;';
@@ -494,8 +497,8 @@ Think of it as a way to start fresh when creating a new component.</p>
 &lt;script>
 var root = document.querySelector('div').createShadowRoot();
 root.resetStyleInheritance = <span id="code-resetStyleInheritance">false</span>;
-root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' + 
-                 '&lt;h3>Shadow DOM&lt;/h3>' + 
+root.innerHTML = '&lt;style>h3{ color: red; }&lt;/style>' +
+                 '&lt;h3>Shadow DOM&lt;/h3>' +
                  '&lt;content select="h3">&lt;/content>';
 &lt;/script>
 </pre>
@@ -642,7 +645,7 @@ CSS Variable placeholders, authors can provide third-parties convenient styling 
 to further customize their content. All in all, web authors are in full control
 of how their content is represented.</p>
 <p class="small-notice">
-Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and 
+Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and
 <a href="https://plus.google.com/111648463906387632236/posts">Dimitri Glazkov</a> for reviewing
 the content of this tutorial.
 </p>
