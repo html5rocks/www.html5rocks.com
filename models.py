@@ -84,6 +84,7 @@ class Resource(DictModel):
   second_author = db.ReferenceProperty(Author, collection_name='author_two_set')
   url = db.StringProperty()
   social_url = db.StringProperty()
+  canonical_url = db.StringProperty()
   browser_support = db.StringListProperty()
   update_date = db.DateProperty()
   publication_date = db.DateProperty()
