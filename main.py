@@ -596,6 +596,7 @@ class DBHandler(ContentHandler):
           second_author=author_key2,
           url=unicode(res['url']),
           social_url=unicode(res.get('social_url') or ''),
+          canonical_url=unicode(res.get('canonical_url') or ''),
           browser_support=res.get('browser_support') or [],
           update_date=res.get('update_date'),
           publication_date=res['publication_date'],
@@ -870,6 +871,7 @@ class DBHandler(ContentHandler):
           tutorial.tags = tags
           tutorial.draft = self.request.get('draft') == 'on'
           tutorial.social_url = unicode(self.request.get('social_url') or '')
+          tutorial.canonical_url = unicode(self.request.get('canonical_url') or '')
         except TypeError:
           pass
       else:
@@ -887,7 +889,8 @@ class DBHandler(ContentHandler):
               publication_date=datetime.date(pub.year, pub.month, pub.day),
               tags=tags,
               draft=self.request.get('draft') == 'on',
-              social_url=self.request.get('social_url') or None
+              social_url=self.request.get('social_url') or None,
+              canonical_url=self.request.get('canonical_url') or None
               )
         except TypeError:
           pass
