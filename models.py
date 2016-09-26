@@ -222,7 +222,7 @@ class TutorialForm(forms.Form):
   social_url = forms.CharField(label='Social URL',
       help_text='A relative URL that should be used for social widgets (G+)', required=False)
   canonical_url = forms.CharField(label='Canonical URL',
-      help_text='A abs URL (eg. https://developers.google.com/web/) that should be used to redirect to new content', required=True)
+      help_text='A abs URL (eg. https://developers.google.com/web/) that should be used to redirect to new content', required=False)
 
   browsers = ['Chrome', 'FF', 'Safari', 'Opera', 'IE']
   browser_support = forms.MultipleChoiceField(
