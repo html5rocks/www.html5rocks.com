@@ -229,6 +229,7 @@ class ContentHandler(webapp2.RequestHandler):
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
     self.response.headers.add_header('X-UA-Compatible', 'IE=Edge,chrome=1')
+    self.response.headers.add_header('Strict-Transport-Security', 'max-age=86400; includeSubDomains')
     self.response.out.write(render_to_string(template_path, template_data))
 
   def render_atom_feed(self, template_path, data):
