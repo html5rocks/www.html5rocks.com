@@ -191,7 +191,7 @@ class ContentHandler(webapp2.RequestHandler):
       'toc': self.get_toc(template_path),
       'self_url': self.request.url,
       'self_pagename': pagename,
-      'host': '%s://%s' % (self.request.scheme, self.request.host),
+      'host': '%s://%s' % ('https', self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
       'prod': settings.PROD,
