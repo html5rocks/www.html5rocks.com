@@ -1,4 +1,4 @@
-HTML5 Rocks Quarter Report for 2016-09-29
+HTML5 Rocks Quarter Report for 2016-09-30
 =========================================
 
 Articles due this quater
