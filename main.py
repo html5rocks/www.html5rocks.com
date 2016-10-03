@@ -880,7 +880,7 @@ class DBHandler(ContentHandler):
           tutorial.draft = self.request.get('draft') == 'on'
           tutorial.social_url = unicode(self.request.get('social_url') or '')
           tutorial.canonical_url = unicode(self.request.get('canonical_url') or '')
-          tutorial.redirect_url = unicode(self.request.get('redirect_url') or '')
+          tutorial.redirect_url = self.request.get('redirect_url') or ''
         except TypeError:
           pass
       else:
