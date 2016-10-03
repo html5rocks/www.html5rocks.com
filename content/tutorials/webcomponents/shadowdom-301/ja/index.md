@@ -19,7 +19,7 @@ root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -68,7 +68,7 @@ root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -147,7 +147,7 @@ root2.appendChild(div);
 <b>var shadow = document.createElement('shadow');</b>
 root2.appendChild(shadow);
 &lt;/script>
-</pre> 
+</pre>
 
 この例は、[前の項](#toc-shadow-insertion) で示したものとほぼ同じですが、`select` を使って、新しく追加された `<span>` を引っ張っている点が異なります。
 
@@ -305,7 +305,7 @@ if ('HTMLTemplateElement' in window) {
 
 <script>
 (function() {
-if (!!Element.prototype.getDestinationInsertionPoints) { 
+if (!!Element.prototype.getDestinationInsertionPoints) {
   var container = document.querySelector('#example5-gip');
   var h2 = container.querySelector('h2');
 
@@ -338,7 +338,7 @@ Shadow DOM のレンダリングがどのように行われているのかをビ
 </figure>
 
 <p>
-<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
 </p>
 
 ぜひ試して、感想を聞かせて下さい！

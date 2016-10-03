@@ -23,7 +23,7 @@ root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="stacking.png" title="Attaching multiple shadow trees" alt="Attaching multiple shadow trees" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -82,7 +82,7 @@ root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -150,7 +150,7 @@ have interfaces for that.
 var container = document.querySelector('#example3');
 var root1 = container.createShadowRoot();
 var root2 = container.createShadowRoot();
-  
+
 var div = document.createElement('div');
 div.textContent = 'Root 1 FTW';
 root1.appendChild(div);
@@ -168,7 +168,7 @@ root2.appendChild(div);
 <b>var shadow = document.createElement('shadow');</b>
 root2.appendChild(shadow);
 &lt;/script>
-</pre> 
+</pre>
 
 This example is nearly identical to the one in the [previous section](#toc-shadow-insertion).
 The only difference is that now I'm using `select` to pull out the newly added `<span>`.
@@ -240,7 +240,7 @@ var root = container.createShadowRoot();
 var t = document.querySelector('#sdom');
 var clone = document.importNode(t.content, true);
 root.appendChild(clone);
-  
+
 var html = [];
 [].forEach.call(root.querySelectorAll('content'), function(el) {
   html.push(el.outerHTML + ': ');
@@ -335,7 +335,7 @@ a node is distributed into by calling its `.getDestinationInsertionPoints()`:
 
 <script>
 (function() {
-if (!!Element.prototype.getDestinationInsertionPoints) { 
+if (!!Element.prototype.getDestinationInsertionPoints) {
   var container = document.querySelector('#example5-gip');
   var h2 = container.querySelector('h2');
 
@@ -372,7 +372,7 @@ work and insertion points swizzle host nodes into the shadow tree.
 </figure>
 
 <p>
-<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
 </p>
 
 Give it a try and let me know what you think!
@@ -443,7 +443,7 @@ how the `mouseout` and `focusin` events bubble up to the main page.
 
   <output></output>
 </div>
-    
+
 <script>
 (function() {
 function stringify(node) {
@@ -460,8 +460,8 @@ root.innerHTML = document.querySelector('#example5 template').innerHTML;
 host.addEventListener('mouseout', function(e) {
 
   out.innerHTML += [
-    '<span>[' + e.type + ']</span>', 
-    'on:', stringify(e.target) + ',', 
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target) + ',',
     'from', stringify(e.fromElement),
     '&rarr;', stringify(e.toElement), '<br>'].join(' ');
   out.scrollTop = out.scrollHeight;
@@ -525,7 +525,7 @@ document.querySelector('#example5 .buttons').addEventListener('click', function(
 
 - This one is interesting. You should see a `mouseout` from the host element (`<div data-host>`)
 to the <span style="color:steelblue">blue</span> node. Even though it's a distributed
-node, it's still in the host, not the ShadowDOM. Mousing further down into 
+node, it's still in the host, not the ShadowDOM. Mousing further down into
 <span style="color:#ffcc00">yellow</span> again causes a `mouseout` on the <span style="color:steelblue">blue</span> node.
 
 **Play Action 2**
@@ -556,7 +556,7 @@ The following events never cross the shadow boundary:
 
 <h2 id="toc-conclusion">Conclusion</h2>
 
-I hope you'll agree that **Shadow DOM is incredibly powerful**. For the first time ever, we have proper encapsulation without the extra baggage of `<iframe>`s or other older techniques. 
+I hope you'll agree that **Shadow DOM is incredibly powerful**. For the first time ever, we have proper encapsulation without the extra baggage of `<iframe>`s or other older techniques.
 
 Shadow DOM is certainly complex beast, but it's a beast worth adding to the web platform.
 Spend some time with it. Learn it. Ask questions.
@@ -565,7 +565,7 @@ If you want to learn more, see Dominic's intro article [Shadow DOM 101](/tutoria
 and my [Shadow DOM 201: CSS &amp; Styling](/tutorials/webcomponents/shadowdom-201/) article.
 
 <p class="small-notice">
-Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and 
+Thanks to <a href="/profiles/#dominiccooney">Dominic Cooney</a> and
 <a href="https://plus.google.com/111648463906387632236/posts">Dimitri Glazkov</a> for reviewing
 the content of this tutorial.
 </p>

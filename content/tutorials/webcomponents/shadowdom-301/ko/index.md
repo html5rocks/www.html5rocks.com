@@ -23,7 +23,7 @@ root2.innerHTML = '&lt;div>Root 2 FTW&lt;/div>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="stacking.png" title="여러개의 섀도 트리 붙이기" alt="여러개의 섀도 트리 붙이기" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -74,7 +74,7 @@ root1.innerHTML = '&lt;div>Root 1 FTW&lt;/div>&lt;content>&lt;/content>';
 &lt;/script>
 </pre>
 
-<div class="demodevtools"> 
+<div class="demodevtools">
 <img src="shadow-insertion-point.png" title="Shadow insertion points" alt="Shadow insertion points" style="width:250px;">
 </div>
 <div class="demoarea">
@@ -135,7 +135,7 @@ Object.defineProperty(host, 'shadowRoot', {
 var container = document.querySelector('#example3');
 var root1 = container.createShadowRoot();
 var root2 = container.createShadowRoot();
-  
+
 var div = document.createElement('div');
 div.textContent = 'Root 1 FTW';
 root1.appendChild(div);
@@ -153,7 +153,7 @@ root2.appendChild(div);
 <b>var shadow = document.createElement('shadow');</b>
 root2.appendChild(shadow);
 &lt;/script>
-</pre> 
+</pre>
 
 이 예제는 [이전 섹션](#toc-shadow-insertion)의 것과 거의 똑같습니다.
 유일한 차이점은 새로 추가된 `<span>`을 뽑아내기 위해 이제 `select`를 사용한다는 것입니다.
@@ -218,7 +218,7 @@ var root = container.createShadowRoot();
 var t = document.querySelector('#sdom');
 var clone = document.importNode(t.content, true);
 root.appendChild(clone);
-  
+
 var html = [];
 [].forEach.call(root.querySelectorAll('content'), function(el) {
   html.push(el.outerHTML + ': ');
@@ -312,7 +312,7 @@ if ('HTMLTemplateElement' in window) {
 
 <script>
 (function() {
-if (!!Element.prototype.getDestinationInsertionPoints) { 
+if (!!Element.prototype.getDestinationInsertionPoints) {
   var container = document.querySelector('#example5-gip');
   var h2 = container.querySelector('h2');
 
@@ -345,7 +345,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 </figure>
 
 <p>
-<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
 </p>
 
 한번 해보고 어떻게 생각하는지 알려주세요!
@@ -407,7 +407,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 
   <output></output>
 </div>
-    
+
 <script>
 (function() {
 function stringify(node) {
@@ -424,8 +424,8 @@ root.innerHTML = document.querySelector('#example5 template').innerHTML;
 host.addEventListener('mouseout', function(e) {
 
   out.innerHTML += [
-    '<span>[' + e.type + ']</span>', 
-    'on:', stringify(e.target) + ',', 
+    '<span>[' + e.type + ']</span>',
+    'on:', stringify(e.target) + ',',
     'from', stringify(e.fromElement),
     '&rarr;', stringify(e.toElement), '<br>'].join(' ');
   out.scrollTop = out.scrollHeight;
@@ -520,7 +520,7 @@ Shadow DOM은 확실히 복잡한 괴물이지만 이는 웹 플랫폼에 추가
 만약 더 학습을 하고 싶으시다면 Dominic의 소개 글인 [Shadow DOM 101](/ko/tutorials/webcomponents/shadowdom/)와 제가 작성한 [Shadow DOM 201: CSS &amp; Styling](/ko/tutorials/webcomponents/shadowdom-201/)를 보시기 발바니다.
 
 <p class="small-notice">
-이 튜토리얼의 내용을 리뷰해준 <a href="/profiles/#dominiccooney">Dominic Cooney</a>과 
+이 튜토리얼의 내용을 리뷰해준 <a href="/profiles/#dominiccooney">Dominic Cooney</a>과
 <a href="https://plus.google.com/111648463906387632236/posts">Dimitri Glazkov</a>에게 고마움을 표합니다.
 </p>
 
