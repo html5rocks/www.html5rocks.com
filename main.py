@@ -405,6 +405,12 @@ class ContentHandler(webapp2.RequestHandler):
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
 
+        # Redirect if needed
+        if tut:
+          if tut.redirect_url:
+            self.redirect(tut.redirect_url, permanent=True)
+            return
+
         # Localize title and description.
         if tut:
           if tut.title:
@@ -598,6 +604,7 @@ class DBHandler(ContentHandler):
           url=unicode(res['url']),
           social_url=unicode(res.get('social_url') or ''),
           canonical_url=unicode(res.get('canonical_url') or ''),
+          redirect_url=unicode(res.get('redirect_url') or ''),
           browser_support=res.get('browser_support') or [],
           update_date=res.get('update_date'),
           publication_date=res['publication_date'],
@@ -873,6 +880,7 @@ class DBHandler(ContentHandler):
           tutorial.draft = self.request.get('draft') == 'on'
           tutorial.social_url = unicode(self.request.get('social_url') or '')
           tutorial.canonical_url = unicode(self.request.get('canonical_url') or '')
+          tutorial.redirect_url = unicode(self.request.get('redirect_url') or '')
         except TypeError:
           pass
       else:
@@ -891,7 +899,8 @@ class DBHandler(ContentHandler):
               tags=tags,
               draft=self.request.get('draft') == 'on',
               social_url=self.request.get('social_url') or None,
-              canonical_url=self.request.get('canonical_url') or None
+              canonical_url=self.request.get('canonical_url') or None,
+              redirect_url=self.request.get('redirect_url') or None
               )
         except TypeError:
           pass
