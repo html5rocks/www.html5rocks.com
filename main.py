@@ -408,7 +408,7 @@ class ContentHandler(webapp2.RequestHandler):
         # Redirect if needed
         if tut:
           if tut.redirect_url:
-            self.redirect(tut.redirect_url, permanent=True)
+            self.redirect(tut.redirect_url.encode('latin-1'), permanent=True)
             return
 
         # Localize title and description.
