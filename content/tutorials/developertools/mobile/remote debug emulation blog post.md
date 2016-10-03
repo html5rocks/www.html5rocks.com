@@ -2,7 +2,7 @@ Developing for mobile should be just as easy as it is developing for desktop. We
 
 ### Screencast your device screen to desktop
 
-<iframe allowfullscreen frameborder="0" height="315" src="http://www.youtube.com/embed/Q7rEFEMpwe4" width="560"><a href="https://www.youtube.com/watch?v=Q7rEFEMpwe4
+<iframe allowfullscreen frameborder="0" height="315" src="https://www.youtube.com/embed/Q7rEFEMpwe4" width="560"><a href="https://www.youtube.com/watch?v=Q7rEFEMpwe4
 ">View a video of Screencast with Chrome on Android remote debugging</a></iframe>
 
 Until now, while remote debugging you've had to shift your eyes back and forth between your device and your devtools. Now, **Screencast displays your devices's screen right alongside your devtools**. Seeing it is good, but interacting with it is even better:
@@ -13,17 +13,17 @@ Until now, while remote debugging you've had to shift your eyes back and forth b
 * Scroll the page by flinging it with your pointer or just sliding on your laptop trackpad.
 
 
-The [full documentation on screencasting](********) captures all this and more, like sending a pinch zoom gesture. 
+The [full documentation on screencasting](********) captures all this and more, like sending a pinch zoom gesture.
 
 ### Zero Config Remote Debugging
 
-18 months ago, Chrome introduced proper remote debugging for mobile browsers, but if you tried it out back then, you had to deal with a 400MB Android SDK download, adding the `adb` binary to your `$PATH` and some magical command line incantations. 
+18 months ago, Chrome introduced proper remote debugging for mobile browsers, but if you tried it out back then, you had to deal with a 400MB Android SDK download, adding the `adb` binary to your `$PATH` and some magical command line incantations.
 
-Now, we're happy to announce you can forget all that. **Chrome can now natively discover and talk to your USB connected devices**. We've implemented the adb protocol directly over USB in Chrome, so you you can easily head to `Menu > Tools > Inspect Devices` and immediately start your remote debugging session. 
+Now, we're happy to announce you can forget all that. **Chrome can now natively discover and talk to your USB connected devices**. We've implemented the adb protocol directly over USB in Chrome, so you you can easily head to `Menu > Tools > Inspect Devices` and immediately start your remote debugging session.
 
 ![](assets/discoverusb.png)
 
-This works great in all platforms, including Chrome OS, though do note that on Windows, you'll need to first [install proper USB drivers](http://developer.android.com/tools/extras/oem-usb.html) to talk to the device. 
+This works great in all platforms, including Chrome OS, though do note that on Windows, you'll need to first [install proper USB drivers](http://developer.android.com/tools/extras/oem-usb.html) to talk to the device.
 
 <p class="notice fact">Extra bonus: Chrome will now keep your screen from going to sleep while you're remote debugging. Good for debugging but do keep a watch on your device!</p>
 
@@ -41,9 +41,9 @@ Now, you don't always have the devices you need to test for compatibility. While
 
 ![](assets/emulation.png)
 
-### Emulate screen size, devicePixelRatio, and `<meta viewport>` with full touch event simulation. 
+### Emulate screen size, devicePixelRatio, and `<meta viewport>` with full touch event simulation.
 
-If you've seen the previous Device Metrics feature, what's now available is a huge upgrade.  The team has worked hard to make the new mobile emulation get a near-reality representation of what you'd see on real devices. For example, WebKit browsers maintain a complex text autosizing algorithm and, in fact, each device has a specific "fudge factor" for the text autosizing that changes to help keep text legible. In emulation mode you can confirm this behavior is being applied and see the results. 
+If you've seen the previous Device Metrics feature, what's now available is a huge upgrade.  The team has worked hard to make the new mobile emulation get a near-reality representation of what you'd see on real devices. For example, WebKit browsers maintain a complex text autosizing algorithm and, in fact, each device has a specific "fudge factor" for the text autosizing that changes to help keep text legible. In emulation mode you can confirm this behavior is being applied and see the results.
 
 **Device Pixel Ratio**: Until now, it's been impossible to see what a hi-DPI device displays on a low-DPI device. Now, the dPR emulation in DevTools will adapt your view to let you zoom int a deep DPI scenario. In addition, you can expect `window.devicePixelRatio`, `@media (-webkit-min-device-pixel-ratio: 2)`, `image-set( url(pic2x.jpg) 2x, …)`, etc to reflect your setting, allowing you to view how your app adapts including loading different dpi-specific assets.
 
@@ -63,7 +63,7 @@ If you've seen the previous Device Metrics feature, what's now available is a hu
 ![](assets/scrolling-emu.gif)
 
 
-Lastly, your standbys of useragent spoofing (both at the request header and `window.navigator` level), geolocation, and orientation emulation let you explore your app's device full functionality. 
+Lastly, your standbys of useragent spoofing (both at the request header and `window.navigator` level), geolocation, and orientation emulation let you explore your app's device full functionality.
 
 
 **Device Presets** let you select a phone or tablet and get the correct screen size, dPR, UA applied for that device, along with full touch events and viewport emulated as well. You can try particular presets or easily can tweak these characteristics one by one.
@@ -74,7 +74,7 @@ Lastly, your standbys of useragent spoofing (both at the request header and `win
 
 To get the full demo of all these features in action, check out my 23 minute talk from Chrome Dev Summit on the DevTools for mobile:
 
-<style>.embed-container { position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden; max-width: 100%; height: auto; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='http://www.youtube.com/embed/gZH1d2Co1X0' frameborder='0' allowfullscreen></iframe></div>
+<style>.embed-container { position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden; max-width: 100%; height: auto; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/embed/gZH1d2Co1X0' frameborder='0' allowfullscreen></iframe></div>
 
 
 

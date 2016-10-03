@@ -3,7 +3,7 @@
 Audio/Video capture has been *the* "Holy Grail" of web development for a long time.
 For many years we've had to rely on browser plugins ([Flash](http://www.kevinmusselman.com/2009/02/access-webcam-with-flash/) or
 [Silverlight](http://www.silverlightshow.net/items/Capturing-the-Webcam-in-Silverlight-4.aspx))
-to get the job done. <a href="http://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a>
+to get the job done. <a href="https://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a>
 
 HTML5 to the rescue. It might not be apparent, but the rise of HTML5 has brought
 a surge of access to device hardware. [Geolocation](/tutorials/geolocation/trip_meter/) (GPS),
@@ -65,9 +65,9 @@ for a new element, the [`<device>` element](http://dev.w3.org/html5/html-device/
 which became the predecessor to `getUserMedia()`.
 
 Opera was among the first browsers to create [initial implementations](http://my.opera.com/core/blog/2011/03/14/web-meet-device)
-of video capture based on the `<device>` element. Soon after 
+of video capture based on the `<device>` element. Soon after
 ([the same day](http://my.opera.com/core/blog/2011/03/23/webcam-orientation-preview) to be precise),
-the WhatWG decided to scrap the `<device>` tag in favor of another up and comer, this time a JavaScript API called 
+the WhatWG decided to scrap the `<device>` tag in favor of another up and comer, this time a JavaScript API called
 `navigator.getUserMedia()`. A week later, Opera put out new builds that included
 support for the updated `getUserMedia()` spec. Later that year,
 Microsoft joined the party by releasing a [Lab for IE9](http://blogs.msdn.com/b/ie/archive/2011/12/09/media-capture-api-helping-web-developers-directly-import-image-video-and-sound-data-into-web-apps.aspx)
@@ -410,13 +410,13 @@ as it is captured:
 One amazing use case for video capture is to render live input as a WebGL texture.
 Since I know absolutely nothing about WebGL (other than it's sweet), I'm going
 to suggest you give Jerome Etienne's [tutorial](http://learningthreejs.com/blog/2012/02/07/live-video-in-webgl/)
-and [demo](http://learningthreejs.com/data/live-video-in-webgl/) a look. 
+and [demo](http://learningthreejs.com/data/live-video-in-webgl/) a look.
 It talks about how to use `getUserMedia()` and [Three.js](/tutorials/three/intro/)
 to render live video into WebGL.
 
 <h2 id="toc-webaudio-api">Using getUserMedia with the Web Audio API</h2>
 
-One of my dreams is to build AutoTune in the browser with nothing more than open web technology! 
+One of my dreams is to build AutoTune in the browser with nothing more than open web technology!
 
 Chrome supports live microphone input from `getUserMedia()` to the [Web Audio API](/tutorials/webaudio/intro/) for real-time effects. Piping microphone input to the Web Audio API looks like this:
 

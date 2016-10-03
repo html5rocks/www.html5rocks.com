@@ -341,7 +341,7 @@ if (!!Element.prototype.getDestinationInsertionPoints) {
 </figure>
 
 <p>
-<iframe width="420" height="315" src="http://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/qnJ_s58ubxg" frameborder="0" allowfullscreen></iframe>
 </p>
 
 尝试一下，再告诉我你的想法！
@@ -493,7 +493,7 @@ document.querySelector('#example5 .buttons').addEventListener('click', function(
 **Play Action 3**
 
 - 注意当你点击输入框时，`focusin` 并没有发生在输入框上，而是在
-- 点自身上。事件被重定向了！ 
+- 点自身上。事件被重定向了！
 
 <h3 id="toc-events-stopped">始终停止的事件</h3>
 
