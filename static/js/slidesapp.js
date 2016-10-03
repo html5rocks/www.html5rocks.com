@@ -258,7 +258,7 @@ Handlebars.registerHelper('video', function(video) {
   if (/youtube\.com$/.test(domain)){
     id = uri.queryKey.v;
 
-    iframe = '<iframe src=\'http://www.youtube.com/embed/' + id +
+    iframe = '<iframe src=\'https://www.youtube.com/embed/' + id +
            '?autoplay=1' +  (uri.anchor ? '&start=' + uri.anchor.match(/\d+/) : '') +
            '\' frameborder=\'0\' allowfullscreen></iframe>';
     html = '<div data-embed="' + iframe + '"><span></span>' + // ▶  ▷

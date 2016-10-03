@@ -10,11 +10,11 @@ This article discusses a few of my favorite proof-of-concept solutions for "scre
 
 <h2 id="toc-method1">Method 1: Mutation Observers + WebSocket</h2>
 
-One approach for mirroring a tab was demonstrated by +[Rafael Weinstein](https://plus.google.com/111386188573471152118/) earlier this year. His technique uses [Mutation Observers](https://developer.mozilla.org/en-US/docs/DOM/DOM_Mutation_Observers) and a WebSocket. 
+One approach for mirroring a tab was demonstrated by +[Rafael Weinstein](https://plus.google.com/111386188573471152118/) earlier this year. His technique uses [Mutation Observers](https://developer.mozilla.org/en-US/docs/DOM/DOM_Mutation_Observers) and a WebSocket.
 
 Essentially, the tab that the presenter is sharing watches for changes to the page and sends diffs to the viewer using a websocket. As the user scrolls or interacts with the page, the observers pick up these changes and report them back to the viewer using Rafael's [mutation summary library](https://code.google.com/p/mutation-summary/). This keeps things performant. The entire page isn't sent for every frame.
 
-<figure><iframe width="480" height="360" src="http://www.youtube.com/embed/eRZ4pO0gVWw?hd=1#t=106s" frameborder="0" allowfullscreen></iframe>
+<figure><iframe width="480" height="360" src="https://www.youtube.com/embed/eRZ4pO0gVWw?hd=1#t=106s" frameborder="0" allowfullscreen></iframe>
 <figcaption><a href="https://code.google.com/p/mutation-summary/source/browse/#git%2Fexamples%2Fpagemirror_extension">FULL SOURCE</a></figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ This next method is one that recently dawned on me. It's similar to the Mutation
 1. Rewrite all URLs on the page to be absolute. This prevents static image and CSS assets from containing broken links.
 2. Clone the page's document element: `document.documentElement.cloneNode(true);`
 3. Make the clone readonly, non-selectable, and prevent scrolling using CSS `pointer-events: 'none';user-select:'none';overflow:hidden;`
-4. Capture the current scroll position of the page and add them as `data-*` attributes on the duplicate. 
+4. Capture the current scroll position of the page and add them as `data-*` attributes on the duplicate.
 5. Create a `new Blob()` from the `.outerHTML` of the duplicate.
 
 The code looks something like this (I've made simplifications from the full source):
@@ -41,7 +41,7 @@ The code looks something like this (I've made simplifications from the full sour
 
       // 2. Duplicate entire document tree.
       var screenshot = document.documentElement.cloneNode(true);
-      
+
       // 3. Screenshot should be readyonly, no scrolling, and no selections.
       screenshot.style.pointerEvents = 'none';
       screenshot.style.overflow = 'hidden';
@@ -93,7 +93,7 @@ The demo button below screenshots this page and opens it in a new window.
 But for tab sharing, we need to continuously capture the tab and send it to viewers. For that I've written a small Node websocket server, app, and bookmarklet that demonstrates
 the flow. If you're not interested in [the code](https://github.com/ebidel/html5demos/tree/master/screenshoter), here's a short video of things in action:
 
-<figure><iframe width="480" height="360" src="http://www.youtube.com/embed/2Ke_qEZGMeo?hd=1" frameborder="0" allowfullscreen></iframe>
+<figure><iframe width="480" height="360" src="https://www.youtube.com/embed/2Ke_qEZGMeo?hd=1" frameborder="0" allowfullscreen></iframe>
 <figcaption><a href="https://github.com/ebidel/html5demos/tree/master/screenshoter">FULL SOURCE</a></figcaption>
 </figure>
 
@@ -107,7 +107,7 @@ the current script doesn't consider.
 
 At [Google I/O 2012](https://developers.google.com/events/io/sessions/gooio2012/204/), I demonstrated another approach for screensharing the contents of a browser tab. However, this one is a cheat. It requires a Chrome Extension API: not pure HTML5 magic.
 
-<figure><iframe width="480" height="360" src="http://www.youtube.com/embed/X_ek1wSe66o?hd=1#t=2318s" frameborder="0" allowfullscreen></iframe>
+<figure><iframe width="480" height="360" src="https://www.youtube.com/embed/X_ek1wSe66o?hd=1#t=2318s" frameborder="0" allowfullscreen></iframe>
 <figcaption><a href="https://github.com/ebidel/html5can/tree/master/demos/screenshare">FULL SOURCE</a></figcaption>
 </figure>
 
