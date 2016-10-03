@@ -85,6 +85,7 @@ class Resource(DictModel):
   url = db.StringProperty()
   social_url = db.StringProperty()
   canonical_url = db.StringProperty()
+  redirect_url = db.StringProperty()
   browser_support = db.StringListProperty()
   update_date = db.DateProperty()
   publication_date = db.DateProperty()
@@ -222,6 +223,8 @@ class TutorialForm(forms.Form):
   social_url = forms.CharField(label='Social URL',
       help_text='A relative URL that should be used for social widgets (G+)', required=False)
   canonical_url = forms.CharField(label='Canonical URL',
+      help_text='A abs URL (eg. https://developers.google.com/web/) that should be used to reference new content', required=False)
+  redirect_url = forms.CharField(label='Redirect URL',
       help_text='A abs URL (eg. https://developers.google.com/web/) that should be used to redirect to new content', required=False)
 
   browsers = ['Chrome', 'FF', 'Safari', 'Opera', 'IE']
