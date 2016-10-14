@@ -20,7 +20,7 @@ Articles due this quater
 |Paul Irish|[Guide to Remote Debugging](https://github.com/html5rocks/www.html5rocks.com/issues/643)|2013-11-16|@dr4b|closed
 |Addy Osmani|[Mobile web development workflow](https://github.com/html5rocks/www.html5rocks.com/issues/527)|2013-11-18|@dr4b|closed
 |Alex Danilo|[User timing: understanding execution timing in your web app](https://github.com/html5rocks/www.html5rocks.com/issues/486)|2013-11-20|@dr4b|closed
-|Matthew  Gaunt|[Tooling for mobile web testing](https://github.com/html5rocks/www.html5rocks.com/issues/645)|2013-11-27|@dr4b|closed
+|Matt Gaunt|[Tooling for mobile web testing](https://github.com/html5rocks/www.html5rocks.com/issues/645)|2013-11-27|@dr4b|closed
 |Addy Osmani|[Access The Terminal From Chrome DevTools](https://github.com/html5rocks/www.html5rocks.com/issues/662)|2013-12-05|@dr4b|closed
 |Sam Dutton|[EME 101](https://github.com/html5rocks/www.html5rocks.com/issues/512)|2013-12-09|@scottrowe|closed
 |Jake Archibald|[Article on DOM Promises](https://github.com/html5rocks/www.html5rocks.com/issues/446)|2013-12-09|@scottrowe|closed
