@@ -1,4 +1,4 @@
-HTML5 Rocks Quarter Report for 2017-03-09
+HTML5 Rocks Quarter Report for 2017-03-10
 =========================================
 
 Articles due this quater
