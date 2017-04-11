@@ -54,30 +54,32 @@
 <h4>Figure 1: A single-layer page. (<a href="basic.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>Screenshot of composited layer render borders around the page's base layer</figcaption></figure>
+<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer"></a><figcaption>Screenshot of composited layer render borders around the page's base layer</figcaption></figure>
 
 <p>This page has just one layer. The blue grid represents tiles, which you can think of as sub-units of a layer that Chrome uses to upload parts of a large layer at a time to the GPU. They aren’t really important here.</p>
 
 <h4>Figure 2: An element in its own layer (<a href="onelayer.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div style="-webkit-transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
-      I am a strange root.
-    &lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div style="transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
+    I am a strange root.
+  &lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></a>
+<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders"></a>
 <figcaption>Screenshot of rotated layer's render borders</figcaption></figure>
 
 <p>By putting a 3D CSS property on the &lt;div&gt; that rotates it, we can see what it looks like when an element gets its own layer: note the orange border, which outlines a layer in this view.</p>
@@ -91,7 +93,7 @@
 <li>&lt;video&gt; elements using accelerated video decoding</li>
 <li>&lt;canvas&gt; elements with a 3D (WebGL) context or accelerated 2D context</li>
 <li>Composited plugins (i.e. Flash)</li>
-<li>Elements with CSS animation for their opacity or using an animated webkit transform</li>
+<li>Elements with CSS animation for their opacity or using an animated transform</li>
 <li>Elements with accelerated CSS filters</li>
 <li>Element has a descendant that has a compositing layer (in other words if the element has a child element that’s in its own layer)</li>
 <li>Element has a sibling with a lower z-index which has a compositing layer (in other words the it’s rendered on top of a composited layer)</li>
@@ -104,31 +106,32 @@
 <h4>Figure 3: Animated Layers (<a href="animatedlayer.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-    &lt;style type="text/css"&gt;
-    div {
-        -webkit-animation-duration: 5s;
-        -webkit-animation-name: slide;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-direction: alternate;
-        width: 200px;
-        height: 200px;
-        margin: 100px;
-        background-color: gray;
+  &lt;style&gt;
+  div {
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
+  }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
     }
-    @-webkit-keyframes slide {
-        from {
-            -webkit-transform: rotate(0deg);
-        }
-        to {
-            -webkit-transform: rotate(120deg);
-        }
+    to {
+      transform: rotate(120deg);
     }
-    &lt;/style&gt;
+  }
+  &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 </pre>
@@ -137,7 +140,7 @@
 
 <p>See, for instance, this view of Dev Tools timeline: there are no paint operations while this layer is rotating back and forth.</p>
 
-<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></a>
+<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation"></a>
 <figcaption>Screenshot of Dev Tools timeline during animation</figcaption></figure>
 
 <h3 id="toc-invalidrepainting">Invalid! Repainting</h3>
@@ -147,32 +150,33 @@
 <h4>Figure 4: Repainting Layers (<a href="animatedinvalidation.html" target="_blank">open stand-alone</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-  &lt;style type="text/css"&gt;
+  &lt;style&gt;
   div {
-      -webkit-animation-duration: 5s;
-      -webkit-animation-name: slide;
-      -webkit-animation-iteration-count: infinite;
-      -webkit-animation-direction: alternate;
-      width: 200px;
-      height: 200px;
-      margin: 100px;
-      background-color: gray;
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
   }
-  @-webkit-keyframes slide {
-      from {
-          -webkit-transform: rotate(0deg);
-      }
-      to {
-          -webkit-transform: rotate(120deg);
-      }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(120deg);
+    }
   }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div id="foo"&gt;I am a strange root.&lt;/div&gt;
-  &lt;input id="paint" type="button" onclick="" value=”repaint”&gt;
+  &lt;input id="paint" type="button" value="repaint"&gt;
   &lt;script&gt;
     var w = 200;
     document.getElementById('paint').onclick = function() {
@@ -187,11 +191,11 @@
 
 <p>A good way to see what’s getting painted is with the “show paint rects” tool in Dev Tools, also under the “Rendering” heading of Dev Tools’ settings. After turning it on, notice that the animated element and the button both flash red when the button is clicked.</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></a><figcaption>Screenshot of show paint rects checkbox</figcaption></figure>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox"></a><figcaption>Screenshot of show paint rects checkbox</figcaption></figure>
 
 <p>The paint events show up in the Dev Tools timeline, too. Sharp-eyed readers might notice there are two paint events there: one for the layer, and one for the button itself, which gets repainted when it changes to/from its depressed state.</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></a>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer"></a>
 <figcaption>Screenshot of Dev Tools Timeline repainting a layer</figcaption></figure>
 
 <p>Note that Chrome doesn’t always need to repaint the entire layer, it tries to be smart about only repainting the part of the DOM that’s been invalidated. In this case, the DOM element that we modified is the size of the entire layer. But in many other cases, there will be lots of DOM elements in a layer.</p>

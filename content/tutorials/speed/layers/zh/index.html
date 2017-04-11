@@ -60,30 +60,32 @@
 <h4>图 1： 单层页面。(<a href="basic.html" target="_blank">打开独立页面</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>截图：页面基础层上的复合层渲染边框</figcaption></figure>
+<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer"></a><figcaption>截图：页面基础层上的复合层渲染边框</figcaption></figure>
 
 <p>这个页面只有一个层。蓝色网格表示瓦片(tile)，你可以把它们当作是层的单元，Chrome 可以将它们作为一个大层的部分上传给 GPU。它们在这里并不重要。</p>
 
 <h4>图 2： 在自己层内的一个元素(<a href="onelayer.html" target="_blank">打开独立页面</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div style="-webkit-transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
-      I am a strange root.
-    &lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div style="transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
+    I am a strange root.
+  &lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></a>
+<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders"></a>
 <figcaption>截图：旋转层的渲染边框</figcaption></figure>
 
 <p>通过在 &lt;div&gt; 上设置一个 3D CSS 属性来旋转它，我们就能看到当元素拥有自己的层时是什么样子：注意橘黄色的边框，它画出了该视图中层的轮廓。</p>
@@ -97,7 +99,7 @@
 <li>使用加速视频解码的 &lt;video&gt; 元素</li>
 <li>拥有 3D (WebGL) 上下文或加速的 2D 上下文的 &lt;canvas&gt; 元素</li>
 <li>混合插件(如 Flash)</li>
-<li>对自己的 opacity 做 CSS 动画或使用一个动画 webkit 变换的元素</li>
+<li>对自己的 opacity 做 CSS 动画或使用一个动画变换的元素</li>
 <li>拥有加速 CSS 过滤器的元素</li>
 <li>元素有一个包含复合层的后代节点(换句话说，就是一个元素拥有一个子元素，该子元素在自己的层里)</li>
 <li>元素有一个 z-index 较低且包含一个复合层的兄弟元素(换句话说就是该元素在复合层上面渲染)</li>
@@ -110,31 +112,32 @@
 <h4>图 3：动画层(<a href="animatedlayer.html" target="_blank">打开独立页面</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-    &lt;style type="text/css"&gt;
-    div {
-        -webkit-animation-duration: 5s;
-        -webkit-animation-name: slide;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-direction: alternate;
-        width: 200px;
-        height: 200px;
-        margin: 100px;
-        background-color: gray;
+  &lt;style&gt;
+  div {
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
+  }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
     }
-    @-webkit-keyframes slide {
-        from {
-            -webkit-transform: rotate(0deg);
-        }
-        to {
-            -webkit-transform: rotate(120deg);
-        }
+    to {
+      transform: rotate(120deg);
     }
-    &lt;/style&gt;
+  }
+  &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 </pre>
@@ -143,7 +146,7 @@
 
 <p>看下开发者工具中的时间轴：层在反复旋转的过程中没有发生绘制操作。</p>
 
-<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></a>
+<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation"></a>
 <figcaption>截图：动画过程中的时间轴</figcaption></figure>
 
 <h3 id="toc-invalidrepainting">无效！重绘</h3>
@@ -153,32 +156,33 @@
 <h4>图 4：重绘层(<a href="animatedinvalidation.html" target="_blank">打开独立页面</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-  &lt;style type="text/css"&gt;
+  &lt;style&gt;
   div {
-      -webkit-animation-duration: 5s;
-      -webkit-animation-name: slide;
-      -webkit-animation-iteration-count: infinite;
-      -webkit-animation-direction: alternate;
-      width: 200px;
-      height: 200px;
-      margin: 100px;
-      background-color: gray;
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
   }
-  @-webkit-keyframes slide {
-      from {
-          -webkit-transform: rotate(0deg);
-      }
-      to {
-          -webkit-transform: rotate(120deg);
-      }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(120deg);
+    }
   }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div id="foo"&gt;I am a strange root.&lt;/div&gt;
-  &lt;input id="paint" type="button" onclick="" value=”repaint”&gt;
+  &lt;input id="paint" type="button" value="repaint"&gt;
   &lt;script&gt;
     var w = 200;
     document.getElementById('paint').onclick = function() {
@@ -193,11 +197,11 @@
 
 <p>若要查看哪些内容被绘制，可以开启开发者工具 “rendering” 标题下的 “show paint rects”。开启后你会看到，当点击按钮后，按钮和旋转元素都会闪现红色。</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></a><figcaption>截图：show paint rects 的复选框</figcaption></figure>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox"></a><figcaption>截图：show paint rects 的复选框</figcaption></figure>
 
 <p>开发者工具的时间轴中显示了绘制事件。眼尖的读者会注意到这里出现了两个绘制事件：一个属于层，另一个属于按钮本身(当它进入/离开按下状态时发生重绘)。</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></a>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer"></a>
 <figcaption>截图： 重绘一个层的开发者工具时间轴</figcaption></figure>
 
 <p>注意 Chrome 并不会始终重绘整个层，它会尝试智能的去重绘 DOM 中失效的部分。在本例中，我们修改的 DOM 元素和整个层同样大小。但是在其他众多例子中，一个层内会存在多个 DOM 元素。</p>

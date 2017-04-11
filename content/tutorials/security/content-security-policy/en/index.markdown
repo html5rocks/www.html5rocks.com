@@ -1,6 +1,6 @@
-The web's security model is rooted in the [_same origin policy_](http://en.wikipedia.org/wiki/Same_origin_policy). Code from `https://mybank.com` should only have access to `https://mybank.com`'s data, and `https://evil.example.com` should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system. 
+The web's security model is rooted in the [_same origin policy_](http://en.wikipedia.org/wiki/Same_origin_policy). Code from `https://mybank.com` should only have access to `https://mybank.com`'s data, and `https://evil.example.com` should certainly never be allowed access. Each origin is kept isolated from the rest of the web, giving developers a safe sandbox in which to build and play. In theory, this is perfectly brilliant. In practice, attackers have found clever ways to subvert the system.
 
-[Cross-site scripting (XSS)](http://en.wikipedia.org/wiki/Cross-site_scripting) attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page's security origin. The [XSS Cheat Sheet](http://ha.ckers.org/xss.html) is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects _any_ code at all, it's pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys. We'd obviously like to prevent that if possible. 
+[Cross-site scripting (XSS)](http://en.wikipedia.org/wiki/Cross-site_scripting) attacks, for example, bypass the same origin policy by tricking a site into delivering malicious code along with the intended content. This is a huge problem, as browsers trust all of the code that shows up on a page as being legitimately part of that page's security origin. The [XSS Cheat Sheet](http://ha.ckers.org/xss.html) is an old but representative cross-section of the methods an attacker might use to violate this trust by injecting malicious code. If an attacker successfully injects _any_ code at all, it's pretty much game over: user session data is compromised and information that should be kept secret is exfiltrated to The Bad Guys. We'd obviously like to prevent that if possible.
 
 This tutorial highlights one promising new defense that can significantly reduce the risk and impact of XSS attacks in modern browsers: Content Security Policy (CSP).
 
@@ -24,18 +24,18 @@ With this policy defined, the browser will simply throw an error instead of load
 
 While script resources are the most obvious security risks, CSP provides a rich set of policy directives that enable fairly granular control over the resources that a page is allowed to load. You've already seen `script-src`, so the concept should be clear. Let's quickly walk through the rest of the resource directives:
 
-* **`base-uri`** restricts the URLs that can appear in a pages `<base>` element.
+* **`base-uri`** restricts the URLs that can appear in a page's `<base>` element.
 * **`child-src`** lists the URLs for workers and embedded frame contents. For example: `child-src https://youtube.com` would enable embedding videos from YouTube but not from other origins. Use this in place of the deprecated **`frame-src`** directive.
 * **`connect-src`** limits the origins to which you can connect (via XHR, WebSockets, and EventSource).
 * **`font-src`** specifies the origins that can serve web fonts. Google's Web Fonts could be enabled via `font-src https://themes.googleusercontent.com`
 * **`form-action`** lists valid endpoints for submission from `<form>` tags.
-* **`frame-ancestors`**  specifies the sources that can embed the current page. This directive applies to `<frame>`, `<iframe>`, `<embed>`, and `<applet>` tags. This directive cant be used in `<meta>` tags and applies only to non-HTML resources.
+* **`frame-ancestors`** specifies the sources that can embed the current page. This directive applies to `<frame>`, `<iframe>`, `<embed>`, and `<applet>` tags. This directive can't be used in `<meta>` tags and applies only to non-HTML resources.
 * **`frame-src`** deprecated. Use **`child-src`** instead.
 * **`img-src`** defines the origins from which images can be loaded.
 * **`media-src`** restricts the origins allowed to deliver video and audio.
 * **`object-src`** allows control over Flash and other plugins.
 * **`plugin-types`** limits the kinds of plugins a page may invoke.
-* **`report-uri`** specifies a URL where a browser will send reports when a content security policy is violated. This directive cant be used in `<meta>` tags.
+* **`report-uri`** specifies a URL where a browser will send reports when a content security policy is violated. This directive can't be used in `<meta>` tags.
 * **`style-src`** is `script-src`'s counterpart for stylesheets.
 * **`upgrade-insecure-requests`** Instructs user agents to rewrite URL schemes, changing HTTP to HTTPS. This directive is for web sites with large numbers of old URL's that need to be rewritten.
 
@@ -44,6 +44,7 @@ By default, directives are wide open. If you don't set a specific policy for a d
 You can override this default behavior by specifying a **`default-src`** directive. This directive, as you might suspect, defines the defaults for most directives you leave unspecified. Generally, this applies to any directive that ends with `-src`. If `default-src` is set to `https://example.com`, and you fail to specify a `font-src` directive, then you can load fonts from `https://example.com`, and nowhere else. We specified only `script-src` in our earlier examples, which means that images, fonts, and so on can be loaded from any origin.
 
 The following directives don't use default-src as a fallback. Remember that failing to set them is the same as allowing anything.
+
 * `base-uri`
 * `form-action`
 * `frame-ancestors`
@@ -53,9 +54,9 @@ The following directives don't use default-src as a fallback. Remember that fail
 
 You can use as many or as few of these directives as makes sense for your specific application, simply listing each in the HTTP header, separating directives with semicolons. You'll want to make sure that you list _all_ required resources of a specific type in a _single_ directive. If wrote something like `script-src https://host1.com; script-src https://host2.com` the second directive would simply be ignored. Something like the following would correctly specify both origins as valid.
 
-    `script-src https://host1.com https://host2.com`
+    script-src https://host1.com https://host2.com
 
-If, for example, you have an application that loads all of it's resources from a content delivery network (say, `https://cdn.example.net`), and know that you don't need framed content or any plugins at all, then your policy might look like the following:
+If, for example, you have an application that loads all of its resources from a content delivery network (say, `https://cdn.example.net`), and know that you don't need framed content or any plugins at all, then your policy might look like the following:
 
     Content-Security-Policy: default-src https://cdn.example.net; child-src 'none'; object-src 'none'
 
@@ -84,7 +85,7 @@ There's one more directive worth talking about: **`sandbox`**. It's a bit differ
 
 CSPs preferred delivery mechanism is an HTTP header. It can be useful, however, to set a policy on a page directly in the markup. Do that using a meta tag with an http-equiv attribute:
 
-    <meta http-equiv="Content-Security-Policy" content="default-src https://cdn.example.net; child-src 'none'; object-src 'none'"> 
+    <meta http-equiv="Content-Security-Policy" content="default-src https://cdn.example.net; child-src 'none'; object-src 'none'">
 
 This can't be used for frame-ancestors, report-uri, or sandbox.
 
@@ -116,25 +117,25 @@ to something more like:
               .addEventListener('click', doAmazingThings);
     });
 
-The rewritten code has a number of advantages above and beyond working well with CSP; it's already best practice, regardless of your use of CSP. Inline JavaScript mixes structure and behavior in exactly the way you shouldn't. External resources are easier for browsers to cache, more understandable for developers, and conducive to compilation and minification. You'll write better code if you do the work to move code into external resources. 
+The rewritten code has a number of advantages above and beyond working well with CSP; it's already best practice, regardless of your use of CSP. Inline JavaScript mixes structure and behavior in exactly the way you shouldn't. External resources are easier for browsers to cache, more understandable for developers, and conducive to compilation and minification. You'll write better code if you do the work to move code into external resources.
 
-Inline style is treated in the same way: both the `style` attribute and `style` tags should be consolidated into external stylesheets to protect against a variety of [surprisingly clever](http://scarybeastsecurity.blogspot.com/2009/12/generic-cross-browser-cross-domain.html) data exfiltration methods that CSS enables. 
+Inline style is treated in the same way: both the `style` attribute and `style` tags should be consolidated into external stylesheets to protect against a variety of [surprisingly clever](http://scarybeastsecurity.blogspot.com/2009/12/generic-cross-browser-cross-domain.html) data exfiltration methods that CSS enables.
 
 If you really, absolutely must have inline script and style, you can enable it by adding `'unsafe-inline'` as an allowed source in a `script-src` or `style-src` directive. You can also use a nonce or a has (see below). But please don't. Banning inline script is the biggest security win CSP provides, and banning inline style likewise hardens your application. It's a little bit of effort up front to ensure that things work correctly after moving all the code out-of-line, but that's a tradeoff that's well worth making.
 
 ### If You Absolutely Must Use It...
 
-CSP Level 2 offers backward compatibility for inline scripts by allowing you to whitelist specific inline scripts using either a cryptographic nonce (number used once) or a hash. Although this may be cumbersome in practice, it is useful in a pinch. 
+CSP Level 2 offers backward compatibility for inline scripts by allowing you to whitelist specific inline scripts using either a cryptographic nonce (number used once) or a hash. Although this may be cumbersome in practice, it is useful in a pinch.
 
 To use a nonce, give your script tag a nonce attribute. Its value must match one in the list of trusted sources. For example:
 
     <script nonce=EDNnf03nceIOfn39fn3e9h3sdfa>
-      //Some inline code I cant remove yet, but need to asap.
+      // Some inline code I can't remove yet, but need to asap.
     </script>
 
 Now, add the nonce to your script-src directive appended to the nonce- keyword.
 
-    Content-Security-Policy: script-src 'nonce-EDNnf03nceIOfn39fn3e9h3sdfa' 
+    Content-Security-Policy: script-src 'nonce-EDNnf03nceIOfn39fn3e9h3sdfa'
 
 Remember that nonces must be regenerated for every page request and they must be unguessable.
 
@@ -144,9 +145,9 @@ Hashes work in much the same way. Instead of adding code to the script tag, crea
 
 Your policy would contain this:
 
-    Content-Security-Policy: script-src 'sha256-sha256-qznLcsROx4GACP2dm0UCKCzCG-HiZ1guq6ZZDob_Tng='
+    Content-Security-Policy: script-src 'sha256-qznLcsROx4GACP2dm0UCKCzCG-HiZ1guq6ZZDob_Tng='
 
-There are a few things to note here. The sha*- prefix specifies the algorithm used to generate the hash. In the example above, sha256- is used. CSP also supports sha384- and sha512-. When generating the hash do not include the `<script>` tags. Also capitalization and whitespace matter, including leading or trailing whitespace.   
+There are a few things to note here. The `sha*-` prefix specifies the algorithm used to generate the hash. In the example above, sha256- is used. CSP also supports sha384- and sha512-. When generating the hash do not include the `<script>` tags. Also capitalization and whitespace matter, including leading or trailing whitespace.   
 
 A Google search on generating SHA hashes will lead you to solutions in any number of languages. Using Chrome 40 or later you can open DevTools then reload your page. The Console tab will contain error messages with the correct sha256 hash for each of your inline scripts.
 
@@ -154,7 +155,7 @@ A Google search on generating SHA hashes will lead you to solutions in any numbe
 
 Even when an attacker can't inject script directly, she might be able to trick your application into converting otherwise inert text into executable JavaScript and executing it on her behalf. `eval()`, `new Function()`, `setTimeout([string], ...)`, `and setInterval([string], ...)` are all vectors through which injected text might end up executing something unexpectedly malicious. CSP's default response to this risk is, unsurprisingly, to block all of these vectors completely.
 
-This has a more than few impacts on the way you build applications:
+This has more than a few impacts on the way you build applications:
 
 *   Parse JSON via the built-in `JSON.parse`, rather than relying on `eval`. Native JSON operations are available in [every browser since IE8](http://caniuse.com/#feat=json), and they're completely safe.
 *   Rewrite any `setTimeout` or `setInterval` calls you're currently making with inline functions rather than strings. For example:
@@ -170,7 +171,7 @@ This has a more than few impacts on the way you build applications:
 *   Avoid inline templating at runtime: Many templating libraries use `new Function()` liberally to speed up template generation at runtime. It's a nifty application of dynamic programming, but comes at the risk of evaluating malicious text. Some frameworks support CSP out of the box, falling back to a robust parser in the absence of `eval`; [AngularJS's ng-csp directive](http://docs.angularjs.org/api/angular.module.ng.$compileProvider.directive.ngCsp) is a good example of this.
 
 You're even better off, however, if your templating language of choice offers precompilation ([Handlebars does](http://handlebarsjs.com/precompilation.html), for instance). Precompiling your templates can make the user experience even faster than the fastest runtime implementation, and it's safer too. Win, win!
-If eval and its text-to-JavaScript brethren are completely essential to your application, you can enable them by adding `'unsafe-eval'` as an allowed source in a `script-src` directive. But, again, please don't. Banning the ability to execute strings makes it much more difficult for an attacker to execute unauthorized code on your site. 
+If eval and its text-to-JavaScript brethren are completely essential to your application, you can enable them by adding `'unsafe-eval'` as an allowed source in a `script-src` directive. But, again, please don't. Banning the ability to execute strings makes it much more difficult for an attacker to execute unauthorized code on your site.
 
 ## Reporting
 
@@ -238,6 +239,6 @@ Even though `https:` was specified in `default-src`, the script and style direct
 
 ## The Future
 
-Content Security Policy Level 2 is a [Candidate Recommendation](http://www.w3.org/TR/CSP2/). The W3Cs Web Application Security Working Group isnt lounging around, patting itself on the back; work has already begun on the specifications next iteration. The next version is already under active development.
+Content Security Policy Level 2 is a [Candidate Recommendation](http://www.w3.org/TR/CSP2/). The W3Cs Web Application Security Working Group isn't lounging around, patting itself on the back; work has already begun on the specifications next iteration. The next version is already under active development.
 
 If you're interested in the discussion around these upcoming features, [skim the public-webappsec@ mailing list archives](http://lists.w3.org/Archives/Public/public-webappsec/), or join in yourself.

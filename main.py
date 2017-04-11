@@ -191,7 +191,7 @@ class ContentHandler(webapp2.RequestHandler):
       'toc': self.get_toc(template_path),
       'self_url': self.request.url,
       'self_pagename': pagename,
-      'host': '%s://%s' % (self.request.scheme, self.request.host),
+      'host': '%s://%s' % ('https', self.request.host),
       'is_mobile': self.is_awesome_mobile_device(),
       'current': current,
       'prod': settings.PROD,
@@ -229,6 +229,7 @@ class ContentHandler(webapp2.RequestHandler):
     # Add CORS support entire site.
     self.response.headers.add_header('Access-Control-Allow-Origin', '*')
     self.response.headers.add_header('X-UA-Compatible', 'IE=Edge,chrome=1')
+    self.response.headers.add_header('Strict-Transport-Security', 'max-age=86400; includeSubDomains')
     self.response.out.write(render_to_string(template_path, template_data))
 
   def render_atom_feed(self, template_path, data):
@@ -403,6 +404,12 @@ class ContentHandler(webapp2.RequestHandler):
         # get_all() not used because we don't care about caching on individual
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
+
+        # Redirect if needed
+        if tut:
+          if tut.redirect_url:
+            self.redirect(tut.redirect_url.encode('latin-1'), permanent=True)
+            return
 
         # Localize title and description.
         if tut:
@@ -596,6 +603,8 @@ class DBHandler(ContentHandler):
           second_author=author_key2,
           url=unicode(res['url']),
           social_url=unicode(res.get('social_url') or ''),
+          canonical_url=unicode(res.get('canonical_url') or ''),
+          redirect_url=unicode(res.get('redirect_url') or ''),
           browser_support=res.get('browser_support') or [],
           update_date=res.get('update_date'),
           publication_date=res['publication_date'],
@@ -870,6 +879,8 @@ class DBHandler(ContentHandler):
           tutorial.tags = tags
           tutorial.draft = self.request.get('draft') == 'on'
           tutorial.social_url = unicode(self.request.get('social_url') or '')
+          tutorial.canonical_url = unicode(self.request.get('canonical_url') or '')
+          tutorial.redirect_url = self.request.get('redirect_url') or ''
         except TypeError:
           pass
       else:
@@ -887,7 +898,9 @@ class DBHandler(ContentHandler):
               publication_date=datetime.date(pub.year, pub.month, pub.day),
               tags=tags,
               draft=self.request.get('draft') == 'on',
-              social_url=self.request.get('social_url') or None
+              social_url=self.request.get('social_url') or None,
+              canonical_url=self.request.get('canonical_url') or None,
+              redirect_url=self.request.get('redirect_url') or None
               )
         except TypeError:
           pass

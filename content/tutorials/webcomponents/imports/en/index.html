@@ -179,8 +179,8 @@ if (supportsImports()) {
   // Use other libraries/require systems to load files.
 }
 </code></pre>
-<p>Browser support is still in the early days. Chrome 31 was the first browser to see an implementation. Since then, Chrome 36 was update with the latest spec. You can enable the flag by turning on <strong>Enable experimental Web Platform features</strong> in <code>about:flags</code> in Chrome Canary. For other browsers, <a href="http://www.polymer-project.org/platform/html-imports.html">Polymer's polyfill</a> works great until things are widely supported.</p>
-<p class="notice tip">Also <b>Enable experimental Web Platform features</b> to get the other bleeding edge web component goodies.</p>
+<p>Browser support is still in the early days. Chrome 31 was the first browser to see an implementation but other browser vendors are waiting to see how ES Modules play out.
+However, for other browsers, <a href="http://webcomponents.org/polyfills/">webcomponents.js polyfill</a> works great until things are widely supported.</p>
 
 <h3 id="bundling">Bundling resources</h3>
 
@@ -217,7 +217,7 @@ of files. Instead, the entirety of Bootstrap is managed and wrapped up in an imp
 and <code>onerror</code> when the attempt fails (e.g. if the resource 404s). </p>
 <p>Imports try to load immediately. An easy way avoid headaches
 is to use the <code>onload</code>/<code>onerror</code> attributes:</p>
-<pre class="prettyprint"><code>&lt;script async&gt;
+<pre class="prettyprint"><code>&lt;script&gt;
   function handleLoad(e) {
     console.log('Loaded import: ' + e.target.href);
   }
@@ -234,7 +234,8 @@ is to use the <code>onload</code>/<code>onerror</code> attributes:</p>
 <p>Or, if you're creating the import dynamically:</p>
 <pre class="prettyprint"><code>var link = document.createElement('link');
 link.rel = 'import';
-link.href = 'file.html'
+link.href = 'file.html';
+//link.setAttribute('async', ''); // make it async!
 link.onload = function(e) {...};
 link.onerror = function(e) {...};
 document.head.appendChild(link);
@@ -259,9 +260,9 @@ document.head.appendChild(link);
 <p><strong>Full example</strong></p>
 <p>Let's say <code>warnings.html</code> contains:</p>
 <pre class="prettyprint"><code>&lt;div class="warning"&gt;
-  &lt;style scoped&gt;
+  &lt;style&gt;
     h3 {
-      color: red;
+      color: red !important;
     }
   &lt;/style&gt;
   &lt;h3&gt;Warning!&lt;/h3&gt;
@@ -292,7 +293,7 @@ document.head.appendChild(link);
 </code></pre>
 <div class="demoarea" id="warning-example-area"></div>
 
-<p><link rel="import" id="warning-example-link" href="warning.html">
+<p><link rel="import" id="warning-example-link" href="/static/demos/imports/warning.html">
 <script>
   var link = document.querySelector('#warning-example-link');
   if ('import' in link) {
@@ -437,7 +438,7 @@ document.head.appendChild(link);
   &lt;/shadow-element&gt;
 &lt;/body&gt;
 </code></pre>
-<p><link rel="import" href="elements.html"></p>
+<p><link rel="import" href="/static/demos/imports/elements.html"></p>
 <div class="demoarea">
   <say-hi name="Eric"></say-hi><br><br>
 </div>
@@ -458,25 +459,27 @@ document.head.appendChild(link);
 <h4 id="sub-imports">Sub-imports</h4>
 
 <p>It can be useful for one import to include another. For example, if you want to reuse or extend another component, use an import to load the other element(s).</p>
-<p>Below is a real example from <a href="http://polymer-project.org">Polymer</a>. It's a new tab component (<code>&lt;polymer-ui-tabs&gt;</code>) that reuses a layout and selector component. The dependencies are managed using HTML Imports. </p>
-<p>polymer-ui-tabs.html</p>
-<pre class="prettyprint"><code>&lt;link rel="import" href="polymer-selector.html"&gt;
-&lt;link rel="import" href="polymer-flex-layout.html"&gt;
+<p>Below is a real example from <a href="http://polymer-project.org">Polymer</a>. It's a new tab component (<code>&lt;paper-tabs&gt;</code>) that reuses a layout and selector component. The dependencies are managed using HTML Imports. </p>
+<p>paper-tabs.html (simplified):</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="iron-selector.html"&gt;
+&lt;link rel="import" href="classes/iron-flex-layout.html"&gt;
 
-&lt;polymer-element name="polymer-ui-tabs" extends="polymer-selector" ...&gt;
+&lt;dom-module id=&quot;paper-tabs&quot;&gt;
   &lt;template&gt;
-    &lt;link rel="stylesheet" href="polymer-ui-tabs.css"&gt;
-    &lt;polymer-flex-layout&gt;&lt;/polymer-flex-layout&gt;
-    &lt;shadow&gt;&lt;/shadow&gt;
+    &lt;style&gt;...&lt;/style&gt;
+    &lt;iron-selector class=&quot;layout horizonta center&quot;&gt;
+      &lt;content select="*"&gt;&lt;/content&gt;
+    &lt;/iron-selector&gt;
   &lt;/template&gt;
-&lt;/polymer-element&gt;
+  &lt;script&gt;...&lt;/script&gt;
+&lt;/dom-module&gt;
 </code></pre>
-<p><a href="https://github.com/Polymer/polymer-ui-elements/blob/master/polymer-ui-tabs/polymer-ui-tabs.html">full source</a></p>
+<p><a href="https://github.com/polymerelements/paper-tabs">full source</a></p>
 <p>App developers can import this new element using:</p>
-<pre class="prettyprint"><code>&lt;link rel="import" href="polymer-ui-tabs.html"&gt;
-&lt;polymer-ui-tabs&gt;&lt;/polymer-ui-tabs&gt;
+<pre class="prettyprint"><code>&lt;link rel="import" href="paper-tabs.html"&gt;
+&lt;paper-tabs&gt;&lt;/paper-tabs&gt;
 </code></pre>
-<p>When a new, more awesome <code>&lt;polymer-selector2&gt;</code> comes along in the future, you can swap out <code>&lt;polymer-selector&gt;</code> and start using it straight away. You won't break your users thanks to imports and web components.</p>
+<p>When a new, more awesome <code>&lt;iron-selector2&gt;</code> comes along in the future, you can swap out <code>&lt;iron-selector&gt;</code> and start using it straight away. You won't break your users thanks to imports and web components.</p>
 <h4 id="deps">Dependency management</h4>
 
 <p>We all know that loading JQuery more than once per page causes errors. Isn't this
@@ -568,6 +571,14 @@ h2.textContent = 'Booyah!';
 </code></pre>
 <p>The reason <code>async</code> isn't the default for HTML Imports is because it requires developers
 to do more work. Synchronous by default means that HTML Imports that have custom element definitions inside of them are guaranteed to load and upgrade, in order. In a completely async world, developers would have to manage that dance and upgrade timings themselves.</p>
+
+<p>You can also create an async import, dynamically:</p>
+
+<pre class="prettyprint"><code>var l = document.createElement('link');
+l.rel = 'import';
+l.href = 'elements.html';
+l.setAttribute('async', '');
+l.onload = function(e) { ... };</code></pre>
 <h4 id="perf-rendering">Imports do not block parsing</h4>
 
 <p><em>Imports don't block parsing of the main page</em>. Scripts inside imports are processed in order but don't block the importing page. This means you get defer-like behavior while maintaining proper script order. One benefit of putting your imports in the <code>&lt;head&gt;</code> is that it lets the parser start working on the content as soon as possible. With that said, it's critical to remember <code>&lt;script&gt;</code> in the main document <em>still</em> continues to block the page. The first <code>&lt;script&gt;</code> after an import will block page rendering. That's because an import can have script inside that needs to be executed before the script in the main page.</p>
@@ -628,7 +639,7 @@ import author establishes a contract for the app developer to follow, the import
 &lt;/body&gt;
 </code></pre>
 <p><strong>Scenario #2: you <em>have</em> script in <code>&lt;head&gt;</code> or inlined in <code>&lt;body&gt;</code></strong></p>
-<p>If you have an import that takes a long time to load, the first <code>&lt;script&gt;</code> that follows it on the page will block the page from rendering. Google Analytics for example, 
+<p>If you have an import that takes a long time to load, the first <code>&lt;script&gt;</code> that follows it on the page will block the page from rendering. Google Analytics for example,
 recommends putting the tracking code in the <code>&lt;head&gt;</code>, If you can't avoid putting <code>&lt;script&gt;</code> in the <code>&lt;head&gt;</code>, dynamically adding the import will prevent blocking the page:</p>
 <pre class="prettyprint"><code>&lt;head&gt;
   &lt;script&gt;

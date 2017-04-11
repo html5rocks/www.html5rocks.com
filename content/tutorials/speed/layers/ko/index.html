@@ -64,30 +64,32 @@
 <h4>Figure 1: 단일-레이어로 구성된 페이지. (<a href="basic.html" target="_blank">새창으로 열기</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer" title=""></a><figcaption>페이지의 기반 레이어 주변의 테두리를 렌더링하는 합성(Composited)된 레이어의 스크린샷</figcaption></figure>
+<figure><a href="basic.html" target="_blank"><img src="images/basic.png" alt="Screenshot of composited layer render borders around the page's base layer"></a><figcaption>페이지의 기반 레이어 주변의 테두리를 렌더링하는 합성(Composited)된 레이어의 스크린샷</figcaption></figure>
 
 <p>이 페이지는 단 하나의 레이어를 가지고 있습니다. 파란색 그리드는 크롬에서 커다란 레이어의 일부를 GPU로 한번에 업로드하기 위해 사용되는 레이어의 서브-유닛(Sub-unit)으로 간주할 수 있는 타일들을 표현합니다. 이 글에서 정말 중요한 것은 아닙니다.</p>
 
 <h4>Figure 2: 레이어의 엘리먼트(<a href="onelayer.html" target="_blank">새창으로 열기</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
-  &lt;body&gt;
-    &lt;div style="-webkit-transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
-      I am a strange root.
-    &lt;/div&gt;
-  &lt;/body&gt;
+&lt;body&gt;
+  &lt;div style="transform: rotateY(30deg) rotateX(-30deg); width: 200px;"&gt;
+    I am a strange root.
+  &lt;/div&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders" title=""></a>
+<figure><a href="onelayer.html" target="_blank"><img src="images/onelayer.png" alt="Screenshot of rotated layer's render borders"></a>
 <figcaption>레이어의 회전으로 렌더링된 테두리의 스크린샷</figcaption></figure>
 
 <p>엘리먼트가 자체의 레이어를 가지고 있을 때 &lt;div&gt;를 회전하는 3D CSS 속성 설정에 의해 다음과 같이 어떻게 보여지는지 확인할 수 있습니다. 이 뷰에서 레이어를 표지하는 오렌지색 테두리에 주의를 기울이시기 바랍니다.</p>
@@ -101,7 +103,7 @@
 <li>비디오 디코딩 가속을 사용하는 &lt;video&gt; 엘리먼트</li>
 <li>3D(WebGL) 컨텍스트나 가속되는 2D 컨텍스트를 가진 &lt;canvas&gt; 엘리먼트</li>
 <li>(예를 들어 Flash)와 같이 포함된 플러그인</li>
-<li>투명도(Opacity)의 CSS 애니메이션이나 애니메이션되는 웹킷 변환(Transform)을 사용하는 엘리먼트</li>
+<li>투명도(Opacity)의 CSS 애니메이션이나 애니메이션되는 변환(Transform)을 사용하는 엘리먼트</li>
 <li>가속되는 CSS 필터를 가진 엘리먼트</li>
 <li>합성 레이어(Compositing layer)를 자손으로 가지는 엘리먼트 (즉, 스스로의 레이어를 가지는 자식 엘리먼트를 가진 엘리먼트)</li>
 <li>형제(Sibling)가 합성 레이어와 낮은 z-index를 가지는 엘리먼트 (즉, 합성 레이어의 상단에 렌더링되는 엘리먼트)</li>
@@ -114,31 +116,32 @@
 <h4>Figure 3: 애니메이션된 레이어 (<a href="animatedlayer.html" target="_blank">새창에서 열기</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-    &lt;style type="text/css"&gt;
-    div {
-        -webkit-animation-duration: 5s;
-        -webkit-animation-name: slide;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-direction: alternate;
-        width: 200px;
-        height: 200px;
-        margin: 100px;
-        background-color: gray;
+  &lt;style&gt;
+  div {
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
+  }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
     }
-    @-webkit-keyframes slide {
-        from {
-            -webkit-transform: rotate(0deg);
-        }
-        to {
-            -webkit-transform: rotate(120deg);
-        }
+    to {
+      transform: rotate(120deg);
     }
-    &lt;/style&gt;
+  }
+  &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-    &lt;div&gt;I am a strange root.&lt;/div&gt;
+  &lt;div&gt;I am a strange root.&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 </pre>
@@ -147,7 +150,7 @@
 
 <p>에를 들어 이관점에서 다음과 같은 개발자도구의 타임라인을 보도록 하겠습니다. 레이어가 앞뒤로 회전하는 동안 아무런 출력 동작도 일어나지 않습니다.</p>
 
-<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation" title=""></a>
+<figure><a href="animatedlayer.html" target="_blank"><img src="images/animatedlayer.png" alt="Screenshot of Dev Tools timeline during animation"></a>
 <figcaption>애니메이션 중의 개발자도구 타임라인의 스크린샷</figcaption></figure>
 
 <h3 id="toc-invalidrepainting">무효한! 재출력(Repainting)</h3>
@@ -157,32 +160,33 @@
 <h4>Figure 4: 레이어 다시 그리기(Repaints) (<a href="animatedinvalidation.html" target="_blank">새창에서 열기</a>)</h4>
 
 <pre class="prettyprint">
+&lt;!doctype html&gt;
 &lt;html&gt;
 &lt;head&gt;
-  &lt;style type="text/css"&gt;
+  &lt;style&gt;
   div {
-      -webkit-animation-duration: 5s;
-      -webkit-animation-name: slide;
-      -webkit-animation-iteration-count: infinite;
-      -webkit-animation-direction: alternate;
-      width: 200px;
-      height: 200px;
-      margin: 100px;
-      background-color: gray;
+    animation-duration: 5s;
+    animation-name: slide;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: gray;
   }
-  @-webkit-keyframes slide {
-      from {
-          -webkit-transform: rotate(0deg);
-      }
-      to {
-          -webkit-transform: rotate(120deg);
-      }
+  @keyframes slide {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(120deg);
+    }
   }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div id="foo"&gt;I am a strange root.&lt;/div&gt;
-  &lt;input id="paint" type="button" onclick="" value=”repaint”&gt;
+  &lt;input id="paint" type="button" value="repaint"&gt;
   &lt;script&gt;
     var w = 200;
     document.getElementById('paint').onclick = function() {
@@ -197,11 +201,11 @@
 
 <p>무엇이 출력되는지를 볼 수 있는 좋은 방법은 개발자도구 설정의 "Rendering" 항목 밑의 "show paint rects"입니다. 이를 켠 뒤에 버튼을 클릭할 때마다 애니메이션되는 엘리먼트와 버튼이 둘다 빨간색으로 반짝이는 것을 주의하여 보시기 바랍니다.</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox" title=""></a><figcaption>show paint rect 화면</figcaption></figure>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/showpaintrects.png" alt="Screenshot of show paint rects checkbox"></a><figcaption>show paint rect 화면</figcaption></figure>
 
 <p>출력(paint) 이벤트 역시 개발자도구의 타임라인에 나타납니다. 날카로운 눈을 가진 독자들은 그곳에 다음과 같은 2개의 출력(Paint) 이벤트가 있다는 사실을 알아챌 것입니다. 하나는 레이어에 대한 것이고 다른 하나는 (버튼이) 눌린 상태로(혹은 부터) 변경되었을 때 재출력되는 버튼 그 자체에 대한 것입니다.</p>
 
-<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer" title=""></a>
+<figure><a href="animatedinvalidation.html" target="_blank"><img src="images/repainttimeline.png" alt="Screenshot of Dev Tools Timeline repainting a layer"></a>
 <figcaption>개발자도구 타임라인의 레이어 재출력(Repainting) 스크린샷</figcaption></figure>
 
 <p>크롬은 항상 전체 레이어에 대한 재출력을 필요로하지는 않는다는 점에 주의하여야 하며 DOM이 무효화(Invalid)된 DOM의 일부만 재출력함으로써 영리해지려 합니다. 이 경우 수정된 DOM 엘리먼트는 전체 레이어의 크기입니다. 그러나 다른 대부분의 경우 여러개의 DOM 엘리먼트들이 하나의 레이어 안에 있을 것입니다.</p>
