@@ -341,17 +341,22 @@ class ContentHandler(webapp2.RequestHandler):
           return self.redirect(relpath + '/?' + self.request.query_string,
                                permanent=True)
 
+      index = 'index.html'
+
       if (relpath == ''):
         include_home_link = None
         css_file = 'v2-combined'
+        # XXX FIXME XXX: note that we serve the 'gone' page as of July 2017
+        index = 'index-gone.html'
 
       if (relpath == 'tutorials/'):
         css_file = 'v2-combined'
         page_class = 'article tutorial listing'
 
-      path = os.path.join('content', relpath, 'index.html')
+      path = os.path.join('content', relpath, index)
     else:
       path = os.path.join('content', relpath)
+    print('rendering path', path)
 
     # Render the .html page if it exists. Otherwise, check that the Atom feed
     # the user is requesting has a corresponding .html page that exists.
