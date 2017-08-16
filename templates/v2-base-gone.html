@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% load toc from templatefilters %}
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{LANGUAGE_CODE}}" dir="{{LANGUAGE_BIDI|yesno:"rtl,ltr"}}" itemscope itemtype="http://schema.org/Article">
+<head>
+  <meta charset="utf-8">
+  <meta property="twitter:account_id" content="1593210261" />
+  <!-- Copyright (c) 2017 Google Inc.
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *     http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   * Author: {% block headauthor %}{% endblock %}
+   *
+   * {% block credits %}{% endblock %}
+   *
+  -->
+  <title>{% if self_pagename == 'home' %}{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}{% else %}{% block headtitle %}{% trans "A resource for open web HTML5 developers" %}{% endblock %} - {% trans "HTML5 Rocks" %}{% endif %}</title>
+  <meta name="description" content="{% if tut.description %}{{tut.description}}{% else %}{{description}}{% endif %}">
+  <meta name="keywords" content="{% trans "html5,html 5,html5 demos,html5 examples,javascript,css3,notifications,geolocation,web workers,apppcache,file api,filereader,indexeddb,offline,audio,video,drag and drop,chrome,sse,mobile" %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta name="theme-color" content="#f04530">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta itemprop="name" content="{% if tut.title %}{{tut.title}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta itemprop="description" content="{% if tut.description %}{{tut.description}}{% else %}{{description}}{% endif %}">
+  {% block share_image %}
+  <meta itemprop="image" content="{{host}}/static/images/html5rocks-logo-wings.png">
+  {% endblock %}
+
+  {% if tut %}
+    {% if tut.canonical_url %}
+  <link rel="canonical" href="{{tut.canonical_url}}">
+    {% else %}
+  <link rel="canonical" href="{{host}}{{tut.url}}">  
+    {% endif %}
+  {% endif %}
+
+  {% if tut %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@ChromiumDev">
+  {% if tut.author.twitter_account %}<meta name="twitter:creator" content="@{{tut.author.twitter_account}}">{% endif %}
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{% if tut.title %}{{tut.title}}{% endif %}{% if tut.subtitle %}: {{tut.subtitle}}{% endif %} - {% trans "HTML5 Rocks" %}">
+  <meta property="og:url" content="{{canonical_url}}">
+  <meta property="og:description" content="{% if tut.description %}{{tut.description}}{% else %}{{description}}{% endif %}">
+  <meta property="og:image" content="{% if tut.author %}{{host}}/static/images/profiles/{{ tut.author.key.name }}.png{% else %}{{host}}/static/images/html5rocks-logo-wings.png{% endif %}">
+  <meta property="og:site_name" content="{% trans "HTML5 Rocks" %} - {% trans "A resource for open web HTML5 developers" %}">
+  {% endif %}
+
+  {% if tut.author.google_account %}
+  <link rel="author" href="https://www.google.com/profiles/{{tut.author.google_account}}">
+  {% endif %}
+  {% if tut.second_author.google_account %}
+  <link rel="author" href="https://www.google.com/profiles/{{tut.second_author.google_account}}">
+  {% endif %}
+  <link rel="publisher" href="https://plus.google.com/+GoogleChromeDevelopers">
+
+  {% if localizations %}
+  {% for alt_locale in localizations %}
+  <link rel="alternate" hreflang="{{alt_locale.loc}}" href="{{host}}{{alt_locale.path}}">
+  {% endfor %}
+  {% endif %}
+
+  {% if css_file %}
+    {% if prod %}
+    <link rel="stylesheet" media="all" href="/static/css/{{css_file}}.min.css?20170808">
+    {% else %}
+    <link rel="stylesheet" media="all" href="/static/css/v2-base.css">
+    <link rel="stylesheet" media="all" href="/static/css/v2-article.css">
+    <link rel="stylesheet" media="all" href="/static/css/v2-tutorials.css">
+    {% endif %}
+
+    {% if LANGUAGE_BIDI %}
+    <!-- Here goes patches needed for BIDI languages like Farsi-->
+    <link rel="stylesheet" media="all" href="/static/css/v2-rtl.css">
+    {% endif %}
+  {% endif %}
+
+  <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,800{%if page_class == 'article tutorial' %}|Source+Code+Pro{% endif %}" rel="stylesheet">
+
+  <link rel="apple-touch-icon" href="/static/images/identity/HTML5_Badge_64.png">
+  <link rel="apple-touch-icon-precomposed" href="/static/images/identity/HTML5_Badge_64.png">
+
+  <script src="/static/js/modernizr.custom.82437.js"></script>
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5-els.js"></script>
+  <![endif]-->
+
+  {% block head %}{% endblock %}
+</head>
+<body data-href="{{self_pagename}}" onload="{% block onload %}{% endblock %}"{% if page_class %} class="{{ page_class }}"{% endif %}>
+
+  <div class="body-content">
+    {% block body %}{% endblock %}
+  </div>
+
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-15028909-1', 'auto');
+  ga('create', 'UA-49880327-4', 'auto', {'name': 'html5rocks'});
+
+  ga('send', 'pageview');
+  ga('html5rocks.send', 'pageview');
+
+  </script>
+</body>
+</html>
