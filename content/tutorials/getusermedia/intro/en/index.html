@@ -81,16 +81,16 @@
 }
 .invert {
   -webkit-filter: invert(1);
-  -moz-filter: invert(1)
-  -o-filter: invert(1)
-  -ms-filter: invert(1)
-  filter: invert(1)
+  -moz-filter: invert(1);
+  -o-filter: invert(1);
+  -ms-filter: invert(1);
+  filter: invert(1);
 }
 </style>
 {% endblock %}
 
 {% block iscompatible %}
-  return !!(navigator.mediaDevices.getUserMedia);
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 {% endblock %}
 
 {% block html5badge %}
@@ -197,7 +197,7 @@ Camera access is now a call away, not an install away. It's baked directly into 
 
 <p>Feature detecting is a simple check for the existence of <code>navigator.mediaDevices.getUserMedia</code>:</p>
 <pre class="prettyprint"><code>function hasGetUserMedia() {
-  return !!navigator.mediaDevices.getUserMedia;
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 }
 
 if (hasGetUserMedia()) {
@@ -237,8 +237,7 @@ navigator.mediaDevices.getUserMedia(constraints).
 <p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs
 working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
 Notice that we're not setting a <code>src</code> attribute or including <code>&lt;source&gt;</code> elements
-on the <code>&lt;video&gt;</code> element. Instead of feeding the video a URL to a media file, we're feeding
-it a <code>LocalMediaStream</code> from the webcam.</p>
+on the <code>&lt;video&gt;</code> element. Instead of feeding the video the URL of a media file, we're giving it a <code>MediaStream</code> from the webcam.</p>
 <p>I'm also telling the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
 the first frame. Adding <code>controls</code> also works as you'd expected.</p>
 
@@ -356,7 +355,7 @@ function success(stream) {
   video.srcObject = stream;
 }
 
-if (!navigator.mediaDevices.getUserMedia) {
+if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
   fallback();
 } else {
   navigator.getUserMedia({video: true}, success, fallback);
@@ -388,7 +387,6 @@ with realtime video:</p>
   const canvas = document.createElement('canvas');
 
   button.onclick = video.onclick = function() {
-    console.log('blah');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
@@ -507,7 +505,6 @@ const constraints = {video: true};
   }
 
   button.onclick = function() {
-    console.log('dsafds', 'fdsafds');
     navigator.mediaDevices.getUserMedia(constraints).
       then(handleSuccess).catch(handleError);
   };
