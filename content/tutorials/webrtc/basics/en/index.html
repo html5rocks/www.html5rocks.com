@@ -145,7 +145,12 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>For the <a href="https://webrtc.github.io/samples/src/content/getusermedia/gum/" title="getUserMedia demo">webrtc.github.io/samples/src/content/getusermedia/gum</a> example, <code>stream.getAudioTracks()</code> returns an empty array (because there's no audio) and, assuming a working webcam is connected, <code>stream.getVideoTracks()</code> returns an array of one MediaStreamTrack representing the stream from the webcam. Each MediaStreamTrack has a kind ('video' or 'audio'), and a label (something like 'FaceTime HD Camera (Built-in)'), and represents one or more channels of either audio or video. In this case, there is only one video track and no audio, but it is easy to imagine use cases where there are more: for example, a chat application that gets streams from the front camera, rear camera, microphone, and a 'screenshared' application.</p>
 
-<p>A MediaStream can be set as the <code>src</code> of a video element by using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/srcObject" title="Mozilla Developer Network article about the srcObject method"><code>srcObject</code> method</a>. (The <code>URL.createObjectURL()</code> method <a href="https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL" title="MDN documentation for URL.createObjectURL()">is deprecated</a>.) Since version M25, Chromium-based browsers (Chrome and Opera) allow audio data from <code>getUserMedia</code> to be passed to an audio or video element (but note that by default the media element will be muted in this case).<p>
+<p>A MediaStream can be attached to a video element by setting the
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/srcObject" title="Mozilla Developer Network article about the srcObject method"><code>srcObject</code> attribute.</a>. Previously this was done by setting the  <code>src</code> attribute to an object URL created with <code>URL.createObjectURL()</code>, but <a href="https://developer.mozilla.org/en-
+US/docs/Web/API/URL/createObjectURL" title="MDN documentation for
+URL.createObjectURL()">this has been deprecated</a>.
+
+<p>Since version 25, Chromium-based browsers (Chrome and Opera) have allowed audio data from <code>getUserMedia()</code> to be passed to an audio or video element (but note that by default the media element will be muted).<p>
 
 <p><code>getUserMedia</code> can also be used <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled" title="HTML5 Rocks update from Chris Wilson: live Web Audio input enabled!">as an input node for the Web Audio API</a>:</p>
 
