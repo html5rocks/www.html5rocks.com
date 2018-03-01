@@ -183,45 +183,44 @@ function start() {
 
   // once remote stream arrives, show it in the remote video element
   pc.onaddstream = function (evt) {
-    remoteView.src = URL.createObjectURL(evt.stream);
+    remoteView.srcObject = evt.stream;
   };
 
   // get a local stream, show it in a self-view and add it to be sent
-  navigator.getUserMedia({
-    'audio': true,
-    'video': true
-  }, function (stream) {
-    selfView.src = URL.createObjectURL(stream);
+  navigator.mediaDevices.getUserMedia(constraints).
+      then(handleSuccess).catch(logError);
+
+  function handleSuccess(stream) {
+    selfView.srcObject = stream;
     pc.addStream(stream);
-  }, logError);
-}
+  }
 
-function localDescCreated(desc) {
-  pc.setLocalDescription(desc, function () {
-    signalingChannel.send(JSON.stringify({
-      'sdp': pc.localDescription
-    }));
-  }, logError);
-}
-
-signalingChannel.onmessage = function (evt) {
-  if (!pc)
-    start();
-
-  var message = JSON.parse(evt.data);
-  if (message.sdp)
-    pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
-      // if we received an offer, we need to answer
-      if (pc.remoteDescription.type == 'offer')
-        pc.createAnswer(localDescCreated, logError);
+  function localDescCreated(desc) {
+    pc.setLocalDescription(desc, function () {
+      signalingChannel.send(JSON.stringify({
+        'sdp': pc.localDescription
+      }));
     }, logError);
-  else
-    pc.addIceCandidate(new RTCIceCandidate(message.candidate));
-};
+  }
 
-function logError(error) {
-  log(error.name + ': ' + error.message);
-}</pre>
+  signalingChannel.onmessage = function (evt) {
+    if (!pc)
+      start();
+
+    var message = JSON.parse(evt.data);
+    if (message.sdp)
+      pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
+        // if we received an offer, we need to answer
+        if (pc.remoteDescription.type == 'offer')
+          pc.createAnswer(localDescCreated, logError);
+      }, logError);
+    else
+      pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+  };
+
+  function logError(error) {
+    log(error.name + ': ' + error.message);
+  }</pre>
 
 <p>To see the offer/answer and candidate exchange processes in action, take a look at the console log for the 'single-page' video chat example at <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page in Chrome or the opera://webrtc-internals page in Opera.</p>
 
