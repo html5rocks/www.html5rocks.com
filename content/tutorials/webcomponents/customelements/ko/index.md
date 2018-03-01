@@ -260,7 +260,7 @@ element는 element가 존재하는 시간 중 흥미로운 시간의 활용을 �
   </tbody>
 </table>
 
-**예:** `<x-foo>`에 createdCallback()` 과 `attachedCallback()` 정의하기:
+**예:** `<x-foo>`에 `createdCallback()` 과 `attachedCallback()` 정의하기:
 
     var proto = Object.create(HTMLElement.prototype);
 
