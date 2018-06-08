@@ -153,74 +153,103 @@ a=rtpmap:111 opus/48000/2
 
 <h3 id="coding-webrtc-for-signaling">Coding WebRTC for signaling</h3>
 
-<p>Below is a <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C code example</a> that summarises the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below.</p>
+<p>Below is a <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below.</p>
 
 <pre class="prettyprint">const signalingChannel = new SignalingChannel();
 const configuration = {
-  'iceServers': [{
-    'urls': 'stun:stun.example.org'
+  iceServers: [{
+    urls: 'stuns:stun.example.org'
   }]
 };
-let pc;
+var pc;
 
 // call start() to initiate
-
 function start() {
   pc = new RTCPeerConnection(configuration);
 
   // send any ice candidates to the other peer
   pc.onicecandidate = (evt) => {
-    if (evt.candidate)
-      signalingChannel.send(JSON.stringify({
-        'candidate': evt.candidate
-      }));
+    signalingChannel.send(JSON.stringify({
+      candidate: evt.candidate
+    }));
   };
 
   // let the 'negotiationneeded' event trigger offer generation
   pc.onnegotiationneeded = () => {
-    pc.createOffer(localDescCreated, logError);
-  }
-
-  // once remote stream arrives, show it in the remote video element
-  pc.onaddstream = (evt) => {
-    remoteView.srcObject = evt.stream;
+    pc.createOffer().
+      then((offer) => {
+        return pc.setLocalDescription(offer);
+      }).
+      then(() => {
+        // send the offer to the other peer
+        signalingChannel.send(JSON.stringify({
+          desc: pc.localDescription
+        }));
+      }).catch((error) => {
+        console.error(error.name + ': ' + error.message);
+      });
   };
+}
 
-  // get a local stream, show it in a self-view and add it to be sent
-  navigator.mediaDevices.getUserMedia(constraints).
-      then(handleSuccess).catch(logError);
+// once remote track arrives, show it in the remote video element
+pc.ontrack = (evt) => {
+  // don't set srcObject again if it is already set.
+  if (!remoteView.srcObject) {
+    remoteView.srcObject = evt.streams[0];
+  }
+};
 
-  function handleSuccess(stream) {
+// get a local stream, show it in a self-view and add it to be sent
+navigator.mediaDevices.getUserMedia({
+  audio: true,
+  video: true
+}).
+  then((stream) => {
     selfView.srcObject = stream;
-    pc.addStream(stream);
+    pc.addTrack(stream.getAudioTracks()[0], stream);
+    pc.addTrack(stream.getVideoTracks()[0], stream);
+  }).
+  catch((error) => {
+    console.error('getUserMedia error:', error);
+  });
+
+signalingChannel.onmessage = (evt) => {
+  if (!pc) {
+    start();
   }
-
-  function localDescCreated(desc) {
-    pc.setLocalDescription(desc, function () {
-      signalingChannel.send(JSON.stringify({
-        'sdp': pc.localDescription
-      }));
-    }, logError);
+  const message = JSON.parse(evt.data);
+  if (message.desc) {
+    var desc = message.desc;
+    // if we get an offer, we need to reply with an answer
+    if (desc.type === 'offer') {
+      pc.setRemoteDescription(desc).then(() => {
+        return pc.createAnswer();
+      })
+        .then((answer) => {
+          return pc.setLocalDescription(answer);
+        })
+        .then(() => {
+          var str = JSON.stringify({
+            desc: pc.localDescription
+          });
+          signalingChannel.send(str);
+        })
+        .catch((error) => {
+          console.error('Error setting description:', error);
+        });
+    } else if (desc.type === 'answer') {
+      pc.setRemoteDescription(desc).catch((error) => {
+        console.error('Error setting description:', error);
+      });
+    } else {
+      console.error('Unsupported SDP type.');
+    }
+  } else {
+    pc.addIceCandidate(message.candidate).catch((error) => {
+      console.error('Error adding ICE candidate:', error);
+    });
   }
-
-  signalingChannel.onmessage = (evt) => {
-    if (!pc)
-      start();
-
-    const message = JSON.parse(evt.data);
-    if (message.sdp)
-      pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
-        // if we received an offer, we need to answer
-        if (pc.remoteDescription.type === 'offer')
-          pc.createAnswer(localDescCreated, logError);
-      }, logError);
-    else
-      pc.addIceCandidate(new RTCIceCandidate(message.candidate));
-  };
-
-  function logError(error) {
-    log(error.name + ': ' + error.message);
-  }</pre>
+};</pre>
 
 <p>To see the offer/answer and candidate exchange processes in action, take a look at the console log for the 'single-page' video chat example at <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page in Chrome or the opera://webrtc-internals page in Opera.</p>
 
@@ -275,9 +304,9 @@ function start() {
 
 <h3 id="building-a-signaling-service-with-socket.io-on-node">Building a signaling service with Socket.io on Node</h3>
 
-<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of 'rooms'.  This example is not designed to scale as a production-grade signaling service, but works well for a relatively small number of users.</p>
+<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of 'rooms'.  <strong>This example is not designed to scale as a production-grade signaling service, but is simple to understand for a relatively small number of users.</strong></p>
 
-<p>Socket.io uses WebSocket with the following fallbacks: Adobe Flash Socket, AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version, which we use in the example below. </p>
+<p>Socket.io uses WebSocket with fallbacks: AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version, which we use in the example below. </p>
 
 <p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="https://bitbucket.org/webrtc/codelab/src/master/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
 
@@ -379,7 +408,7 @@ io.sockets.on('connection', (socket) => {
 
 });</pre>
 
-<p>(You don't need to learn about node-static for this: it just makes the server simpler.)</p>
+<p>(You don't need to learn about node-static for this: it just happens to be used in this example.)</p>
 
 <p>To run this app on localhost, you need to have Node, socket.io and <a href="https://github.com/cloudhead/node-static">node-static</a> installed. Node can be downloaded from <a href="http://nodejs.org/">nodejs.org</a> (installation is straightforward and quick). To install socket.io and node-static, run Node Package Manager from a terminal in your application directory:</p>
 
