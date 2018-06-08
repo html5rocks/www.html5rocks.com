@@ -147,25 +147,25 @@ a[rel='external']
 <p>The code to get started with this is short:</p>
 
 <pre class="prettyprint">
-var peerConnection = new RTCPeerConnection();
+const peerConnection = new RTCPeerConnection();
 
 // Establish your peer connection using your signaling channel here
-var dataChannel =
+const dataChannel =
   peerConnection.createDataChannel("myLabel", dataChannelOptions);
 
-dataChannel.onerror = function (error) {
+dataChannel.onerror = (error) => {
   console.log("Data Channel Error:", error);
 };
 
-dataChannel.onmessage = function (event) {
+dataChannel.onmessage = (event) => {
   console.log("Got Data Channel Message:", event.data);
 };
 
-dataChannel.onopen = function () {
+dataChannel.onopen = () => {
   dataChannel.send("Hello World!");
 };
 
-dataChannel.onclose = function () {
+dataChannel.onclose = () => {
   console.log("The Data Channel is Closed");
 };
 </pre>
@@ -173,7 +173,7 @@ dataChannel.onclose = function () {
 <p>The <code>dataChannel</code> object is created from an already established peer connection. It can be created before or after signaling happens. You then pass in a label to distinguish this channel from others and a set of optional configuration settings:</p>
 
 <pre class="prettyprint">
-var dataChannelOptions = {
+const dataChannelOptions = {
   ordered: false, // do not guarantee order
   maxRetransmitTime: 3000, // in milliseconds
 };
@@ -226,7 +226,7 @@ var dataChannelOptions = {
 
 <pre class="prettyprint">
 function saveFile(blob) {
-  var link = document.createElement('a');
+  const link = document.createElement('a');
   link.href = window.URL.createObjectURL(blob);
   link.download = 'File Name';
   link.click();
