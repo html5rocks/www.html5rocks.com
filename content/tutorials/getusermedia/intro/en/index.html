@@ -5,16 +5,13 @@
 
 {% block head %}
 <style>
-video, #cssfilters-video, #screenshot, #screenshot-img {
+video, #cssfilters-video, #screenshot-img {
   width: 400px;
   height: 300px;
 }
 video, #cssfilters-stream {
   background: rgba(255,255,255,0.5);
   border: 1px solid #ccc;
-}
-#screenshot {
-  vertical-align: top;
 }
 .blur {
   -webkit-filter: blur(3px);
@@ -210,8 +207,7 @@ const constraints = {
 const video = document.querySelector('video');
 
 navigator.mediaDevices.getUserMedia(constraints).
-  then((stream) => {video.srcObject = stream}).
-  catch((error) => {console.error('Reeeejected!', error)});
+  then((stream) => {video.srcObject = stream});
 &lt;/script&gt;
 </code></pre>
 <p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs
@@ -241,8 +237,7 @@ const vgaConstraints = {
 };
 
 navigator.mediaDevices.getUserMedia(vgaConstraints).
-  then((stream) => {video.srcObject = stream}).
-  catch((error) => {console.error('Reeeejected!', error)});
+  then((stream) => {video.srcObject = stream});
 </code></pre>
 <p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>will be rejected with an <code>OverconstrainedError</code> and the user will not be prompted to grant permission to access their camera.</p>
 <p>For more configurations, see the <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints">constraints API</a></p>
@@ -275,7 +270,7 @@ function gotDevices(deviceInfos) {
         (videoSelect.length + 1);
       videoSelect.appendChild(option);
     } else {
-      console.log('Found one other kind of source/device: ', deviceInfo);
+      console.log('Found another kind of device: ', deviceInfo);
     }
   }
 }
@@ -344,26 +339,34 @@ with realtime video:</p>
 &lt;canvas style="display:none;"&gt;&lt;/canvas&gt;
 
 &lt;script&gt;
-  const button = document.querySelector('#screenshot-video button');
-  const img = document.querySelector('#screenshot-video img');
-  const video = document.querySelector('#screenshot-video video');
+const captureVideoButton =
+  document.querySelector('#screenshot .capture-button');
+const screenshotButton = document.querySelector('#screenshot-button');
+const img = document.querySelector('#screenshot img');
+const video = document.querySelector('#screenshot video');
 
-  const canvas = document.createElement('canvas');
+const canvas = document.createElement('canvas');
 
-  button.onclick = video.onclick = function() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    // Other browsers will fall back to image/png
-    img.src = canvas.toDataURL('image/webp');
-  };
-
+captureVideoButton.onclick = function() {
   navigator.mediaDevices.getUserMedia(constraints).
-    then((stream) => {video.srcObject = stream}).
-    catch((error) => {console.error('Reeeejected!', error)});
+    then(handleSuccess).catch(handleError);
+};
+
+screenshotButton.onclick = video.onclick = function() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  // Other browsers will fall back to image/png
+  img.src = canvas.toDataURL('image/webp');
+};
+
+function handleSuccess(stream) {
+  screenshotButton.disabled = false;
+  video.srcObject = stream;
+}
 &lt;/script&gt;
 </code></pre>
-<div id="screenshot-video" style="text-align:center;">
+<div id="screenshot" style="text-align:center;">
   <video class="videostream" autoplay></video>
   <img id="screenshot-img">
   <p><button class="capture-button">Capture video</button>
@@ -376,8 +379,46 @@ with realtime video:</p>
 
 <p>Using <a href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/filters/index.html">CSS Filters</a>, we can apply some gnarly effects to the <code>&lt;video&gt;</code>
 as it is captured:</p>
-<pre class="prettyprint"><code>&lt;style&gt;
+<pre class="prettyprint"><code>
+&lt;video autoplay&gt;&lt;/video&gt;
+&lt;p&gt;&lt;button class="capture-button"&gt;Capture video&lt;/button&gt;
+&lt;p&gt;&lt;button id="cssfilters-apply"&gt;Apply CSS filter&lt;/button&gt;&lt;/p&gt;
 
+&lt;script&gt;
+const captureVideoButton =
+  document.querySelector('#cssfilters .capture-button');
+const cssFiltersButton =
+  document.querySelector('#cssfilters-apply');
+const video =
+  document.querySelector('#cssfilters video');
+
+let filterIndex = 0;
+const filters = [
+  'grayscale',
+  'sepia',
+  'blur',
+  'brightness',
+  'contrast',
+  'hue-rotate',
+  'hue-rotate2',
+  'hue-rotate3',
+  'saturate',
+  'invert',
+  ''
+];
+
+captureVideoButton.onclick = function() {
+  navigator.mediaDevices.getUserMedia(constraints).
+    then(handleSuccess).catch(handleError);
+};
+
+cssFiltersButton.onclick = video.onclick = function() {
+  video.className = filters[filterIndex++ % filters.length];
+};
+
+function handleSuccess(stream) {
+  video.srcObject = stream;
+}
 &lt;/script&gt;
 </code></pre>
 <div id="cssfilters" style="text-align:center;">
@@ -410,7 +451,7 @@ navigator.mediaDevices.getUserMedia({audio: true}).
     // microphone -> filter -> destination
     microphone.connect(filter);
     filter.connect(context.destination);
-}).catch((error) => console.error('Error:', error));
+});
 </code></pre>
 <p>Demos:</p>
 <ul>
@@ -480,10 +521,10 @@ const constraints = {video: true};
 
 (function() {
   const captureVideoButton =
-    document.querySelector('#screenshot-video .capture-button');
+    document.querySelector('#screenshot .capture-button');
   const screenshotButton = document.querySelector('#screenshot-button');
-  const img = document.querySelector('#screenshot-img');
-  const video = document.querySelector('#screenshot-video video');
+  const img = document.querySelector('#screenshot img');
+  const video = document.querySelector('#screenshot video');
 
   const canvas = document.createElement('canvas');
 
