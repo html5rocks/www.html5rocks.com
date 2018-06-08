@@ -309,17 +309,16 @@ function handleError(error) {
 
 <h3 id="toc-security">Security</h3>
 
-<p>All browsers throw up an infobar upon calling <code>getUserMedia()</code>,
-which gives users the option to grant or deny access to their camera/mic.
-The spec unfortunately is very quiet when it comes to security. For example, here
-is Chrome's permission dialog:</p>
+<p><code>getUserMedia()</code> can only be called from HTTPS, localhost or a file:// URL. Otherwise, the promise from the call will be rejected. <code>getUserMedia()</code> also won't work for cross origin calls from iframes: see the Chromium Security article <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a> for more detail.</p>
+
+<p>All browsers will throw up an infobar upon calling <code>getUserMedia()</code>, which gives users the option to grant or deny access to their camera/mic. For example, here is Chrome's permission dialog:</p>
+
 <figure>
 <img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
 <figcaption>Permission dialog in Chrome</figcaption>
 </figure>
 
-<p>If your app is running from SSL (<code>https://</code>), this permission will be persistent.
-That is, users won't have to grant/deny access every time.</p>
+<p>This permission will be persistent. That is, users won't have to grant/deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
 
 <h3 id="toc-basic-demo">Basic demo</h3>
 
