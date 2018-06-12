@@ -100,7 +100,7 @@ video, #cssfilters-stream {
 
 <p>Audio/Video capture has been <em>the</em> "Holy Grail" of web development for a long time.
 For many years we had to rely on browser plugins (<a href="http://www.kevinmusselman.com/2009/02/access-webcam-with-flash/">Flash</a> or
-<a href="http://www.silverlightshow.net/items/Capturing-the-Webcam-in-Silverlight-4.aspx">Silverlight</a>)
+<a href="https://blogs.msdn.microsoft.com/silverlight_sdk/2010/03/16/using-webcams-in-silverlight-4/">Silverlight</a>)
 to get the job done. <a href="https://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a></p>
 <p>HTML5 to the rescue. It might not be apparent, but the rise of HTML5 has brought
 a surge of access to device hardware. <a href="/tutorials/geolocation/trip_meter/">Geolocation</a> (GPS),
@@ -171,7 +171,7 @@ supporting the new spec.</p>
 <p><strong>Support:</strong></p>
 <p>Unfortunately, no released browser ever included <code>&lt;device&gt;</code>.
 One less API to worry about I guess :) <code>&lt;device&gt;</code> did have two great things going
-for it though: 1.) it was semantic, and 2.) it was easily extendible to support
+for it though: 1.) it was semantic, and 2.) it was easily extensible to support
 more than just audio/video devices.</p>
 <p>Take a breath. This stuff moves fast!</p>
 <h3 id="toc-round3">Round 3: WebRTC</h3>
@@ -210,8 +210,7 @@ navigator.mediaDevices.getUserMedia(constraints).
   then((stream) => {video.srcObject = stream});
 &lt;/script&gt;
 </code></pre>
-<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs
-working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
+<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
 Notice that we're not setting a <code>src</code> attribute or including <code>&lt;source&gt;</code> elements
 on the <code>&lt;video&gt;</code> element. Instead of feeding the video the URL of a media file, we're giving it a <code>MediaStream</code> from the webcam.</p>
 <p>I'm also telling the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
@@ -227,8 +226,7 @@ to be HD:</p>
 };
 
 navigator.mediaDevices.getUserMedia(hdConstraints).
-  then((stream) => {video.srcObject = stream}).
-  catch((error) => {console.error('Reeeejected!', error)});
+  then((stream) => {video.srcObject = stream});
 
 ...
 
@@ -239,6 +237,7 @@ const vgaConstraints = {
 navigator.mediaDevices.getUserMedia(vgaConstraints).
   then((stream) => {video.srcObject = stream});
 </code></pre>
+
 <p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>will be rejected with an <code>OverconstrainedError</code> and the user will not be prompted to grant permission to access their camera.</p>
 <p>For more configurations, see the <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints">constraints API</a></p>
 <h3 id="toc-source">Selecting a media source</h3>
@@ -309,9 +308,9 @@ function handleError(error) {
 
 <h3 id="toc-security">Security</h3>
 
-<p><code>getUserMedia()</code> can only be called from HTTPS, localhost or a file:// URL. Otherwise, the promise from the call will be rejected. <code>getUserMedia()</code> also won't work for cross origin calls from iframes: see the Chromium Security article <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a> for more detail.</p>
+<p><code>getUserMedia()</code> can only be called from an HTTPS URL, localhost or a file:// URL. Otherwise, the promise from the call will be rejected. <code>getUserMedia()</code> also won't work for cross origin calls from iframes: see <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a> for more detail.</p>
 
-<p>All browsers will throw up an infobar upon calling <code>getUserMedia()</code>, which gives users the option to grant or deny access to their camera/mic. For example, here is Chrome's permission dialog:</p>
+<p>All browsers will throw up an infobar upon calling <code>getUserMedia()</code>, which gives users the option to grant or deny access to their camera or microphone. Here is Chrome's permission dialog:</p>
 
 <figure>
 <img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
@@ -319,6 +318,8 @@ function handleError(error) {
 </figure>
 
 <p>This permission will be persistent. That is, users won't have to grant/deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
+
+<p class="notice tip">The MediaStreamTrack is actively using the camera, which takes resources and keeps the camera open (and camera light on). When you are no longer using a track make sure to call <code>track.stop()</code> so that the camera can be closed.</p>
 
 <h3 id="toc-basic-demo">Basic demo</h3>
 
@@ -461,20 +462,16 @@ navigator.mediaDevices.getUserMedia({audio: true}).
 <p>For more information, see <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>.</p>
 <h2 id="toc-conclusion">Conclusion</h2>
 
-<p>Historically, device access on the web was a tough nut to crack. <a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">Many tried, few succeeded</a>. Most of the early ideas never took hold outside of a
-proprietary environment or gain widespread adoption.</p>
+<p>Historically, device access on the web has been a tough nut to crack. <a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">Many tried, few succeeded</a>. Most of the early ideas never gained widespread adoption or took hold outside of a proprietary environment. Perhaps the main problem has been that the web's security model is <em>very</em> different from the native world. In particular, you probably don't want every Joe Shmoe website to have random access to your video camera or microphone. It's been difficult to get right.</p>
 
-<p>Perhaps the main problem has been that the web's security model is <em>very</em> different from the native world. In particular, you probably don't want every Joe Shmoe website to have random access to your video camera or microphone. It's been difficult to get right. Bridging frameworks like <a href="http://phonegap.com/">PhoneGap</a> helped push the boundary, but they were only a temporary solution to an underlying problem. To make web apps competitive we've needed access to hardware.</p>
+<p>Since then, driven by the increasingly ubiquitous capabilities of mobile devices, the web has begun to provide much richer functionality. We now have APIs to <a href="https://developers.google.com/web/updates/2016/12/imagecapture" title="Web Fundamentals article about the Image Capture API">take photos and control camera settings</a>, <a href="https://developers.google.com/web/updates/2016/01/mediarecorder" title="Web Fundamentals article: Record Audio and Video with MediaRecorder">record audio and video</a>, and to access other types of sensor data such as location, motion and device orientation. The <a href="https://developers.google.com/web/updates/2017/09/sensors-for-the-web" title="What is Generic Sensor API?">Generic Sensor framework</a> ties all this together, alongside generic APIs to enable web applications to <a href="https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web" title="Access USB Devices on the Web">access USB</a> and <a href="https://developers.google.com/web/updates/2015/07/interact-with-ble-devices-on-the-web" title="Interact with Bluetooth devices on the Web">interact with Bluetooth</a> devices.</p>
 
-<p><code>getUserMedia()</code> was but the first wave of access to devices.</p>
-
-<p>Since then, driven by the increasingly ubiquitous capabilities of mobile devices, the web has enabled much richer access to hardware, including sensors for device orientation, motion, ambient light measurement and many other features — as well as APIs to <a href="https://developers.google.com/web/updates/2016/12/imagecapture" title="Web Fundamentals article about the Image Capture API">take photos and control camera settings</a> and <a href="https://developers.google.com/web/updates/2016/01/mediarecorder" title="Web Fundamentals article: Record Audio and Video with MediaRecorder">record audio and video</a>, to <a href="https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web" title="Access USB Devices on the Web
-">access USB</a> and <a href="https://developers.google.com/web/updates/2015/07/interact-with-ble-devices-on-the-web" title="Interact with Bluetooth devices on the Web">interact with Bluetooth</a> devices, alongside the <a href="https://developers.google.com/web/updates/2017/09/sensors-for-the-web" title="What is Generic Sensor API?">Generic Sensor</a> framework.</p>
+<p><code>getUserMedia()</code> was but the first wave of hardware interactivity.</p>
 
 <h2 id="toc-resources">Additional resources</h2>
 
 <ul>
-<li><a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html">W3C specification</a></li>
+<li><a href="https://w3c.github.io/mediacapture-main/">W3C specification</a></li>
 <li>Bruce Lawson's <a href="http://html5doctor.com/getusermedia/">HTML5Doctor article</a></li>
 <li>Bruce Lawson's <a href="http://dev.opera.com/articles/view/getusermedia-access-camera-privacy-ui/">dev.opera.com article</a></li>
 <li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-mediastream" title="HTML5 Rocks intro to WebRTC">Getting Started with WebRTC</a></li>
