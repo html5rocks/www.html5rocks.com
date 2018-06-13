@@ -191,6 +191,22 @@ It provides the means to access the user's local camera/microphone stream.</p>
 <p>With <code>getUserMedia()</code>, we can finally tap into webcam and microphone input without a plugin.
 Camera access is now a call away, not an install away. It's baked directly into the browser. Excited yet?</p>
 
+<h3 id="toc-featuredecting">Feature detection</h3>
+
+<p>Feature detecting is a simple check for the existence of <code>navigator.mediaDevices.getUserMedia</code>:</p>
+
+<pre class="prettyprint"><code>function hasGetUserMedia() {
+  return !!(navigator.mediaDevices &&
+    navigator.mediaDevices.getUserMedia);
+}
+
+if (hasGetUserMedia()) {
+  // Good to go!
+} else {
+  alert('getUserMedia() is not supported by your browser');
+}
+</code></pre>
+
 <h3 id="toc-acccess">Gaining access to an input device</h3>
 
 <p>To use the webcam or microphone, we need to request permission.
@@ -258,7 +274,7 @@ videoSelect.onchange = getStream;
 function gotDevices(deviceInfos) {
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceInfo = deviceInfos[i];
-    let option = document.createElement('option');
+    const option = document.createElement('option');
     option.value = deviceInfo.deviceId;
     if (deviceInfo.kind === 'audioinput') {
       option.text = deviceInfo.label ||
