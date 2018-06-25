@@ -38,15 +38,15 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>전화기, TV, 컴퓨터가 공통 플랫폼위에서 모두 대화할 수 있는 세상을 상상해보십시요. 여러분의 웹어플리케이션에 비디오채팅 기능과 P2P 데이터 공유 기능을 쉽게 추가했다고 상상해보십시요. 이것이 WebRTC의 비전입니다.</p>
 
-<p>확인해보고 싶으십니까? WebRTC는 현재 구글 Chrome과 Opera, Firefox에서 가능합니다. <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>은 간단한 비디오 채팅 어플리케이션을 시작해볼수 있는 좋은 곳입니다:</p>
+<p>확인해보고 싶으십니까? WebRTC는 현재 구글 Chrome과 Opera, Firefox에서 가능합니다. <a href="http://appr.tc" title="Simple WebRTC demo" target="_blank">appr.tc</a>은 간단한 비디오 채팅 어플리케이션을 시작해볼수 있는 좋은 곳입니다:</p>
 
 <ol>
-	<li><a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a> 페이지를 Chrome이나 Opera, Firefox에서 엽니다.</li>
+	<li><a href="http://appr.tc" title="Simple WebRTC demo" target="_blank">appr.tc</a> 페이지를 Chrome이나 Opera, Firefox에서 엽니다.</li>
 	<li>페이지(웹어플리케이션)에서 Webcam을 사용하도록 허용버튼을 클릭합니다.</li>
 	<li>다른 탭 또는 더 좋은 방법으로 다른 컴퓨터에서 페이지 하단에 표시된 URL을 브라우저에서 엽니다.</li>
 </ol>
 
- <p>이 어플리케이션에 대한 설명은 <a href="#toc-simple" title="Code walkthrough of apprtc.appspot.com">본문 아래</a>에서 다룹니다.</p>
+ <p>이 어플리케이션에 대한 설명은 <a href="#toc-simple" title="Code walkthrough of appr.tc">본문 아래</a>에서 다룹니다.</p>
 
 <h2 id="toc-tldr">Quick start</h2>
 
@@ -59,10 +59,10 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
   </li>
   <li>getUserMedia를 이전에 사용해보지 않았다면, <a href="http://www.html5rocks.com/ko/tutorials/getusermedia/intro/" title="HMTL5 Rocks: Capturing Audio and Video in HTML5" target="_blank">HTML5 Rocks 기사</a>를 읽어 보시기 바랍니다. 그리고 <a href="http://www.simpl.info/getusermedia" title="Simple getUserMedia example">simpl.info/gum</a>에서 간단한 예제 코드를 확인할 수 있습니다.</li>
   <li><a href="#simpleRTCPeerConnectionExample" title="Internal link to simple RTCPeerConnecton example">뒤에 나오는 간단한 예제</a>와 WebRTC를 single page로 구현한 <a href="http://www.simpl.info/pc" title="WebRTC demo without signaling">데모</a>를 통해서 RTCPeerConnection API를 파악하시기 바랍니다.</li>
-	<li><a href="http://apprtc.appspot.com" title="Simple WebRTC video chat demo">apprtc.appspot.com</a>에서 코드와 콘솔로그를 통해 WebRTC가 시그널링, 방화벽, NAT traversal을 위해 서버를 어떻게 사용하는지 더 깊이 공부해보시기 바랍니다.</li>
+	<li><a href="http://appr.tc" title="Simple WebRTC video chat demo">appr.tc</a>에서 코드와 콘솔로그를 통해 WebRTC가 시그널링, 방화벽, NAT traversal을 위해 서버를 어떻게 사용하는지 더 깊이 공부해보시기 바랍니다.</li>
 </ol>
 
-<p style="font-weight: bold">아니면 저희의 <a href="https://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab repository on Bitbucket">WebRTC codelab</a>으로 바로 들어오시기 바랍니다: 간단한 시그널링 서버를 포함한 비디오 채팅앱을 만드는 법을 step-by-step으로 설명한 가이드입니다.</p>
+<p style="font-weight: bold">아니면 저희의 <a href="https://codelabs.developers.google.com/codelabs/webrtc-web/" title="WebRTC codelab">WebRTC codelab</a>으로 바로 들어오시기 바랍니다: 간단한 시그널링 서버를 포함한 비디오 채팅앱을 만드는 법을 step-by-step으로 설명한 가이드입니다.</p>
 
 <h2 id="toc-history">WebRTC의 아주 짧은 역사</h2>
 
@@ -93,7 +93,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p><code><strong>getUserMedia</strong></code>는 Chrome, Opera 그리고 Firefox에서 가능합니다. 크로스 브라우저간의 데모 - <a href="http://www.simpl.info/gum" title="Simple cross-platform getUserMedia demo">simpl.info/gum</a> 와 Web Audio의 입력으로 <code>getUserMedia</code> 사용한 Chris Wilson의 <a href="http://webaudiodemos.appspot.com/" title="">환상적인 예제</a>를 둘러보시기 바랍니다.</p>
 
-<p><code><strong>RTCPeerConnection</strong></code>은 Chrome(데스크탑과 Android), Opera(데스크탑과 최신 안드로이드 beta)와 Firefox에서 구현되어있습니다. 이름으로 쓰이는 임시 단어가 여러번 반복된 이후에 현재 크롬에서는 <code>RTCPeerConnection</code>을 <code>webkitRTCPeerConnection</code>으로 구현되었고,  Firefox에서는 <code>mozRTCPeerConnection</code>로 구현되었습니다. 다른 이름들과 구현들은 더 이상 사용되지 않게 되었습니다. 표준화 과정이 안정화될 때, 머릿말들은 모두 삭제될 것입니다. 여기 아주 간단한 크롬의 RTCPeerConnection 데모 <a href="http://www.simpl.info/peerconnection" title="Simple cross-platform getUserMedia demo">simpl.info/pc</a>와 아주 훌륭한 비디오챗 프로그램 <a href="http://apprtc.appspot.com" title="Video chat demo">apprtc.appspot.com</a>이 있습니다. 브라우저간의 차이와 명세 변경에 대한 것을 추상화하는 <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> - 구글에서 관리하는 Javascript 코드를 이 프로그램에서 사용하고 있습니다.</p>
+<p><code><strong>RTCPeerConnection</strong></code>은 Chrome(데스크탑과 Android), Opera(데스크탑과 최신 안드로이드 beta)와 Firefox에서 구현되어있습니다. 이름으로 쓰이는 임시 단어가 여러번 반복된 이후에 현재 크롬에서는 <code>RTCPeerConnection</code>을 <code>webkitRTCPeerConnection</code>으로 구현되었고,  Firefox에서는 <code>mozRTCPeerConnection</code>로 구현되었습니다. 다른 이름들과 구현들은 더 이상 사용되지 않게 되었습니다. 표준화 과정이 안정화될 때, 머릿말들은 모두 삭제될 것입니다. 여기 아주 간단한 크롬의 RTCPeerConnection 데모 <a href="http://www.simpl.info/peerconnection" title="Simple cross-platform getUserMedia demo">simpl.info/pc</a>와 아주 훌륭한 비디오챗 프로그램 <a href="http://appr.tc" title="Video chat demo">appr.tc</a>이 있습니다. 브라우저간의 차이와 명세 변경에 대한 것을 추상화하는 <a href="https://appr.tc/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a> - 구글에서 관리하는 Javascript 코드를 이 프로그램에서 사용하고 있습니다.</p>
 
 <p><strong><code>RTCDataChannel</code></strong> 은 Chrome 25버전, Opera 18버전, Firefox 22버전 이상에서 지원하고 있습니다.</p>
 
@@ -212,7 +212,7 @@ NavigatorUserMediaError {code: 1, PERMISSION_DENIED: 1}</pre>
 
 <p>WebRTC (피어들로 불리우는) 브라우저들 사이에 스트리밍 데이터를 주고 받는 RTCPeerConnection를 사용합니다, 그리고 또한 통신을 조율하고 조장할 메세지를 주고 받기 위해 Signaling으로 알려진 일련의 과정이 필요합니다. Signaling을 위한 방법들과 프로토콜들은 WebRTC에는 명세되어있지 <em>않습니다</em> : Signaling은 RTCPeerConnection API에 포함되지 않습니다.</p>
 
-<p>대신, WebRTC 개발자들은 SIP,XMPP 도는 적절한 쌍방통신 채널 등 자신들에게 편한 방식을 선택할 수 있습니다.  <a href="http://apprtc.appspot.com" title="apprtc WebRTC example">apprtc.appspot.com</a> 예제는 Signaling 방식으로 XHR과 Channel API를 사용하였습니다. <a href="http://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab">codelab</a>은 <a href="http://nodejs.org/" title="Node website">Node server</a>위에 <a href="http://Socket.io" title="Socket.io website">Socket.io</a>를 이용해서 만들여졌습니다.</p>
+<p>대신, WebRTC 개발자들은 SIP,XMPP 도는 적절한 쌍방통신 채널 등 자신들에게 편한 방식을 선택할 수 있습니다.  <a href="http://appr.tc" title="apprtc WebRTC example">appr.tc</a> 예제는 Signaling 방식으로 XHR과 Channel API를 사용하였습니다. <a href="https://codelabs.developers.google.com/codelabs/webrtc-web/#0" title="WebRTC codelab">codelab</a>은 <a href="http://nodejs.org/" title="Node website">Node server</a>위에 <a href="http://Socket.io" title="Socket.io website">Socket.io</a>를 이용해서 만들여졌습니다.</p>
 
 <p>Signaling은 3가지 종류의 정보를 교환합니다.</p>
 <ul>
@@ -426,7 +426,7 @@ function gotRemoteStream(e){
 
 <p>NAT 탐색, peer-to-peer 네트워크, 사용자 탐색과 Signaling의 서버앱을 만들기 위한 요구사항들은 본문에서는 다루지 않습니다. <a href="http://en.wikipedia.org/wiki/STUN" title="Wikipedia STUN article">STUN</a> 프로토콜과 그 확장인 <a href="http://en.wikipedia.org/wiki/Traversal_Using_Relay_NAT" title="Wikipedia article about TURN">TURN</a>은 NAT 탐색과 다른 네트워크 문제들을 처리하기위해 RTCPeerConnection을 사용 가능하게 하는 <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment" title="Wikipedia article about ICE">ICE</a> framework를 사용한다는 설명으로 충분합니다.</p>
 
-<p>ICE 비디오 채팅 클라이언트 같은 피어들을 연결하기위한 프레임워크입니다. 우선, ICE는 가장 대기시간이 적은 UDP를 통해 피어들 끼리 <em>directly</em> 연결 가능한지 시도합니다. 여기에서 STUN 서버들은 한가지일을 합니다: NAT 뒤에 있는 피어들이 연결 가능하도록 자신들의 공용(public)주소와 포트를 찾아줍니다. (Google은 몇개의 STUN 서버를 가지고 있고,the apprtc.appspot.com 예제에서 그 중 하나를 사용중입니다.)</p>
+<p>ICE 비디오 채팅 클라이언트 같은 피어들을 연결하기위한 프레임워크입니다. 우선, ICE는 가장 대기시간이 적은 UDP를 통해 피어들 끼리 <em>directly</em> 연결 가능한지 시도합니다. 여기에서 STUN 서버들은 한가지일을 합니다: NAT 뒤에 있는 피어들이 연결 가능하도록 자신들의 공용(public)주소와 포트를 찾아줍니다. (Google은 몇개의 STUN 서버를 가지고 있고,the appr.tc 예제에서 그 중 하나를 사용중입니다.)</p>
 
 <figure>
   <img src="stun.png" alt="Finding connection candidates" />
@@ -444,10 +444,10 @@ function gotRemoteStream(e){
 
 <h4 id="toc-simple">A simple video chat client</h4>
 
-<p style="font-weight: bold">뒤에 나오는 signaling 매커니즘은 <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat application">apprtc.appspot.com</a>에서 사용된 것 입니다.</p>
-<p style="font-weight: bold">만약 여기서 이해할 수 없는 부분이 있다면, <a href="https://www.bitbucket.org/webrtc/codelab" title="WebRTC codelab repository on Bitbucket">WebRTC codelab</a>을 참고하는 것이 더 좋을 것입니다. 이 단계별 가이드는 어떻게 화상 채팅 어플리케이션을 만드는지 설명합니다, 그리고 <a href="http://Socket.io" title="Socket.io website">Socket.io</a>를 사용해서 <a href="http://nodejs.org/" title="Node website">Node server</a>에서 구현한 Signaling 서버도 포함되어 있습니다.</p>
+<p style="font-weight: bold">뒤에 나오는 signaling 매커니즘은 <a href="http://appr.tc" title="appr.tc video chat application">appr.tc</a>에서 사용된 것 입니다.</p>
+<p style="font-weight: bold">만약 여기서 이해할 수 없는 부분이 있다면, <a href="https://codelabs.developers.google.com/codelabs/webrtc-web/" title="WebRTC codelab">WebRTC codelab</a>을 참고하는 것이 더 좋을 것입니다. 이 단계별 가이드는 어떻게 화상 채팅 어플리케이션을 만드는지 설명합니다, 그리고 <a href="http://Socket.io" title="Socket.io website">Socket.io</a>를 사용해서 <a href="http://nodejs.org/" title="Node website">Node server</a>에서 구현한 Signaling 서버도 포함되어 있습니다.</p>
 
-<p>WebRTC를 체험해보기 좋은 곳은 signaling도 구현되었고 STUN을 사용해 NAT/방화멱 탐색까지 구현된 <a href="http://apprtc.appspot.com" title="Simple WebRTC demo" target="_blank">apprtc.appspot.com</a>입니다. 이 어플리케이션에서는 RTCPeerConnection과 <code>getUserMedia()</code>의 브라우저별 구현 차이를 처리하기 위해 <a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>를 사용 했습니다.</p>
+<p>WebRTC를 체험해보기 좋은 곳은 signaling도 구현되었고 STUN을 사용해 NAT/방화멱 탐색까지 구현된 <a href="http://appr.tc" title="Simple WebRTC demo" target="_blank">appr.tc</a>입니다. 이 어플리케이션에서는 RTCPeerConnection과 <code>getUserMedia()</code>의 브라우저별 구현 차이를 처리하기 위해 <a href="https://appr.tc/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>를 사용 했습니다.</p>
 
 <p>코드에서는 의도적으로 장황하게 로그를 남겼습니다: 이벤트들의 순서를 이해하기위해서는 콘솔을 확인하시기 바랍니다. 뒤에 자세한 코드 예제들을 보여드리겠습니다.</p>
 
@@ -750,7 +750,7 @@ document.querySelector("button#send").onclick = function (){
 
 <p>통신은 브라우저간 직접 연결됩니다 , 그래서 RTCDataChannel은 WebSocket보다 매우 빠릅니다. 심지어 방화벽과 NAT의 방해로 '구멍내기'가 실패하여 중계(TURN) 서버와 연결이 되더라도 빠릅니다.</p>
 
-<p>RTCDataChannel은 Chrome과 Opera, Firefox에서 가능합니다. 멋진 <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> 게임에서는 게임 상태 통신을 위해 이 API를 사용하였습니다: 친구 또는 곰과 플레이 해봅시다! <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> enables file sharing via RTCDataChannel, and <a href="https://peercdn.com/" title="peerCDN site">peerCDN</a> offers a glimpse of how WebRTC could enable peer-to-peer content distribution.</p>
+<p>RTCDataChannel은 Chrome과 Opera, Firefox에서 가능합니다. 멋진 <a href="http://www.cubeslam.com" title="Cube Slam game">Cube Slam</a> 게임에서는 게임 상태 통신을 위해 이 API를 사용하였습니다: 친구 또는 곰과 플레이 해봅시다! <a href="http://www.sharefest.me" title="Sharefest file sharing app">Sharefest</a> enables file sharing via RTCDataChannel, and <a href="https://techcrunch.com/2013/12/17/yahoo-acquires-peercdn/" title="peerCDN site">peerCDN</a> offers a glimpse of how WebRTC could enable peer-to-peer content distribution.</p>
 
 <p>RTCDataChannel에 관한 더 자세한 내용은 IETF의 <a href="http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-00" title="IETF Data Channel draft specification">draft protocol spec</a>문서를 참고하기 바랍니다.</p>
 
@@ -793,8 +793,8 @@ document.querySelector("button#send").onclick = function (){
     </figure>
   </li>
   <li>크로스 브라우저간의 <a href="http://www.webrtc.org/interop" title="webrtc.org Firefox/Chrome interop information">상호동작에 대한 내용</a></li>
-  <li><a href="https://apprtc.appspot.com/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>는 Google에서 관리하는 WebRTC를 위한 JavaScript 코드 입니다. 이것은 벤더들의 prefix와 브라우저간의 차이들, 명세 구현의 차이들을 추상화합니다.</li>
-  <li>WebRTC Signlaing 과정을 자세하게 확인하려면, <a href="http://apprtc.appspot.com" title="apprtc.appspot.com video chat demo">apprtc.appspot.com</a>의 콘솔로그를 확인하시기 바랍니다.</li>
+  <li><a href="https://appr.tc/js/adapter.js" title="adapter.js JavaScript file">adapter.js</a>는 Google에서 관리하는 WebRTC를 위한 JavaScript 코드 입니다. 이것은 벤더들의 prefix와 브라우저간의 차이들, 명세 구현의 차이들을 추상화합니다.</li>
+  <li>WebRTC Signlaing 과정을 자세하게 확인하려면, <a href="http://appr.tc" title="appr.tc video chat demo">appr.tc</a>의 콘솔로그를 확인하시기 바랍니다.</li>
   <li>만약 이 모든게 너무 많다고 느껴진다면, <a href="http://io13webrtc.appspot.com/#69" title="WebRTC frameworks">WebRTC framework</a> 또는 완성된 <a href="http://io13webrtc.appspot.com/#72" title="WebRTC service providers">WebRTC&nbsp;service</a>를 사용하는 것이 좋습니다.</li>
   <li>버그 리포트와 기능 요청은 언제나 환영합니다: Chrome 버그들은 <a href="http://www.crbug.com/new" title="Report Chrome bugs and feature requests">crbug.com/new</a> 로, Opera 버그들은 <a href="https://bugs.opera.com/wizard/" title="Report Opera bugs and feature requests">bugs.opera.com/wizard/</a>로, Firefox 버그들은 <a href="https://bugzilla.mozilla.org/" title="File a Firefox bug">bugzilla.mozilla.org</a>로 </li>
 </ul>
@@ -810,7 +810,7 @@ document.querySelector("button#send").onclick = function (){
   <li><a href="https://groups.google.com/forum/?fromgroups#!forum/discuss-webrtc" title="discuss-webrt Google Group">discuss-webrtc</a>: Google Group for technical WebRTC discussion</li>
   <li><a href="https://plus.sandbox.google.com/113817074606039822053/posts" title="WebRTC on Google+">+webrtc</a></li>
   <li><a href="https://twitter.com/webrtc" title="WebRTC on Twitter">@webrtc</a></li>
-  <li>Google Developers <a href="https://developers.google.com/talk/libjingle/important_concepts#connections" title="Google Developers: Google Talk for Developers">Google Talk documentation</a>, NAT traversal, STUN, 중계서버 candidate gathering에 관한 자세한 내용이 있습니다.</li>
+  <li>Google Developers <a href="https://developers.google.com/talk/talk_developers_home" title="Google Developers: Google Talk for Developers">Google Talk documentation</a>, NAT traversal, STUN, 중계서버 candidate gathering에 관한 자세한 내용이 있습니다.</li>
   <li><a href="http://stackoverflow.com/questions/tagged/webrtc" title="Stack Overflow questions tagged 'webrtc'">Stack Overflow</a>는 WebRTC관련된 질문들과 답변들을 볼 수 있는 좋은 곳 입니다.</li>
 </ul>
 

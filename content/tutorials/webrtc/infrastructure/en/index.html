@@ -104,7 +104,7 @@ a=rtpmap:111 opus/48000/2
 
 <p>Want to know what all this SDP gobbledygook actually means? Take a look at the <a href="http://datatracker.ietf.org/doc/draft-nandakumar-rtcweb-sdp/?include_text=1">IETF examples</a>.</p>
 
-<p>Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description, by editing the values in the SDP text. For example, the <em>preferAudioCodec() </em>function in <a href="https://apprtc.appspot.com/js/main.js">apprtc.appspot.com</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript, and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP.</p>
+<p>Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description, by editing the values in the SDP text. For example, the <em>preferAudioCodec() </em>function in <a href="https://appr.tc">appr.tc</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript, and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP.</p>
 
 <h3 id="rtcpeerconnection-signaling-offer-answer-and-candidate">RTCPeerConnection + signaling: offer, answer and candidate</h3>
 
@@ -153,80 +153,79 @@ a=rtpmap:111 opus/48000/2
 
 <h3 id="coding-webrtc-for-signaling">Coding WebRTC for signaling</h3>
 
-<p>Below is a <a href="http://www.w3.org/TR/webrtc/#simple-peer-to-peer-example">W3C code example</a> that summarises the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below.</p>
+<p>Below is a <a href="https://w3c.github.io/webrtc-pc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism, <em>SignalingChannel</em>. Signaling is discussed in greater detail below.</p>
 
-<pre class="prettyprint">var signalingChannel = new SignalingChannel();
-var configuration = {
-  'iceServers': [{
-    'urls': 'stun:stun.example.org'
-  }]
+<pre class="prettyprint">// handles JSON.stringify/parse
+const signaling = new SignalingChannel();
+const constraints = {audio: true, video: true};
+const configuration = {iceServers: [{urls: 'stuns:stun.example.org'}]};
+const pc = new RTCPeerConnection(configuration);
+
+// send any ice candidates to the other peer
+pc.onicecandidate = ({candidate}) => signaling.send({candidate});
+
+// let the "negotiationneeded" event trigger offer generation
+pc.onnegotiationneeded = async () => {
+  try {
+    await pc.setLocalDescription(await pc.createOffer());
+    // send the offer to the other peer
+    signaling.send({desc: pc.localDescription});
+  } catch (err) {
+    console.error(err);
+  }
 };
-var pc;
+
+// once remote track media arrives, show it in remote video element
+pc.ontrack = (event) => {
+  // don't set srcObject again if it is already set.
+  if (remoteView.srcObject) return;
+  remoteView.srcObject = event.streams[0];
+};
 
 // call start() to initiate
-
-function start() {
-  pc = new RTCPeerConnection(configuration);
-
-  // send any ice candidates to the other peer
-  pc.onicecandidate = function (evt) {
-    if (evt.candidate)
-      signalingChannel.send(JSON.stringify({
-        'candidate': evt.candidate
-      }));
-  };
-
-  // let the 'negotiationneeded' event trigger offer generation
-  pc.onnegotiationneeded = function () {
-    pc.createOffer(localDescCreated, logError);
-  }
-
-  // once remote stream arrives, show it in the remote video element
-  pc.onaddstream = function (evt) {
-    remoteView.srcObject = evt.stream;
-  };
-
-  // get a local stream, show it in a self-view and add it to be sent
-  navigator.mediaDevices.getUserMedia(constraints).
-      then(handleSuccess).catch(logError);
-
-  function handleSuccess(stream) {
+async function start() {
+  try {
+    // get local stream, show it in self-view and add it to be sent
+    const stream =
+      await navigator.mediaDevices.getUserMedia(constraints);
+    stream.getTracks().forEach((track) =>
+      pc.addTrack(track, stream));
     selfView.srcObject = stream;
-    pc.addStream(stream);
+  } catch (err) {
+    console.error(err);
   }
+}
 
-  function localDescCreated(desc) {
-    pc.setLocalDescription(desc, function () {
-      signalingChannel.send(JSON.stringify({
-        'sdp': pc.localDescription
-      }));
-    }, logError);
+signaling.onmessage = async ({desc, candidate}) => {
+  try {
+    if (desc) {
+      // if we get an offer, we need to reply with an answer
+      if (desc.type === 'offer') {
+        await pc.setRemoteDescription(desc);
+        const stream =
+          await navigator.mediaDevices.getUserMedia(constraints);
+        stream.getTracks().forEach((track) =>
+          pc.addTrack(track, stream));
+        await pc.setLocalDescription(await pc.createAnswer());
+        signaling.send({desc: pc.localDescription});
+      } else if (desc.type === 'answer') {
+        await pc.setRemoteDescription(desc);
+      } else {
+        console.log('Unsupported SDP type.');
+      }
+    } else if (candidate) {
+      await pc.addIceCandidate(candidate);
+    }
+  } catch (err) {
+    console.error(err);
   }
-
-  signalingChannel.onmessage = function (evt) {
-    if (!pc)
-      start();
-
-    var message = JSON.parse(evt.data);
-    if (message.sdp)
-      pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
-        // if we received an offer, we need to answer
-        if (pc.remoteDescription.type == 'offer')
-          pc.createAnswer(localDescCreated, logError);
-      }, logError);
-    else
-      pc.addIceCandidate(new RTCIceCandidate(message.candidate));
-  };
-
-  function logError(error) {
-    log(error.name + ': ' + error.message);
-  }</pre>
+};</pre>
 
 <p>To see the offer/answer and candidate exchange processes in action, take a look at the console log for the 'single-page' video chat example at <a href="http://simpl.info/rtcpeerconnection/">simpl.info/pc</a>. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page in Chrome or the opera://webrtc-internals page in Opera.</p>
 
 <h3 id="peer-discovery">Peer discovery</h3>
 
-<p>This is fancy way of saying &mdash; how do I find someone to talk to?</p>
+<p>This is a fancy way of saying &mdash; how do I find someone to talk to?</p>
 
 <p>For telephone calls we have telephone numbers and directories. For online video chat and messaging, we need identity and presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call.</p>
 
@@ -234,7 +233,7 @@ function start() {
 
 <h2 id="how-can-i-build-a-signaling-service">How can I build a signaling service?</h2>
 
-<p>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!' <br/> <br/> Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> and <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a> we found that, for a video chat session, a total of around 30&ndash;45 messages were handled by the signaling service, with a total size for all messages of around 10kB.</p>
+<p>To reiterate: signaling protocols and mechanisms are not defined by WebRTC standards. Whatever you choose, you'll need an intermediary server to exchange signaling messages and application data between clients. Sadly, a web app cannot simply shout into the internet 'Connect me to my friend!' <br/> <br/> Thankfully signaling messages are small, and mostly exchanged at the start of a call. In testing with <a href="http://appr.tc">appr.tc</a> we found that, for a video chat session, a total of around 30&ndash;45 messages were handled by the signaling service, with a total size for all messages of around 10kB.</p>
 
 <p>As well as being relatively undemanding in terms of bandwidth, WebRTC signaling services don't consume much processing or memory, since they only need to relay messages and retain a small amount of session state data (such as which clients are connected).</p>
 
@@ -250,11 +249,11 @@ function start() {
 
 <p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections, to ensure messages cannot be intercepted unencrypted, and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see the <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in Ilya Grigorik's <em>High Performance Browser Networking</em>. Peter Lubber's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
-<p>Signaling for the canonical <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
+<p>Signaling for the canonical <a href="http://appr.tc">appr.tc</a> WebRTC video chat application is accomplished via the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) There is a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app in the <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">HTML5 Rocks WebRTC article</a>.</p>
 
 <figure>
-  <a href="http://apprtc.appspot.com"><img src="apprtc.jpg" alt="The apprtc.appspot.com video chat application" /></a>
-  <figcaption><a href="http://apprtc.appspot.com">apprtc</a> in action</figcaption>
+  <a href="http://appr.tc"><img src="apprtc.jpg" alt="The appr.tc video chat application" /></a>
+  <figcaption><a href="http://appr.tc">apprtc</a> in action</figcaption>
 </figure>
 
 <p>It is also possible to handle signaling by getting WebRTC clients to poll a messaging server repeatedly via Ajax, but that leads to a lot of redundant network requests, which is especially problematic for mobile devices. Even after a session has been established, peers need to poll for signaling messages in case of changes or session termination by other peers. The <a href="http://webrtcbook.com">WebRTC Book</a> app example takes this option, with some optimizations for polling frequency.</p>
@@ -264,7 +263,7 @@ function start() {
 <p>Although a signaling service consumes relatively little bandwidth and CPU per client, signaling servers for a popular application may have to handle a lot of messages, from different locations, with high levels of concurrency. WebRTC apps that get a lot of traffic need signaling servers able to handle considerable load.</p>
 <p>We won't go into detail here, but there are a number of options for high volume, high performance messaging, including the following:
     <ul>
-      <li><a href="http://en.wikipedia.org/wiki/Xmpp" title="XMPP Wikipedia article">eXtensible Messaging and Presence Protocol</a> (XMPP), originally known as Jabber: a protocol developed for instant messaging that can be used for signaling. Server implementations include <a href="http://en.wikipedia.org/wiki/Ejabberd" title="ejabberd article on Wikipedia">ejabberd</a> and <a href="http://en.wikipedia.org/wiki/Openfire" title="Openfire Wikipedia article">Openfire</a>. JavaScript clients such as <a href="http://strophe.im/strophejs/" title="Strophe XMPP library for JavaScript">Strophe.js</a> use <a href="http://en.wikipedia.org/wiki/BOSH" title="BOSH article on Wikipedia">BOSH</a> to emulate bidirectional streaming, but for <a href="http://stackoverflow.com/questions/7327153/xmpp-bosh-vs-comet" title="Stack Overflow question about XMPP BOSH v Comet: see also http://stackoverflow.com/questions/6434088/why-isnt-bosh-more-popular-especially-as-an-alternative-to-websockets-and-long">various reasons</a> BOSH may not be as efficient as WebSocket, and for the same reasons may not scale well. (On a tangent: <a href="http://en.wikipedia.org/wiki/Jingle_(protocol)" title="Jingle Wikipedia article">Jingle</a> is an XMPP extension to enable voice and video; the WebRTC project uses network and transport components from the <a href="https://developers.google.com/talk/libjingle/" title="Google Talk for Developers: About libjingle">libjingle</a> library, a C++ implementation of Jingle.) </li>
+      <li><a href="http://en.wikipedia.org/wiki/Xmpp" title="XMPP Wikipedia article">eXtensible Messaging and Presence Protocol</a> (XMPP), originally known as Jabber: a protocol developed for instant messaging that can be used for signaling. Server implementations include <a href="http://en.wikipedia.org/wiki/Ejabberd" title="ejabberd article on Wikipedia">ejabberd</a> and <a href="http://en.wikipedia.org/wiki/Openfire" title="Openfire Wikipedia article">Openfire</a>. JavaScript clients such as <a href="http://strophe.im/strophejs/" title="Strophe XMPP library for JavaScript">Strophe.js</a> use <a href="http://en.wikipedia.org/wiki/BOSH" title="BOSH article on Wikipedia">BOSH</a> to emulate bidirectional streaming, but for <a href="http://stackoverflow.com/questions/7327153/xmpp-bosh-vs-comet" title="Stack Overflow question about XMPP BOSH v Comet: see also http://stackoverflow.com/questions/6434088/why-isnt-bosh-more-popular-especially-as-an-alternative-to-websockets-and-long">various reasons</a> BOSH may not be as efficient as WebSocket, and for the same reasons may not scale well. (On a tangent: <a href="http://en.wikipedia.org/wiki/Jingle_(protocol)" title="Jingle Wikipedia article">Jingle</a> is an XMPP extension to enable voice and video; the WebRTC project uses network and transport components from the <a href="https://developers.google.com/talk/libjingle/developer_guide" title="Google Talk for Developers: About libjingle">libjingle</a> library, a C++ implementation of Jingle.) </li>
         <li>Open source libraries such as <a href="http://zeromq.org/">ZeroMQ</a> (as used by TokBox for their <a href="http://www.tokbox.com/blog/tokbox-builds-it%E2%80%99s-own-internal-messaging-infrastructure/">Rumour</a> service) and <a href="http://en.wikipedia.org/wiki/Open_Message_Queue" title="OpenMQ Wikipedia article">OpenMQ</a>. <a href="http://avalanche123.com/blog/2012/02/25/interacting-with-zeromq-from-the-browser/" title="Blog post: Interacting With ZeroMQ From the Browser">NullMQ</a> applies ZeroMQ concepts to web platforms, using the <a href="http://stomp.github.io/" title="Simple Text Oriented Messaging Protocol">STOMP protocol</a> over WebSocket.</li>
         <li>Commercial cloud messaging platforms that use WebSocket (though they may fall back to long polling) such as <a href="http://pusher.com/" title="Pusher website">Pusher</a>, <a href="http://kaazing.com/" title="Kaazing website">Kaazing</a> and <a href="http://pubnub.com" title="PubNub website">PubNub</a>. (PubNub also has an <a href="https://github.com/pubnub/webrtc" title="PubNub WebRTC SDK v0.7.0">API for WebRTC</a>.)</li>
        <li>Commercial WebRTC platforms such as <a href="https://vline.com/" title="vLine WebRTC platform">vLine</a>.</li>
@@ -275,11 +274,11 @@ function start() {
 
 <h3 id="building-a-signaling-service-with-socket.io-on-node">Building a signaling service with Socket.io on Node</h3>
 
-<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of 'rooms'.  This example is not designed to scale as a production-grade signaling service, but works well for a relatively small number of users.</p>
+<p>Below is code for a simple web application that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages, and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of 'rooms'.  <strong>This example is not designed to scale as a production-grade signaling service, but is simple to understand for a relatively small number of users.</strong></p>
 
-<p>Socket.io uses WebSocket with the following fallbacks: Adobe Flash Socket, AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version, which we use in the example below. </p>
+<p>Socket.io uses WebSocket with fallbacks: AJAX long polling, AJAX multipart streaming, Forever Iframe and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version, which we use in the example below. </p>
 
-<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://bitbucket.org/webrtc/codelab">WebRTC codelab</a> gives step-by-step instructions how to integrate this example into a complete WebRTC video chat application. You can download the code from <a href="https://bitbucket.org/webrtc/codelab/src/master/complete/step5">step 5 of the codelab repo</a> or try it out live at <a href="http://samdutton-nodertc.jit.su/">samdutton-nodertc.jit.su</a>: open the URL in two browsers for video chat.</p>
+<p>There's no WebRTC in this example: it's designed only to show how to build signaling into a web app. View the console log to see what's happening as clients join a room and exchange messages. Our <a href="https://codelabs.developers.google.com/codelabs/webrtc-web/#0">WebRTC codelab</a> gives step-by-step instructions how to integrate this into a complete WebRTC video chat application.</p>
 
 <p>Here is the client, <em>index.html</em>:</p>
 
@@ -298,66 +297,66 @@ function start() {
 <p>...and the JavaScript file <em>main.js </em>referenced in the client:</p>
 
 <pre class="prettyprint">
-var isInitiator;
+const isInitiator;
 
 room = prompt('Enter room name:');
 
-var socket = io.connect();
+const socket = io.connect();
 
 if (room !== '') {
   console.log('Joining room ' + room);
   socket.emit('create or join', room);
 }
 
-socket.on('full', function (room){
+socket.on('full', (room) => {
   console.log('Room ' + room + ' is full');
 });
 
-socket.on('empty', function (room){
+socket.on('empty', (room) => {
   isInitiator = true;
   console.log('Room ' + room + ' is empty');
 });
 
-socket.on('join', function (room){
+socket.on('join', (room) => {
   console.log('Making request to join room ' + room);
   console.log('You are the initiator!');
 });
 
-socket.on('log', function (array){
+socket.on('log', (array) => {
   console.log.apply(console, array);
 });
 </pre>
 
 <p>The complete server app:</p>
 
-<pre class="prettyprint">var static = require('node-static');
-var http = require('http');
-var file = new(static.Server)();
-var app = http.createServer(function (req, res) {
+<pre class="prettyprint">const static = require('node-static');
+const http = require('http');
+const file = new(static.Server)();
+const app = http.createServer(function (req, res) {
   file.serve(req, res);
 }).listen(2013);
 
-var io = require('socket.io').listen(app);
+const io = require('socket.io').listen(app);
 
-io.sockets.on('connection', function (socket){
+io.sockets.on('connection', (socket) => {
 
   // convenience function to log server messages to the client
   function log(){
-    var array = ['&gt;&gt;&gt; Message from server: '];
-    for (var i = 0; i &lt; arguments.length; i++) {
+    const array = ['&gt;&gt;&gt; Message from server: '];
+    for (const i = 0; i &lt; arguments.length; i++) {
       array.push(arguments[i]);
     }
       socket.emit('log', array);
   }
 
-  socket.on('message', function (message) {
+  socket.on('message', (message) => {
     log('Got message:', message);
     // for a real app, would be room only (not broadcast)
     socket.broadcast.emit('message', message);
   });
 
-  socket.on('create or join', function (room) {
-    var numClients = io.sockets.clients(room).length;
+  socket.on('create or join', (room) => {
+    const numClients = io.sockets.clients(room).length;
 
     log('Room ' + room + ' has ' + numClients + ' client(s)');
     log('Request to create or join room ' + room);
@@ -372,14 +371,16 @@ io.sockets.on('connection', function (socket){
     } else { // max two clients
       socket.emit('full', room);
     }
-    socket.emit('emit(): client ' + socket.id + ' joined room ' + room);
-    socket.broadcast.emit('broadcast(): client ' + socket.id + ' joined room ' + room);
+    socket.emit('emit(): client ' + socket.id +
+      ' joined room ' + room);
+    socket.broadcast.emit('broadcast(): client ' + socket.id +
+      ' joined room ' + room);
 
   });
 
 });</pre>
 
-<p>(You don't need to learn about node-static for this: it just makes the server simpler.)</p>
+<p>(You don't need to learn about node-static for this: it just happens to be used in this example.)</p>
 
 <p>To run this app on localhost, you need to have Node, socket.io and <a href="https://github.com/cloudhead/node-static">node-static</a> installed. Node can be downloaded from <a href="http://nodejs.org/">nodejs.org</a> (installation is straightforward and quick). To install socket.io and node-static, run Node Package Manager from a terminal in your application directory:</p>
 
@@ -399,12 +400,6 @@ node server.js
 <p>From your browser, open <em>localhost:2013</em>. Open a new tab page or window in any browser and open <em>localhost:2013</em> again. To see what's happening, check the console: in Chrome and Opera, you can access this via the DevTools with Command-Option-J or Ctrl-Shift-J.</p>
 
 <p>Whatever approach you choose for signaling, your backend and client app will &mdash; at the very least &mdash; need to provide services similar to this example.</p>
-
-<h3 id="using-rtcdatachannel-for-signaling">Using RTCDataChannel for signaling</h3>
-
-<p>A signaling service is required to initiate a WebRTC session.</p>
-
-<p>However, once a connection has been established between two peers, RTCDataChannel could, in theory, take over as the signaling channel. This might reduce latency for signaling &mdash; since messages fly direct &mdash; and help reduce signaling server bandwidth and processing costs. We don't have a demo, but watch this space!</p>
 
 <h3 id="signaling-gotchas">Signaling gotchas</h3>
 
@@ -476,7 +471,7 @@ node server.js
 
 <p>Every TURN server supports STUN: a TURN server is a STUN server with added relaying functionality built in. ICE also copes with the complexities of NAT setups: in reality, NAT 'hole punching' may require more than just a public IP:port address.</p>
 
-<p>URLs for STUN and/or TURN servers are (optionally) specified by a WebRTC app in the <em>iceServers</em> configuration object that is the first argument to the RTCPeerConnection constructor. For <a href="http://apprtc.appspot.com">apprtc.appspot.com</a> that value looks like this:</p>
+<p>URLs for STUN and/or TURN servers are (optionally) specified by a WebRTC app in the <em>iceServers</em> configuration object that is the first argument to the RTCPeerConnection constructor. For <a href="http://appr.tc">appr.tc</a> that value looks like this:</p>
 
 <pre class="prettyprint">{
   'iceServers': [
@@ -531,7 +526,7 @@ node server.js
 
 <h3 id="deploying-stun-and-turn-servers">Deploying STUN and TURN servers</h3>
 
-<p>For testing, Google runs a public STUN server, stun.l.google.com:19302, as used by <a href="http://apprtc.appspot.com">apprtc.appspot.com</a>. For a production STUN/TURN service, we recommend using the rfc5766-turn-server; source code for STUN and TURN servers is available from <a href="https://code.google.com/p/rfc5766-turn-server/">code.google.com/p/rfc5766-turn-server</a>, which also provides links to several sources of information about server installation. A <a href="https://groups.google.com/forum/#!msg/discuss-webrtc/X-OeIUC0efs/XW5Wf7Tt1vMJ">VM image for Amazon Web Services</a> is also available.</p>
+<p>For testing, Google runs a public STUN server, stun.l.google.com:19302, as used by <a href="http://appr.tc">appr.tc</a>. For a production STUN/TURN service, we recommend using the rfc5766-turn-server; source code for STUN and TURN servers is available from <a href="https://code.google.com/p/rfc5766-turn-server/">code.google.com/p/rfc5766-turn-server</a>, which also provides links to several sources of information about server installation. A <a href="https://groups.google.com/forum/#!msg/discuss-webrtc/X-OeIUC0efs/XW5Wf7Tt1vMJ">VM image for Amazon Web Services</a> is also available.</p>
 
 <p>An alternative TURN server is restund, available as <a href="http://www.creytiv.com/restund.html">source code</a> and also for AWS. Below are instructions how to set up restund on Google Compute Engine.</p>
 <ol>
@@ -593,7 +588,7 @@ node server.js
 
 <p><a href="http://en.wikipedia.org/wiki/Session_Initiation_Protocol">SIP</a> is a signaling protocol used by VoIP and video conferencing systems. To enable communication between a WebRTC web app and a SIP client such as a video conferencing system, WebRTC needs a proxy server to mediate signaling. Signaling must flow via the gateway but, once communication has been established, SRTP traffic (video and audio) can flow directly peer to peer.</p>
 
-<p><a href="http://en.wikipedia.org/wiki/Public_switched_telephone_network">PSTN</a>, the Public Switched Telephone Network, is the <a href="http://en.wikipedia.org/wiki/Circuit_switching">circuit switched</a> network of all 'plain old' analogue telephones. For calls between WebRTC web apps and telephones, traffic must go through a PSTN gateway. Likewise, WebRTC web apps need an intermediary XMPP server to communicate with <a href="http://en.wikipedia.org/wiki/Jingle_(protocol)">Jingle</a> endpoints such as IM clients. Jingle was developed by Google as an extension to XMPP to enable voice and video for messaging services: current WebRTC implementations are based on the C++ <a href="https://developers.google.com/talk/libjingle/">libjingle</a> library, an implementation of Jingle initially developed for Google Talk.</p>
+<p><a href="http://en.wikipedia.org/wiki/Public_switched_telephone_network">PSTN</a>, the Public Switched Telephone Network, is the <a href="http://en.wikipedia.org/wiki/Circuit_switching">circuit switched</a> network of all 'plain old' analogue telephones. For calls between WebRTC web apps and telephones, traffic must go through a PSTN gateway. Likewise, WebRTC web apps need an intermediary XMPP server to communicate with <a href="http://en.wikipedia.org/wiki/Jingle_(protocol)">Jingle</a> endpoints such as IM clients. Jingle was developed by Google as an extension to XMPP to enable voice and video for messaging services: current WebRTC implementations are based on the C++ <a href="https://developers.google.com/talk/libjingle/developer_guide">libjingle</a> library, an implementation of Jingle initially developed for Google Talk.</p>
 
 <p>A number of apps, libraries and platforms make use of WebRTC's ability to communicate with the outside world:</p>
 

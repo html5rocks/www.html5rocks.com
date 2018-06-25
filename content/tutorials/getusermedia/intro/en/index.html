@@ -5,16 +5,13 @@
 
 {% block head %}
 <style>
-.videostream, #cssfilters-video, #screenshot, #screenshot-img {
+video, #cssfilters-video, #screenshot-img {
   width: 400px;
   height: 300px;
 }
-.videostream, #cssfilters-stream {
+video, #cssfilters-stream {
   background: rgba(255,255,255,0.5);
   border: 1px solid #ccc;
-}
-#screenshot {
-  vertical-align: top;
 }
 .blur {
   -webkit-filter: blur(3px);
@@ -103,7 +100,7 @@
 
 <p>Audio/Video capture has been <em>the</em> "Holy Grail" of web development for a long time.
 For many years we had to rely on browser plugins (<a href="http://www.kevinmusselman.com/2009/02/access-webcam-with-flash/">Flash</a> or
-<a href="http://www.silverlightshow.net/items/Capturing-the-Webcam-in-Silverlight-4.aspx">Silverlight</a>)
+<a href="https://blogs.msdn.microsoft.com/silverlight_sdk/2010/03/16/using-webcams-in-silverlight-4/">Silverlight</a>)
 to get the job done. <a href="https://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a></p>
 <p>HTML5 to the rescue. It might not be apparent, but the rise of HTML5 has brought
 a surge of access to device hardware. <a href="/tutorials/geolocation/trip_meter/">Geolocation</a> (GPS),
@@ -174,7 +171,7 @@ supporting the new spec.</p>
 <p><strong>Support:</strong></p>
 <p>Unfortunately, no released browser ever included <code>&lt;device&gt;</code>.
 One less API to worry about I guess :) <code>&lt;device&gt;</code> did have two great things going
-for it though: 1.) it was semantic, and 2.) it was easily extendible to support
+for it though: 1.) it was semantic, and 2.) it was easily extensible to support
 more than just audio/video devices.</p>
 <p>Take a breath. This stuff moves fast!</p>
 <h3 id="toc-round3">Round 3: WebRTC</h3>
@@ -187,17 +184,20 @@ It provides the means to access the user's local camera/microphone stream.</p>
 
 <p><strong>Support:</strong></p>
 <p><code>getUserMedia()</code> has been available since Chrome 21, Opera 18, and Firefox 17. Support was initially provided by the <code>Navigator.getUserMedia()</code> method, but this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia" title="Mozilla Developer Network documentation for Navigator.getUserMedia()">has been deprecated</a>.</p>
-<p>You should now use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia" title="Mozilla Developer Network documentation for MediaDevices.getUserMedia()"><code>Navigator.MediaDevices.getUserMedia()</code></a> method, which is <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Browser_compatibility" title="MDN browser compatibility chart for MediaDevices.getUserMedia()">widely supported</a>.</p>
+<p>You should now use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia" title="Mozilla Developer Network documentation for MediaDevices.getUserMedia()"><code>navigator.MediaDevices.getUserMedia()</code></a> method, which is <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Browser_compatibility" title="MDN browser compatibility chart for MediaDevices.getUserMedia()">widely supported</a>.</p>
 
 <h2 id="toc-gettingstarted">Getting started</h2>
 
 <p>With <code>getUserMedia()</code>, we can finally tap into webcam and microphone input without a plugin.
 Camera access is now a call away, not an install away. It's baked directly into the browser. Excited yet?</p>
+
 <h3 id="toc-featuredecting">Feature detection</h3>
 
 <p>Feature detecting is a simple check for the existence of <code>navigator.mediaDevices.getUserMedia</code>:</p>
+
 <pre class="prettyprint"><code>function hasGetUserMedia() {
-  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  return !!(navigator.mediaDevices &&
+    navigator.mediaDevices.getUserMedia);
 }
 
 if (hasGetUserMedia()) {
@@ -222,20 +222,11 @@ const constraints = {
 
 const video = document.querySelector('video');
 
-function handleSuccess(stream) {
-  video.srcObject = stream;
-}
-
-function handleError(error) {
-  console.error('Reeeejected!', error);
-}
-
 navigator.mediaDevices.getUserMedia(constraints).
-  then(handleSuccess).catch(handleError);
+  then((stream) => {video.srcObject = stream});
 &lt;/script&gt;
 </code></pre>
-<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs
-working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
+<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
 Notice that we're not setting a <code>src</code> attribute or including <code>&lt;source&gt;</code> elements
 on the <code>&lt;video&gt;</code> element. Instead of feeding the video the URL of a media file, we're giving it a <code>MediaStream</code> from the webcam.</p>
 <p>I'm also telling the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
@@ -246,20 +237,23 @@ the first frame. Adding <code>controls</code> also works as you'd expected.</p>
 <p>The parameter to <code>getUserMedia()</code> can also be used to specify more requirements
 (or constraints) on the returned media stream. For example, instead of just indicating you want basic access to video (e.g. <code>{video: true}</code>), you can additionally require the stream
 to be HD:</p>
-<pre class="prettyprint"><code>var hdConstraints = {
+<pre class="prettyprint"><code>const hdConstraints = {
   video: {width: {min: 1280}, height: {min: 720}}
 };
 
-navigator.mediaDevices.getUserMedia(hdConstraints, successCallback, errorCallback);
+navigator.mediaDevices.getUserMedia(hdConstraints).
+  then((stream) => {video.srcObject = stream});
 
 ...
 
-var vgaConstraints = {
+const vgaConstraints = {
   video: {width: {exact: 640}, height: {exact: 480}}
 };
 
-navigator.mediaDevices.getUserMedia(vgaConstraints, successCallback, errorCallback);
+navigator.mediaDevices.getUserMedia(vgaConstraints).
+  then((stream) => {video.srcObject = stream});
 </code></pre>
+
 <p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>will be rejected with an <code>OverconstrainedError</code> and the user will not be prompted to grant permission to access their camera.</p>
 <p>For more configurations, see the <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints">constraints API</a></p>
 <h3 id="toc-source">Selecting a media source</h3>
@@ -278,9 +272,9 @@ audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
 function gotDevices(deviceInfos) {
-  for (var i = 0; i !== deviceInfos.length; ++i) {
-    var deviceInfo = deviceInfos[i];
-    var option = document.createElement('option');
+  for (let i = 0; i !== deviceInfos.length; ++i) {
+    const deviceInfo = deviceInfos[i];
+    const option = document.createElement('option');
     option.value = deviceInfo.deviceId;
     if (deviceInfo.kind === 'audioinput') {
       option.text = deviceInfo.label ||
@@ -291,7 +285,7 @@ function gotDevices(deviceInfos) {
         (videoSelect.length + 1);
       videoSelect.appendChild(option);
     } else {
-      console.log('Found one other kind of source/device: ', deviceInfo);
+      console.log('Found another kind of device: ', deviceInfo);
     }
   }
 }
@@ -303,7 +297,7 @@ function getStream() {
     });
   }
 
-  var constraints = {
+  const constraints = {
     audio: {
       deviceId: {exact: audioSelect.value}
     },
@@ -330,43 +324,24 @@ function handleError(error) {
 
 <h3 id="toc-security">Security</h3>
 
-<p>Some browsers throw up an infobar upon calling <code>getUserMedia()</code>,
-which gives users the option to grant or deny access to their camera/mic.
-The spec unfortunately is very quiet when it comes to security. For example, here
-is Chrome's permission dialog:</p>
+<p><code>getUserMedia()</code> can only be called from an HTTPS URL, localhost or a <code>file://</code> URL. Otherwise, the promise from the call will be rejected. <code>getUserMedia()</code> also won't work for cross origin calls from iframes: see <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a> for more detail.</p>
+
+<p>All browsers will throw up an infobar upon calling <code>getUserMedia()</code>, which gives users the option to grant or deny access to their camera or microphone. Here is Chrome's permission dialog:</p>
+
 <figure>
 <img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
 <figcaption>Permission dialog in Chrome</figcaption>
 </figure>
 
-<p>If your app is running from SSL (<code>https://</code>), this permission will be persistent.
-That is, users won't have to grant/deny access every time.</p>
-<h3 id="toc-fallback">Providing fallback</h3>
+<p>This permission will be persistent. That is, users won't have to grant/deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
 
-<p>For users that don't have support for <code>getUserMedia()</code>, one option is to fallback
-to an existing video file if the API isn't supported and/or the call fails for some reason:</p>
-
-<pre class="prettyprint"><code>
-function fallback() {
-  video.src = 'fallbackvideo.webm';
-}
-
-function success(stream) {
-  video.srcObject = stream;
-}
-
-if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
-  fallback();
-} else {
-  navigator.getUserMedia({video: true}, success, fallback);
-}
-</code></pre>
+<p class="notice tip">The MediaStreamTrack is actively using the camera, which takes resources and keeps the camera open (and camera light on). When you are no longer using a track make sure to call <code>track.stop()</code> so that the camera can be closed.</p>
 
 <h3 id="toc-basic-demo">Basic demo</h3>
 
-<div style="text-align:center;">
-  <video id="basic-stream" class="videostream" autoplay></video>
-  <p><button id="capture-button">Capture video</button> <button id="stop-button">Stop</button></p>
+<div id="basic" style="text-align:center;">
+  <video class="videostream" autoplay></video>
+  <p><button class="capture-button">Capture video</button> <button id="stop-button">Stop</button></p>
 </div>
 
 <h2 id="toc-screenshot">Taking screenshots</h2>
@@ -380,32 +355,38 @@ with realtime video:</p>
 &lt;canvas style="display:none;"&gt;&lt;/canvas&gt;
 
 &lt;script&gt;
-  const button = document.querySelector('#screenshot-button');
-  const img = document.querySelector('#screenshot-img');
-  const video = document.querySelector('#screenshot-video');
+const captureVideoButton =
+  document.querySelector('#screenshot .capture-button');
+const screenshotButton = document.querySelector('#screenshot-button');
+const img = document.querySelector('#screenshot img');
+const video = document.querySelector('#screenshot video');
 
-  const canvas = document.createElement('canvas');
+const canvas = document.createElement('canvas');
 
-  button.onclick = video.onclick = function() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    // Other browsers will fall back to image/png
-    img.src = canvas.toDataURL('image/webp');
-  };
-
-  function handleSuccess(stream) {
-    video.srcObject = stream;
-  }
-
+captureVideoButton.onclick = function() {
   navigator.mediaDevices.getUserMedia(constraints).
-      then(handleSuccess).catch(handleError);
+    then(handleSuccess).catch(handleError);
+};
+
+screenshotButton.onclick = video.onclick = function() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  // Other browsers will fall back to image/png
+  img.src = canvas.toDataURL('image/webp');
+};
+
+function handleSuccess(stream) {
+  screenshotButton.disabled = false;
+  video.srcObject = stream;
+}
 &lt;/script&gt;
 </code></pre>
-<div style="text-align:center;">
-  <video id="screenshot-video" class="videostream" autoplay></video>
+<div id="screenshot" style="text-align:center;">
+  <video class="videostream" autoplay></video>
   <img id="screenshot-img">
-  <p><button id="screenshot-button">Take screenshot</button></p>
+  <p><button class="capture-button">Capture video</button>
+  <p><button id="screenshot-button" disabled>Take screenshot</button></p>
 </div>
 
 <h2 id="toc-effects">Applying Effects</h2>
@@ -414,12 +395,51 @@ with realtime video:</p>
 
 <p>Using <a href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/filters/index.html">CSS Filters</a>, we can apply some gnarly effects to the <code>&lt;video&gt;</code>
 as it is captured:</p>
-<pre class="prettyprint"><code>&lt;style&gt;
+<pre class="prettyprint"><code>
+&lt;video autoplay&gt;&lt;/video&gt;
+&lt;p&gt;&lt;button class="capture-button"&gt;Capture video&lt;/button&gt;
+&lt;p&gt;&lt;button id="cssfilters-apply"&gt;Apply CSS filter&lt;/button&gt;&lt;/p&gt;
 
+&lt;script&gt;
+const captureVideoButton =
+  document.querySelector('#cssfilters .capture-button');
+const cssFiltersButton =
+  document.querySelector('#cssfilters-apply');
+const video =
+  document.querySelector('#cssfilters video');
+
+let filterIndex = 0;
+const filters = [
+  'grayscale',
+  'sepia',
+  'blur',
+  'brightness',
+  'contrast',
+  'hue-rotate',
+  'hue-rotate2',
+  'hue-rotate3',
+  'saturate',
+  'invert',
+  ''
+];
+
+captureVideoButton.onclick = function() {
+  navigator.mediaDevices.getUserMedia(constraints).
+    then(handleSuccess).catch(handleError);
+};
+
+cssFiltersButton.onclick = video.onclick = function() {
+  video.className = filters[filterIndex++ % filters.length];
+};
+
+function handleSuccess(stream) {
+  video.srcObject = stream;
+}
 &lt;/script&gt;
 </code></pre>
-<div style="text-align:center;">
-  <video id="cssfilters-video" class="videostream" autoplay title="Click me to apply CSS Filters" alt="Click me to apply CSS Filters"></video>
+<div id="cssfilters" style="text-align:center;">
+  <video class="videostream" autoplay title="Click me to apply CSS Filters" alt="Click me to apply CSS Filters"></video>
+  <p><button class="capture-button">Capture video</button>
   <p><button id="cssfilters-apply">Apply CSS filter</button></p>
 </div>
 
@@ -438,16 +458,16 @@ to render live video into WebGL.</p>
 <pre class="prettyprint"><code>window.AudioContext = window.AudioContext ||
                       window.webkitAudioContext;
 
-var context = new AudioContext();
+const context = new AudioContext();
 
-navigator.mediaDevices.getUserMedia({audio: true}, function(stream) {
-  var microphone = context.createMediaStreamSource(stream);
-  var filter = context.createBiquadFilter();
-
-  // microphone -&gt; filter -&gt; destination.
-  microphone.connect(filter);
-  filter.connect(context.destination);
-}, errorCallback);
+navigator.mediaDevices.getUserMedia({audio: true}).
+  then((stream) => {
+    const microphone = context.createMediaStreamSource(stream);
+    const filter = context.createBiquadFilter();
+    // microphone -> filter -> destination
+    microphone.connect(filter);
+    filter.connect(context.destination);
+});
 </code></pre>
 <p>Demos:</p>
 <ul>
@@ -458,22 +478,16 @@ navigator.mediaDevices.getUserMedia({audio: true}, function(stream) {
 <p>For more information, see <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>.</p>
 <h2 id="toc-conclusion">Conclusion</h2>
 
-<p>In general, device access on the web has been a tough cookie to crack. Many
-<a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">people have tried</a>,
-few have succeeded. Most of the early ideas have never taken hold outside of a
-proprietary environment nor have they gained widespread adoption.</p>
-<p>The real problem is that the web's security model is <em>very</em> different from the native world.
-For example, I probably don't want every Joe Shmoe web site to have random access to my
-video camera. It's a tough problem to get right.</p>
-<p>Bridging frameworks like <a href="http://phonegap.com/">PhoneGap</a> have helped push the boundary,
-but they're only a start and a temporary solution to an underlying problem. To make web
-apps competitive to their desktop counterparts, we need access to native devices.</p>
-<p><code>getUserMedia()</code> is but the first wave of access to new types of devices. I hope
-we'll continue to see more in the very near future!</p>
+<p>Historically, device access on the web has been a tough nut to crack. <a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">Many tried, few succeeded</a>. Most of the early ideas never gained widespread adoption or took hold outside of a proprietary environment. Perhaps the main problem has been that the web's security model is <em>very</em> different from the native world. In particular, you probably don't want every Joe Shmoe website to have random access to your video camera or microphone. It's been difficult to get right.</p>
+
+<p>Since then, driven by the increasingly ubiquitous capabilities of mobile devices, the web has begun to provide much richer functionality. We now have APIs to <a href="https://developers.google.com/web/updates/2016/12/imagecapture" title="Web Fundamentals article about the Image Capture API">take photos and control camera settings</a>, <a href="https://developers.google.com/web/updates/2016/01/mediarecorder" title="Web Fundamentals article: Record Audio and Video with MediaRecorder">record audio and video</a>, and to access other types of sensor data such as location, motion and device orientation. The <a href="https://developers.google.com/web/updates/2017/09/sensors-for-the-web" title="What is Generic Sensor API?">Generic Sensor framework</a> ties all this together, alongside generic APIs to enable web applications to <a href="https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web" title="Access USB Devices on the Web">access USB</a> and <a href="https://developers.google.com/web/updates/2015/07/interact-with-ble-devices-on-the-web" title="Interact with Bluetooth devices on the Web">interact with Bluetooth</a> devices.</p>
+
+<p><code>getUserMedia()</code> was but the first wave of hardware interactivity.</p>
+
 <h2 id="toc-resources">Additional resources</h2>
 
 <ul>
-<li><a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html">W3C specification</a></li>
+<li><a href="https://w3c.github.io/mediacapture-main/">W3C specification</a></li>
 <li>Bruce Lawson's <a href="http://html5doctor.com/getusermedia/">HTML5Doctor article</a></li>
 <li>Bruce Lawson's <a href="http://dev.opera.com/articles/view/getusermedia-access-camera-privacy-ui/">dev.opera.com article</a></li>
 <li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-mediastream" title="HTML5 Rocks intro to WebRTC">Getting Started with WebRTC</a></li>
@@ -495,16 +509,16 @@ function handleError(error) {
 const constraints = {video: true};
 
 (function() {
-  const video = document.querySelector('#basic-stream');
-  const button = document.querySelector('#capture-button');
-  var localMediaStream = null;
+  const video = document.querySelector('#basic video');
+  const captureVideoButton = document.querySelector('#basic .capture-button');
+  let localMediaStream;
 
   function handleSuccess(stream) {
-    window.stream = stream; // only to make stream available to console
+    localMediaStream = stream;
     video.srcObject = stream;
   }
 
-  button.onclick = function() {
+  captureVideoButton.onclick = function() {
     navigator.mediaDevices.getUserMedia(constraints).
       then(handleSuccess).catch(handleError);
   };
@@ -516,13 +530,20 @@ const constraints = {video: true};
 })();
 
 (function() {
-  const button = document.querySelector('#screenshot-button');
-  const img = document.querySelector('#screenshot-img');
-  const video = document.querySelector('#screenshot-video');
+  const captureVideoButton =
+    document.querySelector('#screenshot .capture-button');
+  const screenshotButton = document.querySelector('#screenshot-button');
+  const img = document.querySelector('#screenshot img');
+  const video = document.querySelector('#screenshot video');
 
   const canvas = document.createElement('canvas');
 
-  button.onclick = video.onclick = function() {
+  captureVideoButton.onclick = function() {
+    navigator.mediaDevices.getUserMedia(constraints).
+      then(handleSuccess).catch(handleError);
+  };
+
+  screenshotButton.onclick = video.onclick = function() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
@@ -531,19 +552,19 @@ const constraints = {video: true};
   };
 
   function handleSuccess(stream) {
+    screenshotButton.disabled = false;
     video.srcObject = stream;
   }
-
-  navigator.mediaDevices.getUserMedia(constraints).
-      then(handleSuccess).catch(handleError);
 })();
 
 (function() {
-  var button = document.querySelector('#cssfilters-apply');
-  var video = document.querySelector('#cssfilters-video');
+  const captureVideoButton =
+    document.querySelector('#cssfilters .capture-button');
+  const cssFiltersButton = document.querySelector('#cssfilters-apply');
+  const video = document.querySelector('#cssfilters video');
 
-  var filterIndex = 0;
-  var filters = [
+  let filterIndex = 0;
+  const filters = [
     'grayscale',
     'sepia',
     'blur',
@@ -557,16 +578,18 @@ const constraints = {video: true};
     ''
   ];
 
-  button.onclick = video.onclick = function() {
+  captureVideoButton.onclick = function() {
+    navigator.mediaDevices.getUserMedia(constraints).
+      then(handleSuccess).catch(handleError);
+  };
+
+  cssFiltersButton.onclick = video.onclick = function() {
     video.className = filters[filterIndex++ % filters.length];
   };
 
   function handleSuccess(stream) {
     video.srcObject = stream;
   }
-
-  navigator.mediaDevices.getUserMedia(constraints).
-      then(handleSuccess).catch(handleError);
 })();
 </script>
 {% endblock %}

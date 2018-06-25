@@ -147,25 +147,25 @@ a[rel='external']
 <p>The code to get started with this is short:</p>
 
 <pre class="prettyprint">
-var peerConnection = new RTCPeerConnection();
+const peerConnection = new RTCPeerConnection();
 
 // Establish your peer connection using your signaling channel here
-var dataChannel =
+const dataChannel =
   peerConnection.createDataChannel("myLabel", dataChannelOptions);
 
-dataChannel.onerror = function (error) {
+dataChannel.onerror = (error) => {
   console.log("Data Channel Error:", error);
 };
 
-dataChannel.onmessage = function (event) {
+dataChannel.onmessage = (event) => {
   console.log("Got Data Channel Message:", event.data);
 };
 
-dataChannel.onopen = function () {
+dataChannel.onopen = () => {
   dataChannel.send("Hello World!");
 };
 
-dataChannel.onclose = function () {
+dataChannel.onclose = () => {
   console.log("The Data Channel is Closed");
 };
 </pre>
@@ -173,7 +173,7 @@ dataChannel.onclose = function () {
 <p>The <code>dataChannel</code> object is created from an already established peer connection. It can be created before or after signaling happens. You then pass in a label to distinguish this channel from others and a set of optional configuration settings:</p>
 
 <pre class="prettyprint">
-var dataChannelOptions = {
+const dataChannelOptions = {
   ordered: false, // do not guarantee order
   maxRetransmitTime: 3000, // in milliseconds
 };
@@ -202,7 +202,7 @@ var dataChannelOptions = {
 
 <h2 id="change-how-you-think-about-data">Change how you think about data</h2>
 
-<p>Handling large amounts of data can be a pain point in JavaScript. As the developers of <a href="http://www.sharefest.me/">Sharefest</a> have pointed out, this requires thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
+<p>Handling large amounts of data can be a pain point in JavaScript. As the developers of <a href="https://github.com/Peer5/ShareFest">Sharefest</a> pointed out, this required thinking about data in a new way. If you are transferring a file that is larger than the amount of memory you have available you have to think about new ways to save this information. This is where technologies such as the <a href="http://www.html5rocks.com/en/tutorials/file/filesystem/">FileSystem API</a> come into play, as we show below.</p>
 <h2 id="build-a-file-sharing-application">Build a file sharing application</h2>
 
 <p>Creating a web application that can share files in the browser is now possible with RTCDataChannel. Building on top of RTCDataChannel means that the transferred file data is encrypted and does not touch an application provider's servers. This functionality, combined with the possibility of connecting to multiple clients for faster sharing, makes WebRTC file sharing a strong candidate for the web.</p>
@@ -226,7 +226,7 @@ var dataChannelOptions = {
 
 <pre class="prettyprint">
 function saveFile(blob) {
-  var link = document.createElement('a');
+  const link = document.createElement('a');
   link.href = window.URL.createObjectURL(blob);
   link.download = 'File Name';
   link.click();
@@ -243,7 +243,7 @@ function saveFile(blob) {
 <ul>
   <li>Peer to peer file sharing as described above.</li>
   <li>Multiplayer gaming, paired with other technologies like WebGL, as seen in Mozilla's <a href="https://hacks.mozilla.org/2013/03/webrtc-data-channels-for-great-multiplayer/">Banana Bread</a>.</li>
-  <li>Content delivery: as being reinvented by <a href="https://peercdn.com/">PeerCDN</a>, a framework that delivers web assets through peer to peer data communication.</li>
+  <li>Content delivery: as being reinvented by <a href="https://techcrunch.com/2013/12/17/yahoo-acquires-peercdn/">PeerCDN</a>, a framework that delivers web assets through peer to peer data communication.</li>
 </ul>
 
 <h2 id="change-the-way-you-build-applications">Change the way you build applications</h2>
