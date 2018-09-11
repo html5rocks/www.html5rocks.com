@@ -119,16 +119,17 @@ a[rel='external']
 
 <p>(From <a href="http://chimera.labs.oreilly.com/books/1230000000545/ch18.html">High Performance Browser Networking</a> by <a href="http://www.igvita.com/" title="Ilya Grigorik's website">Ilya Grigorik</a>.)</p>
 
-<p>RTCDataChannel can work in either unreliable mode (analogous to User Datagram Protocol or UDP) or reliable mode (analogous to Transmission Control Protocol or TCP). The two modes have a simple distinction:</p>
+<p>RTCDataChannel can work in unreliable and unordered mode (analogous to User Datagram Protocol or UDP), reliable and ordered mode (analogous to Transmission Control Protocol or TCP) and partial reliable modes:</p>
 
 <ul>
-  <li><strong>Reliable mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus potentially making this mode slower. </li>
-  <li><strong>Unreliable mode</strong> does not guarantee every message will get to the other side nor what order they get there. This removes the overhead, allowing this mode to work much faster.</li>
+  <li><strong>Reliable and ordered mode</strong> guarantees the transmission of messages and also the order in which they are delivered. This takes extra overhead, thus potentially making this mode slower. </li>
+  <li><strong>Unreliable and unordered mode</strong> does not guarantee every message will get to the other side nor what order they get there. This removes the overhead, allowing this mode to work much faster.</li>
+  <li><strong>Partial reliable mode</strong> guarantees the transmission of message under a specific condition (such as a retransmit timeout or a maximum amount of retransmissions). The ordering of messages is also configurable.
 </ul>
 
-<p>Performance for both modes is about the same when there are no packet losses. However, in reliable mode a lost packet will cause other packets to get blocked behind it, and the lost packet might be stale by the time it is retransmitted and arrives. It is, of course, possible to use multiple data channels within the same application, each with their own (un)reliable semantics.</p>
+<p>Performance for the first two modes is about the same when there are no packet losses. However, in reliable and ordered mode a lost packet will cause other packets to get blocked behind it, and the lost packet might be stale by the time it is retransmitted and arrives. It is, of course, possible to use multiple data channels within the same application, each with their own (un)reliable semantics.</p>
 
-<p>We show below how to configure RTCDataChannel to use reliable or unreliable mode.</p>
+<p>We show below how to configure RTCDataChannel to use reliable and ordered or unreliable and unordered mode.</p>
 
 <h2 id="just-show-me-the-action">Configuring data channels</h2>
 
@@ -175,22 +176,22 @@ dataChannel.onclose = () => {
 <pre class="prettyprint">
 const dataChannelOptions = {
   ordered: false, // do not guarantee order
-  maxRetransmitTime: 3000, // in milliseconds
+  maxPacketLifeTime: 3000, // in milliseconds
 };
 </pre>
 
-<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing) but you can only specify maxRetransmits or maxRetransmitTime, not both. For UDP semantics, set <code>maxRetransmits</code> to 0 and <code>ordered</code> to <code>false</code>. For more information, see <a href="http://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">RFC 4960</a> (SCTP) and <a href="http://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">RFC 3758</a> (SCTP partial reliability).</p>
+<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing) but you can only specify maxRetransmits or maxPacketLifeTime, not both. For UDP semantics, set <code>maxRetransmits</code> to 0 and <code>ordered</code> to <code>false</code>. For more information, see <a href="http://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">RFC 4960</a> (SCTP) and <a href="http://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">RFC 3758</a> (SCTP partial reliability).</p>
 
 <ul>
   <li><strong>ordered:</strong> If the data channel should guarantee order or not</li>
-  <li><strong>maxRetransmitTime:</strong> The maximum time to try and retransmit a failed message (forces unreliable mode)</li>
-  <li><strong>maxRetransmits:</strong> The maximum number of times to try and retransmit a failed message (forces unreliable mode)</li>
-  <li><strong>protocol:</strong> Allows a subprotocol to be used, but will fail if the specified protocol is unsupported</li>
+  <li><strong>maxPacketLifeTime:</strong> The maximum time to try and retransmit a failed message</li>
+  <li><strong>maxRetransmits:</strong> The maximum number of times to try and retransmit a failed message</li>
+  <li><strong>protocol:</strong> Allows a subprotocol to be used which provides meta information towards the application</li>
   <li><strong>negotiated:</strong> If set to true, it removes the automatic setting up of a data channel on the other peer, meaning that you are provided your own way to create a data channel with the same id on the other side</li>
-  <li><strong>id:</strong> Allows you to provide your own ID for the channel</li>
+  <li><strong>id:</strong> Allows you to provide your own ID for the channel (can only be used in combination with <code>negotiated</code> set to <code>true</code>)</li>
 </ul>
 
-<p>The only options most people will need to use are the first three: <code>ordered</code>, <code>maxRetransmitTime</code>, and <code>maxRetransmits</code>. With <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol" title="Wikipedia article about SCTP">SCTP</a> (now used by all browsers that support WebRTC) reliable and ordered is true by default. It makes sense to use full unreliable if you want full control from the application layer, but in most cases, partially reliable is helpful.</p>
+<p>The only options most people will need to use are the first three: <code>ordered</code>, <code>maxPacketLifeTime</code>, and <code>maxRetransmits</code>. With <a href="https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol" title="Wikipedia article about SCTP">SCTP</a> (now used by all browsers that support WebRTC) reliable and ordered is true by default. It makes sense to use unreliable and unordered if you want full control from the application layer, but in most cases, partial reliability is helpful.</p>
 
 <p>Note that, as with WebSocket, RTCDataChannel fires events when a connection is established, closed, or errors, and when it receives a message from the other peer.</p>
 
@@ -218,8 +219,7 @@ const dataChannelOptions = {
 
 <ul>
   <li><strong>File size:</strong> if file size is reasonably small and can be stored and loaded as one Blob, you can load into memory using the File API and then send the file over a reliable channel as is (though bear in mind that browsers impose limits on maximum transfer size). As file size get larger, things get trickier. A chunking mechanism is required: file chunks are loaded and sent to another peer, accompanied with chunkId metadata so the peer can recognize them. Note that in this case you will also need to save the chunks first to offline storage (for example, using the FileSystem API) and only when you have the file in its entirety save it to the user's disk.</li>
-  <li><strong>Speed:</strong> it is debatable whether unreliable (UDP-like) or reliable (TCP-like) transport is better for the job of file transfer. If the application is a simple one-to-one file transfer, going with unreliable data channels will take some design effort for the ACK/retransmit protocol. You will need to implement this yourself and &mdash; even if you're good &mdash; it may not be much faster than using reliable transport. Reliable and unordered should provide the best of both worlds, but results may vary when considering multi-party (mesh) file transfer.</li>
-  <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. Chunking is required, since there is currently a send size limit (though this will be fixed in a future version of data channels). The current recommendation for maximum chunk size is 16KB.</li>
+  <li><strong>Chunk size:</strong> these are the smallest 'atoms' of data for your application. Chunking is required, since there is currently a send size limit (though this will be fixed in a future version of data channels). The current recommendation for maximum chunk size is 64 KiB.</li>
 </ul>
 
 <p>Once the file is fully transferred to the other side, it can be downloaded using an anchor tag:</p>
