@@ -61,7 +61,7 @@
       <img src="/static/images/banner-mobile.png">
       <div class="mobileScreenshot hidden">
         <a class="image">
-          <img> 
+          <img>
         </a>
         <div>
           Learn how to improve this page with <a class="noexternal">PageSpeed Insights</a> and monitor your site with the <a href="https://chrome.google.com/webstore/detail/pagespeed-insights-checke/mkjmodmicmpjedhoekkmafdgpocdkbna">PageSpeed Insights Checker</a>.
@@ -73,15 +73,9 @@
       <h3>The web, in your pocket</h3>
       <p>More and more people see the web through the screen of a mobile device. In 2014, mobile web users are set to outnumber desktop web users. Are you ready?</p>
       <!-- <p>Whether you’re starting from scratch or updating an existing site for mobile, start with the <a href="/{{LANGUAGE_CODE}}/mobile/mobifying/" class="updateRequired">10 Essentials for the  Mobile Web</a>.</p> -->
-      <h3>How does your site behave on mobile?</h3>
-      <form class="testWithPageSpeed">
-        <input id="inputURL" type="url" placeholder="http://google.com">
-        <button id="butPSShowMe">Show me</button>
-        <div class="psiError">An error occured with that URL.</div>
-      </form>
     </section>
   </header>
-  
+
   <div class="group">
   <section class="pattern-bg-lighter" id="ux">
     <hgroup>
@@ -190,74 +184,6 @@
 </script>
 <script defer src="/static/js/handlebars-1{% if prod %}.min{% endif %}.js"></script>
 <script defer src="/static/js/persona{% if prod %}.min{% endif %}.js"></script>
-<script type="text/javascript">
-  $('.testWithPageSpeed').submit(function(e) {
-    e.preventDefault();
-    // Get the URL from the text box and url encode it
-    var urlToTest = $("#inputURL").val();
-    urlToTest = encodeURIComponent(urlToTest);
-
-    // Make sure we have something to test
-    if (urlToTest != "") {
-      var container = $(".mobileScreenshot");
-
-      // Reset the header to it's initial state and disable the loading button
-      $(".psiError").hide();
-      $("#butPSShowMe")
-        .attr("disabled", "disabled")
-        .text("Loading...");
-
-      // Developer Console Project: html5rocks-hrd (99453920800)
-      var pageSpeedAPIKey = "AIzaSyATtRTvobPKXVzr9Z0YxKB7sz6WgYeWgRo"
-      var pageSpeedAPIURL = "https://www.googleapis.com/pagespeedonline/v1/runPagespeed";
-      var pageSpeedUserURL = "https://developers.google.com/speed/pagespeed/insights/?url=";
-      
-      // build the URL we'll use to get the screenshot
-      var pageSpeedURL = pageSpeedAPIURL;
-      pageSpeedURL += "?key=" + pageSpeedAPIKey;
-      pageSpeedURL += "&strategy=mobile";
-      pageSpeedURL += "&screenshot=true";
-      pageSpeedURL += "&url=" + urlToTest;
-
-      // Make an AJAX request for the screenshot
-      $.ajax({
-        url: pageSpeedURL
-      }).done(function(data, textStatus, jqXHR) {
-        
-        var screenshot = "data:" + data.screenshot.mime_type + ";base64,";
-        screenshot += data.screenshot.data;
-        // We need to replace _ and - to get a true base64 encoded image
-        screenshot = screenshot.replace(/_/g, "/");
-        screenshot = screenshot.replace(/-/g, "+");
-        
-        // Set the image src to the screenshot and add the href to the hyperlinks
-        container.find("img").attr("src", screenshot);
-        container.find("a").attr("href", pageSpeedUserURL + urlToTest);
-
-        // Hide the primary image
-        $("section > img").hide();
-        container.removeClass("hidden");
-
-        // Make sure the image is visible, on mobile it's most likely above
-        // the current viewport, so we need to scroll up so it can be seen.
-        var currentPosition = $(document).scrollTop();
-        var topOfImage = container.offset()["top"];
-        if (currentPosition > topOfImage) {
-          $(document).scrollTop(topOfImage - 15);
-        }
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        // Show the error message.
-        $(".psiError").show();
-      }).always(function() {
-        // We've finished loading, reset the input box and button
-        $("#butPSShowMe")
-          .removeAttr("disabled")
-          .text("Show me");
-        $("#inputURL").val("");
-      });
-    }
-  });
-</script>
 <style>
 
 @media (min-width: 860px) {
