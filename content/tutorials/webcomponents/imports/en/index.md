@@ -1,3 +1,8 @@
+<p class="notice warning" style="text-align:center">
+  HTML Imports are deprecated and will be <a href="https://www.chromestatus.com/feature/5144752345317376">removed
+  from Chrome in February 2020</a>.
+</p>
+
 <h2 id="why">Why imports?</h2>
 
 Think about how you load different types of resources on the web. For JS, we have `<script src>`. For CSS, your go-to is probably `<link rel="stylesheet">`. For images it's `<img>`. Video has `<video>`. Audio, `<audio>`.... Get to the point! The majority of the web's content has a simple and declarative way to load itself. Not so for HTML. Here's your options:
