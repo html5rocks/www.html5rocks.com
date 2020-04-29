@@ -14,6 +14,7 @@
 
 import yaml
 import logging
+import re
 
 
 def normalize_pathname(pathname):
@@ -66,22 +67,30 @@ def build_redirect_matcher(f):
 
     group_redirect[redirect_from[0:-3]] = redirect_to
 
+  # Compile a prefix regexp for speed.
+  escaped = [re.escape(x) for x in list(group_redirect.keys())]
+  group_re = re.compile('^(%s)' % ('|'.join(escaped),))
+
   def _redir(relpath):
     pathname = normalize_pathname(relpath)
     if pathname in single_redirect:
       return single_redirect[pathname]
 
-    for redirect_from, redirect_to in group_redirect.items():
-      if pathname.startswith(redirect_from):
-        target = redirect_to
+    m = group_re.match(pathname)
+    if not m:
+      return None
+    redirect_from = m.group(1)
+    if redirect_from not in group_redirect:
+      return None
 
-        # If the target ends with "/...", append the found suffix. Otherwise just lose it.
-        if target.endswith('/...'):
-          suffix = pathname[len(redirect_from):]
-          target = target[:-3] + suffix
+    redirect_to = group_redirect[redirect_from]
+    target = redirect_to
 
-        return target
+    # If the target ends with "/...", append the found suffix. Otherwise just lose it.
+    if target.endswith('/...'):
+      suffix = pathname[len(redirect_from):]
+      target = target[:-3] + suffix
 
-    return None
+    return target
 
   return _redir
