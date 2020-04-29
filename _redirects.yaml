@@ -1,0 +1,40 @@
+# Master redirects file for html5rocks.com. This is similar to, but with subtle differences from,
+# the format used in DevSite and web.dev.
+#
+# There are two types of redirects:
+#
+#  (1) Simple redirects, e.g., "from: /foo"
+#      - These don't match subpaths, like "/foo/bar"
+#      - But it will match similar URLs "/foo", "/foo/" and "/foo/index.html"
+#
+#  (2) Group redirects, e.g., "from: /foo/...", which will match the top-level path (with the same
+#      same rules as (1)) as well as any descendant paths
+#      - The 'to' rule can optionally end with "/..." to bring across the suffix, or it can be left
+#        off to drop this part.
+#
+# Differences from other redirect files:
+#
+#   * IMPORTANT! These redirects TAKE PRIORITY over contents.
+#   * If a redirect is added from "/tutorials/", then the content page at this location will never
+#     appear. The redirect will catch "/tutorials", "/tutorials/", as well as
+#     "/tutorials/index.html".
+#   * Redirects are also applied AFTER language is run: the above example will ALSO match any
+#     valid language, e.g. "/en/tutorials/". If this match occurs, the same language prefix will
+#     be applied when the redirect is within the site (the "to:" starts with a slash).
+#     - If a rule says "/tutorials/" => "/banana/", then "/en/tutorials/" will go to "/en/banana/".
+#     - This won't be included when going to another domain
+#
+
+redirects:
+
+- from: /test-single
+  to: /output-single/in/folder
+
+- from: /test-internal/...
+  to: /output-multiple/...
+
+- from: /test-redirect-blank/...
+  to: https://web.dev
+
+- from: /test-redirect-suffix/...
+  to: https://web.dev/...

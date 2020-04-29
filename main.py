@@ -30,6 +30,7 @@ import cgi
 # App libs.
 import settings
 import models
+from redirects import build_redirect_matcher
 
 # Libraries
 import html5lib
@@ -46,6 +47,9 @@ from django.utils.translation import ugettext as _
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.ext import db
+
+
+redirect_matcher = build_redirect_matcher(os.path.join(os.path.dirname(__file__), '_redirects.yaml'))
 
 
 class ContentHandler(webapp2.RequestHandler):
@@ -272,6 +276,11 @@ class ContentHandler(webapp2.RequestHandler):
 
     self._set_cache_param()
 
+    # Check for unlocalized redirects.
+    redir = redirect_matcher(relpath)
+    if redir is not None:
+      return self.redirect(redir)
+
     # Handle bug redirects before anything else, as it's trivial.
     if relpath == 'new-bug':
       return self.redirect('https://github.com/html5rocks/www.html5rocks.com/issues/new')
@@ -301,6 +310,13 @@ class ContentHandler(webapp2.RequestHandler):
 
     # Strip off leading `/[en|de|fr|...]/`
     relpath = re.sub('^/?\w{2,3}(?:/)?', '', relpath)
+
+    # Check for redirects but after language has been stripped.
+    redir = redirect_matcher(relpath)
+    if redir is not None:
+      if redir.startswith('/'):
+        redir = '/%s%s' % (locale, redir)
+      return self.redirect(redir)
 
     # Are we looking for a feed?
     is_feed = self.request.path.endswith('.xml')
