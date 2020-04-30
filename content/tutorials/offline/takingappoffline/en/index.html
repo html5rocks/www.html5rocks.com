@@ -1,195 +1,20 @@
 {% extends "tutorial.html" %}
-
-{% block headauthor %}Paul Kinlan{% endblock %}
-
-{% block headtitle %}Practical Guide to Take Your TODO List Offline{% endblock %}
-{% block pagetitle %}Practical Guide to Take Your TODO List Offline{% endblock %}
-{% block pagebreadcrumb %}Practical Guide to Take Your TODO List Offline{% endblock %}
-{% block date %}June 18, 2010{% endblock %}
-
-{% block browsersupport %}
-<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
-<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
-<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
-<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
-<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
-{% endblock %}
-
-{% block html5badge %}
-<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="This article is powered by HTML5 Offline &amp; Storage" title="This article is powered by HTML5 Offline &amp; Storage" />
-{% endblock %}
-
-{% block iscompatible %}
-  return Modernizr.applicationcache
-{% endblock %}
+{% load mixin from templatefilters %}
 
 {% block head %}
+  <script>
+    window.location.replace("https://web.dev/storage-for-the-web/");
+  </script>
 {% endblock %}
-    
-{% block onload %}{% endblock %}
 
 {% block content %}
-  <h2 id="toc-intro">Introduction</h2>
-  <p>
-    There are two main components to Offline support in HTML.
-  </p>
-  <ul>
-    <li><a href="/en/tutorials/appcache/beginner/">The Application Cache</a>, used for caching application files such as
-       html, images, javascript and css</li>
-    <li><a href="/tutorials/webdatabase/todo/">Databases</a> used for data access and key based lookups such as 
-      <a href="/en/features/storage">localStorage and sessionStorage</a></li>
-  </ul>
-  <p>
-    This sample demonstrates how to take your applications offline using the 
-    Applications cache, by extending the Database functionality in the
-    <a href="/tutorials/webdatabase/todo/">to-do list manager</a> tutorial.
-  </p>
-  <p>
-    The TODO list manager already demonstrates the use of client-side databases,
-    so combining this with the Application Cache and using all the same 
-    Javascript and HTML so it will give you a really clear indication
-    of how simple it can be to take your applications offline.
-  </p>
-  <h2 id="toc-step0">What is the Application Cache?</h2>
-  <p>
-    The Application Cache (or AppCache for short) is designed to let you 
-    declaratively specify your web application's required resources in a 
-    manifest file. The resources listed in the manifest will be proactively 
-    downloaded and stored by the browser.
-  </p>
-  <h2 id="toc-step1">Step 1. Creating a basic manifest</h2>
-  <p>Because we already have an application on the web, it is a simple 
-    process to add offline support.  The first that we need to do is to 
-    create our manifest file.
-  </p>
-  <pre class="prettyprint">CACHE MANIFEST
-# Revision: 1
-index.html
-script.js
-base.css</pre>
-  <p>
-    As you can see it is pretty simple. The manifest file contains a simple
-    list of the three files that we will be using and a comment.
-  </p>
-  <p>
-    The browser will re-download all the files in the manifest
-    if it detects a single change in the manifest file.  Therefore, if you
-    are deploying software and making changes, you can use this simple comment
-    to ensure that all your users download the latest application.
-  </p>
-  
-  <h2 id="toc-step2">Step 2. Attaching the manifest</h2>
-  <p>
-    For the browser to be able find the manifest file, we need to reference it
-    from the root html element.
-  </p>
-  <pre class="prettyprint">&lt;html manifest="cache.manifest"&gt;</pre>
-  <p>
-    The presence of this attribute will invoke the browser to download the 
-    manifest file and start the process of acquiring the resources needed to 
-    ensure your application is available in offline mode.
-  </p>
-  <p>
-    <code>index.html</code> was listed in the manifest for completeness only,
-    any page linking to a manifest as above will automatically be cached, and
-    there's no way to override this.
-  </p>
-  <h2 id="toc-step3">Step 3. Pulling the plug (Testing)</h2>
-  <p>
-    If you have correctly listed all the application files, then your application
-    will be available offline.
-  </p>
-  <p>
-    In fact, you don't need to go offline to test. AppCache automatically
-    prevents cached pages using the network, even if the user is online. However, this
-    behaviour usually gets in the way, breaking API calls and such. to disable it, add the following to the end of your manifest:
-  </p>
-  <pre class="prettyprint">NETWORK:
-*</pre>
-  <p>
-    You can also list specific URLs to whitelist, "*" simply means all URLs.
-    Unfortunately this doesn't act like a wildcard, "/hello/*" does not match
-    all URLs beginning "/hello/", it matches the exact URL "/hello/*".
-  </p>
-  <p>
-    For an example see our sample application: 
-    <a href="./todo/sample.html">Offline To-do list</a>. In this application,
-    we are using all the same code as our previous To-do sample,
-    but now it is available offline.
-  </p>
-  <h2 id="toc-further">Taking it further</h2>
-  <p>This is a pretty simple example, in reality applications are a
-    little more in-depth.  So now is a good time to cover some more features
-    of the AppCache.</p>
-    
-  <h3 id="toc-mixin">Mixing Offline and Online</h3>
-  <p>
-    Quite often you won't want to package all your files inside one offline
-    manifest, for instance, you might have an online help system that your users
-    will reference.
-  </p>
-  <p>
-    To ensure that your users don't get a network error when
-    visiting your help pages offline, you can specify a "FALLBACK" page in your manifest.
-    This page will be presented to your users in place of the browser error page if
-    the help page fails to download.
-  </p>
-  <p>
-    Fallback pages are triggered on network errors, but also other errors such as 404, 500, or redirects to captive portal "Wifi login" pages.
-  </p>
-  <pre class="prettyprint">CACHE MANIFEST
-# A list of the files that are need for this application
-# Rev 25
-index.html  
-script.js 
-base.css
 
-FALLBACK:
-/ offline.html</pre>
-  <p>
-    To see this in action use our sample <a href="./todo/sample.html">Offline 
-    To-do list</a> application, disconnect from the Internet and click on 
-    <a href="./todo/help.html">Online help</a>. HINT: You 
-    should see a Whoopsie page.
-  </p>
-  <h3 id="toc-updates">Detecting Updates</h3>
-  <p>There is a very strong chance that you will need to update your application,
-    be it bug fixes or great new functionality. Once an application is offline
-    it remains so until a user clears their browse cache or you programatically
-    update their version of the code.</p>
-  <p>
-    The good thing is, the browser can handle all of this. Earlier we talked 
-    about the browser detecting updates to the manifest, when this occurs the 
-    browser will download all the latest resources and send an event to your 
-    JavaScript indicating that an update is available.  You can present your
-    users with a notification to inform them that they can update the application
-    to a latest version.
-  </p>
-<pre class="prettyprint">// Called at the end of the body
-var status = document.getElementById("status");
-var updateButton = document.getElementById("update");
+<!-- A redirect has been setup in the H5R database. -->
 
-window.applicationCache.addEventListener('updateready', function() { 
-  status.innerText = "There is an update ready - click to update";
-});
+<p class="notice warning" style="text-align:center">
+  This article has been updated and migrated to
+  <a href="https://web.dev/storage-for-the-web/">Storage for the web</a>
+  on <a href="https://web.dev/">web.dev</a>.
+</p>
 
-updateButton.addEventListener("click", function(event) {
-  // Reload the application
-  window.location.reload();
-  event.preventDefault();
-});
-</pre>
-  <h2 id="toc-wrap">Wrapping it up</h2>
-  <p>
-    We have seen that it is pretty simple to take your existing applications
-    offline.  At the simplest level it is just a process of defining a 
-    basic manifest file and attaching it to your root html element.
-  </p>
-  <p>
-    We have also seen the extra things that you can do to drastically improve
-    the user experience of your applications with enhancements such as 
-    NETWORK whitelisting, FALLBACK support and capturing events.
-  </p>
-  <p>But the best thing of all is, your application will still work online with
-    browsers that don't support AppCache.</p>
 {% endblock %}
