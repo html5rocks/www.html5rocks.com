@@ -426,7 +426,8 @@ class ContentHandler(webapp2.RequestHandler):
         # tut page.
         tut = models.Resource.all().filter('url =', '/' + relpath).get()
 
-        # Redirect if needed
+        # -DBRedirect-
+        # Check if article metadata specifies redirect, and redirect.
         if tut:
           if tut.redirect_url:
             self.redirect(tut.redirect_url.encode('latin-1'), permanent=True)
