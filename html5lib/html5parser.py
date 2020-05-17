@@ -1209,7 +1209,7 @@ class InBodyPhase(Phase):
         #has a namespace not equal to the xmlns attribute
         if self.parser.phase != self.parser.phases["inForeignContent"]:
             self.parser.secondaryPhase = self.parser.phase
-        self.parser.phase = self.parser.phases["inForeignContent"]
+            self.parser.phase = self.parser.phases["inForeignContent"]
         if token["selfClosing"]:
             self.tree.openElements.pop()
             token["selfClosingAcknowledged"] = True
@@ -1224,7 +1224,7 @@ class InBodyPhase(Phase):
         #has a namespace not equal to the xmlns attribute
         if self.parser.phase != self.parser.phases["inForeignContent"]:
             self.parser.secondaryPhase = self.parser.phase
-        self.parser.phase = self.parser.phases["inForeignContent"]
+            self.parser.phase = self.parser.phases["inForeignContent"]
         if token["selfClosing"]:
             self.tree.openElements.pop()
             token["selfClosingAcknowledged"] = True
