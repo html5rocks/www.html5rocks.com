@@ -40,7 +40,7 @@ a[rel='external']
 
   <p>WebRTC enables peer-to-peer communication, but it still needs servers so that clients can exchange metadata to coordinate communication through a process called signaling, and to cope with network address translators (NATs) and firewalls.</p>
 
-<p>This article shows you how to build a signaling service, and how to deal with the quirks of real-world connectivity with STUN and TURN servers. It also explains how WebRTC apps can handle multi-party calls and interact with services, such as VoIP and PSTN (also known as telephones).</p>
+<p>This article shows you how to build a signaling service, and how to deal with the quirks of real-world connectivity with STUN and TURN servers. It also explains how WebRTC apps can handle multiparty calls and interact with services, such as VoIP and PSTN (also known as telephones).</p>
 
 <p>If you're not familiar with the basics of WebRTC, see <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started With WebRTC</a> before you read this article.</p>
 
@@ -95,7 +95,7 @@ a=rtpmap:111 opus/48000/2
 
 <p>Want to know what all this SDP gobbledygook actually means? Take a look at the <a href="http://datatracker.ietf.org/doc/draft-nandakumar-rtcweb-sdp/?include_text=1">Internet Engineering Task Force (IETF) examples</a>.</p>
 
-<p>Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description by editing the values in the SDP text. For example, the <em>preferAudioCodec() </em>function in <a href="https://appr.tc">appr.tc</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP.</p>
+<p>Bear in mind that WebRTC is designed so that the offer or answer can be tweaked before being set as the local or remote description by editing the values in the SDP text. For example, the <code>preferAudioCodec()</code> function in <a href="https://appr.tc">appr.tc</a> can be used to set the default codec and bitrate. SDP is somewhat painful to manipulate with JavaScript and there is discussion about whether future versions of WebRTC should use JSON instead, but there are <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.3">some advantages</a> to sticking with SDP.</p>
 
 <h3 id="rtcpeerconnection-signaling-offer-answer-and-candidate">RTCPeerConnection and signaling: Offer, answer, and candidate</h3>
 
@@ -115,14 +115,14 @@ a=rtpmap:111 opus/48000/2
 
 <ol style="list-style-type: decimal">
   <li>Alice creates an <code>RTCPeerConnection</code> object.</li>
-  <li>Alice creates an <strong>offer</strong> (an SDP session description) with the <code>RTCPeerConnection</code> <em>createOffer() </em>method.</li>
-  <li>Alice calls <em>setLocalDescription() </em>with her offer.</li>
+  <li>Alice creates an offer (an SDP session description) with the <code>RTCPeerConnection</code> <code>createOffer()</code> method.</li>
+  <li>Alice calls <code>setLocalDescription()</code> with her offer.</li>
   <li><p>Alice stringifies the offer and uses a signaling mechanism to send it to Eve.</p></li>
-  <li>Eve calls <em>setRemoteDescription()</em> with Alice's offer, so that her <code>RTCPeerConnection</code> knows about Alice's setup.</li>
-  <li>Eve calls <em>createAnswer()</em> and the success callback for this is passed a local session description&mdash;Eve's <strong>answer</strong>.</li>
-  <li>Eve sets her answer as the local description by calling <em>setLocalDescription()</em>.</li>
+  <li>Eve calls <code>setRemoteDescription()</code> with Alice's offer, so that her <code>RTCPeerConnection</code> knows about Alice's setup.</li>
+  <li>Eve calls <code>createAnswer()</code> and the success callback for this is passed a local session description&mdash;Eve's <strong>answer</strong>.</li>
+  <li>Eve sets her answer as the local description by calling <code>setLocalDescription()</code>.</li>
   <li>Eve then uses the signaling mechanism to send her stringified answer to Alice.</li>
-  <li><p>Alice sets Eve's answer as the remote session description using <em>setRemoteDescription()</em>.</p></li>
+  <li><p>Alice sets Eve's answer as the remote session description using <code>setRemoteDescription()</code>.</p></li>
 </ol>
 
 <!-- flow diagram -->
@@ -134,17 +134,17 @@ a=rtpmap:111 opus/48000/2
 <p>Alice and Eve also need to exchange network information. The expression "finding candidates" refers to the process of finding network interfaces and ports using the <a href="http://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment">ICE framework</a>.</p>
 
 <ol style="list-style-type: decimal">
-  <li>Alice creates an <code>RTCPeerConnection</code> object with an <em><code>onicecandidate</code></em> handler.</li>
+  <li>Alice creates an <code>RTCPeerConnection</code> object with an <code>onicecandidate</code> handler.</li>
   <li>The handler is called when network candidates become available.</li>
   <li>In the handler, Alice sends stringified candidate data to Eve through their signaling channel.</li>
-  <li>When Eve gets a candidate message from Alice, she calls <em><code>addIceCandidate()</code></em> to add the candidate to the remote peer description.</li>
+  <li>When Eve gets a candidate message from Alice, she calls <code>addIceCandidate()</code> to add the candidate to the remote peer description.</li>
 </ol>
 
 <p>JSEP supports <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-3.4.1">ICE Candidate Trickling</a>, which allows the caller to incrementally provide candidates to the callee after the initial offer, and for the callee to begin acting on the call and setting up a connection without waiting for all candidates to arrive.</p>
 
 <h3 id="coding-webrtc-for-signaling">Coding WebRTC for signaling</h3>
 
-<p>The following code snippet is a <a href="https://w3c.github.io/webrtc-pc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism&mdash;<em><code>SignalingChannel</code></em>. Signaling is discussed in greater detail later.</p>
+<p>The following code snippet is a <a href="https://w3c.github.io/webrtc-pc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism&mdash;<code>SignalingChannel</code>. Signaling is discussed in greater detail later.</p>
 
 <pre class="prettyprint">// handles JSON.stringify/parse
 const signaling = new SignalingChannel();
@@ -212,7 +212,7 @@ signaling.onmessage = async ({desc, candidate}) => {
   }
 };</pre>
 
-<p>To see the offer/answer and candidate exchange processes in action, see <a href="http://simpl.info/rtcpeerconnection/">simpl.info RTCPeerConnection</a> and look at the console log for a single-page video chat example. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page in Google Chrome or the opera://webrtc-internals page in Opera.</p>
+<p>To see the offer/answer and candidate-exchange processes in action, see <a href="http://simpl.info/rtcpeerconnection/">simpl.info RTCPeerConnection</a> and look at the console log for a single-page video chat example. If you want more, download a complete dump of WebRTC signaling and stats from the chrome://webrtc-internals page in Google Chrome or the opera://webrtc-internals page in Opera.</p>
 
 <h3 id="peer-discovery">Peer discovery</h3>
 
@@ -240,7 +240,7 @@ signaling.onmessage = async ({desc, candidate}) => {
 
 <p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections to ensure messages cannot be intercepted unencrypted and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal, see the <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in Ilya Grigorik's <em>High Performance Browser Networking</em>. Peter Lubbers's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
-<p>Signaling for the canonical <a href="http://appr.tc">appr.tc</a> WebRTC video chat app is accomplished through the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. <strong>Star the bug to vote it up!</strong>) For a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app, see <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started with WebRTC
+<p>Signaling for the canonical <a href="http://appr.tc">appr.tc</a> WebRTC video chat app is accomplished through the <a href="https://developers.google.com/appengine/docs/java/channel/">Google App Engine Channel API</a>, which uses <a href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> techniques (long polling) to enable signaling with push communication between the App Engine backend and the web client. (There's a <a href="https://code.google.com/p/googleappengine/issues/detail?id=2535">long-standing bug</a> for App Engine to support WebSocket. Star the bug to upvote it!) For a <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-simple">detailed code walkthrough</a> of this app, see <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/">Getting Started with WebRTC
 </a>.</p>
 
 <figure>
@@ -266,13 +266,13 @@ signaling.onmessage = async ({desc, candidate}) => {
 
 <h3 id="building-a-signaling-service-with-socket.io-on-node">Build a signaling service with Socket.io on Node</h3>
 
-<p>The following is code for a simple web app that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of rooms.  <strong>This example is not designed to scale as a production-grade signaling service, but is simple to understand for a relatively small number of users.</strong></p>
+<p>The following is code for a simple web app that uses a signaling service built with <a href="http://socket.io">Socket.io</a> on <a href="http://nodejs.org/">Node</a>. The design of Socket.io makes it simple to build a service to exchange messages and Socket.io is particularly suited to WebRTC signaling because of its built-in concept of rooms. This example is not designed to scale as a production-grade signaling service, but is simple to understand for a relatively small number of users.</p>
 
 <p>Socket.io uses WebSocket with fallbacks: AJAX long polling, AJAX multipart streaming, Forever Iframe, and JSONP polling. It has been ported to various backends, but is perhaps best known for its Node version used in this example. </p>
 
 <p>There's no WebRTC in this example. It's designed only to show how to build signaling into a web app. View the console log to see what's happening as clients join a room and exchange messages. This <a href="https://codelabs.developers.google.com/codelabs/webrtc-web/#0">WebRTC codelab</a> gives step-by-step instructions for how to integrate this into a complete WebRTC video chat app.</p>
 
-<p>Here is the client, <em><code>index.html</code></em>:</p>
+<p>Here is the client, <code>index.html</code>:</p>
 
 <pre class="prettyprint">
 &lt;!DOCTYPE html&gt;
@@ -286,7 +286,7 @@ signaling.onmessage = async ({desc, candidate}) => {
   &lt;/body&gt;
 &lt;/html&gt;</pre>
 
-<p>Here's the JavaScript file <em><code>main.js</code></em>referenced in the client:</p>
+<p>Here's the JavaScript file <code>main.js</code> referenced in the client:</p>
 
 <pre class="prettyprint">
 const isInitiator;
@@ -389,15 +389,15 @@ npm install node-static
 node server.js
 </pre>
 
-<p>From your browser, open <em><code>localhost:2013</code></em>. Open a new tab or window in any browser and open <em><code>localhost:2013</code></em> again. To see what's happening, check the console. In Chrome and Opera, you can access the console through Google Chrome Developer Tools with <kbd>Ctrl+Shift+J</kbd> (or <kbd>Command+Option+J</kbd> on Mac).</p>
+<p>From your browser, open <code>localhost:2013</code>. Open a new tab or window in any browser and open <code>localhost:2013</code> again. To see what's happening, check the console. In Chrome and Opera, you can access the console through Google Chrome Developer Tools with <kbd>Ctrl+Shift+J</kbd> (or <kbd>Command+Option+J</kbd> on Mac).</p>
 
 <p>Whatever approach you choose for signaling, your backend and client app&mdash;at the very least&mdash;need to provide services similar to this example.</p>
 
 <h3 id="signaling-gotchas">Signaling gotchas</h3>
 
 <ul>
-  <li><code>RTCPeerConnection</code> won't start gathering candidates until <em><code>setLocalDescription()</code></em> is called. This is mandated in the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-4.2.4">JSEP IETF draft</a>.</li>
-  <li>Take advantage of Trickle ICE. Call <em><code>addIceCandidate()</code></em> as soon as candidates arrive.</li>
+  <li><code>RTCPeerConnection</code> won't start gathering candidates until <code>setLocalDescription()</code> is called. This is mandated in the <a href="http://tools.ietf.org/html/draft-ietf-rtcweb-jsep-03#section-4.2.4">JSEP IETF draft</a>.</li>
+  <li>Take advantage of Trickle ICE. Call <code>addIceCandidate()</code> as soon as candidates arrive.</li>
 
 </ul>
 
@@ -430,7 +430,7 @@ node server.js
 <p>The most important factor in securing signaling is to use secure protocols&mdash;
 HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be intercepted unencrypted. Also, be careful not to broadcast signaling messages in a way that they can be accessed by other callers using the same signaling server.</p>
 
-<p class="notice fact">To secure a WebRTC app, it is <strong>absolutely imperative</strong> that signaling uses <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>.</p>
+<p class="notice fact">To secure a WebRTC app, it is absolutely imperative that signaling uses <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a>.</p>
 
 <h2 id="after-signaling-using-ice-to-cope-with-nats-and-firewalls">After signaling: Use ICE to cope with NATs and firewalls</h2>
 
@@ -458,7 +458,7 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
 
 <p>Every TURN server supports STUN. A TURN server is a STUN server with additional built-in relaying functionality. ICE also copes with the complexities of NAT setups. In reality, NAT hole-punching may require more than just a public IP:port address.</p>
 
-<p>URLs for STUN and/or TURN servers are (optionally) specified by a WebRTC app in the <em><code>iceServers</code></em> configuration object that is the first argument to the <code>RTCPeerConnection</code> constructor. For <a href="http://appr.tc">appr.tc</a>, that value looks like this:</p>
+<p>URLs for STUN and/or TURN servers are (optionally) specified by a WebRTC app in the <code>iceServers</code> configuration object that is the first argument to the <code>RTCPeerConnection</code> constructor. For <a href="http://appr.tc">appr.tc</a>, that value looks like this:</p>
 
 <pre class="prettyprint">{
   'iceServers': [
@@ -477,7 +477,7 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
     }
   ]
 }</pre>
-<p><b>Note:</b> The TURN credentials example was time-limited and expired in September 2013. TURN servers are expensive to run and you need to pay for your own servers or find a service provider. To test credentials, you can use the <a href="https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/">candidate gathering sample</a> and check if you get a candidate with type <i><code>relay</code></i>.</p>
+<p><b>Note:</b> The TURN credentials example was time-limited and expired in September 2013. TURN servers are expensive to run and you need to pay for your own servers or find a service provider. To test credentials, you can use the <a href="https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/">candidate gathering sample</a> and check if you get a candidate with type <code>relay</code>.</p>
 
 <p>Once <code>RTCPeerConnection</code> has that information, the ICE magic happens automatically. <code>RTCPeerConnection</code> uses the ICE framework to work out the best path between peers, working with STUN and TURN servers as necessary.</p>
 
@@ -500,7 +500,7 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
 
 <p><code>RTCPeerConnection</code> tries to set up direct communication between peers over UDP. If that fails, <code>RTCPeerConnection</code> resorts to TCP. If that fails, TURN servers can be used as a fallback, relaying data between endpoints.</p>
 
-<p><strong>Just to reiterate, TURN is used to relay audio, video, and data streaming between peers, not signaling data!</strong></p>
+<p>Just to reiterate, TURN is used to relay audio, video, and data streaming between peers, not signaling data!</p>
 
 <p>TURN servers have public addresses, so they can be contacted by peers even if the peers are behind firewalls or proxies. TURN servers have a conceptually simple task&mdash;to relay a stream. However, unlike STUN servers, they inherently consume a lot of bandwidth. In other words, TURN servers need to be beefier.</p>
 
@@ -529,15 +529,15 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
   <li>Fetch restund from <a href="http://creytiv.com/restund.html" title="">creytiv.com/restund.html</a> and unpack.</li>
   <li><code>wget</code> <a href="http://hancke.name/restund-auth.patch" title="restund patch file">hancke.name/restund-auth.patch</a> and apply with <code>patch -p1 &lt; restund-auth.patch</code>.</li>
   <li>Run <code>make</code>, <code>sudo make install</code> for libre and restund.</li>
-  <li>Adapt <em><code>restund.conf</code></em> to your needs (replace IP addresses and make sure it contains the same shared secret) and copy to <em><code>/etc</code></em>.</li>
-  <li>Copy <em><code>restund/etc/restund</code></em> to <em><code>/etc/init.d/</code></em>.</li>
+  <li>Adapt <code>restund.conf</code> to your needs (replace IP addresses and make sure it contains the same shared secret) and copy to <code>/etc</code>.</li>
+  <li>Copy <code>restund/etc/restund</code> to <code>/etc/init.d/</code>.</li>
   <li style="line-height: 1.8em;">Configure restund:<br />
-    a. Set <em><code>LD_LIBRARY_PATH</code></em>.<br />
-    b. Copy <em><code>restund.conf</code></em> to <em><code>/etc/restund.conf</code></em>.<br />
-    c. Set <em><code>restund.conf</code></em> to use the right 10. IP address.
+    a. Set <code>LD_LIBRARY_PATH</code>.<br />
+    b. Copy <code>restund.conf</code> to <code>/etc/restund.conf</code>.<br />
+    c. Set <code>restund.conf</code> to use the right 10. IP address.
   </li>
   <li>Run restund</li>
-  <li>Test using stund client from remote machine: <code>./client <em>IP:port</em></code></li>
+  <li>Test using stund client from remote machine: <code>./client IP:port</code></li>
 </ol>
 <h2 id="beyond-one-to-one-multi-party-webrtc">Beyond one-to-one: Multiparty WebRTC</h2>
 
