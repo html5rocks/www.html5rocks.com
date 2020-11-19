@@ -110,7 +110,7 @@ are ridiculously powerful, and expose high-level JavaScript APIs that sit
 on top of the system's foundational hardware capabilities.</p>
 <p>This tutorial introduces <a href="https://www.w3.org/TR/mediacapture-streams/"><code>navigator.mediaDevices.getUserMedia()</code></a>, which allows
 web apps to access a user's camera and microphone.</p>
-<h2 id="toc-history">The road to getUserMedia()</h2>
+<h2 id="toc-history">The road to <code>getUserMedia()</code> API</h2>
 
 <p>If you're not aware of its history, the road to the <code>getUserMedia()</code> API is an interesting tale.</p>
 <p>Several variants of media-capture APIs evolved over the past few years.
@@ -130,13 +130,12 @@ that's possible with <code>capture=camera</code>:</p>
 <pre class="prettyprint"><code>&lt;input type="file" accept="image/*;capture=camera"&gt;
 </code></pre>
 
-<p>Pretty nice, right? I particularly like that it reuses a file input. Semantically,
-it makes a lot of sense. Where this particular API falls short is the ability to do real-time effects, such as render live webcam data to a <code>&lt;canvas&gt;</code> and apply WebGL filters.
+<p>Pretty nice, right? Semantically, it makes a lot of sense. Where this particular API falls short is the ability to do real-time effects, such as render live webcam data to a <code>&lt;canvas&gt;</code> and apply WebGL filters.
 HTML Media Capture only allows you to record a media file or take a snapshot in time.</p>
-<p><strong>Support:</strong></p>
+<p><strong>Support</strong></p>
 <ul>
-<li><a href="https://developer.android.com/studio/releases/platforms#3.0</a>—one of the first implementations. Check out <a href="https://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">this video</a> to see it in action.</li>
-<li>Chrome for Android (0.16)</li>
+<li><a href="https://developer.android.com/studio/releases/platforms#3.0</a>—one of the first implementations. Check out <a href="https://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">Watch this video</a> to see it in action.</li>
+<li>Google Chrome for Android (0.16)</li>
 <li>Firefox Mobile 10.0</li>
 <li>iOS6 Safari and Chrome (partial support)</li>
 </ul>
@@ -174,7 +173,7 @@ for it, though:
 <p>Take a breath. This stuff moves fast!</p>
 <h3 id="toc-round3">Round 3: WebRTC</h3>
 
-<p>The <code>&lt;device&gt;</code> element eventually went the way of the Dodo.</p>
+<p>The <code>&lt;device&gt;</code> element eventually went the way of the dodo.</p>
 <p>The pace to find a suitable capture API accelerated thanks to the larger <a href="https://www.w3.org/TR/webrtc/">WebRTC</a> (web real-time communication) effort. That spec is overseen by the <a href="http://www.w3.org/2011/04/webrtc/">Web Real-Time Communications Working Group</a>. Google, Opera, Mozilla, and <a href="http://webrtc.org">a few others</a> have
 implementations.</p>
 <p><code>getUserMedia()</code> is related to WebRTC because it's the gateway into that set of APIs.
@@ -223,13 +222,13 @@ navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
 });
 &lt;/script&gt;
 </code></pre>
-<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with your other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
-Notice that you don't set a <code>src</code> attribute or including <code>&lt;source&gt;</code> elements
+<p>Okay. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with your other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
+Notice that you don't set a <code>src</code> attribute or include <code>&lt;source&gt;</code> elements
 on the <code>&lt;video&gt;</code> element. Instead of the URL of a media file, you give the video a <code>MediaStream</code> from the webcam.</p>
 <p>You also tell the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
 the first frame. The addition of <code>controls</code> also works as you'd expect.</p>
 
-<h3 id="toc-constraints">Setting media constraints (resolution, height, width)</h3>
+<h3 id="toc-constraints">Setting media constraints (resolution, height, and width)</h3>
 
 <p>The parameter to <code>getUserMedia()</code> can also be used to specify more requirements
 (or constraints) on the returned media stream. For example, instead of only basic access to video (for example, <code>{video: true}</code>), you can additionally require the stream
@@ -253,7 +252,7 @@ navigator.mediaDevices.getUserMedia(vgaConstraints).then((stream) => {
 </code></pre>
 
 <p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>is rejected with an <code>OverconstrainedError</code> and the user isn't prompted to grant permission to access their camera.</p>
-<p>For more configurations, see the <a href="https://w3c.github.io/mediacapture-main/getusermedia.html#media-track-constraints</a></p>
+<p>For more configurations, see <a href="https://w3c.github.io/mediacapture-main/getusermedia.html#media-track-constraints</a></p>
 <h3 id="toc-source">Select a media source</h3>
 
 <p>The <code>navigator.mediaDevices.enumerateDevices()</code> method provides information about available input and output devices, and makes it possible to select a camera or microphone. (The <code>MediaStreamTrack.getSources()</code> API <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack#Browser_compatibility" title="Mozilla Developer network browser compatibility table for MediaStreamTrack.getSources()">has been deprecated</a>.)</p>
@@ -327,7 +326,7 @@ function handleError(error) {
 
 <p><code>getUserMedia()</code> can only be called from an HTTPS URL or localhost. Otherwise, the promise from the call is rejected. <code>getUserMedia()</code> also doesn't work for cross-origin calls from iframes. For more information, see <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a>.</p>
 
-<p>All browsers generate an infobar upon the call to <code>getUserMedia()</code>, which gives users the option to grant or deny access to their cameras or microphones. Here's the permission dialog from Google Chrome:</p>
+<p>All browsers generate an infobar upon the call to <code>getUserMedia()</code>, which gives users the option to grant or deny access to their cameras or microphones. Here's the permission dialog from Chrome:</p>
 
 <figure>
 <img src="permission.png" alt="Permission dialog in Chrome." title="Permission dialog in Chrome">
@@ -336,7 +335,7 @@ function handleError(error) {
 
 <p>This permission is persistent. That is, users don't have to grant or deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
 
-<p class="notice tip">The MediaStreamTrack actively uses the camera, which takes resources and keeps the camera open (and camera light on). When you no longer use a track, call <code>track.stop()</code> so that the camera can be closed.</p>
+<p class="notice tip">The <code>MediaStreamTrack</code> actively uses the camera, which takes resources and keeps the camera open (and camera light on). When you no longer use a track, call <code>track.stop()</code> so that the camera can be closed.</p>
 
 <h3 id="toc-basic-demo">Basic demo</h3>
 
