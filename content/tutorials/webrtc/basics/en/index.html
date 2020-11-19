@@ -75,7 +75,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 <p>The guiding principles of the WebRTC project are that its APIs should be open source, free, standardized, built into web browsers, and more efficient than existing technologies.</p>
 
 <h2 id="toc-where">Where are we now?</h2>
-<p>WebRTC is used in various apps, such as WhatsApp, Facebook Messenger, and appear.in, as well as platforms, such as TokBox. WebRTC has also been integrated with <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-conversational-voice-and-video-implemented-webkit-gtk" title="Ericsson article about WebKitGTK+">WebKitGTK+</a> and <a href="https://www.youtube.com/watch?v=Vm5ebKWKNE8" title="basysKom showcasing WebRTC based video chat in QML application">Qt</a> native apps.</p>
+<p>WebRTC is used in various apps, such as Google Meet. WebRTC has also been integrated with <a href="https://labs.ericsson.com/developer-community/blog/beyond-html5-conversational-voice-and-video-implemented-webkit-gtk" title="Ericsson article about WebKitGTK+">WebKitGTK+</a> and <a href="https://www.youtube.com/watch?v=Vm5ebKWKNE8" title="basysKom showcasing WebRTC based video chat in QML application">Qt</a> native apps.</p>
 
 <p>WebRTC implements these three APIs:</p>
 <ul>
@@ -138,7 +138,7 @@ return !! (window.RTCPeerConnection || window.webkitDeprecatedPeerConnection || 
 
 <p>The <code>getUserMedia()</code> method takes a <a href="#toc-constraints" title="Internal link to section about Media Constraints"><code>MediaStreamConstraints</code> object</a> parameter and returns a <code>Promise</code> that resolves to a <code>MediaStream</code> object.</p>
 
-<p>Each <code>MediaStream</code> has a <code>label</code>, such as <code>'Xk7EuLhsuHKbnjLWkW4yYGNJJ8ONsgwHBvLQ'</code>. An array of <code>MediaStreamTracks</code> is returned by the <code>getAudioTracks()</code> and <code>getVideoTracks()</code> methods.</p>
+<p>Each <code>MediaStream</code> has a <code>label</code>, such as <code>'Xk7EuLhsuHKbnjLWkW4yYGNJJ8ONsgwHBvLQ'</code>. An array of <code>MediaStreamTrack</code>s is returned by the <code>getAudioTracks()</code> and <code>getVideoTracks()</code> methods.</p>
 
 <p>For the <a href="https://webrtc.github.io/samples/src/content/getusermedia/gum/" title="getUserMedia demo"><code>getUserMedia</code></a> example, <code>stream.getAudioTracks()</code> returns an empty array (because there's no audio) and, assuming a working webcam is connected, <code>stream.getVideoTracks()</code> returns an array of one <code>MediaStreamTrack</code> representing the stream from the webcam. Each <code>MediaStreamTrack</code> has a kind (<code>'video'</code> or <code>'audio'</code>), a <code>label</code> (something like <code>'FaceTime HD Camera (Built-in)'</code>), and represents one or more channels of either audio or video. In this case, there is only one video track and no audio, but it is easy to imagine use cases where there are more, such as a chat app that gets streams from the front camera, rear camera, microphone, and an app sharing its screen.</p>
 
@@ -190,7 +190,7 @@ navigator.mediaDevices.getUserMedia({audio: true}, (stream) => {
 
 <p>Permission only has to be granted once for <code>getUserMedia()</code>. First time around, an Allow button is displayed in the browser's <a href="https://dev.chromium.org/user-experience/infobars" title="Chromium information about the browser infobar">infobar</a>. HTTP access for <code>getUserMedia()</code> was deprecated by Chrome at the end of 2015 due to it being classified as a <a href="https://sites.google.com/a/chromium.org/dev/Home/chromium-security/deprecating-powerful-features-on-insecure-origins" title="Chrome powerful features">Powerful feature</a>.</p>
 
-<p>The intention is potentially to enable a <code>MediaStream</code> for any streaming data source, not only a camera or microphone. This would enable streaming from discs or arbitrary data sources, such as sensors or other inputs.</p>
+<p>The intention is potentially to enable a <code>MediaStream</code> for any streaming data source, not only a camera or microphone. This would enable streaming from stored data or arbitrary data sources, such as sensors or other inputs.</p>
 
 <p><code>getUserMedia()</code> really comes to life in combination with other JavaScript APIs and libraries:</p>
 
@@ -229,9 +229,9 @@ navigator.mediaDevices.getUserMedia({audio: true}, (stream) => {
 
 <p>Signaling is used to exchange three types of information:</p>
 <ul>
-  <li>Session control messages, which initialize or close communication and report errors.</li>
-  <li>Network configuration, which communicate your computer's IP address and port to the outside world.</li>
-  <li>Media capabilities, which communicates the codecs and resolutions that your browser and the browser that it wants to communicate with.</li>
+  <li>Session control messages: to initialize or close communication and report errors.</li>
+  <li>Network configuration: to the outside world, what's your computer's IP address and port?</li>
+  <li>Media capabilities: what codecs and resolutions can be handled by your browser and the browser it wants to communicate with?</li>
 </ul>
 
 <p>The exchange of information through signaling must have completed successfully before peer-to-peer streaming can begin.</p>
@@ -344,7 +344,8 @@ a=ssrc:2223794119 label:H4fjnMzxy3dPIgQ7HxuCTLb4wLLLeRHnFxh810
 
 <p>The acquisition and exchange of network and media information can be done simultaneously, but both processes must have completed before audio and video streaming between peers can begin.</p>
 
-<p>The offer and answer architecture previously described is called <a href="https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-00" title="IETF JSEP draft proposal">JSEP</a>, or JavaScript Session Establishment Protocol. (There's an excellent animation explaining the process of signaling and streaming in <a href="https://www.ericsson.com/research-blog/context-aware-communication/beyond-html5-peer-peer-conversational-video/" title="Ericsson conversational video demo">Ericsson's demo video</a> for its first WebRTC implementation.) </p>
+<p>The offer/answer architecture previously described is called <a href="https://rtcweb-wg.github.io/jsep/" title="JavaScript Session Establishment Protocol
+">JavaScript Session Establishment Protocol</a>, or JSEP. (There's an excellent animation explaining the process of signaling and streaming in <a href="https://www.ericsson.com/research-blog/context-aware-communication/beyond-html5-peer-peer-conversational-video/" title="Ericsson conversational video demo">Ericsson's demo video</a> for its first WebRTC implementation.) </p>
 
 <figure>
   <img src="jsep.png" alt="JSEP architecture diagram" />
