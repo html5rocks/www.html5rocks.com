@@ -82,12 +82,13 @@ a[rel='external']
 
 <h2>A caveat: Signaling, STUN, and TURN</h2>
 
-<p>Although WebRTC enables peer-to-peer communication, it still needs servers for:</p>
+WebRTC enables peer-to-peer communication, but it still needs servers for <strong>signaling</strong> to exchange media and network metadata to bootstrap a peer connection. 
 
+WebRTC copes with NATs and firewalls with: 
 <ul>
-  <li>Signaling&mdash;the exchange of media and network metadata to bootstrap a peer connection</li>
-  <li>Coping with network address translators (NATs) and firewalls</li>
-</ul>
+  <li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#ice">The ICE framework</a> to establish the best possible network path between peers.</li>
+  <li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#stun">STUN servers</a> to ascertain a publicly accessible IP and port for each peer</li>
+  <li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#turn">TURN servers</a> if direct connection fails and data relaying is required.</li>	 
 
 <p>For more information about how WebRTC works with servers for signaling and networking, see <a href="https://www.html5rocks.com/en/tutorials/webrtc/infrastructure/">WebRTC&nbsp;in&nbsp;the real world: STUN, TURN, and signaling</a>.</p>
 
@@ -142,7 +143,7 @@ a[rel='external']
   <li><a href="https://webrtc.github.io/samples/src/content/datachannel/filetransfer/">WebRTC samples Transfer a file</a></li>
 </ul>
 
-<p>In these examples, the browser is making a peer connection to itself. It is then creating a data channel and sending the message along the peer connection. Finally, your message appears in the box on the other side of the page!</p>
+<p>In these examples, the browser makes a peer connection to itself, then creates a data channel and sends a message through the peer connection. It is then creating a data channel and sending the message along the peer connection. Finally, your message appears in the box on the other side of the page!</p>
 
 <p>The code to get started with this is short:</p>
 
@@ -179,7 +180,7 @@ const dataChannelOptions = {
 };
 </pre>
 
-<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing), but you can only specify maxRetransmits or maxPacketLifeTime, not both. For UDP semantics, set <code>maxRetransmits</code> to <code>0</code> and <code>ordered</code> to <code>false</code>. For more information, see <a href="https://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">RFC 4960 - SCTP</a> and <a href="https://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">RFC 3758 - SCTP Partial Reliability Extension</a>.</p>
+<p>It is also possible to add a <code>maxRetransmits</code> option (the number of times to try before failing), but you can only specify maxRetransmits or maxPacketLifeTime, not both. For UDP semantics, set <code>maxRetransmits</code> to <code>0</code> and <code>ordered</code> to <code>false</code>. For more information, see these IETF RFCs: <a href="https://tools.ietf.org/html/rfc4960" title="IETF RFC 4960">Stream Control Transmission Protocol</a> and <a href="https://tools.ietf.org/html/rfc3758" title="IETF RFC 3758">Stream Control Transmission Protocol Partial Reliability Extension</a>.</p>
 
 <ul>
   <li><code>ordered</code>: if the data channel should guarantee order or not</li>
@@ -196,7 +197,7 @@ const dataChannelOptions = {
 
 <h2 id="is-it-safe">Is it safe?</h2>
 
-<p>Encryption is mandatory for all WebRTC components. With <code>RTCDataChannel</code>, all data is secured with <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security (DTLS)</a>. DTLS is a derivative of SSL, meaning your data will be as secure as using any standard SSL-based connection. DTLS is standardized and built into all browsers that support WebRTC. For more information, see <a href="https://wiki.wireshark.org/DTLS">DTLS - The Wireshark wiki</a>.</p>
+<p>Encryption is mandatory for all WebRTC components. With <code>RTCDataChannel</code>, all data is secured with <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article about DTLS">Datagram Transport Layer Security</a> (DTLS). DTLS is a derivative of SSL, meaning your data will be as secure as using any standard SSL-based connection. DTLS is standardized and built into all browsers that support WebRTC. For more information, see <a href="https://wiki.wireshark.org/DTLS">Wireshark wiki</a>.</p>
 
 
 
