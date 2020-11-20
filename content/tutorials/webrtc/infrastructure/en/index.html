@@ -48,7 +48,7 @@ a[rel='external']
 
 <h2 id="what-is-signaling">What is signaling?</h2>
 
-<p>Signaling is the process of coordinating communication. In order for a WebRTC app to set up a call, its clients need to exchange information, such as the following:</p>
+<p>Signaling is the process of coordinating communication. In order for a WebRTC app to set up a call, its clients need to exchange the following information:</p>
 
 <ul>
   <li>Session-control messages used to open or close communication</li>
@@ -58,7 +58,7 @@ a[rel='external']
   <li>Network data, such as a host's IP address and port as seen by the outside world</li>
 </ul>
 
-<p>This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs. You need to build it yourself. You read about some ways to build a signaling service later in this article. First, however, you need a little context.</p>
+<p>This signaling process needs a way for clients to pass messages back and forth. That mechanism is not implemented by the WebRTC APIs. You need to build it yourself. Later in this article, you learn ways to build a signaling service. Fist, however, you need a little context.</p>
 
 <h3 id="jsep">Why is signaling not defined by WebRTC?</h3>
 
@@ -144,7 +144,7 @@ a=rtpmap:111 opus/48000/2
 
 <h3 id="coding-webrtc-for-signaling">Coding WebRTC for signaling</h3>
 
-<p>The following code snippet is a <a href="https://w3c.github.io/webrtc-pc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism&mdash;<code>SignalingChannel</code>. Signaling is discussed in greater detail later.</p>
+<p>The following code snippet is a <a href="https://w3c.github.io/webrtc-pc/#simple-peer-to-peer-example">W3C code example</a> that summarizes the complete signaling process. The code assumes the existence of some signaling mechanism, <code>SignalingChannel</code>. Signaling is discussed in greater detail later.</p>
 
 <pre class="prettyprint">// handles JSON.stringify/parse
 const signaling = new SignalingChannel();
@@ -218,7 +218,7 @@ signaling.onmessage = async ({desc, candidate}) => {
 
 <p>This is a fancy way of asking, "How do I find someone to talk to?"</p>
 
-<p>For telephone calls, you have telephone numbers and directories. For online video chat and messaging, you need identity-and-presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call.</p>
+<p>For telephone calls, you have telephone numbers and directories. For online video chat and messaging, you need identity and presence management systems, and a means for users to initiate sessions. WebRTC apps need a way for clients to signal to each other that they want to start or join a call.</p>
 
 <p>Peer discovery mechanisms are not defined by WebRTC and you don't go into the options here. The process can be as simple as emailing or messaging a URL. For video chat apps, such as <a href="https://talky.io">talky.io</a>, <a href="https://tawk.com">tawk.com</a> and <a href="https://browsermeeting.com">browsermeeting.com</a>, you invite people to a call by sharing a custom link. Developer Chris Ball built an intriguing <a href="https://blog.printf.net/articles/2013/05/17/webrtc-without-a-signaling-server/">serverless-webrtc</a> experiment that enables WebRTC call participants to exchange metadata by any messaging service they like, such as IM, email, or homing pigeon.</p>
 
@@ -236,9 +236,9 @@ signaling.onmessage = async ({desc, candidate}) => {
 
 <p>More recently, the <a href="https://www.html5rocks.com/en/tutorials/eventsource/basics/"><code>EventSource</code> API</a> has been <a href="https://caniuse.com/#feat=eventsource">widely implemented</a>. This enables server-sent events&mdash;data sent from a web server to a browser client through HTTP. <code>EventSource</code> is designed for one-way messaging, but it can be used in combination with XHR to build a service for exchanging signaling messages. A signaling service passes a message from a caller, delivered by XHR request, by pushing it through <code>EventSource</code> to the callee.</p>
 
-<p><a href="https://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a> is a more-natural solution, designed for full duplex client–server communication&mdash;messages that can flow in both directions at the same time. One advantage of a signaling service built with pure WebSocket or server-sent events (<code>EventSource</code>) is that the backend for these APIs can be implemented on a variety of web frameworks common to most web-hosting packages for languages, such as PHP, Python, and Ruby.</p>
+<p><a href="https://www.html5rocks.com/en/tutorials/websockets/basics/">WebSocket</a> is a more-natural solution, designed for full duplex client–server communication&mdash;messages that can flow in both directions at the same time. One advantage of a signaling service built with pure WebSocket or server-sent events (<code>EventSource</code>) is that the backend for these APIs can be implemented on a variety of web frameworks common to most web-hosting packages for languages such as PHP, Python, and Ruby.</p>
 
-<p>About three quarters of browsers <a href="https://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections to ensure messages cannot be intercepted unencrypted and also to <a href="https://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal, see the <a href="https://hpbn.co/webrtc">WebRTC chapter</a> in Ilya Grigorik's <em>High Performance Browser Networking</em>.</p>
+<p>About three quarters of browsers <a href="http://caniuse.com/#search=websocket">support WebSocket</a> and, more importantly, all browsers that support WebRTC, also support WebSocket, both on desktop and mobile. <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> should be used for all connections to ensure messages cannot be intercepted unencrypted and also to <a href="http://www.infoq.com/articles/Web-Sockets-Proxy-Servers">reduce problems with proxy traversal</a>. (For more information about WebSocket and proxy traversal see the <a href="http://hpbn.co/webrtc">WebRTC chapter</a> in Ilya Grigorik's <em>High Performance Browser Networking</em>. Peter Lubbers's <a href="http://refcardz.dzone.com/refcardz/html5-websocket">WebSocket Cheat Sheet</a> has more information about WebSocket clients and servers.)</p>
 
 <p>It is also possible to handle signaling by getting WebRTC clients to poll a messaging server repeatedly through Ajax, but that leads to a lot of redundant network requests, which is especially problematic for mobile devices. Even after a session has been established, peers need to poll for signaling messages in case of changes or session termination by other peers. The <a href="https://webrtcbook.com">WebRTC Book</a> app example takes this option with some optimizations for polling frequency.</p>
 
@@ -545,7 +545,7 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
 
 <p>Alternatively, a WebRTC app could choose one endpoint to distribute streams to all others in a star configuration. It would also be possible to run a WebRTC endpoint on a server and construct your own redistribution mechanism (a <a href="https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk">sample client app</a> is provided by webrtc.org).</p>
 
-<p>Since Chrome 31 and Opera 18, a <code>MediaStream</code> from one <code>RTCPeerConnection</code> can be used as the input for another. This can enable more flexible architectures because it enables a web app to handle call-routing by choosing which other peer to connect to.</p>
+<p>Since Chrome 31 and Opera 18, a <code>MediaStream</code> from one <code>RTCPeerConnection</code> can be used as the input for another. This can enable more flexible architectures because it enables a web app to handle call-routing by choosing which other peer to connect to. To see this in action, see <a href="https://webrtc.github.io/samples/src/content/peerconnection/multiple-relay/">WebRTC samples Peer connection relay</a> and <a href="https://webrtc.github.io/samples/src/content/peerconnection/multiple/">WebRTC samples Multiple peer connections</a>.</p>
 
 <h3 id="multipoint-control-unit">Multipoint Control Unit</h3>
 
@@ -596,7 +596,7 @@ HTTPS and WSS (for example, TLS)&mdash;which ensure that messages cannot be inte
 
 <p>Chris Wilson's SFHTML5 presentation&mdash;<a href="https://www.youtube.com/watch?v=3Ifbqaw5l_I" title="Video of Chris Wilson's WebRTC talk at SFHTML5">Introduction to WebRTC Apps</a></p>
 
-<p>This <a href="https://webrtcbook.com">WebRTC book</a> gives a lot of detail about data and signaling pathways, and includes a number of detailed network topology diagrams.</p>
+<p>The 350-page book <a href="https://webrtcbook.com">WebRTC: APIs and RTCWEB Protocols of the HTML5 Real-Time Web</a> provides a lot of detail about data and signaling pathways, and includes a number of detailed network topology diagrams.</p>
 
 <p><a href="https://www.tokbox.com/blog/webrtc-and-signaling-what-two-years-has-taught-us/">WebRTC and Signaling: What Two Years Has Taught Us</a>&mdash;TokBox blog post about why leaving signaling out of the spec was a good idea</p>
 
