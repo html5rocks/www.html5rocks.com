@@ -98,66 +98,60 @@ video, #cssfilters-stream {
 
 <h2 id="toc-into">Introduction</h2>
 
-<p>Audio/Video capture has been <em>the</em> "Holy Grail" of web development for a long time.
-For many years we had to rely on browser plugins (<a href="http://www.kevinmusselman.com/2009/02/access-webcam-with-flash/">Flash</a> or
-<a href="https://blogs.msdn.microsoft.com/silverlight_sdk/2010/03/16/using-webcams-in-silverlight-4/">Silverlight</a>)
+<p>The ability to capture audio and video has been <em>the</em> Holy Grail of web development for a long time.
+For many years, you had to rely on browser plugins (<a href="http://www.kevinmusselman.com/2009/02/07/access-webcam-with-flash/">Flash</a> or
+<a href="https://docs.microsoft.com/en-us/archive/blogs/silverlight_sdk/using-webcams-in-silverlight-4">Silverlight</a>)
 to get the job done. <a href="https://www.youtube.com/watch?v=SP_9zH9Q44o" target="_blank">Come on!</a></p>
 <p>HTML5 to the rescue. It might not be apparent, but the rise of HTML5 has brought
 a surge of access to device hardware. <a href="/tutorials/geolocation/trip_meter/">Geolocation</a> (GPS),
 the <a href="/tutorials/device/orientation/">Orientation API</a> (accelerometer), <a href="/tutorials/webgl/shaders/">WebGL</a> (GPU),
 and the <a href="/tutorials/webaudio/intro/">Web Audio API</a> (audio hardware) are perfect examples. These features
-are ridiculously powerful, exposing high level JavaScript APIs that sit
-on top of the system's underlying hardware capabilities.</p>
+are ridiculously powerful and expose high-level JavaScript APIs that sit
+on top of the system's foundational hardware capabilities.</p>
 <p>This tutorial introduces <a href="https://www.w3.org/TR/mediacapture-streams/"><code>navigator.mediaDevices.getUserMedia()</code></a>, which allows
 web apps to access a user's camera and microphone.</p>
-<h2 id="toc-history">The road to getUserMedia()</h2>
+<h2 id="toc-history">The road to the <code>getUserMedia()</code> API</h2>
 
-<p>If you're not aware of its history, the way we arrived at the <code>getUserMedia()</code> API is an interesting tale.</p>
-<p>Several variants of "Media Capture APIs" have evolved over the past few years.
-Many folks recognized the need to be able to access native devices on the web, but
-that led everyone and their mom to put together a new spec. Things got
+<p>If you're not aware of its history, the road to the <code>getUserMedia()</code> API is an interesting tale.</p>
+<p>Several variants of media-capture APIs evolved over the past few years.
+Many folks recognized the need to access native devices on the web, but
+that led many people to propose a new spec. Things got
 so messy that the W3C finally decided to form a working group. Their sole purpose?
-Make sense of the madness! The <a href="http://www.w3.org/2009/dap/">Device APIs Policy (DAP) Working Group</a>
-has been tasked to consolidate + standardize the plethora of proposals.</p>
-<p>I'll try to summarize what happened in 2011...</p>
+Make sense of the madness! The <a href="https://www.w3.org/2009/dap/">Devices and Sensors Working Group</a>
+has been tasked to consolidate and standardize the plethora of proposals.</p>
+<p>Here's a summary of what happened in 2011.</p>
 <h3 id="toc-round1">Round 1: HTML Media Capture</h3>
 
-<p><a href="http://dev.w3.org/2009/dap/camera/">HTML Media Capture</a> was the DAP's first go at
-standardizing media capture on the web. It works by overloading the <code>&lt;input type="file"&gt;</code>
-and adding new values for the <code>accept</code> parameter.</p>
-<p>If you wanted to let users take a snapshot of themselves with the webcam,
+<p><a href="https://dev.w3.org/2009/dap/camera/">HTML Media Capture</a> was the group's first go at
+standardizing media capture on the web. It overloads the <code>&lt;input type="file"&gt;</code>
+and adds new values for the <code>accept</code> parameter.</p>
+<p>If you want to let users take a snapshot of themselves with the webcam,
 that's possible with <code>capture=camera</code>:</p>
 <pre class="prettyprint"><code>&lt;input type="file" accept="image/*;capture=camera"&gt;
 </code></pre>
-<p>Recording a video or audio is similar:</p>
-<pre class="prettyprint"><code>&lt;input type="file" accept="video/*;capture=camcorder"&gt;
-&lt;input type="file" accept="audio/*;capture=microphone"&gt;
-</code></pre>
-<p>Kinda nice right? I particularly like that it reuses a file input. Semantically,
-it makes a lot of sense. Where this particular "API" falls short is the ability to do realtime effects
-(e.g. render live webcam data to a <code>&lt;canvas&gt;</code> and apply WebGL filters).
-HTML Media Capture only allows you to record a media file or take a snapshot in time.</p>
-<p><strong>Support:</strong></p>
-<ul>
-<li><a href="http://developer.android.com/sdk/android-3.0.html">Android 3.0 browser</a> -
-one of the first implementations. Check out <a href="http://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">this video</a> to see it in action.</li>
-<li>Chrome for Android (0.16)</li>
-<li>Firefox Mobile 10.0</li>
-<li>iOS6 Safari and Chrome (partial support)</li>
-</ul>
-<h3 id="toc-round2">Round 2: device element</h3>
 
-<p>Many thought HTML Media Capture was too limiting, so a new spec
+<p>Pretty nice, right? Semantically, it makes a lot of sense. Where this particular API falls short is the ability to do real-time effects, such as render live webcam data to a <code>&lt;canvas&gt;</code> and apply WebGL filters.
+HTML Media Capture only allows you to record a media file or take a snapshot in time.</p>
+<p><strong>Support</strong></p>
+<ul>
+<li><a href="https://developer.android.com/studio/releases/platforms#3.0">Android 3.0 browser</a>—one of the first implementations. Check out <a href="https://davidbcalhoun.com/2011/android-3-0-honeycomb-is-first-to-implement-the-device-api">this video</a> to see it in action.</li>
+<li>Google Chrome for Android (0.16)</li>
+<li>Firefox Mobile 10.0</li>
+<li>iOS 6 Safari and Chrome (partial support)</li>
+</ul>
+<h3 id="toc-round2">Round 2: Device element</h3>
+
+<p>Many thought HTML Media Capture was too limited, so a new spec
 emerged that supported any type of (future) device. Not surprisingly, the design called
-for a new element, the <a href="http://dev.w3.org/html5/html-device/"><code>&lt;device&gt;</code> element</a>,
+for a new element, the <a href="https://dev.w3.org/html5/html-device/"><code>&lt;device&gt;</code> element</a>,
 which became the predecessor to <code>getUserMedia()</code>.</p>
-<p>Opera was among the first browsers to create <a href="http://my.opera.com/core/blog/2011/03/14/web-meet-device">initial implementations</a>
+<p>Opera was among the first browsers to create <a href="https://my.opera.com/core/blog/2011/03/14/web-meet-device">initial implementations</a>
 of video capture based on the <code>&lt;device&gt;</code> element. Soon after
-(<a href="http://my.opera.com/core/blog/2011/03/23/webcam-orientation-preview">the same day</a> to be precise),
+(<a href="https://dev.opera.com/blog/webcam-orientation-preview/">the same day</a> to be precise),
 the WhatWG decided to scrap the <code>&lt;device&gt;</code> tag in favor of another up and comer, this time a JavaScript API called
 <code>navigator.getUserMedia()</code>. A week later, Opera put out new builds that included
 support for the updated <code>getUserMedia()</code> spec. Later that year,
-Microsoft joined the party by releasing a <a href="http://blogs.msdn.com/b/ie/archive/2011/12/09/media-capture-api-helping-web-developers-directly-import-image-video-and-sound-data-into-web-apps.aspx">Lab for IE9</a>
+Microsoft joined the party by releasing a <a href="https://msoftnews.com/uncategorized/media-capture-api-helping-web-developers-directly-import-image-video-and-sound-data-into-web-apps/">Lab for IE9</a>
 supporting the new spec.</p>
 <p>Here's what <code>&lt;device&gt;</code> would have looked like:</p>
 <pre class="prettyprint"><code>&lt;device type="media" onchange="update(this.data)"&gt;&lt;/device&gt;
@@ -170,46 +164,47 @@ supporting the new spec.</p>
 </code></pre>
 <p><strong>Support:</strong></p>
 <p>Unfortunately, no released browser ever included <code>&lt;device&gt;</code>.
-One less API to worry about I guess :) <code>&lt;device&gt;</code> did have two great things going
-for it though: 1.) it was semantic, and 2.) it was easily extensible to support
-more than just audio/video devices.</p>
+One less API to worry about. <code>&lt;device&gt;</code> did have two great things going
+for it, though: 
+<ul>
+  <li>It was semantic.</li>
+  <li>It was easily extensible to support more than audio and video devices.</li>
+</ul></p>
 <p>Take a breath. This stuff moves fast!</p>
 <h3 id="toc-round3">Round 3: WebRTC</h3>
 
-<p>The <code>&lt;device&gt;</code> element eventually went the way of the Dodo.</p>
-<p>The pace to find a suitable capture API accelerated thanks to the larger <a href="https://www.w3.org/TR/webrtc/">WebRTC</a> (Web Real Time Communications) effort. That spec is overseen by the <a href="http://www.w3.org/2011/04/webrtc/">W3C WebRTC Working Group</a>. Google, Opera, Mozilla, and <a href="http://webrtc.org">a few others</a> have
+<p>The <code>&lt;device&gt;</code> element eventually went the way of the dodo.</p>
+<p>The pace to find a suitable capture API accelerated thanks to the larger <a href="https://www.w3.org/TR/webrtc/">WebRTC</a> (web real-time communication) effort. That spec is overseen by the <a href="http://www.w3.org/2011/04/webrtc/">Web Real-Time Communications Working Group</a>. Google, Opera, Mozilla, and <a href="http://webrtc.org">a few others</a> have
 implementations.</p>
 <p><code>getUserMedia()</code> is related to WebRTC because it's the gateway into that set of APIs.
-It provides the means to access the user's local camera/microphone stream.</p>
+It provides the means to access the user's local camera and microphone stream.</p>
 
 <p><strong>Support:</strong></p>
 <p><code>getUserMedia()</code> has been available since Chrome 21, Opera 18, and Firefox 17. Support was initially provided by the <code>Navigator.getUserMedia()</code> method, but this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia" title="Mozilla Developer Network documentation for Navigator.getUserMedia()">has been deprecated</a>.</p>
-<p>You should now use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia" title="Mozilla Developer Network documentation for MediaDevices.getUserMedia()"><code>navigator.MediaDevices.getUserMedia()</code></a> method, which is <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Browser_compatibility" title="MDN browser compatibility chart for MediaDevices.getUserMedia()">widely supported</a>.</p>
+<p>You should now use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia" title="Mozilla Developer Network documentation for MediaDevices.getUserMedia()"><code>navigator.mediaDevices.getUserMedia()</code></a> method, which is <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Browser_compatibility" title="MDN browser compatibility chart for MediaDevices.getUserMedia()">widely supported</a>.</p>
 
-<h2 id="toc-gettingstarted">Getting started</h2>
+<h2 id="toc-gettingstarted">Get started</h2>
 
-<p>With <code>getUserMedia()</code>, we can finally tap into webcam and microphone input without a plugin.
+<p>With <code>getUserMedia()</code>, you can finally tap into webcam and microphone input without a plugin.
 Camera access is now a call away, not an install away. It's baked directly into the browser. Excited yet?</p>
 
 <h3 id="toc-featuredecting">Feature detection</h3>
 
-<p>Feature detecting is a simple check for the existence of <code>navigator.mediaDevices.getUserMedia</code>:</p>
+<p>Feature detection is a simple check for the existence of <code>navigator.mediaDevices.getUserMedia</code>:</p>
 
 <pre class="prettyprint"><code>function hasGetUserMedia() {
-  return !!(navigator.mediaDevices &&
-    navigator.mediaDevices.getUserMedia);
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 }
-
 if (hasGetUserMedia()) {
   // Good to go!
 } else {
-  alert('getUserMedia() is not supported by your browser');
+  alert("getUserMedia() is not supported by your browser");
 }
 </code></pre>
 
-<h3 id="toc-acccess">Gaining access to an input device</h3>
+<h3 id="toc-acccess">Gain access to an input device</h3>
 
-<p>To use the webcam or microphone, we need to request permission.
+<p>To use the webcam or microphone, you need to request permission.
 The parameter to <code>getUserMedia()</code> is an object specifying the details and
 requirements for each type of media you want to access. For example, if you want to access the webcam, the parameter should be <code>{video: true}</code>. To use both the microphone and camera,
 pass <code>{video: true, audio: true}</code>:</p>
@@ -217,56 +212,61 @@ pass <code>{video: true, audio: true}</code>:</p>
 
 &lt;script&gt;
 const constraints = {
-  video: true
+  video: true,
 };
 
-const video = document.querySelector('video');
+const video = document.querySelector("video");
 
-navigator.mediaDevices.getUserMedia(constraints).
-  then((stream) => {video.srcObject = stream});
+navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+  video.srcObject = stream;
+});
 &lt;/script&gt;
 </code></pre>
-<p>OK. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with our other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
-Notice that we're not setting a <code>src</code> attribute or including <code>&lt;source&gt;</code> elements
-on the <code>&lt;video&gt;</code> element. Instead of feeding the video the URL of a media file, we're giving it a <code>MediaStream</code> from the webcam.</p>
-<p>I'm also telling the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
-the first frame. Adding <code>controls</code> also works as you'd expected.</p>
+<p>Okay. So what's going on here? Media capture is a perfect example of HTML5 APIs working together. It works in conjunction with your other HTML5 buddies, <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code>.
+Notice that you don't set a <code>src</code> attribute or include <code>&lt;source&gt;</code> elements
+on the <code>&lt;video&gt;</code> element. Instead of the URL of a media file, you give the video a <code>MediaStream</code> from the webcam.</p>
+<p>You also tell the <code>&lt;video&gt;</code> to <code>autoplay</code>, otherwise it would be frozen on
+the first frame. The addition of <code>controls</code> also works as you'd expect.</p>
 
-<h3 id="toc-constraints">Setting media constraints (resolution, height, width)</h3>
+<h3 id="toc-constraints">Set media constraints (resolution, height, and width)</h3>
 
 <p>The parameter to <code>getUserMedia()</code> can also be used to specify more requirements
-(or constraints) on the returned media stream. For example, instead of just indicating you want basic access to video (e.g. <code>{video: true}</code>), you can additionally require the stream
+(or constraints) on the returned media stream. For example, instead of only basic access to video (for example, <code>{video: true}</code>), you can additionally require the stream
 to be HD:</p>
 <pre class="prettyprint"><code>const hdConstraints = {
-  video: {width: {min: 1280}, height: {min: 720}}
+  video: { width: { min: 1280 }, height: { min: 720 } },
 };
 
-navigator.mediaDevices.getUserMedia(hdConstraints).
-  then((stream) => {video.srcObject = stream});
-
-...
-
-const vgaConstraints = {
-  video: {width: {exact: 640}, height: {exact: 480}}
-};
-
-navigator.mediaDevices.getUserMedia(vgaConstraints).
-  then((stream) => {video.srcObject = stream});
+navigator.mediaDevices.getUserMedia(hdConstraints).then((stream) => {
+  video.srcObject = stream;
+});
 </code></pre>
 
-<p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>will be rejected with an <code>OverconstrainedError</code> and the user will not be prompted to grant permission to access their camera.</p>
-<p>For more configurations, see the <a href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-MediaTrackConstraints">constraints API</a></p>
-<h3 id="toc-source">Selecting a media source</h3>
+<pre class="prettyprint"><code>const vgaConstraints = {
+  video: { width: { exact: 640 }, height: { exact: 480 } },
+};
+
+navigator.mediaDevices.getUserMedia(vgaConstraints).then((stream) => {
+  video.srcObject = stream;
+});
+</code></pre>
+
+<p>If the resolution isn't supported by the currently selected camera, <code>getUserMedia()</code>is rejected with an <code>OverconstrainedError</code> and the user isn't prompted to grant permission to access their camera.</p>
+<p>For more configurations, see the <a href="https://w3c.github.io/mediacapture-main/getusermedia.html#dom-mediatrackconstraints">Constraints API</a>.</p>
+<h3 id="toc-source">Select a media source</h3>
 
 <p>The <code>navigator.mediaDevices.enumerateDevices()</code> method provides information about available input and output devices, and makes it possible to select a camera or microphone. (The <code>MediaStreamTrack.getSources()</code> API <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack#Browser_compatibility" title="Mozilla Developer network browser compatibility table for MediaStreamTrack.getSources()">has been deprecated</a>.)</p>
 
 <p>This example enables the user to choose an audio and video source:</p>
-<pre class="prettyprint"><code>const videoElement = document.querySelector('video');
-const audioSelect = document.querySelector('select#audioSource');
-const videoSelect = document.querySelector('select#videoSource');
+<pre class="prettyprint"><code>const videoElement = document.querySelector("video");
+const audioSelect = document.querySelector("select#audioSource");
+const videoSelect = document.querySelector("select#videoSource");
 
-navigator.mediaDevices.enumerateDevices()
-  .then(gotDevices).then(getStream).catch(handleError);
+navigator.mediaDevices
+  .enumerateDevices()
+  .then(gotDevices)
+  .then(getStream)
+  .catch(handleError);
 
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
@@ -274,40 +274,41 @@ videoSelect.onchange = getStream;
 function gotDevices(deviceInfos) {
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceInfo = deviceInfos[i];
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.value = deviceInfo.deviceId;
-    if (deviceInfo.kind === 'audioinput') {
-      option.text = deviceInfo.label ||
-        'microphone ' + (audioSelect.length + 1);
+    if (deviceInfo.kind === "audioinput") {
+      option.text =
+        deviceInfo.label || "microphone " + (audioSelect.length + 1);
       audioSelect.appendChild(option);
-    } else if (deviceInfo.kind === 'videoinput') {
-      option.text = deviceInfo.label || 'camera ' +
-        (videoSelect.length + 1);
+    } else if (deviceInfo.kind === "videoinput") {
+      option.text = deviceInfo.label || "camera " + (videoSelect.length + 1);
       videoSelect.appendChild(option);
     } else {
-      console.log('Found another kind of device: ', deviceInfo);
+      console.log("Found another kind of device: ", deviceInfo);
     }
   }
 }
 
 function getStream() {
   if (window.stream) {
-    window.stream.getTracks().forEach(function(track) {
+    window.stream.getTracks().forEach(function (track) {
       track.stop();
     });
   }
 
   const constraints = {
     audio: {
-      deviceId: {exact: audioSelect.value}
+      deviceId: { exact: audioSelect.value },
     },
     video: {
-      deviceId: {exact: videoSelect.value}
-    }
+      deviceId: { exact: videoSelect.value },
+    },
   };
 
-  navigator.mediaDevices.getUserMedia(constraints).
-    then(gotStream).catch(handleError);
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(gotStream)
+    .catch(handleError);
 }
 
 function gotStream(stream) {
@@ -316,26 +317,25 @@ function gotStream(stream) {
 }
 
 function handleError(error) {
-  console.error('Error: ', error);
+  console.error("Error: ", error);
 }
-
 </code></pre>
 <p>Check out Sam Dutton's <a href="https://simpl.info/getusermedia/sources/">great demo</a> of how to let users select the media source.</p>
 
 <h3 id="toc-security">Security</h3>
 
-<p><code>getUserMedia()</code> can only be called from an HTTPS URL, localhost or a <code>file://</code> URL. Otherwise, the promise from the call will be rejected. <code>getUserMedia()</code> also won't work for cross origin calls from iframes: see <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a> for more detail.</p>
+<p><code>getUserMedia()</code> can only be called from an HTTPS URL or localhost. Otherwise, the promise from the call is rejected. <code>getUserMedia()</code> also doesn't work for cross-origin calls from iframes. For more information, see <a href="https://goo.gl/EuHzyv" title="Chromium Project: Deprecating Permissions in Cross-Origin Iframes">Deprecating Permissions in Cross-Origin Iframes</a>.</p>
 
-<p>All browsers will throw up an infobar upon calling <code>getUserMedia()</code>, which gives users the option to grant or deny access to their camera or microphone. Here is Chrome's permission dialog:</p>
+<p>All browsers generate an infobar upon the call to <code>getUserMedia()</code>, which gives users the option to grant or deny access to their cameras or microphones. Here's the permission dialog from Chrome:</p>
 
 <figure>
-<img src="permission.png" alt="Permission dialog in Chrome" title="Permission dialog in Chrome">
+<img src="permission.png" alt="Permission dialog in Chrome." title="Permission dialog in Chrome">
 <figcaption>Permission dialog in Chrome</figcaption>
 </figure>
 
-<p>This permission will be persistent. That is, users won't have to grant/deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
+<p>This permission is persistent. That is, users don't have to grant or deny access every time. If users change their mind later, they can update their camera access options per origin from the browser settings.</p>
 
-<p class="notice tip">The MediaStreamTrack is actively using the camera, which takes resources and keeps the camera open (and camera light on). When you are no longer using a track make sure to call <code>track.stop()</code> so that the camera can be closed.</p>
+<p class="notice tip">The <code>MediaStreamTrack</code> actively uses the camera, which takes resources and keeps the camera open (and camera light on). When you no longer use a track, call <code>track.stop()</code> so that the camera can be closed.</p>
 
 <h3 id="toc-basic-demo">Basic demo</h3>
 
@@ -344,36 +344,39 @@ function handleError(error) {
   <p><button class="capture-button">Capture video</button> <button id="stop-button">Stop</button></p>
 </div>
 
-<h2 id="toc-screenshot">Taking screenshots</h2>
+<h2 id="toc-screenshot">Take screenshots</h2>
 
 <p>The <code>&lt;canvas&gt;</code> API's <code>ctx.drawImage(video, 0, 0)</code> method makes it trivial to draw
-<code>&lt;video&gt;</code> frames to <code>&lt;canvas&gt;</code>. Of course, now that we have video
-input via <code>getUserMedia()</code>, it's just as easy to create a photo booth application
-with realtime video:</p>
+<code>&lt;video&gt;</code> frames to <code>&lt;canvas&gt;</code>. Of course, now that you have video
+input through <code>getUserMedia()</code>, it's just as easy to create a photo-booth app
+with real-time video:</p>
 <pre class="prettyprint"><code>&lt;video autoplay&gt;&lt;/video&gt;
 &lt;img src=""&gt;
 &lt;canvas style="display:none;"&gt;&lt;/canvas&gt;
 
 &lt;script&gt;
-const captureVideoButton =
-  document.querySelector('#screenshot .capture-button');
-const screenshotButton = document.querySelector('#screenshot-button');
-const img = document.querySelector('#screenshot img');
-const video = document.querySelector('#screenshot video');
+const captureVideoButton = document.querySelector(
+  "#screenshot .capture-button"
+);
+const screenshotButton = document.querySelector("#screenshot-button");
+const img = document.querySelector("#screenshot img");
+const video = document.querySelector("#screenshot video");
 
-const canvas = document.createElement('canvas');
+const canvas = document.createElement("canvas");
 
-captureVideoButton.onclick = function() {
-  navigator.mediaDevices.getUserMedia(constraints).
-    then(handleSuccess).catch(handleError);
+captureVideoButton.onclick = function () {
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(handleSuccess)
+    .catch(handleError);
 };
 
-screenshotButton.onclick = video.onclick = function() {
+screenshotButton.onclick = video.onclick = function () {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.getContext("2d").drawImage(video, 0, 0);
   // Other browsers will fall back to image/png
-  img.src = canvas.toDataURL('image/webp');
+  img.src = canvas.toDataURL("image/webp");
 };
 
 function handleSuccess(stream) {
@@ -389,46 +392,46 @@ function handleSuccess(stream) {
   <p><button id="screenshot-button" disabled>Take screenshot</button></p>
 </div>
 
-<h2 id="toc-effects">Applying Effects</h2>
+<h2 id="toc-effects">Apply effects</h2>
 
 <h3 id="toc-effects-css">CSS Filters</h3>
 
-<p>Using <a href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/filters/index.html">CSS Filters</a>, we can apply some gnarly effects to the <code>&lt;video&gt;</code>
+<p>With CSS filters, you can apply some gnarly effects to the <code>&lt;video&gt;</code>
 as it is captured:</p>
-<pre class="prettyprint"><code>
-&lt;video autoplay&gt;&lt;/video&gt;
+<pre class="prettyprint"><code>&lt;video autoplay&gt;&lt;/video&gt;
 &lt;p&gt;&lt;button class="capture-button"&gt;Capture video&lt;/button&gt;
 &lt;p&gt;&lt;button id="cssfilters-apply"&gt;Apply CSS filter&lt;/button&gt;&lt;/p&gt;
 
 &lt;script&gt;
-const captureVideoButton =
-  document.querySelector('#cssfilters .capture-button');
-const cssFiltersButton =
-  document.querySelector('#cssfilters-apply');
-const video =
-  document.querySelector('#cssfilters video');
+const captureVideoButton = document.querySelector(
+  "#cssfilters .capture-button"
+);
+const cssFiltersButton = document.querySelector("#cssfilters-apply");
+const video = document.querySelector("#cssfilters video");
 
 let filterIndex = 0;
 const filters = [
-  'grayscale',
-  'sepia',
-  'blur',
-  'brightness',
-  'contrast',
-  'hue-rotate',
-  'hue-rotate2',
-  'hue-rotate3',
-  'saturate',
-  'invert',
-  ''
+  "grayscale",
+  "sepia",
+  "blur",
+  "brightness",
+  "contrast",
+  "hue-rotate",
+  "hue-rotate2",
+  "hue-rotate3",
+  "saturate",
+  "invert",
+  "",
 ];
 
-captureVideoButton.onclick = function() {
-  navigator.mediaDevices.getUserMedia(constraints).
-    then(handleSuccess).catch(handleError);
+captureVideoButton.onclick = function () {
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(handleSuccess)
+    .catch(handleError);
 };
 
-cssFiltersButton.onclick = video.onclick = function() {
+cssFiltersButton.onclick = video.onclick = function () {
   video.className = filters[filterIndex++ % filters.length];
 };
 
@@ -443,64 +446,58 @@ function handleSuccess(stream) {
   <p><button id="cssfilters-apply">Apply CSS filter</button></p>
 </div>
 
-<h3 id="toc-effects-webgl">WebGL Textures</h3>
+<h3 id="toc-effects-webgl">WebGL textures</h3>
 
 <p>One amazing use case for video capture is to render live input as a WebGL texture.
-Since I know absolutely nothing about WebGL (other than it's sweet), I'm going
-to suggest you give Jerome Etienne's <a href="http://learningthreejs.com/blog/2012/02/07/live-video-in-webgl/">tutorial</a>
+Give Jerome Etienne's <a href="http://learningthreejs.com/blog/2012/02/07/live-video-in-webgl/">tutorial</a>
 and <a href="http://learningthreejs.com/data/live-video-in-webgl/">demo</a> a look.
 It talks about how to use <code>getUserMedia()</code> and <a href="/tutorials/three/intro/">Three.js</a>
 to render live video into WebGL.</p>
-<h2 id="toc-webaudio-api">Using getUserMedia with the Web Audio API</h2>
+<h2 id="toc-webaudio-api">Use the <code>getUserMedia</code> API with the Web Audio API</h2>
 
-<p>One of my dreams is to build AutoTune in the browser with nothing more than open web technology! </p>
-<p>Chrome supports live microphone input from <code>getUserMedia()</code> to the <a href="/tutorials/webaudio/intro/">Web Audio API</a> for real-time effects. Piping microphone input to the Web Audio API looks like this:</p>
-<pre class="prettyprint"><code>window.AudioContext = window.AudioContext ||
-                      window.webkitAudioContext;
+<p>Chrome supports live microphone input from <code>getUserMedia()</code> to the <a href="/tutorials/webaudio/intro/">Web Audio API</a> for real-time effects. It looks like this:</p>
+<pre class="prettyprint"><code>window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const context = new AudioContext();
 
-navigator.mediaDevices.getUserMedia({audio: true}).
-  then((stream) => {
-    const microphone = context.createMediaStreamSource(stream);
-    const filter = context.createBiquadFilter();
-    // microphone -> filter -> destination
-    microphone.connect(filter);
-    filter.connect(context.destination);
+navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+  const microphone = context.createMediaStreamSource(stream);
+  const filter = context.createBiquadFilter();
+  // microphone -> filter -> destination
+  microphone.connect(filter);
+  filter.connect(context.destination);
 });
 </code></pre>
 <p>Demos:</p>
 <ul>
-<li><a href="http://webaudiodemos.appspot.com/input/index.html">Live Input Visualizer</a></li>
-<li><a href="http://webaudiodemos.appspot.com/AudioRecorder/index.html">Audio Recorder</a></li>
-<li><a href="http://webaudiodemos.appspot.com/pitchdetect/index.html">Pitch Detector</a></li>
+<li><a href="https://webaudiodemos.appspot.com/input/index.html">Live-input visualizer</a></li>
+<li><a href="https://webaudiodemos.appspot.com/AudioRecorder/index.html">Audio recorder</a></li>
+<li><a href="https://webaudiodemos.appspot.com/pitchdetect/index.html">Pitch detector</a></li>
 </ul>
-<p>For more information, see <a href="http://updates.html5rocks.com/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>.</p>
+<p>For more information, see <a href="https://developers.google.com/web/updates/2012/09/Live-Web-Audio-Input-Enabled">Chris Wilson's post</a>.</p>
 <h2 id="toc-conclusion">Conclusion</h2>
 
-<p>Historically, device access on the web has been a tough nut to crack. <a href="http://www.slideshare.net/jamesgpearce/mobile-device-apis">Many tried, few succeeded</a>. Most of the early ideas never gained widespread adoption or took hold outside of a proprietary environment. Perhaps the main problem has been that the web's security model is <em>very</em> different from the native world. In particular, you probably don't want every Joe Shmoe website to have random access to your video camera or microphone. It's been difficult to get right.</p>
+<p>Historically, device access on the web has been a tough nut to crack. <a href="https://www.slideshare.net/jamesgpearce/mobile-device-apis">Many tried, few succeeded</a>. Most of the early ideas never gained widespread adoption or took hold outside of a proprietary environment. Perhaps the main problem has been that the web's security model is <em>very</em> different from the native world. In particular, you probably don't want every Joe Shmoe website to have random access to your video camera or microphone. It's been difficult to get right.</p>
 
-<p>Since then, driven by the increasingly ubiquitous capabilities of mobile devices, the web has begun to provide much richer functionality. We now have APIs to <a href="https://developers.google.com/web/updates/2016/12/imagecapture" title="Web Fundamentals article about the Image Capture API">take photos and control camera settings</a>, <a href="https://developers.google.com/web/updates/2016/01/mediarecorder" title="Web Fundamentals article: Record Audio and Video with MediaRecorder">record audio and video</a>, and to access other types of sensor data such as location, motion and device orientation. The <a href="https://developers.google.com/web/updates/2017/09/sensors-for-the-web" title="What is Generic Sensor API?">Generic Sensor framework</a> ties all this together, alongside generic APIs to enable web applications to <a href="https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web" title="Access USB Devices on the Web">access USB</a> and <a href="https://developers.google.com/web/updates/2015/07/interact-with-ble-devices-on-the-web" title="Interact with Bluetooth devices on the Web">interact with Bluetooth</a> devices.</p>
+<p>Since then, driven by the increasingly ubiquitous capabilities of mobile devices, the web has begun to provide much richer functionality. You now have APIs to <a href="https://developers.google.com/web/updates/2016/12/imagecapture" title="Web Fundamentals article about the Image Capture API">take photos and control camera settings</a>, <a href="https://developers.google.com/web/updates/2016/01/mediarecorder" title="Web Fundamentals article: Record Audio and Video with MediaRecorder">record audio and video</a>, and access other types of sensor data, such as location, motion, and device orientation. The <a href="https://developers.google.com/web/updates/2017/09/sensors-for-the-web" title="What is Generic Sensor API?">Generic Sensor framework</a> ties all this together, alongside generic APIs to enable web apps to <a href="https://web.dev/usb" title="Access USB Devices on the Web">access USB</a> and <a href="https://web.dev/bluetooth" title="Interact with Bluetooth devices on the Web">interact with Bluetooth</a> devices.</p>
 
-<p><code>getUserMedia()</code> was but the first wave of hardware interactivity.</p>
+<p><code>getUserMedia()</code> was only the first wave of hardware interactivity.</p>
 
 <h2 id="toc-resources">Additional resources</h2>
 
 <ul>
 <li><a href="https://w3c.github.io/mediacapture-main/">W3C specification</a></li>
-<li>Bruce Lawson's <a href="http://html5doctor.com/getusermedia/">HTML5Doctor article</a></li>
-<li>Bruce Lawson's <a href="http://dev.opera.com/articles/view/getusermedia-access-camera-privacy-ui/">dev.opera.com article</a></li>
-<li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-mediastream" title="HTML5 Rocks intro to WebRTC">Getting Started with WebRTC</a></li>
+<li>Bruce Lawson's <a href="https://html5doctor.com/getusermedia/">HTML5Doctor article</a></li>
+<li>Bruce Lawson's <a href="https://dev.opera.com/articles/view/getusermedia-access-camera-privacy-ui/">dev.opera.com article</a></li>
+<li><a href="https://www.html5rocks.com/en/tutorials/webrtc/basics/#toc-mediastream" title="HTML5 Rocks intro to WebRTC">Get Started with WebRTC</a></li>
 </ul>
 <h3 id="toc-demos">Demos</h3>
 
 <ul>
-<li><a href="https://webrtc.github.io/samples/" title="WebRTC samples GitHub Pages">WebRTC Samples</a>: canonical demos and code repo</li>
-<li><a href="http://html5-demos.appspot.com/static/getusermedia/photobooth.html">Live Photo booth</a></li>
-<li>Paul Neave's <a href="http://neave.com/webcam/html5/">WebGL Camera Effects</a></li>
-<li><a href="http://html5photobooth.com/">Snapster</a></li>
+<li><a href="https://webrtc.github.io/samples/" title="WebRTC samples GitHub Pages">WebRTC samples</a>: Canonical demos and code repository</li>
+<li>Paul Neave's <a href="https://neave.com/webcam/html5/">WebGL camera effects</a></li>
 <li><a href="http://learningthreejs.com/data/live-video-in-webgl/">Live video in WebGL</a></li>
-<li><a href="http://www.soundstep.com/blog/experiments/jsdetection/">Play Xylophone with your hands</a></li>
+<li><a href="http://www.soundstep.com/blog/experiments/jsdetection/">Play xylophone with your hands</a></li>
 </ul>
 <script>
 function handleError(error) {
