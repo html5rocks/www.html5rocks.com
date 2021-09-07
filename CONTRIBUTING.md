@@ -1,3 +1,6 @@
+**⚠️ WARNING! We don't use HTML5Rocks for content anymore.
+Please consider updating one of Google's newer developer sites.**
+
 A step-by-step guide for third-party developers to contribute to html5rocks.com. Before you draft the article, read our [writing tips](https://github.com/html5rocks/www.html5rocks.com/wiki/Writing-Tips). 
 
 # Before you start
@@ -22,7 +25,7 @@ To checkout the corresponding source, fork us an run the following command:
 
     git clone git://github.com/html5rocks/www.html5rocks.com.git
 
-# Development environment  quickstart
+# Development environment quickstart
 1. Install the [App Engine SDK](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) using either the Google App Engine launcher or by manually downloading the SDK (for advanced users working with multiple versions of the SDK for different projects) and making sure it's on your path.
 2. Open the project folder in a terminal, and start the server with `devappserver2.py .`
 3. Import data by navigating to [http://localhost:8080/database/load_all](http://localhost:8080/database/load_all).
