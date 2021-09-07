@@ -1,12 +1,31 @@
-## html5rocks.com is an open source project!
+HTML5Rocks was a content site run by Google.
+Its content lives on at [Web Fundamentals] and [web.dev].
+Chrome-specific content can be found at [Chrome Developers].
 
-**Interested in contributing? Help us:**
+## Deploy
 
-- [Localize content](https://github.com/html5rocks/www.html5rocks.com/blob/master/LOCALIZATION.md)
-- [File or fix bugs](https://github.com/html5rocks/www.html5rocks.com/issues)
-- [Author an article, tutorial, or case study](https://github.com/html5rocks/www.html5rocks.com/wiki/Contributors-Guide)
+HTML5Rocks is _not_ deployed automatically.
+If you make a change, you'll need to deploy it.
+You can just run `gcloud` from this folder (there's no build step):
 
-[![HTML5Rocks Screenshot](https://github.com/html5rocks/www.html5rocks.com/raw/master/static/images/screenshots/landing_page.png)](http://www.html5rocks.com)
+```bash
+$ gcloud app deploy --project html5rocks-hrd --no-promote ./app.yaml
+```
 
-*HTML5Rocks is by [Google](https://github.com/google)*
+This will deploy to a unique version and hostname but not take over serving yet.
+Check it works with your browser, then migrate all traffic to the new version from the [Cloud Console].
 
+⚠️ If you get a 500 when testing the site, wait ~10 seconds and try again.
+The code is slow to start, and App Engine can be initially unhappy.
+
+If you need access to do this, ask in team chat or ping a lead.
+
+## Redirects
+
+If you're removing content and want to add a redirect, add it to the "_redirects.yaml" file.
+Changes to this file need the site to be redeployed as described above.
+
+[Web Fundamentals]: https://developers.google.com/web
+[web.dev]: https://web.dev
+[Chrome Developers]: https://developer.chrome.com
+[Cloud Console]: https://console.cloud.google.com/appengine/versions?project=html5rocks-hrd
