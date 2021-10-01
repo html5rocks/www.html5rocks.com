@@ -13,7 +13,7 @@ $ gcloud app deploy --project html5rocks-hrd --no-promote ./app.yaml
 ```
 
 This will deploy to a unique version and hostname but not take over serving yet.
-Check it works with your browser, then migrate all traffic to the new version from the [Cloud Console].
+Check if it works with your browser, then migrate all traffic to the new version from [Cloud Console].
 
 ⚠️ If you get a 500 when testing the site, wait ~10 seconds and try again.
 The code is slow to start, and App Engine can be initially unhappy.
