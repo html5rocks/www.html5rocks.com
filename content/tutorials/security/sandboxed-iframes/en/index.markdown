@@ -218,7 +218,7 @@ inside out, starting with the frame's contents:
            } catch (e) {
              result = 'eval() threw an exception.';
            }
-           mainWindow.postMessage(result, event.origin);
+           mainWindow.postMessage(result, e.origin);
          });
        </script>
      </head>
