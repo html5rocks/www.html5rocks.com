@@ -2,7 +2,7 @@
 #
 # Compresses the site's JS/CSS and cache busts links before uploading the app
 # to App Engine.
-# 
+#
 # Note: This script should be used in place of using appcfg.py update directly
 # to update the application on App Engine.
 #
@@ -12,7 +12,7 @@ for arg in $@
 do
  if [ $arg = "--release" ] ; then
    versionStr=v`date +%Y%m%d`
-   
+
    git checkout -b $versionStr
 
    if [ $? -ne 0 ] ; then
@@ -34,10 +34,10 @@ do
  fi
 done
 
+./combine_css_files.sh
 ./compress_js_css.sh
 # Cache busting is handled by the GAE PageSpeed feature generating unique URLs.
 #./cachebust.py
-echo \# `date` >> ../cache.appcache
 appcfg.py update ../
 
 # Clean up our modified cache busted files and switch back to master.

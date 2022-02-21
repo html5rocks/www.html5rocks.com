@@ -5,7 +5,9 @@ var VolumeSample = {
 VolumeSample.gainNode = null;
 
 VolumeSample.play = function() {
-  this.gainNode = context.createGainNode();
+  if (!context.createGain)
+    context.createGain = context.createGainNode;
+  this.gainNode = context.createGain();
   var source = context.createBufferSource();
   source.buffer = BUFFERS.techno;
 
@@ -15,7 +17,9 @@ VolumeSample.play = function() {
   this.gainNode.connect(context.destination);
   // Start playback in a loop
   source.loop = true;
-  source.noteOn(0);
+  if (!source.start)
+    source.start = source.noteOn;
+  source.start(0);
   this.source = source;
 };
 
@@ -28,7 +32,9 @@ VolumeSample.changeVolume = function(element) {
 };
 
 VolumeSample.stop = function() {
-  this.source.noteOff(0);
+  if (!this.source.stop)
+    this.source.stop = source.noteOff;
+  this.source.stop(0);
 };
 
 VolumeSample.toggle = function() {

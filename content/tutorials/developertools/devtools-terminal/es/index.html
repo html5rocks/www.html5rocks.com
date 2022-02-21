@@ -1,0 +1,108 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.screenshot{
+  width:100%;
+}
+.inline-list{
+  margin-left:3em;
+  list-style:square;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return 'register' in document;
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-intro">Introducción</h2>
+
+<p><a href="https://github.com/petethepig/devtools-terminal">Terminal de DevTools</a> es una nueva extensión de Chrome DevTools que lleva <a href="http://blog.dfilimonov.com/2013/09/12/devtools-terminal.html">el poder</a> de la terminal para su navegador. Si alguna vez se encuentra cambiando de contexto entre Chrome y la línea de comandos para tareas como: tirar abajo los activos, usando git, ronco, wget o incluso vim - puede encontrar esta extensión útil para ahorrarse tiempo.</p>
+<figure>
+  <img src="image_0.png" alt="DevTools Terminal is great for quick command-line tweaks" />
+  <figcaption>La Terminal de DevTools is útil para modificaciones de línea de comandos rápidas desde interior de Chrome mientras trabajando en su aplicación de web</figcaption>
+</figure>
+
+<figure>
+  <img src="image_1.png" alt="Using cURL in DevTools Terminal" />
+  <figcaption>Después de usar <a href="https://twitter.com/ChromiumDev/status/317183238026186752">Copiar como cURL</a> en el panel Red, puedo pegar fácilmente el comando completo en la Terminal de DevTools y ejecutarlo.</figcaption>
+</figure>
+
+<h2>¿Por qué utilizar un terminal en el navegador?</h2>
+<p> Durante el desarrollo, probablemente estás acostumbrado a trabajar con algunas herramientas diferentes: el editor de texto para la escritura, un navegador para la prueba y la depuración y el terminal para la actualización de los paquetes, cURLing headers o incluso un proceso de construcción usando Grunt.</p>
+<figure>
+  <img src="image_2.png" alt="Running Grunt in DevTools Terminal" />
+  <figcaption>Correr tareas con Grunt sin tener que salir del navegador.</figcaption>
+</figure>
+
+<p>Tener que cambiar contextos entre las herramientas durante el desarrollo puede ser una distracción<em> </em>y puede llevar a la ineficiencia. Hemos hablado previamente acerca de cómo (para ciertos tipos de proyectos) puede depurar y escribir código directamente en el interior de los DevTools Chrome utilizando <a href="http://www.html5rocks.com/en/tutorials/developertools/revolutions2013/">Workspaces</a> sin salirse del navegador.</p>
+<figure>
+  <img src="image_3.png" alt="Git workflow" />
+  <figcaption>Un flujo de trabajo git completo también es posible. Ideal para un <em>git diff</em> después de escribir en un área de trabajo.</figcaption>
+</figure>
+
+<p>La Terminal de DevTools (por Dmitry Filimonov) completa esta historia, por lo que es posible codificar, depurar y construir desde dentro de la misma ventana. Usted consigue el acceso a la pestaña, ctrl, e incluso los colores de Git haciendo que se sienta familiarizado con el terminal que ha acostumbrado a usar en su flujo de trabajo diario.</p>
+<h2 id="toc-workflow">Flujo de Trabajo</h2>
+
+<figure>
+  <img src="image_4.png" alt="Authoring workflow" />
+  <figcaption>Empieze nuevos proyectos con un <em>git clone</em>, <em>yeoman</em> o cualquier otra herramienta accesible a través del terminal.</figcaption>
+</figure>
+
+<p>Mi flujo de trabajo personal para la escritura en Chrome ahora se ve un poco como esto:</p>
+<ul>
+<li>
+<p><strong>Terminal de DevTools:</strong> úselo para <em>git clone</em> a  un repositorio de GitHub, <em>tocar </em>un nuevo archivo o ejectuar <em>yo (yeoman) </em>para crear una aplicación<em>.</em> si quiero, puedo lanzar un nuevo servidor a una vista previa de la aplicación también</p>
+</li>
+<li>
+<p><strong>Espacios de trabajo: </strong>editar y depurar mi webapp dentro de Chrome. Si lancé un servidor anteriornente puedo mapear mi proyecto local a mis archivos de red. Puedo usar Sass o Less y tener mis cambios del <a href="https://developers.google.com/chrome-developer-tools/docs/css-preprocessors">Preprocesador de CSS</a> mapeados de nuevo a mis archivos de CSS.</p>
+</li>
+<li>
+<p><strong>Terminal de</strong><strong> DevTools: </strong>Ahora me puedo comprometer a control de código fuente, utilice un gestor de paquetes (npm, bower) para bajar dependencias o ejecutar mi proceso de construcción (grunt, make) para generar una versión optimizada de la misma aplicación.</p>
+</li>
+</ul>
+<p>Aunque puede tomar un tiempo para acostumbrarse a la organización de las ventanas, es agradable ser capaz de lograr más de lo que necesito dentro del navegador.</p>
+<figure>
+  <img src="image_5.png" alt="Using ls in the terminal" />
+  <figcaption>Apunta los nombres de archivos en el directorio actual utilizando <em>ls</em>. Excelente para visualizar directorios fuera de su área de trabajo.</figcaption>
+</figure>
+
+<h2 id="toc-installation">Instalación</h2>
+
+<p>La Terminal de DevTools se puede instalar desde la <a href="https://chrome.google.com/webstore/detail/devtools-terminal/leakmhneaibbdapdoienlkifomjceknl?hl=en"> tienda por la Red de Chrome</a>. Si usted es un usuario de Mac o Linux, una vez que lo ha añadido a Chrome, simplemente puede "Inspect Element" o <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">I</span> para abrir las DevTools y usted será capaz de acceder a él a través de la nueva pestaña “Terminal”.</p>
+<p>Usuarios de Windows tendrán que conectar la extensión a la terminal del sistema utilizando un apoderado de Node.js. Para obtener esta instalación, instale el<code>devtools-terminal</code> módulo de npm:</p>
+<pre class="prettyprint">npm install -g devtools-terminal</pre>
+
+<p>Luego, abra una nueva ventana de línea de comandos y ejecute <code>devtools-terminal</code>. A continuación, abre las DevTools y en la pestaña "Terminal", conectase al servidor utilizando las opciones de configuración por defecto. Usted será capaz de personalizar el puerto y la dirección aún más si es necesario.</p>
+<figure>
+  <img src="image_6.png" alt="DevTools Terminal supports customizing connection details during setup." />
+</figure>
+
+<h2 id="toc-limitations">Limitaciones</h2>
+
+<p>La Terminal de DevTools tiene algunas limitaciones. A diferencia Terminal.app o iTerm2 en el Mac, al momento no soporta pestañas, múltiples ventanas, o reproducción de la historia. Sin embargo, puede abrir tantas nuevas pestañas de Chrome como quieras, cada uno de los cuales puede tener su propia instancia de la Terminal DevTools. Esto se puede hacer desde la pantalla de Chrome Apps:</p>
+<figure>
+  <img src="image_7.png" alt="DevTools Terminal supports both a light theme and a dark theme" />
+  <figcaption>Por el momento, la extensión es compatible con los dos temas: luz y oscuro. </figcaption>
+</figure>
+
+<p class="notice"> Esta extensión se basa actualmente en la<a href="http://blog.chromium.org/2013/09/saying-goodbye-to-our-old-friend-npapi.html">NPAPI</a>, que se está eliminando gradualmente durante el próximo año a favor de la API de mensajería nativo. El autor de la Terminal de DevTools, Dmitry Filimonov, planea alejarse de NPAPI a favor de cualquiera de esta API o la API del cliente native en un futuro próximo.</p>
+
+<h2 id="toc-conclusions">Conclusiones</h2>
+
+<p>La Terminal de DevTools (y extensiones similares a ella, como <a href="http://krasimirtsonev.com/blog/article/Auxilio-Chrome-extension-or-how-I-boost-my-productivity">Auxilio</a>) ayudarle a evitar el cambio de ida y vuelta entre su editor, el navegador, y la línea de comandos durante el desarrollo. </p>
+<p>Mientras que un in-browser puede ser poco atractivo algunos, usted puede encontrar la extensión ser un complemento útil a su flujo de trabajo y le animamos a probarlo, para ver si le gusta!</p>{% endblock %}

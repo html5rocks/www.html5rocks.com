@@ -1,0 +1,186 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong>
+  <a href="https://github.com/yuuki0902">Yuuki Furukawa</a>
+  <a href="https://github.com/blueteeth48">Ayu Ishii</a>
+  <a href="https://github.com/satakeh">satakeh</a>
+  <a href="https://github.com/yaboo777">Kazuyuki Yabu</a>
+  <a href="https://github.com/yogurito">Kazuki KANAMORI</a>
+</div>
+{% endblock %}
+
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/paullewis.75.png);
+  background-position: -14px -9px !important;
+}
+
+article.tutorial section {
+  overflow: visible;
+}
+
+article.tutorial .notice.fact {
+  position: relative;
+  padding-left: 25px;
+}
+article.tutorial .notice.fact:before {
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  text-transform: uppercase;
+  -webkit-transform: rotateZ(-30deg);
+  -moz-transform: rotateZ(-30deg);
+  -o-transform: rotateZ(-30deg);
+  -ms-transform: rotateZ(-30deg);
+  transform: rotateZ(-30deg);
+  /*color: rgb(80, 139, 136);*/
+  color: rgb(237, 71, 50);
+  font-weight: bold;
+  content: "Fact";
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Uncomment if this is a bleeding edge feature
+  <p>{% include "warning.html" %}</p>
+-->
+<h2 id="toc-introduction">はじめに</h2>
+
+<p>Web サイトやアプリケーションにおいて、要素の描画はとても重く、場合によっては実行時のパフォーマンスに致命的な影響を及ぼします。この記事では、ブラウザにおいて描画が何によって引き起こされているのか、そして、どうすれば不要な描画を避けられるのかについて、ざっと見ていきましょう。</p>
+
+<h2 id="toc-painting">よくわかる描画の仕組み</h2>
+
+<p>ブラウザの重要なタスクの一つはDOMとCSSを画面のピクセルに変換することですが、そこではかなり複雑な処理が行われています。まずはマークアップを解釈し、DOMツリーを作成するところから始まります。またCSSも同様に解釈され、CSSOMが作成されます。その後、DOMとCSSOMが結合され、ピクセルを描画する準備が整います。</p>
+
+<blockquote class="commentary talkinghead" id="how-works">
+    ブラウザの仕組みをもっと理解したいなら<a href="http://www.html5rocks.com/ja/tutorials/internals/howbrowserswork/">こちら</a>の記事も見てみてください！
+</blockquote>
+
+<p>描画処理はそれ自体非常に興味深いものです。Chrome では、結合されたDOMとCSSは <a href="https://code.google.com/p/skia/">Skia</a>というソフトウエアによってラスタライズされます。<code>canvas</code>要素を使った事がある方は、SkiaのAPIに見覚えがあると思います。<code>moveTo</code>- や <code>lineTo</code>-ではじまる関数や、もっと高度なものもたくさんあります。基本的に、描画されるすべての要素は、実行可能なSkia APIの呼び出しに集約され、多数のビットマップが出力されます。これらのビットマップはGPUにアップロードされ、合成されることにより、スクリーン上に最終的な絵が表示されます。</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/domtopixels.jpg" />
+</figure>
+
+<p>ここで重要な事は、要素に適用するスタイルが、Skiaの処理負荷に直接影響することです。アゴリズム的に重いスタイルを使用した場合は、Skiaの作業量も増えます。詳しくは<a href="http://www.google.com/+ColtMcAnlis">Colt McAnlis</a>の<a href="http://www.html5rocks.com/en/tutorials/speed/css-paint-times/">CSSが及ぼす画面描画の処理負荷についての記事</a>を読んでみてください。</p>
+
+<p>これを踏まえると、描画処理はパフォーマンスに影響を与え、処理を減らさなければ１フレームの処理時間の制限である ~16msを超えてしまいます。そうなるとユーザはコマ落ちに気づきストレスを感じます。ひいては、自分のアプリのユーザ体験を損なうことになります。そのような事を望まないのであれば、描画が発生する原因を理解して、何が出来るかを考えましょう。</p>
+
+<h2 id="toc-scrolling">スクロール</h2>
+
+<p>ページが上下にスクロールされると、ブラウザは画面上に現れる前にコンテンツを再描画する必要があります。それが小さい範囲なら問題にならないかもしれませんが、描画される要素には複雑なスタイルが適用されているかもしれません。そのため、小さい範囲だとしてもすぐに描画されるわけではありません。</p>
+
+<p>どのエリアが再描画されているのかを Chrome のデベロッパーツールの “Show Paint Rectangles” （右下の小さな歯車アイコンをクリック）という機能で調べることができます。デベロッパーツールを開いたままページを操作すると Chrome が描画した部分がそのタイミングで長方形で囲まれます。</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/showpaintrects.jpg" />
+  <figcaption>Chrome のデベロッパーツールの Show Paint Rectangles</figcaption>
+</figure>
+
+<p>スクロールパフォーマンスはあなたのウェブサイトの成功に必要不可欠です。ユーザはウェブサイトやアプリケーションがうまくスクロールしないことに必ず気づき、そしてそれを嫌がります。ユーザがストレスを感じないために、私達はスクロール中の描画処理を軽くすることに注意を払わないといけません。</p>
+
+<p>私は以前<a href="http://www.html5rocks.com/en/tutorials/speed/scrolling/">スクロールパフォーマンスについての記事</a>を書いたので、詳細について更に知りたい場合は参照してください。</p>
+
+<h2 id="toc-interactions">インタラクション</h2>
+
+<p>ホバー、クリック、タッチ、ドラッグなどのインタラクションもまた、描画が発生する原因となります。ユーザーがそのようなインタラクションを行った場合、Chromeは影響のある要素を再描画します。そして、スクロールと同様に、広範囲で複雑な描画が発生した場合、フレームレートが落ちるでしょう。</p>
+
+<p>ユーザーは素晴らしくなめらかでインタラクティブなアニメーションを求めているので、ここでも我々はアニメーションにおけるスタイルの変更に時間がかかりすぎていないか確認する必要があるでしょう。</p>
+
+<h2 id="toc-combination">残念な組み合わせの一例</h2>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/demo.jpg" />
+  <figcaption>コストがかかる描画のデモ</figcaption>
+</figure>
+
+<p>スクロールしながら同時にマウスを動かしてしまった場合、どうなるでしょうか。私にとっては、スクロールして通過する要素を<em>うっかりと</em>「触って」しまい、コストのかかる描画処理を開始させてしまうことは非常に良くあります。すると、そのような描画処理のせいで 16.7ms 以内というフレーム制約を超えてしまうこともありえます (60fps を実現するためにはこの 16.7ms という時間以内に収まるようにしなければなりません。) 。何が言いたいかを正確に説明するために、<a href="https://dl.dropboxusercontent.com/u/2272348/codez/expensivescroll/demo.html">デモを作成</a>しました。スクロールしながらマウスを動かすと、hover エフェクトが割り込むのが見えるでしょう。では、Chrome DevTools により何が得られるか見てみましょう。</p>
+
+<figure>
+  <img src="/static/demos/unnecessary-paints/images/devtools.png" />
+  <figcaption>Chrome DevToolsによるコストがかかるフレームの表示</figcaption>
+</figure>
+
+<p>上の画像を見ると、ブロック要素の上に hover するたびに DevTools が描画処理を登録しているのが分かると思います。デモではわかりやすくするために非常に重いスタイルを描画させていたので、ときどきフレーム制約を超えています。他に処理しなければならないことがある場合などは特に、このような描画処理がスクロール中に無駄に発生することはどうしても避けたいです。</p>
+
+<p>では、どのようにすれば避けることができるのでしょうか。じつは修正は非常に簡単です。ここで紹介する方法は、 hover エフェクトを無効にし、再び有効にするタイマーをセットするような <code>scroll</code> ハンドラをセットするというものです。こうすれば、スクロールしているときはコストのかかるインタラクションによる描画処理をする必要がないということを保証できます。十分の時間スクロールをしないと、 hover エフェクトを再び有効にしても問題ないと判断します。</p>
+
+<p class="notice fact">
+このような変更は、アプリケーションのユーザエクスペリエンスに影響を与えますので、慎重に判断してください。 hover エフェクトが再度有効になるまでの遅延をどの程度許容するのか判断できるのは、あなたか、あなたのチームだけです。
+</p>
+
+<p>コードはこちら:</p>
+
+<pre class="prettyprint"><code>// Used to track the enabling of hover effects
+var enableTimer = 0;
+
+/*
+ * Listen for a scroll and use that to remove
+ * the possibility of hover effects
+ */
+window.addEventListener('scroll', function() {
+  clearTimeout(enableTimer);
+  removeHoverClass();
+
+  // enable after 1 second, choose your own value here!
+  enableTimer = setTimeout(addHoverClass, 1000);
+}, false);
+
+/**
+ * Removes the hover class from the body. Hover styles
+ * are reliant on this class being present
+ */
+function removeHoverClass() {
+  document.body.classList.remove('hover');
+}
+
+/**
+ * Adds the hover class to the body. Hover styles
+ * are reliant on this class being present
+ */
+function addHoverClass() {
+  document.body.classList.add('hover');
+}
+</code></pre>
+
+<p>ご覧のとおり、 hover エフェクトが「許可されているかどうか」を追跡するため、 body にある class をつけ、下位のスタイルはこのクラスが存在するかどうかに依存しています。</p>
+
+<pre class="prettyprint"><code>/* Expect the hover class to be on the body
+ before doing any hover effects */
+.hover .block:hover {
+ …
+}
+</code></pre>
+
+<p>以上、たったこれだけのことです。</p>
+
+<h2 id="toc-conclusion">まとめ</h2>
+
+<p>アプリケーションの描画パフォーマンスはユーザにとって非常に重要なので、描画の処理時間が常に16秒以下になるように努めなければなりません。そのためには、開発の間中ずっと DevTools を立ち上げておき、ボトルネックを特定し、その都度修正するべきです。</p>
+
+<p>特に、描画に時間がかかる要素に対して意図しないインタラクションが発生した場合、描画が重くなりパフォーマンスが低下する可能性があります。これまで見てきたように、これは小さな修正で回避可能です。</p>
+
+<p>あなたのサイトやアプリケーションを注意深く見てみてください。もう少し描画を減らしてみてもいいのではないでしょうか。</p>
+
+{% endblock %}

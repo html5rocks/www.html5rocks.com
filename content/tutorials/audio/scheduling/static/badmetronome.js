@@ -43,8 +43,8 @@ function scheduler() {
 		osc.frequency.value = 880.0;
 
     var now = audioContext.currentTime;
-    osc.noteOn( now );
-	osc.noteOff( now + noteLength );
+    osc.start( now );
+    osc.stop( now + noteLength );
 
     // Advance current note and time by a 16th note...
     var secondsPerBeat = 60.0 / tempo;  // Notice this picks up the CURRENT 
@@ -123,7 +123,8 @@ function init(){
     canvasContext.strokeStyle = "#ffffff";
     canvasContext.lineWidth = 2;
 
-	audioContext = new webkitAudioContext();
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
 
 	// if we wanted to load audio files, etc., this is where we should do it.
 

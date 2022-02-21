@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 # Hack to get custom tags working django 1.3 + python27.
@@ -16,6 +17,20 @@ TEMPLATE_DIRS = (
 
 # i18n Configuration
 LANGUAGE_CODE = 'en'
+LANGS = {
+  'de': 'Deutsch',
+  'en': 'English',
+  'fr': 'Français',
+  'es': 'Español',
+  'it': 'Italiano',
+  'ja': '日本語',
+  'ko': '한국어',
+  'pt': 'Português (Brasil)',
+  'ru': 'Pусский',
+  'zh': '中文 (简体)',
+  'tw': '中文（繁體）',
+  'fa': 'فارسی'
+}
 USE_I18N = True
 LOCALE_PATHS = (
   os.path.join(ROOT_DIR, 'conf', 'locale'),
@@ -35,6 +50,7 @@ APP_VERSION = os.environ['CURRENT_VERSION_ID'].split('.')[0]
 
 MEMCACHE_KEY_PREFIX = 'newscheme' #APP_VERSION
 MAX_FETCH_LIMIT = 1000
+FETCH_PAGE_LIMIT = 20
 
 # Users whitelisted to access certain sections the site.
 WHITELISTED_USERS = [

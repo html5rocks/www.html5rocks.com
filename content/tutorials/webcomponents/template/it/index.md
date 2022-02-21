@@ -66,7 +66,7 @@ Includere del contenuto in un`<template>` gode di alcune importanti proprietà.
 
 <h2 id="toc-using">Attivare un template</h2>
 
-Per usare un template, questo deve essere attivato, altrimenti il suo contenuto non sarà mai renderizzato. Il modo più semplice per attivare un template è creare una copia profonda del suo `.content`, utilizzando `cloneNode()`. `.content` è una proprietà in sola lettura cui fa riferimento `DocumentFragment`, contenente le interiora di un template. 
+Per usare un template, questo deve essere attivato, altrimenti il suo contenuto non sarà mai renderizzato. Il modo più semplice per attivare un template è creare una copia profonda del suo `.content`, utilizzando `cloneNode()`. `.content` è una proprietà in sola lettura cui fa riferimento `DocumentFragment`, contenente le interiora di un template.
 
     var t = document.querySelector('#mytemplate');
     // Populate the src at runtime.
@@ -118,7 +118,7 @@ Questo esempio mostra l'inerzia del contenuto di un template. Lo `<script>` vien
 
 <h3 id="toc-demo-sd">Esempio: Creare un DOM Shadow da un template</h3>
 
-Molte persone includono un [DOM Shadow](/webcomponents/shadowdom/) ad un host settando una stringa di markup a `.innerHTML`:
+Molte persone includono un [DOM Shadow](/tutorials/webcomponents/shadowdom/) ad un host settando una stringa di markup a `.innerHTML`:
 
     <div id="host"></div>
     <script>
@@ -141,7 +141,7 @@ Qualche volta sarebbe meglio lavorare direttamente sul DOM aggiungendo il conten
           border-radius: 5px;
           width: 450px;
           max-width: 100%;
-        } 
+        }
         *:hover {
           background: #ccc;
         }
@@ -201,7 +201,7 @@ Qualche volta sarebbe meglio lavorare direttamente sul DOM aggiungendo il conten
       border-radius: 5px;
       width: 450px;
       max-width: 100%;
-    } 
+    }
     *:hover {
       background: #ccc;
     }
@@ -275,7 +275,7 @@ Riporto alcuni problemi in cui mi sono imbattuto utilizzando `<template>` allo s
               <li>Stuff</li>
             </template>
           </ul>
-        </template> 
+        </template>
 
     L'attivazione del template più esterno non comporta l'attivazione del template interno. Ovvero, i template innestati richiedono che i figli siano attivati manualmente.
 

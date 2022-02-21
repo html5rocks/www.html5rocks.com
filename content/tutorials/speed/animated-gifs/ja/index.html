@@ -1,0 +1,88 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/paullewis.75.png);
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong> <a href="https://github.com/kyo-ago">kyo_ago</a>, <a href="https://github.com/negibouze">Yoshiaki Itakura</a>, <a href="https://github.com/kaseijin">kaseijin</a>, <a href="https://github.com/sgrcb">Kayo Sato</a>, <a href="https://github.com/mtsmfm">Fumiaki MATSUSHIMA</a>, <a href="https://github.com/takyana">Tak Yanagida</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>描画を避けることは、特にモバイル端末上で、絹のように滑らかなフレームレートを達成するために重要です。しかし時には、描画はひどく変わった場所で発生します。この記事では、アニメーションGIFが不要な描画を発生させうる理由と、非常に簡単な修正方法を見ていきます。</p>
+
+<blockquote class="commentary talkinghead" id="unnecessary-paints">前回は、<a href="http://www.html5rocks.com/ja/tutorials/speed/unnecessary-paints/">スクロール時にホバー効果を避ける</a>方法を見ました。まだ見ていない場合は、読んでみてください。</blockquote>
+
+<h2 id="toc-layers">素晴らしきレイヤー</h2>
+
+<p>最近のブラウザは広く知られているように、DOM要素のグループをレイヤーと呼ばれる別のイメージとして描画します。ページ全体で一つのレイヤーの場合もありますが、ときには何百、希なケースでは何千ものレイヤーがあります！</p>
+
+<p>複数のDOM要素が一つのレイヤーへグループ化された状態で、その中の一つが視覚的に変化するとき、変更のあった要素だけでなく、変更のあった要素と重なるレイヤーに存在する全ての要素が描画されなければいけません。ある描画結果の上位レイヤーに何かを描画すると、上書きされたピクセルは永遠に失われます。元のピクセルを復元したい場合、それらを再描画する必要があります。</p>
+
+<p>そこで、変更されていない他の要素を再描画する必要がないように、一つの要素を他の要素から分離したくなるときがあります。例えば、固定のページヘッダーとスクロール可能なコンテンツを組み合わせたとき、コンテンツがスクロールする度に新たに表示されるコンテンツだけでなく、ヘッダーを再描画する必要があります。別のレイヤーにヘッダを配置することで、ブラウザがスクロールを最適化できます。スクロールするとブラウザは、おそらくGPUの助けを借りてレイヤーを動かし回るか、レイヤーを再描画しないようにします。</p>
+
+<p>レイヤーの追加はメモリ消費の増加、パフォーマンスのオーバーヘッドを発生させるため、良好な性能を維持しつつ、できるだけ少ないレイヤーにグループ化することが目標です。</p>
+
+<blockquote class="commentary talkinghead" id="layer-intro">もしレイヤーがどのように生成され明確に使用されるのか、より分類された詳細を知りたい場合は<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">Tom Wiltziusのイントロダクション</a>を参照してください。</blockquote>
+
+<h2 id="toc-animated-gifs">これとアニメーションGIFがどう関係するのでしょうか？</h2>
+
+<p>まずはこの図を見てください。</p>
+
+<figure>
+  <img src="layers.jpg" />
+  <figcaption>図1：4層に分けられたWebアプリ</figcaption>
+</figure>
+
+<p>これはシンプルなアプリケーションを階層化したものです。4層うちの3層（2層から4層）はインターフェイスの層です。背面レイヤー (1層) はアニメーションGIFのために発生するローダーです。通常のフローではアプリの読み込み中はローダー(1層)を表示し、すべてが終了すると他のレイヤーを表示します。ここでアニメーションGIFを(他のレイヤーで覆い隠すのではなく)非表示にすることが重要なのです。</p>
+
+<h2 id="toc-but-why">なぜ非表示にする必要があるのですか？</h2>
+
+<p>これは良い質問です。理想は、ブラウザーがGIFが表示されているかどうかをチェックし、自動的に描画されるのを避けることです。しかし、アニメーションGIFが隠されているか表示されているかをチェックすると、一般的にただ描画するよりも高負荷になるため、チェックせずに描画されます。</p>
+
+<p>最も良いのは、GIFが独自のレイヤーにあり、ブラウザがそのレイヤーの描画とGPUへのアップロードを行うだけという場合です。最悪の場合、すべての要素が一つのレイヤーにグループ化され、そうなるとブラウザは<em>すべての要素を再描画</em>しなくてはなりません。再描画が終わってからも、GPUにすべてをアップロードする必要があります。これがGIFの毎フレームに起こるのです。それも、たとえユーザーがそのGIFを見られなくても起こってしまうんです！</p>
+
+<p>デスクトップPCではCPUとGPUが高性能であり、データを転送するための十分な帯域幅がありますので、おそらくこれらの描画処理の振る舞いは気にしなくて良いでしょう。しかし、モバイル端末では描画処理はとても高負荷であるため、細心の注意を払う必要があります。</p>
+
+<h2 id="toc-which-browsers">影響のあるブラウザは?</h2>
+
+<p>よくあることですが、ブラウザ毎に挙動は異なります。今現在の Chrome や Safari 、Opera は GIF が隠されている場合にも再描画します。一方、FirefoxはGIFが隠されている場合は再描画の必要がないと判断してくれます。Internet Explorer は、 IE 11 ですらどうなっているか未知数です - F12 開発者ツールはまだ開発中なので - 再描画がされているかどうかを知る方法がありません。</p>
+
+<h2 id="toc-devtools">問題があるかどうかを確認するには？</h2>
+
+<p>Chrome 開発ツールの「Show paint rectangles」を使うのが最も簡単です。開発ツールを起動し、右下の歯車マークを押して「Rendering」内の「Show paint rectangles」を選択します。</p>
+
+<figure>
+  <img src="showpaintrects.png" class="bordered" />
+  <figcaption>図2：Chrome開発者ツールで、Show paint rectanglesを有効にする</figcaption>
+</figure>
+
+<p>表示されたら、このような赤い矩形部分を確認してください。</p>
+
+<figure>
+  <img src="paintedgif.png" />
+  <figcaption>図3：アニメーションGIFの問題を赤い矩形で表示する開発ツールの矩形描画表示</figcaption>
+</figure>
+
+<p>この小さな赤いボックスは、Chromeブラウザがスクリーン上で何かを再描画していることを示しています。ローディングのアニメーションGIFが他の要素の下に隠れているのは分かっているので、このような赤いボックスが見えたら、表示されている要素を非表示にして、アニメーションGIFが動いているか確認してください。もし動いていたら、アニメーションGIFかその要素にCSSかJavaScriptでdisplay: none 、またはvisibility: hiddenを適用します。もちろん、これが単なる背景画像だった場合は、必ず削除すべきです。</p>
+
+<p>実際のサイトでこの挙動を確認したい場合は、<a href="http://allegro.pl/listing/listing.php?string=phone">アレグロ</a>というサイトで、各商品画像のローディングのアニメーションGIFが、明示的にhiddenになっているのではなく、隠されていることを見ることができます。</p>
+
+<h2 id="toc-conclusion">結論</h2>
+
+<p>秒間60フレームを達成するということは、そのページをレンダリングするのに必要なことだけをやって、それ以外はやらないことを意味します。余分な描画を排除することは、この目標を達成する上で重要なステップです。実行したままになっているアニメーションGIFは不要な描画を引き起こすことがありますが、これは、DevToolsの「Show paint rectangleツール」で容易に見つけてデバッグできます。</p>
+
+<p>あなたはもう、可愛らしいローディングのアニメーションGIFを実行しっぱなしにすることはないですよね。</p>
+
+{% endblock %}

@@ -1,0 +1,668 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+
+<div class="translator">
+  <strong>Traducteur :</strong> <a href="http://tddsworld.com/">Christophe Porteneuve</a>
+</div>
+
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-intro">Introduction</h2>
+
+<p>Une révolution approche.  JavaScript va proposer une nouvelle fonctionnalité qui va <em>complètement</em> changer votre façon de penser au <em>data-binding</em>.  Elle changera aussi la façon qu’ont la plupart des bibliothèques MVC d’observer les changements et mises à jour des modèles.  Êtes-vous prêts à profiter d’un joli boost de performance dans les apps qui ont besoin d’observer des propriétés ?</p>
+
+<p>OK. OK. Sans plus tarder, j’ai le plaisir d’annoncer qu’<a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() </a> est disponible à partir de <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> beta. <em>[WOUHOU. LA FOULE EST EN DÉLIRE]</em>.</p>
+
+<p><code>Object.observe()</code>, qui fait partie d’un prochain standard ECMAScript, est une méthode qui permet de surveiller de façon asynchrone les modifications apportées aux objets JavaScript… sans avoir à recourir à une bibliothèque tierce.  Elle permet à un observateur de recevoir une séquence chronologique de notifications de changement qui décrivent toutes les modifications ayant eu lieu sur ces objets.</p>
+
+<pre class="prettyprint">
+// Disons qu’on a un modèle avec des données
+var model = {};
+
+// Observons-le à présent
+Object.observe(model, function(changes){
+
+    // Ce callback asynchrone est exécuté et agrège les modifications
+    changes.forEach(function(change) {
+
+        // Ça nous permet de savoir ce qui s’est passé
+        console.log(change.type, change.name, change.oldValue);
+    });
+
+});
+</pre>
+
+<p>Chaque fois qu’une modification a lieu, elle est signalée :</p>
+
+<p><img src="image_0.png"  /></p>
+
+<p>Avec <code>Object.observe()</code> (j’aime bien l’appeler O.o() voire Oooooooo), vous pouvez implémenter un <em>data-binding</em> bidirectionnel <a href="http://bitworking.org/news/2014/05/zero_framework_manifesto">sans avoir recours à un framework</a>.</p>
+
+<p>Ça ne veut pas dire que vous ne devriez pas en utiliser un.  Pour de gros projets avec une logique applicative compliquée, des frameworks bien pensés sont un atout précieux, et vous devriez continuer à vous en servir.  Ils simplifient l'arrivée des nouveaux développeurs, vous permettent de maintenir moins de code et définissent des méthodes de travail pour réaliser les tâches usuelles.  Quand un tel framework n'est pas nécessaire, vous pouvez utiliser des bibliothèques plus petites, plus ciblées telles que <a href="http://polymer-project.org">Polymer</a> (qui tire déjà parti de O.o()).</p>
+
+<p>Même si vous utilisez lourdement un framework ou une bibliothèque MV*, O.o() vous offre un potentiel important d'améliorations des performances, avec une implémentation plus rapide et plus simple tout en conservant la même API.  Par exemple, fin 2012 Angular <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-September/024978.html">a constaté</a>, dans un <em>benchmark</em> sur des changements de modèles, que les vérifications classiques prenaient 40ms par mise à jour alors que O.o() ne prenait que 1-2ms (une performance 20-40x plus rapide).</p>
+
+<p>Pouvoir faire du <em>data-binding</em> sans se farcir des tonnes de code compliqué implique aussi que vous n'avez plus à examiner proactivement les changements (<em>polling</em>), donc vous rallongez votre durée de batterie !</p>
+
+<p>Si vous êtes déjà convaincus par O.o(), allez directement à sa <a href="#toc-intro-oo">présentation</a>, sinon lisez la suite pour découvrir quels problèmes cette fonctionnalité résout.</p>
+
+<h2 id="toc-what-are-we-observing">Que cherche-t-on à observer ?</h2>
+
+<p>Quand on parle d’observer des données, cela revient généralement à garder un œil sur certains types de changements :</p>
+
+<ul>
+<li><p>Changements sur des objets JavaScript bruts</p></li>
+<li><p>Lorsque des propriétés sont ajoutées, modifiées ou supprimées</p></li>
+<li><p>Lorsque des tableaux se voient ajouter ou retirer des éléments</p></li>
+<li><p>Lorsque le prototype d’un objet change</p></li>
+</ul>
+
+<h2 id="toc-importance">L’importance du <em>data-binding</em></h2>
+
+<p>En bref, ça nous permet de bien séparer les couches de contrôle Modèle et Vue.  HTML est un excellent mécanisme de déclaration, mais il est totalement statique.  Idéalement, on voudrait juste déclarer les relations entre nos données et le DOM, et avoir le DOM garanti à jour.  Ça serait super utile et nous éviterait de passer plein de temps à écrire du code particulièrement répétitif qui s'occuperait juste d'échanger des données entre le DOM et l'état interne de notre application, ou la couche serveur.</p>
+
+<p>Le <em>data-binding</em> est particulièrement utile quand on a des interfaces utilisateurs complexes pour lesquelles on doit connecter plusieurs propriétés de nos modèles de données à de multiples éléments dans les vues.  Ce besoin est plutôt courant dans les <em>single-page applications</em> que nous créons ces temps-ci.</p>
+
+<p>En proposant un mécanisme natif d'observation des données dans le navigateur, nous fournissons aux frameworks JavaScript (et aux petites bibliothèques utilitaires que vous écrivez) un moyen d'observer les changements d'un modèle de données sans avoir à recourir aux hacks patauds que le monde utilisait jusqu'à présent.</p>
+
+<h2 id="toc-world-look-like-today">L’état des choses aujourd’hui</h2>
+
+<p><strong>Dirty-checking</strong> (vérifications massives)</p>
+
+<p>Où avez-vous déjà vu du <em>data-binding</em> pour le moment ?  Eh bien, si vous utilisez une bibliothèque MV* récente pour construire vos applis web (par ex. Angular), vous avez probablement l’habitude de connecter un modèle de données au DOM.  Pour rappel, voici un exemple d'une appli de liste de contacts téléphoniques dans laquelle nous connectons chaque téléphone au sein du tableau <code>phones</code> (défini en JavaScript) à un élément de liste afin que nos données et notre UI (interface utilisateur) soient toujours synchronisées :</p>
+
+<pre class="prettyprint">
+&lt;html ng-app&gt;
+  &lt;head&gt;
+    ...
+    &lt;script src=&quot;angular.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;controller.js&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body ng-controller=&quot;PhoneListCtrl&quot;&gt;
+    &lt;ul&gt;
+      &lt;li ng-repeat=&quot;phone in phones&quot;&gt;
+        &#123;&#123;phone.name&#125;&#125;
+        &lt;p&gt;&#123;&#123;phone.snippet&#125;&#125;&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>…et le JavaScript pour le contrôleur :</p>
+
+<pre class="prettyprint">
+var phonecatApp = angular.module('phonecatApp', []);
+
+phonecatApp.controller('PhoneListCtrl', function($scope) {
+  $scope.phones = [
+    {'name': 'Nexus S',
+     'snippet': 'Le Nexus S, plus rapide que rapide.'},
+    {'name': 'Motorola XOOM with Wi-Fi',
+     'snippet': 'La prochaine, prochaine génération de tablette.'},
+    {'name': 'MOTOROLA XOOM',
+     'snippet': 'La prochaine, prochaine génération de tablette.'}
+  ];
+});
+</pre>
+
+<p><a href="http://angular.github.io/angular-phonecat/step-2/app/">(Demo)</a></p>
+
+<p>Chaque fois que le modèle de données sous-jacent change, notre liste dans le DOM est mise à jour.  Comment Angular y parvient-il ?  Eh bien, en coulisses il utilise ce qu’on appelle du <em>dirty-checking</em>.</p>
+
+<img src="image_1_fr.png"/>
+
+<p>L'idée de base du <em>dirty-checking</em> est que dès qu'une modification des données peut avoir eu lieu, la bibliothèque va examiner l'intégralité du modèle de données pour déterminer s’il a changé, en utilisant un cycle de vie basé sur des sommes de contrôle ou sur les valeurs brutes.  En ce qui concerne Angular, un cycle de vie basé sur des sommes de contrôle identifie toutes les expressions enregistrées auprès du système d'observation.  Angular <a href="http://stackoverflow.com/questions/9682092/databinding-in-angularjs/9693933#9693933">connaît</a> les valeurs précédentes du modèle et si elles ont changé, un événement de modification est déclenché.  Pour les développeurs, le principal avantage réside dans la possibilité d'utiliser des objets JavaScript bruts, ce qui est agréable à l'emploi et permet de composer les données assez facilement.  L'inconvénient est que c'est un algorithme lourd, au coût d'exécution potentiellement très élevé.</p>
+
+<img src="image_2_fr.png"/>
+
+<p>Le coût de cette opération est proportionnel au nombre total d’objets observés.  Je risque donc d’avoir un gros paquet de <em>dirty checking</em> à faire…  En plus, il me faut un moyen de déclencher le <em>dirty-checking</em> quand les données <em>pourraient</em> avoir changé.  Il y a plein d'astuces techniques utilisées par les frameworks pour faire ça.  Mais je doute que ça soit un jour parfait.</p>
+
+<p>L'écosystème du web devrait pouvoir innover et évoluer plus facilement en termes de mécanismes déclaratifs, par exemple à l’aide de…</p>
+
+<ul>
+<li>Systèmes de modèles basés sur contraintes</li>
+<li>Systèmes de persistence automatique (ex. persister les changements dans IndexedDB ou localStorage)</li>
+<li>Objets conteneurs (Ember, Backbone)</li>
+</ul>
+
+<p>On parle d’objets <a href="http://www.slideshare.net/mixonic/containers-di">conteneurs</a> lorsqu’un framework crée un objet dédié pour y placer les données.  Ils ont des accesseurs pour les données et sont donc au courant dès que vous lisez ou modifiez ces données, ce qui leur permet de diffuser des notifications.  Ça marche bien.  C'est relativement performant et algorithmiquement propre.  Voici un exemple d’objets conteneurs avec Ember :</p>
+
+<pre class="prettyprint">
+// Objet conteneur
+MyApp.president = Ember.Object.create({
+  name: "Barack Obama"
+});
+
+MyApp.country = Ember.Object.create({
+  // Suffixer une propriété par "Binding" indique à Ember
+  // qu'on crée un binding pour la propriété presidentName
+  presidentNameBinding: "MyApp.president.name"
+});
+
+// Plus tard, une fois qu’Ember a résolu ses bindings
+MyApp.country.get("presidentName");
+// "Barack Obama"
+
+// Les données du serveur ont besoin d'être converties
+// Ça se compose mal avec du code existant
+</pre>
+
+<p>Le coût est ainsi proportionnel au volume de données qui ont effectivement changé, ce qui reste un souci, même s'il est moindre.  Autre problème : on utilise désormais un autre type d'objet (plutôt que les données brutes).  D'une façon générale, on doit désormais convertir les données obtenues depuis le serveur en objets conteneurs pour les rendre observables.</p>
+
+<p>Ça n'est pas facilement composable, en particulier avec du code JS tiers, parce que la majorité du code suppose qu'elle opère sur des objets bruts, et non sur des conteneurs avec accesseurs.</p>
+
+<h2 id="toc-intro-oo">Présentation de Object.observe()</h2>
+
+<p>Idéalement on cherche à avoir le meilleur des deux mondes : un moyen d’observer les données qui fonctionne avec des objets bruts (des objets JavaScript nus) si on le souhaite ET sans avoir à recourir à un <em>dirty-checking</em> massif à chaque fois.  On veut une solution algorithmiquement saine et rapide, qui compose facilement et qui soit fournie nativement par la plate-forme.  C’est là toute la beauté de la solution proposée par <code>Object.observe()</code>.</p>
+
+<p>Elle nous permet d’observer un objet, d’en modifier les propriétés et d’obtenir facilement un rapport de modifications précisant ce qui est nouveau, ce qui a été supprimé ou modifié.  Mais assez de théorie, passons au code !</p>
+
+<img src="image_3.png"/>
+
+<h3>Object.observe() et Object.unobserve()</h3>
+
+<p>Imaginons que vous ayez un objet JavaScript tout simple qui représente un modèle :</p>
+
+<pre class="prettyprint">
+// Votre modèle peut être un objet JS tout simple
+var todoModel = {
+  label: 'Default',
+  completed: false
+};
+</pre>
+
+<p>On peut alors définir un callback pour toutes les mutations (les changements) qui auront lieu sur cet objet :</p>
+
+<pre class="prettyprint">
+function observer(changes){
+  changes.forEach(function(change, i) {
+    console.log('quelle propriété a changé ? ' + change.name);
+    console.log('quelle nature de changement ? ' + change.type);
+    console.log('valeur actuelle ? ' + change.object[change.name]);
+    console.log(change); // toute l'info de changement
+  });
+}
+</pre>
+
+<p class="notice warning">
+  <strong>Flux de modifications :</strong> il est possible qu'on assiste à un flux de modifications, auquel cas la valeur actuelle et la « nouvelle » valeur (celle après la modification) ne seront <em>pas</em> identiques.
+</p>
+
+<p>On peut désormais observer ces modifications grâce à O.o(), en passant l'objet comme premier argument et notre callback en second :</p>
+
+<pre class="prettyprint">
+Object.observe(todoModel, observer);
+</pre>
+
+<p>Commençons à modifier notre objet modèle :</p>
+
+<pre class="prettyprint">
+todoModel.label = 'Racheter du lait';
+</pre>
+
+<p>Si je regarde ma console, j’obtiens plein d’infos utiles !  Je sais quelle propriété a changé, de quelle façon, et quelle est sa nouvelle valeur.</p>
+
+<p><img src="image_4_fr.png"  /></p>
+
+<p>Waouh ! Adieu, le <em>dirty-checking</em> !  Ta pierre tombale devrait être gravée en Comic Sans.  Passons à une autre propriété.  Cette fois, ce sera <code>completeBy</code> :</p>
+
+<pre class="prettyprint">
+todoModel.completeBy = '01/01/2014';
+</pre>
+
+<p>Et on voit qu’on obtient à nouveau un rapport de modifications :</p>
+
+<p><img src="image_5_fr.png"  /></p>
+
+<p>Génial.  Que se passerait-il si on décidait de supprimer la propriété <code>completed</code> de notre objet ?</p>
+
+<pre class="prettyprint">
+delete todoModel.completed;
+</pre>
+
+<p><img src="image_6_fr.png"  /></p>
+
+<p>Manifestement, le rapport de modifications que nous obtenons inclut des infos sur la suppression.  Comme on pouvait s'y attendre la nouvelle valeur de la propriété est désormais <code>undefined</code>.  Bon, on sait qu'on peut détecter l'ajout (<code>'add'</code>) comme la suppression (<code>'delete'</code>) de propriétés, leurs modifications (<code>'update'</code>), et le changement de son prototype (<code>__proto__</code>, type <code>'setPrototype'</code>).</p>
+
+<p>Comme dans n'importe quel système d'observation, une méthode existe aussi pour arrêter d'écouter les changements.  Dans le cas présent, il s'agit d’<code>Object.unobserve()</code>, qui a la même signature que O.o() :</p>
+
+<pre class="prettyprint">
+Object.unobserve(todoModel, observer);
+</pre>
+
+<p>Comme le montre la capture d’écran ci-dessous, toute mutation ayant lieu sur l'objet après cet appel ne produit plus de notifications de changement.</p>
+
+<p><img src="image_7_fr.png"  /></p>
+
+<h3>Indiquer qu’on s’intéresse à autre chose</h3>
+
+<p>Nous avons vu les bases de l’observation des changements sur un objet.  Mais comment faire si seule une partie de ces changements nous intéresse ?  Tout le monde a besoin d’un filtre anti-spam.  Eh bien, les observateurs peuvent préciser les types de changements qui les intéressent au travers d'une liste blanche, qu’on passe en troisième argument à O.o(), comme ceci :</p>
+
+<pre class="prettyprint">
+Object.observe(obj, callback, opt_acceptList)
+</pre>
+
+<p>Voyons un exemple d’utilisation :</p>
+
+<pre class="prettyprint">
+// Comme précédemment, notre modèle est un objet JS basique
+
+var todoModel = {
+  label: 'Default',
+  completed: false
+};
+
+// On définit un callback pour pour les mutations qui nous
+// intéresseront sur l’objet
+function observer(changes){
+  changes.forEach(function(change, i){
+    console.log(change);
+  })
+};
+
+// Et on observe, en précisant un tableau des types de changements
+// qui nous intéressent
+
+Object.observe(todoModel, observer, ['delete']);
+
+// Sans cette option, on s'intéresserait par défaut à tous les types
+
+todoModel.label = 'Racheter du lait';
+
+// Aucun changement n’est signalé
+</pre>
+
+<p>En revanche, si à présent nous supprimons le libellé, remarquez que ce type de changement est bien signalé :</p>
+
+<pre class="prettyprint">
+delete todoModel.label;
+</pre>
+
+<p>Si vous ne précisez pas la liste des types que vous acceptez, elle contiendra par défaut tous les types intrinsèques de modifications connus par la spec : <code>'add'</code>, <code>'update'</code>, <code>'delete'</code>, <code>'reconfigure'</code> (lorsqu’un descripteur de propriété est ajouté, modifié ou supprimé), <code>'setPrototype'</code> et <code>'preventExtensions'</code> (lorsqu’un objet observé devient non-extensible).</p>
+
+<h2 id="toc-notifications">Notifications</h2>
+
+<p>O.o() propose également un concept de notifications.  Elles ne sont pas irritantes comme celles de votre téléphone, mais plutôt utiles.  Les notifications ressemblent aux <a href="https://developer.m@ozilla.org/en/docs/Web/API/MutationObserver">Mutation Observers</a>. Elles se déclenchent après la micro-tâche, ce qui dans le contexte d'un navigateur revient presque tout le temps à dire qu'elles sont déclenchées une fois le gestionnaire d'événement terminé.</p>
+
+<p>Cette chronologie est pratique parce qu'en général une unité de travail est ainsi terminée, et les observateurs ne se mettent au boulot qu’à ce moment là.  C'est une approche tour-par-tour plutôt bien adaptée.</p>
+
+<p>Le workflow d’utilisation d'un notificateur ressemble à ceci :</p>
+
+<p><img src="image_8_fr.png"  /></p>
+
+<p>Voyons un exemple d’utilisation concrète de notifications personnalisées autour de la lecture et de l'écriture des propriétés. Lisez attentivement les commentaires :</p>
+
+<pre class="prettyprint">
+// On définit un modèle simple
+var model = {
+    a: {}
+};
+
+// Puis une variable distincte qu’on utilisera pour les accesseurs
+// de notre modèle dans un instant
+var _b = 2;
+
+// On ajoute donc une propriété `b` dans `a`, avec des accesseurs
+// spécifiques
+
+Object.defineProperty(model.a, 'b', {
+    get: function () {
+        return _b;
+    },
+    set: function (b) {
+        // Chaque fois que `b` est écrit sur notre modèle,
+        // on notifie tout le monde qu’un changement spécifique
+        // a eu lieu.  Ça nous donne un niveau de contrôle
+        // extrêmement fin sur les notifications.
+        Object.getNotifier(this).notify({
+            type: 'update',
+            name: 'b',
+            oldValue: _b
+        });
+
+        // Tant qu'à faire on va loguer la valeur à chaque
+        // écriture, juste pour le fun
+        console.log('set', b);
+
+        _b = b;
+    }
+});
+
+// On rédige l'observateur
+function observer(changes) {
+    changes.forEach(function (change, i) {
+        console.log(change);
+    })
+}
+
+// Et on commence à observer les modifs sur `model.a`
+Object.observe(model.a, observer);
+</pre>
+
+<img src="image_9.png"/>
+
+<p>Si des années d'expérience avec le Web en tant que plate-forme nous ont appris quelque chose, c'est que notre première approche est souvent synchrone, dans la mesure où le code en question est souvent plus simple à conceptualiser.  Ça crée toutefois des problèmes, car cette approche à des dangers inhérents : quand vous écrivez du code qui modifie une propriété par exemple, vous aimeriez éviter que ça déclenche automatiquement un autre morceau de code qui, lui, fera ce qui lui chante, quitte à invalider votre état en plein milieu de votre fonction.</p>
+
+<p>Si vous êtes un observateur, dans l'idéal vous aimeriez éviter d'être appelé en plein milieu d'un autre morceau de code, d'autant que ça vous amènerait à travailler sur un état intermédiaire qui peut ne pas encore être cohérent, vous obligeant ainsi à effectuer des tas de vérifications d'erreur supplémentaires.  C'est un modèle nettement plus difficile à manipuler.  Une approche asynchrone est certes délicate à manipuler mais au final c'est un modèle plus efficace et utile.</p>
+
+<p>La solution à ce problème réside dans les rapports de changement synthétiques.</p>
+
+<h2 id="toc-synth-change-records">Rapports de changements synthétiques</h2>
+
+<p>En gros, si vous voulez utiliser des accesseurs ou des propriétés calculées/dérivées, il est de votre responsabilité d'effectuer les notifications pour les changements apportés à ces valeurs.  Ça demande un peu de travail en plus mais c’est une fonctionnalité à part entière de ce mécanisme, et ces notifications  seront transmises au même titre que les notifications natives des objets de données originaux et de leurs propriétés.</p>
+
+<img src="image_10_fr.png"/>
+
+<p>Il est donc possible d'observer les accesseurs et propriétés dérivées grâce à <code>notifier.notify()</code>, une autre partie de O.o().  La plupart des systèmes d'observations souhaitent pouvoir observer les valeurs dérivées d'une façon ou d'une autre.  Il y a de nombreuses manières d'y arriver.  O.o ne considère pas que l'une est plus « correcte » que d'autres, mais les propriétés dérivées devraient être implémentées sous forme d'accesseurs qui utilisent <code>notify()</code> lorsque l'état interne, privé, change.</p>
+
+<p>Naturellement, les développeurs web peuvent s'attendre à ce que les bibliothèques facilitent la mise en place de notifications et d'autres manipulations sur les propriétés dérivées (en réduisant le volume de code nécessaire, notamment).</p>
+
+<p>Préparons maintenant notre prochain exemple, basé sur une classe de cercle.  L'idée est qu'on a un cercle avec une propriété <code>radius</code> pour le rayon.  Il s'agit ici d'un accesseur, de sorte que lorsque la valeur change, il va notifier l'univers du changement par une notification.  Ça sera transmis, au sein de tous les autres changements éventuels, à quiconque observe ces modifications.  En somme, si vous implémentez vos propres objets modèle vous voudrez probablement recourir à des propriétés synthétiques / dérivées au moyen d'accesseurs, pour que ça s'intègre de manière fluide au reste de votre système, sans quoi vous aurez besoin de définir une stratégie plus complexe pour propager ces modifications.</p>
+
+<p>Juste après le code ci-dessous, vous verrez ça fonctionner dans les DevTools.</p>
+
+<pre class="prettyprint">
+function Circle(r) {
+  var radius = r;
+
+  var notifier = Object.getNotifier(this);
+  function notifyAreaAndRadius(radius) {
+    notifier.notify({
+      type: 'update',
+      name: 'radius',
+      oldValue: radius
+    })
+    notifier.notify({
+      type: 'update',
+      name: 'area',
+      oldValue: Math.pow(radius, 2) * Math.PI
+    });
+  }
+
+  Object.defineProperty(this, 'radius', {
+    get: function() {
+      return radius;
+    },
+    set: function(r) {
+      if (radius === r)
+        return;
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+
+  Object.defineProperty(this, 'area', {
+    get: function() {
+      return Math.pow(radius, 2) * Math.PI;
+    },
+    set: function(a) {
+      r = Math.sqrt(a) / Math.PI;
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+}
+
+function observer(changes) {
+  changes.forEach(function(change, i) {
+    console.log(change);
+  })
+}
+</pre>
+
+<img src="image_11_fr.png"/>
+
+<h2 id="toc-accessor-props">Propriétés basées sur accesseurs</h2>
+
+<p>Juste un mot sur les propriétés à accesseurs.  Nous disions tout à l'heure qu'il n'est possible d'observer les changements de valeur que pour des propriétés directes (accès direct à la valeur, sans accesseur), et non pour des propriétés calculées ou à accesseurs.  La raison est que JavaScript n'a pas vraiment de notion de changement de valeur en présence d'accesseurs.  Une propriété à accesseurs est juste une série de fonctions.</p>
+
+<p>Si vous affectez une valeur via un accesseur, JavaScript invoque simplement cette fonction et, en ce qui le concerne, aucune donnée n'a nécessairement changé.  Il a simplement donné à l'accesseur une opportunité de s'exécuter.</p>
+
+<p>Sémantiquement, en regardant le code ci-dessus qui initialise la donnée puis lui réaffecte d'autres valeurs, on devrait être capable de déterminer ce qui se passe ; et pourtant, ce n'est pas nécessairement le cas, et il n'existe pas de manière fiable pour un code externe de connaître les opérations exécutées : ça exécute un accesseur dont le code peut être n'importe quoi.  Du coup, tenter de déterminer extérieurement si la donnée a changé n'a pas beaucoup de sens.</p>
+
+<h2 id="toc-single-callback-observers">Observateur centralisé</h2>
+
+<p>Dans la mesure où chaque notification de changement précise l'objet concerné, il est possible d'utiliser un seul observateur pour tout un tas d'objets distincts.  L'observateur recevra l'ensemble des modifications constatées sur les objets qu'il observe une fois la « micro-tâche » terminée (comme pour les Mutation Observers).</p>
+
+<img src="image_12_fr.png"/>
+
+<h2 id="toc-largescale">Changements composites</h2>
+
+<p>Il peut arriver que vous travailliez sur une grooosse appli et procédiez régulièrement à des modifications groupées.  Certains objets pourraient vouloir décrire leurs groupes de changements sur tout un tas de propriétés de façon plus compacte et sémantique (plutôt qu'au travers d'une tonne de notifications sur propriétés individuelles).</p>
+
+<p>O.o() vous aide à faire ça au travers de deux méthodes : <code>notifier.performChange()</code> et <code>notifier.notify()</code>, que nous avions déjà rencontrée.</p>
+
+<img src="image_13_fr.png">
+
+<p>Voyons un exemple de ce type de groupement au travers d'un objet <code>Thingy</code> disposant de certaines méthodes arithmétiques (<code>multiply</code>, <code>increment</code> et <code>incrementAndMultiply</code>).  Chaque fois qu'une de ces méthodes est appelée, elle groupe ses modifications individuelles dans un tout sémantique.</p>
+
+<p>Pour cela, elle recourt à <code>performChange</code>, dont la syntaxe d'appel est : <code>notifier.performChange('groupName', groupChangeCallback);</code></p>
+
+<pre class="prettyprint">
+function Thingy(a, b, c) {
+  this.a = a;
+  this.b = b;
+}
+
+Thingy.MULTIPLY = 'multiply';
+Thingy.INCREMENT = 'increment';
+Thingy.INCREMENT_AND_MULTIPLY = 'incrementAndMultiply';
+
+
+Thingy.prototype = {
+  increment: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    // Indiquer au système qu'une série de modifs atomiques constitue
+    // en fait un groupe sémantique avec un type précis.
+    notifier.performChange(Thingy.INCREMENT, function() {
+      this.a += amount;
+      this.b += amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT,
+      incremented: amount
+    });
+  },
+
+  multiply: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.MULTIPLY, function() {
+      this.a *= amount;
+      this.b *= amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.MULTIPLY,
+      multiplied: amount
+    });
+  },
+
+  incrementAndMultiply: function(incAmount, multAmount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.INCREMENT_AND_MULTIPLY, function() {
+      this.increment(incAmount);
+      this.multiply(multAmount);
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT_AND_MULTIPLY,
+      incremented: incAmount,
+      multiplied: multAmount
+    });
+  }
+}</pre>
+
+<p>On définit ensuite deux observateurs pour notre objet : le premier qui attrape toutes les notifications prédéfinies, et le second qui s'intéressera aux types spécifiques que nous avons défini, en plus du <code>'update'</code> classique.</p>
+
+<pre class="prettyprint">
+var observer = function(r) {
+    console.log(r);
+};
+
+var observer2 = function(r) {
+	console.log('Observer 2', r);
+}
+
+
+Thingy.observe = function(thingy, callback) {
+  // Object.observe(obj, callback, opt_acceptList)
+  Object.observe(thingy, callback, [Thingy.INCREMENT,
+                                    Thingy.MULTIPLY,
+                                    Thingy.INCREMENT_AND_MULTIPLY,
+                                    'update']);
+}
+
+Thingy.unobserve = function(thingy, callback) {
+  Object.unobserve(thingy, callback);
+}</pre>
+
+<p>À présent, on peut commencer à jouer avec ce code.  Définissons un nouveau <code>Thingy</code> :</p>
+
+<pre class="prettyprint">
+var thingy = new Thingy(2, 4);
+</pre>
+
+<p>Et voyons ce qui se passe quand on procède à des modifications.  OMG, trop cool.  TELLEMENT de bidules !</p>
+
+<pre class="prettyprint">
+// On observe thingy
+Object.observe(thingy, observer);
+Thingy.observe(thingy, observer2);
+
+// On joue avec les méthodes qu'il expose
+thingy.increment(3);               // { a: 5, b: 7 }
+thingy.b++;                        // { a: 5, b: 8 }
+thingy.multiply(2);                // { a: 10, b: 16 }
+thingy.a++;                        // { a: 11, b: 16 }
+thingy.incrementAndMultiply(2, 2); // { a: 26, b: 36 }
+</pre>
+
+<img src="image_14.png"/>
+
+<p>Tout le code contenu dans la fonction de rappel de <code>performChange</code> est considéré comme une modification composite.  Les observateurs qui s'y intéressent explicitement ne voient que la notification composite.  Les autres reçoivent les notifications prédéfinies produites par le code de la fonction de rappel.</p>
+
+<h2 id="toc-observing-arrays">Observer des tableaux</h2>
+
+<p>Cela fait un moment que nous parlons d'observer des modifications aux propriétés des objets, mais qu'en est-il des tableaux ?  C'est une excellente question.  Chaque fois qu'on me dit « excellente question » je n'entends pas la réponse parce que je suis trop occupé à m'auto-féliciter d'avoir posé une aussi bonne question, mais je digresse.  Il y a aussi des méthodes pour observer les tableaux !</p>
+
+<p><code>Array.observe()</code> est une méthode qui permet de traiter des groupes de modifications sur le tableau (par exemple au moyen de <code>splice</code>, <code>unshift</code> ou d’autres méthodes modifiant la longueur implicitement) comme une notification unique de type <code>'splice'</code>. En interne, elle utilise <code>notifier.performChange('splice', …)</code>.</p>
+
+<p>Voici un exemple dans lequel on observe un tableau <code>model</code>, pour voir les notifications qui sont produites suite à la modification des données sous-jacentes :</p>
+
+<pre class="prettyprint">
+var model = ['Racheter du lait', 'Apprendre à coder', 'Porter un kilt'];
+
+Array.observe(model, function(changeRecords) {
+  console.log('Array observe', changeRecords);
+});
+
+model.splice(1, 1, 'Apprendre JS', 'Apprendre Ruby');
+model.unshift();
+</pre>
+
+<img src="image_15_fr.png"/>
+
+<h2 id="toc-performance">Performance</h2>
+
+<p>Lorsqu'on réfléchit à la performance algorithmique de O.o(), le mieux est de visualiser un cache en lecture.  D'une façon générale, un tel cache est une excellente stratégie lorsque (par importance décroissante) :</p>
+
+<ol>
+	<li>La fréquence des lectures est largement supérieure à celle des écritures ;</li>
+	<li>Il est possible de créer un cache qui compense un surcoût à l'écriture par une meilleure performance algorithmique de lecture ;</li>
+	<li>Le surcoût constant des écritures est acceptable.</li>
+</ol>
+
+<p>O.o() est conçu pour la première catégorie de cas.</p>
+
+<p>Le <em>dirty-checking</em> nous contraint à conserver une copie en mémoire de toutes les données observées, ce qui entraîne un surcoût structurel en mémoire qui disparaît avec O.o().  Le <em>dirty-checking</em>, bien qu'étant une solution de secours décente, n'en est pas moins une abstraction défaillante qui ajoute une complexité superflue à nos applications.</p>
+
+<p>Pourquoi donc ?  Eh bien, parce que le <em>dirty-checking</em> doit s'exécuter chaque fois qu'une donnée <em>est susceptible d'avoir changé</em>.  Ça n'est tout simplement pas une façon robuste d'attaquer ce problème, et toute approche de ce type a des inconvénients significatifs (par exemple, une vérification à intervalles fixes peut dégrader la qualité et la performance de l'affichage, et entraîner des <em>race conditions</em>).  Qui plus est, le <em>dirty-checking</em> nécessite la maintenance d'un référentiel central d'observateurs, ce qui peut entraîner des fuites de mémoire et allonger le temps de fermeture de la page, toutes choses que O.o() nous épargne.</p>
+
+<p>Jetons donc un œil aux chiffres.</p>
+
+<p>Les tests de performance ci-dessous (qui sont accessibles sur <a href="https://github.com/Polymer/observe-js/tree/master/benchmark">GitHub</a>) nous permettent de comparer le <em>dirty-checking</em> à O.o().  Ils graphent le coût d'un nombre de modifications par taille de l'ensemble des objets observés.</p>
+
+<p>Le résultat principal est que la performance algorithmique du <em>dirty-checking</em> est proportionnelle au nombre des objets observés, tandis que celle de O.o() est proportionnelle au nombre de modifications effectuées.</p>
+
+<strong><em>Dirty-checking</em></strong>
+
+<img src="image_16.png"/>
+
+<strong>Chrome avec <code>Object.observe()</code> activé</strong>
+
+<img src="image_17.png"/>
+
+<h2 id="toc-polyfills">Simuler <code>Object.observe()</code> quand nécessaire (<em>polyfill</em>)</h2>
+
+<p>Super—donc O.o() peut être utilisé à partir de Chrome 36, mais qu'en est-il des autres navigateurs ?  On ne vous oublie pas : le module <a href="https://github.com/Polymer/observe-js">Observe-JS</a> de Polymer est un <em>polyfill</em> qui utilisera l'implémentation native lorsqu'elle existe, et sinon la simulera, en ajoutant quelques syntaxes de confort en bonus.  Elles nous fournissent une vue consolidée de notre environnement d'exécution qui résume les modifications constatées et fournit un rapport de celles-ci.  Les deux compléments majeurs qu'elles fournissent sont :</p>
+
+<p>1) Vous avez la possibilité d’observer des chemins.  Cela signifie que vous pouvez, par exemple, observer « <code>foo.bar.baz</code> » dans un objet donné et être notifié lorsque la valeur à ce chemin a changé.  Si le chemin n'est pas atteignable, on considère qu'il vaut <code>undefined</code>.</p>
+
+<p>Voici un exemple d’observation de chemin sur un objet :</p>
+
+<pre class="prettyprint">
+var obj = { foo: { bar: 'baz' } };
+
+var observer = new PathObserver(obj, 'foo.bar');
+observer.open(function(newValue, oldValue) {
+  // réagit lorsque `obj.foo.bar` a changé de valeur
+});
+</pre>
+
+<!-- FIXME: HOW IS THAT AN EXTRA FEATURE? A.o IS NATIVE! -->
+<p>2) Vous êtes tenus au courant des modifications de tableaux, fournies sous forme de <code>splice</code>. Il s'agit au final du jeu minimal d'opérations <code>splice</code> que vous auriez à rejouter sur le tableau pour le faire passer de son ancien à son nouvel état.  C'est une sorte de transformation, ou de vue alternative, du tableau.</p>
+
+<p>Voici un exemple de suivi des modifications d’un tableau sous forme de jeu minimal de <em>splices</em> :</p>
+
+<pre class="prettyprint">
+var arr = [0, 1, 2, 4];
+
+var observer = new ArrayObserver(arr);
+observer.open(function(splices) {
+  // réagit à tout changement sur les éléments de `arr`
+  splices.forEach(function(splice) {
+    splice.index;      // position du changement
+    splice.removed;    // tableau de valeurs qui ont été retirées (peut être vide)
+    splice.addedCount; // nombre d'éléments ajoutés (peut être zéro)
+  });
+});
+</pre>
+
+<h2 id="toc-frameworks">Les frameworks et <code>Object.observe()</code></h2>
+
+<p>Comme indiqué plus haut, O.o() fournira aux frameworks et bibliothèques une superbe opportunité d'améliorer la performance de leur <em>data-binding</em> dans les navigateurs qui le prennent en charge.</p>
+
+<p>Yehuda Katz et Erik Bryn, d’Ember, ont confirmé l’utilisation de O.o() lorsqu’il est disponible dans les toutes prochaines versions d’Ember.  Misko Hervy, d’Angular, a écrit un <a href="https://docs.google.com/document/d/10W46qDNO8Dl0Uye3QX0oUDPYAwaPl0qNy73TVLjd1WI/edit">document de conception</a> relatif à la détection améliorée des changements dans Angular 2.0.  Leur approche à long terme tirera avantage d’<code>Object.observe()</code> lorsqu'il sera disponible dans Chrome stable, et se base en attendant sur <a href="https://github.com/angular/watchtower.js/">Watchtower.js</a>, leur propre couche de détection de changement.  Suuuuper excitant.</p>
+
+<h2 id="toc-conclusions">Conclusions</h2>
+
+<p>O.o() est un ajout puissant à la plate-forme web, que vous pouvez commencer à utiliser dès aujourd’hui.</p>
+
+<p>Nous avons bon espoir que cette méthode débarquera rapidement dans les principaux navigateurs, permettant aux frameworks JavaScript de booster leurs capacités d'observation des objets nus.  Ceux d'entre vous qui visent principalement Chrome devraient pouvoir utiliser O.o() dès Chrome 36, ainsi que dans une très prochaine version d’Opera.</p>
+
+<p>Alors allez-y, et parlez aux auteurs de vos frameworks JavaScript préférés d’<code>Object.observe()</code> afin de savoir s’ils prévoient de s’en servir pour améliorer les performances du <em>data-binding</em> dans vos applis.  Des choses passionnantes se dessinent !</p>
+
+<h2 id="toc-resources">Ressources</h2>
+
+<ul>
+<li><a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() sur le wiki Harmony</a></li>
+<li><a href="http://bocoup.com/weblog/javascript-object-observe/">Data-binding avec Object.observe(), par Rick Waldron</a></li>
+<li><a href="http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/">Tout ce que vous vouliez savoir sur Object.observe() - JSConf</a></li>
+<li><a href="http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html">Pourquoi Object.observe() est la meilleure nouveauté de ES7</a></li>
+</ul>
+
+<p><em>Avec mes remerciements à Rafael Weinstein, Jake Archibald, Eric Bidelman, Paul Kinlan et Vivian Cromwell pour leurs remarques et relectures.</em></p>
+
+{% endblock %}

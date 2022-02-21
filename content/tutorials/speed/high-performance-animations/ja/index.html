@@ -1,0 +1,196 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block relatedreading %}
+<aside class="panel">
+  <h2>Related reading</h2>
+  <ul>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/unnecessary-paints/">Avoiding Unnecessary Paints</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/animated-gifs/">Avoiding Unnecessary Paints: Animated GIF Edition</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/scrolling/">Scrolling Performance</a></li>
+    <li><a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">Parallaxin'</a></li>
+  </ul>
+</aside>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.talkinghead-lewis:before {
+  background-image: url(/static/images/profiles/paullewis.png);
+}
+
+.talkinghead-irish:before {
+  background-image: url(/static/images/profiles/paulirish.png);
+}
+
+table {
+  width: 100%;
+}
+
+table tr:nth-child(2n) {
+  background: #f2f2f2;
+}
+
+table tr td {
+  padding: 10px;
+}
+
+table.code {
+  font-family: 'Source Code Pro'
+}
+
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong> <a href="https://github.com/1000ch">Shogo Sensui</a>, <a href="https://github.com/nakajmg">Naohiro Nakajima</a>, <a href="https://github.com/ginpei">Ginpei Takanashi</a>, <a href="https://github.com/kubosho">Shota Kubota</a>, <a href="https://github.com/tomo-e">Tomoe Tani</a>, <a href="https://github.com/tacamy">Takami Yamada</a>, <a href="https://github.com/soto3">Natsuko Sotomura</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p class="intro">単刀直入に本題に入りましょう。モダンブラウザは4つの項目を手軽にアニメーションすることができます。<strong>位置（position）</strong>、<strong>大きさ（scale）</strong>、<strong>回転（rotation）</strong>、<strong>透明度（opacity）</strong>です。もし、それ以外のものをアニメーションするなら、それは<em>ご自分の頑張り次第</em>ですが、絹のようになめらかな60fpsの動画を実現できる可能性は少ないでしょう。</p>
+
+<figure>
+  <img src="cheap-operations.jpg" alt="Cheap to animate" />
+</figure>
+
+<p>同じゆっくりとした動きのアニメーションが並んだ動画を見てみましょう。</p>
+
+<div style="position: relative; padding-top: 56.25%;">
+  <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" src="//www.youtube.com/embed/-62uPWUxgcg?rel=0" frameborder="0" allowfullscreen=""></iframe>
+</div>
+
+<p>一方はtransformが終わっていますが、もう一方は終わっていません。どのような違いがあるかわかったところで、なぜこのような違いがあるのか考えてみましょう。</p>
+
+<h2 id="toc-dom-to-pixels">DevToolsにおけるDOMツリーの描画</h2>
+
+<p>あなたがChrome DevToolsのTimelineを使うとき、これと似たパターンを見るはずです。</p>
+
+<figure>
+  <img src="devtools-waterfall.jpg" alt="DevTools waterfall" />
+  <figcaption>Chrome DevToolsのFramesモード。ウォーターフォールの上にあればあるほど、ブラウザの処理する量が多い。</figcaption>
+</figure>
+
+<p>ブラウザが行うプロセスはとてもシンプルです。要素に適用するスタイルを計算します(Recalulate Style)、それぞれの要素のジオメトリと位置を生成します(Layout)、<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">レイヤー</a>へそれぞれの要素のピクセルを埋めます(Paint Setup と Paint)、そしてスクリーンに対してそれらを描画します(Composite Layers)。</p>
+
+<p>スムーズなアニメーションを実現するのに必要なのは処理をさせないことです。そのための一番いい方法は、transformとopacityのプロパティだけを変更することです。タイムラインのウォーターフォールの上にあればあるほど、ブラウザの処理する量が多くなります。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">このアドバイスはだいたいのブラウザに当てはまります。Chrome、Firefox、Safari、そしてOperaはtransformとopacityの全てにハードウェアアクセラレーションを適用します。残念ながらInternet Explorer 10以上でハードウェアアクセラレーションが適用される条件は明らかになっていません。しかしInternet Explorer 11のF12開発者ツールがリリースされれば、この条件が分かるかもしれません。</blockquote>
+
+<h2 id="toc-animating-layout-properties">レイアウト変更を伴うプロパティのアニメーション</h2>
+
+<p>要素に変更を加えると、ブラウザはその変更の影響を受ける全ての要素のジオメトリ（位置と大きさ）の計算を必要とするレイアウトを行います。つまりある要素を変更したとき、その他の要素もジオメトリの再計算が必要になるのです。例えば <code>&lt;html&gt;</code> 要素の幅を変更すると、その子要素の多くが影響を受ける事になります。また、はるか下層のツリーで、ある要素が他の要素へはみ出したり何かしらの影響を与えた結果、その変更がずっと上層のツリーのレイアウト再計算を発生させる事もあります。</p>
+
+<p>可視要素のツリーが大きい程レイアウト計算量も多くなるため、レイアウト再計算を誘発するようなプロパティをアニメーションすることを回避するのに腐心しなければなりません。</p>
+
+<blockquote class="commentary talkinghead talkinghead-lewis"><code>&lt;html&gt;</code>要素、<code>&lt;body&gt;</code>要素のクラスでアプリの状態を管理しようとしていますか？ その要素の変更の際、ブラウザはスタイルとレイアウトの計算をやり直す必要があります。スタイル計算、レイアウトの想定しない再実行に気を付けてください。アニメーションがないものでも、負荷が高い場合がありますよ！</blockquote>
+
+<p>以下の<a href="http://goo.gl/lPVJY6">よく使われているCSSプロパティ</a>は、変更時にレイアウト更新を伴います。</p>
+
+<p><strong>レイアウトに影響を及ぼすプロパティ</strong></p>
+
+<table class="code">
+  <tr><td>width</td><td>height</td></tr>
+  <tr><td>padding</td><td>margin</td></tr>
+  <tr><td>display</td><td>border-width</td></tr>
+  <tr><td>border</td><td>top</td></tr>
+  <tr><td>position</td><td>font-size</td></tr>
+  <tr><td>float</td><td>text-align</td></tr>
+  <tr><td>overflow-y</td><td>font-weight</td></tr>
+  <tr><td>overflow</td><td>left</td></tr>
+  <tr><td>font-family</td><td>line-height</td></tr>
+  <tr><td>vertical-align</td><td>right</td></tr>
+  <tr><td>clear</td><td>white-space</td></tr>
+  <tr><td>bottom</td><td>min-height</td></tr>
+</table>
+
+<p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
+
+<h2 id="toc-">描画をともなうアニメーションのプロパティ</h2>
+
+<p>要素を変更することにより描画が引き起こされることがあります。モダンブラウザでは描画の大部分がソフトウェアのラスタライザーにより行われます。あなたのアプリ上で要素がどのレイヤーに分類されるかによって、変更された要素以外の<em>他の要素にも</em>描画が引き起こされる可能性があります。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">もしレイヤーに対する知識が深くないのであれば、Tom Wiltziusが書いた<a href="http://www.html5rocks.com/en/tutorials/speed/layers/">レイヤーについての概論</a>を読んでおくべきでしょう。</blockquote>
+    
+<p>描画を引き起こす要素はたくさんありますが、そのうち有名なものを以下に列挙します。</p>
+
+<h3>描画に影響を与えるスタイル</h3>
+
+<table class="code">
+  <tr><td>color</td><td>border-style</td></tr>
+  <tr><td>visibility</td><td>background</td></tr>
+  <tr><td>text-decoration</td><td>background-image</td></tr>
+  <tr><td>background-position</td><td>background-repeat</td></tr>
+  <tr><td>outline-color</td><td>outline</td></tr>
+  <tr><td>outline-style</td><td>border-radius</td></tr>
+  <tr><td>outline-width</td><td>box-shadow</td></tr>
+  <tr><td>background-size</td><td></td></tr>
+</table>
+
+<p><em>Source: <a href="http://goo.gl/lPVJY6">http://goo.gl/lPVJY6</a></em></p>
+
+<p>上記のプロパティで要素をアニメーションさせた場合、再描画が発生し、それらの要素が属するレイヤーがGPUに転送されます。携帯端末においては、CPUがデスクトップPCのものより劣っているため、描画処理に特に時間がかかることを意味します。また、CPUとGPU間の転送量も限られているため、テクスチャの更新にも時間がかかります。</p>
+
+<h2 id="toc-composite-properties">コンポジションを伴うアニメーションプロパティ</h2>
+
+<p>描画を誘発しそうで誘発しないCSSプロパティとして、opacityがあります。opacityの値に変更を加えると、低いアルファ値で要素テクスチャが描画されることで、コンポジティング間のGPUがハンドルされます。そして、テクスチャは同一レイヤーに合成されないと動作しません。もしそれらが異なるレイヤーにグルーピングされると、GPUレイヤーに含まれるopacityに変化があった他の要素も誤ってフェードされてしまうでしょう。</p>
+
+<p>BlinkやWebKitのブラウザにおいて、opacityに加えてtransitionやanimationプロパティを要素に付与すると、新しいGPUレイヤーが生成されますが、開発者は<code>translateZ(0)</code>や<code>translate3d(0,0,0)</code>を使って強制的にGPUレイヤーの生成を行います。レイヤーの生成を強制的に行うと、アニメーション開始時（レイヤーの作成と描画は微細な変更にはならず、アニメーションの開始を遅らせます）にすぐ描画可能になり、アンチエイリアスの変化による外観の変化はありません。レイヤーのプロモートは控えめに行うべきであり、もし過剰に行ってしまうと描画レイヤーが多数生成されてしまい、ジャンクを引き起こしてしまいます。</p>
+
+<blockquote class="commentary talkinghead talkinghead-lewis">Chromeにおいて、ルートではない非透過レイヤーはサブピクセルのアンチエイリアスではなくグレイスケールのアンチエイリアスを使い、アンチエイリアスが突然発生すると、とても目立ちうるものです。アニメーションの開始よりも前にプロモートしておきたいのであれば、先にやっておきましょう。</blockquote>
+
+<p>要素のtransformを変えることは、つまるところ位置、回転、縮尺を変えることです。多くの場合、positionはleftとtopプロパティが設定されることでアニメーションが発生します。この問題は上に示したように、leftもtopも再レイアウトを引き起こしてしまい、非常にコストがかかることです。よりよい方法としてはtranslateを使うことであり、translateは再レイアウトを引き起こしません。</p>
+
+<blockquote class="commentary talkinghead talkinghead-irish">Chrome CanaryとSafariにおいては、メインスレッドでは使われないアニメーションフィルタを使うことが可能であり、アクセラレートされ一般的にパフォーマンスが良いです。しかしInternet ExplorerやFirefoxではサポートされておらず、問題を起こしてしまうでしょう。</blockquote>
+
+<h2 id="toc-imperative-declarative">命令的アニメーション vs 宣言的アニメーション</h2>
+
+<p>開発者はアニメーションをJavaScript（命令的：imperative）で行うか、CSS（宣言的：declarative）で行うか決めなければならないことがあります。</p>
+
+<h3>命令的</h3>
+
+<p>命令的なアニメーションのいちばんのメリットは、同時に、いちばんのデメリットを引き起こすこともありえます。アニメーションはブラウザのメインスレッド上のJavaScriptで実行されています。メインスレッドはすでに別のJavaScript（スタイル計算、レイアウトや描画）でいっぱいいっぱいです。スレッドの競合がよく起こります。これは、アニメーションのフレームがコマ落ちする可能性がかなり高くなります。</p>
+
+<p>JavaScriptでのアニメーションは、ほんとうに多くの制御ができます。再生、一時停止、逆再生、中止やキャンセルも、お手のものです。<a href="http://www.html5rocks.com/en/tutorials/speed/parallax/">パララックススクローリング</a>のように、JavaScriptでしか実現できない効果もいくつかあります。</p>
+
+<h3>宣言的</h3>
+
+<p>宣言的アプローチとは、transitionやanimationをCSSで記述することです。いちばんのメリットは、ブラウザがアニメーションを最適化できることです。必要であればレイヤーも作れますし、前述したようにメインスレッドでの操作の実行をやめることもできます。これは、よい点です。多くの人にとって、CSSの主なデメリットは、JavaScriptの表現力がないことです。有意義な方法でアニメーションを組み合わせることは、非常に難しいです。つまり、アニメーションをオーサリングすることは、複雑でエラーが出やすくなるのです。</p>
+
+<h2 id="toc-looking-to-the-future">展望</h2>
+
+<p>Web標準が発達するにつれて、 アニメーション周りの制約の一部はなくなるでしょう。<a href="https://github.com/ianvollick/animation-proxy/blob/master/Explainer.md">workerを用いたJavaScriptアニメーションの実行</a>というコンセプトを研究しようというIan Vollick（Google）による提案があります。これは、レイアウトまたはスタイルの再計算を引き起こしません。</p>
+
+<p>もっと宣言的なアニメーションの方法に、<a href="http://dev.w3.org/fxtf/web-animations/">Web Animations仕様</a>があります。<a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">Jake Archibaldの長々とした紹介記事</a>もありますよ。</p>
+
+<h2 id="toc-conclusion">まとめ</h2>
+
+<p>なめらかなアニメーションは素晴らしいウェブを体験させる根幹です。レイアウトや描画を引き起こすプロパティをアニメーションさせるのは避けるべきです。レイアウトと描画はどちらも処理が重く、フレーム落ちを起こす可能性があるからです。宣言的なアニメーションは事前にブラウザに最適化することができるので、命令的なアニメーションより良いとされています。</p>
+
+<p>transformはGPUに処理を任せることが可能な、アニメーションに最も適したプロパティなので、それらだけで表現出来るのであれば、そうするべきでしょう。</p>
+
+<ul>
+<li>opacity</li>
+<li>translate</li>
+<li>rotate</li>
+<li>scale</li>
+</ul>
+
+<p>将来、スムーズなアニメーションをJavaScriptと同じくらいの表現で実装でき、重いコストを考えることなく制約もなしに、CSSアニメーションと同じくらい最適化されたアニメーションを実現するための新しい方法が出てくるでしょう。</p>
+<h2 id="toc-resources">Resources</h2>
+
+<ul>
+<li><a href="http://www.chromestatus.com/metrics/css/animated">The current status of animated properties on the web</a>.</li>
+<li><a href="https://docs.google.com/a/google.com/presentation/d/19R_E5B__kdE55L1bTpS6IFKbYbHq-PQKKky4do5Yc6A/edit#slide=id.g105c64d69_170">Paul Irish’s deck on performance tooling</a>.</li>
+<li><a href="http://www.html5rocks.com/en/tutorials/internals/antialiasing-101/">Antialiasing 101</a></li>
+<li><a href="http://coding.smashingmagazine.com/2013/03/04/animating-web-gonna-need-bigger-api/">We’re Gonna Need A Bigger API!</a></li>
+</ul>
+
+{% endblock %}

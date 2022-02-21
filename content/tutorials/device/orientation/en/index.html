@@ -8,12 +8,15 @@
 
 <style type="text/css">
 figure.sample {
-	width: 250px;
+	width: 400px;
 	border: 1px solid hsl(10, 50%, 80%);
 	border-radius: 5px;
 	display: inline-block;
 	background-color: hsl(10, 50%, 98%);
-	height: 350px;
+	padding: 15px;
+	margin-bottom: 20px;
+	margin-left: auto;
+	margin-right: auto;
 	vertical-align: top;
 }
 
@@ -63,15 +66,11 @@ pre {
 {% endblock %}
 {% block pagebreadcrumb %}This End Up: Using Device Orientation &amp; Device Motion{% endblock %}
 {% block date %}April 29, 2011{% endblock %}
-{% block updated %}{% endblock %}
+{% block update_date %}July 12, 2013{% endblock %}
 {% block onload %}{% endblock %}
 
-{% block browsersupport %}
-<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
-<span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
-<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
-<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
-<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% block iscompatible %}
+  return !!(window.DeviceOrientationEvent) && !!(window.DeviceMotionEvent);
 {% endblock %}
 
 {% block html5badge %}
@@ -81,56 +80,51 @@ pre {
 {% block content %}
 <h2 id="toc-intro">Introduction</h2>
 <p>Many new computers, mobile phones and other devices are now shipping standard with accelerometers, gyroscopes, compasses and other hardware designed to determine capture motion and orientation data.  At the same time, web browsers are providing increasingly more access to that new hardware.  One example of that are the new <a href="http://dev.w3.org/geo/api/spec-source-orientation">HTML5 DeviceOrientation and DeviceMotion events</a>. These events provide developers with information about the orientation, motion and acceleration of the device.</p>
-<p>Today, Chrome, and Safari Mobile, support these events in their stable releases, Opera has a test implementation; and Firefox has an implementation using a slightly different event model, though they have indicated they will likely implement the HTML5 DeviceOrientation and DeviceMotion events in the future.</p>
+<p>Today, all modern mobile browsers support device orientation, and most support device motion, with Chrome for Android and Opera being the holdouts.  Thankfully they're working on it and we should see it soon.  Note, if you need to support older versions of Firefox, it has an implementation using a slightly different event model.</p>
 <p>These events have a lot of fun uses, such as using orientation to control the direction of character in a game, or motion to determine how high a character should jump.  Additionally, you can use these events beyond gaming.  When used with GeoLocation, you can create a more accurate turn-by-turn navigation system.</p>
-<p>In this article, we’ll take a look at three different events, and use CSS to rotate an image based on the orientation of the device. </p>
+<p>In this article, we’ll take a look at the two different events, and use CSS to rotate an image based on the orientation of the device. </p>
 <h2 id="toc-whichendisup">Which end is up?</h2>
 <p>There are a couple of things that we need to make sure we understand before we can start using these events, which end is up and what are the axes we’re going to use?</p>
-<p>The easiest way to answer the first question is to take your device, and put it on flat, level surface in it’s “resting” position, the position it will be most stable in.  For a mobile phone, that’s probably on the table, with the screen facing up, and the the bottom of the phone is closest to you.  Your laptop is likely positioned with it’s screen open facing you, and the keyboard in-line with the surface.</p> 
+<h3>Device Orientation Data</h3>
+<p>To answer this question, we need to align our device with the local earth frame.  To do that, take your device, and put it on flat, level surface with the top of the device pointing directly north.  To do this with a phone, turn around until you are facing north, and place the phone on a flat table, with the bottom of the phone closest to you and the top pointed north.  For a laptop, the situation is similar, except the screen is open at a 90&deg; angle, facing you and the keyboard in-line with the surface.</p> 
 <figure>
   <img src="axes.png"><br />
-  Phone is in its normal position, on a flat on a surface, with the screen facing up and the bottom of the phone is closest to you.  The X, Y and Z values increase as you move to the right, forward or up respectively.
+  Phone is in its normal position, on a flat on a surface, with the screen facing up, the top of the phone pointed directly north and the bottom of the phone is closest to you.  The X, Y and Z values increase as you move to the right, forward or up respectively.
 </figure>
+<h3>Device Motion Data</h3>
 <p>Acceleration data is returned as a coordinate frame with three axes, x, y and z.  The x-axis runs side-to-side across the mobile phone screen, or the laptop keyboard and is positive towards the right side.  The y-axis runs front-to-back across the mobile phone screen or the laptop keyboard and is positive towards as it moves away from you.  The z-axis comes straight up out of the mobile phone screen or the laptop keyboard and is positive as it moves up.</p>
 <figure>
   <img src="rotation.png"><br />
   The phone is rotated on the Y-Axis by gamma degrees.
 </figure>
-<p>The rotation data uses Euler angles to represent the difference between the device in it’s normal position and it’s current position.  With the HTML5 device orientation events, the data is returned as the number of degrees different from normal.  An easier way to think about it is how much the device is tilted side-to-side, usually referred to as beta.  How much its tilted front-to-back, usually known as gamma, and finally how much has it been rotated around the z-axis, known as alpha.</p>
+<p>The rotation data uses Euler angles to represent the difference between the device in it’s normal position and it’s current position.  With the HTML5 device orientation events, the data is returned as the number of degrees different from normal.  An easier way to think about it is how much the device is tilted front-to-back, is referred to as beta.  How much its tilted side-to-side, is known as gamma.  And finally how much has it been rotated around the z-axis, is known as alpha.</p>
 <p>One thing to keep in mind is that most people don’t use their phones when they’re in this flat position, and instead have rotated them around the x-axis so the screen is facing them, this will affect the acceleration data that is returned from the device motion events.</p>
+<h3 id="toc-differences">Differences in Browsers</h3>
+<p>As mentioned earlier, alpha, beta and gamma are determined based on the position the device is with the local earth frame.  For most browsers, alpha returns the compass heading, so when the device is pointed north, alpha is zero.  With Mobile Safari, alpha is based on the direction the device was pointing when device orientation was first requested.  The compass heading is available in the webkitCompassHeading parameter.</p>
 <h2 id="toc-events">The events</h2>
 <h3 id="toc-deviceorientation">Device orientation</h3>
-<p>The device orientation event returns only the rotation data, which includes how much the device is leaning side-to-side (beta), front-to-back (gamma) and if the phone or laptop has a compass, the direction the device is facing (alpha). </p>
+<p>The device orientation event returns only the rotation data, which includes how much the device is leaning front-to-back (beta), side-to-side (gamma) and if the phone or laptop has a compass, the direction the device is facing (alpha). </p>
 <p>Let’s see a couple examples:</p>
 <figure class="sample">
   <img src="dm1.png"><br />
-  You’re looking north, while the device is in a flat surface, facing north <br />
+  You are looking down at a phone that is lying on a flat, horizontal surface, with north at the top of the frame.<br />
   <code>{evt.alpha: 0, evt.beta: 0, evt.gamma: 0}</code>
 </figure>
 <figure class="sample">
   <img src="dm2.png"><br />
-  You’re looking north, while the device is on a flat surface, pointed south<br />
+  You are looking down at a phone that is lying on a flat, horizontal surface, with north at the top of the frame.  The phone has been rotated by 180&deg; so it is pointing south.<br />
   <code>{evt.alpha: 180, evt.beta: 0, evt.gamma: 0}</code>
 </figure>
 <figure class="sample">
   <img src="dm3.png"><br />
-  The device is leaning to the right, facing north, but doesn’t have a compass <br />
+  You are looking down at a device that does not have a compass built in, it is pointed west and tilted up by 45&deg; with the left side of the phone higer than the right.<br />
   <code>{evt.alpha: null, evt.beta: 0, evt.gamma: 45}</code>
 </figure>
 <figure class="sample">
   <img src="dm4.png"><br />
-  The device is leaning toward the user, facing north <br />
+  You are looking down at a phone that is pointed north and tilted up by 45&deg; with the top of the phone higer than the bottom.<br />
   <code>{evt.alpha: 0, evt.beta: 45, evt.gamma: 0}</code>
 </figure>
-<h3 id="toc-mozdeviceorientation">MozOrientation</h3>
-<p>Firefox 3.6+ has a slightly different implementation of the device orientation event, and instead uses the <a href="https://developer.mozilla.org/en/Detecting_device_orientation#Processing_orientation_events">MozOrientationEvent</a>.  The MozOrientationEvent provides information about the side-to-side tilt (using the parameter x), the front-to-back tilt (using the parameter y), and instead of providing the compass direction, it provides the vertical acceleration (using the parameter z). </p>
-<p>The <code>MozOrientation</code> event returns three values:
-  <ul>
-    <li><code>X</code> - the amount of side-to-side tilt.  When the laptop or phone is level, the value is zero, and approaches +1 when tilted to the left, and approaches -1 when tilted to the right.</li>
-    <li><code>Y</code> - the amount of front-to-back tilt.  When the laptop is level, the value is zero and approaches +1 as it’s titled away from you and approaches -1 as it’s tilted towards you.</li>
-    <li><code>Z</code> - the amount of vertical acceleration.  When undergoing normal earth gravity the value is -1, and decreases if the device is moved up.  The value is 0 if the device is thust up. </li>
-  </ul>
-</p>
 <h3 id="toc-devicemotion">Device motion</h3>
 <p>The device motion event is a superset of the device orientation event; it returns data about the rotation information and also <a href="http://en.wikipedia.org/wiki/Acceleration">acceleration</a> information about the device.  The acceleration data is returned in three axes: x, y and z. They are measured in <a href="http://en.wikipedia.org/wiki/Metre_per_second_per_second">meters per second squared (m/s^2)</a>.  Because some devices might not have the hardware to exclude the effect of <a href="http://en.wikipedia.org/wiki/Gravity">gravity</a>, the event returns two properties, <code>accelerationIncludingGravity</code> and <code>acceleration</code>, which excludes the effects of gravity, (when this is the case, the acceleration data will be null).</p>
 <p>A laptop in its normal position, with the screen facing up, the data returned would be:<br />
@@ -141,7 +135,7 @@ pre {
 				<th>Not accelerating</th>
 				<th>Accelerating up</th>
 				<th>Accelerating forward</th>
-				<th>Accelerating left</th>
+				<th>Accelerating right</th>
 				<th>Accelerating up &amp; to the right</th>
 			</tr>
 		</thead>
@@ -152,15 +146,15 @@ pre {
 				<td>{0, 0, 5}</td>
 				<td>{0, 2, 0}</td>
 				<td>{3, 0, 0}</td>
-				<td>{5, 0, 9}</td>
+				<td>{5, 0, 5}</td>
 			</tr>
 			<tr>
 				<td class="firstCol">accelerationIncludingGravity</td>
 				<td>{0, 0, 9.81}</td>
-				<td>{0, 0, 15}</td>
+				<td>{0, 0, 14.81}</td>
 				<td>{0, 2, 9.81}</td>
 				<td>{3, 0, 9.81}</td>
-				<td>{5, 0, 11}</td>
+				<td>{5, 0, 14.81}</td>
 			</tr>
 		</tbody>
 	</table>
@@ -174,7 +168,7 @@ pre {
 				<th>Not accelerating</th>
 				<th>Accelerating up</th>
 				<th>Accelerating forward</th>
-				<th>Accelerating left</th>
+				<th>Accelerating right</th>
 				<th>Accelerating up &amp; to the right</th>
 			</tr>
 		</thead>
@@ -190,23 +184,20 @@ pre {
 			<tr>
 				<td class="firstCol">accelerationIncludingGravity</td>
 				<td>{0, 9.81, 0}</td>
-				<td>{0, 15, 0}</td>
+				<td>{0, 14.81, 0}</td>
 				<td>{0, 9.81, 2}</td>
 				<td>{3, 9.81, 0}</td>
-				<td>{5, 11, 0}</td>
+				<td>{5, 14.81, 0}</td>
 			</tr>
 		</tbody>
 	</table>
 </p>
 <h2 id="toc-usingDO">Using the DeviceOrientation events</h2>
-<p>Since DeviceOrientation and MozOrientation are similar, we’ll look at them together in this sample.</p>
 <h3 id="toc-do1">1. Check for compatibility</h3>
-<p>Check to see if either the DeviceOrientationEvent or the MozOrientationEvent is supported.</p>
+<p>Check to see if DeviceOrientationEvent supported.</p>
 <pre class="prettyprint">
 if (window.DeviceOrientationEvent) {
  console.log("DeviceOrientation is supported");
-} else if (window.OrientationEvent) {
- console.log("MozOrientation is supported");
 }
 </pre>
 <p>One thing to note, some devices (for example, the original iPad) say that they support the event when in fact they don’t.  In these cases, the event is fired only once, and all of the properties are null.</p>
@@ -221,25 +212,21 @@ if (window.DeviceOrientationEvent) {
       &lt;td id="doEvent"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;Tilt Left/Right [tiltLR]&lt;/td&gt;
+      &lt;td&gt;Tilt Left/Right [gamma]&lt;/td&gt;
       &lt;td id="doTiltLR"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;Tilt Front/Back [tiltFB]&lt;/td&gt;
+      &lt;td&gt;Tilt Front/Back [beta]&lt;/td&gt;
       &lt;td id="doTiltFB"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;Direction [direction]&lt;/td&gt;
+      &lt;td&gt;Direction [alpha]&lt;/td&gt;
       &lt;td id="doDirection"&gt;&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Motion Up/Down&lt;/td&gt;
-      &lt;td id="doMotionUD"&gt;&lt;/td&gt;
     &lt;/tr&gt;
    &lt;/table&gt;
 &lt;/div&gt;
 
-&lt;div class="container" style="-webkit-perspective: 300; perspective: 300;"&gt;
+&lt;div class="container" style="perspective: 300;"&gt;
   &lt;img src="html5_logo.png" id="imgLogo" class="logo"&gt;
 &lt;/div&gt;
 </pre>
@@ -247,14 +234,11 @@ if (window.DeviceOrientationEvent) {
 <p>Now that we know what events are supported, add the appropriate event listeners:</p> 
 <pre class="prettyprint">
 if (window.DeviceOrientationEvent) {
-  // Listen for the deviceorientation event and handle DeviceOrientationEvent object
+  // Listen for the event and handle DeviceOrientationEvent object
   window.addEventListener('deviceorientation', devOrientHandler, false);
-} else if (window.OrientationEvent) {
-  // Listen for the MozOrientation event and handle OrientationData object
-  window.addEventListener('MozOrientation', mozDevOrientHandler, false);
 }
 </pre>
-<h3 id="toc-do4">4. Normalize the data</h3>
+<h3 id="toc-do4">4. Handle the event</h3>
 <p>The HTML5 DeviceOrientation event returns three pieces of data: 
   <ul>
     <li><code>alpha</code> the direction the device is facing according to the compass</li>
@@ -262,7 +246,6 @@ if (window.DeviceOrientationEvent) {
     <li><code>gamma</code> the angle in degrees the device is tilted left-to-right.</li>
   </ul>  
   The angles values increase as you tilt the device to the right or towards you.</p> 
-<p>Since Firefox uses the <code>MozOrientationEvent</code> which returns similar data but using different parameters and a different measurement system, we want to normalize that before we pass it to our <code>deviceOrientationHandler</code> function.</p>
 <pre class="prettyprint">
 if (window.DeviceOrientationEvent) {
   document.getElementById("doEvent").innerHTML = "DeviceOrientation";
@@ -277,50 +260,27 @@ if (window.DeviceOrientationEvent) {
     // alpha is the compass direction the device is facing in degrees
     var dir = eventData.alpha
 
-    // deviceorientation does not provide this data
-    var motUD = null;
-
     // call our orientation event handler
-    deviceOrientationHandler(tiltLR, tiltFB, dir, motUD);
-  }, false);
-} else if (window.OrientationEvent) {
-  document.getElementById("doEvent").innerHTML = "MozOrientation";
-  window.addEventListener('MozOrientation', function(eventData) {
-    // x is the left-to-right tilt from -1 to +1, so we need to convert to degrees
-    var tiltLR = eventData.x * 90;
-
-    // y is the front-to-back tilt from -1 to +1, so we need to convert to degrees
-    // We also need to invert the value so tilting the device towards us (forward) 
-    // results in a positive value. 
-    var tiltFB = eventData.y * -90;
-
-    // MozOrientation does not provide this data
-    var dir = null;
-
-    // z is the vertical acceleration of the device
-    var motUD = eventData.z;
-    
-    // call our orientation event handler
-    deviceOrientationHandler(tiltLR, tiltFB, dir, motUD);
+    deviceOrientationHandler(tiltLR, tiltFB, dir);
   }, false);
 } else {
-  document.getElementById("doEvent").innerHTML = "Not supported on your device or browser."
+  document.getElementById("doEvent").innerHTML = "Not supported."
 }
 </pre>
-<h3 id="toc-do5">5. Create an event handler</h3>
-<p>We’ve already normalized our data, we’ll display it in the table we created in step 2, and also add rotate the image using a CSS3 transform.</p>
+<h3 id="toc-do5">5. Respond to the data</h3>
+<p>We’ll display it in the table we created in step 2, and also add rotate the image using a CSS3 transform.</p>
 <pre class="prettyprint">
 document.getElementById("doTiltLR").innerHTML = Math.round(tiltLR);
 document.getElementById("doTiltFB").innerHTML = Math.round(tiltFB);
 document.getElementById("doDirection").innerHTML = Math.round(dir);
-document.getElementById("doMotionUD").innerHTML = motionUD;
 
 // Apply the transform to the image
-document.getElementById("imgLogo").style.webkitTransform = "rotate(" + 
-  tiltLR + "deg) rotate3d(1,0,0, " + (tiltFB * -1) + "deg)";
-document.getElementById("imgLogo").style.MozTransform = "rotate(" + tiltLR + "deg)";
-document.getElementById("imgLogo").style.transform = "rotate(" + tiltLR + 
-  "deg) rotate3d(1,0,0, " + (tiltFB * -1) + "deg)";
+var logo = document.getElementById("imgLogo");
+logo.style.webkitTransform =
+  "rotate("+ tiltLR +"deg) rotate3d(1,0,0, "+ (tiltFB*-1)+"deg)";
+logo.style.MozTransform = "rotate("+ tiltLR +"deg)";
+logo.style.transform =
+  "rotate("+ tiltLR +"deg) rotate3d(1,0,0, "+ (tiltFB*-1)+"deg)";
 </pre>
 <h3 id="toc-doFinal">The final product</h3>
 <a href="deviceorientationsample.html"><img src="do.png"></a>
@@ -342,7 +302,7 @@ if (window.DeviceMotionEvent) {
 if ((window.DeviceMotionEvent) {
   window.addEventListener('devicemotion', deviceMotionHandler, false);
 } else {
-  document.getElementById("dmEvent").innerHTML = "Not supported on your device."
+  document.getElementById("dmEvent").innerHTML = "Not supported."
 }
 </pre>
 <h3 id="toc-dm3">3. Declare the markup</h3>
@@ -356,62 +316,58 @@ if ((window.DeviceMotionEvent) {
       &lt;td id="dmEvent"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;accelerationIncludingGravity&lt;/td&gt;
+      &lt;td&gt;acceleration&lt;/td&gt;
       &lt;td id="moAccel"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;Calculated Left-Right Tilt&lt;/td&gt;
-      &lt;td id="moCalcTiltLR"&gt;&lt;/td&gt;
+      &lt;td&gt;accelerationIncludingGravity&lt;/td&gt;
+      &lt;td id="moAccelGrav"&gt;&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;Calculated Front-Back Tilt&lt;/td&gt;
-      &lt;td id="moCalcTiltFB"&gt;&lt;/td&gt;
+      &lt;td&gt;rotationRate&lt;/td&gt;
+      &lt;td id="moRotation"&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;interval&lt;/td&gt;
+      &lt;td id="moInterval"&gt;&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/table&gt;
 &lt;/div&gt;
-
-&lt;div class="container" style="-webkit-perspective: 300; perspective: 300;"&gt;
-  &lt;img src="html5_logo.png" id="imgLogo" class="logo"&gt;
-&lt;/div&gt;
 </pre>
 <h3 id="toc-dm4">4. Create an event handler</h3>
-<p>We want to display the raw data that we get back, but also convert that into something that we can use to rotate our image, so we need to do a little math to convert from m/s^2 to an angle.</p>
+<p>We want to display the raw data that we get back.</p>
 <pre class="prettyprint">
 function deviceMotionHandler(eventData) {
+  var info, xyz = "[X, Y, Z]";
+
+  // Grab the acceleration from the results
+  var acceleration = eventData.acceleration;
+  info = xyz.replace("X", acceleration.x);
+  info = info.replace("Y", acceleration.y);
+  info = info.replace("Z", acceleration.z);
+  document.getElementById("moAccel").innerHTML = info;
+
   // Grab the acceleration including gravity from the results
-  var acceleration = eventData.accelerationIncludingGravity;
+  acceleration = eventData.accelerationIncludingGravity;
+  info = xyz.replace("X", acceleration.x);
+  info = info.replace("Y", acceleration.y);
+  info = info.replace("Z", acceleration.z);
+  document.getElementById("moAccelGrav").innerHTML = info;
 
-  // Display the raw acceleration data
-  var rawAcceleration = "[" +  Math.round(acceleration.x) + ", " + 
-    Math.round(acceleration.y) + ", " + Math.round(acceleration.z) + "]";
+  // Grab the rotation rate from the results
+  var rotation = eventData.rotationRate;
+  info = xyz.replace("X", rotation.alpha);
+  info = info.replace("Y", rotation.beta);
+  info = info.replace("Z", rotation.gamma);
+  document.getElementById("moRotation").innerHTML = info;
 
-  // Z is the acceleration in the Z axis, and if the device is facing up or down
-  var facingUp = -1;
-  if (acceleration.z &gt; 0) {
-    facingUp = +1;
-  }
-  
-  // Convert the value from acceleration to degrees acceleration.x|y is the 
-  // acceleration according to gravity, we'll assume we're on Earth and divide 
-  // by 9.81 (earth gravity) to get a percentage value, and then multiply that 
-  // by 90 to convert to degrees.                                
-  var tiltLR = Math.round(((acceleration.x) / 9.81) * -90);
-  var tiltFB = Math.round(((acceleration.y + 9.81) / 9.81) * 90 * facingUp);
-
-  // Display the acceleration and calculated values
-  document.getElementById("moAccel").innerHTML = rawAcceleration;
-  document.getElementById("moCalcTiltLR").innerHTML = tiltLR;
-  document.getElementById("moCalcTiltFB").innerHTML = tiltFB;
-
-  // Apply the 2D rotation and 3D rotation to the image
-  var rotation = "rotate(" + tiltLR + "deg) rotate3d(1,0,0, " + (tiltFB) + "deg)";
-  document.getElementById("imgLogo").style.webkitTransform = rotation;        
+  // // Grab the refresh interval from the results
+  info = eventData.interval;
+  document.getElementById("moInterval").innerHTML = info;       
 }
 </pre>
 <h3 id="toc-dmFinal">The final product</h3>
-<p>When you load the page and move the device around the bottom of the HTML5 logo should always point down, towards earth.</p>
-
-<a href="devicemotionsample.html"><img src="dm.png"></a>
+<p>When you load the page and move the device around, you should see the values change as the device moves through space and is affected by acceleration.</p>
 <p><a href="devicemotionsample.html">Try it out</a>, and view the source to see it in action.</p>
 
 <h2 id="toc-addRes">Additional resources</h2>

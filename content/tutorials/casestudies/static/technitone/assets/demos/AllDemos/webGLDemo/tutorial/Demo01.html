@@ -51,7 +51,7 @@
     <title>WebGL Demo - Basics and Beyond</title>
     
     <!-- glMatrix-0.9.5 is the code-behind for the mat4 and mat3 classes. -->        
-    <script type="text/javascript" src="utils/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="utils/gl-matrix-min.js"></script>
     <!-- webgl-utils.js is the code-behind for the requestAnimFrame, and contains the mvMatrix, 
         nMatrix, and pMatrix declarations. It also contains several other useful methods. -->
     <script type="text/javascript" src="utils/webgl-utils.js"></script>
@@ -264,7 +264,7 @@
         var aspectRatio = canvas.width / canvas.height;
           
         // Set up the camera view with this matrix.
-        mat4.perspective(45, aspectRatio, 0.1, 1000.0, pMatrix);
+        mat4.perspective(pMatrix, 45, aspectRatio, 0.1, 1000.0);
                 
         // Adds the camera to the shader. This will give it a point to start rendering from.
         this.gl.uniformMatrix4fv(shader.pMatrixUniform, 0, pMatrix);
@@ -273,7 +273,7 @@
         mat4.identity(mvMatrix);
         
         // So we can actually see the line (at the moment, the camera is right on top of the origin point), the mvMatrix will be moved 10 units away from the camera (z-axis).
-        mat4.translate(mvMatrix, [0,0,-20]);
+        mat4.translate(mvMatrix, mvMatrix, [0,0,-20]);
         
         // Sets the mvMatrix in the shader like we did with the camera matrix. The shader now know where to draw the what.
         this.gl.uniformMatrix4fv(shader.mvMatrixUniform, 0, mvMatrix);

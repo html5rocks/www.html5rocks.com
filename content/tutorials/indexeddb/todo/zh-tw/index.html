@@ -1,0 +1,420 @@
+{% extends "tutorial.html" %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-storage.png" width="133" height="64" alt="本文由 HTML5 離綫與存儲强力驅動" title="本文由 HTML5 離綫與存儲强力驅動"  />
+{% endblock %}
+
+{% block iscompatible %}
+  return ('indexedDB' in window || 'webkitIndexedDB' in window || 'mozIndexedDB' in window);
+{% endblock %}
+
+{% block head %}
+{% if is_mobile %}
+  <script>
+    var html5rocks = {};
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
+
+    if ('webkitIndexedDB' in window) {
+      window.IDBTransaction = window.webkitIDBTransaction;
+      window.IDBKeyRange = window.webkitIDBKeyRange;
+    }
+
+    html5rocks.indexedDB = {};
+    html5rocks.indexedDB.db = null;
+
+    html5rocks.indexedDB.onerror = function(e) {
+      console.log(e);
+    };
+
+    html5rocks.indexedDB.open = function() {
+      var request = indexedDB.open("todos");
+
+      request.onsuccess = function(e) {
+        var v = "1.98";
+        html5rocks.indexedDB.db = e.target.result;
+        var db = html5rocks.indexedDB.db;
+        // We can only create Object stores in a setVersion transaction;
+        if(v!= db.version) {
+          var setVrequest = db.setVersion(v);
+
+          // onsuccess is the only place we can create Object Stores
+          setVrequest.onfailure = html5rocks.indexedDB.onerror;
+          setVrequest.onsuccess = function(e) {
+            if(db.objectStoreNames.contains("todo")) {
+              db.deleteObjectStore("todo");
+            }
+
+            var store = db.createObjectStore("todo",
+              {keyPath: "timeStamp"});
+
+            html5rocks.indexedDB.getAllTodoItems();
+          };
+        }
+        else {
+          html5rocks.indexedDB.getAllTodoItems();
+        }
+      };
+
+      request.onfailure = html5rocks.indexedDB.onerror;
+    }
+
+    html5rocks.indexedDB.addTodo = function(todoText) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var data = {
+        "text": todoText,
+        "timeStamp": new Date().getTime()
+      };
+
+      var request = store.put(data);
+
+      trans.oncomplete = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.deleteTodo = function(id) {
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      var request = store.delete(id);
+
+      trans.oncomplete = function(e) {
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+
+      request.onerror = function(e) {
+        console.log("Error Adding: ", e);
+      };
+    };
+
+    html5rocks.indexedDB.getAllTodoItems = function() {
+      var todos = document.getElementById("todoItems");
+      todos.innerHTML = "";
+
+      var db = html5rocks.indexedDB.db;
+      var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+      var store = trans.objectStore("todo");
+
+      // Get everything in the store;
+      var keyRange = IDBKeyRange.lowerBound(0);
+      var cursorRequest = store.openCursor(keyRange);
+
+      cursorRequest.onsuccess = function(e) {
+        var result = e.target.result;
+        if(!!result == false)
+          return;
+
+        renderTodo(result.value);
+        result.continue();
+      };
+
+      cursorRequest.onerror = html5rocks.indexedDB.onerror;
+    };
+
+    function renderTodo(row) {
+      var todos = document.getElementById("todoItems");
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      var t = document.createTextNode(row.text);
+
+      a.addEventListener("click", function() {
+        html5rocks.indexedDB.deleteTodo(row.timeStamp);
+      }, false);
+
+      a.textContent = " [Delete]";
+      li.appendChild(t);
+      li.appendChild(a);
+      todos.appendChild(li)
+    }
+
+    function addTodo() {
+      var todo = document.getElementById("todo");
+      html5rocks.indexedDB.addTodo(todo.value);
+      todo.value = "";
+    }
+
+    function init() {
+      html5rocks.indexedDB.open();
+    }
+
+    window.addEventListener("DOMContentLoaded", init, false);
+  </script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-intro">簡介</h2>
+  <p>
+    <a href="http://www.w3.org/TR/IndexedDB/">IndexedDB</a> 是 HTML5 中的新增功能。網絡數據庫托管幷留存在用戶的瀏覽器內。只要讓開發人員通過豐富的查詢功能創建應用，就可以預見到，將會出現能够同時在綫和離綫使用的新型網絡應用。
+  </p>
+  <p>
+    本文中的示例代碼演示了如何創建一個非常簡單的待辦事項列表管理器。這是對 HTML5 中一些功能的高層次演示。
+  </p>
+  <p class="notice" style="text-align:center;">
+    本教程是由我們的<a href="/tutorials/webdatabase/todo/">使用 HTML5 網絡數據庫的簡單待辦事項列表</a>教程轉化而來，目的是重點說明過渡到 IndexedDB 是多麽簡單。
+  </p>
+  <h2 id="what">IndexedDB 是什麽？</h2>
+  <p>
+    IndexedDB 是對象存儲，它不同于帶有表格（包含行和列的集合）的關系數據庫。這是一個重要的根本區別，幷且會影響您設計和構建應用的方式。
+  </p>
+  <p>
+    在傳統的關係數據存儲中，我們有一個“待辦事項”的表格，其中各行存儲了用戶待辦事項數據的集合，而各列則是數據的命名類型。要插入數據，通常采用如下語義：<code>INSERT INTO Todo(id, data, update_time) VALUES (1, "Test", "01/01/2010");</code>
+  </p>
+  <p>
+    IndexedDB 的不同之處在于，您可以創建某個類型數據的對象存儲，然後只需將 JavaScript 對象留存在該存儲中即可。每個對象存儲都可以有索引的集合，這樣就能進行高效的查詢和迭代。
+  </p>
+  <p>
+    IndexedDB 還廢除了標準查詢語言 (
+    <abbr title="Standard Query Languag">SQL</abbr>) 的概念，取而代之的是針對索引的查詢，這樣可以産生一個指針，用于在結果集之間迭代。
+  </p>
+  <p>
+    本教程只是舉了一個實際示例，告訴您針對編寫爲使用 WebSQL 的現有應用如何使用 IndexedDB。
+  </p>
+  <h2 id="why">爲什麽是 IndexedDB？</h2>
+  <p>
+    在 2010 年 11 月 18 日，<a href="http://www.w3.org/TR/webdatabase/">W3C 宣布</a>弃用 Web SQL 數據庫規範。這也就是建議網絡開發人員不要再使用這種技術了，該規範也不會再獲得新的更新，而且不鼓勵瀏覽器供應商支持該技術。
+  </p>
+  <p>
+    取而代之的是 IndexedDB，本教程的主題是開發人員應使用這種數據存儲在客戶端上存儲數據幷進行操作。
+  </p>
+  <p>
+    各大主流瀏覽器（包括 Chrome 瀏覽器、Safari、Opera 等）和幾乎所有基于 Webkit 的移動設備均支持 WebSQL，幷且很有可能在可預見的未來繼續提供支持。
+  </p>
+  <h2 id="toc-prereqs">先决條件</h2>
+  <p>
+    該示例使用命名空間封裝數據庫邏輯。
+  </p>
+  <pre class="prettyprint">
+var html5rocks = {};
+html5rocks.indexedDB = {};
+</pre>
+  <h2 id="toc-transactions">异步和事務性</h2>
+  <p>
+    在大多數情况下，如果您使用的是索引型數據庫，那麽就會使用<a
+      href="http://dev.w3.org/html5/indexeddb/#asynchronous-database-api">异步 API</a>。异步 API 是非阻塞系統，因此不會通過返回值獲得數據，而是獲得傳遞到指定回調函數的數據。
+  </p>
+  <p>
+    通過 HTML 支持 IndexedDB 是事務性的。在事務之外是無法執行命令或打開指針的。事務包括如下類型：讀/寫事務、只讀事務和快照事務。在本教程中，我們使用的是讀/寫事務。
+  </p>
+  <h2 id="toc-step1">第 1 步：打開數據庫</h2>
+  <p>您必須先打開數據庫，才能對其進行操作。
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.db = null;
+
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos");
+
+  request.onsuccess = function(e) {
+    html5rocks.indexedDB.db = e.target.result;
+    // Do some more stuff in a minute
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>我們已打開稱爲“todos”的數據庫，幷已將其分配給 html5rocks.indexedDB 對象中的 <code>db</code> 變量。現在我們可以在整個教程中使用此變量來引用我們的數據庫。</p>
+  <h2 id="toc-step2">第 2 步：創建對象存儲</h2>
+  <p>
+    您只能在“SetVersion”事務內創建對象存儲。我還沒有介紹 setVersion，這是一個非常重要的方法，這是代碼中唯一能够供您創建對象存儲和索引的地方。<em></em>
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.open = function() {
+  var request = indexedDB.open("todos",
+    "This is a description of the database.");
+
+  request.onsuccess = function(e) {
+    var v = "1.0";
+    html5rocks.indexedDB.db = e.target.result;
+    var db = html5rocks.indexedDB.db;
+    // We can only create Object stores in a setVersion transaction;
+    if(v!= db.version) {
+      var setVrequest = db.setVersion(v);
+
+      // onsuccess is the only place we can create Object Stores
+      setVrequest.onfailure = html5rocks.indexedDB.onerror;
+      setVrequest.onsuccess = function(e) {
+        var store = db.createObjectStore("todo",
+          {keyPath: "timeStamp"});
+
+        html5rocks.indexedDB.getAllTodoItems();
+      };
+    }
+
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onfailure = html5rocks.indexedDB.onerror;
+}</pre>
+<p>
+    上述代碼其實有很多功能。我們在 API 中定義了“open”方法，調用此方法即可打開“todos”數據庫。打開請求不是立刻執行的，而是返回 <code>IDBRequest</code>。如果當前函數存在，則會調用 <code>indexedDB.open</code> 方法。這與我們通常指定异步回調的方法略有不同，但是我們在回調執行前，有機會向 <code>IDBRequest</code> 對象附加我們自己的監聽器。
+</p>
+<p>
+    如果打開請求成功了，我們的 <code>onsuccess</code> 回調就會執行。在此回調中，我們應檢查數據庫版本，如果與預期版本不符，則調用“setVersion”。</p>
+<p>
+    setVersion 是代碼中唯一能讓我們改變數據庫結構的地方。<em></em>在 setVersion 中，我們可以創建和删除對象存儲，以及構建和删除索引。調用 <code>setVersion</code> 可返回 <code>IDBRequest</code> 對象，供我們在其中附加回調。如果成功了，我們就開始創建對象存儲。
+</p>
+<p>
+    通過對 <code>createObjectStore</code> 單次調用創建對象存儲。該方法會命名存儲以及參數對象。參數對象非常重要，它可讓您定義重要的可選屬性。就我們而言，定義 <code>keyPath</code> 屬性可讓單個對象在存儲中具備唯一性。本例中的該屬性爲“timeStamp”。objectStore 中存儲的每個對象都必須有“timeStamp”。<em></em>
+</p>
+<p>
+    創建了對象存儲後，我們調用 <a href="#toc-step4">getAllTodoItems</a> 方法。
+</p>
+
+  <h2 id="toc-step3">第 3 步：向對象存儲添加數據</h2>
+  <p>
+    我們要構建的是待辦事項列表管理器，因此必須要能够向數據庫中添加待辦事項。方法如下：
+  </p>
+
+  <pre class="prettyprint">
+html5rocks.indexedDB.addTodo = function(todoText) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+  var request = store.put({
+    "text": todoText,
+    "timeStamp" : new Date().getTime()
+  });
+
+  trans.oncomplete = function(e) {
+    // Re-render all the todo's
+    html5rocks.indexedDB.getAllTodoItems();
+  };
+
+  request.onerror = function(e) {
+    console.log(e.value);
+  };
+};</pre>
+
+  <p>
+    <code>addTodo</code> 方法非常簡單，我們首先獲得數據庫對象的快速引用，初始化 <code>READ_WRITE</code> 事務，幷獲得我們對象存儲的引用。
+  </p>
+  <p>
+    既然應用有權訪問對象存儲，我們就可以通過基礎 JSON 對象發出簡單的 <code>put</code> 命令。請注意 <code>timeStamp</code> 屬性，這是對象的唯一密鑰，幷作爲“keyPath”使用。put 調用成功後，會觸發 onsuccess 事件，然後我們就可以在屏幕上呈現內容了。
+  </p>
+
+  <h2 id="toc-step4">第 4 步：查詢存儲中的數據。</h2>
+  <p>
+    既然數據已經在數據庫中了，我們就需要通過某種方法以有意義的方式訪問數據。幸運的是，這樣的方法非常簡單直接：
+  </p>
+  <pre class="prettyprint">
+html5rocks.indexedDB.getAllTodoItems = function() {
+  var todos = document.getElementById("todoItems");
+  todos.innerHTML = "";
+
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  // Get everything in the store;
+  var keyRange = IDBKeyRange.lowerBound(0);
+  var cursorRequest = store.openCursor(keyRange);
+
+  cursorRequest.onsuccess = function(e) {
+    var result = e.target.result;
+    if(!!result == false)
+      return;
+
+    renderTodo(result.value);
+    result.continue();
+  };
+
+  cursorRequest.onerror = html5rocks.indexedDB.onerror;
+};</pre>
+  <p>
+    請注意，本例中使用的所有這些命令都是异步的，因此數據不是從事務內部返回的。
+  </p>
+  <p>
+    該代碼可生成事務，幷將對于數據的 keyRange 搜索實例化。keyRange 定義了我們要從存儲中查詢的簡單數據子集。如果存儲的 keyRange 是數字時間戳，我們應將搜索的最小值設爲 0（時間原點後的任何時間），這樣就能返回所有數據。
+  </p>
+  <p>
+    現在我們有了事務、對要查詢的存儲的引用以及要迭代的範圍。剩下的工作就是打開指針幷附加“onsuccess”事件了。
+  </p>
+  <p>
+    結果會傳遞到對指針的成功回調，幷在其中呈現。對于每個結果只會啓動一次回調，因此請務必持續迭代您需要的數據，以確保對結果對象調用“continue”。
+  </p>
+  <h2>第 4a 步：呈現對象存儲中的數據</h2>
+  <p>
+    從對象存儲中抓取了數據後，將對指針中的每個結果調用 <code>renderTodo</code> 方法。<em></em>
+  </p>
+
+  <pre class="prettyprint">
+function renderTodo(row) {
+  var todos = document.getElementById("todoItems");
+  var li = document.createElement("li");
+  var a = document.createElement("a");
+  var t = document.createTextNode();
+  t.data = row.text;
+
+  a.addEventListener("click", function(e) {
+    html5rocks.indexedDB.deleteTodo(row.text);
+  });
+
+  a.textContent = " [Delete]";
+  li.appendChild(t);
+  li.appendChild(a);
+  todos.appendChild(li)
+}</pre>
+  <p>
+    對于某個指定的待辦事項，我們只需要獲取文本幷爲其製作用戶界面（包括“删除”按鈕，以便删除待辦事項）。
+  </p>
+  <h2 id="toc-step5">第 5 步：删除表格中的數據</h2>
+  <pre class="prettyprint">
+html5rocks.indexedDB.deleteTodo = function(id) {
+  var db = html5rocks.indexedDB.db;
+  var trans = db.transaction(["todo"], IDBTransaction.READ_WRITE, 0);
+  var store = trans.objectStore("todo");
+
+  var request = store.delete(id);
+
+  trans.oncomplete = function(e) {
+    html5rocks.indexedDB.getAllTodoItems();  // Refresh the screen
+  };
+
+  request.onerror = function(e) {
+    console.log(e);
+  };
+};</pre>
+  <p>
+    正如將數據 <code>put</code> 到對象存儲中的代碼一樣，删除數據也很簡單。啓動一個事務，通過對象引用對象存儲，然後通過對象的唯一 ID 發出 <code>delete</code> 命令。
+  </p>
+  <h2 id="toc-step6">第 6 步：全部關聯起來</h2>
+  <p>
+    在加載網頁時，打開數據庫幷創建表格（如有必要），然後呈現數據庫中可能已存在的任何待辦事項。
+  </p>
+  <pre class="prettyprint">
+function init() {
+  html5rocks.indexedDB.open(); // open displays the data previously saved
+}
+
+window.addEventListener("DOMContentLoaded", init, false);
+</pre>
+  <p>
+    這需要用到可將數據取出 DOM 的函數，即 <code>html5rocks.indexedDB.addTodo</code> 方法：
+  </p>
+  <pre class="prettyprint">
+function addTodo() {
+  var todo = document.getElementById('todo');
+
+  html5rocks.indexedDB.addTodo(todo.value);
+  todo.value = '';
+}</pre>
+  <h2 id="toc-final">最終産品</h2>
+{% if is_mobile %}
+  <ul id="todoItems"></ul>
+  <input type="text" id="todo" name="todo"
+      placeholder="What do you need to do?" style="width: 200px;" />
+    <input type="submit" value="添加待辦事項"
+      onclick="addTodo(); return false;" />
+{% else %}
+<iframe src="http://playground.html5rocks.com/?mode=frame&hu=210&hl=150#a_simple_todo_list_using_indexeddb" style="border: none; width: 100%; height: 480px;"></iframe>
+{% endif %}
+
+{% endblock %}
