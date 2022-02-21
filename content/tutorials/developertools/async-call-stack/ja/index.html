@@ -1,0 +1,359 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong>
+  <a href="https://github.com/ygoto3">Yusuke Goto</a>
+</div>
+{% endblock %}
+
+{% block head %}
+  {{ block.super }} 
+  <style>
+    figcaption p {
+      font-style: normal;
+      font-weight: normal;
+    }
+    figcaption em {
+      font-style: normal;
+    }
+    .comparision figcaption {
+      font-size: 13px;
+      width: 90%;
+    }
+    .comparision figcaption:first-child {
+      font-size: 15px;
+      margin-bottom: 0.8em;
+    }
+    @media screen and (min-width: 620px) {
+      .comparision.side-by-side figure:first-child {
+        margin-right: 2%;
+      }
+      .comparision.side-by-side figure {
+        float: left;
+        width: 49%;
+      }
+      .request-animation-frame figure:first-child,
+      .mutation-observer figure:first-child {
+        width: 65%;
+        padding-right: 10px;
+      }
+      .request-animation-frame figure:last-child {
+        width: 30%;
+        padding-top: 31.5%;
+      }
+      .mutation-observer figure:last-child {
+        width: 30%;
+        padding-top: 35.4%
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+  
+{% block content %}
+ 
+<h2 id="toc-introduction">はじめに</h2>
+ 
+<p>JavaScript をユニークなものにしている強力な特徴の１つはそのコールバック関数を通して非同期に動作させられることです。非同期コールバックを割り当てるとイベントドリブンなコードを書くことができますが、JavaScript は直線的には実行されないため、バグを追い掛けるのがやっかいです。</p>
+
+<p>幸いなことに、現在、Chrome Canary のデベロッパー ツールで非同期 JavaScript の<strong>完全な</strong>コールスタックを見ることができます！</p>
+
+<figure> 
+  <img src="xhr-async.gif" width="572" alt="A quick teaser overview of async call stacks"/>
+  <figcaption>
+    非同期コールスタックの外観です。
+    <p>（このデモの流れはすぐ後に解説します。）</p>
+  </figcaption>
+</figure>
+
+<p>デベロッパー ツールで非同期コールスタック機能を有効にすると、Web アプリのいろんなポイントでの状態を深掘って見ることができます。イベントリスナーや <code>setInterval</code>、<code>setTimeout</code>、<code>XMLHttpRequest</code>、プロミス、<code>requestAnimationFrame</code>、<code>MutationObservers</code> やそのほかの完全なスタックトレースを追うことができます。</p>
+
+<p>スタックトレースを追うと、実行時の特定のポイントでのあらゆる変数の値を分析することもできます。ウォッチ式のタイムマシーンみたいに動作します。</p>
+
+<p>この機能を有効にして、これらシナリオをいくつか見てみましょう。</p>
+
+<h2 id="toc-enable">Chrome Canary で非同期デバッギングを有効にする</h2>
+
+<p>Chrome Canary（ビルド 35 以降）でこの新しい機能を有効にして試してみましょう。Chrome Canary のデベロッパー ツールの「<strong>Sources</strong>」パネルに行きます。</p>
+
+<p>右側にある「<strong>Call Stack</strong>」パネルの隣に、「Async」という新しいチェックボックスがあります。チェックボックスをトグルして非同期デバッギングをオンやオフにします。（一度オンにしたら、二度とオフにしたいと思わないとしてもね。）</p>
+
+<figure>
+  <img src="enable-async-toggle.gif" width="658" alt="Toggle the async feature on or off"/>
+</figure>
+
+<h2 id="toc-timer-xhr">遅延されたタイマーイベントと XHR レスポンスを取得する</h2>
+ 
+<p>以前きっと、このような表示を Gmail で目にしたことがあるでしょう：</p>
+
+<figure>
+  <img src="gmail-retrying.png" width="551" alt="Gmail retrying to send an email"/>
+</figure>
+
+<p>リクエストを送信するのに問題があった（サーバに問題があったりクライアントサイドのネットワーク接続の問題だったり）場合、Gmail は短時間送信を中断した後、自動的にメッセージの再送信を試みます。</p>
+
+<p>非同期コールスタックがどのように遅延されたタイマーイベントと XHR レスポンスを分析するのに役立つかを理解するために、私は <a href="xhr/demo.html" target="_blank">Gmail のモックサンプル</a>でフローを再作成してみました。完全な JavaScript コードは上のリンクにありますが、フローは下記のようになります：</p>
+
+<figure>
+  <img src="xhr-async-flow.gif" width="660" alt="Flow chart of mock Gmail example"/>
+  <figcaption>
+    上のダイアグラムで、青くハイライトされたメソッドが非同期で動作するので、この新しいデベロッパー ツールの機能を利用する上で重要なポイントになります。
+  </figcaption>
+</figure>
+
+<p>以前のバージョンのデベロッパー ツールで Call Stack パネルを見ると、<code>postOnFail()</code> の中のブレークポイントは <code>postOnFail()</code> がどこから呼ばれたのかについて少しだけしか情報を表示してくれません。しかし、非同期スタックを有効にしたときとの違いを見てください：</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>従来</figcaption>
+    <img src="xhr-before.gif" width="320" alt="Breakpoint set in mock Gmail example without async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっていない</em>コールスタックパネル。
+      <br />
+      <p>ここで、<code>postOnFail()</code> が AJAX のコールバックで開始していることが分かりますが、それ以上の情報はありません。</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>現在</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Breakpoint set in mock Gmail example with async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっている</em>コールスタックパネル。
+      <br />
+      <p>ここで、XHR が <code>submitHandler()</code> から開始していることが分かり、<code>submitHandler()</code> は script.js のクリックハンドラから開始していることが分かります。ナイス！</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+<p>非同期コールスタックを有効にすると、リクエストが（送信ボタンをクリックした後に発生する）<code>submitHandler()</code> もしくは（setTimeout() での遅延の後に発生する）<code>retrySubmit()</code> のどちらから開始されているか全体のコールスタックを見ることができます：</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>submitHandler()</figcaption>
+    <img src="xhr-after-click.gif" width="320" alt="Breakpoint set in mock Gmail example with async call stacks"/>
+  </figure>
+
+  <figure>
+    <figcaption>retrySubmit()</figcaption>
+    <img src="xhr-after-retry-shortened.gif" width="320" alt="Another breakpoint set in mock Gmail example with async call stacks"/>
+  </figure>
+
+</div>
+
+<h2 id="toc-watch-expressions">式を非同期に監視する</h2>
+
+<p>完全なコールスタックを行き来していると、あなたが監視している式がそのタイミングでの状態を反映するために更新されていきます！</p>
+
+<figure>
+  <img src="watch-expressions.gif" width="368" alt="An example of using watch expressions with aysnc call stacks"/>
+</figure>
+
+<h2 id="toc-past-scopes">過去のスコープからコードを評価する</h2>
+
+<p>単純に式を<em>監視すること</em>に加えて、デベロッパー ツールの JavaScript コンソールパネルの過去のスコープからのコードとやり取りすることができます。</p>
+
+<p>あなたがドクター・フーで、ターディスに乗る前と現在との時間を比べるのに少し助けを必要としていると想像してみてください。デベロッパー ツールのコンソールから、さまざまな実行ポイントで値を評価し、保存し、計算することが簡単にできます。</p>
+
+<figure>
+  <img src="time-travel.gif" width="433" alt="An example of using the JavaScript console with aysnc call stacks"/>
+  <figcaption>
+    あなたのコードをデバッグするために JavaScript コンソールを非同期コールスタックと合わせて使いましょう。上のデモは<a href="past-scope/demo.html" target="_blank">ここ</a>にあります。
+  </figcaption>
+</figure>
+
+<p>デベロッパー ツールの中で式を操作することで、ソースコードを編集してブラウザをリフレッシュしなければいけなかった時間を節約できます。</p>
+
+<h2 id="toc-promises">近日公開：プロミス解決の連鎖を解く</h2>
+
+<p>もしあなたが、先の Gmail のモックの流れを解いていくのが非同期コールスタックの機能が有効じゃなければ大変だと思うなら、連鎖しているプロミスのような更に複雑な非同期フローがどれだけ大変か想像できるでしょうか。Jake Archibald の <a href="/tutorials/es6/promises/" target="_blank">JavaScript Promises</a> チュートリアルの最後の例を再度見てみましょう。</p>
+
+<figure>
+  <div style="max-width: 495px; margin: 10px auto">
+    <div style="position: relative; padding-top: 93%;">
+      <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden" src="/tutorials/es6/promises/promise-flow.svg" frameborder="0" allowtransparency="true"></iframe>
+    </div>
+  </div>
+  <figcaption>
+  <em>JavaScript Promises</em> からフローダイアグラム。
+  </figcaption>
+</figure>
+
+<p>ここに Jake の <a href="/tutorials/es6/promises/async-best-example.html" target="_blank">async-best-example.html</a> の例でコールスタックを行き来しているちょっとしたアニメーションがあります。</p>
+
+<div class="comparision stacked">
+
+  <figure>
+    <figcaption>従来</figcaption>
+    <img src="promises-before.gif" width="600" alt="Breakpoint set in promises example without async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっていない</em>コールスタックパネル。
+      <br />
+      <p>プロミスをデバッグしようとするときコールスタックパネルの情報がとても短かいことに注意してください。</p>
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>現在</figcaption>
+    <img src="promises-after.gif" width="600" alt="Breakpoint set in promises example with async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっている</em>コールスタックパネル。
+      <br />
+      <p>Ｗｏｗ！なんてプロミスでしょう。たくさんのコールバックです。</p>
+    </figcaption>
+  </figure>
+
+</div>
+
+<div class="notice tip">
+<p>プロミスの実装が Blink のバージョンから 最終的な V8 のバージョンにスイッチするにともない、プロミスのコールスタックはすぐにサポートされます。</p>
+<p>時間を遡る気持ちで、もしあなたがプロモスの非同期コールスタックを下見したいなら、<a href="https://googledrive.com/host/0B8R1QvA3x5IbWll3M0hIYXVLZlk/" target="_blank">Chrome 33 か Chrome 34</a> でチェックできます。アドレスバーに <code>chrome://flags/#enable-devtools-experiments</code> と打って、デベロッパー ツールのテストを有効にしてください。Canary を再起動した後、デベロッパー ツールの設定に行くと、<a href="enable-async-experiments.gif" target="_blank">enable support for async stack traces</a> のオプションがあるはずです。</p>
+</div>
+
+<h2 id="toc-request-animation-frame">Web アニメーションについての洞察を得る</h2>
+
+<p>HTML5 Rocks のアーカイブを更に深掘ってみましょう。Paul Lewis の <em><a href="/tutorials/speed/animations/" target="_blank">Leaner, Meaner, Faster Animations with requestAnimationFrame</a></em> を覚えていますか？</p>
+
+<p><a href="/tutorials/speed/animations/post.html" target="_blank">requestAnimationFrame のデモ</a>を開き、post.html の（８７４行目あたりにある）<code>update()</code> メソッドの最初にブレークポイントを追加します。非同期コールスタックで、スクロールイベントのコールバックを開始するところまで含めて、<code>requestAnimationFrame</code> の深い洞察を得ることができます。</p>
+
+<div class="comparision side-by-side request-animation-frame">
+
+  <figure>
+    <figcaption>従来</figcaption>
+    <img src="requestAnimationFrame-before.gif" width="500" alt="Breakpoint set in requestAnimationFrame example without async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっていない</em>コールスタックパネル。
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>現在</figcaption>
+    <img src="requestAnimationFrame-after.gif" width="305" alt="Breakpoint set in requestAnimationFrame example with async call stacks"/>
+    <figcaption>
+      そして、非同期を有効に<em>した</em>もの
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-mutation-observer">MutationObserver 使用時の DOM の更新を追う</h2>
+
+<p><code>MutationObserver</code> は DOM の変化を監視させてくれます。この<a href="mutation-observers/demo.html" target="_blank">シンプルな例</a>では、ボタンをクリックしたときに、新しい DOM ノードを <code style="white-space:nowrap;">&lt;div class="rows"&gt;&lt;/div&gt;</code> に追加します。</p>
+
+<p>demo.html の（３１行目の）<code>nodeAdded()</code> の中にブレークポイントを追加してください。非同期コールスタックが有効になっていれば、<code>addNode()</code> を通って最初のクリックイベントまで遡ることができます。</p>
+
+<div class="comparision side-by-side mutation-observer">
+
+  <figure>
+    <figcaption>従来</figcaption>
+    <img src="mutationObserver-before.gif" width="721" alt="Breakpoint set in mutationObserver example without async call stacks"/>
+    <figcaption>
+      非同期が有効に<em>なっていない</em>コールスタックパネル。
+    </figcaption>
+  </figure>
+
+  <figure>
+    <figcaption>現在</figcaption>
+    <img src="mutationObserver-after.gif" width="320" alt="Breakpoint set in mutationObserver example with async call stacks"/>
+    <figcaption>
+      そして、非同期を有効に<em>した</em>もの。
+    </figcaption>
+  </figure>
+
+</div>
+
+<h2 id="toc-debugging-tips">非同期コールスタックで JavaScript をデバッグするための Tips</h2>
+
+<h3>関数に名前を付ける</h3>
+
+<p>もしあなたが全てのコールバックを無名関数として割り当ててしてしまいがちなら、そうするよりコールスタックをもっと簡単に見れるように名前を付けたいと思うかもしれません。</p>
+
+<p>例として、こんな無名関数を挙げます：</p>
+
+<pre class="prettyprint">window.addEventListener('load', function(){
+  // 何か処理します
+});</pre>
+
+<p>そして、これに <code>windowLoaded()</code> のような名前を付けます：</p>
+
+<pre class="prettyprint">window.addEventListener('load', function <strong>windowLoaded</strong>(){
+  // 何か処理します
+});</pre>
+
+<p>読み込みイベントが発火したとき、デベロッパー ツールのスタックトレースに「<em>anonymous function</em>」といった隠れた表示ではなく、その関数名が表示されます。こうすると、スタックトレース内で何が起きているのか一目で理解しやすくなります。</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <figcaption>従来</figcaption>
+    <img src="function-names-before.gif" width="320" alt="An anonymous function"/>
+    <!-- <figcaption>
+      An anonymous function.
+    </figcaption> -->
+  </figure>
+
+  <figure>
+    <figcaption>現在</figcaption>
+    <img src="function-names-after.gif" width="320" alt="A named function"/>
+    <!-- <figcaption>
+      A named function.
+    </figcaption> -->
+  </figure>
+
+</div>
+
+<h2 id="toc-explore-further">もっと詳しく知る</h2>
+
+<p>まとめると、下記がデベロッパー ツールが完全なコールスタックを表示する非同期コールバックの全てです：</p>
+
+<ul>
+  <li>
+    <strong>タイマー</strong>：
+    setTimeout() や setInterval() が開始された場所まで戻ります。 
+  </li>
+  <li>
+    <strong>XHR</strong>：
+    xhr.send() が呼ばれた場所まで戻ります。
+  </li>
+  <li>
+    <strong>アニメーションフレーム</strong>：
+    requestAnimationFrame が呼ばれた場所まで戻ります。
+  </li>
+  <li>
+    <strong>MutationObserver</strong>： 
+    MutationObserver のイベントが発火した場所まで戻ります。
+  </li>
+  <li>
+    <strong>addEventListener() からの選ばれた DOM イベント</strong>：
+    イベントが発火した場所まで戻ります。パフォーマンス上の理由で、全ての DOM イベントが非同期コールスタック機能に選ばれてはいません。現在利用可能なイベントの例は：「scroll」、「hashchange」、「selectionchange」です。
+  </li>
+  <li>
+    <strong>addEventListener() からのマルチメディアイベント</strong>：
+    イベントが発火した場所まで戻ります。利用可能なマルチメディアイベントは：audio と video のイベント（例：「play」、「pause」、「ratechange」）、WebRTC の MediaStreamTrackList イベント（例：「addtrack」、「removetrack」）、MediaSource イベント（例：「sourceopen」）です。
+  </li>
+</ul>
+
+<p>下記の実験的な JavaScript API についても完全なコールスタックができるようになる予定です：</p>
+
+<ul>
+  <li>
+    <strong>プロミス</strong>： 
+    プロミスが解決した場所まで戻ります。
+  </li>
+  <li>
+    <strong>Object.observe</strong>:
+    オブザーバのコールバックが最初にバインドされた場所まで戻ります。
+  </li>
+</ul>
+
+<p>JavaScript コールバックの完全なスタックトレースを見ることができれば、はげる程頭を悩ませることもないはずです。デベロッパー ツールのこの機能は、特に複数の非同期イベントが互いに関連して発生したときに役に立ちます。もしくは、非同期のコールバックの中から捕捉されない例外が投げられたときに役に立ちます。</p>
+
+<p>Chrome Canary で試してみてください。この新機能にフィードバックがある場合は、Chrome デベロッパー ツールの<a href="https://code.google.com/p/chromium/issues/detail?id=272416" target="_blank">バグトラッカー</a>か <a href="https://groups.google.com/forum/#!forum/google-chrome-developer-tools" target="_blank">Chrome デベロッパー ツールのグループ</a>に知らせてください。</p>
+
+{% endblock %}

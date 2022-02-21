@@ -1,0 +1,203 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong> <a href="https://github.com/ygoto3">Yusuke Goto</a>, <a href="https://github.com/sparkgene">Jun Ichikawa</a>, <a href="https://github.com/kysnm">Kiyoshi Nomo</a>, <a href="https://github.com/can-i-do-web">can.i.do.web</a>, <a href="https://github.com/hokaccha">Kazuhito Hokamura</a>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+.danilotalkinghead:before {
+  background-image: url(/static/images/profiles/75/alexdanilo.75.png);
+  background-position: 0px -4px !important;
+}
+
+</style>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-solo.png" width="63" height="64" alt="HTML5 Powered" title="HTML5 Powered" style="margin-right:17px" />
+{% endblock %}
+
+{% block content %}
+<p>
+Web アプリケーションが高性能であることは、素晴らしいユーザー体験にとって極めて重要なことです。Web アプリケーションが複雑になるにつれて、パフォーマンスに対する影響を理解することは、魅力的な体験を作り出す上で必須になってきました。ここ数年で、ネットワークや、ロードタイムなどのパフォーマンスの解析に役立つ、さまざまな API がブラウザに数多く登場してきました。しかし、それらは何があなたのアプリケーションを遅くしているかを探るに足りる柔軟性を持ったきめ細かな情報を必ずしも教えてくれるわけではありません。<a href="http://www.w3.org/TR/user-timing/" target="_blank">User Timing API</a> の登場で、あなたのアプリケーションがどこで時間を使っているかを特定するための仕組みが提供されました。この記事ではAPIとその使い方の例について解説します。
+</p>
+
+<h2 id="toc-measure">計測できないものは最適化できない</h2>
+<p>
+遅い Web アプリケーションを速くする最初のステップは、どこで時間がかかっているかを解明することです。JavaScript のコードの中で時間的な影響を計測することは、ホットスポットを特定するための理想的な方法であり、どのようにパフォーマンスを改善していけばよいかを見つけるための最初のステップです。<a href="http://www.w3.org/TR/user-timing/" target="_blank">User Timing API</a> は、JavaScript 内のさまざまな場所に挿入可能なAPIを呼び出す手段を提供し、そして最適化に役立つ詳細なタイミング情報を抽出してくれます。
+</p>
+
+<h2 id="toc-highres">高精度計時と‘<code>now()</code>’</h2>
+<p>
+正確な時間計測に重要なのは精密さです。昔はおおよそミリ秒の計測タイミングでも良しとしていましたが、精密に 60FPS を保つサイトを構築するということは、各フレームを 16ms で描画しなければいけないということを意味します。だから、ミリ秒での精度しかないのでは、優れた解析を行うために必要な精密さに欠けます。<a href="http://www.w3.org/TR/hr-time/" target="_blank">高精度計時</a>の登場により、新しいタイミングの型がモダンブラウザに搭載されました。<a href="http://www.w3.org/TR/hr-time/" target="_blank">高精度計時</a>はマイクロ秒精度の浮動小数点のタイムスタンプを提供してくれます。今までより 1000 倍高い精度です。
+</p>
+<p>
+<a href="http://www.w3.org/TR/navigation-timing/#performance" target="_blank">Performance</a> インターフェースの<a href="http://www.w3.org/TR/hr-time/#sec-extenstions-performance-interface" target="_blank">拡張</a>である <a href="http://www.w3.org/TR/hr-time/#dom-performance-now" target="_blank"><code>now()</code></a> メソッドを呼び出すことで、Web アプリケーション内で現在時刻を取得することができます。次のコードでやり方を示します：
+</p>
+<pre class="prettyprint"><code>var myTime = window.performance.now();
+</code></pre>
+<p>
+<a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" target="_blank">PerformanceTiming</a> と呼ばれる別のインターフェースは、どのように Web アプリケーションが読み込まれたかに関するさまざまな時間情報を数多く提供してくれます。<code>now()</code> メソッドは、<a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" target="_blank">PerformanceTiming</a> の <a href="http://www.w3.org/TR/navigation-timing/#dom-performancetiming-navigationstart" target="_blank"><code>navigationStart</code></a> が発生した時からの経過時間を返します。
+</p>
+<h3 id="toc-highrestime">DOMHighResTimeStamp 型</h3>
+<p>
+従来、Web アプリケーションの時間を計測しようとする場合は、<a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#Core-DOMTimeStamp" target="_blank">DOMTimeStamp</a> を返す <code>Date.now()</code> のようなものを使っていました。DOMTimeStamp は値としてミリ秒の整数値を返します。高精度計時に必要とされる、より高い精度を提供するために、<a href="http://www.w3.org/TR/hr-time/#sec-DOMHighResTimeStamp" target="_blank">DOMHighResTimeStamp</a> と呼ばれる新しい型が導入されました。この型は浮動小数点の値であり、ミリ秒で時間を返します。しかし、その値は浮動小数点なので、ミリ秒より小さい値を表現できるため、1/1000 ミリ秒の精度を生成できます。
+</p>
+<h2 id="toc-usertimingapi">User Timingインターフェース</h2>
+<p>
+高精度なタイムスタンプを利用できるようになったので、タイミング情報を取り出すのに <a href="http://www.w3.org/TR/user-timing/" target="_blank">User Timing</a> インターフェースを使いましょう。
+</p>
+<p>
+User Timing インターフェースは、アプリケーションのさまざまな場所で呼び出すことができて、どこで時間が使われているか追跡するためのヘンゼルとグレーテルのパンくずリストを提供するメソッドを提供してくれます。
+</p>
+<h3 id="toc-mark">‘<code>mark()</code>’ の使用</h3>
+<p>
+‘<a href="http://www.w3.org/TR/user-timing/#dom-performance-mark" target="_blank"><code>mark()</code></a>’ メソッドはこのタイミング分析ツールキットのメインツールです。<code>mark()</code> はタイムスタンプを保存します。<code>mark()</code> の何がすごく便利かというと、タイムスタンプに名前を付けることができ、API がその名前とタイムスタンプを１つの単位として記憶してくれることです。
+</p>
+<p>
+アプリケーションのさまざまな場所で <code>mark()</code> を呼ぶことで、そのマークに当たるまでにどのくらい時間が経過したかを算出できます。
+</p>
+<p>
+仕様では、‘mark_fully_loaded’ 、‘mark_fully_visible’ 、‘mark_above_the_fold’ のような、関心を引く自明な名前をマーク用にいくつか推奨しています。
+</p>
+<p>
+例えば、アプリケーションが完全に読み込まれたときのマークは次のようなコードで設定できます。
+</p>
+<pre class="prettyprint"><code>window.performance.mark('mark_fully_loaded');
+</code></pre>
+<p>
+Web アプリケーション全体を通して名前が付いたマークを設定することで、アプリケーションがいつ何をしているのかを算出するための大量のタイミングデータを収集して、手すきの時間に解析することができます。
+</p>
+<h3 id="toc-measure">‘<code>measure()</code>’ で測定値の算出</h3>
+<p>
+たくさんのタイミングマークを設定すると、マーク間の経過時間を知りたくなるでしょう。‘<a href="http://www.w3.org/TR/user-timing/#dom-performance-measure" target="_blank"><code>measure()</code></a>’ を使ってそれができます。
+</p>
+<p>
+<code>measure()</code> メソッドはマーク間の経過時間を計算します。そしてあなたが設定したマークと <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" target="_blank">PerformanceTiming</a> インターフェースの周知のイベント名との間の時間も計測できます。
+</p>
+<p>
+例として、DOM が完成してからアプリケーションが完全に読み込まれるまでの時間は以下のようなコードで計測できます：
+</p>
+<pre class="prettyprint"><code>window.performance.measure('measure_load_from_dom', 'domComplete', 'mark_fully_loaded');
+</code></pre>
+
+<blockquote class="commentary talkinghead danilotalkinghead"><b>注</b>: 
+この例では <a href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface" target="_blank">PerformanceTiming</a> インターフェースの周知の名前である ‘<a href="http://www.w3.org/TR/navigation-timing/#dom-performancetiming-domcomplete" target="_blank">domComplete</a>’ を渡している。 
+</blockquote>
+<p>
+<code>measure()</code> を呼び出すと、あなたが設定したマークとは独立して結果が保存されるので、後から取り出すことができます。アプリケーションが実行されている間、時間を別に保存することによって、アプリケーションはレスポンスできる状態を継続し、アプリケーションが処理を終えてから全てのデータを取り出すことができるので、後から分析が可能です。
+</p>
+<h3 id="toc-clearmarks">‘<code>clearMarks()</code>’ でマークの削除</h3>
+<p>
+ときには設定したマークを大量に削除できると便利です。例えば、Web アプリケーションを一括実行することもあるでしょうから、それぞれの実行時にマークも真っ新から新規に設定し始めたいと思うでしょう。
+</p>
+<p>
+‘<a href="http://www.w3.org/TR/user-timing/#dom-performance-clearmarks" target="_blank"><code>clearMarks()</code></a>’ の呼ぶことで、設定済のマークを削除することは簡単です。
+</p>
+<p>
+以下に例示したコードは既存マークを全て削除するので、タイミングを再度設定することもできます。
+</p>
+<pre class="prettyprint"><code>window.performance.clearMarks();
+</code></pre>
+<p>
+もちろん全てのマークをクリアしたくない場合もあるでしょう。特定のマークだけを削除したいなら、削除したいマークの名前を渡すだけでできます。例えば、以下のコード：
+</p>
+<pre class="prettyprint"><code>window.peformance.clearMarks('mark_fully_loaded');
+</code></pre>
+<p>
+は、最初の例で設定したマークは削除しますが、残りのマークに関しては何も変更しません。
+</p>
+<p>
+同様に計測を削除したいこともあるでしょう。それに対応したメソッドとして '<a href="http://www.w3.org/TR/user-timing/#dom-performance-clearmeasures" target="_blank"><code>clearMeasures()</code></a>' があります。このメソッドは計測を対象にすること以外は <code>clearMarks()</code> と同様に動作します。例えば、コード：
+</p>
+<pre class="prettyprint"><code>window.performance.clearMeasures('measure_load_from_dom');
+</code></pre>
+<p>
+は、先述の <code>measure()</code> の例で作成した計測を削除します。全ての計測を削除したいなら、<code>clearMeasures()</code> を引数なしで呼び出すことによって <code>clearMarks()</code> と同様に動作します。
+</p>
+<h2 id="toc-dataout">タイミングデータの抽出</h2>
+<p>
+マークを設定してそのインターバルを計測するのも有効ですが、場合によっては解析するために必要なタイミングのデータを取得したいことがあります。これもまた、<a href="http://www.w3.org/TR/performance-timeline/#sec-performance-timeline" target="_blank">PerformanceTimeline</a> インターフェースを利用することで簡単に行うことができます。
+</p>
+<p>
+例として、'<a href="http://www.w3.org/TR/performance-timeline/#dom-performance-getentriesbytype" target="_blank"><code>getEntriesByType()</code></a>' メソッドで、マークされた時間をすべて取得したり、計測時間をリスト形式で取得できるので、ループを使ってデータを順次処理することができます。素晴らしいことに返されるリストデータは時系列でソートされているので、Web アプリケーションの中でマークが呼び出された順番を知ることができます。
+</p>
+<p>
+以下のコード：
+</p>
+<pre class="prettyprint"><code>var items = window.performance.getEntriesByType('mark');
+</code></pre>
+<p>
+は、Web アプリケーション内で呼び出されたすべてのマークをリストで返すのに対して、以下のコード：
+</p>
+<pre class="prettyprint"><code>var items = window.performance.getEntriesByType('measure');
+</code></pre>
+<p>
+は、作成されたすべての計測時間をリストで返します。
+</p>
+<p>
+マークに付けた<a href="http://www.w3.org/TR/performance-timeline/#dom-performance-getentriesbyname" target="_blank">特定の名前</a>を使ってエントリーのリストを取得することも可能です。以下のサンプルコード：
+</p>
+<pre class="prettyprint"><code>var items = window.performance.getEntriesByName('mark_fully_loaded');
+</code></pre>
+<p>
+は、<a href="http://www.w3.org/TR/performance-timeline/#dom-performanceentry-starttime" target="_blank"><code>startTime</code></a> プロパティーに ‘mark_fully_loaded’ のタイムスタンプを含んだ、アイテムが１つのリストを返します。
+</p>
+<h2 id="toc-xhrtiming">XHR リクエストの計測（例）</h2>
+<p>
+User Timing API の全体像が見えてきたので、この API を利用して、Web アプリケーションの中で <a href="http://www.w3.org/TR/XMLHttpRequest/" target="_blank">XMLHttpRequests</a> がどれくらいの時間がかかっているか分析できます。
+</p>
+<p>
+まず始めにすべての <a href="http://www.w3.org/TR/XMLHttpRequest/#the-send()-method" target="_blank"><code>send()</code></a> リクエストでマークを設定し、同時に success コールバックでもう１つのマークを設定するように変更することで、リクエストにかかった時間を計測できるようにします。
+</p>
+<p>
+そのため、通常 XMLHttpRequest を利用する場合は以下のようになります：
+</p>
+<pre class="prettyprint"><code>var myReq = new XMLHttpRequest();
+myReq.open('GET', url, true);
+myReq.onload = function(e) {
+  do_something(e.responseText);
+}
+myReq.send();
+</code></pre>
+<p>
+ここの例では、グローバルカウンターを追加してリクエストが呼ばれた回数をカウントします。またこのカウンターを利用して、リクエストごとに計測を保存できるようにします。これを実行するコードは以下のようになります：
+</p>
+<pre class="prettyprint"><code>var reqCount = 0;
+
+var myReq = new XMLHttpRequest();
+myReq.open('GET', url, true);
+myReq.onload = function(e) {
+  window.performance.mark('mark_end_xhr');
+  reqCnt++;
+  window.performance.measure('measure_xhr_' + reqCnt, 'mark_start_xhr', 'mark_end_xhr');
+  do_something(e.responseText);
+}
+window.performance.mark('mark_start_xhr');
+myReq.send();
+</code></pre>
+<p>
+このコードではすべての XMLHttpRequest に対してユニークな名称で計測を生成します。ここではすべてのリクエストは順次実行されることを想定しています - 並列で実行される処理では、リクエストが正しい順序で終わるとは限らないため、もう少し複雑なハンドリングが必要となります。その対処方法は、この記事を読んでいる皆さんのエクササイズとして残しておきます。
+</p>
+<p>
+Web アプリケーションからの大量のリクエストが処理されたら、以下のコードを利用することで、結果をコンソールへ出力できます：
+</p>
+<pre class="prettyprint"><code>var items = window.performance.getEntriesByType('measure');
+for (var i = 0; i &lt; items.length(); ++i) {
+  var req = items[i];
+  console.log('XHR ' + req.name + ' took ' + req.duration + 'ms');
+}
+</code></pre>
+
+<h2 id="toc-conclusion">まとめ</h2>
+<p>
+User Timing API はあなたの Web アプリケーションのあらゆることに適用できる多くの素晴らしいツールを提供します。Web アプリケーションのすみずみで API が呼び出されるように設定し、集計したタイミングデータからどこで時間がかかっているかを解析することで、ホットスポットとなっている箇所を容易に絞ることができます。もし、あなたのブラウザがこの API をサポートしていなくても問題ありません。この API をよくエミュレートしていて、<a href="http://www.webpagetest.org/" target="_blank">webpagetest.org</a> とも相性が良い<a href="https://gist.github.com/pmeenan/5902672" target="_blank">素晴らしい polyfill がこちら</a>にあります。グズグズする必要はありません。今すぐあなたのアプリケーションで User Timing API を試してみましょう。処理が遅い部分を見つけ出し改善することで、ユーザー体験が向上し皆喜ぶでしょう。
+</p>
+{% endblock %}
+
+

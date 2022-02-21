@@ -1,0 +1,400 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Audio/Video" title="This article is powered by HTML5 Audio?/Video" />
+{% endblock %}
+
+{% block iscompatible %}
+var audio = new Audio;
+return typeof audio.addKey !== "undefined" ||
+  typeof audio.webkitAddKey !== "undefined";
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳:</strong> <a href="https://github.com/kuu/">Kuu Miyazaki</a>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+.page header a[href^='http']:not([href*='html5rocks.']),
+.tutorials a[href^='http']:not([href*='html5rocks.']),
+.feed-section a[href^='http']:not([href*='html5rocks']),
+.info-section a[href^='http']:not([href*='html5rocks.']),
+article section a[href^='http']:not([href*='html5rocks']),
+a[rel='external']
+{
+  background: none;
+  padding-right: 0;
+}
+
+.h2 {
+  font-size: 24px;
+}
+.h2 + h2 {
+  margin-top: 0;
+}
+</style>
+{% endblock %}
+
+{% block onload %}
+// TODO
+{% endblock %}
+
+{% block content %}
+
+<p>Encrypted Media Extensions が提供するAPIにより、Webアプリケーションはコンテンツ保護システムとやりとりして、暗号化された音声や映像を再生することが可能になります。</p>
+
+<blockquote>
+
+  <p>この記事ではEME APIとその使い方を紹介します。EMEにまつわる対立に興味がある方は、<a href="https://docs.google.com/document/d/1EV1O26wP3y3OkPLBDcJdrbU9S-x5lyjBZ2jRITcTCfM" target="_blank">ドキュメント</a>に賛成／反対の議論を要約しましたのでそちらをご覧ください。</p>
+
+  <p>一般的なデジタルメディアの入門としては、Monty Montgomery の <a href="http://xiph.org/video/vid1.shtml" target="_blank">Digital Media Primer for Geeks</a>をご覧ください。</p>
+
+</blockquote>
+
+<p>EME は、すべてのブラウザにおいて、特定のコンテンツ保護システムに依存せず、同一のアプリケーションが、同一の暗号化されたファイルを再生できるように設計されています。前者はAPIとフローを標準化することにより可能になり、また、後者は <a href="#common-encryption" title="Common Encryption section">Common Encryption</a> の概念により可能になります。</p>
+
+<p>EME は <code>HTMLMediaElement</code> の仕様の「拡張」であり、それが名前の由来となっています。「拡張」であるということは、ブラウザでのサポートは任意であることを意味します。つまり、サポートしていないブラウザは、暗号化されたメディアを再生できないというだけで、EMEはHTMLの仕様に準拠するにあたって必須ではありません。以下は<a href="http://www.w3.org/TR/encrypted-media/">EMEの仕様</a>からの引用です：</p>
+
+<blockquote style=" border: none; font-size: 90%; color: #555; font-style: normal; margin: 0">
+
+  <p>この提案は HTMLMediaElement を拡張して保護されたコンテンツの再生を制御するAPIを提供するものです。</p>
+
+  <p>このAPIは、単純なClear Keyによる復号化から、高付加価値ビデオ (ユーザエージェントによる適切な実装が前提となる) まで、広範囲のユースケースをサポートします。ライセンスや鍵の交換をアプリケーションが制御することで、幅広いコンテンツ暗号／保護技術をサポートする、強力な再生アプリケーションの開発を促進します。</p>
+
+  <p>この仕様書はコンテンツ保護やDRMのシステムを定義するものではありません。そうではなく、そのようなシステムを、単純なコンテンツ暗号システムと同様、発見し、選び、対話するための、共通のAPIを定義するものです。DRMの実装は当該仕様に準拠するための必須条件ではありません。最低限の単純なClear Keyシステムの実装だけが要求されます。</p>
+
+  <p>このAPIは、コンテンツ保護の単純な機能を提供するだけで、認証や権限のようなアプリケーションの機能はページの作者に任されています。コンテンツ保護のシステムごとに異なる処理は、ページ側で実現されなければいけません。これにより、暗号化システムとライセンスサーバ間の外部通信を仮定せずに済みます。</p>
+
+</blockquote>
+
+<p>EMEの実装は以下の外部コンポーネントを使用します。</p>
+
+<ul>
+  <li><strong>鍵システム:</strong> コンテンツ保護 (DRM) の仕組み。EME の仕様自体は鍵システムを定義しませんが、例外として、Clear Key (<a href="#clear-key" title="Clear Key">以下を参照</a>) のみ定義します。</li>
+  <li><strong>Content Decryption Module (CDM):</strong> 暗号化されたメディアの再生を行う、クライアントサイドのソフトウェアもしくはハードウェアのモジュール。鍵システムと同様、EME はCDMを定義せず、アプリケーションが利用可能なCDMと対話するためのインターフェイスのみを提供します。</li>
+  <li><strong>ライセンス(鍵)サーバ:</strong> CDMと協調して復号化用の鍵を提供します。ライセンスサーバとの実際のやり取りはアプリケーションの責務となります。</li>
+  <li><strong>パッケージングサービス:</strong> メディアをエンコード／暗号化して、実際に配布／消費可能な形にします。</li>
+</ul>
+
+<p>EMEは復号化のためにライセンスサーバから取得した鍵を必要としますが、ユーザIDや認証はEMEの範疇ではないことに注意してください。メディア再生のための鍵の取得は、通常はユーザ認証の後に行われます。NetflixのようなサービスはWeb アプリケーション内でユーザ認証を行わなければいけません。すなわち、ユーザがログインしたときにアプリはユーザを特定し、権限を付与します。</p>
+
+<h2 id="eme-flow">EMEはどのように動作するか？</h2>
+
+<p>以下、EMEの各コンポーネントがどのように相互作用するか記します。ちなみにこれは、<a href="#getting-a-key-from-a-license-server" title="Code example: getting a key from a license server">下のコード例</a>に対応しています。</p>
+
+<ol>
+  <li>Webアプリケーションは、暗号化されたストリームを含むオーディオもしくはビデオを再生しようとします。</li>
+  <li>ブラウザはメディアデータが暗号化されている事を察知し、(なぜそれが可能か、下欄に説明があります。) <code>needkey</code> イベントを発行します。イベントには、メディアから取得した暗号化に関する情報 (<code>initData</code>) が添付されます。</li>
+  <li>アプリケーションは<code>needkey</code>イベントを以下の手順で処理します。
+    <ol style="list-style-type: lower-alpha; margin: 0">
+      <li>Media 要素に <code>MediaKeys</code> オブジェクトが関連づけられていない場合、利用可能な鍵システムおよびライセンスサーバのURLを設定します。<code>MediaKeys.isTypeSupported()</code>を使用することで、どの鍵システムが利用可能か調べることができます。そして、その鍵システムの<code>MediaKeys</code>オブジェクトを作成します。<code>MediaKeys</code>オブジェクトはaudioもしくはvideo要素においてメディアデータの復号化に使用される鍵を表します。それはCDMインスタンスを表し、CDMへのアクセス手段 (特に鍵セッションの作成) を提供します。</li>
+      <li>作成した<code>MediaKeys</code>オブジェクトをMedia要素にセットします。<code>setMediaKeys()</code>メソッドにより、<code>MediaKeys</code>オブジェクトと HTMLMediaElement が関連づけられます。以降は再生中、つまりデコードしている間、その鍵が使用されます。</li>
+    </ol>
+  </li>
+  <li>アプリケーションは<code>needkey</code>のイベントハンドラで取得したメディアデータをCDMに渡します。これは<code>MediaKeys</code>オブジェクトの<code>createSession()</code>メソッドを呼び出すことで行います。これにより、<code>MediaKeySession</code>オブジェクトが作成されます。このオブジェクトはライセンスおよび鍵の存続期間を表します。</li>
+  <li>CDMは<code>message</code>イベントを発行し、ライセンスサーバから鍵を取得することを要求します。</li>
+  <li><code>MediaKeySession</code>オブジェクトは<code>message</code>イベントを受信するので、アプリケーションはライセンスサーバに (XHR経由等の手段で) メッセージ送信します。</li>
+  <li>ライセンスサーバからレスポンス取得すると、アプリケーションはそのデータをCDMに渡します。これは、<code>MediaKeySession</code>オブジェクトの<code>update()</code>メソッドを呼び出すことで行います。</li>
+  <li>CDMはライセンス鍵を使ってメディアデータを復号化します。有効な鍵は、Media要素に関連づけられた<code>MediaKey</code>オブジェクト内のいずれのセッションからも使用されます。鍵は鍵IDにより特定され、CDMは鍵と関連するデータを鍵IDごとに保持します。</li>
+  <li>ようやくメディアの再生がはじまります。</li>
+  </ol>
+
+  <p>(；´Д｀)=3</p>
+
+<blockquote>
+
+  <p>どのようにしてブラウザはメディアが暗号化されていることを察知するか？</p>
+
+  <p>この情報は <a href="https://en.wikipedia.org/wiki/ISO_base_media_file_format">ISO BMFF</a> や <a href="https://en.wikipedia.org/wiki/WebM">WebM</a> のようなメディアコンテナファイルの中にメタデータとして存在します。ISO BMFFの場合、ヘッダー内の <em style="font-style: normal">protection scheme information box</em> がこれにあたります。WebMは、Matroskaの <a href="http://matroska.org/technical/specs/notes.html">ContentEncryption element</a> にWebM固有の情報を追加して使用しています。各コンテナフォーマットにおけるガイドラインに関して<a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html#containers">EMEの仕様</a>を参照ください。</p>
+
+</blockquote>
+
+<p>CDMとサーバの間で複数のメッセージがやりとりされるかもしれませんが、これらの通信はブラウザやアプリケーションには不過視となっており、CDMとライセンスサーバだけがメッセージを解します。ライセンスのリクエストはCDMの正当性と信頼関係を証明するためのデータを含みます。また、ライセンス鍵のデータを暗号化する際に使用する鍵も含みます。</p>
+
+<h2 id="content-decryption-modules">・・で、CDMは実際には何をしてるの？</h2>
+
+<p>EMEの実装は、単にアプリケーションがContent Decryption Modules とやりとりするためのAPIを提供するだけで、それ自身はメディア復号化の機能を提供しません。</p>
+
+<p>EME の仕様には、CDM が実際に何をするかについて定義されていません。また、CDMはメディアの復号化だけでなく、デコード(展開)も行う場合があります。CDMの提供する機能については、最小限のものから、強力なものまで、幾通りもの選択肢が考えられます。</p>
+
+<ul>
+  <li>復号化のみ行う。通常のメディアパイプライン、例えば &lt;video&gt; 要素を使って再生する。</li>
+  <li>復号化とデコードを行う。できあがったビデオフレームをブラウザに渡して描画してもらう。</li>
+  <li>復号化とデコードを行う。そのままGPU等のハードウェアで描画する。</li>
+</ul>
+
+<p>CDM をWeb アプリケーションから利用可能にするには、いくつかの方法があります。</p>
+
+<ul>
+  <li>CDM をブラウザに同梱する。</li>
+  <li>CDM を別途配布する。</li>
+  <li>CDM をOSの一部として提供する。</li>
+  <li>ファームウェアにCDM が搭載されている。</li>
+  <li>CDM がハードウェアとして提供される。</li>
+</ul>
+
+<p>どうやってCDMを利用可能にするかについて、EME の仕様には定義されていません。しかし、いずれの場合もブラウザが責任を持ってCDM を提供します。</p>
+
+<p>EME は特定の鍵システムを必須条件としません。今日のデスクトップおよびモバイルのブラウザにおいては、Chrome は Widevine を、また IE11 は PlayReady をサポートしています。</p>
+
+<h2 id="getting-a-key-from-a-license-server">ライセンスサーバから鍵を取得する</h2>
+
+<p>多くの商用サービスでは、コンテンツは何らかのパッケージングサービスあるいはツールを用いて暗号化および圧縮されます。そして、ひとたび暗号化されたメディアがオンラインで利用可能になると、Web クライアントはライセンスサーバから鍵(ライセンス)を取得し、それによりコンテンツを複合化して再生します。</p>
+
+<p>以下のコードは<a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html#examples">仕様のExamplesの章</a>からの抜粋です。アプリケーションが適切な鍵システムを選択し、ライセンスサーバから鍵を取得するやり方が書かれています。</p>
+
+<pre class="prettyprint">
+&lt;script&gt;
+var keySystem;
+var licenseUrl;
+
+function selectKeySystem() {
+  if (MediaKeys.isTypeSupported("com.example.somesystem",
+      "video/webm; codecs='vp8, vorbis'")) {
+    licenseUrl = "https://license.example.com/getkey";
+    keySystem = "com.example.somesystem";
+  } else if (MediaKeys.isTypeSupported("com.foobar",
+      "video/webm; codecs='vp8, vorbis'")) {
+    licenseUrl = "https://license.foobar.com/request";
+    keySystem = "com.foobar";
+  } else {
+    throw "Key System not supported";
+  }
+}
+
+function handleKeyNeeded(event) {
+  var video = event.target;
+  if (!video.mediaKeys) {
+    selectKeySystem();
+    video.setMediaKeys(new MediaKeys(keySystem));
+  }
+  if (!video.mediaKeys) {
+    throw "Could not create MediaKeys";
+  }
+  var keySession = video.mediaKeys.createSession(event.contentType, event.initData);
+  if (!keySession) {
+    throw "Could not create key session";
+  }
+  keySession.addEventListener("message", licenseRequestReady, false);
+}
+
+function licenseRequestReady(event) {
+  var keySession = event.target;
+  var request = event.message;
+  if (!request) {
+    throw "Could not create license request";
+  }
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("POST", licenseUrl);
+  xmlhttp.onreadystatechange = function () {
+    if (xmlhttp.readyState === 4) {
+      var license = new Uint8Array(xmlhttp.response);
+      keySession.update(license); // playback can now begin
+    }
+  }
+  xmlhttp.send(request);
+}
+&lt;/script&gt;
+
+...
+
+&lt;video src="foo.webm" autoplay onneedkey="handleKeyNeeded(event)"&gt;&lt;/video&gt;
+</pre>
+
+<h2 id="common-encryption">Common Encryption</h2>
+
+<p>Common Encryption により、コンテンツプロバイダーは、ひとつのコンテナーフォーマット／コーデックに対して一回のみ暗号化とパッケージングを行うだけでよくなります。そして、それは様々な鍵システムおよびCDM (Common Encryptionに対応したCDM)間で使い回すことができます。例えば、PlayReadyでパッケージングされたビデオはWidevineのCDMを使ったブラウザで、Widevineのライセンスサーバから鍵を取得して再生することが可能です。</p>
+
+<p>それに比べて従来の方式では、ソフトウェアスタックが完全に縦割りになっているので、単一のクライアント(多くの場合アプリケーション・ランタイム)でしか動作しません。</p>
+
+<p><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">CENC</a> は Common Encryption の <a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397">ISO BMFF 標準</a>であり、類似の考え方が WebM においても適用されています。</p>
+
+<h2 id="clear-key">Clear Key</h2>
+
+<p>EME はDRM の機能を規定しませんが、現時点の仕様によれば、すべてのEME 準拠のブラウザはClear Keyを実装しなければいけません。このシステムでは、単純にメディアを暗号化した鍵をそのまま再生に使用します。Clear Keyはブラウザのみで実装され、別途 CDM を必要としません。</p>
+
+<p>多くの商用コンテンツでは使われないでしょうが、Clear Key はすべてのEME 準拠ブラウザで完全に相互運用可能です。また、EME の実装をテストする場合や、EME を使用するアプリケーションをテストする場合などに、ライセンスサーバを立てる必要がないので便利です。簡単なClear Key の実装例が <a href="http://simpl.info/clearkey">simpl.info/clearkey</a> にあります。下にコードを詳しく解説しています。<a href="#getting-a-key-from-a-license-server" title="Code example: Getting a key from a license server">上のコード例</a>と似ていますが、ライセンスサーバとのやりとりが無いところが違います。(このコードはEME のEditor's Draft版である <a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html">プリフィックスバージョン 0.1b</a> に対応しており、最新のChromeで実装されています。)</p>
+
+<pre class="prettyprint">
+// Define a key: hardcoded in this example – this corresponds to the key used for encryption
+var KEY = new Uint8Array([0xeb, 0xdd, 0x62, 0xf1, 0x68, 0x14, 0xd2, 0x7b,
+  0x68, 0xef, 0x12, 0x2a, 0xfc, 0xe4, 0xae, 0x3c
+]);
+
+// Specify the Key System used: in this example, Clear Key
+var keySystem = 'webkit-org.w3.clearkey';
+
+// Add listeners to the media element
+var videoElement = document.querySelector('video');
+videoElement.addEventListener('needkey', onNeedKey);
+videoElement.addEventListener('keymessage', onKeyMessage);
+videoElement.addEventListener('keyerror', onKeyError);
+videoElement.addEventListener('keyadded', onKeyAdded);
+
+// Handle the needkey event
+function onNeedKey(e) {
+  // Generate a key request, specifying the Key System and media InitData
+  // e.target is the video
+  e.target.webkitGenerateKeyRequest(keySystem, e.initData);
+}
+
+// Handle a key message, adding a key
+function onKeyMessage(e) {
+  var initData = e.message;
+  e.target.webkitAddKey(keySystem, KEY, initData);
+}
+</pre>
+
+<p>このコードをテストするためにはまず、ビデオを暗号化する必要があります。WebMの場合、Clear Keyでビデオを暗号化するには<a href="https://docs.google.com/document/d/17d6_KX5jX0gY1ygYbjqOEdVzuUGkPO53wL8t40dMGeQ/edit?usp=sharing">webm_crypt を使った手順</a>を参照ください。商用サービスも (少なくともISO BMFF/MP4ならば) 存在しますし、その他のサービスも開発されています。</p>
+
+<div class="h2">関連技術 その１</div>
+
+<h2 id="related-technology-1">Media Source Extensions (MSE)</h2>
+
+<p><a href="https://developer.mozilla.org/en/docs/Web/API/HTMLMediaElement">HTMLMediaElement</a>はシンプルさが売りです。</p>
+
+<p>src 属性に URLをセットするだけで、メディアのロード、デコードそして再生が可能です。</p>
+
+<pre class="prettyprint">
+&lt;video src='foo.webm'&gt;&lt;/video&gt;
+</pre>
+
+<p>Media Source API は HTMLMediaElement の拡張で、メディアソースに対してさらにきめの細かい制御ができるようになります。これにより、JavaScriptで「チャンク」単位でビデオのストリームを扱うことができるようになり、その結果、アダプティブストリーミングやタイムシフト等の技術が可能になります。</p>
+
+<p>なぜ MSE は EME にとって重要なのでしょうか？ なぜなら、商用コンテンツのプロバイダーは、保護されたコンテンツの配信を行うだけでなく、ネットワークの状況やその他の要件に合わせてコンテンツの配信を調整しなければいけないからです。例えば、Netflix は、ネットワーク状況の変化に応じて、ストリームのビットレートを動的に変えています。<code>src</code> 属性により与えられたメディアと同様、EME は MSE の実装により与えられたメディアストリームの再生においても動作します。</p>
+
+<p>異なるビットレートでエンコードされたメディアは、どのようにして分割／再生されるのでしょうか？以下の<a href="#related-technology-2" title="Dynamic Adaptive Streaming over HTTP">DASH の節</a>をご覧ください。</p>
+
+<p>実際に動作する MSE の例は、<a href="http://simpl.info/mse">simpl.info/mse</a> で見ることができます。 このデモでは、WebM ビデオは File API により、5 つのチャンクに分割されていますが、実際のアプリケーションでは、ビデオのチャンクは AJAX 経由で取得されるでしょう。</p>
+
+<p>まず、SourceBuffer を作成します。</p>
+
+<pre class="prettyprint">var sourceBuffer = mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');</pre>
+
+<p>そして、video 要素に対してビデオを流し込みます。これには、appendBuffer() メソッドを使って、チャンクを順に付加していきます。</p>
+
+<pre class="prettyprint">
+reader.onload = function (e) {
+  sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+  if (i === NUM_CHUNKS - 1) {
+    mediaSource.endOfStream();
+  } else {
+    if (video.paused) {
+      // start playing after first chunk is appended
+      video.play();
+    }
+    readChunk_(++i);
+  }
+};
+</pre>
+
+<p>MSE に関しては、こちらの <a href="http://updates.html5rocks.com/2011/11/Stream-video-using-the-MediaSource-API">HTML5 Rocks の記事</a>も併せてご覧ください。</p>
+
+<div class="h2">関連技術 その２</div>
+
+<h2 id="related-technology-2">Dynamic Adaptive Streaming over HTTP (DASH)</h2>
+
+<p>マルチデバイス、マルチプラットフォーム、モバイル、呼び名はどうあれ、Web はしばしば不安定な接続の条件下で消費されます。そのようなマルチデバイスの世界では、帯域の制限や流動性に対処するために、動的でアダプティブな配信技術が不可欠です。</p>
+
+<p>DASH (通称 MPEG-DASH) は不安定な状況でベストなメディア配信を実現するために設計されました。ストリーミングとダウンロード両方に対応しています。類似の技術は他にもたくさんあります。例えば、Apple の <a href="https://en.wikipedia.org/wiki/HTTP_Live_Streaming">HTTP Live Streaming</a> (HLS) や、Microsoft の <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming">Smooth Streaming</a> です。しかし DASH は唯一オープンスタンダードに基づいた HTTP 上のアダプティブ・ビットレート・ストリーミングの方式です。DASH はすでに YouTube のようなサイトで実績があります。</p>
+
+<p>では、これが EME および MSE とどう関係するのでしょうか？MSE ベースの DASH の実装は、マニフェストファイルをパースし、適切なビットレートのビデオの断片をダウンロードし、そして video 要素の消費スピードに合わせてそれらのデータを供給します。これらはすべて、既存のHTTPの基盤を利用して行われます。</p>
+
+<p>別の言い方をすると、DASH により、商用コンテンツのプロバイダは、保護されたコンテンツをアダプティブストリーミングすることが可能になります。</p>
+
+<p>DASH はその名の通り、</p>
+
+<ul>
+  <li><strong>Dynamic:</strong> 変化する状況に対応します。</li>
+  <li><strong>Adaptive:</strong> 最適なオーディオ／ビデオを提供するためにビットレートを調整します。</li>
+  <li><strong>Streaming:</strong> ダウンロードと同様、ストリーミングも対応します。</li>
+  <li><strong>HTTP:</strong> HTTP を利用したコンテンツ配信が可能となるため、従来のストリーミングサーバより便利です。</li>
+</ul>
+
+<p>BBC は <a href="http://bbc.co.uk/rd/blog/2013/09/mpeg-dash-test-streams">DASH を用いたテストストリーム</a>の配信を始めました。</p>
+
+<blockquote>メディアは複数の異なるビットレートでエンコードされます。エンコードされたものを Representation と呼びます。これはさらに複数の Media Segment に分割されます。クライアントは Representation の先頭から順に Media Segment をHTTPリクエストしてビデオを再生します。同一コンテンツの複数の Representation は Adaptation Set にグループ化されます。クライアントがビットレートを変更する場合、現在の Adaptation Set から代替の Representation を選び、Media Segment をリクエストします。クライアントがこのような変更を簡単に行えるように、コンテンツはエンコードされているのです。複数の Media Segment に加えて、通常 Representation は Initialisation Segment を保持します。これはヘッダーのようなもので、エンコーディングの情報やフレームサイズ等を含みます。クライアントは Media Segment を消費する前に、Representation からこのヘッダー情報を取得する必要があります。</blockquote>
+
+<p>まとめると、</p>
+
+<ol style="list-style-type: decimal">
+  <li>メディアは異なるビットレートでエンコードされます。</li>
+  <li>異なるビットレートのファイルはHTTPサーバにより提供されます。</li>
+  <li>クライアント Web アプリケーションは DASH により、最適なビットレートを選択できます。</li>
+  </ol>
+
+<p>ビデオを分割する過程で、Media Presentation Description (MPD) と呼ばれる XML マニフェストファイルが自動的に生成されます。このファイルは Adaptation Set と Representation および、再生時間と URL が記述されています。以下に MPD がどのようなものか示します。</p>
+
+<pre class="prettyprint">
+&lt;MPD xmlns="urn:mpeg:DASH:schema:MPD:2011" mediaPresentationDuration="PT0H3M1.63S" minBufferTime="PT1.5S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011"
+type="static"&gt;
+  &lt;Period duration="PT0H3M1.63S" start="PT0S"&gt;
+    &lt;AdaptationSet&gt;
+      &lt;ContentComponent contentType="video" id="1" /&gt;
+      &lt;Representation bandwidth="4190760" codecs="avc1.640028" height="1080" id="1" mimeType="video/mp4" width="1920"&gt;
+        &lt;BaseURL&gt;car-20120827-89.mp4&lt;/BaseURL&gt;
+        &lt;SegmentBase indexRange="674-1149"&gt;
+          &lt;Initialization range="0-673" /&gt;
+        &lt;/SegmentBase&gt;
+      &lt;/Representation&gt;
+      &lt;Representation bandwidth="2073921" codecs="avc1.4d401f" height="720" id="2" mimeType="video/mp4" width="1280"&gt;
+        &lt;BaseURL&gt;car-20120827-88.mp4&lt;/BaseURL&gt;
+        &lt;SegmentBase indexRange="708-1183"&gt;
+          &lt;Initialization range="0-707" /&gt;
+        &lt;/SegmentBase&gt;
+      &lt;/Representation&gt;
+
+      …
+
+    &lt;/AdaptationSet&gt;
+  &lt;/Period&gt;
+&lt;/MPD&gt;
+</pre>
+
+<p>この XML は <a href="http://dash-mse-test.appspot.com/dash-player.html?url=http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">YouTube DASH デモプレイヤー</a> において使われている <a href="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd">.mpd ファイル</a>からの抜粋です。</p>
+
+<p>DASH の仕様によれば、MPD ファイルは理論上は video 要素の <code>src</code> 属性として設定可能ですが、ブラウザベンダーはそうする代わりに、例えば <a href="http://www-itec.uni-klu.ac.at/dash/?p=792">dash.js</a> のように、JavaScript ライブラリ側で MSE を用いて DASH サポートを行えるようにしました。そうすることで Web 開発者はより柔軟に対応できます。 DASH を JavaScript 側の実装に任せることにより、ブラウザを更新することなく、アダプテーションストリーミングのアルゴリズムを進化させることができます。また、MSE により、代替のマニフェストフォーマットや配信の仕組みを、ブラウザの変更無しに実験することができます。</p>
+
+
+<p><a href="https://developer.mozilla.org/en-US/docs/DASH_Adaptive_Streaming_for_HTML_5_Video" title="MDN: DASH Adaptive Streaming for HTML 5 Video">Mozilla Developer Network</a> に、WebM ツールと FFmpeg を用いてビデオを分割し、MPDを生成する手順についての記事があります。</p>
+
+<h2 id="conclusion">結び</h2>
+<p>Web を使用した有料のビデオ／オーディオの配信は急激に成長しています。タブレット、ゲーム機、テレビ、STB等の、ほぼすべての新しいデバイスはメジャーなコンテンツプロバイダからHTTP 経由でメディアをストリーミング再生可能です。<a href="http://longtailvideo.com/html5">85% 以上</a>のモバイルおよびデスクトップのブラウザは &lt;video&gt; と &lt;audio&gt; タグをサポートします。また、Cisco の試算によると、2017 年までに<a href="http://www.cisco.com/en/US/solutions/collateral/ns341/ns525/ns537/ns705/ns827/white_paper_c11-481360_ns827_Networking_Solutions_White_Paper.html">世界のコンシューマー・インターネットのトラフィックのうち、80 から 90 % をビデオが占めるようになる</a>そうです。  この文脈において、ブラウザが保護されたコンテンツの配信をサポートすることの重要性は、ますます高まると思われます。<a href="https://blog.mozilla.org/security/2013/01/29/putting-users-in-control-of-plugins/" title="Mozilla Security Blog: Putting Users in Control of Plugins">ブラウザベンダー</a>は、多くのメディアプラグインが依存している API の<a href="https://sites.google.com/a/chromium.org/dev/developers/npapi-deprecation" title="Chromium NPAPI deprecation: developer guide">サポートを縮小</a>していることですし。</p>
+
+<h2 id="find-out-more">参考文献</h2>
+
+
+<h3 id="specs-and-standards">仕様と標準</h3>
+
+<ul>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/default/encrypted-media/encrypted-media.html" target="_blank">EME 仕様</a>: 最新の Editor's Draft 版</li>
+  <li><a href="https://dvcs.w3.org/hg/html-media/raw-file/eme-v0.1b/encrypted-media/encrypted-media.html" target="_blank">EME 仕様</a>: Editor's Draft 版のプリフィックスバージョン 0.1b 。最新のChromeで実装されている。</li>
+  <li><a href="http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=60397" target="_blank">Common Encryption (CENC)</a></li>
+  <li><a href="http://www.w3.org/TR/media-source/" target="_blank">Media Source Extensions</a></li>
+  <li><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c057623_ISO_IEC_23009-1_2012.zip" target="_blank">DASH 標準</a> (PDFです。)</li>
+  <li><a href="http://dashif.org/mpeg-dash/" title="Overview of MPEG-DASH Standard from DASH Industry Forum" target="_blank">DASH 標準の概要</a></li>
+</ul>
+
+<h3 id="articles">記事</h3>
+<ul>
+  <li><a href="http://vimeo.com/62269279" target="_blank">DTG オンラインセミナー</a> (部分的に古いです。)</li>
+  <li><a href="https://hsivonen.fi/eme/" title="Article by member of HTML Working Group of the W3C" target="_blank">EME とは？</a>, by Henri Sivonen</li>
+  <li><a href="http://updates.html5rocks.com/2011/11/Stream-video-using-the-MediaSource-API" target="_blank">HTML5 Rocks の Media Source Extensions の記事</a></li>
+  <li>MPEG-DASH テストストリーム: <a href="http://bbc.co.uk/rd/blog/2013/09/mpeg-dash-test-streams" target="_blank">BBC R&amp;D ブログの記事</a></li>
+</ul>
+
+<h2 id="demos">デモ</h2>
+
+<ul>
+  <li><a href="http://simpl.info/clearkey" title="Clear Key demo" target="_blank">Clear Key</a></li>
+  <li><a href="http://downloads.webmproject.org/adaptive-encrypted-demo/adaptive" target="_blank">暗号化された WebM のアダプティブストリーミング</a> (<a href="https://chromium.googlesource.com/webm/webm-dash-javascript/">Git リポジトリ</a>)</li>
+  <li><a href="http://dash-mse-test.appspot.com/" target="_blank">YouTube の MPEG-DASH / Media Source デモ</a></li>
+  <li><a href="http://html5-demos.appspot.com/static/media-source.html" target="_blank">Media Source Extensions (MSE) デモ</a></li>
+</ul>
+
+{% endblock %}

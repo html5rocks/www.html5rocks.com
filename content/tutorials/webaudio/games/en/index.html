@@ -33,7 +33,7 @@ you've probably noticed this.</p>
 <p>Games are no exception! My fondest video game memories are of the music
 and sound effects. Now, in many cases nearly two decades after playing
 my favorites, I still can't get <a href="http://en.wikipedia.org/wiki/Koji_Kondo">Koji Kondo</a>'s Zelda
-<a href="http://www.youtube.com/watch?v=4qJ-xEZhGms">compositions</a> and <a href="http://en.wikipedia.org/wiki/Matt_Uelmen">Matt Uelmen</a>'s atmospheric <a href="http://www.youtube.com/watch?v=Q2evIg-aYw8">Diablo
+<a href="https://www.youtube.com/watch?v=4qJ-xEZhGms">compositions</a> and <a href="http://en.wikipedia.org/wiki/Matt_Uelmen">Matt Uelmen</a>'s atmospheric <a href="https://www.youtube.com/watch?v=Q2evIg-aYw8">Diablo
 soundtrack</a> out of my head. The same catchiness applies to sound
 effects, such as the instantly recognizable unit click responses from
 Warcraft, and samples from Nintendo's classics.</p>
@@ -166,7 +166,7 @@ in game state. Like background music, however, sound effects can get
 annoying very quickly. To avoid this, it's often useful to have a pool
 of similar but different sounds to play. This can vary from mild
 variations of footstep samples, to drastic variations, as seen in the
-<a href="http://www.youtube.com/watch?v=MXgr6SYYNZM">Warcraft series</a> in response to clicking on units.</p>
+<a href="https://www.youtube.com/watch?v=MXgr6SYYNZM">Warcraft series</a> in response to clicking on units.</p>
 <p>Another key feature of sound effects in games is that there can be many
 of them simultaneously. Imagine you're in the middle of a gunfight with
 multiple actors shooting machine guns. Each machine gun fires many times
@@ -349,7 +349,7 @@ Once this is detected, it's useful to give visual feedback that this is
 happening. To do this reliably, put a <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#JavaScriptAudioNode-section">JavaScriptAudioNode</a> into
 your graph. The audio graph would be setup as follows:</p>
 <pre class="prettyprint"><code>// Assume entire sound output is being piped through the mix node.
-var meter = context.createJavaScriptNode(2048, 1, 1);
+var meter = context.createScriptProcessor(2048, 1, 1);
 meter.onaudioprocess = processAudio;
 mix.connect(meter);
 meter.connect(context.destination);
@@ -473,7 +473,8 @@ Audio API in real games today:</p>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     try {
-      context = new webkitAudioContext();
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+      context = new AudioContext();
     }
     catch(e) {
       alert("Web Audio API is not supported in this browser");

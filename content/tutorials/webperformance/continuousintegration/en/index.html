@@ -1,0 +1,95 @@
+{% extends "tutorial.html" %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+.danilotalkinghead:before {
+  background-image: url(/static/images/profiles/75/parashuram.75.png);
+  background-position: 0px -4px !important;
+}
+
+</style>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-solo.png" width="63" height="64" alt="HTML5 Powered" title="HTML5 Powered" style="margin-right:17px" />
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-introduction">Introduction</h2>
+<p>
+Web page performance has a strong impact on user engagement and revenue. 
+Tools like the <a href = "https://developers.google.com/chrome-developer-tools/docs/timeline" target = "_blank">Chrome DevTools timeline</a> or <a href = "http://msdn.microsoft.com/en-us/library/ie/dn255009%28v=vs.85%29.aspx">Internet Explorer 11 UI Responsiveness</a> have come a long way in providing great insights into how a browser spends its time painting a web page. 
+However, returning to these tools to check for performance regressions after every commit or deployment can be hard. Most web developers today look at the performance panels in the tools only when the site get visibly slow. The gradual degradation of performance often goes unnoticed.
+Apart from delivering content as quickly as possible, the page should also feel smooth, responsive and snappy for an ideal experience. A <a href = "http://updates.html5rocks.com/2014/06/Automating-Web-Performance-Measurement">previous article</a> covered how performance measurement can be automated and added to the build process. This article adds measuring rendering performance to the setup.
+</p>
+
+<h2 id="toc-runtime-performance-metrics">Runtime Performance Metrics</h2>
+<p>While tools like Page Speed Insights cover metrics like response times, or size of resources, metrics like time spent for layouts or recalculating styles, mean frame time etc. are collected manually from the dev tools profilers. </p>
+<p><img src = "chrome_profile.gif"/></p>
+<p>Investigating runtime rendering performance usually involves opening the Profiler, hitting the record button, performining a series of tasks and then looking at the timeline to understand the time taken by each operation like paint, layout, styles, etc. 
+</p>
+
+<h2 id="toc-introducing-browser-perf">Introducing browser-perf</h2>
+<p>
+	<a href = "http://npmjs.org/package/browser-perf">browser-perf</a> is a tool that automates the collection of rendering metrics for a web page. It is based on <a href = "http://www.chromium.org/developers/telemetry">Chromium telementry</a> and basically automates the process described above. It uses <a href = "http://docs.seleniumhq.org/">Selenium</a> to run the series of actions and collects the data from sources like the Chrome timeline, about:tracing or <a href = "http://blogs.msdn.com/b/ie/archive/2010/06/21/measuring-browser-performance-with-the-windows-performance-tools.aspx">WPA</a> in case of IE. 
+</p><p>
+Using the tools is very simple. Ensure that you have a selenium server running, and install the node module globally using `npm install -g browser-perf`. Then run the tool against a web page that you would like to collect the metrics for.
+</p>
+<p>
+<code>
+browser-perf http://www.html5rocks.com/en/features/performance --selenium=http://localhost:4444/wd
+</code>
+</p>
+<p><img src = "browserperf-cli.png"/></p>
+<p>browser-perf can also be run on services like <a href = "https://saucelabs.com/">Sauce Labs</a> that provide Selenium on the cloud. More information about the various command line options, instructions for setting up selenium, etc can be found on the project's <a href = "https://github.com/axemclion/browser-perf/wiki/_pages">wiki pages</a>.</p>
+
+<h2 id = "toc-saving-for-later">Saving for later - perfjankie</h2>
+<p>
+	browser-perf gives you a lot of data to analyze. Some of this information becomes more useful when analysed over time. Plotting this information in a graph can help you identify trends on how adding functionality may have made a page heavy, or how a single commit slowed the page down. 
+</p><p>
+For example, the <a href = "http://bench.topcoat.io">graph</a> generated for <a href = "http://topcoat.io">topcoat</a> shows has a single commit had a spike in load time just because license text was added to all files. Another example is the evolution of <a href = "http://getbootstrap.com/">bootstrap</a> and the change in performance over the years described in <a href = "http://nparashuram.com/bootstrap-perf/">this graph</a>. 
+</p><p>
+<a href = "http://npmjs.org/packages/perfjankie">perfjankie</a> is a node module built on top of browser-perf that runs performance tests and then saves the metrics to a CouchDB database. It also adds the code to view the results as a graph into CouchDB. 
+</p>
+
+<h2 id = "toc-adding-build-process">Adding to build process</h2>
+<p>
+	<a href = "http://github.com/axemclion/perfjankie">perfjankie</a> also has a grunt task that can be added to your build process to run the performance tests for every commit or deploy. 
+</p>
+<p>
+	<code>
+perfjankie: {
+	options: {
+		suite: 'Runtime Performance Analysis',
+		urls: ['http://localhost:8080']
+	},
+	local: {
+		options: {
+			selenium: 'http://localhost:4444/wd/hub',
+			browsers: 'chrome',
+			couch: {
+				server: 'http://localhost:5984',
+				database: 'html5rocks'
+			}
+		}
+	}
+}
+	</code>
+</p>
+<p>
+	More details about the various options supported by perfjankie can be found in the <a href = "http://github.com/axemclion/perfjankie">repository</a>. 
+</p>
+
+<h2 id = "toc-conclusion">Putting it all together</h2>
+<p>
+	<a href = "http://github.com/axemclion/perfslides">Here</a> is a sample repository that shows how perfjankie was run and problems with runtime performance identified. The <a href = "https://github.com/axemclion/perfslides/commits/perf">top 5 commits</a> have code snippets from real world projects and show some performance anti-patterns like expensive scroll handlers and how they were fixed using CSS transforms and requestAnimationFrames. The <a href = "http://nparashuram.com/perfslides/perfjankie">graph</a> from these 5 commits show how the metrics metrics like mean frame time are high when the scroll handler is expensive. 
+</p><p>
+	To conclude, adding performance measurement as a part of build or continuous integration process can be useful in identifying performance bottlenecks. 
+</p><p>
+	As the author of the tools above, I would love to hear what you think, and how these tools could help you make you websites jankfree. 
+</p>
+
+{% endblock %}

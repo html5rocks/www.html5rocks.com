@@ -67,8 +67,8 @@
 
 <pre class="prettyprint">
 var MyCustomNode = function(){
-    this.input = audioContext.createGainNode();
-    var output = audioContext.createGainNode();
+    this.input = audioContext.createGain();
+    var output = audioContext.createGain();
 
     this.connect = function(target){
        output.connect(target);
@@ -80,9 +80,9 @@ var MyCustomNode = function(){
 
 <pre class="prettyprint">
 //create a couple of native nodes and our custom node
-var gain = audioContext.createGainNode(),
+var gain = audioContext.createGain(),
     customNode = new MyCustomNode(),
-    anotherGain = audioContext.createGainNode();
+    anotherGain = audioContext.createGain();
 
 //connect our custom node to the native nodes and send to the output
 gain.connect(customNode.input);
@@ -103,11 +103,11 @@ anotherGain.connect(audioContext.destination);
 <pre class="prettyprint">
 var SlapbackDelayNode = function(){
     //create the nodes we’ll use
-    this.input = audioContext.createGainNode();
-    var output = audioContext.createGainNode(),
-        delay = audioContext.createDelayNode(),
-        feedback = audioContext.createGainNode(),
-        wetLevel = audioContext.createGainNode();
+    this.input = audioContext.createGain();
+    var output = audioContext.createGain(),
+        delay = audioContext.createDelay(),
+        feedback = audioContext.createGain(),
+        wetLevel = audioContext.createGain();
 
     //set some decent values
     delay.delayTime.value = 0.15; //150 ms delay
@@ -148,8 +148,8 @@ var SlapbackDelayNode = function(){
 
 <pre class="prettyprint">
 var AudioBus = function(){
-    this.input = audioContext.createGainNode();
-    var output = audioContext.createGainNode();
+    this.input = audioContext.createGain();
+    var output = audioContext.createGain();
 
     //create effect nodes (Convolver and Equalizer are other custom effects from the library presented at the end of the article)
     var delay = new SlapbackDelayNode(),
@@ -218,16 +218,16 @@ bus.connect(audioContext.destination);
 			    }
             }
             
-            var audioContext = new webkitAudioContext();
+            var audioContext = new AudioContext() || new webkitAudioContext();
             
             //our custom node
             var SlapbackDelayNode = function(){
                 //create the nodes we’ll use
-                this.input = audioContext.createGainNode();
-                var output = audioContext.createGainNode(),
-                    delay = audioContext.createDelayNode(),
-                    feedback = audioContext.createGainNode(),
-                    wetLevel = audioContext.createGainNode();
+                this.input = audioContext.createGain();
+                var output = audioContext.createGain(),
+                    delay = audioContext.createDelay(),
+                    feedback = audioContext.createGain(),
+                    wetLevel = audioContext.createGain();
 
                 //set some decent values
                 delay.delayTime.value = 0.15; //150 ms delay
@@ -262,20 +262,20 @@ bus.connect(audioContext.destination);
                 bufferSourceDry = audioContext.createBufferSource();
                 bufferSourceDry.buffer = buffer;
                 bufferSourceDry.connect(audioContext.destination);
-                bufferSourceDry.noteOn(audioContext.currentTime);
+                bufferSourceDry.start(audioContext.currentTime);
             }
             function playWet(){
                 bufferSourceWet = audioContext.createBufferSource();
                 bufferSourceWet.buffer = buffer;
                 bufferSourceWet.connect(delay.input);
-                bufferSourceWet.noteOn(audioContext.currentTime);
+                bufferSourceWet.start(audioContext.currentTime);
             }
             function stopDry(){
-                bufferSourceDry.noteOff(audioContext.currentTime);
+                bufferSourceDry.stop(audioContext.currentTime);
                 bufferSourceDry.disconnect();
             }
             function stopWet(){
-                bufferSourceWet.noteOff(audioContext.currentTime);
+                bufferSourceWet.stop(audioContext.currentTime);
                 bufferSourceWet.disconnect();
             }
             
@@ -292,7 +292,13 @@ bus.connect(audioContext.destination);
             request.open("GET", filename, true);
             request.responseType = "arraybuffer";
             request.onload = function() {
-                buffer = audioContext.createBuffer(request.response, false);
+                audioContext.decodeAudioData(request.response, success, error);
+                function success(audioData) {
+                    buffer = audioData;
+                }
+                function error() {
+                    console.error("Failed decoding the audio needed. The examples in this article will not work.");
+                }
                 setupListeners();
             };
             request.send();

@@ -32,8 +32,8 @@
 
 <p>ゲームもまた例外ではありません。
 わたしの最高のビデオゲームの思い出は音楽とサウンドエフェクトによるものです。
-あれから20年近く経つのに、未だに <a href="http://ja.wikipedia.org/wiki/近藤浩治">近藤浩治</a>の<a href="http://www.youtube.com/watch?v=4qJ-xEZhGms">『ゼルダの伝説』</a>
-や  <a href="http://en.wikipedia.org/wiki/Matt_Uelmen">Matt Uelmen</a> の <a href="http://www.youtube.com/watch?v=Q2evIg-aYw8">Diablo のサウンドトラック</a> が頭から離れません。
+あれから20年近く経つのに、未だに <a href="http://ja.wikipedia.org/wiki/近藤浩治">近藤浩治</a>の<a href="https://www.youtube.com/watch?v=4qJ-xEZhGms">『ゼルダの伝説』</a>
+や  <a href="http://en.wikipedia.org/wiki/Matt_Uelmen">Matt Uelmen</a> の <a href="https://www.youtube.com/watch?v=Q2evIg-aYw8">Diablo のサウンドトラック</a> が頭から離れません。
 同様の親しみやすさはサウンドエフェクトにも当てはまります。
 例えば、Warcraftのクリック音や、任天堂の古いゲームなどです。</p>
 
@@ -171,7 +171,7 @@ filter.connect(context.destination);
 しかしながら、BGMの場合と同様、サウンドエフェクトもまた、ユーザーにとって煩わしいものになりがちです。
 そのようなことを避けるためにしばしば使われる手法として、よく似た、しかし異なったサウンドをプールして
 使い分けることがあります。簡単な例では足音のサンプル、また、凝った例では
- <a href="http://www.youtube.com/watch?v=MXgr6SYYNZM">Warcraft シリーズ</a>のキャラクターをクリックしたときの音などがあります。</p>
+ <a href="https://www.youtube.com/watch?v=MXgr6SYYNZM">Warcraft シリーズ</a>のキャラクターをクリックしたときの音などがあります。</p>
 
 <p>他にも、ゲームのサウンドエフェクトの特徴として、たくさんの音を同時に鳴らすことが挙げられます。
 複数のキャラクターがマシンガンを打ち合っているまっただ中にいると想像してみてください。
@@ -195,7 +195,7 @@ for (var i = 0; i &lt; rounds; i++) {
 <button onclick="mgun.shootRound(1, 3, 0.1);">Short burst M1 Garand</button><br/>
 <button onclick="mgun.shootRound(0, 10, 0.05);">Long burst M4A1</button><br/></p>
 
-<p>少しうるさかったでしょうか？ 
+<p>少しうるさかったでしょうか？
 後の章で、距離の取り方とコンプレッサーの適用について説明します。</p>
 
 <p>ところで、もしゲーム内のすべてのマシンガンの音がまったく同じであれば、非常にたいくつです。
@@ -365,7 +365,7 @@ convolver.connect(context.destination);
 それには、以下のように <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#JavaScriptAudioNode-section">JavaScriptAudioNode</a> をオーディオグラフに接続します：</p>
 
 <pre class="prettyprint"><code>// Assume entire sound output is being piped through the mix node.
-var meter = context.createJavaScriptNode(2048, 1, 1);
+var meter = context.createScriptProcessor(2048, 1, 1);
 meter.onaudioprocess = processAudio;
 mix.connect(meter);
 meter.connect(context.destination);
@@ -430,7 +430,7 @@ DynamicsCompressorNode をオーディオグラフに接続することで、よ
 さらにクリッピングを抑えることが出来ます。以下は仕様書から直接引用した文章です：</p>
 
 <blockquote>
-  <p>(このノードは) 最も音量の高い部分を抑え、最も音量の低い部分を引き上げる。 (中略) 
+  <p>(このノードは) 最も音量の高い部分を抑え、最も音量の低い部分を引き上げる。 (中略)
  特に、非常に多くの独立したサウンドが同時に再生されるようなゲームや音楽のアプリケーションでは、
 信号のレベルを一定に保つことでクリッピングを避けることは重要である。</p>
 </blockquote>
@@ -489,7 +489,8 @@ compressor.connect(context.destination);
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     try {
-      context = new webkitAudioContext();
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+      context = new AudioContext();
     }
     catch(e) {
       alert("Web Audio API is not supported in this browser");

@@ -15,11 +15,11 @@
   var mainBG = $('section#content');
 
   function onResize () {
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
   }
 
   function onScroll (evt) {
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
   }
 
   function updateElements (yPos) {
@@ -74,7 +74,7 @@
 
   (function() {
 
-    updateElements(win.scrollY);
+    updateElements(win.pageYOffset);
 
     blob1.classList.add('force-show');
     blob2.classList.add('force-show');

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mutation Observer Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        text-align: center;
+      }
+      .rows > div {
+        background-color: #eee;
+        margin: 5px 0;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+
+    <button onclick="addNode()">Click here to add a DOM node</button>
+
+    <div class="rows">
+    </div>
+
+    <script>
+
+      var rows = document.querySelector('.rows'),
+          rowIndex = 0,
+          observer;
+
+      function nodeAdded(mutations) {
+        console.log("rows.childNodes.length", rows.childNodes.length);
+      }
+
+      function addNode(){
+        var row = document.createElement('div');
+        row.classList.add('row');
+        row.innerHTML = "Row " + (++rowIndex);
+        rows.appendChild(row);
+      }
+
+      // create and init mutation observer
+      observer = new WebKitMutationObserver(nodeAdded);
+      observer.observe(rows, { childList: true });
+
+    </script>
+
+  </body>
+  </html>

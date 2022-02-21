@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+        
+        <title>Racer</title>
+
+        <style>
+            body, html {
+                margin: 20px;
+                padding: 0;
+                background-color: #000;
+                position: absolute;
+            }
+            
+            * {
+                 position: absolute;
+            }
+			
+			#explode {
+				left: 100px;
+				top: 150px;
+				z-index: 10;
+			}
+			
+			.wrapper {
+				width: 60px;
+				height: 40px;
+				top: 80px;
+				left: 100px;
+			}
+			
+			#car {
+				width: 60px;
+				height: 40px;
+				background: url(img/car.png) 0 0 no-repeat;
+				background-size: 100%;
+			}
+			
+			.car-bounce {
+				-webkit-animation-name:car-bounce;
+				-webkit-animation-duration:0.5s;
+				-webkit-animation-fill-mode:backwards;
+				-webkit-animation-delay: 0.2s;
+			}
+
+			@-webkit-keyframes car-bounce {
+			    0%   { opacity: 0; -webkit-transform: scale(1.8); animation-timing-function:ease-in;  }
+			    37%  { opacity: 1; -webkit-transform: scale(1); animation-timing-function:ease-out; }
+			    55%  { -webkit-transform: scale(1.12); animation-timing-function:ease-in;  }
+			    73%  { -webkit-transform: scale(1); animation-timing-function:ease-out; }
+			    82%  { -webkit-transform: scale(1.04); animation-timing-function:ease-in;  }
+			    91%  { -webkit-transform: scale(1); animation-timing-function:ease-out; }
+			    96%  { -webkit-transform: scale(1.01); animation-timing-function:ease-in;  }
+			    100% { -webkit-transform: scale(1); }
+			}
+			
+			#crash {
+				width: 300px;
+				height: 250px;
+				top: -94px;
+				display: none;
+				left: -112px;
+				background: url(img/car-crash.png) 0 0 no-repeat;
+				
+			}
+			
+			.play-crash {
+				-webkit-animation-name:car-crash-row1, car-crash-row2, car-crash-row3, car-crash-row4, car-crash-row5;
+				-webkit-animation-duration:0.2s;
+				-webkit-animation-delay:0s, 0.2s, 0.4s, 0.6s, 0.8s;
+				-webkit-animation-timing-function: steps(5), steps(5), steps(5), steps(5), steps(5);
+				-webkit-animation-fill-mode: forwards;
+			}
+
+			@-webkit-keyframes car-crash-row1 {
+			    0%   	{ background-position: 0px 0px; }
+			    100% 	{ background-position: -1500px 0px; }
+			}
+
+			@-webkit-keyframes car-crash-row2 {
+			    0%   	{ background-position: 0px -250px; }
+			    100% 	{ background-position: -1500px -250px; }
+			}
+
+			@-webkit-keyframes car-crash-row3 {
+			    0%   	{ background-position: 0px -500px; }
+			    100% 	{ background-position: -1500px -500px; }
+			}
+
+			@-webkit-keyframes car-crash-row4 {
+			    0%   	{ background-position: 0px -750px; }
+			    100% 	{ background-position: -1500px -750px; }
+			}
+
+			@-webkit-keyframes car-crash-row5 {
+			    0%   	{ background-position: 0px -1000px; }
+			    100% 	{ background-position: -1500px -1000px; }
+			}
+        </style>
+		<script>
+			function Main(){
+				var timeout;
+				var button = document.getElementById('explode');
+				var car = document.getElementById('car');
+				var crash = document.getElementById('crash');
+				button.addEventListener('click', function(){
+					car.className = '';
+					car.style.display = 'none';
+					crash.className = 'play-crash';
+					crash.style.display = 'block';
+					setTimeout(function(){
+						car.className = 'car-bounce';
+						car.style.display = 'block';
+						crash.className = '';
+						crash.style.display = 'none';
+					}, 1000);
+				}, false);
+			}
+			
+			window.onload = Main;
+		</script>
+</head>
+<body>
+	<input id="explode" type="button" value="CRASH!" />
+	<div class="wrapper">
+		<div id="car"></div>
+		<div id="crash"></div>
+	</div>
+</body>
+</html>
+    

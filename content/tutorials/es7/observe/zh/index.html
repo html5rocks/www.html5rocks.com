@@ -1,0 +1,685 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block translator %}
+<div class="translator">
+    <strong>翻译：</strong> <a href="https://github.com/cloverzero">刘凯</a>
+    <strong>校对：</strong> <a href="https://github.com/leeyeh">李叶</a>，<a href="https://github.com/wayou">刘勇</a>，余尔威
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="toc-intro">介绍</h2>
+
+<p>一场革命正在来临。JavaScript增加了一个新机能，其将改变以往你对数据绑定的<em>所有认知</em>。它也将会改变当今的MVC框架实现监听数据模型编辑、更新行为的方法。那些关注属性监听的应用将会得到性能上的提升，你准备好了吗？</p>
+
+<p>好了，赶快进入正题吧。我很高兴地宣布，「<a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe()</a>」正式在 <a href="http://www.chromestatus.com/features/6147094632988672">Chrome 36</a> 稳定版中可用了。<em>【哇哦~此处应该有掌声】</em>.</p>
+
+<p><code>Object.observe()</code>，作为未来ECMAScript标准的一部分，是一个用于异步监听JavaScript对象变化的方法，并且无需使用额外的JavaScript库。它允许监听器接受一个按时间顺序排列的变更记录序列，这些变更记录描述了被监听对象所发生变化的内容的集合。</p>
+
+<pre class="prettyprint">
+// 假设我们这里有个数据模型
+var model = {};
+
+// 我们来对它进行监听
+Object.observe(model, function(changes){
+
+    // 这个异步回调函数将被执行
+    changes.forEach(function(change) {
+
+        // 我们知道了都发生了哪些变化
+        console.log(change.type, change.name, change.oldValue);
+    });
+});
+</pre>
+
+<p>数据模型发生的任何变化都会被记录下来：</p>
+
+<p><img src="image_0.png"  /></p>
+
+<p>通过<code>Object.observe()</code>我更喜欢称它为O.o()或Ooooooo)，你可以在<a href="http://bitworking.org/news/2014/05/zero_framework_manifesto">不使用任何</a>的前提下轻松实现双向数据绑定。</p>
+
+<p>当然这并不是说你不应该使用它们。对于那些业务逻辑复杂的大工程，这些框架还是非常有价值的。它们缩小了开发者的关注面，减少了需要维护的代码，并且固化了常见任务的实现模式。如果不需要，你也可以选择一些更小更具针对性的库，比如<a href="http://polymer-project.org">Polymer</a>（它已经是O.o()的受益者了）。</p>
+
+<p>即使你发现自己正重度依赖一些框架或MV*库，O.o()也有可能以一个更快更简单的实现改善他们的性能，并同时保证API不变。举个例子，去年Angular进行了一个监听模型变化的<a href="https://mail.mozilla.org/pipermail/es-discuss/2012-September/024978.html">测试</a>。在benchmark上，使用脏检查的话每次更新需要耗费40毫秒，而O.o()只花了1~2毫秒（足足快了20~40倍）。</p>
+
+<p>数据绑定不再需要一大堆的复杂代码，也意味着不再需要通过轮询来发现变化，因此也就意味着更长的电池续航！</p>
+
+<p>如果你已经爱上了O.o()，那么你可以跳到后面的<a href="#toc-intro-oo">特性介绍</a>，或继续看看它都解决了哪些问题。</p>
+
+<h2 id="toc-what-are-we-observing">我们都想要监听些什么？</h2>
+
+<p>当我们谈起数据监听时，通常是指观察一些特定的变化：</p>
+
+<ul>
+    <li><p>JavaScript原生对象的改变</p></li>
+    <li><p>属性的添加、变动、删除</p></li>
+    <li><p>数组元素的添加或移除</p></li>
+    <li><p>对象原型的改变</p></li>
+</ul>
+
+
+<h2 id="toc-importance">数据绑定的重要性</h2>
+
+<p>当你关注模型-视图的控制分离时，数据绑定就变得非常重要。HTML是一个很好的声明机制，但它完全是静态的。理想情况下，你希望只声明数据与DOM之间的关系，就能够让DOM保持最新。你将不再需要编写那些仅仅是在DOM和你的应用内部状态或服务器间进行数据交换的代码，从而节省大量的时间。</p>
+
+<p>如果你的用户界面较为复杂，你需要维护数据模型中的多个属性与页面中多个元素的关系，这时数据绑定的优势尤为明显。这在当今的单页应用中非常普遍。</p>
+
+<p>通过浏览器原生的数据监听，我们给予了JavaScript框架（还有你正在编写的小工具库）监听模型中数据变化的方法，且不用依赖我们现在正在使用的一些hack方法。</p>
+
+<h2 id="toc-world-look-like-today">现状是什么样的</h2>
+
+<p><strong>脏检查</strong></p>
+
+<p>你以前在哪见过数据绑定？好吧，如果你用过现代MV*库来构建你的网页应用（比如Angular，Knockout），你可能已习惯了将模型数据绑定到DOM上。我们来复习一下，这有个手机列表应用的例子，我们要把「phones」数组（在JS中定义的）中的每个「phone」的值绑定到一个列表项上，这样我们的数据和用户界面总能保持同步：</p>
+
+<pre class="prettyprint">
+&lt;html ng-app&gt;
+  &lt;head&gt;
+    ...
+    &lt;script src=&quot;angular.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;controller.js&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body ng-controller=&quot;PhoneListCtrl&quot;&gt;
+    &lt;ul&gt;
+      &lt;li ng-repeat=&quot;phone in phones&quot;&gt;
+        &#123;&#123;phone.name&#125;&#125;
+        &lt;p&gt;&#123;&#123;phone.snippet&#125;&#125;&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>下面是控制器的JS代码：</p>
+
+<pre class="prettyprint">
+var phonecatApp = angular.module('phonecatApp', []);
+
+phonecatApp.controller('PhoneListCtrl', function($scope) {
+  $scope.phones = [
+    {'name': 'Nexus S',
+     'snippet': 'Fast just got faster with Nexus S.'},
+    {'name': 'Motorola XOOM with Wi-Fi',
+     'snippet': 'The Next, Next Generation tablet.'},
+    {'name': 'MOTOROLA XOOM',
+     'snippet': 'The Next, Next Generation tablet.'}
+  ];
+});
+</pre>
+
+<p><a href="http://angular.github.io/angular-phonecat/step-2/app/">(Demo)</a></p>
+
+<p>一旦底层的模型数据发生变化，我们DOM中的列表就会相应更新。Angular是怎么做到的？它在底层进行着「脏检查」的工作。</p>
+
+<img src="image_1.png"/>
+
+<p>脏检查的基本思想是，一旦数据可能发生改变，库就要通过摘要循环或变化循环去检查是否发生了变化。在Angular中，一次摘要循环会检查所有需要监听的表达式，看是否发生了变化。它<a href="http://stackoverflow.com/questions/9682092/databinding-in-angularjs/9693933#9693933">知道</a>模型的前一个值是什么，当变化发生时，会触发一个「change」事件。对开发者来说，最大的好处莫过于你可以使用原生的JavaScript对象（用起来写起来都很爽）。而缺点就是它的算法比较糟糕，并且可能有很大的开销。</p>
+
+<img src="image_2.png"/>
+
+<p>该操作的开销与被监视的对象的数量是成正比的。我可以进行大量的脏检查，也可以找到一种方法，在数据「可能」发生改变时才触发脏检查。解决这个问题有很多很聪明的技巧，有些框架已经在使用了。但是否会有完美的方案还不好说。</p>
+
+<p>Web的生态系统应该有更多的能力去创新和改进它的声明机制，比如：</p>
+
+<ul>
+    <li>约束型模型系统</li>
+    <li>自动持久化系统（比如把变化数据保存在IndexedDB或LocalStorage中）</li>
+    <li>容器对象（Ember，Backbone）</li>
+</ul>
+
+<p><a href="http://www.slideshare.net/mixonic/containers-di">容器</a>对象是一些框架用来在内部保存数据的对象。它们有对数据的存取方法，这样它们就可以在你访问或者获取数据时，捕获到这一行为，然后在内部进行广播。它工作得很好。这套机制拥有相对不错的性能，以及良好的算法。下面举一个使用Ember容器对象的例子：</p>
+
+<pre class="prettyprint">
+// 容器对象
+MyApp.president = Ember.Object.create({
+  name: "Barack Obama"
+});
+
+MyApp.country = Ember.Object.create({
+  // 以「Binding」结尾的属性名是告诉Ember创建一个绑定属性，
+  // 绑定到persidentName属性。
+  presidentNameBinding: "MyApp.president.name"
+});
+
+// 在Ember处理完绑定后：
+MyApp.country.get("presidentName");
+// "Barack Obama"
+
+// 从服务器获取的数据需要进行转换
+// 与现有的代码结合起来非常困难
+</pre>
+
+<p>发现改变的开销与发生改变的对象的数量是成正比的。另一个问题是你现在正在使用一个不同类型的对象。总的来说你需要将从服务器获取到的数据转换为这类对象以便他们能够进行监视。</p>
+
+<p>对于现有的代码这种方式不能很好地进行整合，因为现有代码大部分都假设操作的是原生数据，而非这些特殊类型的对象。</p>
+
+<h2 id="toc-intro-oo">隆重推出Object.observe()</h2>
+
+<p>理想情况下，我们想要的是兼顾了双方优点的东西——一种能够监听原生数据对象（常规JavaScript对象）的方法，并且，不需要总是进行脏检查。它拥有良好的算法，并且能够很好地整合到平台中。这些都是<code>Object.observe()</code>将带给我们的。</p>
+
+<p>它允许我们监视一个对象，改变其属性，然后得到发生了什么变动。原理就说到这里，让我们看看代码！</p>
+
+<img src="image_3.png"/>
+
+<h3>Object.observe() 和 Object.unobserve()</h3>
+
+<p>我们来想象一下，这里有一个简单、原生的JavaScript对象来代表一个模型：</p>
+
+<pre class="prettyprint">
+// 数据模型可以是一个简单的原生对象
+var todoModel = {
+  label: 'Default',
+  completed: false
+};
+</pre>
+
+<p>我们可以指定一个回调函数来处理该对象随时可能发生的改变。</p>
+
+<pre class="prettyprint">
+function observer(changes){
+  changes.forEach(function(change, i){
+      console.log('what property changed? ' + change.name);
+      console.log('how did it change? ' + change.type);
+      console.log('whats the current value? ' + change.object[change.name]);
+      console.log(change); // 所有变化
+  });
+}
+</pre>
+
+<p>注意：当observer的回调函数被调用，被监视对象可能已经改变了多次，所以针对每次变化，新的值（每次改变后的值）和当前值（最终值）不是一回事。</p>
+
+<p>我们可以使用O.o()来监视这些变化，将被监视对象作为第一个参数，将回调函数作为第二个参数。</p>
+
+<pre class="prettyprint">
+Object.observe(todoModel, observer);
+</pre>
+
+<p>下面我们对Todos做些修改：</p>
+
+<pre class="prettyprint">
+todoModel.label = 'Buy some more milk';
+</pre>
+
+<p>看看控制台，我们得到了一些非常有用的信息！我们知道了哪个属性发生了改变，它是怎么改变的，它的新值是什么：</p>
+
+<p><img src="image_4.png"  /></p>
+
+<p>哇哦！再见吧，脏检查！你的墓碑上应该被刻上「Comic Sans」字体。让我们来改变另一个属性。这回是「completeBy」属性：</p>
+
+<pre class="prettyprint">
+todoModel.completeBy = '01/01/2014';
+</pre>
+
+<p>正如我们所见，又再次成功得到了变化的报告：</p>
+
+<p><img src="image_5.png"  /></p>
+
+<p>太棒了。要是我们删掉「completed」属性会怎么样：</p>
+
+<pre class="prettyprint">
+delete todoModel.completed;
+</pre>
+
+<p><img src="image_6.png"  /></p>
+
+<p>我们会看到，就像我们想的那样一个包含了本次删除信息的报告被返回，该属性的新值现在是「undefined」。所以，我们现在知道了你可以知道属性何时被添加，何时被删除。基本上，一个对象身上的属性集("new", "deleted", "reconfigured")以及它的原型链(_proto_)（都可以被我们侦听到）。</p>
+
+<p>任何监视系统都存在一个用于停止监听变化的方法。在这里，它叫「<code>Object.unobserve()</code>」。它与O.o()拥有相同的签名，调用方式如下：</p>
+
+<pre class="prettyprint">
+Object.unobserve(todoModel, observer);
+</pre>
+
+<p>下面我们看到，在执行了这行语句后，模型发生的变化就不再被报告出来了。</p>
+
+<p><img src="image_7.png"  /></p>
+
+<h3>指定感兴趣的变化</h3>
+
+<p>到现在为止我们已经对如何获取一个被监视对象发生变化的列表有了基础的了解。那么如果你只关心一个对象所有变化的一部分，而非全部，怎么办？每个人都需要垃圾邮件过滤器。监听器可以通过一个「accept list」来指定那些我们真正关心的变化类型。这个列表可以通过O.o()的第三个参数来指定：</p>
+
+<pre class="prettyprint">
+Object.observe(obj, callback, optAcceptList)
+</pre>
+
+<p>让我们来通过一个例子来展示如何使用它：</p>
+
+<pre class="prettyprint">
+// 和前面一样，一个简单的数据模型
+
+var todoModel = {
+  label: 'Default',
+  completed: false
+
+};
+
+
+// 然后我们指定一个回调函数用来接收产生的任何变化
+function observer(changes){
+  changes.forEach(function(change, i){
+    console.log(change);
+  })
+
+};
+
+// 这回我们监听的时候，指定一个包含我们关心的变更类型的数组
+
+Object.observe(todoModel, observer, ['delete']);
+
+// 不填写第三个参数，其默认值为固有类型
+
+todoModel.label = 'Buy some milk';
+
+// 注意这里没有任何变更被报告出来
+</pre>
+
+<p>理所当然的，当我们删除「label」属性时，这个类型的变化就被监听到了。</p>
+
+<pre class="prettyprint">
+delete todoModel.label;
+</pre>
+
+<p>如果你不指定这个「accept list」，它将默认监听固有类型（"add"，"update"，"delete"，"reconfigure"，"preventExtensions"（因为不可扩展对象的对象不能被监听））。</p>
+
+<h2 id="toc-notifications">通知</h2>
+
+<p>O.o()也有通知的概念。它们一点都不像手机上那些气人的玩意儿，但相当有用。通知与「<a href="https://developer.mozilla.org/en/docs/Web/API/MutationObserver">Mutation Observers</a>」类似。它们在微任务的结束时发生。在浏览器环境中，这几乎就是当前事件处理器的结束的时候。</p>
+
+<p>这个时间点非常好，因为这时一般正是一个工作单元刚刚完成，这样监听器就可以开始它的工作了。这是一个很好的回合制处理模型。</p>
+
+<p>一个使用了通知器的工作流有点像下图所示：</p>
+
+<p><img src="image_8.png"  /></p>
+
+<p>让我们来看个例子，当一个对象的属性发生get或set操作时，应该怎样使用通知器来自定义通知。注意看代码注释：</p>
+
+<pre class="prettyprint">
+// 定义一个简单模型
+var model = {
+    a: {}
+};
+
+// 一个独立变量，一会儿用于模型的getter方法
+var _b = 2;
+
+// 给「a」定义一个新属性「b」，并为「b」指定自定义的getter和setter
+Object.defineProperty(model.a, 'b', {
+    get: function () {
+        return _b;
+    },
+    set: function (b) {
+
+        // 一旦对「b」进行赋值，就会发出一个指定变化类型的通知。
+        // 这给了你很大的空间控制通知。
+        Object.getNotifier(this).notify({
+            type: 'update',
+            name: 'b',
+            oldValue: _b
+        });
+
+        // 将新的值在控制台中输出
+        console.log('set', b);
+
+        _b = b;
+    }
+});
+
+// 设置我们的监听器
+function observer(changes) {
+    changes.forEach(function (change, i) {
+        console.log(change);
+    })
+}
+
+// 开始监听model.a
+Object.observe(model.a, observer);
+</pre>
+
+<img src="image_9.png"/>
+
+<p>当属性值变化（「update」）时我们得到了报告。而其他的，视对象的实现选择报告（<code>notifier.notifyChange()</code>）。</p>
+
+<p>多年的Web开发经验告诉我们你会最先尝试同步过程，因为这对你的思维最简单。问题是他创造了一个从根本上很危险的处理模型。假设你在编写代码，然后说，更新这个模型的属性，你其实并不希望更新属性的过程引入一些代码，这些代码还能做任何它们想做的事。你运行一个函数时，过程和你想的一点都不一样，这肯定不理想。</p>
+
+<p>如果你是一个观察器，你肯定不想在一些变化还在进行时就被调用。也不想在变化还没有发生完全的非稳定情况下被叫去执行。这样只会得到错误的检测结果。如果需要经常忍受这样的不确定因素，一般来说，这是一个不怎么好用的模型。异步稍微难处理些，却是一种可以让你愉快结束一天工作的模型。</p>
+
+<p>这个问题的解决方案就是「综合变更记录」（synthetic change records）。</p>
+
+<h2 id="toc-synth-change-records">综合变更记录</h2>
+
+<p>基本来说，如果你想要拥有存取器或计算属性（译者注：Ember里有这个概念，英文原文为Computed Properties），那么当数值发生改变时进行通知就是你的责任。这会带来一些额外的工作，但它被设计为这个机制的一种一级特性，这类通知会与来自底层数据对象、属性的其他通知会被一起发出来。</p>
+
+<img src="image_10.png"/>
+
+<p>监视存取器和计算属性的问题可以通过「notifier.notiffy」解决——这也是O.o()的另一部分。大部分的监视系统都想要以某些手段发布新的值。有很多方法可以处理这个工作，O.o()不关注哪种方式才是「正确的」。计算属性应该是个存取器，当其内部状态（私有的）发生改变时进行通知。</p>
+
+<p>还是那句话，Web开发者应该期待出现一些库，更方便地实现通知与计算属性（并减少样板代码）。</p>
+
+<p>让我们来看下一个例子，这有个Circle类。这个Circle类有个半径属性。这次的例子中，半径是一个存取器，当数值发生改变时，它会自己通知自己。这个通知会连同其他变化通知一起发送给这个对象或其他对象。基本上，如果你想要在一个对象上实现合成属性或计算属性，你必须选择一个能让他们工作的策略。一旦你进行了选择，它将适配你的整个系统。</p>
+
+<p>跳过代码可以看到它在DevTools中的运行结果。</p>
+
+<pre class="prettyprint">
+function Circle(r) {
+  var radius = r;
+
+  var notifier = Object.getNotifier(this);
+  function notifyAreaAndRadius(radius) {
+    notifier.notify({
+      type: 'update',
+      name: 'radius',
+      oldValue: radius
+    })
+    notifier.notify({
+      type: 'update',
+      name: 'area',
+      oldValue: Math.pow(radius * Math.PI, 2)
+    });
+  }
+
+  Object.defineProperty(this, 'radius', {
+    get: function() {
+      return radius;
+    },
+    set: function(r) {
+      if (radius === r)
+        return;
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+
+  Object.defineProperty(this, 'area', {
+    get: function() {
+      return Math.pow(radius, 2) * Math.PI;
+    },
+    set: function(a) {
+      r = Math.sqrt(a/Math.PI);
+      notifyAreaAndRadius(radius);
+      radius = r;
+    }
+  });
+}
+
+function observer(changes){
+  changes.forEach(function(change, i){
+    console.log(change);
+  })
+}
+</pre>
+
+<img src="image_11.png"/>
+
+<h2 id="toc-accessor-props">存取器属性</h2>
+
+<p>这里对存取器属性进行一下快速说明。前面我们提到对于数据属性只有当值改变时才能够被监听到，但这不包括计算属性或存取器属性。原因是JavaScript没有存取器属性值变化的概念。存取器只是一组函数而已。</p>
+
+<p>如果给一个存取器赋值，那么JavaScript只是调用了这个方法，从它的视角来看什么变化也没有发生。他只是给了一段代码一次运行的机会。</p>
+
+<p>从上面给半径赋值为5的例子上，这个问题从语义上就很好理解了。我们应该能够知道到底发生了什么。这个确实是个未解决的问题。这个例子演示了为什么。任何一个系统都没有什么方法知道存取器方法的意图是什么，因为里面可以随便写任何代码。在这里可以做任何你想做的事。每次访问都会更新数值，因此询问它是否发生了改变没有太大的意义。</p>
+
+<h2 id="toc-single-callback-observers">使用一个回调监听多个对象</h2>
+
+<p>O.o()的另一个可能的模式是单回调监听器概念。它允许一个回调函数用来监听许多不同的对象。这个回调函数会在「微任务结束」（注意其与Mutation Observers的相似性）时接收到所有对象变化的完整集合。</p>
+
+<img src="image_12.png"/>
+
+<h2 id="toc-largescale">大规模变化</h2>
+
+<p>也许你正在开发一个非常非常庞大的应用，经常会发生规模庞大的变化。我们会希望对象能够以一种更紧凑的方式（用于替代广播一大堆属性变化的方式）来描述大量属性被改变的大型语义变化。</p>
+
+<p>O.o()通过两个特别的实用工具来帮助我们解决这个问题：<code>notiier.performChange()</code>和<code>notifier.notify()</code>，后者我们已经介绍过了。</p>
+
+<img src="image_13.png">
+
+<p>让我们通过一个例子，来看如何描述一个大规模变化。这里我们定义了一个「Thingy」对象，它包含了一些工具方法（multiply，increment，incrementAndMultiply）。一旦一个工具方法被调用，它将告知系统一大堆事情组合成了一个特殊类型的变化。</p>
+
+<p>举个例子：<code>notifier.performChange(‘foo’, performFooChangeFn);</code></p>
+
+<pre class="prettyprint">
+function Thingy(a, b, c) {
+  this.a = a;
+  this.b = b;
+}
+
+Thingy.MULTIPLY = 'multiply';
+Thingy.INCREMENT = 'increment';
+Thingy.INCREMENT_AND_MULTIPLY = 'incrementAndMultiply';
+
+
+Thingy.prototype = {
+  increment: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    // 告知系统一组结果组合成了一个特殊类型的变化
+    // notifier.performChange('foo', performFooChangeFn);
+    // notifier.notify('foo', 'fooChangeRecord');
+    notifier.performChange(Thingy.INCREMENT, function() {
+      this.a += amount;
+      this.b += amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT,
+      incremented: amount
+    });
+  },
+
+  multiply: function(amount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.MULTIPLY, function() {
+      this.a *= amount;
+      this.b *= amount;
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.MULTIPLY,
+      multiplied: amount
+    });
+  },
+
+  incrementAndMultiply: function(incAmount, multAmount) {
+    var notifier = Object.getNotifier(this);
+
+    notifier.performChange(Thingy.INCREMENT_AND_MULTIPLY, function() {
+      this.increment(incAmount);
+      this.multiply(multAmount);
+    }, this);
+
+    notifier.notify({
+      object: this,
+      type: Thingy.INCREMENT_AND_MULTIPLY,
+      incremented: incAmount,
+      multiplied: multAmount
+    });
+  }
+}
+
+</pre>
+
+<p>
+    然后，我们定义了两个监听器来监听这个对象：一个用来捕获所有的变化，另一个用来捕获我们定义的特殊类型的变化（Thingy.INCREMENT，ThingyMULTIPLY，Thingy.INCREMENT_AND_MULTIPLY）。
+</p>
+
+<pre class="prettyprint">
+var observer, observer2 = {
+    records: undefined,
+    callbackCount: 0,
+    reset: function() {
+      this.records = undefined;
+      this.callbackCount = 0;
+    },
+};
+
+observer.callback = function(r) {
+    console.log(r);
+    observer.records = r;
+    observer.callbackCount++;
+};
+
+observer2.callback = function(r){
+	console.log('Observer 2', r);
+}
+
+
+Thingy.observe = function(thingy, callback) {
+  // Object.observe(obj, callback, optAcceptList)
+  Object.observe(thingy, callback, [Thingy.INCREMENT,
+                                    Thingy.MULTIPLY,
+                                    Thingy.INCREMENT_AND_MULTIPLY,
+                                    'update']);
+}
+
+Thingy.unobserve = function(thingy, callback) {
+  Object.unobserve(thingy);
+}
+
+</pre>
+
+<p>现在我们可以和这个对象愉快的玩耍了。让我们来定义一个新的Thingy对象：</p>
+
+<pre class="prettyprint">
+var thingy = new Thingy(2, 4);
+</pre>
+
+<p>监听他，并且给它鼓捣点变化出来。天呐，太好玩了。好多小玩意儿！</p>
+
+<pre class="prettyprint">
+// 监听thingy
+Object.observe(thingy, observer.callback);
+Thingy.observe(thingy, observer2.callback);
+
+// 调用thingy暴露的方法
+thingy.increment(3);               // { a: 5, b: 7 }
+thingy.b++;                        // { a: 5, b: 8 }
+thingy.multiply(2);                // { a: 10, b: 16 }
+thingy.a++;                        // { a: 11, b: 16 }
+thingy.incrementAndMultiply(2, 2); // { a: 26, b: 36 }
+</pre>
+
+
+<img src="image_14.png"/>
+
+<p>&nbsp;</p>
+
+<p>所有在「perform function」里被执行的内容都被认为是「大规模的变更」。接收「大规模变更」的监听器只能接收到「大规模变更」的记录。一般监听器是无法接收到通过「perform function」造成的底层变化的。</p>
+
+<h2 id="toc-observing-arrays">监听数组</h2>
+
+<p>我们说了半天如何监听一个对象的变化，那数组呢？！好问题。当有人告诉我「好问题」时，我从来没有去听他们的答案，因为我正忙于夸奖自己问了一个这么好的问题。好吧，我离题了。我们也有个新方法给数组使用！</p>
+
+<p><code>Array.observe()</code>是用于处理自身的大规模变化的方法。举个例子：splice，unshift或任何隐式地改变了数组的长度的行为——就像「splice」这样，他内部调用了<code>notifier.performChange(“splice”,...)</code>。</p>
+
+<p>下面看个例子，这里我们监听了一个数组模型。并且当有任何底层数据的改变发生时我们会得到一个变化列表：</p>
+
+<pre class="prettyprint">
+var model = ['Buy some milk', 'Learn to code', 'Wear some plaid'];
+var count = 0;
+
+Array.observe(model, function(changeRecords) {
+  count++;
+  console.log('Array observe', changeRecords, count);
+});
+
+model[0] = 'Teach Paul Lewis to code';
+model[1] = 'Channel your inner Paul Irish';
+</pre>
+
+<img src="image_15.png"/>
+
+<h2 id="toc-performance">性能</h2>
+
+<p>考虑O.o()对计算性能的影响时，可以把它想作一种读取缓存。大致来说，当如下情况时缓存是非常好的选择（按重要程度排序）：</p>
+
+<ol>
+    <li>读取频率远大于写入频率。</li>
+    <li>能够创建缓存，通过增加常数时间复杂度的写入步骤换取读取时的算法性能提升。</li>
+    <li>写入时的固定延迟是可接受的。</li>
+</ol>
+
+<p>O.o()被设计用于第一种情况。</p>
+
+<p>脏检查需要保留一份你正在监听的数据的完整备份。这就意味着使用脏检查需要更多的内存，而使用O.o()是不需要的。脏检查，尽管是个还不错的过渡方案，从根本是个泄露的抽象（译者注：原文为「leaky abstraction」，直译为抽象泄露，由Joel Spolsky在其Blog中提出，指任何试图减少或隐藏复杂性的抽象，其实并不能完全屏蔽细节，试图被隐藏的复杂细节总是可能会泄漏出来），会带来不必要的复杂性。</p>
+
+<p>为什么？每当数据「可能」发生变化时，脏检查就必须执行。这没有什么特别好的方法能够解决这个问题，并且每种方案都有明显的缺点（举例来说，轮询就需要承担视觉效果上以及竞争条件上的风险）。脏检查还需要注册一个全局的监听器，其会产生内存泄露的风险，增加析构成本，这都是O.o()可以避免的。</p>
+
+<p>让我们来看一些数据。</p>
+
+<p>下面一组benchmark测试（可在<a href="https://github.com/Polymer/observe-js/tree/master/benchmark">GitHub</a>上看到）对脏检查和O.o()进行了对比。以图表的方式对比了不同监听对象集合数和变更数时的性能水平。</p>
+<p>总体结果上看，脏检查的性能与监听对象的数量成正比，而O.o()的性能与我们制造的变更数量成正比。</p>
+
+<strong>脏检查</strong>
+
+<img src="image_16.png"/>
+
+<strong>在Chrome上使用Object.observe()</strong>
+
+<img src="image_17.png"/>
+
+<h2 id="toc-polyfills">Object.observe()的Polyfill</h2>
+
+<p>很高兴O.o()已经可以在Chrome 36中使用了，但是在其它浏览器又如何呢？放心吧。Polymer的<a href="https://github.com/Polymer/observe-js">Observe-JS</a>是一个O.o()的polyfill，如果浏览器存在原生O.o()实现那么会直接使用它，否则就会使用其polyfill实现并且顺带提供了一些有用的语法糖。它创造了一个紧凑的世界，在里面整合了所有变更并且分发出去。。它提供了两个特别强大的东西：</p>
+
+<p>1) 你可以监听一个路径。意思就是你可以说，我要监听一个对象的「foo.bar.baz」，然后它就会在这个路径的值发生改变时告知你。如果这个路径不可达，它会认为这个值为undefined。</p>
+
+<p>举例监听一个对象路径的值：</p>
+
+<pre class="prettyprint">
+var obj = { foo: { bar: 'baz' } };
+
+var observer = new PathObserver(obj, 'foo.bar');
+observer.open(function(newValue, oldValue) {
+  // 报告obj.foo.bar变更后的值
+});
+</pre>
+
+<p>2) 数组发生拼接时会告知你。从一个数据得到另一个新数据时，数组拼接是这个过程中最小的操作单位。这是一种转换或数组的不同视图。它是你将旧状态迁移到新状态所做的工作的最小量。</p>
+
+<p>举例报告一个数组的变化，以最小拼接集合的形式：</p>
+
+<pre class="prettyprint">
+var arr = [0, 1, 2, 4];
+
+var observer = new ArrayObserver(arr);
+observer.open(function(splices) {
+  // arr中的元素发生改变时响应
+  splices.forEach(function(splice) {
+    splice.index; // 发生改变位置的索引值
+    splice.removed; // 被移除的元素，类型为数组
+    splice.addedCount; // 添加元素的数量
+  });
+});
+</pre>
+
+<h2 id="toc-frameworks">框架和Object.observe()</h2>
+
+<p>就像我们前面说的，在那些支持此特性的浏览器中，O.o()给了那些框架和库巨大的机会去改善他们数据绑定的性能。</p>
+
+<p>来自Ember的Yehuda Katz和Erik Bryn已经确认将在Ember近期的开发计划中添加O.o的支持。Angular的Misko Hervy写了一个<a href="https://docs.google.com/document/d/10W46qDNO8Dl0Uye3QX0oUDPYAwaPl0qNy73TVLjd1WI/edit">设计文档</a>指出Angular 2.0将改进变更探测的实现。他们的长期计划是当Object.observe()在Chrome稳定版落地后再使用，在这之前先使用他们自己的<a href="https://github.com/angular/watchtower.js/">Watchtower.js</a>作为变更探测方案。超~~期待。</p>
+
+<h2 id="toc-conclusions">结论</h2>
+
+<p>O.o()是现在Web平台上你已经可以使用的一项强大的新机能</p>
+
+<p>我们希望它能赶快在更多的浏览器中落地。使JavaScript框架能够提升访问原生对象监听的性能。以Chrome为目标浏览器开发的话，O.o已经在Chrome 36（及以上）可以使用了，并且不久后的Opera版本也会添加这个特性。</p>
+
+<p>因此，把它用起来吧，并且将Object.observe()介绍给其他的JavaScript框架的作者，告诉他们可以如何提升你的应用中数据绑定的性能的。那绝对令人兴奋的时代就在前方！</p>
+
+<h2 id="toc-resources">资料</h2>
+
+<ul>
+    <li><a href="http://wiki.ecmascript.org/doku.php?id=harmony:observe">Object.observe() on the Harmony wiki</a></li>
+    <li><a href="http://bocoup.com/weblog/javascript-object-observe/">Databinding with Object.observe() by Rick Waldron</a></li>
+    <li><a href="http://addyosmani.com/blog/the-future-of-data-binding-is-object-observe/">Everything you wanted to know about Object.observe() - JSConf</a></li>
+    <li><a href="http://georgestefanis.com/blog/2014/03/25/object-observe-ES7.html">Why Object.observe() is the best ES7 feature</a></li>
+</ul>
+
+<p><em>感谢Rafael Weinstein，Jake Archibald，Eric Bidelman，Paul Kinlan和Vivian Cromwell提供建议，进行检阅。</em></p>
+
+
+{% endblock %}

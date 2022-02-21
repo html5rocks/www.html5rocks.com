@@ -33,7 +33,7 @@ BackgroundIntensity.prototype.playPause = function() {
     // Stop all sources.
     for (var i = 0, length = this.sources.length; i < length; i++) {
       var src = this.sources[i];
-      src.noteOff(0);
+      src.stop(0);
     }
   } else {
     var targetStart = context.currentTime + 0.1;
@@ -59,7 +59,7 @@ BackgroundIntensity.prototype.setIntensity = function(normVal) {
   var x = value - leftNode;
   var gain1 = Math.cos(x * 0.5*Math.PI);
   var gain2 = Math.cos((1.0 - x) * 0.5*Math.PI);
-  console.log(gain1, gain2);
+  //console.log(gain1, gain2);
   // Set the two gains accordingly.
   this.gains[leftNode].gain.value = gain1;
   // Check to make sure that there's a right node.
@@ -81,5 +81,5 @@ BackgroundIntensity.prototype.playSound = function(index, targetTime) {
   // Save the source and gain node.
   this.sources[index] = source;
   this.gains[index] = gainNode;
-  source.noteOn(targetTime);
+  source.start(targetTime);
 }

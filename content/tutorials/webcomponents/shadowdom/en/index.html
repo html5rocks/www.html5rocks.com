@@ -36,7 +36,7 @@ span.unchanged * {
 {% endblock %}
 
 {% block iscompatible %}
-  return window.HTMLTemplateElement && HTMLElement.prototype.webkitCreateShadowRoot ? true : false;
+  return window.HTMLTemplateElement && HTMLElement.prototype.createShadowRoot;
 {% endblock %}
 
 {% block html5badge %}
@@ -49,7 +49,8 @@ span.unchanged * {
 
 {% block content %}
 
-<p>{% include "warning.html" %}</p>
+<p class="notice warning" style="text-align:center">
+This article describes an old version of Shadow DOM (v0). If you're interested in using Shadow DOM, check out our new article at developers.google.com, "<a href="https://developers.google.com/web/fundamentals/primers/shadowdom/">Shadow DOM v1: self-contained web components</a>". It covers everything in the newer Shadow DOM v1 spec shipping in Chrome 53, Opera, and Safari 10.</p>
 
 <h2 id="toc-introduction">Introduction</h2>
 
@@ -121,10 +122,7 @@ can also pick and choose which parts of Web Components to use. This
 tutorial shows you how to use Shadow DOM.
 </p>
 
-<p>
-Shadow DOM is currently only available from Chrome 25, which is why
-the API has a <code>webkit</code> prefix.
-</p>
+<p class="notice"><b>Note:</b> Shadow DOM is now available in Chrome 35+.</p>
 
 <h2 id="toc-hello-world">Hello, Shadow World</h2>
 
@@ -144,7 +142,7 @@ For example, if you had markup like this:
 &lt;button&gt;Hello, world!&lt;/button&gt;
 &lt;script&gt;
 var host = document.querySelector('button');
-<b>var root = host.webkitCreateShadowRoot();</b>
+<b>var root = host.createShadowRoot();</b>
 root.textContent = 'こんにちは、影の世界!';
 &lt;/script&gt;
 </pre>
@@ -159,7 +157,7 @@ function remove(selector) {
       function (node) { node.parentNode.removeChild(node); });
 }
 
-if (!HTMLElement.prototype.webkitCreateShadowRoot) {
+if (!HTMLElement.prototype.createShadowRoot) {
   remove('#ex1a');
   document.write('<img src="SS1.png" alt="Screenshot of a button with \'Hello, world!\' on it.">');
 }
@@ -170,13 +168,13 @@ if (!HTMLElement.prototype.webkitCreateShadowRoot) {
 <button id="ex1b">Hello, world!</button>
 <script>
 (function () {
-  if (!HTMLElement.prototype.webkitCreateShadowRoot) {
+  if (!HTMLElement.prototype.createShadowRoot) {
     remove('#ex1b');
     document.write('<img src="SS2.png" alt="Screenshot of a button with \'Hello, shadow world!\' in Japanese on it.">');
     return;
   }
   var host = document.querySelector('#ex1b');
-  var root = host.webkitCreateShadowRoot();
+  var root = host.createShadowRoot();
   root.textContent = 'こんにちは、影の世界!';
 })();
 </script>
@@ -187,20 +185,6 @@ Not only that, if JavaScript on the page asks what the button’s
 “こんにちは、影の世界!”, but “Hello, world!” because the DOM subtree
 under the shadow root is encapsulated.
 </p>
-
-<p>
-One rule of thumb, which is possibly being violated here, is that you
-shouldn’t put <em>content</em> in Shadow DOM. Content must be in the
-document to be accessible to screen readers, search engines,
-extensions and so on. Shadow DOM is for all of the semantically
-meaningless markup you need to create an attractive, usable
-widget. But the content should stay in the page.
-</p>
-
-<blockquote class="commentary talkinghead">
-Of course, we don’t enforce this; this is the web and you can do more
-or less what you like. Just don’t overdo it, people.
-</blockquote>
 
 <h2 id="toc-separation">Separating Content from Presentation</h2>
 
@@ -344,17 +328,17 @@ populate the shadow root:
 
 <pre class="prettyprint">
 &lt;script&gt;
-var shadow = document.querySelector('#nameTag').webkitCreateShadowRoot();
+var shadow = document.querySelector('#nameTag').createShadowRoot();
 var template = document.querySelector('#nameTagTemplate');
-shadow.appendChild(template.content);
-template.remove();
+var clone = document.importNode(template.content, true);
+shadow.appendChild(clone);
 &lt;/script&gt;
 </pre>
 
 <blockquote class="commentary talkinghead">
 Templates, like Shadow DOM, are an emerging
 standard. The <code>&lt;template&gt;</code> element is available in
-Chrome Canary. You can also populate a shadow root using familiar
+<a href="http://caniuse.com/#search=template" target="_blank">many modern browsers</a>. You can also populate a shadow root using familiar
 properties and methods
 like <span class="property">innerHTML</span>, <span class="method">appendChild</span>, <span class="method">getElementById</span>,
 and so on. This article is focused on Shadow DOM, so we won’t go
@@ -427,7 +411,7 @@ If we change the markup in the Shadow DOM to this:
 </pre>
 
 <p>
-if when the name tag is rendered, the content of the shadow host is
+When the name tag is rendered, the content of the shadow host is
 projected into the spot that the <code>&lt;content&gt;</code> element
 appears.
 </p>
@@ -507,12 +491,12 @@ function updateClicked(nameTagSelector, textBoxSelector) {
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex2b');
     return;
   }
 
-  var shadow = document.querySelector('#ex2bNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex2bNameTag').createShadowRoot();
   var template = document.querySelector('#ex2bNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -633,12 +617,12 @@ Now we've got a Japanese name tag:
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex3a');
     document.write('<img src="SS4.png" alt="A name tag with a watercolor painting of cherry blossoms on it.">');
     return;
   }
-  var shadow = document.querySelector('#ex3aNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex3aNameTag').createShadowRoot();
   var template = document.querySelector('#ex3aNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -701,6 +685,10 @@ and a shadow root which uses CSS selectors to select specific content:
 &lt;/div&gt;
 </pre>
 
+<p class="notice"><b>Note:</b> <span class="attribute">select</span> can only
+select elements which are immediate children of the host node. That is, you
+cannot select descendants (e.g.<code>select="table tr"</code>).</p>
+
 <p>
 The <code>&lt;div class="email"&gt;</code> element is matched by both
 the <code>&lt;content select="div"&gt;</code> and <code>&lt;content
@@ -734,12 +722,12 @@ address appear, and in what colors?
 <script>
 (function () {
   if (!window.HTMLTemplateElement ||
-      !HTMLElement.prototype.webkitCreateShadowRoot) {
+      !HTMLElement.prototype.createShadowRoot) {
     remove('#ex4a');
     document.write('<img src="SS5.png" alt="The rendered result. Bob’s email appears in yellow." id="ex4a">');
     return;
   }
-  var shadow = document.querySelector('#ex4aNameTag').webkitCreateShadowRoot();
+  var shadow = document.querySelector('#ex4aNameTag').createShadowRoot();
   var template = document.querySelector('#ex4aNameTagTemplate');
   shadow.appendChild(template.content);
   template.remove();
@@ -832,10 +820,7 @@ Those are the basics of Shadow DOM — you pass Shadow DOM 101! You can
 do more with Shadow DOM, for example, you can use multiple shadow on
 one shadow host, or nested shadows for encapsulation, or architect
 your page using Model-Driven Views (MDV) and Shadow DOM. And Web
-Components are more than just Shadow DOM. For example, using another
-part of Web Components called Custom Elements, you can set up Shadow
-DOM for widgets declaratively instead of having to write script to do
-it.
+Components are more than just Shadow DOM.
 </p>
 
 <p>
@@ -850,5 +835,9 @@ Fisher, Dimitri Glazkov, Alex Komoroske, Alex Russell,
 and <a href="/profiles/#paulirish">Paul Irish</a> for comments on
 earlier versions of this tutorial.
 </p>
+
+<script>
+HTMLElement.prototype.createShadowRoot = HTMLElement.prototype.createShadowRoot || HTMLElement.prototype.createShadowRoot;
+</script>
 
 {% endblock %}

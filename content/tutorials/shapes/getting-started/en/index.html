@@ -1,0 +1,390 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block content %}
+
+<p>For a long time, web designers have been forced to create within the constraints of the rectangle. Most content on the web is still trapped in simple boxes because most creative ventures into non-rectangular layout end in frustration. That is about to change with the introduction of CSS Shapes, available starting with Chrome 37.</p>
+CSS Shapes allow web designers to wrap content around custom paths, like circles, ellipses and polygons, thus breaking free from the constraints of the rectangle.</p>
+
+<p>Shapes can be defined manually or they can be inferred from images.</p>
+
+<p>Let&#39;s look at a very simple example.</p>
+
+<p>Perhaps you&#39;ve been as naïve as me when first floating an image with transparent parts expecting the content to wrap and fill the gaps, only to be disappointed by the rectangular wrap shape persisting around the element. CSS Shapes can be used to solve this problem.</p>
+
+<p><img src="espresso.jpg" alt="Extracting a shape from an image"></p>
+
+<pre class="prettyprint">
+&lt;img class=”element” src=”image.png” /&gt;
+&lt;p&gt;Lorem ipsum…&lt;/p&gt;
+
+&lt;style&gt;
+.element{
+  shape-outside: url(image.png);
+  shape-image-threshold: 0.5;
+  float: left;
+}
+&lt;/style&gt;
+</pre>
+
+<p>The <code>shape-outside: url(image.png)</code> CSS declaration tells the browser to extract a shape from the image.</p>
+
+<p>The <code>shape-image-threshold</code> property defines the minimum opacity level of pixels that will be used to create the shape. Its value must be in the range between <code>0.0</code> (fully transparent) and <code>1.0</code> (fully opaque). So, <code>shape-image-threshold: 0.5</code> means that only pixels with opacity 50% and above will be used to create the shape.</p>
+
+<p>The <code>float</code> property is key here. While the <code>shape-outside</code> property defines the shape of the area around which content will wrap, without the float, you won&#39;t see the effects of the shape.</p>
+
+<p>Elements have a float area on the opposite side of their <code>float</code> value. For example, if an element with a coffee cup image is being floated left, the float area will be created to the right of the cup. Even though you can engineer an image with gaps on both sides, content will only wrap around the shape on the opposite side designated by the float property, left or right, never both.</p>
+
+<p>In the future, it will be possible to use <code>shape-outside</code> on elements which are not floated with the introduction <a href="#toc-exclusions-disambiguation">CSS Exclusions</a>.</p>
+
+<h2 id="toc-manual-shapes">Creating shapes manually</h2>
+
+<p>Beyond extracting shapes from images, you can also code them manually. You can choose from a few functional values to create shapes: <code>circle()</code>, <code>ellipse()</code>, <code>inset()</code> and <code>polygon()</code>. Each shape function accepts a set of coordinates and it is paired with a reference box which establishes the coordinate system. More about reference boxes in a moment.</p>
+
+<h2 id="toc-circle">The circle() function</h2>
+
+<p><img src="circle.png" alt="Illustration of the circle() shape value"></p>
+
+<p>The full notation for a circle shape value is <code>circle(r at cx cy)</code> where <code>r</code> is the radius of the circle, while <code>cx</code> and <code>cy</code> are coordinates of the circle center on the X-axis and Y-axis. The coordinates for the circle center are optional. If you omit them, the center of the element (the intersection of its diagonals) will be used as the default.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(50%);
+  width: 300px;
+  height: 300px;
+  float: left;
+}
+</pre>
+
+<p>In the example above, content will wrap around the outside of a circular path. The single argument <code>50%</code> specifies the radius of the circle, which, in this specific case, amounts to half of the element&#39;s width or height. Changing the dimensions of the element will influence the radius of the circle shape. This is a basic example of how CSS Shapes can be responsive.</p>
+
+<p>Before going further, a quick aside: it is important to remember that CSS Shapes influence only the shape of the float area around an element. If the element has a background, that will not be clipped by the shape. To achieve that effect, you must use properties from <a target="_blank" href="http://www.html5rocks.com/en/tutorials/masking/adobe/">CSS Masking</a> - either <a target="_blank" href="http://docs.webplatform.org/wiki/css/properties/clip-path">clip-path</a> or <a target="_blank" href="http://docs.webplatform.org/wiki/css/properties/mask-image">mask-image</a>. The <code>clip-path</code> property comes in very handy because it follows the same notation as CSS Shapes, so you can reuse values.</p>
+
+<p><img src="circle-clip-path.png" alt="Illustration of `circle()` shape + clip-path"></p>
+
+<p>Illustrations throughout this document use clipping to highlight the shape and help you understand the effects.</p>
+
+<p>Back to the circle shape.</p>
+
+<p>When using percentages for the circle radius, the value is actually computed with a slightly more complex <a target="_blank" href="http://www.w3.org/TR/css-shapes/#funcdef-circle">formula</a>: sqrt(width^2 + height^2) / sqrt(2). It&#39;s useful to understand this because it will help you imagine what the resulting circle shape will be if the element&#39;s dimensions are not equal.</p>
+
+<p>All CSS unit types can be used in shape function coordinates &mdash; px, em, rem, vw, vh, and so forth. You can pick the one which is flexible or rigid enough for your needs.</p>
+
+<p>You can adjust the circle&#39;s position by setting explicit values for the coordinates of its center.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(50% at 0 0);
+}
+</pre>
+
+<p>This positions the circle center at the origin of the coordinate system. What is the coordinate system? This is where we introduce reference boxes.</p>
+
+<h2 id="toc-reference-boxes">Reference boxes for CSS Shapes</h2>
+
+<p>The reference box is a virtual box around the element, which establishes the coordinate system used to draw and position the shape. The origin of the coordinate system is at its upper-left corner with the X-axis pointing to the right and the Y-axis pointing down.</p>
+
+<p><img src="coordinate-system.png" alt="Coordinate system for CSS Shapes"></p>
+
+<p>Remember that <code>shape-outside</code> alters the shape of the float area around which content will wrap. The float area extends to the outer edges of the box defined by the <code>margin</code> property. This is called the <code>margin-box</code> and it is the default reference box for a shape if none is explicitly mentioned.</p>
+
+<p>The following two CSS declarations have identical results:</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(50% at 0 0);
+  /* identical to: */
+  shape-outside: circle(50% at 0 0) margin-box;
+}
+</pre>
+
+<p>We have not yet set a margin on the element. At this point it is safe to assume that the origin of the coordinate system and the circle center are at the upper-left corner of the element&#39;s content area. This changes when you do set a margin:</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(50% at 0 0) margin-box;
+  margin: 100px;
+}
+</pre>
+
+<p>The origin of the coordinate system now lies outside the element&#39;s content area (100px up and 100px left), as does the circle center. The computed value of the circle radius also grows to account for the increased surface of the coordinate system established by the <code>margin-box</code> reference box.</p>
+
+<p><img src="reference-box-margin-box.png" alt="Margin-box coordinate system with and without margin"></p>
+
+<p>There are a few reference box options to choose from: <code>margin-box</code>, <code>border-box</code>, <code>padding-box</code> and <code>content-box</code>. Their names imply their boundaries. We previously explained the <code>margin-box</code>. The <code>border-box</code> is constrained by the outer edges of the element&#39;s borders, the <code>padding-box</code> is constrained by the element&#39;s padding, while the <code>content-box</code> is identical to the actual surface area used by the content within an element.</p>
+
+<p><img src="reference-box-all.png" alt="Illustration of all reference boxes"></p>
+
+<p>Only one reference box can be used at a given time with a <code>shape-outside</code> declaration. Each reference box will influence the shape in a different and sometimes subtle way. There is another article which delves deeper and helps you <a target="_blank" href="http://razvancaliman.com/writing/css-shapes-reference-boxes">understand reference boxes for CSS Shapes</a>.</p>
+
+<h2 id="toc-ellipse">The ellipse() function</h2>
+
+<p><img src="ellipse.png" alt="Illustration of ellipse() shape value"></p>
+
+<p>Ellipses look like squished circles. They are defined as <code>ellipse(rx ry at cx cy)</code>, where <code>rx</code> and <code>ry</code> are the radii for the ellipse on the X-axis and Y-axis, while <code>cx</code> and <code>cy</code> are the coordinates for the center of the ellipse.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: ellipse(150px 300px at 50% 50%);
+  width: 300px;
+  height: 600px;
+}
+</pre>
+
+<p>Percentage values will be computed from the dimensions of the coordinate system. No funny maths required here. You can omit the coordinates for the ellipse center and they will be inferred from the center of the coordinate system.</p>
+
+<p>Radii on the X and Y axes may also be defined with keywords: <code>farthest-side</code> yields a radius equal to the distance between the ellipse center and the side of the reference box farthest away from it, while <code>closest-side</code> means the exact opposite &mdash; use the shortest distance between the center and a side.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: ellipse(closest-side farthest-side at 50% 50%);
+  /* identical to: */
+  shape-outside: ellipse(150px 300px at 50% 50%);
+  width: 300px;
+  height: 600px;
+}
+</pre>
+
+<p>This may come in handy when the element&#39;s dimensions (or the reference box) may change in unpredictable ways, but you want the ellipse shape to adapt.</p>
+
+<p>The same <code>farthest-side</code> and <code>closest-side</code> keywords can also be used for the radius in the <code>circle()</code> shape function.</p>
+
+<h2 id="toc-polygon">The polygon() function</h2>
+
+<p><img src="spoon.jpg" alt="Illustration of polygon() shape value"></p>
+
+<p>If circles and ellipses are too limiting, the polygon shape function opens up a world of options. The format is <code>polygon(x1 y1, x2 y2, ...)</code> where you specify pairs of x y coordinates for each vertex (point) of a polygon. The minimum number of pairs to specify a polygon is three, a triangle.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: polygon(0 0, 0 300px, 300px 600px);
+  width: 300px;
+  height: 600px;
+}
+</pre>
+
+<p>Vertices are placed on the coordinate system. For responsive polygons you can use percentage values for some or all of the coordinates.</p>
+
+<pre class="prettyprint">
+.element{
+  /* polygon responsive to font-size*/
+  shape-outside: polygon(0 0, 0 100%, 100% 100%);
+  width: 20em;
+  height: 40em;
+}
+</pre>
+
+<p>There is an optional <code>fill-rule</code> parameter, <a target="_blank" href="http://www.w3.org/TR/SVG/painting.html#FillRuleProperty">imported from SVG</a>, which instructs the browser how to consider the “insideness” of a polygon in case of self-intersecting paths or enclosed shapes. Joni Trythall explains very well <a target="_blank" href="http://www.sitepoint.com/understanding-svg-fill-rule-property/">how the fill-rule property works</a> in SVG. If not defined, the <code>fill-rule</code> defaults to <code>nonzero</code>.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: polygon(0 0, 0 100%, 100% 100%);
+  /* identical to: */
+  shape-outside: polygon(nonzero, 0 0, 0 100%, 100% 100%);
+}
+</pre>
+
+<h2 id="toc-inset">The inset() function</h2>
+
+<p>The <code>inset()</code> shape function allows you create rectangular shapes around which to wrap content. This might sound counter-intuitive considering the initial premise that CSS Shapes free web content from simple boxes. It may very well be. I have yet to find a use case for <code>inset()</code> which isn&#39;t already achievable with floats and margins or with a <code>polygon()</code>. Though <code>inset()</code> does provide a more readable expression for rectangular shapes than <code>polygon()</code>.</p>
+
+<p>The full notation for an inset shape function is <code>inset(top right bottom left border-radius)</code>. The first four position arguments are offsets inwards from the element&#39;s edges. The last argument is the border radius for the rectangular shape. It is optional, so you can leave it out. It follows the <code>border-radius</code> shorthand notation you already use in CSS.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: inset(100px 100px 100px 100px);
+  /* yields a rectangular shape which is 100px inset on all sides */
+  float: left;
+}
+</pre>
+
+<h2 id="toc-shapes-from-reference-boxes">Creating shapes from reference-boxes</h2>
+
+<p>If you don&#39;t specify a shape function to the <code>shape-outside</code> property, you can allow the browser to derive a shape from the element&#39;s reference box. The default reference box is <code>margin-box</code>. Nothing exotic so far, that&#39;s how floats already work. But applying this technique, you can reuse the geometry of an element. Let&#39;s look at the <code>border-radius</code> property.</p>
+
+<p>If you use it to round the corners of a floated element, you get the clipping effect, but the float area remains rectangular. Add <code>shape-outside: border-box</code> to wrap around the contour created by the <code>border-radius</code>.</p>
+
+<p><img src="border-radius-shape.png" alt="Extracting a shape from an element&#39;s border-radius using the border-box reference box"></p>
+
+<pre class="prettyprint">
+.element{
+  border-radius: 50%;
+  shape-outside: border-box;
+  float: left;
+}
+</pre>
+
+<p>Of course, you can use all the reference boxes in this manner. Here&#39;s another use for derived shapes &mdash; offset pull-quotes.</p>
+
+<p><img src="pull-quote.png" alt="Creating an offset pull-quote using the content-box reference box"></p>
+
+<p>It is possible to achieve the offset pull-quote effect by using only float and margin properties. But that requires you to position the quote element in the HTML tree at the point you want it to render.</p>
+
+<p>Here&#39;s how to achieve the same offset pull-quote effect with added flexibility:</p>
+
+<pre class="prettyprint">
+.pull-quote{
+  shape-outside: content-box;
+  margin-top: 200px;
+  float: left;
+}
+</pre>
+
+<p>We explicitly set the <code>content-box</code> reference box for the shape&#39;s coordinate system. In this case, the amount of content in the pull-quote defines the shape around which outside content will wrap. The <code>margin-top</code> property is used here to position (offset) the pull-quote, regardless of its position in the HTML tree.</p>
+
+<h2 id="toc-shape-margin">Shape margin</h2>
+
+<p>You&#39;ll notice that wrapping content around a shape can make it rub too closely against the element. You can add spacing around the shape with the <code>shape-margin</code> property.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(40%);
+  shape-margin: 1em;
+  float: left;
+}
+</pre>
+
+<p>The effect is similar to what you&#39;re used to from using the regular <code>margin</code> property, but the <code>shape-margin</code> affects only the space around <code>shape-outside</code> value. It will add spacing around the shape only if there is room for it in the coordinate system. That&#39;s why in the example above the circle radius is set to 40%, not 50%. If the radius was set to 50%, the circle would have taken up all the space in the coordinate system leaving no room for the effect of <code>shape-margin</code>. Remember, the shape is ultimately constrained to the element’s <code>margin-box</code> (the element plus its surrounding <code>margin</code>). If the shape is larger and overflows, it will be clipped to the <code>margin-box</code> and you will end up with a rectangular shape.</p>
+
+<p>It&#39;s important to understand that <code>shape-margin</code> accepts only a single positive value. It does not have a long-hand notation. What is a shape-margin-top for a circle, anyway?</p>
+
+<h2 id="toc-animating-shapes">Animating shapes</h2>
+
+<p>You can mix CSS shapes with many other CSS features, such as transitions and animations. Though, I must stress that users find it very annoying when text layout changes while they&#39;re reading. Pay close attention to the experience if you do decide in favor of animating shapes.</p>
+
+<p>You can animate the radii and centers for <code>circle()</code> and <code>ellipse()</code> shapes as long as they&#39;re defined in values that the browser can interpolate. Going from <code>circle(30%)</code> to <code>circle(50%)</code> is possible. However, animating between <code>circle(closest-side)</code> to <code>circle(farthest-side)</code> will choke the browser.</p>
+
+<pre class="prettyprint">
+.element{
+  shape-outside: circle(30%);
+  transition: shape-outside 1s;
+  float: left;
+}
+
+.element:hover{
+  shape-outside: circle(50%);
+}
+</pre>
+
+<p><img src="circle-animation.gif" alt="GIF of animated circle"></p>
+
+<p>More interesting effects can be achieved when animating <code>polygon()</code> shapes, with the important note that the polygon must have the same number of vertices between the two animation states. The browser can&#39;t interpolate if you add or remove vertices.</p>
+
+<p>One trick is to add the maximum amount of vertices you need and position them clustered together in the animation state where you want fewer perceived edges to the shape.</p>
+
+<pre class="prettyprint">
+.element{
+  /* four vertices (looks like rectangle) */
+  shape-outside: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  transition: shape-outside 1s;
+}
+
+.element:hover{
+  /* four vertices, but second and third overlap (looks like triangle) */
+  shape-outside: polygon(0 0, 100% 50%, 100% 50%, 0 100%);
+}
+</pre>
+
+<p><img src="triangle-animation.gif" alt="GIF of animated triangle"></p>
+
+<h2 id="toc-inside-shape">Wrapping content inside a shape</h2>
+
+<p><img src="alice-screenshot.jpg" alt="Screenshot of Alice in Wonderland demo using CSS Shapes to wrap content"></p>
+
+<p>The initial draft of the CSS Shapes specification included a <code>shape-inside</code> property which allowed you to wrap content inside of a shape. There were even implementations in Chrome and Webkit for a while. But wrapping arbitrarily-positioned content inside a custom path requires much more effort and research to cover all possible scenarios and avoid bugs. That&#39;s why the <code>shape-inside</code> property has been deferred to <a target="_blank" href="http://dev.w3.org/csswg/css-shapes-2/">CSS Shapes Level 2</a> and implementations for it have been withdrawn.</p>
+
+<p>However, with some effort and a bit of compromise, you can still achieve the effect of wrapping content inside a custom shape. The hack is to use two floated elements with <code>shape-outside</code>, positioned at opposite sides of a container. The compromise is that you have to use one or two empty elements which have no semantic meaning, but serve as the struts to create the illusion of a shape inside.</p>
+
+<pre class="prettyprint">
+&lt;div&gt;
+  &lt;div class=&quot;left-shape&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;right-shape&quot;&gt;&lt;/div&gt;
+
+  Lorem ipsum...
+&lt;/div&gt;
+</pre>
+
+<p>The position of the <code>.left-shape</code> and <code>.right-shape</code> strut elements at the top of the container is important because they will be floated to the left and to right in order to flank the content.</p>
+
+<pre class="prettyprint">
+.left-shape{
+  shape-outside: polygon(0 0, ...);
+  float: left;
+  width: 50%;
+  height: 100%;
+}
+
+.right-shape{
+  shape-outside: polygon(50% 0, ...);
+  float: right;
+  width: 50%;
+  height: 100%;
+}
+</pre>
+
+<p><img src="shape-inside-workaround.jpg" alt="Illustration of workaround for shape-inside for Alice demo"></p>
+
+<p>This styling makes the two floated struts take up all the space within the element, but the <code>shape-outside</code> properties carve out space for the rest of the content.</p>
+
+<p>If CSS Shapes are not supported by the browser, this will yield ugly effects by pushing all of the content down. That&#39;s why it&#39;s important to use the feature in a progressively enhanced manner.</p>
+
+<p>In the earlier shape animation examples, you&#39;ll notice that text shifting around can be bothersome. Not all use cases warrant an animated shape. But you can animate other properties which interact with CSS Shapes to add effect where it makes sense.</p>
+
+<p>In the <a target="_blank" href="http://adobe-webplatform.github.io/Demo-for-Alice-s-Adventures-in-Wonderland">Alice in Wonderland</a> demonstration of CSS Shapes, we used the scroll position to change the top margin of the content. The text is squeezed between two floated elements. As it moves down, it has to relayout according to the <code>shape-outside</code> of the two floated elements. This gives the impression that the text is going down the rabbit hole and it adds to the storytelling experience. Borderline gratuitous? Maybe. But it does look cool.</p>
+
+<p>Because the text layout is done natively by the browser, the performance is better than using a JavaScript solution. But changing the margin-top on scroll does trigger lots of relayout and paint events, and that may noticeably reduce performance. Use with caution! However, using CSS Shapes without animating them does not come with a perceivable performance hit.</p>
+
+<h2 id="toc-progressive-enhancement">Progressive enhancement</h2>
+
+<p>Start off by assuming that the browser does not have CSS Shapes support and build up on that when you do detect the feature. <a target="_blank" href="http://modernizr.com/">Modernizr</a> is a good solution to do feature detection and there is a test for CSS Shapes in the <a target="_blank" href="http://modernizr.com/download/#-css_shapes">&quot;Non-core detects&quot;</a> section.</p>
+
+<p>Some browsers provide feature detection in CSS via the <code>@supports</code> rule without the need for external libraries. Google Chrome, which also supports CSS Shapes, understands the <code>@supports</code> rule. This is how you use it to progressively enhance:</p>
+
+<pre class="prettyprint">
+.element{
+  /* styles for all browsers */
+}
+
+@supports (shape-outside: circle(50%)){
+  /* styles only for browsers which support CSS Shapes */
+  .element{
+    shape-outside: circle(50%);
+  }
+}
+</pre>
+
+<p><a target="_blank" href="https://twitter.com/leaverou">Lea Verou</a> has written more about <a target="_blank" href="http://www.creativebloq.com/css3/how-use-supports-rule-your-css-11410545">how to use the CSS @supports rule</a>.</p>
+
+<h2 id="toc-exclusions-disambiguation">Disambiguation from CSS Exclusions</h2>
+
+<p>What we know today as CSS Shapes used to be called CSS Exclusions and Shapes in the early days of the spec. The switch in naming might seem as a nuance, but it is actually very important. <a target="_blank" href="http://dev.w3.org/csswg/css-exclusions/">CSS Exclusions</a>, now a separate spec, enables wrapping content around elements positioned arbitrarily, without the need for a float property. Imagine wrapping content around an absolutely-positioned element; that&#39;s a use case for CSS Exclusions. CSS Shapes just define the path around which the content will wrap.</p>
+
+<p>So, shapes and exclusions are not the same thing, but they do complement each other. CSS Shapes are available in browsers today, while CSS Exclusions are not yet implemented with shapes interaction.</p>
+
+<h2 id="toc-tools">Tools for working with CSS Shapes</h2>
+
+<p>You can create paths in classic image authoring tools, but none of them, at the time of this writing, exports the required syntax for CSS Shapes values. Even if they did, working like that wouldn&#39;t be too practical.</p>
+
+<p>CSS Shapes are meant to be used in the browser, where they react to other elements on the page. It&#39;s very useful to visualize the effects of editing the shape on the content which surrounds it. There are a few tools to help you with this workflow:</p>
+
+<p><strong>Brackets</strong>: The <a target="_blank" href="http://blog.brackets.io/2014/04/17/css-shapes-editor/">CSS Shapes Editor extension for Brackets</a> uses the code editor&#39;s live preview mode to overlay an interactive editor for editing shape values.</p>
+
+<p><strong>Google Chrome</strong>: The <a target="_blank" href="https://chrome.google.com/webstore/detail/css-shapes-editor/nenndldnbcncjmeacmnondmkkfedmgmp">CSS Shapes Editor extension for Google Chrome</a> extends the browser&#39;s Developer Tools with controls to create and edit shapes. It places an interactive editor on top of the selected element.</p>
+
+<p>The inspector in Google Chrome has built-in support for highlighting shapes. Hover over an element with a <code>shape-outside</code> property and it will light up to illustrate the shape.</p>
+
+<p><strong>Shapes from images</strong>: If you prefer to generate images and have the browser extract shapes from them, Rebecca Hauck has written a good <a target="_blank" href="http://blogs.adobe.com/webplatform/2014/03/11/add-shape-and-depth-to-your-layout-with-photoshop-and-css-shapes/">tutorial for Photoshop</a>.</p>
+
+<p><strong>Polyfill</strong>: Google Chrome is the first major browser to ship CSS Shapes. There is upcoming support for the feature on Apple&#39;s iOS 8 and Safari 8. Other browser vendors may consider it in the future. Until then, there is a <a target="_blank" href="https://github.com/adobe-webplatform/css-shapes-polyfill">CSS Shapes polyfill</a> to provide basic support.</p>
+
+<h2 id="toc-conclusion">Conclusion</h2>
+
+<p>In a web where content is mostly trapped in simple boxes, CSS Shapes provide a way to create expressive layout, bridging the fidelity gap between web and print design. Of course, shapes can be abused and create distractions. But, when applied with taste and good judgement, shapes can enhance the content presentation and focus the user’s attention in a way which is unique to them.</p>
+
+<p>I leave you with a <a target="_blank" href="https://www.behance.net/collection/25035325/Shapes">collection of work</a> by others, mostly from print, which demonstrates interesting uses for non-rectagular layout. I hope this inspires you to try CSS Shapes and experiment with new design ideas.</p>
+
+<p>Many thanks to Pearl Chen, Alan Stearns and Zoltan Horvath for reviewing this article and providing valuable insight.</p>
+
+{% endblock %}

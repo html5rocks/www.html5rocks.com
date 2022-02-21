@@ -1,0 +1,683 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+
+{% block head %}
+<style>
+label.bad, label.good, label.sortof {
+  padding: 4px;
+  line-height: 1.7;
+  border-radius: 50%;
+  color: white;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  -webkit-transform: rotateZ(90deg);
+  -moz-transform: rotateZ(90deg);
+  -ms-transform: rotateZ(90deg);
+  -o-transform: rotateZ(90deg);
+  transform: rotateZ(90deg);
+  box-shadow: -2px 2px 3px 3px rgba(0, 0, 0, 0.25) inset;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+}
+label.good::after,
+label.bad::after,
+label.sortof::after {
+  position: relative;
+  left: 2px;
+  top: -5px;
+}
+label.bad {
+  background-color: red;
+}
+label.bad::after {
+  content: ':(';
+}
+label.good {
+  background-color: green;
+}
+label.good::after {
+  content: ':)';
+}
+label.sortof {
+  background-color: rgb(230, 190, 32);
+  line-height: 1.8;
+}
+label.sortof::after {
+  content: ':|';
+}
+button a {
+  color: inherit !important;
+}
+.centered {
+  text-align: center;
+}
+figure img {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+article.tutorial section {
+  overflow: visible;
+}
+.talkinghead:before {
+  background-image: url(/static/images/profiles/75/ericbidelman.75.png);
+  background-position: 0px 0px !important;
+}
+/*blockquote:not(.talkinghead) {
+  background: rgb(238, 238, 238);
+  padding: 1px 15px;
+  position: relative;
+}*/
+/*blockquote:not(.talkinghead):before {
+  content: '“';
+  top: -25px;
+  left: -15px;
+}
+blockquote:not(.talkinghead):after {
+  content: '”';
+  right: -5px;
+  bottom: -55px;
+}
+blockquote:not(.talkinghead):before,
+blockquote:not(.talkinghead):after {
+  font-size: 75px;
+  position: absolute;
+  color: rgb(204, 204, 204);
+}
+*/
+
+/*
+.tutorial table td,
+.tutorial table th {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+.tutorial table th {
+  background: #222;
+  color: white;
+  padding: 10px;
+  font-weight: 600;
+}*/
+
+.disabledemos .demoarea {
+  display: none !important;
+}
+.demoarea {
+  margin-top: 20px;
+}
+.demoarea {
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #000;
+  display: inline-block;
+  position: relative;
+}
+.demoarea:before {
+  content: 'Live demo:';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+</style>
+{% endblock %}
+
+{% block iscompatible %}
+  return 'import' in document.createElement('link');
+{% endblock %}
+
+{% block html5badge %}
+<!-- Your HTML5 badge (tech class icons used in the article) goes here -->
+{% endblock %}
+
+{% block share_image %}
+<!--<meta itemprop="image" content="images/your_social_sharing_img.png">-->
+{% endblock %}
+
+{% block translator %}
+<div class="translator">
+  <strong>翻訳：</strong> <a href="/profiles/#agektmr">Eiji Kitamura</a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<h2 id="why">なぜ imports が必要なのか？</h2>
+
+<p>ウェブ上で様々なリソースを読み込みたいとします。JavaScript であれば <code>&lt;script src&gt;</code>、CSS なら <code>&lt;link rel="stylesheet"&gt;</code>、画像なら <code>&lt;img&gt;</code>、動画なら <code>&lt;video&gt;</code>、音声なら <code>&lt;audio&gt;</code> を使いますよね。ウェブ上のコンテンツのほとんどは、ロードするのに、シンプルで宣言的な方法が用意されています。しかし HTML をロードする場合はそういう訳にいきません。やり方としては：</p>
+<ol>
+<li><strong><code>&lt;iframe&gt;</code></strong> - 試して、実際に動きましたが、ちょっと重いですね。iframe のコンテンツは他のページのコンテキスト上に表示されます。大抵のケースでは用を足しますが、課題を残す場合もあります (フレームのサイズを縮めるのは面倒、JavaScript で操作するのもなかなかしんどい。スタイリングに至っては、ほとんど不可能です。)</li>
+<li><strong>AJAX</strong> - <a href="http://ericbidelman.tumblr.com/post/31140607367/mashups-using-cors-and-responsetype-document"><code>xhr.responseType="document"</code> をするのは大好きですが</a>、HTML をロードするのに JavaScript が必要というのでは、正しい方法とは思えません。</li>
+<li><strong>クレイジーハック&#8482;</strong> - 文字列に埋め込んで、コメントとして隠す方法とか (例： <code>&lt;script type="text/html"&gt;</code>)・・・どうなんでしょうね？</li>
+</ol>
+<p>この皮肉が分かりますか？ <strong>ウェブの最も基本的なコンテンツである HTML を読み込むには、かなりの労力が必要なのです！</strong> でも幸運な事に、<a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> を使えば、これを楽に実現することができます。</p>
+<h2 id="started">Getting started</h2>
+
+<p><a href="http://w3c.github.io/webcomponents/explainer/">Web Components</a> の一部である <a href="http://w3c.github.io/webcomponents/spec/imports/">HTML Imports</a> は、HTML ドキュメントが他の HTML をドキュメントに取り込むための方法です。マークアップに限定されているわけではありません。import は CSS や JavaScript、その他 <code>.html</code> が持つことのできるどんなものでも、取り込むことができるのです。import は <strong>関連する HTML/CSS/JavaScript をロードするためのツール</strong> と言い換えることもできます。</p>
+<h3 id="basics">基本</h3>
+
+<p>ページに <code>&lt;link rel="import"&gt;</code> を宣言して、import を使ってみます：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/imports/stuff.html"&gt;
+&lt;/head&gt;
+</code></pre>
+<p>import の URL は <em>インポートロケーション</em> と呼ばれます。別のドメインからコンテンツをロードする場合、インポートロケーションは CORS に対応している必要があります：</p>
+<pre class="prettyprint"><code>&lt;!-- Resources on other origins must be CORS-enabled. --&gt;
+&lt;link rel="import" href="http://example.com/elements.html"&gt;
+</code></pre>
+<p class="notice fact">ブラウザのネットワークスタックは、自動的に同じ URL へのリクエストを省略します。同じ URL への参照は、一度しか読み込まれません。何度同じロケーションをインポートしようとしても、一度しか実行されません。</p>
+
+<h3 id="featuredetect">機能検知とサポート</h3>
+
+<p>サポート状況を検知するには、<code>&lt;link&gt;</code> 要素に <code>.import</code> があるかをチェックします：</p>
+<pre class="prettyprint"><code>function supportsImports() {
+  return 'import' in document.createElement('link');
+}
+
+if (supportsImports()) {
+  // Good to go!
+} else {
+  // Use other libraries/require systems to load files.
+}
+</code></pre>
+<p>ブラウザのサポート状況はまだ初期の段階にあります。Chrome 31 が HTML Imports を最初に実装したブラウザで、Chrome 36 では最新の仕様に対応しました。Chrome Canary の <code>about:flags</code> で <strong>Enable experimental Web Platform features</strong> をオンにすることで利用可能です。他のブラウザについては <a href="http://www.polymer-project.org/platform/html-imports.html">Polymer の polyfill</a> が利用可能です。</p>
+<p class="notice tip"><b>Enable experimental Web Platform features</b> では、他の Web Components の機能も利用可能になります。</p>
+
+<h3 id="bundling">リソースのバンドリング</h3>
+
+<p>HTML Imports は HTML/CSS/JavaScript (他の import も含め) のバンドリングを可能にします。これは基本的な機能ですが、とてもパワフルです。テーマやライブラリを作りたい場合だけでなく、アプリケーションを論理的に分割したい場合に、ひとつの URL だけで済ませられるというだけでも価値がある機能です。場合によっては、アプリそのものを import で提供するなんてことも可能です。ちょっと考えてみてください。</p>
+<blockquote class="commentary talkinghead">ひとつの URL で済ませることは、第三者が再利用可能なリソースを、ひとつのパッケージにまとめることができるということです。</blockquote>
+
+<p>実際に利用可能な例として <a href="http://getbootstrap.com/">Bootstrap</a> が挙げられます。Bootstrap は複数のファイル (bootstrap.css, bootstrap.js, fonts) から成り立ちます。プラグインは jQuery に依存性があり、マークアップ例も提供されています。開発者には、フレームワークの中から必要に応じて機能を選択する柔軟性をもたらします。典型的な開発者の多くが、このやり方で Bootstrap すべてをダウンロードするやり方を選択する方に賭けてもいいくらいです。</p>
+<p>HTML Imports は Bootstrap のようなもので特に威力を発揮します。将来的に、Bootstrap のロードはこんな感じになるでしょう：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="bootstrap.html"&gt;
+&lt;/head&gt;
+</code></pre>
+<p>ユーザーは HTML Import の link をロードするのみ。複数に分割されたファイルを読み込む必要はありません。Bootstrap 全体が bootstrap.html として import にまとめられます：</p>
+<pre class="prettyprint"><code>&lt;link rel="stylesheet" href="bootstrap.css"&gt;
+&lt;link rel="stylesheet" href="fonts.css"&gt;
+&lt;script src="jquery.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap-tooltip.js"&gt;&lt;/script&gt;
+&lt;script src="bootstrap-dropdown.js"&gt;&lt;/script&gt;
+...
+
+&lt;!-- scaffolding markup --&gt;
+&lt;template&gt;
+  ...
+&lt;/template&gt;
+</code></pre>
+<p>これでよしとしましょう。素敵じゃないですか。</p>
+<h3 id="events">ロード/エラーイベント</h3>
+
+<p><code>&lt;link&gt;</code> 要素は ロードが成功すると <code>load</code> イベントを、失敗すると (例：リソースが 404 など) <code>onerror</code> イベントを発火します。</p>
+<p>import は即座にロードを試みます。面倒なことは <code>onload</code> や <code>onerror</code> 属性を使うことで避けられます：</p>
+<pre class="prettyprint"><code>&lt;script async&gt;
+  function handleLoad(e) {
+    console.log('Loaded import: ' + e.target.href);
+  }
+  function handleError(e) {
+    console.log('Error loading import: ' + e.target.href);
+  }
+&lt;/script&gt;
+
+&lt;link rel="import" href="file.html"
+      onload="handleLoad(event)" onerror="handleError(event)"&gt;
+</code></pre>
+<p class="notice tip">イベントハンドラーがページ内で、 import のロードより先に定義されていることに注意して下さい。import は、ブラウザがタグを発見し次第ロードされます。関数がまだ存在していないと、undefined な関数名であるとコンソールエラーを吐き出します。</p>
+
+<p>動的に import を作った場合はこうします：</p>
+<pre class="prettyprint"><code>var link = document.createElement('link');
+link.rel = 'import';
+link.href = 'file.html'
+link.onload = function(e) {...};
+link.onerror = function(e) {...};
+document.head.appendChild(link);
+</code></pre>
+<h2 id="usingcontent">コンテンツを使う</h2>
+
+<p>ページに import を含めるだけでは、「ここにファイルの中身を置け」という意味にはなりません。「このドキュメントが使えるように取ってきてくれ」と解釈されます。ファイルの中身を実際に使うには、スクリプトを書く必要があります。</p>
+<p>重要なアハ体験は、import の中身がドキュメントに過ぎないことに気付いた時です。インポートされたコンテンツは <em>インポートドキュメント</em> と呼ばれ、<strong>標準的な DOM API を使って操作することができます。</strong></p>
+<h3 id="importprop">link.import</h3>
+
+<p>インポートされたコンテンツにアクセスするには、link 要素の <code>.import</code> プロパティを使います：</p>
+<pre class="prettyprint"><code>var content = document.querySelector('link[rel="import"]').import;
+</code></pre>
+<p><code>link.import</code> は下記の条件において <code>null</code> となります：</p>
+<ul>
+<li>ブラウザが HTML Imports をサポートしない</li>
+<li><code>&lt;link&gt;</code> が <code>rel="import"</code> を持たない</li>
+<li><code>&lt;link&gt;</code> が DOM に追加されていない</li>
+<li><code>&lt;link&gt;</code> が DOM から取り除かれている</li>
+<li>リソースが CORS に対応していない</li>
+</ul>
+<p><strong>例</strong></p>
+<p><code>warnings.html</code> の内容が下記の場合を考えてみます：</p>
+<pre class="prettyprint"><code>&lt;div class="warning"&gt;
+  &lt;style scoped&gt;
+    h3 {
+      color: red;
+    }
+  &lt;/style&gt;
+  &lt;h3&gt;Warning!&lt;/h3&gt;
+  &lt;p&gt;This page is under construction&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="outdated"&gt;
+  &lt;h3&gt;Heads up!&lt;/h3&gt;
+  &lt;p&gt;This content may be out of date&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+<p>import はドキュメントの特定箇所をページにクローンすることができます：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="warnings.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  ...
+  &lt;script&gt;
+    var link = document.querySelector('link[rel="import"]');
+    var content = link.import;
+
+    // warning.html のドキュメントから DOM を取得
+    var el = content.querySelector('.warning');
+
+    document.body.appendChild(el.cloneNode(true));
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<div class="demoarea" id="warning-example-area"></div>
+
+<p><link rel="import" id="warning-example-link" href="warning.html">
+<script>
+  var link = document.querySelector('#warning-example-link');
+  if ('import' in link) {
+    var content = link.import;
+    var alertDOM = content.querySelector('div.alert');
+    document.querySelector('#warning-example-area').appendChild(alertDOM.cloneNode(true));
+  }
+</script></p>
+<h3 id="includejs">import でスクリプトを扱う</h3>
+
+<p>import の中身はメインドキュメントにありません。別の場所に存在します。しかし、メインドキュメントが中心の状況であっても、import の中身をメインページとして扱うことは可能です。import 内にあるスクリプトは、それ自体の DOM、もしくはそれを読み込み元ページの DOM にアクセスすることができます：</p>
+<p><strong>例</strong> - import.html が、自身の持つスタイルシートをメインページに追加します</p>
+<pre class="prettyprint"><code>&lt;link rel="stylesheet" href="http://www.example.com/styles.css"&gt;
+&lt;link rel="stylesheet" href="http://www.example.com/styles2.css"&gt;
+...
+
+&lt;script&gt;
+  // importDoc はこの import のドキュメントを参照
+  var importDoc = document.currentScript.ownerDocument;
+
+  // mainDoc はメインドキュメントを参照 (これをインポートしているページ)
+  var mainDoc = document;
+
+  // この import から最初のスタイルシートを取り込み、クローン
+  // そしてインポートしているドキュメントに追加
+  var styles = importDoc.querySelector('link[rel="stylesheet"]');
+  mainDoc.head.appendChild(styles.cloneNode(true));
+&lt;/script&gt;
+</code></pre>
+<p>何が起こっているのか見てみましょう。import 内のスクリプトが 自分自身を参照 (<code>document.currentScript.ownerDocument</code>) し、ドキュメントの一部をインポートしたページ (<code>mainDoc.head.appendChild(...)</code>) に追加します。ちょっと気持ち悪いですね。</p>
+<blockquote class="commentary talkinghead">import 内のスクリプトは、直接コードを実行するか、インポート元ページに定義させることができます。これは Python における <a href="http://docs.python.org/2/tutorial/modules.html#more-on-modules">module</a> の定義方法に似ています。
+</blockquote>
+
+<p>import 内の JavaScript のルール：</p>
+<ul>
+<li>import 内のスクリプトはインポート元となる <code>document</code> を含むウィンドウのコンテキスト上で実行されます。そのため、<code>window.document</code> はメインページのドキュメントを意味します。このことから 2 つのことが推測されます：<ul>
+<li>import 内のスクリプトで定義された関数は <code>window</code> にぶら下がります。</li>
+<li>import 内の <code>&lt;script&gt;</code> ブロックをメインページに追加する必要ありません。スクリプトが再度実行されてしまいます。</li>
+</ul>
+</li>
+<li>import は、メインページのパースをブロックしません。しかし、import ページ内の script は順番に実行されます。script の順序を守ってくれる反面、defer のような挙動をします。下記でより詳しく説明します。</li>
+</ul>
+<h2 id="deliver-webcomponents">Web Components を取り込む</h2>
+
+<p>HTML Imports のデザインは、再利用可能なコンテンツをウェブにロードできるように作られています。特に、Web Components にとって、基本的な <a href="/webcomponents/template/">HTML <code>&lt;template&gt;</code></a> から、完全な <a href="/tutorials/webcomponents/customelements/#registering">Custom Elements</a> と Shadow DOM [<a href="/tutorials/webcomponents/shadowdom/">1</a>, <a href="/tutorials/webcomponents/shadowdom-201/">2</a>, <a href="/tutorials/webcomponents/shadowdom-301/">3</a>] までカバーできる、理想的な作りです。これらのテクノロジーをセットで使うことで、import は Web Components の <a href="http://en.cppreference.com/w/cpp/preprocessor/include"><code>#include</code></a> のような役割を果たします。</p>
+<h3 id="include-templates">template を取り込む</h3>
+
+<p><a href="/tutorials/webcomponents/template/">HTML Template</a> 要素は、HTML Imports と相性バツグンです。<code>&lt;template&gt;</code> はマークアップの切れ端をテンプレートとして利用するのに適していますが、コンテンツを <code>&lt;template&gt;</code> に内包することで、実際に利用されるまで自律的に動作しないようにできるというメリットもあります。スクリプトは、template が DOM に追加されるまで、実行されません。</p>
+<p>import.html</p>
+<pre class="prettyprint"><code>&lt;template&gt;
+  &lt;h1&gt;Hello World!&lt;/h1&gt;
+  &lt;!-- &lt;template&gt; が実際に使われるまで img はリクエストされない --&gt;
+  &lt;img src="world.png"&gt;
+  &lt;script&gt;alert("Executed when the template is activated.");&lt;/script&gt;
+&lt;/template&gt;
+</code></pre>
+<p>index.html</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="import.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="container"&gt;&lt;/div&gt;
+  &lt;script&gt;
+    var link = document.querySelector('link[rel="import"]');
+
+    // import で &lt;template&gt; をクローンする
+    var template = link.import.querySelector('template');
+    var clone = document.importNode(template.content, true);
+
+    document.querySelector('#container').appendChild(clone);
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<h3 id="include-elements">Custom Elements を登録する</h3>
+
+<p><a href="tutorials/webcomponents/customelements/">Custom Elements</a> もまた、HTML Imports と相性バツグンの Web Components テクノロジーです。<a href="#includejs">Imports はスクリプトを実行できる</a> のですから、ユーザーではなく、コンポーネントの作者であるあなたが Custom Elements を定義し、登録してしまいましょう。</p>
+<p>elements.html</p>
+<pre class="prettyprint"><code>&lt;script&gt;
+  // &lt;say-hi&gt; を定義し、登録する
+  var proto = Object.create(HTMLElement.prototype);
+
+  proto.createdCallback = function() {
+    this.innerHTML = 'Hello, &lt;b&gt;' +
+                     (this.getAttribute('name') || '?') + '&lt;/b&gt;';
+  };
+
+  document.registerElement('say-hi', {prototype: proto});
+
+  // Shadow DOM を利用する &lt;shdow-element&gt; を定義し、登録する
+  var proto2 = Object.create(HTMLElement.prototype);
+
+  proto2.createdCallback = function() {
+    var root = this.createShadowRoot();
+    root.innerHTML = "&lt;style&gt;::content &gt; *{color: red}&lt;/style&gt;" +
+                     "I'm a " + this.localName +
+                     " using Shadow DOM!&lt;content&gt;&lt;/content&gt;";
+  };
+  document.registerElement('shadow-element', {prototype: proto2});
+&lt;/script&gt;
+</code></pre>
+<p>この import では、<code>&lt;say-hi&gt;</code> と <code>&lt;shadow-element&gt;</code> という 2 つの要素を定義 (そして登録) しています。インポート元ドキュメントは宣言するだけで大丈夫。</p>
+<p>index.html</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="elements.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;say-hi name="Eric"&gt;&lt;/say-hi&gt;
+  &lt;shadow-element&gt;
+    &lt;div&gt;( I'm in the light dom )&lt;/div&gt;
+  &lt;/shadow-element&gt;
+&lt;/body&gt;
+</code></pre>
+<p><link rel="import" href="elements.html"></p>
+<div class="demoarea">
+  <say-hi name="Eric"></say-hi><br><br>
+</div>
+
+<div class="demoarea">
+  <shadow-element>
+    <div>( I'm in the light dom )</div>
+  </shadow-element>
+</div>
+
+<p>このワークフローだけでも、HTML Imports は Web Components を共有する最適なソリューションであると言えると思います。</p>
+<h3 id="depssubimports">依存性の管理とサブインポート</h3>
+
+<blockquote>
+  import が気に入ったようなので、あなたの import <em>の中に</em> さらに import を入れてみました。
+</blockquote>
+
+<h4 id="sub-imports">サブインポート</h4>
+
+<p>ひとつの import が他の import を持てると便利なケースが有ります。例えば、他のコンポーネントを再利用したい場合、その要素をロードするのにも import が使えます。</p>
+<p>以下は、<a href="http://polymer-project.org">Polymer</a> で実際に使われている例です。レイアウトとセレクターコンポーネントを再利用した、新しいタブコンポーネントです。依存性は HTML Imports で管理されています。</p>
+<p>polymer-ui-tabs.html</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="polymer-selector.html"&gt;
+&lt;link rel="import" href="polymer-flex-layout.html"&gt;
+
+&lt;polymer-element name="polymer-ui-tabs" extends="polymer-selector" ...&gt;
+  &lt;template&gt;
+    &lt;link rel="stylesheet" href="polymer-ui-tabs.css"&gt;
+    &lt;polymer-flex-layout&gt;&lt;/polymer-flex-layout&gt;
+    &lt;shadow&gt;&lt;/shadow&gt;
+  &lt;/template&gt;
+&lt;/polymer-element&gt;
+</code></pre>
+<p><a href="https://github.com/Polymer/polymer-ui-elements/blob/master/polymer-ui-tabs/polymer-ui-tabs.html">ソースコード全体</a></p>
+<p>アプリ開発者は、この新しい要素を下記のようにして import できます：</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="polymer-ui-tabs.html"&gt;
+&lt;polymer-ui-tabs&gt;&lt;/polymer-ui-tabs&gt;
+</code></pre>
+<p>将来的にもっと新しくてかっこいい <code>&lt;polymer-selector2&gt;</code> 要素が登場した際、<code>&lt;polymer-selector&gt;</code> と差し替えて、すぐに使い始めることができます。HTML Imports と Web Components のおかげで、ユーザーに迷惑をかけることはありません。</p>
+<h4 id="deps">依存性の管理</h4>
+
+<p>jQuery を同じページで何度も呼び出すと、エラーが発生するのはみなさんご存知と思います。複数のコンポーネントが同じライブラリを呼び出すとしたら、Web Components にとって <em>とても大きな</em> 問題になると思いませんか？ HTML Imports なら心配ありません。依存性の管理にも役立ちます。</p>
+<p>HTML Imports にライブラリを内包することで、リソースは自動的に重複を避けられます。
+ドキュメントは一度だけパースされ、スクリプトも一度だけ実行されます。jQuery のコピーを読み込む jquery.html を呼び出す import を定義した場合を例に見てみましょう。</p>
+<p>jquery.html</p>
+<pre class="prettyprint"><code>&lt;script src="http://cdn.com/jquery.js"&gt;&lt;/script&gt;
+</code></pre>
+<p>この import は後で再利用できます：</p>
+<p>import2.html</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="jquery.html"&gt;
+&lt;div&gt;Hello, I'm import 2&lt;/div&gt;
+</code></pre>
+<p>ajax-element.html</p>
+<pre class="prettyprint"><code>&lt;link rel="import" href="jquery.html"&gt;
+&lt;link rel="import" href="import2.html"&gt;
+
+&lt;script&gt;
+  var proto = Object.create(HTMLElement.prototype);
+
+  proto.makeRequest = function(url, done) {
+    return $.ajax(url).done(function() {
+      done();
+    });
+  };
+
+  document.registerElement('ajax-element', {prototype: proto});
+&lt;/script&gt;
+</code></pre>
+<p>メインページでさえ、必要なら jquery.html を呼び出して構いません。</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="jquery.html"&gt;
+  &lt;link rel="import" href="ajax-element.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+...
+
+&lt;script&gt;
+  $(document).ready(function() {
+    var el = document.createElement('ajax-element');
+    el.makeRequest('http://example.com');
+  });
+&lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p>jquery.html が複数の import で宣言されているにも関わらず、ドキュメントはブラウザによって一度しか読み込まれません。Network パネルで検証してみれば一目瞭然です：</p>
+<figure>
+  <img src="requests-devtools.png">
+  <figcaption>jquery.html が必要とされるのは一度だけ</figcpation>
+</figure>
+
+<h2 id="performance">パフォーマンスに関する考察</h2>
+
+<p>HTML Imports は大変素晴らしいものですが、他の新しいウェブテクノロジー同様、賢く使うべきです。ウェブ開発のベストプラクティスは変わりません。いくつか覚えておくべきことをまとめました。</p>
+<h3 id="perf-concat">import を連結する</h3>
+
+<p>ネットワークリクエストを減らすことは常に重要です。もし複数の import リンクがあるなら、ひとつのリソースにまとめましょう。</p>
+<p><a href="https://github.com/Polymer/vulcanize">Vulcanize</a> は <a href="http://www.polymer-project.org/">Polymer</a> チームの開発した npm のビルドツールで、複数の HTML Imports ファイルを再帰的にひとつにまとめます。Web Components のビルドステップのひとつと考えて下さい。</p>
+<h3 id="perf-caching">Import はブラウザキャッシュが効く</h3>
+
+<p>多くの人は、ブラウザのネットワークスタックが長年をかけてチューニングされてきたことを忘れがちです。Import (とサブインポート) はこの利点を活かすことができます。<code>http://cdn.com/bootstrap.html</code> import にはサブリソースが含まれるかもしれませんが、キャッシュされるはずです。</p>
+<h3 id="perf-inert">コンテンツは追加した場合のみ有効</h3>
+
+<p>コンテンツは実際に使われるまで自律的に動作しないと考えて下さい。動的に読み込まれた通常のスタイルシートを思い浮かべて下さい：</p>
+<pre class="prettyprint"><code>var link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = 'styles.css';
+</code></pre>
+<p>ブラウザは <code>link</code> が DOM に追加されるまで、style.css をリクエストしません：</p>
+<pre class="prettyprint"><code>document.head.appendChild(link); // browser requests styles.css
+</code></pre>
+<p>動的に作られたマークアップであれば：</p>
+<pre class="prettyprint"><code>var h2 = document.createElement('h2');
+h2.textContent = 'Booyah!';
+</code></pre>
+<p><code>h2</code> は DOM に追加されるまで、意味を持ちません。</p>
+<p>このコンセプトは import ドキュメントについても当てはまります。DOM に追加するまで、コンテンツは有効ではありません。実のところ、import ドキュメントで直接実行されるのは <code>&lt;script&gt;</code> タグだけです。詳しくは <a href="#includejs">imports でスクリプトを扱う</a> をご覧ください。</p>
+<h3 id="perf-parsing">非同期ロードに最適化する</h3>
+
+<p><strong>import はメインページのパースをブロックしません</strong> 。import 内のスクリプトは順番に実行されますが、インポート元ページはブロックされません。script の順序を守ってくれる反面、defer のような挙動をします。import を <code>&lt;head&gt;</code> タグに入れる利点の一つは、パーサーができるだけ早くその内容を扱えるためです。メインドキュメントの <code>&lt;script&gt;</code> がページをブロックすることに変わりないことは覚えておいて下さい：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import_that_takes_5secs.html"&gt;
+  &lt;script&gt;console.log('I block page rendering');&lt;/script&gt;
+&lt;/head&gt;
+</code></pre>
+<p>アプリの構造とユースケースによって、非同期の挙動を最適化する方法はいくつかあります。メインページでのブロックを防ぐには、下記のテクニックをお試し下さい。</p>
+<p><strong>シナリオ #1 (推奨)：<code>&lt;head&gt;</code> にも <code>&lt;body&gt;</code> にも script が含まれないケース</strong></p>
+<p><code>&lt;script&gt;</code> の配置について私のオススメは、import の直後は避けた方がいい、というものです。script タグは、できるだけページの最後に置きましょう・・・・でももうやってますよね？ ;)</p>
+<p>例：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import.html"&gt;
+  &lt;link rel="import" href="/path/to/import2.html"&gt;
+  &lt;!-- script は避ける --&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- script は避ける --&gt;
+
+  &lt;div id="container"&gt;&lt;/div&gt;
+
+  &lt;!-- script は避ける --&gt;
+  ...
+
+  &lt;script&gt;
+    // その他のスクリプト等
+
+    // import コンテンツを取り込む
+    var link = document.querySelector('link[rel="import"]');
+    var post = link.import.querySelector('#blog-post');
+
+    var container = document.querySelector('#container');
+    container.appendChild(post.cloneNode(true));
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p>全て、一番下に置いています。</p>
+<p><strong>シナリオ #1.5：import が自ら追加するケース</strong></p>
+<p>もうひとつの方法は、import で <a href="#includejs">自分自身のコンテンツを追加する</a> 方法です。import 作者の必要とする条件に対応できれば、import はメインページの一部に自身を追加することができます：</p>
+<p>import.html:</p>
+<pre class="prettyprint"><code>&lt;div id="blog-post"&gt;...&lt;/div&gt;
+&lt;script&gt;
+  var me = document.currentScript.ownerDocument;
+  var post = me.querySelector('#blog-post');
+
+  var container = document.querySelector('#container');
+  container.appendChild(post.cloneNode(true));
+&lt;/script&gt;
+</code></pre>
+<p>index.html</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;link rel="import" href="/path/to/import.html"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- script は不要。import がすべて面倒を見てくれます。 --&gt;
+&lt;/body&gt;
+</code></pre>
+<p><strong>シナリオ #2：<code>&lt;head&gt;</code> か <code>&lt;body&gt;</code> に script が含まれるケース</strong></p>
+<p>ロードに時間を要する import が含まれる場合、import に続く <code>&lt;script&gt;</code> はブロックされてしまいます。例えば Google Analytics は、<code>&lt;head&gt;</code> 内にトラッキングコードを置くことを推奨しています。<code>&lt;script&gt;</code> を <code>&lt;head&gt;</code> 内に置かざるを得ない場合は、import を動的に追加することで、ブロックさせないようにすることもできます。</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;script&gt;
+    function addImportLink(url) {
+      var link = document.createElement('link');
+      link.rel = 'import';
+      link.href = url;
+      link.onload = function(e) {
+        var post = this.import.querySelector('#blog-post');
+
+        var container = document.querySelector('#container');
+        container.appendChild(post.cloneNode(true));
+      };
+      document.head.appendChild(link);
+    }
+
+    addImportLink('/path/to/import.html'); // Import is added early :)
+  &lt;/script&gt;
+  &lt;script&gt;
+    // other scripts
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+   &lt;div id="container"&gt;&lt;/div&gt;
+   ...
+&lt;/body&gt;
+</code></pre>
+<p>もうひとつのアプローチは、import を <code>&lt;body&gt;</code> の終わり近くに置く方法です：</p>
+<pre class="prettyprint"><code>&lt;head&gt;
+  &lt;script&gt;
+    // other scripts
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="container"&gt;&lt;/div&gt;
+  ...
+
+  &lt;script&gt;
+    function addImportLink(url) { ... }
+
+    addImportLink('/path/to/import.html'); // import が追加されるのは一番最後 :(
+  &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<p class="notice"><b>注意：</b> 最後のアプローチはあまりオススメできません。ページの終わりに到達するまで、パーサーはインポートを始めません。</p>
+
+<h2 id="tips">覚えておくべきこと</h2>
+
+<ul>
+<li>
+<p>import の mimetype は <code>text/html</code> です。</p>
+</li>
+<li>
+<p>他のオリジンに存在するリソースは CORS に対応している必要があります。</p>
+</li>
+<li>
+<p>同じ URL からの import は、取得もパースも一度しか行われません。これは import 内の script は、読み込まれた最初の一度しか実行されないことを意味します。</p>
+</li>
+<li>
+<p>import 内の script は順番に実行されますが、メインドキュメントのパースはブロックしません。</p>
+</li>
+<li>
+<p>import リンクは「コンテンツをここに #include せよ」という意味ではありません。「このドキュメントが使えるように取ってきてくれ」と解釈されます。スクリプトは import が読み込まれると同時に実行されますが、スタイルシートやマークアップなどのリソースは、明示的にメインページに追加されなければなりません。これは HTML Imports と <code>&lt;iframe&gt;</code> (コンテンツを読み込んでここに表示) の最も大きな違いです。</p>
+</li>
+</ul>
+<h2 id="conclusion">まとめ</h2>
+
+<p>HTML Imports は、HTML/CSS/JavaScript を一つのリソースとしてバンドルさせてくれます。それ自体が便利なのはもちろん、Web Components の世界ではとりわけ、極めてパワフルといえます。開発者は再利用可能なコンポーネントを作り、 第三者が <code>&lt;link rel="import"&gt;</code> だけで、自分のアプリに取り込めるようにできるのです。</p>
+<p>HTML Imports はシンプルなコンセプトですが、たくさんのユースケースを可能にします。</p>
+<h3 id="usecases">ユースケース</h3>
+
+<ul>
+<li>関連する <a href="#bundling">HTML/CSS/JS をひとつのバンドルとして</a> <strong>配布</strong> 理論的には、ウェブアプリを丸々別のウェブアプリにインポートすることも可能です。</li>
+<li><strong>コードの整理</strong> - コンセプトを論理的に別々のファイルに分け、モジュラー構造と再利用性を促します。</li>
+<li><a href="/tutorials/webcomponents/customelements/">Custom Element</a> の定義を <strong>提供</strong> 。import は Custom Elements を <a href="/tutorials/webcomponents/customelements/#registering">登録</a> し、アプリに取り込むことができます。要素のインターフェースと定義を、実際の使用と切り分けるというソフトウェアパターンを実践しています。</li>
+<li><a href="#depssubimports"><strong>依存性の管理</strong></a> - リソースは一度しか読み込まれません。</li>
+<li>
+<p><strong>スクリプトをまとめる</strong> - import 以前、大きなサイズの JavaScript ライブラリは、動き始める前に全体をパースする必要がありました。import があれば、script A がパースされるとすぐに、ライブラリが動作を始めます。レイテンシーは低くなるはずです。</p>
+<p><code>&lt;link rel="import" href="chunks.html"&gt;</code>:</p>
+<pre class="prettyprint"><code>&lt;script&gt;/* script A */&lt;/script&gt;
+&lt;script&gt;/* script B */&lt;/script&gt;
+&lt;script&gt;/* script C */&lt;/script&gt;
+...
+</code></pre>
+</li>
+<li>
+<p><strong>HTML のパースを並行に</strong> - ブラウザ史上はじめて、HTML パーサーが 2 つ以上同時に動きます。</p>
+</li>
+<li>
+<p>import の読み込み URL を変更するだけで、アプリ内で <strong>デバッグモードの切り替えを可能にします</strong>。アプリは、import されるドキュメントがバンドルされているリソースか、コンパイルされているリソースか、ツリー構造かなどを知る必要はありません。</p>
+</li>
+</ul><script>
+document.addEventListener('DOMContentLoaded', function(e) {
+  if (!isCompatible()) {
+    document.body.classList.add('disabledemos');
+  }
+});
+</script>
+{% endblock %}

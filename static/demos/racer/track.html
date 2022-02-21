@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+        
+        <title>Racer</title>
+        
+        <script src="js/paper.js"></script>
+        
+        <style>
+            body, html {
+                margin: 20px;
+                padding: 0;
+                background-color: #000;
+                position: absolute;
+            }
+            
+             * {
+                 position: absolute;
+                 -moz-select: none;
+                 -webkit-select: none;
+                 select: none;
+             }
+        </style>
+        
+        <script>
+            function Track() {
+                var _this = this;
+                var _canvas, _context;
+                var _paper, _path;
+                
+                (function() {
+                    initCanvas();
+                    initPaper();
+                })();
+                
+                function initCanvas() {
+                    _canvas = document.getElementById('track_canvas');
+                    _context = _canvas.getContext('2d');
+                }
+                
+                function initPaper() {
+                    paper.install(window);
+                    _paper = new paper.PaperScope(); //create multiple scopes because this Track class would be used for multiple lanes
+                    _paper.setup('track_canvas');
+                    
+                    
+                    var svg = document.getElementById('track');
+                    var layer = new _paper.Layer();
+
+                    _path = layer.importSvg(svg).firstChild.firstChild;
+                    _path.strokeColor = '#14a8df';
+                    _path.strokeWidth = 2;
+                    
+                    _paper.view.draw();
+                }
+                
+            }
+            
+            window.onload = Track;
+        </script>
+</head>
+<body>
+     <svg version="1.1" id="track" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><path fill="none" stroke="#fff" stroke-width="2" stroke-miterlimit="10" d="M19.5,95.75C19.5,43.367,55.717,1,102.139,1h29.245
+    c46.421,0,85.741,42.367,85.741,94.75v115.238c0,41.842-31.61,76.012-68.691,76.012h-0.423c-37.08,0-65.589-34.17-65.589-76.012
+    v-69.478C82.42,99.67,110.93,66,148.011,66h13.503H179.4c12.578,0,22.658,1.631,36.728,10l1.106,0.5
+    c37.221,19.721,59.266,63.206,59.266,117.25v91c0,52.383-36.66,94.25-83.082,94.25h-88.621C58.375,379,19.5,337.133,19.5,284.75
+    V95.75z"/></g></svg>
+    
+    <canvas id="track_canvas" width="292" height="380"></canvas>
+</svg>
+
+</body>
+</html>
+    

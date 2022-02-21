@@ -7,7 +7,8 @@
 
 rm index.html
 cat header.html >> index.html
-/usr/local/bin/markdown_py index.md >> index.html
+# /usr/local/bin/markdown_py index.md >> index.html
+/Library/Frameworks/Python.framework/Versions/2.7/bin/markdown_py index.md >> index.html
 cat footer.html >> index.html
 
 sed -i -e 's/<pre>/<pre class="prettyprint">/g' index.html

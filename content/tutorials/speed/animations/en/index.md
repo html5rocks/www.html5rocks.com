@@ -265,7 +265,7 @@ The reason using `className` is less performant than `classList` is that `classN
 
 If you want more information on using `classList` and the new-and-extremely-useful frame breakdown mode in Chrome's Dev Tools you should watch this video by Paul Irish:
 
-<iframe width="640" height="360" src="http://www.youtube.com/embed/hZJacl2VkKo?rel=0" frameborder="0" allowfullscreen></iframe>
+<iframe width="640" height="360" src="https://www.youtube.com/embed/hZJacl2VkKo?rel=0" frameborder="0" allowfullscreen></iframe>
 
 So let's take a look at what a better version of this would look like:
 

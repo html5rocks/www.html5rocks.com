@@ -1,0 +1,390 @@
+{% extends "tutorial.html" %}
+{% load mixin from templatefilters %}
+
+{% block head %}
+  {{ block.super }} 
+  <style>
+    dt {
+      font-weight: bold;
+    }
+    dt em {
+      font-weight: normal;
+    }
+    dd {
+      margin-bottom: 0.5em;
+    }
+    figcaption p {
+      font-style: normal;
+      font-weight: normal;
+    }
+    figcaption em {
+      font-style: normal;
+    }
+    .comparision figcaption {
+      font-size: 13px;
+      width: 90%;
+    }
+    .comparision figcaption:first-child {
+      font-size: 15px;
+      margin-bottom: 0.8em;
+    }
+    @media screen and (min-width: 620px) {
+      .comparision.side-by-side figure:first-child {
+        margin-right: 2%;
+      }
+      .comparision.side-by-side figure {
+        float: left;
+        width: 49%;
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block pagebreadcrumb %}{{ tut.title }}{% endblock %}
+  
+{% block content %}
+ 
+<h2 id="toc-introduction">Introducing the &lt;picture&gt; element</h2>
+
+<p>The <code>&lt;picture&gt;</code> element offers a declarative approach towards image resource 
+loading. Web developers will no longer need CSS or JavaScript hacks to handle 
+images in responsive designs. And users benefit from natively-optimized image 
+resource loading—especially important for users on slower mobile internet 
+connections.</p>
+
+<p>Alongside the newer <code>srcset</code> and <code>sizes</code> attributes 
+recently added to <code>&lt;img&gt;</code>, the 
+<code>&lt;picture&gt;</code> element gives web developers more flexibility in specifying image 
+resources. Write clear HTML markup and let the browser do the work of detecting 
+any of the following scenarios, alone or in combination, to support responsive 
+designs and improve web page load times:</p>
+
+<dl>
+
+  <dt>Art direction-based selection</dt>
+  <dd>
+    Is this a mobile device held in a portrait orientation or a wide desktop monitor?
+    <a href="#toc-art-direction">Load an image that is optimized for the given screen dimensions.</a>
+  </dd>
+
+  <dt>Device-pixel-ratio-based selection</dt>
+  <dd>
+    Does the device have a high DPI display?
+    <a href="#toc-pixel-density-descriptors">Load a higher resolution image.</a>
+  </dd>
+
+  <dt>Viewport-based selection</dt>
+  <dd>
+    Is the image meant to always fill a fixed proportion of the viewport?
+    <a href="#toc-width-descriptors">Load images relative to the viewport.</a>
+  </dd>
+
+  <dt>Image format-based selection</dt>
+  <dd>Can the browser support additional image file types that offer 
+    performance boosts such as smaller file sizes?
+    <a href="#toc-file-type">Load an alternative image file such as WebP.</a>
+  </dd>
+
+</dl> 
+
+<h3 id="toc-art-direction">Use for art direction</h3>
+
+<p>The most common use of the <code>&lt;picture&gt;</code> element will be for "art direction" in 
+responsive designs. Instead of having one image that is scaled up or down based 
+on the viewport width, multiple images can be designed to more appropriately 
+fill the browser viewport.</p>
+
+<div class="comparision side-by-side">
+
+  <figure>
+    <img src="resized-image.png"
+      srcset="resized-image@2X.png 2x"
+      width="320"
+      alt="one image that is scaled up or down based on the viewport width">
+    <figcaption>
+      The result of using only one image that is scaled up or down based on the viewport width.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <img src="art-direction.png"
+      srcset="art-direction@2X.png 2x"
+      width="320"
+      alt="several different images to more appropriately fill the browser viewport">
+    <figcaption>
+      Use several different images to more appropriately fill the browser viewport.
+    </figcaption>
+  </figure>
+
+</div>
+
+<h3 id="improve-performance">Improve resource loading performance</h3>
+
+<p>When using <code>&lt;picture&gt;</code>, or <code>&lt;img&gt;</code> with the <code>srcset</code> 
+and <code>sizes</code> attribute, the browser 
+will only download the image explicitly stated for the matching scenario. This 
+native implementation is compatible with HTML parsers and can take advantage of 
+the browser's image caching and preloading abilities.</p>
+
+<h2 id="toc-demo">View a live demo</h2>
+
+<p>It's a fact that the Internet was created to host cat images. Using <code>&lt;picture&gt;</code> we 
+can emulate the amazing ability of cats to adjust to the space given to them no 
+matter how small or large.</p>
+
+<figure> 
+  <a href="http://googlechrome.github.io/samples/picture-element/" target="_blank">
+    <img src="cat-stretching.png"
+      srcset="cat-stretching@2X.png 2x"
+      alt="an illustration of a cat stretching">
+  </a>
+  <figcaption>
+    Cat illustrations by @itsJonQ</p>
+  </figcaption>
+</figure>
+
+<p>
+<strong><a href="http://googlechrome.github.io/samples/picture-element/"
+  target="_blank">Open the demo in a new tab</a></strong>
+with <strong>Chrome 38</strong> or higher. Resize the viewport to see the cat in action.</p>
+
+<p>As a starting point, this demo only shows off the bare minimum of features that 
+<code>&lt;picture&gt;</code> has to offer. Let's dig into the syntax now.</p>
+
+<h2 id="toc-syntax">The &lt;picture&gt; syntax</h2>
+
+<p>The following HTML and CSS snippet is everything that was used to implement the 
+demo:</p>
+
+<pre class="prettyprint">
+&lt;style&gt;
+  img {display: block; margin: 0 auto;}
+&lt;/style&gt;
+
+&lt;picture&gt;
+  &lt;source 
+    media="(min-width: 650px)"
+    srcset="images/kitten-stretching.png"&gt;
+  &lt;source 
+    media="(min-width: 465px)"
+    srcset="images/kitten-sitting.png"&gt;
+  &lt;img 
+    src="images/kitten-curled.png" 
+    alt="a cute kitten"&gt;
+&lt;/picture&gt;
+</pre>
+
+<p>Note how there is no JavaScript involved and no-third party libraries. The CSS 
+<code>&lt;style&gt;</code> block is used only to style the image element and does not contain media 
+queries. The native implementation of the <code>&lt;picture&gt;</code> element means that you can 
+declare your responsive images using only HTML.</p>
+
+<h3 id="toc-source-element">Use with &lt;source&gt; elements</h3>
+
+<p>The <code>&lt;picture&gt;</code> element has no unique attributes of its own. The magic happens 
+when <code>&lt;picture&gt;</code> is used as a container for <code>&lt;source&gt;</code>.</p>
+
+<p>The <code>&lt;source&gt;</code> element, which is used for loading media such as video and audio, 
+has been updated for image loading and these new attributes have been added:</p>
+
+<dl>
+
+  <dt>srcset <em>(required)</em></dt>
+  <dd>
+    <p>Accepts a single image file path (e.g. <code>srcset="kitten.png"</code>).</p>
+    <p>Or a comma-delimited list of image file paths with pixel density descriptors 
+    (e.g. <code>srcset="kitten.png, kitten@2X.png 2x"</code>) where a 1x descriptor is assumed 
+    when it is left off.</p> 
+    <p>Refer to <a href="#toc-pixel-density-descriptors">Combine with pixel density descriptors</a> 
+    for this in use.</p>
+  </dd>
+
+  <dt>media <em>(optional)</em></dt>
+  <dd>
+    <p>Accepts any valid media query that you would normally find in a CSS <code>@media</code> 
+    selector (e.g. <code>media="(max-width: 30em)"</code>).</p>
+    <p>Refer to the previous <a href="#toc-syntax">&lt;picture&gt; syntax</a> example
+    for this in use.</p>
+  </dd>
+
+  <dt>sizes <em>(optional)</em></dt>
+  <dd>
+    <p>Accepts a single width descriptor (e.g. <code>sizes="100vw"</code>)
+      or a single media query with width descriptor 
+      (e.g. <code>sizes="(max-width: 30em) 100vw"</code>).</p>
+    <p>Or a comma-delimited list of media queries with a width descriptor
+      (e.g. <code>sizes="(max-width: 30em) 100vw, (max-width: 50em) 50vw, calc(33vw - 100px)"</code>) 
+      in which the last item in the list is used as the default.</p>
+    <p>Refer to <a href="#toc-width-descriptors">Combine with width descriptors</a> for this in use.</p>
+  </dd>
+
+  <dt>type <em>(optional)</em></dt>
+  <dd>
+    <p>Accepts a supported MIME type (e.g. <code>type="image/webp"</code> or 
+    <code>type="image/vnd.ms-photo"</code>).</p>
+    <p>Refer to <a href="#toc-file-type">Load alternative image file formats</a> for this in use.</p>
+  </dd>
+
+</dl>
+
+<p>The browser will use the hints passed in as attribute values to load the most 
+appropriate image resource. The listing order of tags matter! The browser will 
+use the first <code>&lt;source&gt;</code> element with a matching hint and ignore any following 
+<code>&lt;source&gt;</code> tags.</p>
+
+<h3 id="toc-add-img">Add a final &lt;img&gt; element</h3>
+
+<p>The <code>&lt;img&gt;</code> element has also been updated to be used within 
+<code>&lt;picture&gt;</code> as the fallback in case a browser does not support the picture element
+or if no source element tags are matched. Using <code>&lt;img&gt;</code> within 
+<code>&lt;picture&gt;</code> is a <strong>requirement</strong>&mdash;if you forget it, 
+no images will show up.</p>
+
+<p>Use <code>&lt;img&gt;</code> to declare the default image to be used within a 
+<code>&lt;picture&gt;</code> block. Place <code>&lt;img&gt;</code> as the last child of 
+<code>&lt;picture&gt;</code> since the browser will ignore any <code>&lt;source&gt;</code>
+declarations that occur after an <code>&lt;img&gt;</code> tag is found. The image tag is 
+also where you should attach alternative text using the image element's <code>alt</code> attribute.</p>
+
+<h3 id="toc-pixel-density-descriptors">Combine with pixel density descriptors</h3>
+
+<p>Add support for high resolution displays using pixel density descriptors such as 
+1x, 1.5x, 2x, and 3x. The new <a href="https://developers.google.com/web/fundamentals/media/images/images-in-markup#enhance-imgs-with-srcset-for-high-dpi-devices" target="_blank">srcset attribute</a>
+applies to both <code>&lt;img&gt;</code> and <code>&lt;source&gt;</code> elements.</p>
+
+<p>The example below supports 1x, 1.5x, and 2x resolution screens:</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source 
+    media="(min-width: 650px)" 
+    srcset="images/kitten-stretching.png,
+            images/kitten-stretching@1.5x.png 1.5x,  
+            images/kitten-stretching@2x.png 2x"&gt;
+  &lt;source 
+    media="(min-width: 465px)" 
+    srcset="images/kitten-sitting.png,
+            images/kitten-sitting@1.5x.png 1.5x
+            images/kitten-sitting@2x.png 2x"&gt;
+  &lt;img 
+    src="images/kitten-curled.png" 
+    srcset="images/kitten-curled@1.5x.png 1.5x,
+            images/kitten-curled@2x.png 2x"
+    alt="a cute kitten"&gt;
+&lt;/picture&gt;
+</pre>
+
+<h3 id="toc-width-descriptors">Combine with width descriptors</h3>
+
+<p><em>Web Fundamentals</em> covers the new 
+<a href="https://developers.google.com/web/fundamentals/media/images/images-in-markup#relative-sized-images"  target="_blank">sizes attribute</a>
+for the <code>&lt;img&gt;</code> element indepth:</p>
+
+<blockquote>
+<p>"When the final size of the image isn't known, it can be difficult to specify 
+a density descriptor for the image sources. This is especially true for images 
+that span a proportional width of the browser and are fluid, depending on the 
+size of the browser.</p>
+
+<p>Instead of supplying fixed image sizes and densities, the size of each 
+supplied image can be specified by adding a width descriptor along with the 
+size of the image element, allowing the browser to automatically calculate the 
+effective pixel density and choose the best image to download."</p>
+</blockquote>
+
+<p>Here's an example of using the <code>sizes</code> attribute to set the proportion of an image 
+to always fill 80% of the viewport. It is combined with the <code>srcset</code> attribute to 
+supply four versions of the same lighthouse photo in widths of 160px, 320px, 
+640px, and 1280px wide:</p>
+
+<pre class="prettyprint">
+&lt;img src="lighthouse-160.jpg" alt="lighthouse"
+     sizes="80vw"
+     srcset="lighthouse-160.jpg 160w, 
+             lighthouse-320.jpg 320w,        
+             lighthouse-640.jpg 640w,
+             lighthouse-1280.jpg 1280w"&gt;
+</pre>
+
+<p>The browser will use these hints to choose the most appropriate image resource
+to serve up based on the viewport width and hardware display resolution:</p>
+
+<figure>
+  <img src="lighthouse-example-img.png"
+    srcset="lighthouse-example-img@2X.png 2x"
+    alt="a photo of a lighthouse always filling 80% of the browser viewport">
+    <figcaption>
+      For example, the viewport on the left is approx. 800px wide. The browser will load lighthouse-640.jpg unless the device pixel ratio is 2x&mdash;in which case, lighthouse-1280.jpg will be loaded instead.
+    </figcaption>
+</figure>
+
+<p>With the addition of <code>&lt;picture&gt;</code>, the <code>sizes</code> attribute 
+can be applied to both <code>&lt;img&gt;</code> and <code>&lt;source&gt;</code> elements:</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source media="(min-width: 800px)"
+          sizes="80vw"
+          srcset="lighthouse-landscape-640.jpg 640w,
+                  lighthouse-landscape-1280.jpg 1280w,
+                  lighthouse-landscape-2560.jpg 2560w"&gt;
+  &lt;img src="lighthouse-160.jpg" alt="lighthouse"
+       sizes="80vw"
+       srcset="lighthouse-160.jpg 160w,
+               lighthouse-320.jpg 320w,
+               lighthouse-640.jpg 640w,
+               lighthouse-1280.jpg 1280w"&gt;
+&lt;/picture&gt;
+</pre>
+
+<p>Building on the previous example, when the viewport is at 800px and above, the 
+browser will serve up a landscape version of the lighthouse version instead:</p>
+
+<figure>
+  <img src="lighthouse-example-picture.png"
+    srcset="lighthouse-example-picture@2X.png 2x"
+    alt="a photo of a lighthouse always filling 80% of the browser viewport except the larger viewport shows the landscape version of the lighthouse photo">
+    <figcaption>
+      The viewport on the left is above 800px wide so a landscape version of the 
+      lighthouse photo will be displayed.
+    </figcaption>
+</figure>
+
+<h3 id="toc-file-type">Load alternative image file formats</h3>
+
+<p>The <code>type</code> attribute of <code>&lt;source&gt;</code> can be used to load alternative image file 
+formats that might not be supported in all browsers. For example, you can serve 
+an image in <a href="https://developers.google.com/speed/webp/" target="_blank">WebP format</a> to browsers that 
+support it, while falling back to a JPEG on other browsers:</p>
+
+<pre class="prettyprint">
+&lt;picture&gt;
+  &lt;source type="image/webp" srcset="images/butterfly.webp"&gt;
+  &lt;img src="images/butterfly.jpg" alt="a butterfly"&gt;
+&lt;/picture&gt;
+</pre>
+
+<h3 id="toc-additional-code-examples">Additional code examples</h3>
+
+<p>Refer to <a href="http://dev.opera.com/articles/responsive-images/" target="_blank">Responsive Images: Use Cases and Documented Code Snippets to Get You Started</a> on the Dev.Opera blog
+for an exhaustive list of examples combining <code>&lt;picture&gt;</code> and <code>&lt;img&gt;</code> 
+with the <code>srcset</code>, <code>media</code>, <code>sizes</code>, and <code>type</code> attributes.</p>
+
+<h2 id="toc-try-it-out">Try it out today</h2>
+
+<p>The <code>&lt;picture&gt;</code> element is 
+<a href="http://www.chromestatus.com/feature/5910974510923776" target="_blank">currently available Chrome 38</a>. 
+Try it out with <a href="https://developer.chrome.com/devtools/docs/device-mode#screen-emulation" target="_blank">screen emulation</a> in the Chrome DevTools.</p>
+
+<p>If you have feedback on this new feature, drop us a line on the <a href="http://crbug.com" target="_blank">Chrome bug 
+tracker</a>.</p>
+
+<p>If you're ready to start implementing <code>&lt;picture&gt;</code> today but also want to add 
+support for responsive images in additional browsers, refer to  
+<a href="http://googlesamples.github.io/web-fundamentals/samples/media/images/media.html" target="_blank">this &lt;picture&gt; element sample</a>
+for using <code>&lt;picture&gt;</code> with a polyfill.</p>
+
+<p>Be sure to also check out <a href="https://developers.google.com/web/fundamentals/media/images/" target="_blank">the guide to images on Web Fundamentals</a> for best practice examples of implementing images on the web.</p>
+
+{% endblock %}

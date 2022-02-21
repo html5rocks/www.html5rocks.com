@@ -10,8 +10,8 @@
 {% block browsersupport %}
 <span class="browser opera"><span class="browser_name">Opera</span><span class="support">unsupported</span></span>
 <span class="browser ie"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
-<span class="browser safari "><span class="browser_name">Safari</span><span class="support">unsupported</span></span>
-<span class="browser ff"><span class="browser_name">Firefox</span><span class="support">unsupported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
 <span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
 {% endblock %}
 
@@ -31,7 +31,7 @@ h2 code { text-transform: none; }
 
 <p>Have you ever found yourself wishing you could keep your client-side code readable and more importantly debuggable even after you've combined and minified it, without impacting performance? Well now you can through the magic of <a href="https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?hl=en_US&amp;pli=1&amp;pli=1">source maps</a>.</p><!--more-->
 
-<p>Basically it's a way to map a combined/minified file back to an unbuilt state. When you build for production, along with minifying and combining your JavaScript files, you generate a source map which holds information about your original files. When you query a certain line and column number in your generated JavaScript you can do a lookup in the source map which returns the original location. Developer tools (currently WebKit nightly builds, or Google Chrome Canary) can parse the source map automatically and make it appear as though you're running unminified and uncombined files. As of writing Firefox has a blocked status for Source Map support. See <a href="https://wiki.mozilla.org/DevTools/Features/SourceMap">MozillaWiki Source Map</a> entry for more details.</p>
+<p>Basically it's a way to map a combined/minified file back to an unbuilt state. When you build for production, along with minifying and combining your JavaScript files, you generate a source map which holds information about your original files. When you query a certain line and column number in your generated JavaScript you can do a lookup in the source map which returns the original location. Developer tools (currently WebKit nightly builds, Google Chrome, or Firefox 23+) can parse the source map automatically and make it appear as though you're running unminified and uncombined files.</p>
 
 
 <a class="button-download demo" href="http://www.thecssninja.com/demo/source_mapping/">Demo: Get original location</a>
@@ -50,7 +50,13 @@ h2 code { text-transform: none; }
     <img src="enable-source-maps.png" alt="" title="How to enable source maps in WebKit dev tools" width="609" height="232" class="article-img main-img" />
 </figure>
 
-<p>So... That Source Map query demo is cool and all but what about a real world use case? Take a look at the special build of font dragr at <a href="http://dev.fontdragr.com/">dev.fontdragr.com</a> in Chrome Canary or WebKit nightly, with source mapping enabled, and you'll notice that the JavaScript isn't compiled and you can see all the individual JavaScript files it references. This is using source mapping, but behind the scenes actually running the compiled code. Any errors, logs and breakpoints will map to the dev code for awesome debugging! So in effect it gives you the illusion that you're running a dev site in production.</p>
+<p>Firefox 23+ has source maps enabled by default in the built in dev tools. See screenshot below.</p>
+
+<figure>
+    <img src="enable-source-maps_ff.png" alt="" title="How to enable source maps in Firefox dev tools" width="609" height="224" class="article-img main-img" />
+</figure>
+
+<p>So... That Source Map query demo is cool and all but what about a real world use case? Take a look at the special build of font dragr at <a href="http://dev.fontdragr.com/">dev.fontdragr.com</a> in Chrome Canary, WebKit nightly or Firefox 23+, with source mapping enabled, and you'll notice that the JavaScript isn't compiled and you can see all the individual JavaScript files it references. This is using source mapping, but behind the scenes actually running the compiled code. Any errors, logs and breakpoints will map to the dev code for awesome debugging! So in effect it gives you the illusion that you're running a dev site in production.</p>
 
 
 <a class="button-download demo" href="http://dev.fontdragr.com/">Demo: View scripts panel (with source maps) on fontdragr.com</a>
@@ -70,16 +76,13 @@ h2 code { text-transform: none; }
 
 <p>Take a look at this screencast of CoffeeScript being debugged in an experimental build of the Firefox console:</p>
 
-<iframe width="609" height="339" src="http://www.youtube.com/embed/2aQw1dSIYko?start=625" frameborder="0" allowfullscreen></iframe>
+<iframe width="609" height="339" src="https://www.youtube.com/embed/2aQw1dSIYko?start=625" frameborder="0" allowfullscreen></iframe>
 
 <p>The Google Web Toolkit (GWT) has recently added <a href="http://code.google.com/p/google-web-toolkit/wiki/SourceMaps">support for Source Maps</a> and Ray Cromwell of the GWT team did an awesome screencast showing source map support in action.</p>
 
-<iframe width="609" height="339" src="http://www.youtube.com/embed/-xJl22Kvgjg" frameborder="0" allowfullscreen></iframe>
+<iframe width="609" height="339" src="https://www.youtube.com/embed/-xJl22Kvgjg" frameborder="0" allowfullscreen></iframe>
 
 <p>Another example I've put together uses Google's <a href="http://code.google.com/p/traceur-compiler/">Traceur</a> library which allows you to write ES6 (ECMAScript 6 or Next) and compile it to ES3 compatible code. The Traceur compiler also generates a source map. Take a look at this <a href="http://www.thecssninja.com/demo/source_mapping/ES6/">demo</a> of ES6 traits and classes being used like they're supported natively in the browser, thanks to the source map. The textarea in the demo also allows you to write ES6 which will be compiled on the fly and generate a source map plus the equivalent ES3 code.</p>
-
-
-
 
 <figure>
     <a href="http://www.thecssninja.com/demo/source_mapping/ES6/">
@@ -91,13 +94,15 @@ h2 code { text-transform: none; }
 
 <h2 id="toc-howwork" class="subtitle02">How does the source map work?</h2>
 
-<p>The only JavaScript compiler/minifier that has support, at the moment, for source map generation is the Closure compiler. (I'll explain how to use it later.) Once you've combined and minified your JavaScript, alongside it will exist a sourcemap file. Currently, the Closure compiler doesn't add the special comment at the end that is required to signify to WebKit and Chrome Canary dev tools that a source map is available:</p>
+<p>The only JavaScript compiler/minifier that has support, at the moment, for source map generation is the Closure compiler. (I'll explain how to use it later.) Once you've combined and minified your JavaScript, alongside it will exist a sourcemap file. Currently, the Closure compiler doesn't add the special comment at the end that is required to signify to a browsers dev tools that a source map is available:</p>
 
 <div class="code syntax">
-<pre class="prettyprint">//@ sourceMappingURL=/path/to/file.js.map</pre>
+<pre class="prettyprint">//# sourceMappingURL=/path/to/file.js.map</pre>
 </div>
 
-<p>This enables developer tools to map calls back to their location in original source files. If you don't like the idea of the weird comment you can alternatively set a special header on your compiled JavaScript file:</p>
+<p>This enables developer tools to map calls back to their location in original source files. Previously the comment pragma was <code>//@</code> but due to some issues with that and <a href="#toc-issues">IE conditional compilation comments</a> the <a href="https://groups.google.com/forum/#!topic/mozilla.dev.js-sourcemap/4uo7Z5nTfUY">decision was made</a> to change it to <code>//#</code>. Currently Chrome Canary, WebKit Nightly and Firefox 24+ support the new comment pragma. This syntax change also affects <a href="#toc-sourceurl">sourceURL</a>.</p>
+
+<p>If you don't like the idea of the weird comment you can alternatively set a special header on your compiled JavaScript file:</p>
 
 <div class="code syntax"><pre class="prettyprint">X-SourceMap: /path/to/file.js.map</pre></div>
 
@@ -224,17 +229,17 @@ V    V
 
 <p>As shown above, the first three characters are sliced to check if they match the syntax error in the spec and if so removes all characters leading up to the first new line entity (\n).</p>
 
-<h2 id="toc-sourceurl" class="subtitle02"><code>@sourceURL</code> and <code>displayName</code> in action: Eval and anonymous functions</h2>
+<h2 id="toc-sourceurl" class="subtitle02"><code>sourceURL</code> and <code>displayName</code> in action: Eval and anonymous functions</h2>
 
 <p>While not part of the source map spec the following two conventions allow you to make development much easier when working with evals and anonymous functions.</p>
 
-<p>The first helper looks very similar to the <code>//@ sourceMappingURL</code> property and is actually mentioned in the source map V3 spec. By including the following special comment in your code, which will be evaled, you can name evals so they appear as more logical names in your dev tools. Check out a simple demo using the CoffeeScript compiler:
+<p>The first helper looks very similar to the <code>//# sourceMappingURL</code> property and is actually mentioned in the source map V3 spec. By including the following special comment in your code, which will be evaled, you can name evals so they appear as more logical names in your dev tools. Check out a simple demo using the CoffeeScript compiler:
 
-<a class="button-download demo" href="http://www.thecssninja.com/demo/source_mapping/compile.html">Demo: See <code>eval()</code>'d code show as a script via @sourceURL</a>
+<a class="button-download demo" href="http://www.thecssninja.com/demo/source_mapping/compile.html">Demo: See <code>eval()</code>'d code show as a script via sourceURL</a>
 
 
 <div class="code syntax">
-<pre class="prettyprint">//@ sourceURL=sqrt.coffee</pre>
+<pre class="prettyprint">//# sourceURL=sqrt.coffee</pre>
 </div>
 
 <figure>
@@ -266,9 +271,11 @@ V    V
 
 <h2 id="toc-rally" class="subtitle01">Let's rally together</h2>
 
-<p>Currently there is very lengthy discussion on <a href="https://github.com/jashkenas/coffee-script/issues/558">source map support</a> being added to CoffeeScript. Go check out the issue and add your support for getting source map generation added to the CoffeeScript compiler. This will be a huge win for CoffeeScript and its devoted followers.</p>
+<p><s>Currently there is very lengthy discussion on <a href="https://github.com/jashkenas/coffee-script/issues/558">source map support</a> being added to CoffeeScript. Go check out the issue and add your support for getting source map generation added to the CoffeeScript compiler. This will be a huge win for CoffeeScript and its devoted followers.</s></p>
 
-<p>UglifyJS also has a <a href="https://github.com/mishoo/UglifyJS/issues/315">source map issue</a> you should take a look at too.</p>
+<p><s>UglifyJS also has a <a href="https://github.com/mishoo/UglifyJS/issues/315">source map issue</a> you should take a look at too.</s></p>
+
+<p>Lot's of <a href="https://github.com/ryanseddon/source-map/wiki/Source-maps%3A-languages,-tools-and-other-info">tools</a> generate source maps, including the coffeescript compiler. I consider this a moot point now.</p>
 
 <p>The more tools available to us that can generate a source maps the better off we'll be, so go forth and ask or add source map support to your favourite open source project.</p>
 
@@ -281,6 +288,8 @@ V    V
 <h2 id="toc-issues" class="subtitle02">Issues</h2>
 
 <p>Recently <a href="http://blog.jquery.com/2013/01/15/jquery-1-9-final-jquery-2-0-beta-migrate-final-released/">jQuery 1.9</a> added support for source maps when served off of offical CDNs. It also pointed a <a href="http://bugs.jquery.com/ticket/13274#comment:6">peculiar bug</a> when IE conditional compilation comments (//@cc_on) are used before jQuery loads. There has since been a <a href="https://github.com/jquery/jquery/commit/487b703521e63188102c73e8ce6ce203d28f260b">commit</a> to mitigate this by wrapping the sourceMappingURL in a multi-line comment. Lesson to be learned don't use conditional comment.</p>
+
+<p>This has since <a href="https://groups.google.com/forum/#!topic/mozilla.dev.js-sourcemap/4uo7Z5nTfUY">been addressed</a> with the changing of the syntax to <code>//#</code>.</p>
 
 <h2 id="toc-tools" class="subtitle02">Tools and resource</h2>
 
