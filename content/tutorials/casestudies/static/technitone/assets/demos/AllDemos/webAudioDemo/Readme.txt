@@ -1,1 +1,0 @@
-- Note that the web audio demo will only work when hosted on a server, and then viewed in a web audio enabled browser (like Google Chrome).
