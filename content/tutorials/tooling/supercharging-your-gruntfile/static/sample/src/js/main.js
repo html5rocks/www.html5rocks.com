@@ -1,1 +1,0 @@
-alert("I am the main program");
