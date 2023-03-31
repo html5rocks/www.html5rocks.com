@@ -1,0 +1,2228 @@
+{% extends "tutorial.html" %}
+
+{% block iscompatible %}
+
+{% endblock %}
+{% block head %}
+<style>
+  article.tutorial section h1 b {
+    display: block;
+    font-size: 58px;
+  }
+
+  article.tutorial section blockquote {
+    opacity: 0.9;
+    border-left: 8px solid #ccc;
+    padding-left: 20px;
+  }
+
+  article.tutorial section li {
+    margin: 3px 0;
+  }
+
+  h3 {
+    font-size: 19px;
+  }
+
+  h4 {
+    font-size: 15.5px;
+  }
+
+  h5 {
+    font-size: 14px;
+  }
+
+  article.tutorial section #stack {
+    margin: 5px auto;
+  }
+
+  article.tutorial section #stack td, #stack th {
+    border-bottom: 1px dotted #999;
+  }
+
+  article.tutorial section samp {
+    background-color: #f2f2f2;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  article.tutorial section samp:empty {
+    display: none;
+  }
+
+  article.tutorial section ol.toc {
+    padding-left: 20px;
+    line-height: 1.1;
+  }
+
+  article.tutorial section .autonum *:target {
+    background: hsl(60, 73%, 93%);
+  }
+
+  article.tutorial section cite {
+    display: block;
+    text-align: right;
+    font-size: 80%;
+  }
+
+  article.tutorial section figcaption span:after {
+    content: attr(data-count);
+  }
+
+  article.tutorial section .tocchap, .tocnum {
+    cursor: default;
+  }
+
+  article.tutorial section .tocchap {
+    color: hsl(0, 0%, 60%);
+    margin-bottom: 0;
+    margin-top: 30px;
+  }
+
+  article.tutorial section .tocchap + * {
+    margin-top: 5px;
+  }
+
+  article.tutorial section h2, h3, h4, h5 {
+    position: relative;
+  }
+
+  article.tutorial section .tocnum {
+    position: absolute;
+    left: -56px;
+    width: 50px;
+    text-align: right;
+    font-size: 70%;
+    top: 3px;
+    color: hsl(0, 0%, 80%);
+    -webkit-transition: all 0.3s ease-out;
+    -moz-transition: all 0.3s ease-out;
+    -ms-transition: all 0.3s ease-out;
+    -o-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+  }
+
+  article.tutorial section h2:hover .tocnum, h3:hover .tocnum, h4:hover .tocnum, h5:hover .tocnum {
+    color: hsl(0, 0%, 20%);
+  }
+
+  article.tutorial section .preface + hr + .tocchap {
+    visibility: hidden;
+  }
+
+  article.tutorial section aside.bio {
+    border: 3px double hsl(0, 0%, 80%);
+    padding: 10px;
+  }
+
+  article.tutorial section aside.bio img {
+    width: 60px;
+    height: 60px;
+    margin: 0 10px 0 0;
+    border: 1px solid hsl(0, 0%, 50%);
+  }
+
+  article.tutorial section aside.bio p {
+    margin: 0;
+  }
+</style>
+<script>
+  [].forEach.call(document.querySelectorAll("header .date a"), function (elem, i) {
+    elem.textContent += " (" + ["author", "editor"][i] + ")"
+  })
+</script>
+{% endblock %}
+<meta charset="utf-8">
+<link rel="stylesheet" href="v2-combined.min.css"/>
+{% block content %}
+<div class="preface">
+  <h2>Préface</h2>
+  <p>
+    Cette introduction détaillée sur les opérations internes de WebKit et Gecko est le résultat de beaucoup de
+    recherches menées par la développeuse israélienne Tali Garsiel. Durant quelques années, elle a examiné l'ensemble
+    des données publiées sur les composants internes des navigateurs
+    <small>(voir les <a href="#Resources">ressources</a>)</small>
+    et passé beaucoup de temps à lire le code source de navigateurs. Elle écrit :
+
+  <blockquote>
+    À l'époque de la domination d'IE à 90% il n'y avait rien d'autre à faire que de considérer le navigateur comme une
+    "boîte noire", mais aujourd'hui, avec les navigateurs open représentant <a
+      href="http://techcrunch.com/2011/08/01/open-web-browsers/">plus de la moitié des utilisateurs du marché</a>, c'est
+    le bon moment pour jeter un œil sous le capot et regarder ce qui se trouve dans un navigateur. Eh bien, ce qu'on y
+    trouve sont des millions de lignes de C++...
+  </blockquote>
+  Tali a publié ses recherches sur <a href="http://taligarsiel.com/">son site</a>, mais nous savions qu'elles méritaient
+  une plus large audience, et l'avons donc revu et republié ici.
+
+  <p>
+    En tant que développeur web, <strong>apprendre l'interne des opérations d'un navigateur vous aide à prendre de
+    meilleures décisions et à comprendre les justifications derrière l'apparition de bonnes pratiques</strong>. Bien
+    qu'il s'agisse d'un document plutôt conséquent, nous vous recommandons de passer un peu de temps à le creuser ;
+    soyez sûr(e) que vous ne le regretterez pas.
+
+    <cite>Paul Irish, Relations Développeurs de Chrome</cite>
+  </p>
+
+
+  <div style="border-left: 3px solid hsl(177, 27%, 43%); padding: 7px;">
+    <p>
+      Cet article a été traduit en différentes langues : HTML5 Rocks héberge les versions en <a
+        href="http://www.html5rocks.com/en/tutorials/internals/howbrowserswork/">anglais</a>, <a
+        href="http://www.html5rocks.com/de/tutorials/internals/howbrowserswork/">allemand</a>, <a
+        href="http://www.html5rocks.com/es/tutorials/internals/howbrowserswork/">espagnol</a>, <a
+        href="http://www.html5rocks.com/ja/tutorials/internals/howbrowserswork/">japonais</a>, <a
+        href="http://www.html5rocks.com/pt/tutorials/internals/howbrowserswork/">portugais</a>, <a
+        href="http://www.html5rocks.com/ru/tutorials/internals/howbrowserswork/">russe</a> et <a
+        href="http://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/">chinois simplifié</a>. Vous pouvez
+      également lire des traductions stockées ailleurs en <a
+        href="http://helloworld.naver.com/helloworld/59361">coréen</a> et <a
+        href="http://sonsuzdongu.com/blog/tarayicilar-nasil-calisir-modern-web-tarayicilarin-perde-arkasi-cevirisi">truc </a>.
+    <p>
+      Vous pouvez aussi regarder <a href="http://vimeo.com/44182484">Tali Garsiel donnant une conférence sur ce
+      sujet</a> sur Vimeo:
+      <iframe src="//player.vimeo.com/video/44182484" width="500" height="281" allowfullscreen></iframe>
+    </p>
+  </div>
+
+</div>
+
+<hr>
+
+<h2 id="Introduction">Introduction</h2>
+<p>
+  Les navigateurs web sont les logiciels les plus utilisés. Dans cette introduction, j'expliquerai comment ils
+  fonctionnent en réalité. Nous verrons ce qui se passe lorsque vous tapez <code>google.com</code> dans la barre
+  d'adresse jusqu'à ce qu'apparaisse la page Google sur l'écran du navigateur.
+</p>
+
+<h3>Table des matières</h3>
+
+<ol class="toc">
+  <li><a href="#Introduction">Introduction</a>
+    <ol>
+      <li><a href="#The_browsers_we_will_talk_about">Les navigateurs dont nous allons parler</a></li>
+      <li><a href="#The_browser_main_functionality">La principale fonctionnalité du navigateur</a></li>
+      <li><a href="#The_browser_high_level_structure">La structure haut niveau du navigateur</a></li>
+    </ol>
+  </li>
+  <li><a href="#The_rendering_engine">Le moteur de rendu</a>
+    <ol>
+      <li><a href="#Rendering_engines">Les moteurs de rendu</a></li>
+      <li><a href="#The_main_flow">Le flux principal</a></li>
+      <li><a href="#Main_flow_examples">Exemples de flux principaux</a></li>
+    </ol>
+  </li>
+  <li><a href="#Parsing_general">Analyse et construction et l'arbre DOM</a>
+    <ol>
+      <li><a href="#Parsing_general">Analyse : généralités</a>
+        <ol>
+          <li><a href="#Grammars">Grammaires</a></li>
+          <li><a href="#Parser_Lexer_combination">Combinaison analyseur syntatique&ndash;analyseur lexical</a></li>
+          <li><a href="#Translation">Traduction</a></li>
+          <li><a href="#Parsing_example">Exemple d'analyse syntaxique</a></li>
+          <li><a href="#Formal_definitions_for_vocabulary_and_syntax">Définitions formelles pour vocabulaire et
+            syntaxe</a>
+          </li>
+          <li><a href="#Types_of_parsers">Types de analyseurs syntaxiques</a></li>
+          <li><a href="#Generating_parsers_automatically">Générer les parseurs automatiquement</a></li>
+        </ol>
+      </li>
+      <li><a href="#HTML_Parser">Analyseur syntaxique HTML</a>
+        <ol>
+          <li><a href="#The_HTML_grammar_definition">La définition de grammaire HTML</a></li>
+          <li><a href="#Not_a_context_free_grammar">Pas une grammaire non contextuelle</a></li>
+          <li><a href="#HTML_DTD">DTD HTML</a></li>
+          <li><a href="#DOM">DOM</a></li>
+          <li><a href="#The_parsing_algorithm">L'algorithme de parsing</a></li>
+          <li><a href="#The_tokenization_algorithm">L'algorithme de tokenisation</a></li>
+          <li><a href="#Tree_construction_algorithm">L'algorithme de construction d'arbre</a></li>
+          <li><a href="#Actions_when_the_parsing_is_finished">Actions lorsque le parsing est terminé</a></li>
+          <li><a href="#Browsers_error_tolerance">Tolérance aux erreurs du navigateur</a></li>
+        </ol>
+      </li>
+      <li><a href="#CSS_parsing">Parsing CSS</a>
+        <ol>
+          <li><a href="#WebKit_CSS_parser">Parseur CSS de WebKit</a></li>
+        </ol>
+      </li>
+      <li><a href="#The_order_of_processing_scripts_and_style_sheets">Ordre des scripts de traitement et des feuilles de
+        style</a>
+        <ol>
+          <li><a href="#Scripts">Scripts</a></li>
+          <li><a href="#Speculative_parsing">Parsing spéculatif</a></li>
+          <li><a href="#Style_sheets">Feuilles de style</a></li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li><a href="#Render_tree_construction">Construction de l'arbre de rendu</a>
+    <ol>
+      <li><a href="#The_render_tree_relation_to_the_DOM_tree">Lien entre l'arbre de rendu et l'arbre DOM</a></li>
+      <li><a href="#The_flow_of_constructing_the_tree">Flux de construction de l'arbre</a></li>
+      <li><a href="#Style_Computation">Calcul du style</a>
+        <ol>
+          <li><a href="#Sharing_style_data">Partage des données de style</a></li>
+          <li><a href="#Firefox_rule_tree">Arbre de règles de Firefox</a>
+            <ol>
+              <li><a href="#Division_into_structs">Division en structures</a></li>
+              <li><a href="#Computing_the_style_contexts_using_the_rule_tree">Calculer les contextes de style en
+                utilisant l'arbre de règles</a></li>
+            </ol>
+          </li>
+          <li><a href="#Manipulating_the_rules_for_an_easy_match">Manipuler les règles pour une correspondance
+            facilitée</a></li>
+          <li><a href="#Applying_the_rules_in_the_correct_cascade_order">Appliquer les règles dans le bon ordre de
+            cascade</a>
+            <ol>
+              <li><a href="#Style_sheet_cascade_order">Ordre de cascade de la feuille de style</a></li>
+              <li><a href="#Specificity">Spécificité</a></li>
+              <li><a href="#Sorting_the_rules">Trier les règles</a></li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+      <li><a href="#Gradual_process">Processus progressif</a></li>
+    </ol>
+  </li>
+  <li><a href="#Layout">Mise en page</a>
+    <ol>
+      <li><a href="#Dirty_bit_system">Système de marqueur de changement</a></li>
+      <li><a href="#Global_and_incremental_layout">Positionnement global et incrémental</a></li>
+      <li><a href="#Asynchronous_and_Synchronous_layout">Positionnements asynchrones et synchrones</a></li>
+      <li><a href="#Optimizations">Optimisations</a></li>
+      <li><a href="#The_layout_process">Le processus de mise en page</a></li>
+      <li><a href="#Width_calculation">Calcul de la largeur</a></li>
+      <li><a href="#Line_Breaking">Saut de ligne</a></li>
+    </ol>
+  </li>
+  <li><a href="#Painting">Dessin</a>
+    <ol>
+      <li><a href="#Global_and_Incremental">Global et incrémental</a></li>
+      <li><a href="#The_painting_order">L'ordre de dessin</a></li>
+      <li><a href="#Firefox_display_list">Liste d'affichage de Firefox</a></li>
+      <li><a href="#WebKit_rectangle_storage">Stockage de rectangles de WebKit</a></li>
+    </ol>
+  </li>
+  <li><a href="#Dynamic_changes">Changements dynamiques</a></li>
+  <li><a href="#The_rendering_engines_threads">Les threads du moteur de rendu</a>
+    <ol>
+      <li><a href="#Event_loop">Boucle d'événements</a></li>
+    </ol>
+  </li>
+  <li><a href="#css">Modèle visuel de CSS2</a>
+    <ol>
+      <li><a href="#The_canvas">Le canvas</a></li>
+      <li><a href="#CSS_Box_model">Modèle de boîte CSS</a></li>
+      <li><a href="#Positioning_scheme">Schéma de positionnement</a></li>
+      <li><a href="#Box_types">Types de boîtes</a></li>
+      <li><a href="#Positioning">Positionnement</a>
+        <ol>
+          <li><a href="#Relative">Relatif</a></li>
+          <li><a href="#Floats">Flottant</a></li>
+          <li><a href="#Absolute_and_fixed">Absolu et fixé</a></li>
+        </ol>
+      </li>
+      <li><a href="#Layered_representation">Représentation en couches</a></li>
+    </ol>
+  </li>
+  <li><a href="#Resources">Ressources</a></li>
+</ol>
+
+
+<div>
+
+  <h2 id="The_browsers_we_will_talk_about">Les navigateurs dont nous allons parler</h2>
+  <p>
+    Cinq grands navigateurs sont utilisés sur les ordinateurs de bureau aujourd'hui : Chrome, Internet Explorer,
+    Firefox, Safari et Opera. Sur mobile, les principaux navigateurs sont Android Browser, iPhone, Opera Mini et Opera
+    Mobile, UC Browser, les navigateurs du Nokia S40/S60 browsers et Chrome&ndash;tous, à l'exception des navigateurs
+    Opéra, étant basés sur WebKit. Je donnerai des exemples des navigateurs open source Firefox et Chrome, ainsi que
+    Safari (qui est en partie open source). Selon <a
+      href="http://gs.statcounter.com/">StatCounter statistics</a> (en Juin 2013) Chrome, Firefox et Safari représentent
+    près de 71% de l'utilisation globale des navigateurs sur ordinateur de bureau. Sur mobile, Android Browser, iPhone
+    et Chrome constituent près de 54% de cette utilisation.
+  </p>
+
+  <h2 id="The_browser_main_functionality">La fonctionnalité principale des navigateurs</h2>
+  <p>
+    La fonctionnalité principale d'un navigateur est de vous présenter la ressource web que vous avez choisie, en la
+    demandant au serveur et en l'affichant dans la fenêtre de navigation. La ressource en question est généralement un
+    document HTML, mais pourrait aussi être un PDF, une image, ou n'importe quel autre type de contenu. La localisation
+    de la ressource est spécifiée par l'utilisateur au travers d'un <abbr
+      title="Uniform Resource Identifier">URI</abbr> (Identificateur Uniforme de Ressource).
+  </p>
+  <p>
+    La manière dont le navigateur interprète et affiche les fichiers HTML est décrite dans les spécifications HTML et
+    CSS. Ces spécifications sont maintenues par l'organisation <a id="w3c">W3C</a> (Consortium World Wide Web), qui est
+    l'organisation régissant les standards du web. Durant des années les navigateurs ne se sont conformés qu'à une
+    partie des specifications et ont développé leurs propres extensions. Cela a causé de sérieux problèmes de
+    compatibilité pour les auteurs de pages web. Aujourd'hui la plupart des navigateurs se conforment plus ou moins à
+    ces specifications.
+  </p>
+  <p>
+    Les interfaces utilisateur d'un navigateur se ressemblent beaucoup entre elles. Parmi les éléments les plus courants
+    d'interface utilisateur, on trouve :
+  <ul>
+    <li>une Barre d'adresse pour insérer un URI</li>
+    <li>des boutons Retour et Avant</li>
+    <li>des options pour places de signets</li>
+    <li>des boutons de Rafraîchissement de Stop pour rafraîchir ou stopper le chargement des documents en cours</li>
+    <li>un bouton Accueil qui vous emmène vers votre page d'accueil</li>
+  </ul>
+
+  <p>
+    Étonnamment, l'interface utilisateur du navigateur n'est spécifiée dans aucune spécification formelle ; elle émane
+    just de bonnes pratiques forgées au cours d'années d'expérience et de navigateurs s'imitant les uns-les autres. La
+    spécification HTML5 ne définit pas les éléments d'IU que doit posséder un navigateur, mais liste certains éléments
+    courants. Parmi ceux-ci, la barre d'adresse, la barre de statut et la barre d'outils. Il existe, bien sûr, des
+    fonctionnalités spécifiques à un navigateur donné, comme le gestionnaire de téléchargements de Firefox par exemple.
+  </p>
+  <h2 id="The_browser_high_level_structure">La structure haut-niveau du navigateur</h2>
+  <p>
+    Les composants principaux d'un navigateur sont (<a href="#1_1">1.1</a>):
+  </p>
+
+  <ol>
+
+    <li><strong>L'interface utilisateur</strong> : cela inclut la barre d'adresse, les boutons retour/avant, le menu de
+      signets, etc. Tout ce qu'affiche le navigateur en dehors de la fenêtre où vous voyez la page demandée.</li>
+    <li><strong>Le moteur de navigation</strong> : gère les actions entre l'IU et le moteur de rendu.</li>
+    <li><strong>Le moteur de rendu </strong> : responsable de l'affichage du contenu demandé. Par exemple si le contenu
+      demandé est en HTML, le moteur de rendu analyse le HTML et le CSS, puis affiche le contenu analysé à l'écran.</li>
+    <li><strong>Réseau</strong> : pour les appels réseaux comme les requête HTTP, en utilisant des implémentations
+      différentes pour différentes plates-formes derrière une interface indépendante de la plate-forme.</li>
+    <li><strong>Backend IU</strong> : utilisé pour dessiner les composants de base comme des boîtes combo ou des
+      fenêtres. Ce backend propose une interface générique qui n'est pas spécifique à la plate-forme. Derrière il
+      utilise des méthodes d'interface utilisateur du système d'exploitation.</li>
+    <li><strong>Interpréteur JavaScript</strong>. Utilisé pour analyser syntaxiquement et exécuter le code JavaScript .
+    </li>
+    <li><strong>Stockage de données</strong>. Il s'agit d'une couche de persistance. Le navigateur peut avoir besoin de
+      sauver toutes sortes de données localement, comme des cookies. Les navigateurs supportent aussi des mécanismes de
+      stockage comme le localStorage, IndexedDB, WebSQL et le système de fichiers.</li>
+
+  </ol>
+
+
+  <figure>
+    <img src="layers.png" width="500" height="339" alt="Composants du navigateur" title=""/>
+    <figcaption><span>Figure </span> : Composants du navigateur</figcaption>
+  </figure>
+
+
+  <p>
+    Il est important de noter que les navigateurs comme Chrome lancent plusieurs instances du moteur de rendu : une pour
+    chaque onglet. Chaque onglet s'exécute dans un processus distinct.
+  </p>
+
+  <h2 id="The_rendering_engine">Le moteur de rendu</h2>
+  <p>
+    La responsabilité du moteur de rendu est, eh bien... de faire le rendu, c'est-à-dire d'afficher le contenu demandé
+    dans la fenêtre du navigateur.
+  </p>
+  <p>
+    Par défaut le moteur de rendu peut afficher des documents HTML et XML, ainsi que des images. Il peut afficher
+    d'autres types de données à l'aide de plug-ins ou d'extensions ; par exemple, afficher des documents PDF en
+    utilisant un plug-in de visualisation PDF. Cependant, dans ce chapitre nous nous concentrerons sur le cas
+    d'utilisation principal : afficher du HTML et des images, formatés en utilisant CSS.</p>
+
+  <h2 id="Rendering_engines">Moteurs de rendu</h2>
+  <p>
+    Différents navigateurs utilisent des moteurs de rendu différents : Internet Explorer utilise Trident, Firefox
+    utilise Gecko, Safari utilise WebKit. Chrome et Opera (depuis la version 15) utilisent Blink, un dérivé de WebKit.
+  </p>
+  <p>
+    WebKit est un moteur de rendu open source qui a commencé comme moteur pour la plate-forme Linux puis a été modifié
+    par Apple pour supporter Mac et Windows. Voir <a href="http://webkit.org/">webkit.org</a> pour plus de détails.
+  </p>
+
+  <h2 id="The_main_flow">Le flux principal</h2>
+  <p>
+    Le moteur de rendu commencera à récupérer le contenu du document demandé en le demandant à la couche réseau. Cela
+    sera généralement fait par portions de 8 Ko.
+  </p>
+  <p>
+    Après cela, il s'agit du flux de base du moteur de rendu :
+  </p>
+
+  <figure>
+    <img src="flow.png" width="600" height="66" alt="Flux de base du moteur de rendu" title=""/>
+    <figcaption><span>Figure </span> : Flux de base du moteur de rendu</figcaption>
+  </figure>
+
+
+  <p>
+    Le moteur de rendu commencera à analyser syntaxiquement le document HTML et à convertir les éléments en nœuds <a
+      href="#DOM">DOM</a> dans un arbre appelé "arbre de contenu". Le moteur analysera syntaxiquement les données de
+    style, qu'elles viennent de fichiers CSS externes ou d'éléments de style dans le contenu. Les informations de style,
+    couplées aux instructions visuelles du HTML, seront utilisés pour créer un autre arbre : l'<a
+      href="#Render_tree_construction">arbre de rendu</a>.
+  </p>
+  <p>
+    L'arbre de rendu contient des rectangles avec des attributs visuels comme la couleur et les dimensions. Les
+    rectangles sont dans le bon ordre pour être affichés à l'écran.
+  </p>
+  <p>
+    Après sa construction, l'arbre de rendu passe par un processus de "<a href="#layout">layout</a>". Cela veut dire
+    donner à chaque nœud les coordonnées exactes de là où il devrait apparaître à l'écran. L'étape suivante est de <a
+      href="#Painting">peindre</a>&ndash;l'arbre de rendu va être traversé et chaque nœud sera dessiné en utilisant la
+    couche de backend IU.
+  </p>
+  <p>
+    Il est important de comprendre qu'il s'agit d'un processus progressif. Pour une meilleure expérience utilisateur, le
+    moteur de rendu essaiera d'afficher du contenu à l'écran aussi tôt que possible. Il n'attendra pas que tout le HTML
+    soit analysé avant de construire les arbres de layout et de rendu. Des parties du contenu seront analysées et
+    affichées, tandis que le processus continuera avec le reste du contenu qui continue à arriver du réseau.
+  </p>
+
+  <h3 id="Main_flow_examples">Exemples de flux principaux</h3>
+
+  <figure>
+    <img src="webkitflow.png" width="624" height="289" alt="Flux principal de WebKit"/>
+    <figcaption><span>Figure </span> : Flux principal de WebKit</figcaption>
+  </figure>
+
+
+  <figure>
+    <img src="image008.jpg" width="624" height="290" alt=""/>
+    <figcaption><span>Figure </span> : Flux principal du moteur de rendu Gecko de Mozilla (<a
+        href="#3_6">3.6</a>)
+    </figcaption>
+  </figure>
+
+
+  <p>
+    Les figures 3 et 4 vous montrent que bien que WebKit et Gecko utilisent une terminologie légèrement différente, le
+    flux reste globalement le même.
+  <p>
+    Gecko appelle "arbre d'image" l'arbre des éléments visuellement formaté. Chaque élément est une image à afficher.
+    WebKit utilise le terme de "arbre de rendu", constitué d'"objets de rendu". WebKit utilise le terme de "layout" pour
+    placer les éléments, tandis que Gecko parle de "Reflux". "Attachement" est le terme utilisé de WebKit pour faire le
+    lien entre nœuds DOM et information visuelle afin de créer l'arbre de rendu. Une différence non sémantique mineure
+    est que Gecko dispose d'une couche supplémentaire entre le HTML et l'arbre DOM tree. Il s'agit de "l'entonnoir à
+    contenu" qui est une fabrique d'éléments DOM. Nous allons parler de chacune des parties du flux :
+  <p>
+  <h3 id="Parsing_general">Analyse&ndash;généralités</h3>
+  <p>
+    L'analyse syntaxique étant un processus particulièrement significatif au sein du moteur de rendu, nous allons
+    l'examiner un peu plus en détails. Commençons par une petite introduction sur ce type d'analyse.
+  </p>
+  <p>
+    L'analyse syntaxique d'un document implique de le traduire en une structure que le code peut utiliser. Le résultat
+    d'une analyse est généralement un arbre de nœuds représentant la structure du document. On l'appelle arbre d'analyse
+    ou arbre syntaxique.
+  </p>
+
+  <p>
+    Par exemple, analyser l'expression <samp>2 + 3 - 1</samp> pourrait retourner cet arbre :
+
+  </p>
+
+
+  <figure>
+    <img src="image009.png" width="400" height="155" alt="nœud d'arbre d'une expression mathématique"/>
+    <figcaption><span>Figure </span>: nœud d'arbre d'une expression mathématique</figcaption>
+  </figure>
+
+  <h3 id="Grammars">Grammaires</h3>
+  <p>
+    L'analyse syntaxique est basée sur les règles syntaxiques auxquelles obéit le document : le langage ou le format
+    dans lequel il a été rédigé. Chaque format que vous analysez doit avoir une grammaire déterministe constituée d'un
+    vocabulaire et de règles de syntaxe. On parle de <a
+      href="#context_free_grammar">grammaire non contextuelle</a>. Les langues humaines ne sont pas de tels langages et
+    ne peuvent donc pas être analysées avec des techniques d'analyse syntaxique conventionnelles.
+  </p>
+  <h3 id="Parser_Lexer_combination">Combinaison analyse syntaxique&ndash;analyse lexicale</h3>
+  <p>
+    L'analyse peut être séparée en deux sous-processus : l'analyse lexicale et l'analyse syntaxique.
+  </p>
+  <p>
+    L'analyse lexicale est le processus de décomposition de l'entrée en tokens. Les tokens représentent le vocabulaire
+    du langage : la collection des blocs de construction valides. Pour une langue humaine il s'agira de tous les mots
+    que l'on peut trouver dans un dictionnaire de cette langue.
+  </p>
+  <p>
+    L'analyse syntaxique est le fait d'appliquer les règles de syntaxe du langage.
+  </p>
+  <p>
+    Les parsers divisent généralement le travail en deux composants : le <b>lexer</b> (parfois appelé tokenizer) qui est
+    responsable de décomposer l'entrée en tokens valides, et le <b>parseur</b> qui est responsable de la construction de
+    l'arbre d'analyse en analysant la structure du document en fonction des règles de syntaxe du langage.
+
+    Le lexeur sait comment éliminer les caractères à ne pas prendre en compte comme les espaces et les sauts de ligne.
+  </p>
+
+  <figure>
+    <img src="image011.png" width="101" height="300" alt="du document source aux arbres d'analyse"/>
+    <figcaption><span>Figure </span> : du document source aux arbres d'analyse</figcaption>
+  </figure>
+
+  <p>
+    Le processus d'analyse est itératif. Le parseur demandera généralement au lexeur un nouveau token et essaiera de
+    faire correspondre le token à une des règles syntaxiques. Si une règle correspond, un nœud correspondant au token
+    sera ajouté à l'arbre d'analyse et le parseur demandera un autre token.
+  <p>
+    Si aucune règle ne correspond, le parseur stockera le token en interne, et continuera à demander d'autres tokens
+    jusqu'à ce qu'une règle correspondant à l'ensemble des tokens stockés en interne soit trouvée. Si aucune règle n'est
+    trouvée alors le parseur lèvera une exception. Cela signifie que le document n'était pas valide et contenait des
+    erreurs de syntaxe.
+  </p>
+  <h3 id="Translation">Traduction</h3>
+  <p>
+    Dans de nombreux cas l'arbre d'analyse n'est pas le produit final. L'analyse est souvent utilisée pour une
+    traduction : transformer le document d'entrée en un autre format. Un exemple est la compilation. La compilateur qui
+    compile le code source en code machine commence par l'analyser sous forme d'un arbre d'analyse, puis traduit l'arbre
+    en un document de code machine.
+  </p>
+
+
+  <figure>
+    <img src="image013.png" width="104" height="400" alt="flux de compilation"/>
+    <figcaption><span>Figure </span> : flux de compilation</figcaption>
+  </figure>
+
+
+  <h3 id="Parsing_example">Exemple d'analyse</h3>
+  <p>
+    Dans la figure 5 nous avons construit un arbre d'analyse à partir d'une expression mathématique. Essayons de définir
+    un langage mathématique simple et voyons le processus d'analyse.
+  <p>
+  <p>
+    Vocabulaire : Notre langage peut inclure des entiers, des signes plus et des signes moins.
+  </p>
+  <p>
+    Syntaxe :
+  <ol>
+    <li>Les blocs de construction de la syntaxe du langage sont des expressions, des termes et des operations.
+    <li>Notre langage peut inclure n'importe quel nombre d'expressions.</li>
+    <li>Une expression est définie comme un "terme" suivi d'une "opération", suivie d'un autre terme</li>
+    <li>Une opération est un token plus ou un token moins</li>
+    <li>Un terme est un token d'entier ou une expression</li>
+  </ol>
+  </p><p>
+  Analysons l'entrée <samp>2 + 3 - 1</samp>. <br> La première sous-chaîne qui correspond à une règle est <samp>2</samp>
+  : selon la règle #5 il s'agit d'un terme. La second correspondance est <samp>2 + 3</samp> : cela correspond à la
+  troisième règle : un terme suivi d'une opération, suivie d'un autre terme. La correspondance suivante n'interviendra
+  que lorsque la fin de l'entrée sera atteinte. <samp>2 + 3 - 1</samp> est une expression parce que nous savons déjà que
+  <samp>2 + 3</samp> est un terme, et nous avons donc un terme suivi d'une opération, suivie d'un autre terme. <samp>2 +
+  + </samp> ne correspondra à aucune règle et est donc une entrée invalide.
+</p>
+  <h3 id="Formal_definitions_for_vocabulary_and_syntax">Définitions formelles pour le vocabulaire et la syntaxe</h3>
+  <p>
+    Le vocabulaire est généralement exprimée au travers <a href="http://www.regular-expressions.info/">expressions
+    régulières</a>.
+  </p>
+  <p>
+    Par exemple notre langage sera défini comme :
+  <pre class="prettyprint">
+ENTIER: 0|[1-9][0-9]*
+PLUS: +
+MOINS: -
+</pre>
+  Comme vous pouvez le voir, les entiers sont définis par une expression régulière.</p><p>
+  La syntaxe est généralement définie dans un format appelé <a
+    href="http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form">BNF </a>. Our language will be defined as:
+  <pre class="prettyprint">
+expression :=  terme  opération  terme
+opération :=  PLUS | MOINS
+terme := ENTIER | expression
+</pre>
+  </p><p>
+  Nous avons dit qu'un langage peut être analysé par des analyseurs syntaxiques réguliers si sa grammaire est une <a
+    id="context_free_grammar">grammaire non contextuelle</a>. Une définition intuitive d'une grammaire non contextuelle
+  est une grammaire qui peut être entièrement exprimée en BNF. Pour une définition formelle, voir l'<a
+    href="http://en.wikipedia.org/wiki/Context-free_grammar">article de Wikipedia sur les grammaires non
+  contextuelles</a>
+  <h3 id="Types_of_parsers">Types d'analyseurs</h3>
+  <p>
+    Il existe deux types d'analyseurs : les analyseurs descendants et les analyseurs ascendants. Une explication
+    intuitive est que les analyseurs descendants examinent la structure de haut niveau de la syntaxe et tentent de
+    trouver une règle qui corresponde. Les analyseurs ascendants commençent par l'entrée et la transforment
+    progressivement dans les règles de syntaxe, en commeçant par les règles de bas niveau, jusqu'à trouver des
+    correspondance avec les règles de haut niveau.
+  </p>
+  <p>
+    Voyons comme les deux types d'analyseurs syntaxiques vont traiter notre exemple.
+  </p>
+  <p>
+    L'analyseur descendant va commencer par la règle de plus haut niveau : il va identifier <samp>2 + 3</samp> comme une
+    expression. Il va alors identifier <samp>2 + 3 - 1</samp> comme une expression (le processus d'identifier
+    l'expression évolue, en faisant correspondre les autres règles, mais le point de départ est la règle de plus haut
+    niveau).
+  </p>
+  <p>
+    L'analyseur ascendant va scruter l'entrée jusqu'à ce qu'une règle corresponde. Il va alors remplacer l'entrée
+    correspondante par la règle. Cela va continuer ainsi jusqu'à la fin de l'entrée. L'expression correspondant
+    partiellement est placée sur la pile de l'analyseur.
+  <table id="stack">
+    <tr>
+      <th>Pile</th>
+      <th>Entrée</th>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td><samp>2 + 3 - 1 </samp></td>
+    </tr>
+    <tr>
+      <td>terme</td>
+      <td><samp> + 3 - 1 </samp></td>
+    </tr>
+    <tr>
+      <td>terme opération</td>
+      <td><samp> 3 - 1 </samp></td>
+    </tr>
+    <tr>
+      <td>expression</td>
+      <td><samp>- 1 </samp></td>
+    </tr>
+    <tr>
+      <td>expression opération</td>
+      <td><samp>1 </samp></td>
+    </tr>
+    <tr>
+      <td>expression</td>
+      <td><samp> - </samp></td>
+    </tr>
+  </table>
+  Ce type d'analyseur ascendant est appelé analyseur lecture-réduction, parce que l'entrée est lue et décalée vers la
+  droite (imaginez un pointeur commençant au début de l'entrée puis se déplaçant vers la droite) puis est
+  progressivement réduite à des règles de syntaxe.</p>
+  <h3 id="Generating_parsers_automatically">Générer automatiquement des analyseurs</h3>
+  <p>
+    Des outils existent pour générer un analyseur syntaxiques. Vous leur donner la grammaire de votre langage&ndash;son
+    vocabulaire et ses règles de syntaxe&ndash;et ils génèrent un analyseur opérationnel. Créer un parseur demande une
+    compréhension approfondie de l'analyse syntaxique et il n'est pas aisé de créer un analyseur syntaxique soi-même ;
+    les générateurs de tels analyseurs sont donc très utiles.
+  </p>
+  <p>
+    <a id="parser_generators">WebKit</a> utilise deux générateurs d'analyseurs syntaxique bien connus : <a
+      href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">Flex</a> pour créer un analyseur lexical, et <a
+      href="http://www.gnu.org/software/bison/">Bison</a> pour créer un analyseur syntaxique (il est possible que vous
+    les trouviez sous les noms de Lex et Yacc). L'entrée de Flex est un fichier contenu les définitions d'expressions
+    régulières des tokens. L'entrée de Bison est l'ensemble des règles de syntax du langage, au format BNF.
+  </p>
+  <h2 id="HTML_Parser">Analyseur syntaxique HTML</h2>
+  <p>
+    Le rôle de l'analyseur syntaxique HTML est d'analyser les balises HTML sous forme d'arbre d'analyse.
+  </p>
+  <h3 id="The_HTML_grammar_definition">Définition de la grammaire HTML</h3>
+  <p>
+    Le vocabulaire et la syntaxe du HTML sont définis dans les <a href="#w3c">specifications</a> créées par
+    l'organisation W3C.
+  </p>
+  <h3 id="Not_a_context_free_grammar">Pas une grammaire non contextuelle</h3>
+  <p>
+    Comme nous l'avons vu dans l'introduction sur l'analyse syntaxique, la syntaxe de la grammaire peut être définie
+    formellement en utilisant des formats comme la BNF.
+  </p>
+  <p>
+    Malheureusement tous les sujets d'un analyseur conventionnel ne s'appliquent pas au HTML (je ne les ai pas mentionné
+    juste pour le plaisir&ndash;ils seront utilisés dans l'analyse syntaxique du CSS et du JavaScript). HTML ne peut pas
+    être facilement défini avec la grammaire non contextuelle dont les analyseurs syntaxiques ont besoin.
+  </p>
+  <p>
+    Il existe un format formel pour définit l'HTML&ndash;la DTD (Définition de Typ de Document)&ndash;mais il ne s'agit
+    pas d'une grammaire non contextuelle.
+  </p>
+  <p>
+    Cela semble étrange au premier abord ; le HTML est plutôt proche du XML. Il existe beaucoup d'analyseurs syntaxique
+    pour XML. Il existe une variation XML du HTML&ndash;XHTML&ndash;alors quelle est la grosse différence ?
+  </p>
+  <p>
+    La différence est que l'approche du HTML est plus "permissive" : elle vous laisse omettre certains tags (qui sont
+    alors ajoutés implicitement), ou parfois omettre des tags ouvrants ou fermants, etc. Dans l'ensemble c'est une
+    syntaxe "gentille", contrairement à la syntaxe rigide et exigeante du XML.
+  </p>
+  <p>
+    Ce détail en apparence anodin change en fait tout. D'un côté c'est la principale raison à la popularité de HTML : il
+    vous pardonne vos erreurs et facilite la vie du créateur de contenu web. D'un autre côté, il rend difficile d'écrire
+    une grammaire formelle. Donc pour résumer, HTML ne peut être facilement analysé syntaxiquement en utilisant des
+    analyseurs syntaxiques conventionnels, parce que sa grammaire n'est pas non contextuelle. HTML ne peut être analysé
+    syntaxiquement par des analyseurs syntaxiques XML.
+  </p>
+  <h3 id="HTML_DTD">DTD HTML</h3>
+  <p>
+    La définition de HTML est au format DTD. Ce format est utilisé pour définir des langages de la famille <a
+      href="http://en.wikipedia.org/wiki/Standard_Generalized_Markup_Language">SGML</a>. Le format contient les
+    définitions de tous les éléments autorisés, leurs attributs et leur hiérarchie. Comme nous l'avons vu auparavant, la
+    DTD HTML ne forme pas une grammaire non contextuelle.
+  </p>
+  <p>
+    Il existe quelques variations de la DTD. Le mode strict se conforme uniquement aux spécifications mais d'autres
+    modes contiennent un support de balises utilisées par des navigateurs dans le passé. Le but est la compatibilité
+    ascendante avec des contenus plus anciens. La DTD stricte actuelle est ici : <a
+      href="http://www.w3.org/TR/html4/strict.dtd">www.w3.org/TR/html4/strict.dtd</a>
+  </p>
+  <h3 id="DOM">DOM</h3>
+  <p>
+    L'arbre de sortie (l'"arbre d'analyse") est un arbre d'attributs et éléments DOM. <abbr
+      title="Document Object Model">DOM</abbr> est l'abbréviation de Modèle Objet de Document. C'est la représentation
+    objet du document HTML et l'interface des éléments HTML avec le monde extérieur comme JavaScript. <br> La racine de
+    l'arbre est l'objet "<a
+      href="http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#i-Document">Document</a>".
+  </p>
+  <p>
+    Le DOM a presque une relation un-pour-un avec les balises. Par exemple :
+  <pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;p&gt;
+      Hello World
+    &lt;/p&gt;
+    &lt;div&gt; &lt;img src="example.png"/&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+  Ces balises seraient traduites en l'arbre DOM suivant :</p>
+
+  <figure>
+    <img src="image015.png" width="400" height="219" alt="Arbre DOM des balises d'exemple"/>
+    <figcaption><span>Figure </span> : Arbre DOM des balises d'exemple</figcaption>
+  </figure>
+
+  <p>
+    Comme HTML, le DOM est spécifié par l'organisation W3C. Voir <a href="http://www.w3.org/DOM/DOMTR">www.w3.org/DOM/DOMTR</a>.
+    Il s'agit d'une spécification générique pour manipuler les documents. Un module spécifique décrit les éléments HTML
+    en particulier. Les définitions HTML peuvent être trouvées ici : <a
+      href="http://www.w3.org/TR/2003/REC-DOM-Level-2-HTML-20030109/idl-definitions.html">www.w3.org/TR/2003/REC-DOM-Level-2-HTML-20030109/idl-definitions.html</a>.
+  </p>
+  <p>
+    Quand je dis que l'arbre contient des nœuds DOM, je veux dire que l'arbre est construit avec des éléments qui
+    implémentent une des interfaces du DOM. Les navigateurs utilisent des implémentations concrètes qui ont d'autres
+    attributs utilisés par le navigateur en interne.
+  </p>
+  <h4 id="The_parsing_algorithm">L'algorithme d'analyse syntaxique</h4>
+  <p>
+    Comme nous l'avons vu dans les sections précédentes, HTML ne peut être analysé syntaxiquement en utilisant les
+    analyseurs syntaxiques normaux descendants ou ascendants.
+  </p>
+  <p>
+    Les raisons sont :
+  <ol>
+    <li>La nature permissive du langage.</li>
+    <li>Le fait que les navigateurs ont une tolérance aux erreurs traditionnelle pour supporter des cas de HTML invalide
+      bien connus.</li>
+    <li>Le processus d'analyse syntaxique est réentrant. Pour d'autres langages, la source ne change pas durant
+      l'analyse, mais en HTML, du code dynamique (tel que des éléments de script contenant des appels à <code>document.write()</code>)
+      peut ajouter de nouveaux tokens, et le processus d'analyse syntaxique modifie donc en fait l'entrée.</li>
+  </ol>
+  <p>
+    Ne pouvant utiliser les techniques d'analyse syntaxique normales, les navigateurs créent des analyseurs syntaxiques
+    spécifiques pour l'analyse du HTML.
+  </p>
+  <p>
+    L'<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html">algorithme d'analyse syntaxique
+    est décrit en détail par la spécification HTML5</a>. L'algorithme consiste en deux étapes : la tokenisation et la
+    construction d'arbre.
+  <p>
+    La tokenisation est l'analyse lexicale, qui analyse l'entrée sous forme de tokens. Parmi les tokens HTML se trouvent
+    des balises ouvrantes, fermantes, des noms et valeurs d'attributs.
+  </p>
+  <p>
+    Le tokeniser reconnait le token, le donne au constructeur d'arbre, et consomme le prochain caractère pour
+    reconnaître le prochain token, et ainsi de suite jusqu'à la fin de l'entrée.
+  </p>
+
+  <figure>
+    <img src="image017.png" width="308" height="400" alt="flux d'analyse HTML (tiré de la spéc HTML5)"/>
+    <figcaption><span>Figure </span> : flux d'analyse HTML (tiré de la spéc HTML5)</figcaption>
+  </figure>
+
+  <h3 id="The_tokenization_algorithm">L'algorithme de tokenisation</h3>
+  <p>
+    La sortie de l'algorithme est un token HTML. L'algorithme est exprimé comme une machine à état. Chaque état consomme
+    un ou plusieurs caractères du flux d'entrée et met à jour l'état suivant en fonction de ces caractères. La décision
+    est influencée par l'état courant de tokenisation et par l'état de construction de l'arbre. Cela signifie que le
+    même caractère consommé donnera des résultats différents pour le prochain état correct, en fonction de l'état en
+    cours. L'algorithme est trop complexe pour être complètement décrit, donc voyons un exemple simple qui nous aidera à
+    comprendre le principe.
+
+  </p>
+  <p>
+
+    Exemple de base&ndash;tokeniser le HTML suivant :
+
+  </p>
+
+  <pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    Hello world
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>
+
+    L'état initial est l'"état donnée". Lorsque le caractère <code>&lt;</code> est rencontré, l'état est changé en <b>"état
+    balise ouverte"</b>. Consommer un caractère <code>a-z</code> provoque la création d'un "Token de début de balise",
+    et l'état est changé en <b>"état nom de tag"</b>. Nous restons dans cet état jusqu'à ce que le caractère
+    <code>&gt; </code> soit consommé. Chaque caractère est ajouté au nouveau nom de token. Dans notre cas le token créé
+    est un token <code>html</code>.
+
+  </p>
+  <p>
+
+    Lorsque la balise <code>&gt;</code> est atteinte, le token en cours est émis et l'état revient à l'<b>"état
+    donnée"</b>. La balise <code>&lt;body&gt;</code> sera traitée au travers des mêmes étapes. Jusqu'ici les balises
+    <code>html</code> et <code>body</code> ont été émises. Nous sommes maintenant de retour dans l'<b>"état donnée"</b>.
+    Consommer le caractère <code>H</code> de <code>Hello world</code> provoquera la création et l'émission d'un token de
+    caractère, ceci jusqu'à ce que le <code>&lt;</code> de <code>&lt;/body&gt;</code> soit atteint. Nous émettrons un
+    token caractère pour chaque caractère de <code>Hello world</code>.
+
+  </p>
+  <p>
+
+    Nous sommes maintenant revenus dans l'<b>"état balise ouverte"</b>. Consommer la prochain entrée <code>/</code>
+    provoquera la création d'un <code>token de balise fermante</code> et un déplacement vers l'<b>"état nom de
+    balise"</b>. À nouveau nous restons dans cet état jusqu'à atteindre <code>&gt;</code>. Puis le nouveau token de
+    balise sera émis et nous retournerons à l'<b>"état donnée"</b>. L'entrée <code>&lt;/html&gt;</code> sera traitée
+    comme le cas précédent.
+
+  </p>
+
+  <figure>
+    <img src="image019.png" width="627" height="387" alt="Tokeniser l'entrée d'exemple">
+    <figcaption><span>Figure </span> : Tokeniser l'entrée d'exemple</figcaption>
+  </figure>
+
+  <h4 id="Tree_construction_algorithm">Algorithme de construction d'arbre</h4>
+  <p>
+    Lorsque l'analyseur syntaxique est créé l'objet Document est créé. Lors de la phase de construction d'arbre l'arbre
+    DOM avec le Document à sa racine sera modifié et des éléments y seront ajoutés. Chaque nœud émis par le tokeniser
+    sera traité par le constructeur d'arbre. Pour chaque token la spécification définit quel élément du DOM est adapté
+    et sera créé pour ce token. L'élément est ajouté à l'arbre DOM, ainsi qu'à la pile des éléments ouverts. Cette pile
+    est utilisée pour corriger les incohérences d'imbrication et les balises non fermées. L'algorithme est également
+    décrit comme une machine à état. Les états sont appelés "nœuds d'insertion".
+  </p>
+
+  <p>
+    Voyons le processus de construction d'arbre pour l'entrée d'exemple :
+  </p>
+
+
+  <pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    Hello world
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>
+    L'entrée de la construction d'arbre est une séquence de tokens issue d'étape de tokenisation. Le premier mode est le
+    <b>"mode initial"</b>. Recevoir le token "html" provoquera un passage dans le mode <b>"avant html"</b> et un
+    retraitement du token dans ce mode. Cela provoquera la création de l'élément HTMLHtmlElement, qui sera ajouté à
+    l'objet racine Document.
+
+  </p>
+  <p>
+
+    L'état sera changé en <b>"avant en-tête"</b>. Le token "body" est alors reçu. Un HTMLHeadElement sera créé
+    implicitement bien que nous n'ayons pas de token "head" et sera ajouté à l'arbre.
+
+  </p>
+  <p>
+
+    Nous passons maintenant en mode <b>"dans l'en-tête"</b> puis dans <b>"après en-tête"</b>. Le token body est
+    retraité, un HTMLBodyElement est créé et inséré et le mode est changé à to <b>"dans corps de document"</b>.
+
+  </p>
+  <p>
+
+    Les tokens caractères de la chaîne "Hello world" sont maintenant reçus. Le premier provoquera la création et
+    l'insertion d'un nœud "Texte" et les autres caractères seront ajoutés à ce nœud.
+
+  </p>
+  <p>
+
+    La réception du token de fin de body provoquera un passage dans le mode <b>"après corps de document"</b>. Nous
+    recevrons maintenant la balise de fin de html qui nous placera dans le mode <b>"après après corps de document"</b>.
+    Recevoir le token de fin de fichier terminera l'analyse syntaxique.
+  </p>
+
+  <figure>
+    <img src="image022.gif" width="532" height="769" alt="Construction d'arbre du html d'exemple"/>
+    <figcaption><span>Figure </span> : construction d'arbre du html d'exemple</figcaption>
+  </figure>
+
+
+  <h3 id="Actions_when_the_parsing_is_finished">Actions lorsque l'analyse syntaxique est terminée</h3>
+  <p>
+    À cette étape le navigateur marquera le document comme interactif et commencera à analyser les scripts qui sont en
+    mode "deferred" : ceux qui doivent être exécutés après l'analyse du document. L'état du document sera alors fixé à
+    "complet" et un événement "load" va être émis.
+  </p>
+
+  <p>
+    Vous pouvez voir <a href="http://www.w3.org/TR/html5/syntax.html#html-parser">les algorithmes complets de
+    tokenisation et construction d'arbre dans la spécification HTML5</a>
+  </p>
+
+  <h3 id="Browsers_error_tolerance">Tolérance aux erreurs des navigateurs</h3>
+  <p>
+    Vous n'aurez jamais d'erreur "Syntaxe invalide" dans une page HTML. Les navigateurs corrigent tout contenu invalide
+    et poursuivent leur analyse.
+
+  </p>
+  <p>
+    Prenez ce HTML par exemple :
+
+  </p>
+
+  <pre class="prettyprint">
+&lt;html&gt;
+  &lt;mytag&gt;
+  &lt;/mytag&gt;
+  &lt;div&gt;
+  &lt;p&gt;
+  &lt;/div&gt;
+    Really lousy HTML
+  &lt;/p&gt;
+&lt;/html&gt;
+</pre>
+
+  <p>
+
+    Je dois avoir violé près d'un million de règles ("mytag" n'est pas une balise standard, mauvaise imbrication des
+    éléments "p" et "div", etc.) mais le navigateur l'affiche toujours correctement et ne se plaint de rien. Donc une
+    bonne partie du code de l'analyseur syntaxique consiste à corriger les erreurs de l'auteur du code HTML.
+
+  </p>
+  <p>
+
+    La gestion d'erreurs est relativement uniforme dans les navigateurs, mais assez incroyablement elle n'a pas été
+    incluse dans les spécifications HTML. Tout comme les signets et les boutons retour/avant, c'est juste quelque chose
+    qui s'est développé dans les navigateurs au fil des années. Il y a des constructions HTML invalides qui sont
+    répétées dans de nombreux sites, et les navigateurs tentent de les corriger d'une manière similaire à ce que font
+    d'autres navigateurs.
+
+  </p>
+
+  <p>
+    La spécification HTML5 définit certaines de ces attentes (WebKit résume bien cela dans le commentaire au début de la
+    classe de l'analyseur syntaxique HTML).
+  </p>
+
+  <blockquote>
+    <p>L'analyseur syntaxique analyse l'entrée tokenisée dans le document, construisant l'arbre du document. Si le
+      document est bien formé, son analyse est rapide.</p>
+
+    <p>Malheureusement, nous devons supporter de nombreux documents HTML qui ne sont pas bien formés, et l'analyseur
+      syntaxique doit donc être tolérant aux erreurs.</p>
+
+    <p>Nous devons prêter attention au moins aux conditions d'erreur suivantes :</p>
+
+    <ol>
+      <li>L'élément que l'on tente d'ajouter est explicitement interdit à l'intérieur d'une balise parente. Dans ce cas
+        nous devrions fermer toutes les balises jusqu'à celle qui interdit l'élément, et l'ajouter à la suite.</li>
+      <li>Nous n'avons pas le droit d'ajouter l'élément directement. Il se pourrait que la personnes rédigeant le
+        document a oublié une balise au milieu (ou que la balise au milieu est optionnelle). Ce pourrait être le cas
+        avec les balises suivantes : HTML HEAD BODY TBODY TR TD LI (en ai-je oublié ?).</li>
+      <li>Nous voulons ajouter un élément de type bloc dans un élément inline. Ferme tous les éléments inline jusqu'au
+        prochain élément bloc de plus haut niveau.</li>
+      <li>Si ça n'aide pas, fermer les éléments jusqu'à ce qu'il soit autorisé d'ajouter l'élément&ndash;ou ignorer la
+        balise.</li>
+    </ol>
+
+  </blockquote>
+
+  <p>
+    Voyons quelques exemples de tolérance aux erreurs de WebKit :
+  </p>
+  <h4>&lt;/br&gt; au lieu de &lt;br&gt;</h4>
+  <p>
+    Certains sites utilisent &lt;/br&gt; au lieu de &lt;br&gt;. Afin d'être compatible avec IE et Firefox, WebKit traite
+    cela comme &lt;br&gt;. <br> Le code :
+  <pre class="prettyprint">
+if (t->isCloseTag(brTag) && m_document->inCompatMode()) {
+     reportError(MalformedBRError);
+     t->beginTag = true;
+}
+</pre>
+  Notez que la gestion d'erreur est interne : elle ne sera pas présentée à l'utilisateur.</p><h4>Un tableau égaré</h4>
+  <p>
+    Un tableau égaré est un tableau dans un autre tableau, mais pas à l'intérieur d'une cellule de tableau.
+  </p>
+  <p>Par exemple :</p>
+  <pre class="prettyprint">
+&lt;table&gt;
+    &lt;table&gt;
+        &lt;tr&gt;&lt;td&gt;tableau interne&lt;/td&gt;&lt;/tr&gt;
+    &lt;/table&gt;
+    &lt;tr&gt;&lt;td&gt;tableau externe&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+  WebKit changera cette hiérarchie en deux tableaux voisins :
+  <pre class="prettyprint">
+&lt;table&gt;
+    &lt;tr&gt;&lt;td&gt;tableau externe&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;table&gt;
+    &lt;tr&gt;&lt;td&gt;tableau interne&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+  Le code :
+  <pre class="prettyprint">
+if (m_inStrayTableContent && localName == tableTag)
+        popBlock(tableTag);
+</pre>
+  WebKit utilise une pile pour le contenu de l'élément courant : il dépilera le tableau interne hors de la pile du
+  tableau externe. Les tableaux seront alors frères.</p><h4>Éléments formulaires imbriqués</h4>
+  <p>
+    Au cas où l'utilisateur place un formulaire dans un autre formulaire, le second formulaire est ignoré. <br> Le code
+    :
+  <pre class="prettyprint">
+if (!m_currentFormElement) {
+        m_currentFormElement = new HTMLFormElement(formTag,    m_document);
+}
+</pre>
+  </p><h4>Une hiérarchie de balises trop profonde</h4>
+  <p>
+    Le commentaire parle de lui-même. <br>
+  <div class="comment">
+    <blockquote>
+      www.liceo.edu.mx est un exemple de site arrivant à imbriquer près de 1500 balises, tous à partir d'un tas de
+      &lt;b&gt;s. Nous n'autoriserons tout au plus que 20 balises imbriquées du même type avant de simplement toutes les
+      ignorer.
+    </blockquote>
+  </div>
+  <pre class="prettyprint">
+bool HTMLParser::allowNestedRedundantTag(const AtomicString& tagName)
+{
+
+unsigned i = 0;
+for (HTMLStackElem* curr = m_blockStack;
+         i &lt; cMaxRedundantTagDepth && curr && curr->tagName == tagName;
+     curr = curr->next, i++) { }
+return i != cMaxRedundantTagDepth;
+}
+</pre>
+  </p><h4>Balises fermantes html ou body mal placées</h4>
+  <p>
+    Encore une fois&ndash;le commentaire parle de lui-même.
+
+  <blockquote>
+    Support de HTML vraiment cassé. Nous ne fermons jamais la balise body, car certaines pages web stupides la ferment
+    avant la réelle fin du doc. Fions-nous à l'appel à end() pour fermer les choses.
+  </blockquote>
+
+  <pre class="prettyprint">
+if (t->tagName == htmlTag || t->tagName == bodyTag )
+        return;
+
+</pre>
+  Donc attentions auteurs du web&ndash;à moins que vous ne vouliez apparaître comme exemple dans un extrait de code de
+  tolérance aux erreurs de WebKit&ndash;rédigez du HTML bien formé.</p><p>
+  <h2 id="CSS_parsing">Analyse syntaxique de CSS</h2>
+  <p>
+    Vous vous souvenez des concepts d'analyse syntaxique dans l'introduction ? Eh bien, contrairement à HTML, CSS est
+    une grammaire non contextuelle et peut être analysé en utilisant les types d'analyseurs décrits dans l'introduction.
+    En fait <a
+      href="http://www.w3.org/TR/CSS2/grammar.html">les spécification CSS définissent la grammaire lexicale et
+    syntaxique de CSS</a>.
+  </p>
+  <p>
+    Voyons quelques exemples : <br> La grammaire lexicale (le vocabulaire) est définie par les expressions régulières de
+    chaque token :
+  <pre>
+comment   \/\*[^*]*\*+([^/*][^*]*\*+)*\/
+num   [0-9]+|[0-9]*"."[0-9]+
+nonascii  [\200-\377]
+nmstart   [_a-z]|{nonascii}|{escape}
+nmchar    [_a-z0-9-]|{nonascii}|{escape}
+name    {nmchar}+
+ident   {nmstart}{nmchar}*
+</pre>
+  <p>
+    "ident" est l'abréviation de identificateur, comme un nom de classe par exemple. "name" est un identifiant d'élément
+    (référencé par "#" )
+  </p>
+  <p>
+    La grammaire syntaxique est décrite en BNF.
+  <pre class="prettyprint lang-css">
+ruleset
+  : selector [ ',' S* selector ]*
+    '{' S* declaration [ ';' S* declaration ]* '}' S*
+  ;
+selector
+  : simple_selector [ combinator selector | S+ [ combinator? selector ]? ]?
+  ;
+simple_selector
+  : element_name [ HASH | class | attrib | pseudo ]*
+  | [ HASH | class | attrib | pseudo ]+
+  ;
+class
+  : '.' IDENT
+  ;
+element_name
+  : IDENT | '*'
+  ;
+attrib
+  : '[' S* IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*
+    [ IDENT | STRING ] S* ] ']'
+  ;
+pseudo
+  : ':' [ IDENT | FUNCTION S* [IDENT S*] ')' ]
+  ;
+</pre>
+  Explication : un ensemble de règles est cette structure :
+  <pre class="prettyprint lang-css">
+div.error, a.error {
+  color:red;
+  font-weight:bold;
+}
+</pre>
+  div.error et a.error sont des sélecteurs. La partie à l'intérieur des accolades contient les règles qui sont
+  appliquées par cet ensemble. Cette structure est définie formellement dans cette définition :
+  <pre class="prettyprint lang-css">
+ruleset
+  : selector [ ',' S* selector ]*
+    '{' S* declaration [ ';' S* declaration ]* '}' S*
+  ;
+</pre>
+  Cela signifie qu'un ensemble de règles est un sélecteur ou éventuellement un certain nombre de sélecteurs séparés par
+  une virgule et des espaces (S veut dire espace). Un ensemble de règles contient des accolades et à l'intérieur de
+  celles-ci une déclaration ou éventuellement une série de déclarations séparées par un point-virgule. "declaration" et
+  "selector" seront définis dans les définitions BNF suivantes.</p>
+  <h3 id="WebKit_CSS_parser">Analyse syntaxique de CSS par WebKit</h3>
+  <p>
+    WebKit utilise les générateurs d'analyseurs syntaxiques <a href="#parser_generators">Flex et Bison</a> pour créer
+    des parseurs automatiquement à partir de fichiers de grammaire CSS. Comme vous vous en souvenez lors de
+    l'introduction à l'analyse syntaxique, Bison crée un analyseur syntaxique ascendant de type lecture-réduction.
+    Firefox utilise un analyseur syntaxique descendant écrit à la main. Dans les deux cas chaque fichier CSS est analysé
+    pour produire un objet StyleSheet. Chaque objet contient des règles CSS. Les objets de type règle CSS contiennent un
+    sélecteur et des objets de déclarations ainsi que d'autres objets correspondant à la grammaire CSS.
+  </p>
+
+  <figure>
+    <img src="image023.png" width="500" height="393" alt="Analyse syntaxique du CSS" title=""/>
+    <figcaption><span>Figure </span> : analyse syntaxique du CSS</figcaption>
+  </figure>
+
+
+  <h2 id="The_order_of_processing_scripts_and_style_sheets">Ordre de traitement des scripts et des feuilles de style
+  </h2>
+  <h4 id="Scripts">Scripts</h4>
+  <p>
+    Le modèle du web est synchrone. Les auteurs s'attendent à ce que les scripts soient analysés et exécutés
+    immédiatement lorsque l'analyseur syntaxique trouve une balise &lt;script&gt;. L'analyse syntaxique du document
+    s'interrompt jusqu'à ce que le script ait été exécuté. Si le script est externe alors la ressource doit d'abord être
+    téléchargée depuis le réseau&ndash;ce qui est aussi fait de manière synchrone, et l'analyse s'interrompt jusqu'à ce
+    que la ressource soit récupérée. Ce fut le modèle pendant de nombreuses années et c'est aussi indiqué dans les
+    spécifications HTML4 et 5. Les auteurs peuvent ajouter l'attribut "defer" à un script, auquel cas il n'interrompra
+    pas l'analyse du document et s'exécutera après que le document ait été analysé. HTML5 ajoute une option pour marquer
+    le script comme asynchrone afin qu'il soit analysé et exécuté par un thread différent.
+  </p>
+  <h3 id="Speculative_parsing">Analyse spéculative</h3>
+  <p>
+    WebKit come Firefox font cette optimisation. Lorsqu'ils exécutent des scripts, un autre thread analyse le reste du
+    document et cherche quelles autres ressources doivent être chargées du réseau et les charge. De cette manière, les
+    ressources peuvent être chargées sur des connexions parallèles et la vitesse globale améliorée. Note : l'analyseur
+    spéculatif n'analyse que les références à des ressources externes comme les feuilles de style, les images et les
+    scripts externes : il ne modifie pas l'arbre DOM&ndash;cela reste le travail de l'analyseur principal.
+  </p>
+  <h3 id="Style_sheets">Feuilles de style</h3>
+  <p>
+    Les feuilles de style d'un autre côté ont un modèle différent. Conceptuellement il semble que puisque les feuilles
+    de style ne changent pas l'arbre DOM, il n'y a aucune raison d'interrompre l'analyse du document pour les attendre.
+    Il y a la question, cependant, des scripts demandant des informations sur les styles pendant la phase d'analyse du
+    document. Si le style n'est pas encore chargé et analysé, le script récupèrera des réponses incorrectes et cela a
+    apparemment causé beaucoup de problèmes. Cela semble être un cas rare mais c'est en fait assez courant. Firefox
+    bloque tous les scripts lorsqu'une feuille de style est en cours de chargement et d'analyse. WebKit ne bloque les
+    scripts que lorsqu'ils tentent de lire certaines propriétés de style qui pourraient être affectées par des feuilles
+    de style non chargées.
+  </p>
+  <h2 id="Render_tree_construction">Construction de l'arbre de rendu</h2>
+  <p>
+    Pendant que l'arbre DOM est construit, la navigateur construit un autre arbre, l'arbre de rendu. Cet arbre est
+    constitué d'éléments visuels, dans l'ordre où ils seront affichés. C'est la représentation visuelle du document. Le
+    but de cet arbre est de permettre de dessiner les contenus dans leur ordre correct.
+  </p>
+  <p>
+    Firefox appelle "frames" les éléments de l'arbre de rendu. WebKit utilise le terme de rendu ou objet de rendu. <br>
+    Un rendu sait comment s'agencer et se dessiner lui et ses éléments fils. <br> La classe RenderObject de WebKit, la
+    base de tous les rendus, a la définition suivante :
+  <pre class="prettyprint">
+class RenderObject{
+  virtual void layout();
+  virtual void paint(PaintInfo);
+  virtual void rect repaintRect();
+  Node* node;  //the DOM node
+  RenderStyle* style;  // le style calculé
+  RenderLayer* containgLayer; //the containing z-index layer
+}
+</pre>
+  </p><p>
+  Chaque rendu représente une zone rectangulaire correspondant généralement à la boîte CSS d'un nœud, comme c'est décrit
+  dans la spec CSS2. Cela inclut des informations géometriques comme la largeur, la hauteur et la position. <br> Le type
+  de boîte dépend de la valeur "display" de l'attribut de style associé au nœud (voir la section de <a
+    href="#style_computation">calcul du style</a>). Voici le code de WebKit pour décider quel type de rendu devrait être
+  créé pour un nœud DOM, en fonction de l'attribut display :
+  <pre class="prettyprint">
+RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
+{
+    Document* doc = node->document();
+    RenderArena* arena = doc->renderArena();
+    ...
+    RenderObject* o = 0;
+
+    switch (style->display()) {
+        case NONE:
+            break;
+        case INLINE:
+            o = new (arena) RenderInline(node);
+            break;
+        case BLOCK:
+            o = new (arena) RenderBlock(node);
+            break;
+        case INLINE_BLOCK:
+            o = new (arena) RenderBlock(node);
+            break;
+        case LIST_ITEM:
+            o = new (arena) RenderListItem(node);
+            break;
+       ...
+    }
+
+    return o;
+}
+</pre>
+  Le type de l'élément est aussi pris en compte : par exemple, les éléments de formulaires et les tableaux ont des
+  images spécifiques. <br> Dans WebKit si un élément veut créer un rendu spécifique, il redéfinira la méthode <code>
+  createRenderer()</code>. Les rendus pointent vers des objets de style contenant des informations non géométriques.</p>
+  <h3 id="The_render_tree_relation_to_the_DOM_tree">Lien entre arbre de rendu et arbre DOM</h3>
+  Les rendus correspondent aux éléments du DOM, mais la relation n'est pas un pour un. Des éléments non-visuels du DOM
+  ne seront pas insérés dans l'arbre de rendu. Un exemple est l'élément "head". Également les éléments dont la valeur de
+  display ont été mis à "none" n'apparaîtrons pas dans l'arbre (alors que les éléments avec la visibilité "hidden"
+  apparaîtront dans l'arbre).</p><p>
+  Il existe des éléments du DOM correspondant à plusieurs objets visuels. Ce sont généralement des éléments ayant une
+  structure complexe qui ne peut être décrite par un simple rectangle. Par exemple, l'élément "select" a 3 rendus : un
+  pour la zone d'affichage, un pour la boîte de la liste déroulante et un pour le bouton. Également lorsque le texte est
+  divisé en plusieurs lignes parce que la largeur n'est pas suffisante pour une ligne, les nouvelles lignes seront
+  ajoutées comme autant de rendus supplémentaires. <br> Un autre exemple de rendus multiples et le HTML cassé. Selon la
+  spéc CSS un élément inline doit contenir soit uniquement des éléments de type bloc, soit uniquement des éléments
+  inline. Dans le cas d'un contenu mixte, des rendus de bloc anonymes seront créés pour encapsuler les éléments inline.
+</p>
+  <p>
+    Des objets de rendu correspondent à un nœud DOM mais par au même endroit dans l'arbre. Les éléments flottants ou
+    positionnés de manière absolue sont hors du flux, placés dans un endroit différent de l'arbre, et associés à l'image
+    réelle. Une image factice est l'endroit où elles auraient dû être.
+  </p>
+
+  <a id="rendertree"></a>
+
+  <figure>
+    <img src="image025.png" width="731" height="396" alt="L'arbre de rendu et l'arbre DOM associé">
+    <figcaption><span>Figure </span> : L'arbre de rendu et l'arbre DOM associé (<a
+        href="#3_1">3.1</a>). Le "viewport" est le bloc conteneur initial. Dans WebKit ce sera l'objet "RenderView"
+    </figcaption>
+  </figure>
+
+
+  <h4 id="The_flow_of_constructing_the_tree">Le flux de construction de l'arbre</h4>
+  <p>
+    Dans Firefox, la présentation est abonnée aux mises-à-jour du DOM. La présentation la création d'images au <code>
+    FrameConstructor</code> et le constructeur résoud le style (voir <a href="#style">calcul du style</a>) et crée une
+    image.
+  </p>
+  <p>
+    Dans WebKit le processus de résolution du style et de création d'un rendu est appelé "attachement". Chaque nœud DOM
+    dispose d'une méthode "attach". L'attachement est synchrone, l'insertion de nœud dans l'arbre DOM appelle la méthode
+    "attach" du nouveau nœud.
+  <p>
+    Traiter les balises html et body débouche sur la construction de la racine de l'arbre de rendu. L'objet de rendu
+    racine correspond à ce que la spéc CSS appelle le bloc conteneur : le bloc de plus haut niveau qui contient tous les
+    autres blocs. Ses dimensions sont celles du viewport : les dimensions de la fenêtre d'affichage du navigateur.
+    Firefox l'appelle <code>ViewPortFrame</code> et WebKit <code>RenderView</code>. Il s'agit de l'objet de rendu vers
+    lequel pointe le document. Le reste de l'arbre est construit au travers de l'insertion de nœuds DOM.
+  </p>
+  <p>
+    Voir <a href="http://www.w3.org/TR/CSS21/intro.html#processing-model">la spéc CSS2 sur le modèle de traitement</a>.
+  </p>
+
+
+  <h3 id="Style_Computation">Calcul de style</h3>
+  <p>
+    Construire l'arbre de rendu nécessite de calcul les propriétés visuelles de chaque objet de rendu. Cela est fait en
+    calculant les propriétés de style de chaque élément.
+  </p>
+  <p>
+    Le style inclut les feuilles de style d'origines diverses, les éléments de style inclus et les propriétés visuelles
+    du HTML (comme la propriété "bgcolor"). Ces dernières sont traduites sous forme de propriétés de style CSS
+    correspondantes.
+  </p>
+  <p>
+    Les origines des feuilles de style sont les feuilles de style par défaut du navigateur, les feuilles de style
+    fournies par l'auteur de la page et les feuilles de style de l'utilisateur&ndash;ce sont des feuilles de style
+    fournies par l'utilisateur du navigateur (les navigateurs vous permettent de définir vos styles favoris. Dans
+    Firefox, par exemple, cela est fait en plaçant une feuille de style dans le dossier "Firefox Profile").
+  </p>
+  <p>
+    Le calcul de style amène plusieurs difficultés :
+  <ol>
+    <li>Les données de <a id="issue1">style</a> sont une très grande structure, contenant de nombreuses propriétés de
+      style, ce qui peut provoquer des problèmes de mémoire.</li>
+    <li>
+      <p><a id="issue2">Trouver</a> les règles correspondantes à chaque élément peut poser des problèmes de performance
+        si ce n'est pas optimisé. Traverser toute la liste de règles pour chaque élément afin de trouver des
+        correspondances est une tâche considérable. Les sélecteurs peuvent avoir une structure complexe pouvant amener
+        le processus de correspondance à emprunter un chemin prometteur qui se révèle finalement non pertinent et un
+        autre chemin doit alors être essayé.
+      </p>
+      <p>Par exemple&ndash;ce sélecteur composite :</p>
+
+      <pre class="prettyprint">
+div div div div{
+  ...
+}
+</pre>
+      signifie que les règles s'appliquent à une <code>&lt;div&gt;</code> qui descend de 3 divs. Supposez que vous
+      vouliez vérifier si la règle s'applique pour un élément <code>&lt;div&gt;</code> donné. Vous choisissez un certain
+      chemin dans l'arbre à vérifier. Vous pourriez avoir besoin de remonter l'arbre de nœuds juste pour vous apercevoir
+      qu'il n'y a que deux divs et que la règle ne s'applique donc pas. Vous devez alors essayer d'autres chemins dans
+      l'arbre.
+    </li>
+    <li><a id="issue3">Appliquer</a> les règles implique des règles de cascade assez complexes qui définissent la
+      hiérarchie des règles.</li>
+  </ol>
+  Voyons comment les navigateurs adressent ces problèmes :
+
+  <h3 id="Sharing_style_data">Partage des données de style</h3>
+  <p>
+    Les nœuds WebKit référencent des objets de style (RenderStyle). Ces objets peuvent être partagés par les nœuds dans
+    certaines conditions. Les nœuds sont frères ou cousins et :
+  <ol>
+    <li>Les éléments doivent être dans le même état de souris (e.g., un ne peut être en :hover tandis que l'autre ne
+      l'est pas)</li>
+    <li>Aucun élément ne peut avoir un id</li>
+    <li>Les noms de balises doivent correspondre</li>
+    <li>Les attributs de classe doivent correspondre</li>
+    <li>Les ensembles d'attributs associés doivent être identiques</li>
+    <li>Les états de lien doivent correspondre</li>
+    <li>les états de focalisation doivent correspondre</li>
+    <li>Aucun des éléments ne doit être affecté par des sélecteurs d'attribut, où "affecté" est défini comme le fait
+      d'avoir une correspondance de sélecteur qui utilise un sélecteur d'attribut à n'importe quelle position dans le
+      sélecteur</li>
+    <li>Il ne doit y avoir aucun attribut de style inclus dans les éléments</li>
+    <li>Aucun sélecteur frère ne doit être utilisé. WebCore active simplement un switch global quand un sélecteur de
+      frère est rencontré et désactive le partage de style pour l'ensemble du document quand ils sont présents. Cela
+      inclut le sélecteur + et des sélecteurs comme :first-child et :last-child.</li>
+  </ol>
+
+  <h3 id="Firefox_rule_tree">Arbre de règles de Firefox</h3>
+  <p>
+    Firefox dispose de deux arbres supplémentaires pour faciliter le calcul de style : l'arbre de règles et l'arbre de
+    contexte de style. WebKit a aussi des objets de style mais ils ne sont pas stockés dans un arbre comme l'arbre de
+    contexte de style, ce sont seulement les nœuds DOM qui pointent vers le style qui leur est associé.
+
+  </p>
+
+  <figure>
+    <img src="image035.png" width="640" height="407" alt="Arbre de contexte de style de Firefox"/>
+    <figcaption><span>Figure </span> : Arbre de contexte de style de Firefox (<a href="#2_2">2.2</a>)
+    </figcaption>
+  </figure>
+
+
+  <p>
+    Les contextes de style contiennent des valeurs finales. Les valeurs sont calculées en appliquant l'ensemble des
+    règles correspondantes dans le bon ordre et en effectuant des manipulations les transformant de valeurs logiques en
+    valeurs concretes. Par exemple, si la valeur logique est un pourcentage de l'écran, elle sera calculée et
+    transformée en unités absolues. L'idée de l'arbre de règles est vraiment maline. Elle permet de partager ces valeurs
+    entre nœuds pour éviter de les recalculer. Cela économise aussi de la mémoire.
+  </p>
+
+  <p>
+    Toutes les règles que l'on a pu faire correspondre sont stockées dans un arbre. Les nœuds du bas dans un arbre ont
+    une plus grande priorité. L'arbre contient tous les chemins des règles pour lesquelles on a trouvé des
+    correspondances. Le stockage des règles est fait à la demande. L'arbre n'est pas calculé au début pour chaque nœud
+    mais, à chaque fois qu'un nœud à besoin d'être calculé, les chemins calculés sont ajoutés à l'arbre.
+  </p>
+  <p>
+    L'idée est de voir les chemins de l'arbre comme les mots d'un lexique. Disons que nous avons déjà calculé cet arbre
+    de règles :
+
+  <figure>
+    <img src="tree.png" width="400" height="261" alt="" title=""/>
+  </figure>
+
+  Supposez que nous ayons besoin de faire correspondre des règles pour un autre élément de l'arbre de contenu, et que
+  nous trouvions que les règles correspondantes (dans le bon ordre) sont B-E-I. Nous avons déjà ce chemin dans l'arbre
+  car nous avons déjà calculé le chemin A-B-E-I-L. Nous avons maintenant moins de choses à faire.</p><p>
+  Voyons comment l'arbre nous économise du travail.
+</p>
+  <h3 id="Division_into_structs">Division en structures</h3>
+  <p>
+    Les contextes de style sont divisés en structures. Ces structures contiennent des informations de style pour une
+    certaine catégorie comme border ou color. Toutes les propriétés dans une structure sont héritées ou non héritées.
+    Les propriétés héritées sont des qui, à moins d'être définies par l'élément, sont héritées du parent. Les propriétés
+    non héritées (appelées propriétés "reset") utilisent des valeurs par défaut si elles ne sont pas définies.
+  </p>
+  <p>
+    L'arbre nous aide pour cacher des structures entières (contenant les valeurs calculées finales) dans l'arbre. L'idée
+    est que si le nœud du bas n'a pas fourni de définition pour une structure, une structure cachée dans un nœud plus
+    haut peut être utilisée.
+  </p>
+  <h3 id="Computing_the_style_contexts_using_the_rule_tree">Calculer les contextes de style en utilisant l'arbre de
+    règles
+  </h3>
+  <p>
+    Lorsque l'on calcule le contexte de style pour un élément donné, on commence par calculer un chemin dans l'arbre de
+    règles ou en utiliser un existant. On commence alors à appliquer les règles trouvées dans le chemin pour remplir les
+    structures de notre nouveau context de style. On commence au nœud du bas du chemin&ndash;celui avec la priorité la
+    plus élevée (le sélecteur le plus spécifique généralement) et on traverse l'arbre jusqu'à ce que notre structure
+    soit complète. S'il n'y a aucune spécification pour la structure dans ce nœud de règle, alors on peut beaucoup
+    optimizer&ndash;on remonte l'arbre jusqu'à trouver un nœud qui le spécifie entièrement et on pointe simplement
+    dessus&ndash;c'est la meilleure optimisation&ndash;la structure entière est partagée. Cela évite le calcul de
+    valeurs finales et économise de la mémoire. <br> Si nous trouvons des définitions partielles nous remontons l'arbre
+    jusqu'à ce que la structure soit remplie.
+  </p>
+  <p>
+    Si nous n'avons trouvé aucune définition pour notre structure alors, au cas où la structure est un type "hérité",
+    nous pointons vers la structure de notre parent dans l'<b>arbre de contexte</b>. Dans un tel cas nous avons encore
+    réussi à partager les structures. Si c'est une structure de reset alors les valeurs par défaut seront utilisées.
+  </p>
+  <p>
+    Si le nœud le plus spécifique ajoute des valeurs alors il nous faut faire des calculs supplémentaires pour les
+    transformer en valeurs réelles. On cache alors le résultat dans le nœud de l'arbre afin qu'il puisse être réutilisé
+    par des nœuds enfants.
+  </p>
+  <p>
+    Dans le cas où un élément a un voisin ou un frère qui pointe vers le même nœud d'arbre, alors l'<b>ensemble du
+    contexte de style</b> peut être partagé entre eux.
+  </p>
+  <p>
+    Voyons un exemple : Supposez que nous ayons ce HTML
+
+
+  <pre class="prettyprint">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div class="err" id="div1"&gt;
+      &lt;p&gt;
+        this is a &lt;span class="big"&gt; grosse erreur &lt;/span&gt;
+        this is also a
+        &lt;span class="big"&gt; très grosse erreur&lt;/span&gt; error
+      &lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="err" id="div2"&gt;une autre erreur&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  et les règles suivantes :
+  <pre class="prettyprint lang-css linenums">
+div {margin:5px;color:black}
+.err {color:red}
+.big {margin-top:3px}
+div span {margin-bottom:4px}
+#div1 {color:blue}
+#div2 {color:green}
+</pre>
+  <p>
+    Pour simplifier les choses disons que nous avons besoin de ne remplir que deux structures : la structure de couleur
+    et la structure de marge. La structure de couleur ne contient qu'un membre : la couleur. La structure de marge
+    contient les quatre côtés. <br> L'arbre de règles résultant ressemblera à ceci (les nœuds sont marqués avec le nom
+    du nœud : le numéro de la règle vers laquelle ils pointent):
+
+
+  <figure>
+    <img src="image027.png" width="500" height="294" alt="L'arbre de règles"/>
+    <figcaption><span>Figure </span> : L'arbre de règles</figcaption>
+  </figure>
+
+
+  <br> L'arbre de contexte ressemblera à ceci (nom de nœud : le nœud de règle vers lequel ils pointent):
+
+
+  <figure>
+    <img src="image029.png" width="400" height="305" alt="L'arbre de contexte">
+    <figcaption><span>Figure </span> : L'arbre de contexte</figcaption>
+  </figure>
+
+
+  <p>
+    Supposons que nous analysons syntaxiquement le HTML et arrivons à la seconde balise &lt;div&gt;. Nous avons besoin
+    de créer un contexte de style pour ce nœud et de remplir ses structures de style. <br> Nous allons chercher les
+    correspondances de règles et découvrir que les règles correspondant à la &lt;div&gt; sont 1, 2 et 6. Cela signifie
+    qu'il existe déjà un chemin dans l'arbre que notre élément peut utiliser et que nous avons juste besoin d'y ajouter
+    un nouveau nœud pour la règle 6 (nœud F dans l'arbre de règles). <br> Nous créerons un contexte de style et le
+    placerons dans l'arbre de contexte. Le nouveau contexte de style pointera vers le nœud F dans l'arbre de règles.
+  </p>
+  <p>
+    Nous avons maintenant besoin de remplir les structures de style. Nous commencerons par remplir la structure de
+    marge. Puisque le dernier nœud de règle (F) n'ajoute rien à la structure de marge, nous pouvons remonter dans
+    l'arbre jusqu'à trouver une structure cachée, calculée lors d'une insertion précédente, et l'utiliser. Nous allons
+    la trouver sur le nœud B, qui est le nœud le plus élevé a avoir spécifié des règles sur les marges.
+  </p>
+  <p>
+    Nous avons bien une définition pour la structure de couleur, et ne pouvons donc pas utiliser une structure déjà
+    cachée. La couleur ayant un attribut, nous n'avons pas besoin de remonter l'arbre pour remplir d'autres attributs.
+    Nous calculerons la valeur finale (convertir la chaîne en RVB etc) et cacherons la structure calculée sur ce nœud.
+  </p>
+  <p>
+    Le travail sur le second élément &lt;span&gt; est encore plus simple. Nous chercherons les correspondances avec les
+    règles et en arriverons à la conclusion qu'il pointe vers la règle G, comme le span précédent. Comme nous avons des
+    noeuds frères qui pointent vers le même noeud, nous pouvons partager l'ensemble du contexte de style et simplement
+    pointer vers le contexte du span précédent.
+  </p>
+  <p>
+    Pour les structures contenant des règles héritées du parent, le cache est fait sur l'arbre de context (la propriété
+    de couleur est en réalité héritée, mais Firefox la taite comme une propriété reset et la cache sur l'arbre de
+    règles). <br> Par exemple nous avons ajouté des règles pour les fontes dans un paragraphe :
+  <pre class="prettyprint">
+p {font-family: Verdana; font size: 10px; font-weight: bold}
+</pre>
+  L'élément paragraphe, qui est un élément fils de la div dans l'arbre de context, pourrait alors partager la même
+  structure de fonte que son élément parent. C'est le cas si aucune règle de fonte n'a été spécifié pour le
+  paragraphe.</p><p>
+  Dans WebKit, il n'y a pas d'arbre de règles. Les déclarations qui trouvent une correspondances sont traversées quatre
+  fois. En tout premier, les règles de haute priorité non-importantes sont appliquées (les propriétés qui devraient être
+  appliquées en premier parce que d'autres en dépendent, comme display), puis celles de haute priorité importantes, puis
+  celles de priorité normales non-importantes, et enfin celles de priorité normale importantes. Cela veut dire que les
+  propriétés qui apparaissent plusieurs fois seront résolues dans le bon ordre de cascade. Le dernier gagne. <br>
+</p>
+  <p>
+    Donc pour résumer : partager les objets de style (entièrement ou certaines des structures qu'ils contiennent) permet
+    d'adresser les problèmes <a href="#issue1">1</a> et <a href="#issue3">3</a>. L'arbre de règles de Firefox aide
+    également à appliquer les propriétés dans le bon ordre.
+  </p>
+  <h3 id="Manipulating_the_rules_for_an_easy_match">Manipuler les règles pour une correspondance facilitée</h3>
+  <p>
+    Il existe plusieurs sources de règles de style :
+  <ul>
+    <li>les règles CSS, qu'elles viennent de feuilles de style externes ou incluses dans des éléments.
+      <pre class="prettyprint">
+p {color: blue}
+</pre>
+    </li>
+    <li>Les attributs de style inclus dans les éléments, comme
+      <pre class="prettyprint">
+&lt;p style="color: blue" /&gt;
+</pre>
+    </li>
+    <li>les attributs visuels supportés par HTML (qui sont en fait associés à des règles de styles)
+      <pre class="prettyprint">
+&lt;p bgcolor="blue" /&gt;
+</pre>
+    </li>
+  </ul>
+  <p>
+    Les deux dernières sont facilement associées à l'élément puisque les attributs de style et que les attributs HTML
+    peuvent être associés en utilisant l'élément comme clé.
+  </p>
+  <p>
+    Comme indiqué précédemment pour le <a href="#issue2">problème n°2</a>, la correspondance de règle CSS peut être plus
+    complexe. Pour résoudre la difficulté, les règles sont manipulées pour un accès plus facile.
+  </p>
+  <p>
+    Après avoir analysé syntaxiquement la feuille de style, les règles sont ajoutées à une des diverses tables de
+    hachage, en fonction du sélecteur. Il y a plusieurs maps par id, par nom de classe, par nom de balise et une map
+    générale pour tout ce qui ne rentre pas dans ces catégories. Si le sélecteur est un id, la règle sera ajoutée à la
+    map des ids, si c'est une classe elle sera ajoutée à la map des classes, etc. <br> Cette manipulation facilite
+    beaucoup la recherche de correspondance de règles. Il n'y a pas besoin de rechercher dans chaque déclaration : on
+    peut extraire de ces maps les règles à associer à un élément. Cette optimisation élimine 95+% des règles, de sorte
+    qu'il n'y a même plus besoin de les prendre en compte durant le process de recherche de correspondances (<a
+      href="#4_1">4.1</a>).
+  </p>
+  <p>
+    Voyons par exemple les règles de style suivantes :
+  <pre class="prettyprint">
+p.error {color: red}
+#messageDiv {height: 50px}
+div {margin: 5px}
+</pre>
+  La première règle sera insérée dans la map de classes. La seconde dans la map des ids et la troisième dans la map des
+  balises. <br> Pour le fragment HTML suivant;
+  <pre class="prettyprint">
+&lt;p class="error">une erreur est intervenue &lt;/p>
+&lt;div id=" messageDiv">ceci est un message&lt;/div&gt;
+</pre>
+  </p><p>
+  Nous allons d'abord essayer de trouver des règles pour l'élément p. La map de classes contiendra une clé "error" avec
+  laquelle on pourra trouver la règle pour "p.error". L'élément div aura des règles associées dans la map des ids (la
+  clé est l'id) et la map de balises. Le seul travail restant est donc de trouver quelles règles parmi celles extraites
+  correspond vraiment. <br> Par exemple si la règle pour la div était
+  <pre class="prettyprint">
+table div {margin: 5px}
+</pre>
+  elle sera quand même extraite de la map des balises, parce que la clé est le sélecteur le plus à droite, mais elle ne
+  sera pas associée à notre élément div, qui n'a pas d'ancêtre de type table.</p><p>
+  WebKit comme Firefox effectuent cette manipulation.
+</p>
+  <h3 id="Applying_the_rules_in_the_correct_cascade_order">Appliquer les règles dans le bon ordre de cascade</h3>
+  <p>
+    L'objet de style a des propriétés correspondant à chaque attribut visuel (tous les attributs CSS, mais en plus
+    générique). Si la propriété n'est définie par aucune des règles trouvées, alors des propriétés peuvent être héritées
+    via l'objet de style de l'élément parent. Les autres propriétés ont des valeurs par défaut.
+  </p>
+  <p>
+    Le problème survient lorsqu'il y a plus d'une définition&ndash;arrive alors l'ordre de la cascade pour résoudre le
+    problème.
+  <h3 id="Style_sheet_cascade_order">Ordre de cascade de la feuille de style</h3>
+  La déclaration d'une propriété de style peut apparaître dans plusieurs feuilles de style, et même plusieurs fois dans
+  une feuille de style donnée. Cela signifie que l'ordre d'application des règles est très important. On appelle ça
+  l'ordre en "cascade". Selon la spéc CSS2, l'ordre en cascade est (de faible à élevé):
+  <ol>
+    <li>les déclarations du navigateur</li>
+    <li>les déclarations normales de l'utilisateur</li>
+    <li>les déclarations normales de l'auteur</li>
+    <li>les déclarations importantes de l'auteur</li>
+    <li>les déclarations importantes de l'utilisateur</li>
+  </ol>
+  </p><p>
+  Les déclarations du navigateur sont moins importantes et l'utilisateur ne passe devant l'auteur que lorsque ses
+  déclarations sont marquées comme importantes. Les déclarations du même ordre seront triées par <a
+    href="#Specificity">spécificité</a> puis en fonction de l'ordre dans lequel elles sont spécifiées. Les attributs
+  visuels HTML sont traduits sous forme de déclarations CSS. Ils sont traités comme des règles de l'auteur avec une
+  faible priorité.
+</p>
+  <h3 id="Specificity">Spécificité</h3>
+  <p>
+    La spécificité du sélecteur est définie par la <a
+      href="http://www.w3.org/TR/CSS2/cascade.html#specificity">spécification CSS2</a> comme suit :
+  <ul>
+    <li>compter 1 si la déclaration vient d'un attribut 'style' plutôt que d'une règle avec un sélecteur, 0 sinon (=
+      a)</li>
+    <li>compter le nombre d'attributs ID dans le sélecteur (= b) </li>
+    <li>compter le nombre d'autres attributs et de pseudo-classes dans le sélecteur (= c) </li>
+    <li>compter le nombre d'éléments et de pseudo-elements dans le sélecteurs (= d) </li>
+  </ul>
+  Concaténer les 4 nombres a-b-c-d (dans un système numérique avec une grande base) donne la spécificité.</p><p>
+  La base numérique que vous devez utiliser est définie par le plus grand nombre que vous avez dans une des catégories.
+  <br> Par exemple, si a=14 vous devez utiliser une base hexadécimale. Dans le cas peu probable où a=17 vous devrez
+  utiliser une base numérique à 17 chiffres. Cette dernière situation peut arriver avec un sélecteur comme ceci : html
+  body div div p ... (17 balises dans votre sélecteur.. peu probable).
+</p>
+  <p>
+    Quelques exemples :
+  <pre class="prettyprint">
+ *             {}  /* a=0 b=0 c=0 d=0 -> spécificité = 0,0,0,0 */
+ li            {}  /* a=0 b=0 c=0 d=1 -> spécificité = 0,0,0,1 */
+ li:first-line {}  /* a=0 b=0 c=0 d=2 -> spécificité = 0,0,0,2 */
+ ul li         {}  /* a=0 b=0 c=0 d=2 -> spécificité = 0,0,0,2 */
+ ul ol+li      {}  /* a=0 b=0 c=0 d=3 -> spécificité = 0,0,0,3 */
+ h1 + *[rel=up]{}  /* a=0 b=0 c=1 d=1 -> spécificité = 0,0,1,1 */
+ ul ol li.red  {}  /* a=0 b=0 c=1 d=3 -> spécificité = 0,0,1,3 */
+ li.red.level  {}  /* a=0 b=0 c=2 d=1 -> spécificité = 0,0,2,1 */
+ #x34y         {}  /* a=0 b=1 c=0 d=0 -> spécificité = 0,1,0,0 */
+ style=""          /* a=1 b=0 c=0 d=0 -> spécificité = 1,0,0,0 */
+</pre>
+  </p>
+  <h3 id="Sorting_the_rules">Trier les règles</h3>
+  <p>
+    Une fois les règles trouvées, elles sont triées selon les règles de la cascade. WebKit utilise un tri à bulles pour
+    les petites listes et un tri fusion pour les grandes. WebKit implémente le tri en redéfinissant l'opérateur "&gt;"
+    pour les règles :
+  <pre class="prettyprint">
+static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
+{
+    int spec1 = r1.selector()->specificity();
+    int spec2 = r2.selector()->specificity();
+    return (spec1 == spec2) : r1.position() > r2.position() : spec1 > spec2;
+}
+</pre>
+  </p>
+  <h3 id="Gradual_process">Processus progressif</h3>
+  <p>
+    WebKit utilise un flag pour marquer si toutes les feuilles de style de plus haut niveau (y compris les @imports) ont
+    été chargées. Si le style n'est pas complètement chargé lors de l'attachement, des espaces réservés sont utilisés et
+    cela est marqué dans le document, et ils seront recalculés lorsque les feuilles de style auront été chargées.
+  </p>
+
+
+  <h2 id="Layout">Mise en page</h2>
+  <p>
+    Lorsque le rendu est créé et ajouté à l'arbre, il n'a pas de position ni de taille. Calculer ces valeurs appelé
+    layout ou reflow.
+  </p>
+  <p>
+    HTML utilise un modèle d'agencement basé sur un flux, ce qui veut dire que la plupart du temps il est possible de
+    calculer la géométrie en une seule fois. Les éléments arrivant plus tard ``dans le flux'' n'affecteront typiquement
+    pas la géométrie des éléments qui étaient auparavant ``dans le flux'', et donc le positionnement des éléments peut
+    se faire de gauche à droite, de haut en bas pour tout le document. Il y a des exceptions : par exemple, les tableaux
+    HTML peuvent demander plus d'une passe (<a href="#3_5">3.5</a>).
+  </p>
+  <p>
+    Le système de coordonnées est relative à l'image racine. Les coordonnées haut et gauche sont utilisées.
+  </p>
+  <p>
+    La mise en page est un processus récursif. Cela commence au rendu racine, qui correspond à l'élément
+    <code>&lt;html></code> du document HTML. La mise en page continue récursivement à travers une partie ou l'ensemble
+    de la hiérarchie des images, en calculant les informations géométriques pour chaque rendu qui le nécessite.
+  </p>
+  La position du rendu racine est 0,0 et ses dimensions sont celles du viewport&ndash;la partie visible de la fenêtre du
+  navigateur.
+  <p>
+    Tous les rendus ont une méthode "layout" ou "reflow", et chaque rendu appelle la méthode layout de ses enfants qui
+    nécessitent une mise en page.
+  </p>
+  <h3 id="Dirty_bit_system">Système de marqueur de changement</h3>
+  <p>
+    Afin de ne pas procéder à une remise en page totale à chaque petit changement, les navigateurs utilisent un système
+    de "marqueur de changement". Un rendu qui est changé ou ajouté se marque lui et ses enfants comme "modifié" :
+    nécessitant une remise en page.
+  </p>
+  <p>
+    Il existe deux marqueurs : "modifié", et "les enfants ont été modifiés", ce qui signifie que bien que le rendu
+    lui-même puisse être OK, au moins un de ses enfants nécessite une remise en page.
+  </p>
+  <h3 id="Global_and_incremental_layout">Remise en page globale et incrémentale</h3>
+  <p>
+    La mise en page peut être déclenchée sur l'arbre de rendu en entier&ndash;il s'agit alors d'une mise en page
+    "globale". Cela peut arriver lorsque :
+  <ol>
+    <li>un changement global de style qui affecte tous les rendus, comme le changement d'une taille de fonte.</li>
+    <li>un écran est redimensionné</li>
+  </ol>
+  </p><p>
+  La mise en page peut être incrémentale, et seuls les rendus modifiés seront repositionnés (cela peut provoquer des
+  dégâts qui demanderont d'autres remise en page). <br> Une mise en page incrémentale est déclenchée (de manière
+  asynchrone) lorsque les rendus sont marqués comme modifiés. Par exemple lorsque de nouveaux rendus sont ajoutés à
+  l'arbre de rendu après que du nouveau contenu soit arrivé du réseau et ajouté à l'arbre DOM.
+</p>
+
+
+  <figure>
+    <img src="reflow.png" width="326" height="341" alt="Mise en page incrémentale"/>
+    <figcaption><span>Figure </span> : Mise en page incrémentale&ndash;seuls les rendus marqués modifiés et leurs
+      enfants sont repositionnés (<a href="#3_6">3.6</a>)
+    </figcaption>
+  </figure>
+
+  <h3 id="Asynchronous_and_Synchronous_layout">Mise en page asynchrone et synchrone</h3>
+  La mise en page incrémentale est faite de manière asynchrone. Firefox empile des "commandes de reflux" pour des mises
+  en page incrémentales et un planificateur déclenche l'exécution groupée de ces commandes. WebKit dispose aussi d'un
+  système de rafraîchissement qui réalise une mise en page incrémentale à intervalles réguliers&ndash;l'arbre est
+  traversé et les rendus modifiés sont repositionnés. <br> Les scripts demandant des informations de style, comme
+  "offsetHeight", peuvent déclencher une mise en page incrémentale de manière synchrone. <br> Une remise en page globale
+  sera généralement déclenchée de manière synchrone. <br> Parfois une mise en page est déclenchée comme conséquence
+  d'une mise en page précédente, parce que des attributs, comme la position du défilement, a changé.
+  <h3 id="Optimizations">Optimisations</h3>
+  Lorsqu'une mise en page est déclenchée par un "redimensionnement" ou un changement dans la position du rendu (mais pas
+  de taille), les tailles des rendus sont récupérées d'un cache et ne sont donc pas recalculées. <br> Dans certains cas,
+  une branche de l'arbre seulement est modifiée et la mise en page ne partira pas de la racine. Cela peut arriver dans
+  des cas où le changement est local et n'affecte pas les éléments autour&ndash;comme du texte saisi dans des champs
+  (autrement chaque saisie au clavier déclencherait une remise en page depuis la racine).</p>
+  <h3 id="The_layout_process">Le processus de mise en page</h3>
+  <p>
+    La mise en page se fait généralement selon le schéma suivant :
+  <ol>
+    <li>Le rendu parent détermine sa propre largeur.
+    <li>Le parent examine ses enfants et pour chacun d'entre eux :
+      <ol>
+        <li>Positionne le rendu de l'enfant (fixe ses x et y).</li>
+        <li>Déclenche la mise en page de l'enfant si nécessaire&ndash;i.e. ils sont marqués comme modifiés ou nous
+          sommes en train de faire une mise en page globale, ou pour une autre raison&ndash;qui calcule la hauteur de
+          l'enfant.</li>
+      </ol>
+    </li>
+    <li>Le parent utilise les hauteurs accumulées des enfants et les hauteurs des marges externes et internes pour fixer
+      sa propre hauteur&ndash;cela sera ensuite utilisé par le parent du rendu parent.</li>
+    <li>Il fixe son marqueur de changement à faux.</li>
+  </ol>
+  </p><p>
+  Firefox utilise un objet "état" (nsHTMLReflowState) comme paramètre de la mise en page (appelée "reflow"). Entre
+  autres choses cet état inclut la largeur des parents. <br> Le résultat de la mise en page de Firefox est un objet
+  "métriques" (nsHTMLReflowMetrics). Il contiendra la hauteur calculée du rendu.
+</p>
+  <h3 id="Width_calculation">Calcul de la largeur</h3>
+  <p>
+    La largeur du rendu est calculée en utilisant la largeur du bloc conteneur, la propriété "width" du style du rendu,
+    les marges et les bordures. <br> Par exemple la lageur de la div suivante :
+  <pre class="prettyprint">
+&lt;div style="width: 30%"/&gt;
+</pre>
+  sera calculée par WebKit comme suit (classe RenderBox, méthode calcWidth):
+  <ul>
+    <li>La largeur du conteneur est le maximum entre 0 et la availableWidth des conteneurs. Dans ce cas la
+      availableWidth est la contentWidth qui est calculée comme :
+      <pre class="prettyprint">
+clientWidth() - paddingLeft() - paddingRight()
+</pre>
+      clientWidth et clientHeight représentent l'intérieur d'un objet, sans la bordure ni la barre de défilement.
+    </li>
+    <li>La largeur des éléments est l'attribut de style "width". Elle sera calculée sous forme de valeur absolue en
+      calculant le pourcentage de la largeur du conteneur.
+    </li>
+    <li>les bordures horizontales et marges internes sont alors ajoutés.</li>
+  </ul>
+  Jusqu'ici il s'agit du calcul de la "largeur préférée". Les largeurs minimum et maximum vont ensuite être calculés.
+  <br> Si la largeur préférée est plus grande que la margeur maximale, la valeur maximum est utilisée. Si elle est
+  inférieure à la largeur minimum (l'unité la plus petite qui ne puisse être coupée) alors la largeur minimale est
+  utilisée.</p><p>
+  Les valeurs sont cachées au cas où une mise en page soit demandée, mais la largeur ne change pas.
+</p>
+  <p>
+  <h3 id="Line_Breaking">Retour à la ligne</h3>
+  <p>
+    Lorsqu'un rendu au milieu d'une mise en page décide qu'il doit revenir à la ligne, le rendu s'arrête et propage au
+    parent de la mise en page qu'il a besoin de revenir à la ligne. Le parent crée des rendus supplémentaires et appelle
+    layout dessus.
+  </p>
+  <h2 id="Painting">Dessin</h2>
+  <p>
+    Dans l'étape de dessin, l'arbre de rendu est traversé et la méthode "paint()" du rendu est appelée pour afficher le
+    contenu à l'écran. Le dessin utilise le composant de l'infrastructure UI.
+  <h3 id="Global_and_Incremental">Global et incrémental</h3>
+  Comme la mise en page, le dessin peut aussi être global&ndash;tout l'arbre est dessiné&ndash;ou incrémental. Lors du
+  dessin incrémental, certains des rendus changent d'une manière qui n'affecte pas tout l'arbre. Le rendu changé
+  invalide son rectangle à l'écran. Cela amène le SE à le voir comme une "région modifiée" et il génère un événement
+  "paint". Le SE le fait de manière très astucieuse et agrège plusieurs régions en une. Dans Chrome cela est plus
+  compliqué parce que le rendu se trouve dans un processus différent du processus principal. Chrome simule le
+  comportement du SE dans une certaine mesure. La présentation écoute ces événements et délègue le message à la racine
+  du rendu. L'arbre est traversé jusqu'à ce que le rendu pertinent soit trouvé. Il se redessine alors tout seul (ainsi
+  que ses enfants généralement).
+  <h3 id="The_painting_order">L'ordre de dessin</h3>
+  <a href="http://www.w3.org/TR/CSS21/zindex.html">CSS2 définit l'ordre du processus de dessin</a>. C'est en fait
+  l'ordre dans lequel les éléments sont empilés dans les <a href="#stackingcontext">contextes d'empilement</a>. Cet
+  ordre affecte le dessin puisque les piles sont dessinées de l'arrière vers l'avant. L'ordre d'empilement d'un rendu de
+  bloc est :
+  <ol>
+    <li>couleur de fond</li>
+    <li>image de fond</li>
+    <li>bordure</li>
+    <li>enfants</li>
+    <li>outline</li>
+  </ol>
+  </p>
+  <h3 id="Firefox_display_list">Liste d'affichage de Firefox</h3>
+  Firefox parcourt l'arbre de rendu et construit une liste d'affichage pour les rectangles à dessiner. Elle contient les
+  rendus associés aux rectangles, dans le bon ordre de dessin (fonds des rendus, puis leurs bordures, etc).
+
+  De cette manière, l'arbre n'a besoin d'être traversé qu'une seule fois pour redessiner, au lieu de plusieurs fois&ndash;dessiner
+  tous les fonds, puis toutes les images, toutes les bordures, etc.
+
+  <p>
+    Firefox optimise le processus en évitant d'ajouter ce qui sera caché, comme des éléments entièrement masqués
+    derrière d'autres éléments opaques.
+  </p>
+  <h4 id="WebKit_rectangle_storage">Stockage de rectangles de WebKit</h4>
+  Avant de redessiner, WebKit sauve l'ancien rectangle sous forme de bitmap. Il ne dessine alors que la différence entre
+  les nouveaux et les anciens rectangles.
+
+  <br>
+
+  <h3 id="Dynamic_changes">Changements dynamiques</h3>
+  Les navigateurs s'efforce de faire le moins de choses possibles suite à un changement. Donc les changements de la
+  couleur d'un élément ne provoqueront un dessin que de cet élément. Les changements de la position de l'élément
+  provoqueront une remise en page et un nouveau dessin de l'élément, de ses enfants et des éventuels éléments frères.
+  Ajouter un noeud dans le DOM provoquera une mise en page et un nouveau dessin du noeud. Ces changements majeurs, comme
+  l'augmentation de la aille de fonte de l'élément "html", provoqueront l'invalidation des caches, une remise en page et
+  un nouveau dessin de la totalité de l'arbre.
+
+
+  <h3 id="The_rendering_engines_threads">Les threads du moteur de rendu</h3>
+  Le moteur de rendu est mono-thread. Presque tout, à l'exception des opérations réseau, se produit dans un seul thread.
+  Dans Firefox et Safari il s'agit d'un thread principal du navigateur. Dans Chrome il s'agit du thread principal de
+  l'onglet. <br> Les opérations réseau peuvent être prise en charge par plusieurs threads parallèles. Le nombre de
+  connexions en parallèle est limité (généralement 2 à 6 connexions).
+  <h3 id="Event_loop">Boucle d'événements</h3>
+  Le thread principal du navigateur est une boucle d'événements. C'est une boucle infinie qui empêche le processus de se
+  terminer. Elle attend des événements (comme les événements de mise en page ou de dessin) et le traite. Voici le code
+  de la boucle d'événements principale de Firefox:
+  <pre class="prettyprint">
+while (!mExiting)
+    NS_ProcessNextEvent(thread);
+</pre>
+
+
+  <h2 id="css">Modèle visuel de CSS2</h2>
+  <h3 id="The_canvas">Le canvas</h3>
+  <p>
+    Selon la <a href="http://www.w3.org/TR/CSS21/intro.html#processing-model">spécification CSS2</a>, le terme de canvas
+    décrit "l'espace où est rendu la structure de formatage" : là où le navigateur dessine le contenu.
+
+    Le canvas est infini pour chaque dimension de l'espace mais les navigateurs choisissent une largeur initiale basée
+    sur les dimensions du viewport.
+  </p>
+  <p>
+    Selon <a href="http://www.w3.org/TR/CSS2/zindex.html">www.w3.org/TR/CSS2/zindex.html</a>, le canvas est transparent
+    s'il est contenu dans un autre, et reçoit une couleur définie par le navigateur s'il n'en a pas.
+  </p>
+  <h3 id="CSS_Box_model">Modèle de boîte CSS</h3>
+  <p>
+    Le <a href="http://www.w3.org/TR/CSS2/box.html">modèle de boîte CSS</a> décrit des boîtes rectangulaires qui sont
+    générées pour les éléments de l'arbre du document et affichées conformément au modèle de formatage visuel. <br>
+    Chaque boîte dispose d'une zone de contenu (e.g. du texte, une image, etc.) ainsi que d'éventuelles bordure et
+    marges interne et externe.
+
+
+  <figure>
+    <img src="image046.jpg" width="509" height="348">
+    <figcaption><span>Figure </span> : Le modèle de boîte CSS2</figcaption>
+  </figure>
+
+
+  <p>
+    Chaque noeud génère 0..n de ces boîtes. <br> Tous les éléments ont une propriété "display" qui détermine le type de
+    boîte qui sera générée.
+
+    Exemples :
+
+  <pre class="prettyprint">
+block : génère une boîte de type bloc.
+inline : génère une ou plusieurs boîte en ligne.
+none : aucune boîte n'est générée.
+</pre>
+  Le défaut est inline mais la feuille de style du navigateur peut fixer d'autres valeurs par défaut. Par exemple : le
+  display par défaut pour un élément "div" est block. <br> Vous pouvez trouver un exemple de feuille de style par défaut
+  ici : <a
+    href="http://www.w3.org/TR/CSS2/sample.html">www.w3.org/TR/CSS2/sample.html</a></p>
+
+  <h3 id="Positioning_scheme">Schéma de positionnement</h3>
+  <p>
+    Il y a trois schémas :
+  <ol>
+    <li>Normal : l'objet est positionné en fonction de sa place dans le document. Cela veut dire que sa place dans
+      l'arbre de rendu est comme sa place dans l'arbre DOM et affichée selon le type et les dimensions de sa boîte</li>
+    <li>Flottant : l'objet est d'abord affiché comme du flux normal, puis déplacé aussi à gauche ou à droite que
+      possible </li>
+    <li>Absolu : l'objet est placé dans l'arbre de rendu à un endroit différent de sa place dans l'arbre DOM</li>
+  </ol>
+  </p><p>
+  Le schéma de positionnement est fixé par la propriété "position" et l'attribut "float".
+  <ul>
+    <li>static et relative impliquent un flux normal</li>
+    <li>absolute et fixed impliquent un positionnement absolu</li>
+  </ul>
+  <br>En positionnement statique, aucune position n'est définie et le postionnement par défaut est utilisé. Dans les
+  autres schémas, l'auteur spécifie la position : top, bottom, left, right.</p><p>
+  La manière dont la boîte est affichée est déterminée par :
+  <ul>
+    <li>Le type de boîte</li>
+    <li>Les dimensions de la boîte</li>
+    <li>Le schéma de positionnement</li>
+    <li>Des informations externes comme la taille de l'image et la taille de l'écran</li>
+  </ul>
+  </p>
+  <h3 id="Box_types">Types de boîte</h3>
+  <p>
+    Boîte bloc : forme un bloc&ndash;possède son propre rectangle dans la fenêtre du navigateur.
+  </p>
+
+
+  <figure>
+    <img src="image057.png" width="150" height="127" alt="Boîte de type bloc"/>
+    <figcaption><span>Figure </span> : Boîte de type bloc</figcaption>
+  </figure>
+
+  <p>
+    Boîte en ligne : ne possède pas son propre bloc, mais se trouve à l'intérieur un bloc conteneur.
+  </p>
+
+
+  <figure>
+    <img src="image059.png" width="300" height="233" alt="Boîtes en ligne"/>
+    <figcaption><span>Figure </span> : Boîtes en ligne</figcaption>
+  </figure>
+
+
+  <p>
+    Les blocs sont formatés verticalement l'un après l'autre. Les boîtes en lignes sont formatées horizontalement.
+  </p>
+
+
+  <figure>
+    <img src="image061.png" width="350" height="324" alt="Formatage bloc et en ligne"/>
+    <figcaption><span>Figure </span> : Formatage bloc et en ligne</figcaption>
+  </figure>
+
+
+  <p>
+    Les boîtes en ligne sont placées dans des lignes ou "boîtes de ligne". Les lignes sont au moins aussi hautes que la
+    boîte la plus haute mais peuvent être plus hautes, lorsque les boîtes sont alignées "baseline"&ndash;ce qui veut
+    dire que la partie basse d'un élément est alignée en un point d'une autre boîte autre que sa base. Si la largeur du
+    conteneur n'est pas suffisante, les inlines seront plus sur plusieurs lignes. C'est généralement ce qui se passe
+    dans un paragraphe.
+
+  </p>
+
+
+  <figure>
+    <img src="image063.png" width="400" height="277" alt="Lignes">
+    <figcaption><span>Figure</span> : Lignes</figcaption>
+  </figure>
+
+  <h3 id="Positioning">Positionnement</h3>
+  <h4 id="Relative">Relatif</h4>
+  <p>
+    Positionnement relatif&ndash;positionné comme d'habitude plus déplacé selon le delta demandé.
+  </p>
+
+  <figure>
+    <img src="image065.png" width="500" height="261" alt="Positionnement relatif"/>
+    <figcaption><span>Figure</span> : Positionnement relatif</figcaption>
+  </figure>
+
+  <h4 id="Floats">Flottants</h4>
+  <p>
+    Une boîte flottante est décalée vers la gauche ou la droite sur une ligne. La caractéristique intéressante est que
+    les autres boîtes la contournent. Le HTML:
+  <pre class="prettyprint">
+&lt;p&gt;
+  &lt;img style="float: right" src="images/image.gif" width="100" height="100"&gt;
+  Lorem ipsum dolor sit amet, consectetuer...
+&lt;/p&gt;
+</pre>
+  Ressemblera à :</p>
+
+
+  <figure>
+    <img src="image067.png" width="444" height="203" alt="Flottant"/>
+    <figcaption><span>Figure </span> : Flottant</figcaption>
+  </figure>
+
+
+  <h4 id="Absolute_and_fixed">Absolu et fixé</h4>
+  <p>
+    La mise en page est définie exactement, indépendamment du flux normal. L'élément ne participe pas au flux normal.
+    Les dimensions sont relatives au conteneur. Dans le cas fixé, le conteneur est le viewport.
+
+  <figure>
+    <img src="image069.png" width="500" height="343" alt="Positionnement fixé"/>
+    <figcaption><span>Figure </span> : Positionnement fixé</figcaption>
+  </figure>
+
+
+  <br> Note : la boîte fixée ne se déplacera pas même lors que l'on fait défiler le document !</p>
+  <h3 id="Layered_representation">Représentation en couches</h3>
+  <p>
+    Ceci est spécifié par la propriété CSS z-index. Elle représente la 3ème dimension de la boîte : sa position le long
+    de l'"axe z".
+  </p>
+  <p>
+    Les boîtes sont réparties en <a id="stackingcontext">piles</a> (appelées contextes d'empilement). Dans chaque pile
+    les éléments à l'arrière seront dessinés en premier et les éléments à l'avant par-dessus, plus près de
+    l'utilisateur. Dans le cas d'un recouvrement, l'élément le plus proche masquera l'élément précédent. <br> Les piles
+    sont ordonnées selon la propriété z-index. Les boîtes ayant une propriété "z-index" forment une pile locale. Le
+    viewport a la pile externe.
+
+  <p>Exemple :</p>
+
+  <pre class="prettyprint">
+&lt;style type="text/css"&gt;
+      div {
+        position: absolute;
+        left: 2in;
+        top: 2in;
+      }
+&lt;/style&gt;
+
+&lt;p&gt;
+    &lt;div
+         style="z-index: 3;background-color:red; width: 1in; height: 1in; "&gt;
+    &lt;/div&gt;
+    &lt;div
+         style="z-index: 1;background-color:green;width: 2in; height: 2in;"&gt;
+    &lt;/div&gt;
+ &lt;/p&gt;
+</pre>
+  Le résultat sera ainsi :</p>
+
+
+  <figure>
+    <img src="image071.png" width="254" height="227" alt="Positionnement fixé"/>
+    <figcaption><span>Figure </span> : Positionnement fixé</figcaption>
+  </figure>
+
+  <p>
+    Bien que la div rouge précède la verte dans le balisage, et aurait donc dû être dessinée avant dans le flux normal,
+    sa propriété z-index est plus élevée, et elle est donc plus en avant dans la pile possédée par la boîte racine.
+  </p>
+
+  <h2 id="Resources">Ressources</h2>
+  <div class="autonum">
+    <ol>
+      <li id="1">Architecture du navigateur
+        <ol>
+          <li id="1_1">Grosskurth, Alan. <a href="http://grosskurth.ca/papers/browser-refarch.pdf">A Reference
+            Architecture for Web Browsers (pdf)</a>
+          <li id="1_2">Gupta, Vineet. <a
+              href="http://www.vineetgupta.com/2010/11/how-browsers-work-part-1-architecture/">How Browsers Work&ndash;Part
+            1&ndash;Architecture</a>
+        </ol>
+
+      <li id="2">Analyse syntaxique
+        <ol>
+          <li id="2_1">Aho, Sethi, Ullman, Compilers: Principles, Techniques, and Tools (aka the "Dragon book"),
+            Addison-Wesley, 1986
+          <li id="2_2"> Rick Jelliffe. <a
+              href="http://broadcast.oreilly.com/2009/05/the-bold-and-the-beautiful-two.html">The Bold and the
+            Beautiful: two new drafts for HTML 5.</a>
+        </ol>
+
+      <li id="3">Firefox
+        <ol>
+          <li id="3_1">L. David Baron, <a href="http://dbaron.org/talks/2008-11-12-faster-html-and-css/slide-6.xhtml">Faster
+            HTML and CSS: Layout Engine Internals for Web Developers.</a>
+          <li id="3_2">L. David Baron, <a href="https://www.youtube.com/watch?v=a2_6bGNZ7bA">Faster HTML and CSS: Layout
+            Engine Internals for Web Developers (Google tech talk video)</a>
+          <li id="3_3">L. David Baron, <a href="http://www.mozilla.org/newlayout/doc/layout-2006-07-12/slide-6.xhtml">Mozilla's
+            Layout Engine</a>
+          <li id="3_4">L. David Baron, <a href="http://www.mozilla.org/newlayout/doc/style-system.html">Mozilla Style
+            System Documentation</a>
+          <li id="3_5">Chris Waterson, <a href="http://www.mozilla.org/newlayout/doc/reflow.html">Notes on HTML
+            Reflow</a>
+          <li id="3_6">Chris Waterson, <a href="http://www.mozilla.org/newlayout/doc/gecko-overview.htm">Gecko
+            Overview</a>
+          <li id="3_7">Alexander Larsson, <a href="https://developer.mozilla.org/en/The_life_of_an_HTML_HTTP_request">The
+            life of an HTML HTTP request</a>
+        </ol>
+
+      <li id="4">WebKit
+        <ol>
+          <li id="4_1">David Hyatt, <a href="http://weblogs.mozillazine.org/hyatt/archives/cat_safari.html">Implementing
+            CSS(part 1)</a>
+          <li id="4_2">David Hyatt, <a href="http://weblogs.mozillazine.org/hyatt/WebCore/chapter2.html">An Overview of
+            WebCore</a>
+          <li id="4_3">David Hyatt, <a href="http://webkit.org/blog/114/">WebCore Rendering</a>
+          <li id="4_5">David Hyatt, <a href="http://webkit.org/blog/66/the-fouc-problem/">The FOUC Problem</a>
+        </ol>
+
+      <li id="5">Spécifications du W3C
+        <ol>
+          <li id="5_1"><a href="http://www.w3.org/TR/html4/">HTML 4.01 Specification</a>
+          <li id="5_2"><a href="http://dev.w3.org/html5/spec/Overview.html">W3C HTML5 Specification</a>
+          <li id="5_3"><a href="http://www.w3.org/TR/CSS2/">Cascading Style Sheets Level 2 Revision 1 (CSS 2.1)
+            Specification</a>
+        </ol>
+
+      <li>Instruction de construction des navigateurs
+        <ol>
+          <li>Firefox. <a href="https://developer.mozilla.org/en/Build_Documentation">https://developer.mozilla.org/en/Build_Documentation</a>
+          <li>WebKit. <a href="http://webkit.org/building/build.html">http://webkit.org/building/build.html</a>
+        </ol>
+
+    </ol>
+
+    <!--  -->
+
+  </div>
+
+
+</div>
+
+<aside class="bio">
+
+  <img align="left" src="/static/images/profiles/taligarsiel.png">
+  <p><a href="http://taligarsiel.com/">Tali Garsiel</a> est développeuse en Israël. Elle a commencé comme développeuse
+    web en 2000, et a appris à connaître le modèle de couche "diabolique" de Netscape. Tout comme Richard Feynmann, elle
+    a développé une fascination à comprendre comment les choses fonctionnent et elle a donc commencé à chercher dans les
+    internes des navigateurs et à commencer à documenter ce qu'elle trouvait. Tali a aussi publié un court <a
+        href="http://taligarsiel.com/ClientSidePerformance.html">guide sur la performance côté client</a>.
+  </p>
+
+</aside>
+
+
+<h4>Traductions</h4>
+<p>Cette page a été traduite en Japonais, deux fois ! <a
+    href="http://cou929.nu/docs/how-browsers-work/">How Browsers
+  Work&ndash;Behind the Scenes of Modern Web Browsers (ja)</a> by <a href="https://twitter.com/#!/_kosei_">@_kosei_</a>
+  and also <a href="http://shanon-tech.blogspot.com/2011/09/web.html">ブラウザってどうやって動いてるの？（モダンWEBブラウザシーンの裏側</a> by <a
+      href="https://twitter.com/#!/ikeike443">@ikeike443</a> and <a href="https://twitter.com/#!/kiyoto01">@kiyoto01</a>.
+  Thanks everyone!</p>
+
+
+{% endblock %}
