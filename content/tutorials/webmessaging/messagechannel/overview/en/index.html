@@ -1,0 +1,232 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Raju Konga <kongaraju@gmail.com>{% endblock %}
+
+{% block pagebreadcrumb %}Javascript Threads Communication{% endblock %}
+
+{% block head %}
+<style>
+.example {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-performance.png" width="133" height="64" alt="This article is powered by HTML5 Performance &amp; Integration" title="This article is powered by HTML5 Performance &amp; Integration" />
+{% endblock %}
+
+{% block iscompatible %}
+  return !!window.MessageChannel;
+{% endblock %}
+
+{% block content %}
+<h2 id="toc-introduction-js-thread-comm">Introduction to Javascript Threads Communication</h2>
+<p>What are threads in Javascript? thread in javascript can be document main execution thread or it can be a webworker. These independant scripts can perform their jobs with no interaction between them, some cases needs interaction between them like two threads initailized in same document they need to share task.</p>
+
+<p>How would communication between javascript threads can heppen? Web Messaging, it brings the cross document communication and channel messaging. This article will only covers channel messaging i.e; Message Channel.</p>
+
+<h2 id="toc-introduction-to-channel-messaging">Introduction to Channel Messaging</h2>
+<p>Channel messaging enables communication between two independent pieces of code. MessageChannel API gives you a way to implement channel messaging, MessageChannel API is a part of Web Messaging specification .Message Channel allows to communicate two independent scripts they can be documents from different origins, they can be two webworkers, individual unrealated scripts, etc... It helps to transfer messages to the other end without any media, both the threads can communicate directly via ports. Array of ports can be sent using ports property of event.</p?
+
+<h2 id="toc-messagechannel-api">Message Channel API</h2>
+
+<p>Message Channel API deals with three things MessageChannel constructor, Message Ports and Message Event. MessageChannel constructor creates new MessageChannel Object with two properties called <code>port1</code> and <code>port2</code> on each instance, each property of MessageChannel object is an instance  MessagePort related to other property.</p>. 
+
+<p>Ports can 
+	send messages using <code>postMessage</code> API and 
+	receives messages using <code>onmessage</code> event.
+
+	 <code>start()</code> enables the messaging on the port and 
+	 <code>close()</code> will terminates.
+</p>
+
+<figure class="center">
+    <img src="/static/images/tutorials/message-channel-flow.png" width="450" height="100" title="Message Channel Flow Diagram" alt="Message Channel Flow Diagram" />
+    <figcaption>Message Channel Flow</figcaption>
+  </figure>
+
+<h2 id="toc-getting-started">Getting Started</h2>
+<p>Detecting the MessageChannel support</p>
+<pre class="prettyprint">
+if(window.MessageChannel &amp;&amp; window.MessagePort){
+	//Yes, you can use channel messaging
+}
+</pre>
+
+<p>Initializing a MessageChannel</p>
+<pre class="prettyprint">
+var msgChannel = new MessageChannel();
+//It returns MessageChannel object
+//MessageChannel {}
+//	|-port1: MessagePort
+//	|-port2: MessagePort
+</pre>
+
+<p>Passing the ports to scripts using postMessage</p>
+<pre class="prettyprint">
+window.postMessage(data,origin,[msgChannel.port2]);
+//postMessage can transfer the transferable objects with the message.
+//for webworkers ignore the origin parameter
+//worker.postMessage(data,[msgChannel.port2]);
+</pre>
+
+<p>Initializing the communication and listening to other port</p>
+<pre class="prettyprint">
+function portMsgListener(msgEvent){
+	//msgEvent is MessageEvent object
+	//msgEvent.data gives the data sent from other port
+	alert(msgEvent.data);
+}
+
+msgChannel.port1.addEventListener("message", portMsgListener, false);
+
+//start listening to messages from other port of message channel
+msgChannel.port1.start();
+</pre>
+
+<p>Receiving the port and storing for future communication purpose</p>
+<pre class="prettyprint">
+//otherWindow can be second worker or frame
+var otherEndMsgPort = null;
+function messageHandler(msgEvent){
+	if( messageEvent.ports.length > 0 ){
+		otherEndMsgPort = messageEvent.ports[0];
+		//It can be use for sending message to the other end
+		//otherEndMsgPort.postMessage(msg);
+		//otherEnd will receive msg
+	}
+}
+
+otherWindow.onmessage = messageHandler;
+</pre>
+
+<p>The messages sending through the ports are copies, not shared. Messages will get serialized and passed to the other port, they will get de-serialized on the other end. So the ports do not share same object instance, the copy of message receives on either port.</p>
+
+<p>Great explanation on Transferable objects can be found <a href="http://www.html5rocks.com/en/tutorials/workers/basics/#toc-transferrables">here</a></p>
+
+<h2 id="toc-use-cases">Use Cases</h2>
+<p>The two different interesting use cases mentioned her, there can be many depending on different scenarios.</p>
+<ol>
+<li>A document contains two frames with different origins, they need communication between them.</li>
+<li>A game application initialized two workers and they need to share a job between them based on requirement.</li> 
+</ol>
+
+<h3 id="toc-communication-workers"><strong>Example: </strong>Communication between web workers</h3>
+
+<p>One of the above mentioned use case explaining here.</p>
+<p><b>In main thred: </b></p>
+<pre class="prettyprint">
+function msgChannelSetup(){
+	if(!supportsMessageChannel()){
+		//Don't have message channel support quit!
+		alert("Your Browser does not support Channel Messaging!");
+		return false;
+	}
+
+    var msgChannel = new MessageChannel();
+    var worker1 = new Worker("worker1.js");
+    var worker2 = new Worker("worker2.js");
+
+    // Setup the connection: Port 1 is for worker 1
+    worker1.postMessage({
+        command : "connect",
+    },[ msgChannel.port1 ]);
+
+    // Setup the connection: Port 2 is for worker 2
+    worker2.postMessage({
+        command : "connect",
+    },[ msgChannel.port2 ]);
+
+    worker1.postMessage({
+        command: "forward",
+        message: "this message is forwarded to worker 2"
+    });
+}
+
+function supportsMessageChannel(){
+	return window.MessageChannel &amp;&amp; window.MessagePort;
+}
+</pre>
+
+<p>In <b>worker1.js</b></p>
+
+<pre class="prettyprint">
+var worker2port;
+var onMessageFromWorker2 = function( event ){
+    console.log("Worker 1 received a message from worker 2: " + event.data);
+
+    //To send something back to worker 2
+    //worker2port.postMessage("");
+};
+
+self.onmessage = function( event ) {
+    switch( event.data.command )
+    {
+        // Setup connection to worker 2
+        case "connect":
+            worker2port = event.ports[0];
+            worker2port.onmessage = onMessageFromWorker2;
+            break;
+
+        // Forward messages to worker 2
+        case "forward":
+            // Forward messages to worker 2
+            worker2port.postMessage( event.data.message );
+            break;
+
+        //handle other messages from main
+        default:
+            console.log( event.data );
+    }
+};
+</pre>
+
+<p>In <b>worker2.js</b></p>
+
+<pre class="prettyprint">
+var worker1port;
+var onMessageFromWorker1 = function( event ){
+    console.log("Worker 2 received a message from worker 1: " + event.data);
+
+    //To send something back to worker 1
+    //worker1port.postMessage("");
+};
+
+    self.onmessage = function( event ) {
+    switch( event.data.command )
+    {
+        // Setup connection to worker 1
+        case "connect":
+            worker1port = event.ports[0];
+            worker1port.onmessage = onMessageFromWorker1;
+            break;
+
+        // Forward messages to worker 1
+        case "forward":
+            // Forward messages to worker 1
+            worker1port.postMessage( event.data.message );
+            break;
+
+        //handle other messages from main
+        default:
+            console.log( event.data );
+    }
+};
+</pre>
+
+<p><a href="https://threadcomm.appspot.com/">Demo</a></p>
+
+<p>The above example shows, how to forward message channel port to workers, how to handle other worker messages and main thread messages and communication between the workers</p>
+
+<p>If there is no support in platform <a href="https://github.com/tildeio/MessageChannel.js">polyfill</a> gives the support to use it. <a href="http://caniuse.com/#search=MessageChannel" >caniuse</a> helps to the support.</p>
+
+<h2 id="toc-references">References</h2>
+  <ul>
+    <li><a href="https://www.w3.org/TR/2011/WD-webmessaging-20110317/#channel-messaging">Channel Messaging</a> specification</li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Channel_Messaging_API/Using_channel_messaging">"Using channel messaging"</a> from Mozilla Developer Network</li>
+    <li><a href="https://dev.opera.com/articles/window-postmessage-messagechannel/#channel">"An Introduction to HTML5 Web Messaging"</a> from Dev.Opera</li>
+  </ul>
+
+{% endblock %}
