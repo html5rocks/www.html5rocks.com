@@ -1,0 +1,231 @@
+{% extends "tutorial.html" %}
+
+{% block headauthor %}Ernest Delgado{% endblock %}
+
+{% block credits %}
+ * Credits:
+ * - flash mp3 player from http://flash-mp3-player.net/
+ *   The player is under the Creative Commons BY SA and MPL 1.1 license.
+ *   http://creativecommons.org/licenses/by-sa/3.0/deed.fr
+ *   http://www.mozilla.org/MPL/
+ * - mp3 file from http://freemusicarchive.org/music/Black_Ant/Free_Beats_Sel_3/Oh_K
+ *   Oh K. by Black Ant is licensed under a Creative Commons Attribution License.
+ *   http://creativecommons.org/licenses/by/3.0/
+ *   http://freemusicarchive.org/music/Black_Ant/
+{% endblock %}
+
+{% block headtitle %}Quick Guide to Implementing the HTML5 Audio Tag{% endblock %}
+{% block pagetitle %}Quick Guide to Implementing the HTML5 Audio Tag (with Fallback to Flash){% endblock %}
+{% block pagebreadcrumb %}Quick Guide to Implementing the HTML5 Audio Tag{% endblock %}
+{% block date %}February 5th, 2010{% endblock %}
+{% block updated %}October 29, 2013{% endblock %}
+
+{% block browsersupport %}
+<span class="browser opera supported"><span class="browser_name">Opera</span><span class="support">supported</span></span>
+<span class="browser ie supported"><span class="browser_name">Internet Explorer</span><span class="support">unsupported</span></span>
+<span class="browser safari supported"><span class="browser_name">Safari</span><span class="support">supported</span></span>
+<span class="browser ff supported"><span class="browser_name">Firefox</span><span class="support">supported</span></span>
+<span class="browser chrome supported"><span class="browser_name">Chrome</span><span class="support">supported</span></span>
+{% endblock %}
+
+{% block html5badge %}
+<img src="/static/images/identity/html5-badge-h-multimedia.png" width="133" height="64" alt="This article is powered by HTML5 Multimedia" title="This article is powered by HTML5 Multimedia" />
+{% endblock %}
+
+{% block head %}
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+  <script>
+    google.load("swfobject", "2.2");
+  </script>
+{% endblock %}
+
+{% block content %}
+  <h2 id="toc-step1">步驟一： 用 audio 元素包住 Flash 物件</h2>
+  <p>那些不支援 HTML5 audio 元素的瀏覽器，將會载入Flash內容。</p>
+  <pre class="prettyprint">
+<span class="new">&lt;audio>
+</span><span class="old">
+    &lt;object class="playerpreview" type="application/x-shockwave-flash"
+            data="player_mp3_mini.swf" width="200" height="20">
+      &lt;param name="movie" value="player_mp3_mini.swf" />
+      &lt;param name="bgcolor" value="#085c68" />
+      &lt;param name="FlashVars" value="mp3=test.mp3" />
+      &lt;embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200"
+             height="20" name="movie" align=""
+             type="application/x-shockwave-flash" flashvars="mp3=test.mp3">
+      &lt;/embed>
+    &lt;/object>
+</span><span class="new">
+&lt;/audio></span>
+</pre>
+
+  <h2 id="toc-step2">步驟二： 加入媒體來源(source標籤)</h2>
+  <p>我們可以加入多行不同媒體格式的"source標籤"。如果瀏覽器不支援第一行的格式，它會嘗試下一行，如此類推。</p>
+   <pre class="prettyprint">
+<span class="old">&lt;audio></span>
+  <span class="new">&lt;source src="test.mp3" type="audio/mpeg" />
+  &lt;source src="test.ogg" type="audio/ogg" /></span><span class="old">
+
+  &lt;object class="playerpreview" type="application/x-shockwave-flash"
+          data="player_mp3_mini.swf" width="200" height="20">
+    &lt;param name="movie" value="player_mp3_mini.swf" />
+    &lt;param name="bgcolor" value="#085c68" />
+    &lt;param name="FlashVars" value="mp3=test.mp3" />
+    &lt;embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200"
+           height="20" name="movie" align=""
+           type="application/x-shockwave-flash" flashvars="mp3=test.mp3">
+    &lt;/embed>
+  &lt;/object>
+
+&lt;/audio></span></pre>
+
+  <h2 id="toc-step3">步驟三： 加入倒退回Flash播放器的支援</h2>
+  <p>萬一瀏覽器不支援我們提供的所有格式，安全起見，我們需要加入倒退回Flash播放器的支援，例如，Firefox 3.5只支援audio元素中的source格式<em>Ogg</em>，但我們手上只有<em>mp3</em>格式檔案。</p>
+  <p><em>備註:</em>坊間有些工具和 <a href="http://audio.online-convert.com/convert-to-ogg">線上轉換器</a> 。如果你想，你可以用你的 mp3 格式檔案來製作 ogg 格式檔案，來加入對 ogg 的支援。</p>
+  <pre class="prettyprint"><span class="old">&lt;audio></span>
+    <span class="new">&lt;source src="test.mp3" type="audio/mpeg" /></span><span class="old">
+
+  &lt;object class="playerpreview" type="application/x-shockwave-flash"
+          data="player_mp3_mini.swf" width="200" height="20">
+    &lt;param name="movie" value="player_mp3_mini.swf" />
+    &lt;param name="bgcolor" value="#085c68" />
+    &lt;param name="FlashVars" value="mp3=test.mp3" />
+    &lt;embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200"
+           height="20" name="movie" align=""
+           type="application/x-shockwave-flash" flashvars="mp3=test.mp3">
+    &lt;/embed>
+  &lt;/object>
+
+&lt;/audio>
+</span><span class="new">
+&lt;div id="player_fallback">&lt;/div>
+&lt;script>
+  if (document.createElement('audio').canPlayType) {
+    if (!document.createElement('audio').canPlayType('audio/mpeg')) {
+      swfobject.embedSWF(
+        "player_mp3_mini.swf",
+        "player_fallback",
+        "200",
+        "20",
+        "9.0.0",
+        "",
+        {"mp3":"test.mp3"},
+        {"bgcolor":"#085c68"});
+    }
+  }
+&lt;/script></span></pre>
+  <p>為了簡化工序，我們使用 <a href="http://code.google.com/p/swfobject/">SWFObject</a> library 來運用 JavaScript 來加入 Flash 播放器。 要運用這個 library ，你只需要用 <a href="http://code.google.com/apis/ajaxlibs/">Google AJAX Libraries API</a> 來配合。在header 元素中插入以下兩行：</p>
+  <pre class="prettyprint"><span class="new">&lt;script src="http://www.google.com/jsapi">&lt;/script>
+&lt;script>google.load("swfobject", "2.2");&lt;/script></span></pre>
+
+  <h2 id="toc-step4">步驟四： 加入預設控制面板的播放器</h2>
+  <p>在audio元素加入屬性controls，這些控制面板是不可自訂修改的 (請看網頁尾的範例)。由於無論是什麼支援的來源檔案格式，這個預設控制面板都會顯示出來，因此我們需要根據之前出現Flash播放器的條件，來決定預設控制面板的播放器出現與否。</p>
+  <pre class="prettyprint"><span class="old">&lt;audio </span><span class="new">id="audio_with_controls" controls</span><span class="old">></span>
+  <span class="old">&lt;source src="test.mp3" type="audio/mpeg" /></span><span class="old">
+
+  &lt;object class="playerpreview" type="application/x-shockwave-flash"
+          data="player_mp3_mini.swf" width="200" height="20">
+    &lt;param name="movie" value="player_mp3_mini.swf" />
+    &lt;param name="bgcolor" value="#085c68" />
+    &lt;param name="FlashVars" value="mp3=test.mp3" />
+    &lt;embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200"
+           height="20" name="movie" align=""
+           type="application/x-shockwave-flash" flashvars="mp3=test.mp3">
+    &lt;/embed>
+  &lt;/object>
+
+&lt;/audio>
+</span><span class="old">
+&lt;div id="player_fallback">&lt;/div>
+&lt;script>
+  if (document.createElement('audio').canPlayType) {
+    if (!document.createElement('audio').canPlayType('audio/mpeg')) {
+      ... SWFObject script line here ...
+      </span><span class="new">document.getElementsById('audio_with_controls').style.display = 'none';</span><span class="old">
+    }
+  }
+&lt;/script></span></pre>
+
+  <p>另外，你也可以用 JavaScript 和 CSS 來建立你的播放器。</p>
+  <pre class="prettyprint"><span class="old">&lt;audio </span><span class="new">id="audio"</span><span class="old">></span>
+  <span class="old">&lt;source src="test.mp3" type="audio/mpeg" /></span><span class="old">
+
+  &lt;object class="playerpreview" type="application/x-shockwave-flash"
+          data="player_mp3_mini.swf" width="200" height="20">
+    &lt;param name="movie" value="player_mp3_mini.swf" />
+    &lt;param name="bgcolor" value="#085c68" />
+    &lt;param name="FlashVars" value="mp3=test.mp3" />
+    &lt;embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200"
+           height="20" name="movie" align=""
+           type="application/x-shockwave-flash" flashvars="mp3=test.mp3">
+    &lt;/embed>
+  &lt;/object>
+
+&lt;/audio>
+</span><span class="old">
+&lt;div id="player_fallback">&lt;/div>
+<span class="new">&lt;div id="player" style="display: none">
+  &lt;button onClick="document.getElementById('audio').play()">Play&lt;/button>
+  &lt;button onClick="document.getElementById('audio').pause()">Pause&lt;/button>
+&lt;/div></span>
+
+&lt;script>
+  if (document.createElement('audio').canPlayType) {
+    if (!document.createElement('audio').canPlayType('audio/mpeg')) {
+      ... SWFObject script lines here ...
+    } </span><span class="new">else { // HTML5 audio + mp3 support
+      document.getElementById('player').style.display = 'block';
+    }</span><span class="old">
+  }
+&lt;/script></span></pre>
+
+  <h2 id="toc-examples">範例</h2>
+  <p>以下兩個範例，將會在不支援 audio 元素和播放 mp3 的瀏覽器，倒退回去 Flash 播放器。</p>
+  {% if is_mobile %}
+  <h3 id="toc-player-default">Player with default controls</h3>
+  <audio id="audio_with_controls" controls>
+    <source src="test.mp3" type="audio/mpeg" />
+    <source src="test.ogg" type="audio/ogg" />
+      <object class="playerpreview" type="application/x-shockwave-flash" data="player_mp3_mini.swf" width="200" height="20"><param name="movie" value="player_mp3_mini.swf" /><param name="bgcolor" value="#085c68" /><param name="FlashVars" value="mp3=test.mp3" /><embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200" height="20" name="movie" align="" type="application/x-shockwave-flash" flashvars="mp3=test.mp3" /></object>
+
+  </audio>
+  <div id="default_player_fallback"></div>
+
+  <h3 id="toc-player-custom">Player with customized controls</h3>
+  <audio id="audio">
+    <source src="test.mp3" type="audio/mpeg" />
+    <source src="test.ogg" type="audio/ogg" />
+      <object id="flash_obj" class="playerpreview" type="application/x-shockwave-flash" data="player_mp3_mini.swf" width="200" height="20"><param name="movie" value="player_mp3_mini.swf" /><param name="bgcolor" value="#085c68" /><param name="FlashVars" value="mp3=test.mp3" /><embed href="player_mp3_mini.swf" bgcolor="#085c68" width="200" height="20" name="movie" align="" type="application/x-shockwave-flash" flashvars="mp3=test.mp3" /></object>
+
+  </audio>
+  <div id="custom_player_fallback"></div>
+  <div id="player" style="display: none">
+    <button onClick="document.getElementById('audio').play()">Play</button>
+    <button onClick="document.getElementById('audio').pause()">Pause</button>
+  </div>
+
+  <script>
+  if (document.createElement('audio').canPlayType) {
+    if (!document.createElement('audio').canPlayType('audio/mpeg') &&
+        !document.createElement('audio').canPlayType('audio/ogg')) {
+      swfobject.embedSWF("player_mp3_mini.swf", "default_player_fallback", "200", "20", "9.0.0", "", {"mp3":"test.mp3"}, {"bgcolor":"#085c68"});
+      swfobject.embedSWF("player_mp3_mini.swf", "custom_player_fallback", "200", "20", "9.0.0", "", {"mp3":"test.mp3"}, {"bgcolor":"#085c68"});
+      document.getElementById('audio_with_controls').style.display = 'none';
+    }
+    else { // HTML5 audio + mp3 support
+      document.getElementById('player').style.display = 'block';
+    }
+  }
+  </script>
+  {% else %}
+  <iframe src="http://playground.html5rocks.com/?mode=frame&hu=180&hl=180#audio_tag_with_fallback_to_flash" style="border: none; width: 100%; height: 480px;"></iframe>
+  {% endif %}
+  <p>你完成了！</p>
+
+  <div class="footer">
+    <p>Flash MP3 播放器取自 <a href="http://flash-mp3-player.net/">neolao production</a>。
+       MP3 範例檔案是 <strong>Modal Blues</strong> 取自 <a
+         href="http://freemusicarchive.org/music/Rushus/">Rushus</a> 和授權於 <a href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution License</a>。
+    </p>
+  </div>
+{% endblock %}
